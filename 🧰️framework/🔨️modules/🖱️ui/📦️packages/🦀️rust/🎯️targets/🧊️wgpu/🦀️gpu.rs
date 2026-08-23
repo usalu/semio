@@ -140,8 +140,8 @@ impl GpuContext {
         &mut self.mesh_store
     }
 
-    pub fn ensure_mesh(&mut self, key: &str, version: u64, positions: &[f32], normals: &[f32], indices: &[u32]) {
-        self.mesh_store.ensure_mesh(&self.device, key, version, positions, normals, indices);
+    pub fn ensure_mesh(&mut self, key: &str, version: u64, lease: crate::wgpu::kernel_3d_scene::Mesh3dLease) {
+        self.mesh_store.ensure_mesh(&self.device, key, version, lease);
     }
 
     pub fn evict_mesh(&mut self, key: &str) {
@@ -182,7 +182,7 @@ impl GpuContext {
                 PreparedRenderUpload::GlyphAtlas { pixels, width, height } => self.pipelines.upload_glyph_atlas(&self.queue, pixels, *width, *height),
                 PreparedRenderUpload::IconAtlas { pixels, width, height } => self.pipelines.upload_icon_atlas(&self.queue, pixels, *width, *height),
                 PreparedRenderUpload::Raster { key, pixels, width, height } => self.ensure_raster_texture(key, pixels, *width, *height),
-                PreparedRenderUpload::Mesh { key, version, positions, normals, indices } => self.ensure_mesh(key, *version, positions, normals, indices),
+                PreparedRenderUpload::Mesh { key, version, lease } => self.ensure_mesh(key, *version, *lease),
             }
         }
     }

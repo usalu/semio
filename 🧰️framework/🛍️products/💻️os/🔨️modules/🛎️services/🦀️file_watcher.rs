@@ -23,7 +23,7 @@ struct DirectoryProbe {
 
 //#region 🔭️Probe
 
-fn submit_probe_step(pool: &Arc<WorkerPool>, root: PathBuf, cancelled: Arc<AtomicBool>, sender: mpsc::SyncSender<Result<Vec<FileStamp>, String>>, probe: Option<DirectoryProbe>) {
+fn submit_probe_step(pool: &Arc<WorkerPool>, root: PathBuf, cancelled: Arc<AtomicBool>, sender: mpsc::SyncSender<Result<Vec<FileStamp>, String>>, wake: Arc<dyn Fn() + Send + Sync>, probe: Option<DirectoryProbe>) {
     let next_pool = pool.clone();
     pool.submit(
         Lane::Io,
@@ -35,13 +35,15 @@ fn submit_probe_step(pool: &Arc<WorkerPool>, root: PathBuf, cancelled: Arc<Atomi
                 Some(probe) => probe,
                 None => {
                     if let Err(error) = std::fs::create_dir_all(&root) {
-                        let _ = sender.send(Err(format!("{}: {error}", root.display())));
+                        let _ = sender.try_send(Err(format!("{}: {error}", root.display())));
+                        wake();
                         return;
                     }
                     match std::fs::read_dir(&root) {
                         Ok(entries) => DirectoryProbe { entries, stamps: Vec::new() },
                         Err(error) => {
-                            let _ = sender.send(Err(format!("{}: {error}", root.display())));
+                            let _ = sender.try_send(Err(format!("{}: {error}", root.display())));
+                            wake();
                             return;
                         }
                     }
@@ -51,7 +53,8 @@ fn submit_probe_step(pool: &Arc<WorkerPool>, root: PathBuf, cancelled: Arc<Atomi
                 let Some(entry) = probe.entries.next() else {
                     probe.stamps.sort();
                     if !cancelled.load(Ordering::Acquire) {
-                        let _ = sender.send(Ok(probe.stamps));
+                        let _ = sender.try_send(Ok(probe.stamps));
+                        wake();
                     }
                     return;
                 };
@@ -63,7 +66,7 @@ fn submit_probe_step(pool: &Arc<WorkerPool>, root: PathBuf, cancelled: Arc<Atomi
                 let modified_ns = metadata.modified().ok().and_then(|modified| modified.duration_since(UNIX_EPOCH).ok()).map_or(0, |duration| duration.as_nanos());
                 probe.stamps.push(FileStamp { path, directory: metadata.is_dir(), len: metadata.len(), modified_ns });
             }
-            submit_probe_step(&next_pool, root, cancelled, sender, Some(probe));
+            submit_probe_step(&next_pool, root, cancelled, sender, wake, Some(probe));
         }),
     );
 }
@@ -83,23 +86,25 @@ pub struct OwnedFileChangeWatcher {
     previous: Option<Vec<FileStamp>>,
     in_flight: bool,
     next_probe_at: Instant,
+    wake: Arc<dyn Fn() + Send + Sync>,
+    deadline_armed: Arc<AtomicBool>,
 }
 
 impl OwnedFileChangeWatcher {
     /// 🌱️ Watches the containing directory so create, replace, rename, and delete are observable.
-    pub fn new(watch_path: &Path, pool: Arc<WorkerPool>) -> Self {
+    pub fn new(watch_path: &Path, pool: Arc<WorkerPool>, wake: Arc<dyn Fn() + Send + Sync>) -> Self {
         let root = watch_path.parent().map_or_else(|| watch_path.to_path_buf(), Path::to_path_buf);
         let (sender, receiver) = mpsc::sync_channel(1);
-        Self { pool, root, cancelled: Arc::new(AtomicBool::new(false)), sender, receiver, previous: None, in_flight: false, next_probe_at: Instant::now() }
+        Self { pool, root, cancelled: Arc::new(AtomicBool::new(false)), sender, receiver, previous: None, in_flight: false, next_probe_at: Instant::now(), wake, deadline_armed: Arc::new(AtomicBool::new(false)) }
     }
 
     /// 🔎 Polls completed probes without waiting and schedules the next bounded probe when due.
     pub fn poll_changed(&mut self) -> bool {
         let mut changed = false;
-        while let Ok(result) = self.receiver.try_recv() {
+        if let Ok(result) = self.receiver.try_recv() {
             self.in_flight = false;
             if let Ok(snapshot) = result {
-                changed |= self.previous.as_ref().is_some_and(|previous| previous != &snapshot);
+                changed = self.previous.as_ref().is_some_and(|previous| previous != &snapshot);
                 self.previous = Some(snapshot);
             }
         }
@@ -107,7 +112,16 @@ impl OwnedFileChangeWatcher {
         if !self.in_flight && now >= self.next_probe_at {
             self.in_flight = true;
             self.next_probe_at = now + Duration::from_millis(20);
-            submit_probe_step(&self.pool, self.root.clone(), self.cancelled.clone(), self.sender.clone(), None);
+            self.deadline_armed.store(false, Ordering::Release);
+            submit_probe_step(&self.pool, self.root.clone(), self.cancelled.clone(), self.sender.clone(), self.wake.clone(), None);
+        } else if !self.in_flight && self.deadline_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+            let delay_ms = u64::try_from(self.next_probe_at.saturating_duration_since(now).as_millis()).unwrap_or(u64::MAX).max(1);
+            let deadline_armed = self.deadline_armed.clone();
+            let wake = self.wake.clone();
+            self.pool.callback_at(self.pool.now_ms().saturating_add(delay_ms), move || {
+                deadline_armed.store(false, Ordering::Release);
+                wake();
+            });
         }
         changed
     }
@@ -148,7 +162,7 @@ mod tests {
         let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 2)));
         let cancelled;
         {
-            let mut watcher = OwnedFileChangeWatcher::new(&root.join("document.db"), pool);
+            let mut watcher = OwnedFileChangeWatcher::new(&root.join("document.db"), pool, Arc::new(|| {}));
             cancelled = watcher.cancelled.clone();
             wait_until(|| {
                 let _ = watcher.poll_changed();

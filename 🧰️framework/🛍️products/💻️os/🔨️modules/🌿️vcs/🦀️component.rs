@@ -139,14 +139,387 @@ pub struct Alternative {
     pub checkpoint_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub const ARTIFACT_HISTORY_LEDGER_CAPACITY: usize = 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactHistoryKey {
+    pub index: u16,
+    pub generation: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ArtifactHistoryReservation {
+    authority: usize,
+    index: u16,
+    generation: u32,
+}
+
+struct ArtifactHistorySlot<T> {
+    generation: u32,
+    previous: Option<u16>,
+    next: Option<u16>,
+    free_next: Option<u16>,
+    value: Option<T>,
+}
+
+/// @emoji 📚️ Fixed-capacity generation-keyed history authority. Live entries form one stable
+/// linked order; removed slots are tombstoned and reused only after their generation advances.
+pub struct ArtifactHistoryLedger<T> {
+    slots: std::mem::ManuallyDrop<Vec<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>>,
+    head: Option<u16>,
+    tail: Option<u16>,
+    free_head: Option<u16>,
+    reservation: Option<ArtifactHistoryReservation>,
+    len: usize,
+}
+
+impl<T> ArtifactHistoryLedger<T> {
+    pub fn new() -> Self {
+        Self { slots: std::mem::ManuallyDrop::new(Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY)), head: None, tail: None, free_head: None, reservation: None, len: 0 }
+    }
+
+    fn slot(&self, index: u16) -> &ArtifactHistorySlot<T> {
+        unsafe { self.slots[index as usize].assume_init_ref() }
+    }
+
+    fn slot_mut(&mut self, index: u16) -> &mut ArtifactHistorySlot<T> {
+        unsafe { self.slots[index as usize].assume_init_mut() }
+    }
+
+    fn authority(&self) -> usize {
+        self.slots.as_ptr() as usize
+    }
+
+    pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ()> {
+        if self.reservation.is_some() {
+            return Err(());
+        }
+        let (index, generation) = if let Some(index) = self.free_head {
+            let generation = self.slot(index).generation.checked_add(1).ok_or(())?;
+            (index, generation)
+        } else {
+            if self.slots.len() == ARTIFACT_HISTORY_LEDGER_CAPACITY {
+                return Err(());
+            }
+            (self.slots.len() as u16, 1)
+        };
+        let reservation = ArtifactHistoryReservation { authority: self.authority(), index, generation };
+        self.reservation = Some(ArtifactHistoryReservation { authority: reservation.authority, index, generation });
+        Ok(reservation)
+    }
+
+    pub fn cancel_reservation(&mut self, reservation: ArtifactHistoryReservation) -> Result<(), ArtifactHistoryReservation> {
+        if self.reservation.as_ref() != Some(&reservation) {
+            return Err(reservation);
+        }
+        self.reservation = None;
+        Ok(())
+    }
+
+    pub fn insert_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
+        if reservation.authority != self.authority() || self.reservation.as_ref() != Some(&reservation) {
+            return Err((reservation, value));
+        }
+        let index = reservation.index;
+        let generation = reservation.generation;
+        self.reservation = None;
+        if Some(index) == self.free_head {
+            let free_next = self.slot(index).free_next;
+            self.free_head = free_next;
+            let previous = self.tail;
+            let slot = self.slot_mut(index);
+            slot.generation = generation;
+            slot.previous = previous;
+            slot.next = None;
+            slot.free_next = None;
+            slot.value = Some(value);
+        } else if index as usize == self.slots.len() && self.slots.len() < ARTIFACT_HISTORY_LEDGER_CAPACITY {
+            self.slots.push(std::mem::MaybeUninit::new(ArtifactHistorySlot { generation, previous: self.tail, next: None, free_next: None, value: Some(value) }));
+        } else {
+            return Err((reservation, value));
+        }
+        if let Some(tail) = self.tail {
+            self.slot_mut(tail).next = Some(index);
+        } else {
+            self.head = Some(index);
+        }
+        self.tail = Some(index);
+        self.len += 1;
+        Ok(ArtifactHistoryKey { index, generation })
+    }
+
+    pub fn try_push(&mut self, value: T) -> Result<ArtifactHistoryKey, T> {
+        let reservation = match self.reserve_one() {
+            Ok(reservation) => reservation,
+            Err(()) => return Err(value),
+        };
+        self.insert_reserved(reservation, value).map_err(|(_, value)| value)
+    }
+
+    pub fn try_from_preflighted(values: Vec<T>) -> Result<Self, Vec<T>> {
+        if values.len() > ARTIFACT_HISTORY_LEDGER_CAPACITY {
+            return Err(values);
+        }
+        let mut ledger = Self::new();
+        let mut pending = values.into_iter();
+        while let Some(value) = pending.next() {
+            if let Err(value) = ledger.try_push(value) {
+                let mut rejected = Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY + 1);
+                while let Some(established) = ledger.pop() {
+                    rejected.push(established);
+                }
+                rejected.reverse();
+                rejected.push(value);
+                rejected.extend(pending);
+                return Err(rejected);
+            }
+        }
+        Ok(ledger)
+    }
+
+    pub fn remove_key(&mut self, key: ArtifactHistoryKey) -> Result<T, ArtifactHistoryKey> {
+        if self.reservation.is_some() {
+            return Err(key);
+        }
+        if key.index as usize >= self.slots.len() {
+            return Err(key);
+        }
+        let slot = self.slot(key.index);
+        if slot.generation != key.generation || slot.value.is_none() {
+            return Err(key);
+        }
+        let previous = slot.previous;
+        let next = slot.next;
+        if let Some(previous) = previous {
+            self.slot_mut(previous).next = next;
+        } else {
+            self.head = next;
+        }
+        if let Some(next) = next {
+            self.slot_mut(next).previous = previous;
+        } else {
+            self.tail = previous;
+        }
+        let free_head = self.free_head;
+        let value = {
+            let slot = self.slot_mut(key.index);
+            slot.previous = None;
+            slot.next = None;
+            slot.free_next = free_head;
+            slot.value.take().expect("validated history slot retains its exact owner")
+        };
+        self.free_head = Some(key.index);
+        self.len -= 1;
+        Ok(value)
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        let index = self.tail?;
+        let generation = self.slot(index).generation;
+        self.remove_key(ArtifactHistoryKey { index, generation }).ok()
+    }
+
+    pub fn first(&self) -> Option<&T> {
+        self.head.and_then(|index| self.slot(index).value.as_ref())
+    }
+
+    pub fn last(&self) -> Option<&T> {
+        self.tail.and_then(|index| self.slot(index).value.as_ref())
+    }
+
+    pub fn last_mut(&mut self) -> Option<&mut T> {
+        let index = self.tail?;
+        self.slot_mut(index).value.as_mut()
+    }
+
+    pub fn get(&self, position: usize) -> Option<&T> {
+        self.iter().nth(position)
+    }
+
+    pub fn get_mut(&mut self, position: usize) -> Option<&mut T> {
+        self.iter_mut().nth(position)
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn has_capacity(&self) -> bool {
+        self.reservation.is_none() && (self.free_head.is_some_and(|index| self.slot(index).generation != u32::MAX) || self.slots.len() < ARTIFACT_HISTORY_LEDGER_CAPACITY)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn iter(&self) -> ArtifactHistoryIter<'_, T> {
+        ArtifactHistoryIter { ledger: self, front: self.head, back: self.tail, remaining: self.len }
+    }
+
+    pub fn iter_mut(&mut self) -> ArtifactHistoryIterMut<'_, T> {
+        ArtifactHistoryIterMut { slots: &mut *self.slots, front: self.head, back: self.tail, remaining: self.len, marker: std::marker::PhantomData }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none()
+    }
+}
+
+impl<T> Drop for ArtifactHistoryLedger<T> {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "artifact history ledger reached Drop before every exact entry owner was retired");
+        unsafe { std::mem::ManuallyDrop::drop(&mut self.slots) };
+    }
+}
+
+pub struct ArtifactHistoryIter<'a, T> {
+    ledger: &'a ArtifactHistoryLedger<T>,
+    front: Option<u16>,
+    back: Option<u16>,
+    remaining: usize,
+}
+
+impl<'a, T> Iterator for ArtifactHistoryIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+        let index = self.front?;
+        let slot = self.ledger.slot(index);
+        self.front = slot.next;
+        self.remaining -= 1;
+        slot.value.as_ref()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.remaining, Some(self.remaining))
+    }
+}
+
+impl<T> DoubleEndedIterator for ArtifactHistoryIter<'_, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+        let index = self.back?;
+        let slot = self.ledger.slot(index);
+        self.back = slot.previous;
+        self.remaining -= 1;
+        slot.value.as_ref()
+    }
+}
+
+impl<T> ExactSizeIterator for ArtifactHistoryIter<'_, T> {}
+
+pub struct ArtifactHistoryIterMut<'a, T> {
+    slots: *mut Vec<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>,
+    front: Option<u16>,
+    back: Option<u16>,
+    remaining: usize,
+    marker: std::marker::PhantomData<&'a mut T>,
+}
+
+impl<'a, T> Iterator for ArtifactHistoryIterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+        let index = self.front?;
+        let slot = unsafe { (&mut *self.slots)[index as usize].assume_init_mut() };
+        self.front = slot.next;
+        self.remaining -= 1;
+        slot.value.as_mut().map(|value| unsafe { &mut *(value as *mut T) })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.remaining, Some(self.remaining))
+    }
+}
+
+impl<T> DoubleEndedIterator for ArtifactHistoryIterMut<'_, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+        let index = self.back?;
+        let slot = unsafe { (&mut *self.slots)[index as usize].assume_init_mut() };
+        self.back = slot.previous;
+        self.remaining -= 1;
+        slot.value.as_mut().map(|value| unsafe { &mut *(value as *mut T) })
+    }
+}
+
+impl<T> ExactSizeIterator for ArtifactHistoryIterMut<'_, T> {}
+
+impl<'a, T> IntoIterator for &'a ArtifactHistoryLedger<T> {
+    type Item = &'a T;
+    type IntoIter = ArtifactHistoryIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, T> IntoIterator for &'a mut ArtifactHistoryLedger<T> {
+    type Item = &'a mut T;
+    type IntoIter = ArtifactHistoryIterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
+impl<T> std::ops::Index<usize> for ArtifactHistoryLedger<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.get(index).expect("artifact history index outside the live deterministic order")
+    }
+}
+
+impl<T> std::ops::IndexMut<usize> for ArtifactHistoryLedger<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.get_mut(index).expect("artifact history index outside the live deterministic order")
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for ArtifactHistoryLedger<T> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_list().entries(self.iter()).finish()
+    }
+}
+
+impl<T: PartialEq> PartialEq for ArtifactHistoryLedger<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.len == other.len && self.iter().zip(other.iter()).all(|(left, right)| left == right)
+    }
+}
+
+impl<T: Eq> Eq for ArtifactHistoryLedger<T> {}
+
+impl<T: Serialize> Serialize for ArtifactHistoryLedger<T> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+        let mut sequence = serializer.serialize_seq(Some(self.len))?;
+        for entry in self {
+            sequence.serialize_element(entry)?;
+        }
+        sequence.end()
+    }
+}
+
+#[derive(Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ArtifactVcs<P, Mutation> {
     pub initial_snapshot: P,
-    pub edits: Vec<Edit<Mutation>>,
-    pub changes: Vec<Change>,
-    pub checkpoints: Vec<Checkpoint>,
-    pub alternatives: Vec<Alternative>,
+    pub edits: ArtifactHistoryLedger<Edit<Mutation>>,
+    pub changes: ArtifactHistoryLedger<Change>,
+    pub checkpoints: ArtifactHistoryLedger<Checkpoint>,
+    pub alternatives: ArtifactHistoryLedger<Alternative>,
 }
 //#endregion 🔖️Schemas
 //#region 🔖️Errors
@@ -460,12 +833,36 @@ where
 /// natural deterministic order of its own, and two peers committing the identical pin SET must
 /// still converge on the identical id regardless of which order their local dispatch happened to
 /// discover the children in.
-pub async fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[String], changes: &[Change], message: Option<&str>, authors: &[Author], timestamp: &str, pins: &[CompositionPin]) -> String {
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PendingChangeRef<'a> {
+    id: &'a str,
+    edit_ids: &'a [String],
+    description: Option<&'a str>,
+    saved_at: &'a str,
+}
+
+fn content_addressed_checkpoint_id_core(
+    parent_id: Option<&str>,
+    change_ids: &[String],
+    changes: &ArtifactHistoryLedger<Change>,
+    pending: Option<PendingChangeRef<'_>>,
+    message: Option<&str>,
+    authors: &[Author],
+    timestamp: &str,
+    pins: &[CompositionPin],
+) -> String {
     let mut input = Vec::new();
     input.extend_from_slice(parent_id.unwrap_or("").as_bytes());
     input.push(0);
     for change_id in change_ids {
-        let change_hash = changes.iter().find(|change| change.id == *change_id).map_or([0u8; 32], |change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes());
+        let change_hash = if let Some(change) = changes.iter().find(|change| change.id == *change_id) {
+            *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()
+        } else if let Some(change) = pending.as_ref().filter(|change| change.id == change_id.as_str()) {
+            *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()
+        } else {
+            [0u8; 32]
+        };
         input.extend_from_slice(&change_hash);
     }
     input.push(0);
@@ -496,6 +893,26 @@ pub async fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids
     let digest = *blake3::hash(&input).as_bytes();
     let hex16: String = digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
     format!("ck-{hex16}")
+}
+
+pub async fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[String], changes: &ArtifactHistoryLedger<Change>, message: Option<&str>, authors: &[Author], timestamp: &str, pins: &[CompositionPin]) -> String {
+    content_addressed_checkpoint_id_core(parent_id, change_ids, changes, None, message, authors, timestamp, pins)
+}
+
+pub fn content_addressed_checkpoint_id_with_pending_change(
+    parent_id: Option<&str>,
+    change_ids: &[String],
+    changes: &ArtifactHistoryLedger<Change>,
+    pending_change_id: &str,
+    pending_edit_ids: &[String],
+    pending_description: Option<&str>,
+    pending_saved_at: &str,
+    message: Option<&str>,
+    authors: &[Author],
+    timestamp: &str,
+    pins: &[CompositionPin],
+) -> String {
+    content_addressed_checkpoint_id_core(parent_id, change_ids, changes, Some(PendingChangeRef { id: pending_change_id, edit_ids: pending_edit_ids, description: pending_description, saved_at: pending_saved_at }), message, authors, timestamp, pins)
 }
 //#endregion 🔖️MergeStrategy
 
@@ -606,9 +1023,55 @@ mod tests {
 
     //#region 🔖️ContentAddressedCheckpointAndMergeBase
     #[semio_framework_async_macros::async_test]
+    async fn fixed_history_ledger_preserves_order_capacity_and_aba_rejection() {
+        let mut ledger = ArtifactHistoryLedger::new();
+        let mut keys = Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY);
+        for index in 0..ARTIFACT_HISTORY_LEDGER_CAPACITY {
+            keys.push(ledger.try_push(format!("history-{index:02}")).expect("fixed ledger admits its exact capacity"));
+        }
+        let rejected = ledger.try_push("history-overflow".to_string()).expect_err("capacity + 1 returns the exact rejected owner");
+        assert_eq!(rejected, "history-overflow");
+        assert_eq!(ledger.iter().next().map(String::as_str), Some("history-00"));
+        assert_eq!(ledger.iter().next_back().map(String::as_str), Some("history-63"));
+
+        let removed = ledger.remove_key(keys[17]).expect("live generation removes its exact owner");
+        assert_eq!(removed, "history-17");
+        assert_eq!(ledger.remove_key(keys[17]), Err(keys[17]), "a stale generation cannot remove the reused slot");
+        let replacement = ledger.try_push("history-replacement".to_string()).expect("one tombstone admits one replacement");
+        assert_eq!(replacement.index, keys[17].index);
+        assert!(replacement.generation > keys[17].generation);
+        assert_eq!(ledger.last().map(String::as_str), Some("history-replacement"));
+
+        let mut drained = 0;
+        while ledger.pop().is_some() {
+            drained += 1;
+        }
+        assert_eq!(drained, ARTIFACT_HISTORY_LEDGER_CAPACITY);
+        assert!(ledger.terminal_is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn fixed_history_reservation_returns_exact_rejected_owner_and_blocks_aba() {
+        let mut first = ArtifactHistoryLedger::new();
+        let mut second = ArtifactHistoryLedger::new();
+        let reservation = first.reserve_one().expect("empty fixed ledger reserves one exact slot");
+        let rejected = first.try_push("parallel-owner".to_string()).expect_err("an outstanding reservation excludes parallel adoption");
+        assert_eq!(rejected, "parallel-owner");
+        let (reservation, rejected) = second.insert_reserved(reservation, "wrong-ledger-owner".to_string()).expect_err("a reservation cannot cross ledger authority");
+        assert_eq!(rejected, "wrong-ledger-owner");
+        first.cancel_reservation(reservation).expect("the exact unconsumed token returns to its issuing ledger");
+
+        let reservation = first.reserve_one().expect("cancelled reservation releases capacity");
+        let key = first.insert_reserved(reservation, "committed-owner".to_string()).expect("matching token adopts exactly once");
+        assert_eq!(first.remove_key(key).expect("live key returns its exact owner"), "committed-owner");
+        assert!(first.terminal_is_empty());
+        assert!(second.terminal_is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn content_addressed_checkpoint_id_is_deterministic_and_content_sensitive() {
         let root_change = Change { id: "change-root".into(), edit_ids: vec!["edit-1".into()], description: Some("root".into()), saved_at: "2026-07-27T00:00:00Z".into() };
-        let changes = vec![root_change];
+        let mut changes = ArtifactHistoryLedger::try_from_preflighted(vec![root_change]).expect("one change fits the fixed ledger");
         let change_ids = vec!["change-root".to_string()];
         let authors = vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }];
 
@@ -625,6 +1088,22 @@ mod tests {
 
         let id_different_timestamp = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:02Z", &[]).await;
         assert_ne!(id_a, id_different_timestamp, "a different timestamp must change the id");
+        drop(changes.pop());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn pending_change_checkpoint_hash_is_byte_identical_before_history_reservation() {
+        let mut changes = ArtifactHistoryLedger::new();
+        let change = Change { id: "change-pending".into(), edit_ids: vec!["edit-a".into(), "edit-b".into()], description: Some("pending".into()), saved_at: "2026-08-23T00:00:00Z".into() };
+        let change_ids = vec![change.id.clone()];
+        let authors = vec![Author { id: "actor".into(), name: "Actor".into(), avatar: None }];
+        let before_reservation =
+            content_addressed_checkpoint_id_with_pending_change(None, &change_ids, &changes, &change.id, &change.edit_ids, change.description.as_deref(), &change.saved_at, Some("checkpoint"), &authors, "2026-08-23T00:00:01Z", &[]);
+        let reservation = changes.reserve_one().expect("hashing does not consume the fixed ledger reservation");
+        changes.insert_reserved(reservation, change).expect("exact reservation adopts the pending change");
+        let after_commit = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("checkpoint"), &authors, "2026-08-23T00:00:01Z", &[]).await;
+        assert_eq!(before_reservation, after_commit, "borrowing the pending change before reservation preserves the exact wire hash");
+        drop(changes.pop());
     }
 
     /// @emoji 🧩️ `composition_pins`/`CompositionPin` extension to `content_addressed_checkpoint_id`:
@@ -635,7 +1114,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible() {
         let root_change = Change { id: "change-root".into(), edit_ids: vec!["edit-1".into()], description: Some("root".into()), saved_at: "2026-07-27T00:00:00Z".into() };
-        let changes = vec![root_change];
+        let mut changes = ArtifactHistoryLedger::try_from_preflighted(vec![root_change]).expect("one change fits the fixed ledger");
         let change_ids = vec!["change-root".to_string()];
         let authors = vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }];
         let args = (None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z");
@@ -689,6 +1168,7 @@ mod tests {
         let id_ordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_ordered);
         let id_reordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_reordered);
         assert_eq!(id_ordered.await, id_reordered.await, "two peers discovering the same pin set in different incidental order must converge on the identical id");
+        drop(changes.pop());
     }
 
     //#region 🆔️Ids

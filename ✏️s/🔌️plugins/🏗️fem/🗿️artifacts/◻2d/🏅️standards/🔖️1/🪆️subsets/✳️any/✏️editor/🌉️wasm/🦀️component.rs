@@ -19,7 +19,7 @@ mod wasm_bridge {
         pub async fn create(envelope_json: Option<String>) -> Result<Fem2dSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: Fem2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: Fem2dEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Fem2dStore::new(envelope).await.map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
                 None => Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?,

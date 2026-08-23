@@ -11,6 +11,7 @@ pub const ACTION_STRING_BYTE_CAPACITY: usize = 4 * 1024;
 pub const ACTION_ITEM_BYTE_CAPACITY: usize = 16 * 1024;
 pub const ACTION_QUEUE_BYTE_CAPACITY: usize = 1024 * 1024;
 pub const ACTION_CLAIM_CAPACITY: usize = 256;
+pub const ACTION_CLAIM_BATCH_CAPACITY: usize = 16;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BoundedActionFault {
@@ -223,6 +224,31 @@ impl BoundedActionBuilder {
         self.push_node(key, FlatValue::String(span)).map(|_| ())
     }
 
+    pub fn string_joined(&mut self, key: Option<&str>, parts: &[&str]) -> Result<(), BoundedActionFault> {
+        self.live()?;
+        let mut len = 0usize;
+        for part in parts {
+            len = len.checked_add(part.len()).ok_or(BoundedActionFault::ByteCredits)?;
+            if len > ACTION_STRING_BYTE_CAPACITY {
+                return self.poison(BoundedActionFault::StringCredits);
+            }
+        }
+        let start = self.action.byte_len;
+        let end = start.checked_add(len).ok_or(BoundedActionFault::ByteCredits)?;
+        if end > self.reserved_bytes || end > ACTION_ITEM_BYTE_CAPACITY {
+            return self.poison(BoundedActionFault::ByteCredits);
+        }
+        let mut cursor = start;
+        for part in parts {
+            let next = cursor + part.len();
+            self.action.bytes[cursor..next].copy_from_slice(part.as_bytes());
+            cursor = next;
+        }
+        self.action.byte_len = end;
+        let span = TextSpan { start: start as u16, len: len as u16 };
+        self.push_node(key, FlatValue::String(span)).map(|_| ())
+    }
+
     pub fn value(&mut self, key: Option<&str>, value: &DslValue) -> Result<(), BoundedActionFault> {
         self.copy_value(key, value, 0)
     }
@@ -365,6 +391,105 @@ pub struct BoundedClaimedActionReservation<'a> {
     queue: &'a mut BoundedActionQueue,
     claim: BoundedActionClaim,
     builder: BoundedActionBuilder,
+}
+
+pub struct BoundedClaimedActionDraft {
+    claim: BoundedActionClaim,
+    builder: BoundedActionBuilder,
+}
+
+pub struct PreparedClaimedAction {
+    claim: BoundedActionClaim,
+    action: BoundedAction,
+}
+
+pub struct BoundedActionClaimBatch {
+    claims: [Option<BoundedActionClaim>; ACTION_CLAIM_BATCH_CAPACITY],
+    len: u8,
+}
+
+pub struct PreparedClaimedActionBatch {
+    claims: BoundedActionClaimBatch,
+    actions: [Option<PreparedClaimedAction>; ACTION_CLAIM_BATCH_CAPACITY],
+    len: u8,
+}
+
+impl BoundedClaimedActionDraft {
+    pub fn builder(&mut self) -> &mut BoundedActionBuilder {
+        &mut self.builder
+    }
+
+    pub fn finish(self) -> Result<PreparedClaimedAction, BoundedActionFault> {
+        Ok(PreparedClaimedAction { claim: self.claim, action: self.builder.finish()? })
+    }
+
+    pub fn claim(&self) -> BoundedActionClaim {
+        self.claim
+    }
+}
+
+impl BoundedActionClaimBatch {
+    pub fn len(&self) -> usize {
+        usize::from(self.len)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn claim(&self, index: usize) -> Option<BoundedActionClaim> {
+        self.claims.get(index).copied().flatten()
+    }
+
+    pub fn take_last(&mut self) -> Option<BoundedActionClaim> {
+        if self.len == 0 {
+            return None;
+        }
+        self.len -= 1;
+        self.claims[usize::from(self.len)].take()
+    }
+}
+
+impl PreparedClaimedActionBatch {
+    pub fn new(claims: BoundedActionClaimBatch) -> Self {
+        Self { claims, actions: std::array::from_fn(|_| None), len: 0 }
+    }
+
+    pub fn claim(&self, index: usize) -> Option<BoundedActionClaim> {
+        self.claims.claim(index)
+    }
+
+    pub fn push(&mut self, prepared: PreparedClaimedAction) -> Result<(), BoundedActionFault> {
+        let index = usize::from(self.len);
+        if index == self.claims.len() || self.claims.claim(index) != Some(prepared.claim) {
+            return Err(BoundedActionFault::Structure);
+        }
+        self.actions[index] = Some(prepared);
+        self.len += 1;
+        Ok(())
+    }
+
+    pub fn is_complete(&self) -> bool {
+        usize::from(self.len) == self.claims.len()
+    }
+
+    pub fn take_last_claim(&mut self) -> Option<BoundedActionClaim> {
+        let claim = self.claims.take_last()?;
+        let index = self.claims.len();
+        self.actions[index] = None;
+        self.len = self.len.min(self.claims.len() as u8);
+        Some(claim)
+    }
+
+    pub fn restore_last_claim(&mut self, claim: BoundedActionClaim) -> Result<(), BoundedActionFault> {
+        let index = self.claims.len();
+        if index == ACTION_CLAIM_BATCH_CAPACITY || self.claims.claims[index].is_some() {
+            return Err(BoundedActionFault::Structure);
+        }
+        self.claims.claims[index] = Some(claim);
+        self.claims.len += 1;
+        Ok(())
+    }
 }
 
 impl BoundedActionBatchReservation<'_> {
@@ -537,10 +662,83 @@ impl BoundedActionQueue {
         Ok(BoundedActionClaim { slot: slot as u16, epoch, byte_credits })
     }
 
+    pub fn claim_batch(&mut self, byte_credits: &[usize]) -> Result<BoundedActionClaimBatch, BoundedActionFault> {
+        if byte_credits.is_empty() || byte_credits.len() > ACTION_CLAIM_BATCH_CAPACITY {
+            return Err(BoundedActionFault::ItemCredits);
+        }
+        let total_bytes = byte_credits.iter().try_fold(0usize, |sum, bytes| {
+            if *bytes > ACTION_ITEM_BYTE_CAPACITY {
+                return Err(BoundedActionFault::ByteCredits);
+            }
+            sum.checked_add(*bytes).ok_or(BoundedActionFault::ByteCredits)
+        })?;
+        if self.len.checked_add(self.claimed_items).and_then(|items| items.checked_add(byte_credits.len())).is_none_or(|items| items > ACTION_QUEUE_ITEM_CAPACITY) {
+            return Err(BoundedActionFault::ItemCredits);
+        }
+        if self.bytes.checked_add(self.claimed_bytes).and_then(|bytes| bytes.checked_add(total_bytes)).is_none_or(|bytes| bytes > ACTION_QUEUE_BYTE_CAPACITY) {
+            return Err(BoundedActionFault::ByteCredits);
+        }
+        let mut free = [0usize; ACTION_CLAIM_BATCH_CAPACITY];
+        let mut free_len = 0usize;
+        for (index, claim) in self.claims.iter().enumerate() {
+            if claim.is_none() {
+                free[free_len] = index;
+                free_len += 1;
+                if free_len == byte_credits.len() {
+                    break;
+                }
+            }
+        }
+        if free_len != byte_credits.len() {
+            return Err(BoundedActionFault::ItemCredits);
+        }
+        let mut claims = [None; ACTION_CLAIM_BATCH_CAPACITY];
+        for (index, bytes) in byte_credits.iter().copied().enumerate() {
+            let slot = free[index];
+            let epoch = self.next_claim_epoch;
+            self.next_claim_epoch = self.next_claim_epoch.wrapping_add(1).max(1);
+            self.claims[slot] = Some(BoundedActionClaimSlot { epoch, byte_credits: bytes });
+            claims[index] = Some(BoundedActionClaim { slot: slot as u16, epoch, byte_credits: bytes });
+        }
+        self.claimed_items += byte_credits.len();
+        self.claimed_bytes += total_bytes;
+        Ok(BoundedActionClaimBatch { claims, len: byte_credits.len() as u8 })
+    }
+
     pub fn reserve_claimed<'a>(&'a mut self, claim: BoundedActionClaim, controller_id: &str, action: &str) -> Result<BoundedClaimedActionReservation<'a>, BoundedActionFault> {
         self.validate_claim(claim)?;
         let builder = BoundedActionBuilder::new(controller_id, action, claim.byte_credits)?;
         Ok(BoundedClaimedActionReservation { queue: self, claim, builder })
+    }
+
+    pub fn draft_claimed(&self, claim: BoundedActionClaim, controller_id: &str, action: &str) -> Result<BoundedClaimedActionDraft, BoundedActionFault> {
+        self.validate_claim(claim)?;
+        Ok(BoundedClaimedActionDraft { claim, builder: BoundedActionBuilder::new(controller_id, action, claim.byte_credits)? })
+    }
+
+    pub fn publish_prepared_claimed(&mut self, prepared: PreparedClaimedAction) -> Result<(), BoundedActionFault> {
+        self.publish_claimed(prepared.claim, prepared.action)
+    }
+
+    pub fn publish_prepared_claimed_batch(&mut self, mut prepared: PreparedClaimedActionBatch) -> Result<(), BoundedActionFault> {
+        if !prepared.is_complete() {
+            return Err(BoundedActionFault::ItemCredits);
+        }
+        for index in 0..prepared.claims.len() {
+            let action = prepared.actions[index].as_ref().ok_or(BoundedActionFault::Structure)?;
+            let claim = prepared.claims.claim(index).ok_or(BoundedActionFault::Structure)?;
+            self.validate_claim(claim)?;
+            if action.claim != claim || action.action.owned_bytes() > claim.byte_credits {
+                return Err(BoundedActionFault::Structure);
+            }
+        }
+        for index in 0..prepared.claims.len() {
+            let action = prepared.actions[index].take().expect("validated claimed batch action");
+            self.publish_claimed(action.claim, action.action)?;
+        }
+        prepared.claims.len = 0;
+        prepared.len = 0;
+        Ok(())
     }
 
     pub fn release_claim(&mut self, claim: BoundedActionClaim) -> Result<(), BoundedActionFault> {
@@ -675,6 +873,23 @@ mod tests {
     }
 
     #[test]
+    fn joined_string_writes_directly_into_the_pre_admitted_flat_slab() {
+        let mut queue = BoundedActionQueue::default();
+        let credits = checked_action_string_bytes(&["controller", "dispatch", "id", "surface", "/", "object"]).unwrap();
+        let mut reservation = queue.reserve("controller", "dispatch", credits).expect("reservation");
+        reservation.builder().begin_object(None).unwrap();
+        reservation.builder().string_joined(Some("id"), &["surface", "/", "object"]).unwrap();
+        reservation.builder().end_container().unwrap();
+        reservation.publish().unwrap();
+        let descriptor = queue.pop_front().unwrap().into_descriptor().unwrap();
+        assert_eq!(descriptor.args.as_ref().and_then(|args| args.get("id")).and_then(DslValue::as_str), Some("surface/object"));
+
+        let mut oversized = queue.reserve("controller", "dispatch", ACTION_ITEM_BYTE_CAPACITY).unwrap();
+        assert_eq!(oversized.builder().string_joined(None, &[&"x".repeat(ACTION_STRING_BYTE_CAPACITY), "x"]), Err(BoundedActionFault::StringCredits));
+        assert_eq!(oversized.publish(), Err(BoundedActionFault::StringCredits));
+    }
+
+    #[test]
     fn full_queue_fails_before_builder_and_retry_preserves_fifo() {
         let mut queue = BoundedActionQueue::default();
         for index in 0..ACTION_QUEUE_ITEM_CAPACITY {
@@ -724,6 +939,73 @@ mod tests {
         assert_eq!(queue.claimed_items(), 1);
         assert!(!queue.close_claim_step());
         assert!(queue.close_claim_step());
+        assert!(queue.is_empty());
+    }
+
+    #[test]
+    fn claimed_draft_builds_incrementally_and_publishes_only_complete_owner() {
+        let mut queue = BoundedActionQueue::default();
+        let claim = queue.claim(256).expect("draft claim");
+        let mut draft = queue.draft_claimed(claim, "controller", "dispatch").expect("detached draft");
+        draft.builder().begin_object(None).unwrap();
+        draft.builder().begin_array(Some("values")).unwrap();
+        draft.builder().number(None, 1.0).unwrap();
+        draft.builder().number(None, 2.0).unwrap();
+        draft.builder().end_container().unwrap();
+        draft.builder().end_container().unwrap();
+        let prepared = draft.finish().expect("complete flat owner");
+        assert!(queue.is_empty());
+        assert_eq!(queue.claimed_items(), 1);
+        queue.publish_prepared_claimed(prepared).expect("claimed publication");
+        assert_eq!(queue.claimed_items(), 0);
+        let action = queue.pop_front().expect("published owner").into_descriptor().expect("descriptor");
+        assert!(matches!(action.args.as_ref().and_then(|args| args.get("values")), Some(DslValue::Array(values)) if values.len() == 2));
+
+        let stale = queue.claim(64).expect("stale claim");
+        let draft = queue.draft_claimed(stale, "controller", "stale").expect("stale draft");
+        queue.release_claim(stale).expect("cancel claim");
+        let prepared = draft.finish().expect("shallow stale owner");
+        assert_eq!(queue.publish_prepared_claimed(prepared), Err(BoundedActionFault::Structure));
+        assert!(queue.is_empty());
+    }
+
+    #[test]
+    fn detached_claim_batch_reserves_and_publishes_all_pages_atomically_in_fifo_order() {
+        let mut queue = BoundedActionQueue::default();
+        let claims = queue.claim_batch(&[128, 128, 128]).expect("three exact page claims");
+        assert_eq!(claims.len(), 3);
+        assert_eq!(queue.claimed_items(), 3);
+        let mut batch = PreparedClaimedActionBatch::new(claims);
+        for index in 0..3 {
+            let claim = batch.claim(index).expect("page claim");
+            let mut draft = queue.draft_claimed(claim, "controller", ["first", "second", "third"][index]).expect("page draft");
+            draft.builder().begin_object(None).unwrap();
+            draft.builder().number(Some("index"), index as f64).unwrap();
+            draft.builder().end_container().unwrap();
+            batch.push(draft.finish().unwrap()).expect("ordered page");
+        }
+        assert!(queue.is_empty());
+        queue.publish_prepared_claimed_batch(batch).expect("atomic page publication");
+        assert_eq!(queue.claimed_items(), 0);
+        assert_eq!(queue.pop_front().unwrap().into_descriptor().unwrap().action, "first");
+        assert_eq!(queue.pop_front().unwrap().into_descriptor().unwrap().action, "second");
+        assert_eq!(queue.pop_front().unwrap().into_descriptor().unwrap().action, "third");
+    }
+
+    #[test]
+    fn detached_claim_batch_rejects_capacity_plus_one_before_ownership_and_closes_one_claim_at_a_time() {
+        let mut queue = BoundedActionQueue::default();
+        assert!(matches!(queue.claim_batch(&[1; ACTION_CLAIM_BATCH_CAPACITY + 1]), Err(BoundedActionFault::ItemCredits)));
+        assert_eq!(queue.claimed_items(), 0);
+        let claims = queue.claim_batch(&[32; ACTION_CLAIM_BATCH_CAPACITY]).expect("max fixed batch");
+        let mut batch = PreparedClaimedActionBatch::new(claims);
+        let mut turns = 0;
+        while let Some(claim) = batch.take_last_claim() {
+            queue.release_claim(claim).expect("cursorized batch claim release");
+            turns += 1;
+        }
+        assert_eq!(turns, ACTION_CLAIM_BATCH_CAPACITY);
+        assert_eq!(queue.claimed_items(), 0);
         assert!(queue.is_empty());
     }
 

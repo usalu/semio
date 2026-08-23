@@ -256,6 +256,26 @@ impl ArtifactEditor for WriterPlayApp {
     const DIALECT: Dialect = crate::artifacts::writer::WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
+    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::writer::spr::writer_envelope_decode_owner_bundle())
+    }
+
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::writer::spr::writer_document_store_owners())
+    }
+
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(crate::artifacts::writer::spr::writer_document_store_initialization_job(envelope, operation, generation))
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::writer::config::schema::app_schema_descriptor())
     }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "semio.phase8.child-snapshot-retirement-cohorts.v1",
-  "generatedAt": "2026-08-22",
-  "verdict": "fail-closed-pending-domain-bindings",
+  "generatedAt": "2026-08-23",
+  "verdict": "fail-closed-pending-store-disassembly",
   "sharedContract": {
     "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
     "symbols": [
@@ -9,8 +9,13 @@
       "ErasedSnapshotRetirement::close_step",
       "ErasedSnapshotRetirement::terminal_is_empty",
       "SnapshotRetirementFactory::retire",
+      "ArtifactOwnedValueRetirementFactory::retire_owned",
+      "ArtifactStoreOwnedDisposer::close_step",
+      "ArtifactStoreOwnedDisposer::terminal_is_empty",
+      "MemberStoreOwner::member_store_owners",
+      "MemberStoreOwners::new",
       "SpaceMember::retire_snapshot_read_erased",
-      "ArtifactStore::install_snapshot_retirement_factory"
+      "ArtifactStore::install_member_store_owners_exact"
     ],
     "defaultImplementationAllowed": false
   },

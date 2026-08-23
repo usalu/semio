@@ -556,3 +556,595 @@ exact returned-root pumping, and fixed child-member ownership transfer. REJECT f
 `ArtifactStore` member disposal, the remaining ordinary app/runtime nested fields, the final P3
 renderer close caller, full typed operation publication, all 884 command activations, and Phase 8.
 Not ready for independent runtime acceptance.**
+
+---
+
+## 2026-08-23 — Atomic Member Owner Pair Checkpoint
+
+Generated member creation and reopen can no longer bypass the domain owner through UFCS or install
+only one half of its close authority:
+
+- `MemberStoreOwner<Mutation>` is a required, no-default snapshot-type contract.
+- Its only constructor result is `MemberStoreOwners<P, Mutation>`, which contains the exact typed
+  immutable-root, owned-initial-snapshot, owned-mutation, and whole-store retirement authorities
+  together.
+- `create_member_store`, `open_member_store`, the blanket `ArtifactStore` member factory, and every
+  `space_members!` generated arm require `P: MemberStoreOwner<Mutation>`.
+- Both generic construction paths install the pair through one private, infallible fresh-store
+  transfer. There is no partial snapshot-first fallible branch whose error could stack-drop the
+  newly constructed store.
+- The production `SemioMembers` cohort generates all 18 exact snapshot/mutation pair bindings from
+  `semio_subset_table!`. The old `install_semio_snapshot_retirement` wrapper and its post-factory
+  create/open calls are removed, so direct generated `MemberFactory::{create,open}` and the Semio
+  convenience functions use the same mandatory authority.
+- Duplicate snapshot factory replacement is rejected, missing whole-store ownership faults before
+  close progress, and a blocked disposer remains retained for a later bounded turn.
+
+The Semio whole-store disposer is deliberately not certified terminal. It returns an observable
+fault naming the missing per-field cursor and `terminal_is_empty == false`; it does not misuse
+`Blocked` for a permanent unimplemented state. The internal `ArtifactStore`
+still contains an ordinary `ArtifactEnvelope`, history vectors/maps, causal DAG, index roots,
+backbone, current/tail snapshot Arcs, and pending command owners without a completed per-field
+transfer cursor. Claiming Complete would make final member Drop monolithic. The next accepted layer
+must replace those resizable/string-key close owners or transfer each exact owner into a retained
+domain cursor one fixed item/page per grant; it must also prove the final store shell shallow.
+
+The first real store-field cursor layers are now connected behind the unforgeable
+`ArtifactStoreCloseView` passed only by `close_owned_store_step`:
+
+- returned snapshot leases are pumped first and a live external reader is the only `Blocked` state;
+- every inverse/forward history mutation is popped one at a time and transferred into the exact
+  owner-supplied `ArtifactOwnedValueRetirementFactory<Mutation>`;
+- after mutations are empty, each edit is detached from the tail into
+  `ArtifactStoreEditRetirement`, which cursor-disposes edit strings, dependency ids, metadata,
+  provenance, and byte ownership under the item/byte grant;
+- incomplete edit retirement uses `ManuallyDrop` plus a release-mode terminal assertion, while a
+  nonempty mutation vector is returned intact to the store;
+- Semio owned snapshots use the existing field retirement tree. Semio mutation retirement remains
+  retained and observably faults because generated per-variant field cursors have not landed; it
+  does not drop or falsely complete the exact mutation owner.
+
+The remaining structural phase is explicit: history changes/checkpoints/alternatives, durable
+message/conflict roots, the HashMap edit index, causal `MutationDag`, cursor/index vectors,
+backbone, current/tail/initial roots, and final envelope/store shell. Until those owners move to
+fixed/paged terminalizable storage, the Semio disposer returns the named structural fault and
+`terminal_is_empty == false`.
+
+The machine inventory `📊️p8yt-child-snapshot-retirement-cohorts.json` now records
+`fail-closed-pending-store-disassembly` and the paired owner symbols. The verifier adds four
+adversarial fixtures rejecting a default/optional member owner, a snapshot-only member owner, and a
+wrapper-only bypass, plus a whole-history drop without the retained edit cursor.
+
+### Exact files changed in this checkpoint
+
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️component.rs`
+- `/Users/ueli/Documents/semio/📜️script.ts`
+- `📊️p8yt-child-snapshot-retirement-cohorts.json`
+- this report and `p8-member-owner-verifier.json`
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `rustfmt --edition 2024 --check` on store, plugin, and Semio owner source | PASS |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test` | PASS: `self-tests=123 clean` |
+| `bun ./📜️script.ts verify interactivity` | PASS: DENY clean |
+| full tool-jobs JSON | Expected RED: 14 failure classes, 0/884 admitted, 8 reserved, 35 importers, 34 globals |
+| `git diff --check` | PASS |
+| Cargo/Nx/native/Wasm/runtime timing | Not run by coordinator instruction |
+
+Verdict: **PASS only for the atomic, mandatory generated member-owner pair and its exact Semio
+cohort binding. REJECT for deep `ArtifactStore` disposal, app/runtime terminal Drop, typed full
+operation publication, all 884 activations, and Phase 8. Not ready for independent runtime audit.**
+
+---
+
+## 2026-08-23 — Structural Owner Transaction and Generated Mutation Cursor Checkpoint
+
+This rejection-driven layer removes three concrete whole-owner destruction paths while keeping the
+activation ledger closed:
+
+- Document root adoption now crosses an explicit
+  `ArtifactStoreDocumentRootCommitAuthority<P, Mutation>`. Preparation validates the three exact
+  snapshot/mutation retirement factories and reserves the displaced-owner credits before any root
+  swap. The commit transfers the old envelope, immutable current root, causal DAG, and optional tail
+  root into retained cursor owners without a fallible branch between swaps. Reset, resolution
+  candidate adoption, full remote replacement, and remote merge use this seam.
+- The live durable diagnostic index has fixed tombstone slots. Removal uses `swap_remove`, removes
+  both exact index tickets before moving the tail, updates only the moved ticket, and transfers the
+  removed entry to `ArtifactStoreMessageLedgerRetirement`. No `Vec::remove` shift or whole
+  `ArtifactEditMessageIndex::rebuild` remains on that path.
+- `MutationDag` no longer owns `ManuallyDrop<Vec<MutationEnvelope/String>>`. Its envelope,
+  applied-id, and pending-id lanes are fixed 8,192-slot `MaybeUninit` authorities with per-slot
+  generations, a fixed LIFO free ring, linked deterministic insertion traversal, exact capacity
+  rejection, O(1) ticket removal/tail pop, and terminal-empty Drop. A pending identity is moved into
+  the applied lane instead of cloned and dropped. Duplicate seed now returns its exact rejected
+  identity owner.
+- All 18 Semio member mutation enums implement schema-taxonomy field retirement. Scalar,
+  string/byte, nested snapshot, recursive collection, path, geometry, link, and child reference
+  fields are transferred into the same per-item/per-byte cursor tree. The permanent
+  `semio mutation owner has no generated field-by-field retirement cursor` fault and its opaque
+  retained owner are removed.
+- Every remaining deep `ArtifactStore` runtime field is now born behind `ManuallyDrop`.
+  `ArtifactStore::drop` accepts only a fully detached envelope/current, empty causal/index/string/
+  report/lease/displaced-owner shell, no tail/backbone/disposer, and a terminal whole-store
+  disposer. Only then does it release the empty shallow authorities. This closes implicit Rust field
+  destruction; it does not yet prove that every direct constructor/error path reaches the terminal
+  state.
+
+### Permanent adversarial evidence
+
+- causal capacity plus one retains the rejected identity;
+- duplicate causal seed retains the exact duplicate owner;
+- oversized causal identity returns the whole envelope;
+- the verifier rejects a root transaction that still shifts/rebuilds its diagnostic ledger, uses
+  `ManuallyDrop<Vec>` causal storage, or retains the opaque Semio mutation disposer;
+- the structural predicate now requires fixed causal storage, a fixed live durable ledger,
+  generated coverage for exactly 18 mutation enums, and the terminal-only `ArtifactStore::drop`.
+
+### Honest residual rejection
+
+This checkpoint is not a StructuralOwners PASS:
+
+1. `ArtifactEnvelope::edit_messages` is still a resizable wire `Vec`; the runtime index no longer
+   shifts or rebuilds, but push/growth and whole wire-envelope materialization are not a fixed
+   generation-slot ledger.
+2. The causal fixed authority has generation tags and a free ring, but construction initializes its
+   fixed control tables, clone still visits every live slot, logical-index lookup walks the linked
+   order, and ready/dependency scans remain synchronous rather than retained paged cursors.
+3. Reset and resolution candidate preparation can still return an error while stack-local
+   envelope/DAG/current candidates exist. The terminal-only store Drop prevents implicit deep
+   destruction, but rejected candidates are not yet returned in a reclaimable exact-owner result or
+   installed into a live close pump; resolution candidates are still represented as a full
+   `ArtifactStore`.
+4. Runtime vector/string/backbone/revision replacements outside the new root transaction still
+   overwrite some old owners before a displaced retirement cursor is reserved. The fields are
+   non-destructive from birth, but terminal progress is not wired for every early return.
+5. No Cargo/Nx/native/Wasm/runtime measurement was authorized. Rustfmt proves parsing/formatting,
+   not type correctness or the required sub-8ms runtime timings.
+
+### Exact files
+
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️component.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️component.rs`
+- `/Users/ueli/Documents/semio/📜️script.ts`
+- this report and `p8-structural-owners-verifier.json`
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `rustfmt --edition 2024 --check` on store, causal, plugin, and Semio source | PASS |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test` | PASS: `self-tests=126 clean` |
+| `bun ./📜️script.ts verify interactivity` | PASS: DENY clean |
+| full deterministic tool-jobs JSON | Expected RED: 16 failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique rows, 0 admitted, 884 residual commands, 8 reserved routes, 35 importers, 34 globals |
+| scoped and whole-tree `git diff --check` | PASS |
+| Cargo/Nx/native/Wasm/runtime timing | Not run by coordinator instruction |
+
+Verdict: **PASS only for the pre-reserved retained root commit seam, non-shifting diagnostic removal,
+fixed causal owner storage, generated 18-cohort mutation disposal, and terminal-only store shell.
+REJECT for exact candidate-error ownership, the resizable live wire ledger, paged causal
+scan/clone progress, complete runtime-field retirement, typed full-operation publication, all 884
+activations, and Phase 8. Not ready for independent runtime acceptance.**
+
+---
+
+## 2026-08-23 — Exact Candidate Handoff and Runtime Replacement Cursor Checkpoint
+
+The next rejection-driven layer closes the stack-local resolution-candidate drop and direct deep
+runtime replacement paths without changing the activation verdict:
+
+- `ArtifactStoreResolutionCandidateAuthority` reserves one exact slot in the store's fixed
+  displaced-owner queue before cloning candidate authority. The reservation carries a monotone
+  generation and is included in every subsequent capacity calculation.
+- Every candidate ingest, validation, early non-acceptance, and adoption-preflight branch now either
+  adopts the authority or transfers it to `ArtifactStoreResolutionCandidateRetirement`. The
+  retirement advances displaced children, reports, backbone, runtime string/revision lanes, tail
+  and current snapshot roots, causal owners, and the final envelope one exact child at a time. Its
+  final store Drop occurs only after the terminal-empty store witness is true.
+- String vectors, cursor strings, revision accumulators, pending command reports, backbones, and
+  persisted cursors have explicit retained retirement cursors. Root transactions reserve their
+  runtime-owner credits together with envelope/current/DAG/tail credits before the first swap.
+  `set_state`, full remote replacement, remote merge publication, checkpoint/local-actor changes,
+  and candidate adoption no longer directly overwrite these deep `ManuallyDrop` fields.
+- `CursorRevisionAccumulator::reconcile` pops displaced records into a retained string-vector
+  owner rather than truncating and dropping them. Persisted cursor replacement transfers the old
+  cursor into `ArtifactStoreCursorRetirement` before adoption.
+- A schema-target `ArtifactEditMessageLedger` now exists with 8,192 fixed `MaybeUninit` slots,
+  stable linked insertion order, fixed free-ring admission, per-slot generations, stale-ticket
+  rejection, exact +1 owner return, and terminal-only Drop. It is intentionally not yet installed
+  as `ArtifactEnvelope.edit_messages`: doing so before all serde/pack/error owners use the retained
+  decoder/close protocol would turn a source marker into an ordinary-Drop leak or panic.
+- Resolved-conflict pruning transfers the removed payload into
+  `ArtifactStoreConflictRetirement`; candidate conflict suffixes are likewise retained rather than
+  truncated.
+
+### Permanent adversarial evidence
+
+- The verifier now separately rejects a resolution candidate that can cross `?` without an exact
+  reserved handoff and terminal retirement owner.
+- Structural admission requires the candidate authority, fixed ledger ticket/generation symbols,
+  and rejects revision truncation plus applied/redo `remove`/`clear` escape paths.
+- `set_local_actor_id` is now fallible; all seven shared plugin callers preserve fail-closure by
+  mapping a saturated retirement admission to the exact framework fault path.
+
+### Remaining StructuralOwners rejection
+
+1. The live wire field is still `ArtifactEnvelope::edit_messages: Vec<EditMessages>`. The fixed
+   ledger cannot be installed until JSON/SPR/pack decoding returns malformed/+1 owners to a bounded
+   close pump instead of relying on serde's ordinary error Drop. Old-wire differential and real
+   wire round-trip evidence therefore remain pending.
+2. Applied/redo cursor lanes still use `Vec<String>` and three ordered middle-removal paths still
+   shift a whole suffix. Those paths move the selected string rather than dropping it, but they are
+   not hard-bounded and keep the structural verifier RED.
+3. Resolved-conflict removal still shifts the surrounding `Vec<Conflict>` pointer suffix even
+   though the exact removed payload is retained. A fixed ordered conflict ledger is still required.
+4. Candidate retirement is exact and reclaimable, but candidate work and several preparation maps
+   remain run-to-completion rather than a persistent step cursor. The authority is foundation
+   progress, not interactive operation admission.
+5. Fixed-ledger generation exhaustion, fixed-control-table construction time, decode timing, and
+   sub-8ms retirement steps have no runtime evidence because Cargo/Nx/native/Wasm execution remains
+   explicitly prohibited.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `rustfmt --edition 2024 --check` on store, causal, plugin, and Semio source | PASS |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test` | PASS: `self-tests=127 clean` |
+| `bun ./📜️script.ts verify interactivity` | PASS: DENY clean |
+| full deterministic tool-jobs JSON | Expected RED: 16 failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique rows, 0 admitted, 884 residual commands, 8 reserved routes, 35 importers, 34 globals |
+| scoped and whole-tree `git diff --check` | PASS |
+| Cargo/Nx/native/Wasm/runtime timing | Not run by coordinator instruction |
+
+Verdict: **PASS only for exact reserved candidate handoff, bounded candidate reclamation authority,
+and retained direct-runtime replacement cursors. REJECT for live wire-ledger migration, ordered
+cursor/conflict suffix shifts, persistent candidate preparation, typed full-operation publication,
+all 884 activations, and Phase 8. Not ready for independent runtime acceptance.**
+
+---
+
+## 2026-08-23 — Fixed-Ledger Admission and Owned-Codec Fail-Closure Checkpoint
+
+This save hardens the fixed edit-message target without pretending that it is already the live
+envelope authority:
+
+- `ArtifactEditMessageLedger` now owns a fixed 8,192-bucket identity table in addition to its fixed
+  payload slots and linked order. Admission preflights exact item count, 256-byte ids, 4,096 bytes
+  per entry, the checked aggregate byte authority, and duplicate ids before moving any entry into a
+  live slot.
+- Slot generations are `u64` and use `checked_add`; wrapping ABA reuse is rejected with the exact
+  entry still owned by the caller. Removal locates and tombstones the exact identity bucket before
+  returning the payload and never clones the id.
+- `ArtifactEditMessageLedgerRejected` retains the exact rejected vector behind `ManuallyDrop`,
+  advances one `ArtifactStoreMessageLedgerRetirement` child at a time under the caller's item/byte
+  grant, and accepts Drop only after the vector allocation and every nested message/string owner are
+  terminal-empty.
+- Permanent fixtures cover duplicate admission, capacity +1, stable order after middle tombstone,
+  slot reuse, stale generation rejection, exact rejected-owner retention, interrupted bounded
+  reclamation, and terminal Drop.
+- The verifier now rejects ordinary-`Vec` rejection ownership and wrapping ledger generations. It
+  also has a separate owned-envelope-codec gate: public `ArtifactEnvelope: Deserialize`, any direct
+  production `serde_json::from_*::<...Envelope>` caller, missing fixed 4,096-byte decode pages, or
+  missing retained decode-error close authority keeps the packet RED.
+
+### Exact codec ingress inventory
+
+The fresh whole-tree scan finds **19 production direct JSON envelope decoders**, plus two store
+tests. They are grouped as follows:
+
+- 15 artifact editor/Wasm bridge files: writer, procedural2d, procedural3d, GIS map, Present,
+  Shooting, FEM 2d, FEM 3d, Process 3d, CAD, Trinity Jack, Draw, Raster, Puzzle 5d, and Puzzle 3d;
+- one Present binary mutation codec;
+- Trinity Rewrite's world-side Wasm bridge;
+- the framework DAG editor bridge;
+- the framework Flow VCS bridge.
+
+The tree therefore differs from the earlier 15-caller estimate: the exact current production count
+is 19. None was mechanically rewritten to a run-to-terminal helper. A valid simultaneous cutover
+requires an owner-supplied schema decoder for `P` and `Mutation` that accepts fixed pages, advances
+one decode/semantic stage per `StepContext` grant, and returns every malformed/partial owner to the
+retained error authority. A private serde DTO, `Vec` wire adapter, whole second-pass decode, or
+post-lift paging would fail the new verifier contract.
+
+### World3D coordination result
+
+P3 provided the typed snapshot lease/page consumer and an interruptible writer-abort API. An initial
+shared producer experiment was rejected during joint source review because it copied already-whole
+JSON strings into typed pages, synchronously hashed/built 19 pages, panicked on admission, and only
+marked (rather than pumped) writer abort. That experiment and its fixture/imports were fully removed.
+`world3d_scene_extended` remains source-coherent with `snapshot: None`; this is an explicit RED
+legacy producer boundary, not a claimed typed cutover. The required separate packet has 30 live
+domain call sites and must start from typed camera/mesh/vertex/triangle/instance authorities, not
+parse or copy their JSON products.
+
+### Gates at this save
+
+| Gate | Result |
+| --- | --- |
+| `rustfmt --edition 2024 --check` on store, causal, shared plugin, and Semio source | PASS |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test` | PASS: `self-tests=131 clean` |
+| full deterministic tool-jobs JSON | Expected RED: **17** failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique rows, 0 admitted, 884 residual commands, 8 reserved routes, 35 importers, 34 globals |
+| `bun ./📜️script.ts verify interactivity` | RED from three concurrently-owned P1 shard-executor findings; no P8 allowlist was added |
+| scoped and whole-tree `git diff --check` | PASS |
+| Cargo/Nx/native/Wasm/runtime timing | Not run by coordinator instruction |
+
+Verdict: **PASS only for fixed-ledger preflight, checked generation/identity authority, and exact
+bounded rejection ownership. REJECT for the live `ArtifactEnvelope` field, owned schema decoder and
+all 19 production call-site cutovers, applied/redo/conflict linked ledgers, persistent candidate
+preparation, World3D typed producers, typed full-operation publication, all 884 activations, and
+Phase 8. Not ready for independent runtime acceptance.**
+
+---
+
+## 2026-08-23 — Fixed-Page Schema Cursor Checkpoint
+
+This save closes the first truthful layer below the owned envelope decoder without introducing a
+serde adapter or claiming a caller migration:
+
+- `OwnedSchemaDecodePages` reserves fixed `MaybeUninit` page slots and exact total byte credits
+  before accepting input. Each admitted page is an inline, definitionally shallow 4,096-byte owner;
+  saturation and byte +1 return the exact page untouched. There is no `Vec<Vec<u8>>`, no aggregate
+  concatenation, and no post-admission paging of a contiguous input.
+- `OwnedSchemaTokenCursor` retains operation/generation authority, advances under `StepContext`
+  fuel/deadline/cancellation, and validates strings, escapes, Unicode hex, UTF-8 continuation
+  ranges, numbers, literals, and truncation directly across fixed pages. Diagnostics carry exact
+  byte offset, line, column, and fixed path authority.
+- `OwnedSchemaRecordCursor` binds the byte cursor to a no-default `OwnedSchemaRecordSpec`, validates
+  the field-ID/key bijection, preserves source field order, rejects unknown/duplicate/missing
+  required fields, and returns field tokens with exact stable numeric IDs. Nested delimiter kinds
+  are retained in a fixed 256-entry stack; mismatched or excessive nesting faults.
+- `ArtifactEnvelopeFieldDecoder<P, Mutation>` is the owner-supplied typed field interface. It exposes
+  no serde/serde_json types and requires explicit token, finish, typed-result take, bounded close,
+  and terminal-empty methods. The sole 12-field `ArtifactEnvelope` key/ID schema is now declared in
+  the same owned taxonomy.
+- Cancelled, stale, malformed, or rejected cursors release one real admitted page per close grant.
+  The fixed page payload and slot shell have no nested Drop work, so unexpected release of an empty
+  or partially parsed byte source cannot walk user payload owners.
+
+### Permanent source fixtures
+
+- exact page capacity and aggregate-byte +1 owner return;
+- a string spanning the 4,096-byte boundary and a partial terminal page, driven with seven fuel
+  units per turn;
+- invalid UTF-8 whose lead byte is the last byte of page one and invalid continuation is the first
+  byte of page two, with exact offset 4,096;
+- unknown and duplicate envelope field paths, truncated string token, stale generation before byte
+  consumption, cancellation, two interrupted close turns, and terminal empty;
+- verifier negatives for `Vec<Vec<u8>>` schema pages, a post-lift
+  `ArtifactEnvelopeDecodeAuthority::new(Vec<u8>)`, and an unbudgeted token cursor.
+
+### Explicit RED boundary
+
+The field decoder is a required owner contract, but no blanket/default implementation exists. The
+current 19 production decoders and two store tests still call `serde_json::from_*`; none was hidden
+behind a whole-buffer helper. `ArtifactEnvelope` still derives `Deserialize`, and
+`ArtifactEnvelope.edit_messages` is still the live `Vec<EditMessages>`. The fixed ledger remains a
+pre-admitted target rather than the live wire field because the nested VCS/P/Mutation/SPR owners do
+not yet implement the required token/close protocol. Applied/redo/conflict ordering and persistent
+candidate preparation remain RED for the same reason.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `rustfmt --edition 2024 --check` on shared store source | PASS |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test` | PASS: `self-tests=134 clean` |
+| `bun ./📜️script.ts verify interactivity` | PASS: DENY clean; one test-only permanent allowlist entry is structurally outside production |
+| full deterministic tool-jobs JSON | Expected RED: **17** failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique rows, 0 admitted, 884 residual commands, 8 reserved routes, 34 globals |
+| scoped and whole-tree `git diff --check` | PASS |
+| Cargo/Nx/native/Wasm/runtime timing | Not run by coordinator instruction |
+
+Verdict: **PASS only for the fixed-page lexical/schema cursor and the no-default typed field-owner
+contract. REJECT for envelope construction, all 21 decoder call sites, live fixed ledger,
+applied/redo/conflict fixed ordering, runtime timing, every command activation, and Phase 8. Not
+ready for independent runtime acceptance.**
+
+---
+
+## 2026-08-23 — Present Generic Maintenance Gate
+
+The representative Present decoder is no longer only a domain-local job object:
+
+- `ArtifactEnvelopeDecodeOwnerBundle<P, Mutation>` binds the exact owner catalog, initial-snapshot
+  retirement factory, and mutation retirement factory in one non-default authority. `ArtifactApp`
+  and `ArtifactEditor` return `None` by default, which grants no decode admission; the Present owner
+  installs its exact bundle explicitly.
+- `VcsArtifactApp` owns a fixed `ArtifactFixedRegistry<ActiveArtifactEnvelopeDecode<...>>`. Public
+  submission preflights the exact operation slot before consuming pages, creates a persistent
+  `WorkerJobSession`, and returns a generation-qualified handle. Worker saturation yields without
+  losing the session.
+- A field-registry admission race does not drop the already-tokenized record or field decoder.
+  `ArtifactEnvelopeUnadmittedDecodeRejected` retains both and closes one decoder/page owner per
+  grant. Its release-mode Drop accepts only terminal-empty authority.
+- Maintenance now round-robins the active decode job, returned-field pump, and completed-record
+  pump. Application close uses the same three-way interleave, cancels every retained operation,
+  and cannot deadlock a decode waiting for its returned field lease or completed output retirement.
+- Completed publication revalidates the live store generation in release code immediately before
+  the one non-suspending target adoption. A rejected target leaves the exact record and operation
+  retained for ordered retry. Cancel/stale/app-close requests output retirement instead of dropping
+  an unpublished envelope.
+
+Present's owner-local fixed registry now has permanent fixtures for malformed pack, explicit cancel,
+64-slot capacity and +1 modulo collision, same-operation duplicate collision, exact rejected-page
+return, publication backpressure and retry, stale generation, and close of a ready but unpublished
+output. The source-bounded `<=4096` snapshot pack decode still lacks runtime timing evidence because
+native execution remains prohibited.
+
+### Exact production caller ledger
+
+The initial inventory contained 19 direct whole-buffer callers. The obsolete Present binary
+`materialize_present_projection_json`/`materializePresentProjectionJson` route is removed. The exact
+residual is therefore **18**, all fail-closed placeholders rather than claimed migrations:
+
+| # | Owner | Source boundary | Residual |
+| ---: | --- | --- | --- |
+| 1 | Procedural3d | `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:23` | whole `String` create |
+| 2 | Dag | `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs:8925` | whole `String` create |
+| 3 | Draw | `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:497` | whole `String` create |
+| 4 | Flow | `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️component.rs:844` | whole `String` create |
+| 5 | Shooting | `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:31` | whole `String` create |
+| 6 | Procedural2d | `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:23` | whole `String` create |
+| 7 | GisMap | `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:27` | whole `String` create |
+| 8 | Fem2d | `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:22` | whole `String` create |
+| 9 | Fem3d | `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:22` | whole `String` create |
+| 10 | Process3d | `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:36` | whole `String` create |
+| 11 | Present | `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:28` | store create still bypasses generic app registry |
+| 12 | Writer | `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:36` | whole `&str` create |
+| 13 | Cad | `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:24` | whole `String` create |
+| 14 | Raster | `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:23` | whole `&str` create |
+| 15 | Puzzle5d | `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:27` | whole `String` create |
+| 16 | Puzzle3d | `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:27` | whole `String` create |
+| 17 | Trinity Rewrite | `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️component.rs:697` | whole `String` create |
+| 18 | Trinity Jack | `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:23` | whole `String` create |
+
+### Honest populated-history boundary
+
+Present still accepts only exact empty `edits`, `changes`, `checkpoints`, and `alternatives` in its
+owner-local VCS authority. `ArtifactVcs` still exposes four `Vec` owners, and converting a decoded
+fixed ledger into those vectors would recreate the prohibited deep-drop escape. This checkpoint
+therefore does not claim populated history or decrement the 18 residual callers. The next required
+source packet is a schema-owned fixed generation-keyed VCS ledger from construction, with retained
+per-entry decode/retirement and no ordinary `Vec` publication.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test` | PASS: `self-tests=139 clean` |
+| full deterministic tool-jobs JSON | Expected RED: **18** failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique rows, 0 admitted, 884 residual commands, 8 reserved routes, 35 importers, 34 globals |
+| `bun ./📜️script.ts verify interactivity` | PASS: DENY clean |
+| rustfmt parse of shared plugin plus rustfmt write/check on store and Present-owned files | PASS; shared plugin has pre-existing whole-module formatting drift and was not mass-formatted |
+| scoped `git diff --check` | PASS |
+| Cargo/Nx/native/Wasm/runtime timing | Not run by coordinator instruction |
+
+Verdict: **PASS for the generic retained Present decode maintenance/close foundation and its exact
+owner-return gates. REJECT for populated VCS history, all 18 residual caller cutovers, full store
+terminal disposal, typed full-operation publication, all 884 activations, and Phase 8. Not ready
+for independent runtime acceptance.**
+
+---
+
+## 2026-08-23 — Fixed VCS History and Populated Present Checkpoint
+
+`ArtifactVcs` now owns four schema-level `ArtifactHistoryLedger<T>` authorities from construction
+instead of resizable `Vec` histories. Each ledger preallocates exactly 64 stable slots, keeps live
+order through fixed previous/next indices, tombstones removed slots, advances a checked generation
+before reuse, and returns the exact rejected owner at capacity. Ordinary Drop accepts only a fully
+drained logical authority; the empty `MaybeUninit` allocation is then shallow.
+
+History adoption now has an explicit two-phase `ArtifactHistoryReservation`: the exact issuing
+ledger, slot, and next generation are fixed before an entry is decoded or cloned. A second
+reservation, wrong-ledger token, stale token, or capacity +1 cannot consume the owner. The retained
+schema decoder holds the token across per-token work, commits through `insert_reserved`, and cancels
+the exact token during bounded close. Rejected entries transfer to their domain retirement factory;
+the decoder never uses `try_push(...).map_err` as an owner-dropping admission boundary.
+
+The store owns concrete bounded retirement cursors for the full VCS aggregate: edit mutations first,
+then edit metadata, changes, checkpoints, alternatives, and the initial snapshot. Store mutation and
+metadata insertions use exact reserved commit helpers; impossible stale-token returns enter the
+existing fixed displaced-owner maintenance pump rather than stack Drop. The remaining free
+`reconcile_alternative` helper and legacy `.spr`/`.ops` parsers are still RED because they stage
+temporary vectors or lack an app-owned rejection pump; no acceptance credit is claimed for them.
+
+Present's retained materializer now accepts populated edit history. It owns the completed envelope,
+current snapshot, prior-snapshot retirement, and full-envelope retirement in `ManuallyDrop`
+authorities. One worker step takes one mutation in deterministic ledger order, computes and applies
+its diff, retires the displaced snapshot before advancing, and publishes only the exact final
+snapshot after the history and envelope owners reach terminal empty. Cancellation, stale generation,
+fault, and unpublished output all use the same retained close phases. The permanent populated-history
+fixture applies a real `ReplaceTiles` edit through submit, maintenance, completion, and close.
+
+The obsolete standalone Present Wasm whole-string ABI was removed: there is no
+`createPresentEnvelopeJson`, `envelope_json` constructor parameter, or fail-closed whole-buffer
+placeholder in that owner. Source authority now reports **17** remaining production placeholder
+sites (the prior table's Present row is gone): Raster, Cad, GisMap, Shooting, Procedural2d,
+Procedural3d, Dag, Flow, Trinity Rewrite, Trinity Jack, Draw, Fem2d, Fem3d, Writer, Puzzle3d,
+Puzzle5d, and Process3d. This is deletion of an obsolete parallel ABI, not credit for another live
+domain migration; Present's live migration is the app-owned retained submit/pump/consume path above.
+
+### Exact changed source in this checkpoint
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs`
+- the four Draw command literals `commit-document`, `set-fixture-json`, `set-active-example`, and
+  `set-snapshot` (mechanical empty fixed-ledger initializers only)
+- `📜️script.ts`
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test --format json` | PASS: `self-tests=141 clean` |
+| full tool-jobs JSON | Expected RED: **18** failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique rows, 0 admitted, 884 residual commands, 8 reserved routes, 35 importers, 34 globals |
+| scoped rustfmt and `git diff --check` | PASS |
+| Cargo/Nx/native/Wasm/runtime timing | Not run by coordinator instruction |
+
+Verdict: **PASS only for fixed history storage, exact reservation/handback, bounded VCS retirement,
+and the populated Present retained materializer. REJECT for the 17 remaining caller placeholders,
+legacy vector parsers, free-history rejection ownership, terminal-fault quarantine, runtime timing,
+the full typed operation, all 884 activations, and Phase 8.**
+
+---
+
+## 2026-08-23 — Writer Retained Edit and Mutation Decoder Checkpoint
+
+The Writer cohort's nested history decoder no longer reconstructs a bounded entry and invokes
+domain serde at the closing token:
+
+- 'ArtifactOwnedHistoryEntryDecoder<T>' is now a factory for a retained
+  'ArtifactOwnedHistoryEntryAuthority<T>'. The fixed history array gives that authority every exact
+  schema token, preserves a pending token for replay, inserts only after the authority's
+  terminal-empty take witness, and drives partial/rejected owners through the existing one-owner
+  retirement lane.
+- Repository Change, Checkpoint, and Alternative entries use an explicit retained
+  source-bounded adapter. It still performs one at-most-4,096-byte serde decode after token
+  collection and therefore remains RED pending runtime timing and schema-owned field cursors; it is
+  no longer an implicit domain-edit fallback.
+- Writer owns a concrete ten-field Edit catalog. Scalar values use fixed inline string
+  authorities; forwards and inverse preallocate exactly 64 slots and retain their partially
+  populated owners; mutationMeta is presently admitted only as the exact empty array. Missing,
+  duplicate, unknown, mismatched, stale, cancelled, and malformed fields fault without dropping
+  partial strings or mutations.
+- Each Writer mutation is created through the catalog's real begin_mutation method. The exact
+  tagged schema accepts only renameWriter/newId, changeUri/newUri,
+  changeLanguage/newLanguageId, or editText/text. Tag/payload mismatches, extra payload fields,
+  and semantic byte capacity faults retain the exact authority for bounded close.
+- Writer snapshot, mutation, mutation-array, mutation-target, and edit authorities use terminal
+  Drop assertions over ManuallyDrop owners. Mutation and snapshot retirement release one exact
+  string/child-reference owner per item+byte grant.
+
+The live Writer Wasm constructor is deliberately unchanged at this save: it still accepts a whole
+&str and invokes the fail-closed placeholder. The generic app can publish a completed envelope
+to an exact target, but it cannot yet adopt that record as a document store: ArtifactStore::new
+consumes the envelope across fallible, whole-history async validation/folding, and replacing the
+app's initial store has no pre-reserved displaced-store retirement transaction. Removing the
+placeholder before an owner-returning retained initialization/replacement job exists would be a
+deletion-only false migration. The exact residual caller count therefore remains **17**.
+
+P1 coordination in the same shared store boundary is also complete:
+
+- ChannelBackboneRemote::try_pop_front() returns one exact FIFO message or nonblocking
+  contention; the legacy bulk drain() -> Vec<_> surface is removed after native and Wasm sync
+  consumers migrated.
+- ArtifactWorkerEntry::cmd_tx now uses P1's fixed ArtifactMailboxSender; send rejection retains
+  the exact ArtifactActorMsg through ArtifactMailboxSendError::into_message.
+
+### Current gates
+
+| Gate | Result |
+| --- | --- |
+| bun ./📜️script.ts verify interactivity tool-jobs --self-test --format json | PASS: self-tests=142 clean |
+| rustfmt parse/write on shared store, Writer binary, and Present binary | PASS |
+| scoped git diff --check on shared store and the touched Writer/Present sources | PASS |
+| full tool-jobs verifier | Expected RED: activation remains 0/884 and Writer remains one of 17 caller placeholders |
+| Cargo/Nx/native/Wasm/runtime timing | Not run by coordinator instruction |
+
+Verdict: **PASS only for the retained token-to-Edit/token-to-WriterMutation ownership foundation.
+REJECT for Writer live Wasm submit/pump/consume, populated mutation metadata, retained store
+initialization/replacement, legacy .spr/.ops parsers, every activation, and Phase 8.**

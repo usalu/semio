@@ -3,7 +3,7 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use crate::artifacts::present::spr::{create_present_envelope, materialize_present_projection_json, PresentEnvelope, PresentStore};
+use crate::artifacts::present::spr::PresentStore;
 use crate::artifacts::present::PRESENT_DOCUMENT_SCHEMA;
 use std::cell::RefCell;
 use store::create_document_envelope;
@@ -14,29 +14,11 @@ pub struct PresentArtifactVcs {
     store: RefCell<PresentStore>,
 }
 
-#[wasm_bindgen(js_name = createPresentEnvelopeJson)]
-pub fn create_present_envelope_json(id: &str) -> Result<String, JsValue> {
-    serde_json::to_string(&create_present_envelope(id)).map_err(|error| JsValue::from_str(&error.to_string()))
-}
-
-#[wasm_bindgen(js_name = materializePresentProjectionJson)]
-pub fn materialize_present_projection_json_wasm(envelope_json: &str) -> Result<String, JsValue> {
-    let deck = materialize_present_projection_json(envelope_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
-    serde_json::to_string(&deck).map_err(|error| JsValue::from_str(&error.to_string()))
-}
-
 #[wasm_bindgen]
 impl PresentArtifactVcs {
     #[wasm_bindgen(js_name = create)]
-    pub async fn create(envelope_json: Option<String>) -> Result<PresentArtifactVcs, JsValue> {
-        let store = match envelope_json {
-            Some(json) => {
-                let envelope: PresentEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                PresentStore::new(envelope).await
-            }
-            None => PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::schema::empty_present_snapshot(), None)).await,
-        }
-        .map_err(|error| JsValue::from_str(&error.to_string()))?;
+    pub async fn create() -> Result<PresentArtifactVcs, JsValue> {
+        let store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::schema::empty_present_snapshot(), None)).await.map_err(|error| JsValue::from_str(&error.to_string()))?;
         Ok(Self { store: RefCell::new(store) })
     }
 

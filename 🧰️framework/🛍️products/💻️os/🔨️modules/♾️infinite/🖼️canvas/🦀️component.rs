@@ -19,7 +19,8 @@ mod renderer {
     // #endregion 🏷️VelloBackend
 
     use geometry::{Affine, ShapeRef};
-    use std::sync::Arc as SharedArc;
+    use std::mem::ManuallyDrop;
+    use std::sync::{Arc as SharedArc, Mutex, OnceLock};
     use vello_backend as backend;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -178,6 +179,74 @@ mod renderer {
     #[derive(Clone, Default)]
     pub struct Scene(pub(crate) backend::Scene);
 
+    const OPAQUE_SCENE_RETIREMENT_CAPACITY: usize = 1024;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct OpaqueSceneRetirementToken {
+        slot: u16,
+        generation: u64,
+    }
+
+    struct OpaqueSceneRetirementSlot {
+        generation: u64,
+        scene: Option<ManuallyDrop<Scene>>,
+    }
+
+    struct OpaqueSceneRetirementRegistry {
+        slots: Box<[OpaqueSceneRetirementSlot; OPAQUE_SCENE_RETIREMENT_CAPACITY]>,
+        next: usize,
+        faulted: bool,
+    }
+
+    impl Default for OpaqueSceneRetirementRegistry {
+        fn default() -> Self {
+            Self { slots: Box::new(std::array::from_fn(|_| OpaqueSceneRetirementSlot { generation: 0, scene: None })), next: 0, faulted: false }
+        }
+    }
+
+    impl OpaqueSceneRetirementRegistry {
+        fn reserve(&mut self) -> Option<OpaqueSceneRetirementToken> {
+            if self.next == OPAQUE_SCENE_RETIREMENT_CAPACITY {
+                self.faulted = true;
+                return None;
+            }
+            let index = self.next;
+            self.next += 1;
+            let slot = &mut self.slots[index];
+            slot.generation = slot.generation.wrapping_add(1).max(1);
+            Some(OpaqueSceneRetirementToken { slot: index as u16, generation: slot.generation })
+        }
+
+        fn token_is_current(&self, token: OpaqueSceneRetirementToken) -> bool {
+            self.slots.get(usize::from(token.slot)).is_some_and(|slot| slot.generation == token.generation && slot.scene.is_none())
+        }
+
+        fn publish(&mut self, token: OpaqueSceneRetirementToken, scene: Scene) {
+            assert!(self.token_is_current(token), "opaque scene retirement token remains current before ownership transfer");
+            self.slots[usize::from(token.slot)].scene = Some(ManuallyDrop::new(scene));
+        }
+    }
+
+    fn opaque_scene_retirements() -> &'static Mutex<OpaqueSceneRetirementRegistry> {
+        static REGISTRY: OnceLock<Mutex<OpaqueSceneRetirementRegistry>> = OnceLock::new();
+        REGISTRY.get_or_init(|| Mutex::new(OpaqueSceneRetirementRegistry::default()))
+    }
+
+    pub fn reserve_opaque_scene_retirement() -> Option<OpaqueSceneRetirementToken> {
+        let mut registry = opaque_scene_retirements().lock().expect("worker opaque scene retirement registry");
+        registry.reserve()
+    }
+
+    pub fn publish_opaque_scene_retirement(token: OpaqueSceneRetirementToken, scene: Scene) {
+        let mut registry = opaque_scene_retirements().lock().expect("worker opaque scene retirement registry");
+        registry.publish(token, scene);
+    }
+
+    pub fn opaque_scene_retirement_status() -> (usize, bool) {
+        let registry = opaque_scene_retirements().lock().expect("worker opaque scene retirement registry");
+        (registry.next, registry.faulted)
+    }
+
     impl Scene {
         pub fn new() -> Self {
             Self(backend::Scene::new())
@@ -296,11 +365,39 @@ mod renderer {
     pub fn append_svg_document(scene: &mut Scene, doc: &SvgDocument) {
         doc.append_to_scene(scene);
     }
+
+    #[cfg(test)]
+    mod opaque_scene_retirement_tests {
+        use super::*;
+
+        #[test]
+        fn fixed_quarantine_saturates_before_scene_ownership_transfer() {
+            let mut registry = OpaqueSceneRetirementRegistry::default();
+            for _ in 0..OPAQUE_SCENE_RETIREMENT_CAPACITY {
+                let token = registry.reserve().expect("fixed quarantine credit");
+                registry.publish(token, Scene::new());
+            }
+            assert!(registry.reserve().is_none());
+            assert!(registry.faulted);
+            assert_eq!(registry.next, OPAQUE_SCENE_RETIREMENT_CAPACITY);
+        }
+
+        #[test]
+        fn late_opaque_scene_token_is_rejected_before_owner_publication() {
+            let mut registry = OpaqueSceneRetirementRegistry::default();
+            let token = registry.reserve().expect("fixed quarantine credit");
+            registry.publish(token, Scene::new());
+            assert!(!registry.token_is_current(token));
+            assert_eq!(registry.next, 1);
+        }
+    }
 }
 
 pub use geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle, CubicBez, Line, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, ShapeRef, Vec2};
 pub(crate) use renderer::vello_backend::usvg;
-pub use renderer::{append_svg_document, BlendMode, Cap, Color, FillRule, Paint, RasterImage, Rgba8, Scene, Stroke, SvgDocument};
+pub use renderer::{
+    append_svg_document, opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8, Scene, Stroke, SvgDocument,
+};
 // #endregion 🔖️Renderer
 
 // #region ⚠️ Errors

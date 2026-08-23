@@ -661,8 +661,8 @@ pub struct HttpOptions {
     pub bridge_token_file: Option<String>,
 }
 
-/// 🚪️ Boots an axum-backed [`HttpTransport`] (Streamable HTTP, dual-era, `/mcp` + `/bridge` on the
-/// SAME socket) bound to `bind:port`, serving until the process is killed — the HTTP analogue of
+/// 🚪️ Boots the retained nonblocking [`HttpTransport`] (Streamable HTTP, dual-era, `/mcp` +
+/// `/bridge` on the SAME socket) bound to `bind:port`, serving until cancellation or process exit —
 /// [`run_stdio`]. Fails fast (before binding a socket) if the audit directory cannot be created, so a
 /// misconfigured `--audit-dir` surfaces immediately rather than on the first audit write a later
 /// packet wires in. Mints a FRESH `/bridge` secret every start (`bridge::mint_bridge_token`), writes
@@ -683,7 +683,7 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
 
     let transport_options = HttpTransportOptions::new(options.token, bridge_token).bind_addr(std::net::SocketAddr::new(bind_ip, options.port)).allowed_origins(options.allow_origin);
     let mut transport = HttpTransport::new(transport_options);
-    transport.serve(server)
+    transport.start(server)?.wait()
 }
 //#endregion 🔖️HttpEntrypoint
 

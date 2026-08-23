@@ -168,7 +168,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@mdx-js/rollup": "^3.1.1",
     "@nx/devkit": "21.6.11",
     "@nx/js": "21.6.11",
     "@nxlv/python": "^21.2.3",
@@ -183,7 +182,6 @@
     "chevrotain": "^11.0.3",
     "dependency-cruiser": "^16.10.0",
     "eslint": "^10.0.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-storybook": "10.4.0",
     "nx": "21.6.11",
     "playwright": "^1.57.0",

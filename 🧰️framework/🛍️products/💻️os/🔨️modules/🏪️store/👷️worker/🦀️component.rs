@@ -3,13 +3,13 @@
 
 use crate::os_store::sync::{
     backbone_worker_wire::{self, BackboneWorkerRequest, BackboneWorkerResponse},
-    ArtifactActorMsg, ArtifactHost,
+    ArtifactActorMsg, ArtifactHost, ArtifactMailboxSender,
 };
 use wasm_bindgen::prelude::*;
 
 //#region 🔖️Worker
 struct DocumentEntry {
-    cmd_tx: tokio::sync::mpsc::UnboundedSender<ArtifactActorMsg>,
+    cmd_tx: ArtifactMailboxSender,
 }
 
 fn install_worker_panic_hook() {

@@ -28,7 +28,7 @@ mod wasm_bridge {
         pub async fn new(envelope_json: Option<String>) -> Result<ShootingArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: ShootingEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: ShootingEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     ShootingStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
                 None => ShootingStore::new(store::create_document_envelope(SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,

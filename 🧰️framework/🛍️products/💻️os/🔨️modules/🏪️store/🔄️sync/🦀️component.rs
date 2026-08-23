@@ -16,7 +16,7 @@
 use crate::os_spr::PresencePeer;
 use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, ServerFrame};
 use crate::os_spr::{ActorId, MutationId};
-use crate::os_store::{reconcile_alternative, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote};
+use crate::os_store::{ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
@@ -154,6 +154,325 @@ pub enum ArtifactActorMsg {
     ExternalChanged,
     /// @emoji ✂️ Flushes any pending outbound operations, then stops the actor.
     Detach,
+}
+
+pub const ARTIFACT_MAILBOX_ITEMS: usize = 64;
+pub const ARTIFACT_MAILBOX_BYTES: usize = 1_048_576;
+
+#[derive(Debug)]
+pub enum ArtifactMailboxSendError {
+    Full { message: ArtifactActorMsg },
+    Bytes { message: ArtifactActorMsg },
+    Closed { message: ArtifactActorMsg },
+    Stale { message: ArtifactActorMsg },
+}
+
+impl ArtifactMailboxSendError {
+    pub fn into_message(self) -> ArtifactActorMsg {
+        match self {
+            Self::Full { message } | Self::Bytes { message } | Self::Closed { message } | Self::Stale { message } => message,
+        }
+    }
+}
+
+struct ArtifactMailboxSlot {
+    generation: u64,
+    bytes: usize,
+    message: ArtifactActorMsg,
+}
+
+struct ArtifactMailboxState {
+    slots: [Option<ArtifactMailboxSlot>; ARTIFACT_MAILBOX_ITEMS],
+    head: usize,
+    len: usize,
+    bytes: usize,
+    generation: u64,
+    closed: bool,
+    wake_armed: bool,
+    waker: Option<std::task::Waker>,
+    wake: Option<std::sync::Arc<dyn Fn() + Send + Sync>>,
+}
+
+impl ArtifactMailboxState {
+    fn new() -> Self {
+        Self { slots: std::array::from_fn(|_| None), head: 0, len: 0, bytes: 0, generation: 1, closed: false, wake_armed: false, waker: None, wake: None }
+    }
+}
+
+struct ArtifactMailboxAuthority {
+    state: std::sync::Mutex<ArtifactMailboxState>,
+}
+
+#[derive(Clone)]
+pub struct ArtifactMailboxSender {
+    authority: std::sync::Arc<ArtifactMailboxAuthority>,
+    generation: u64,
+}
+
+struct ArtifactMailboxReceiver {
+    authority: std::sync::Arc<ArtifactMailboxAuthority>,
+    generation: u64,
+}
+
+#[derive(Clone)]
+struct ArtifactMailboxClose {
+    authority: std::sync::Arc<ArtifactMailboxAuthority>,
+    generation: u64,
+}
+
+impl ArtifactMailboxSender {
+    pub fn send(&self, message: ArtifactActorMsg) -> Result<(), ArtifactMailboxSendError> {
+        let Some(bytes) = artifact_actor_message_bytes(&message) else { return Err(ArtifactMailboxSendError::Bytes { message }) };
+        let (waker, wake) = {
+            let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if self.generation != state.generation {
+                return Err(ArtifactMailboxSendError::Stale { message });
+            }
+            if state.closed {
+                return Err(ArtifactMailboxSendError::Closed { message });
+            }
+            if state.len == ARTIFACT_MAILBOX_ITEMS {
+                return Err(ArtifactMailboxSendError::Full { message });
+            }
+            if bytes > ARTIFACT_MAILBOX_BYTES.saturating_sub(state.bytes) {
+                return Err(ArtifactMailboxSendError::Bytes { message });
+            }
+            let index = (state.head + state.len) % ARTIFACT_MAILBOX_ITEMS;
+            state.slots[index] = Some(ArtifactMailboxSlot { generation: self.generation, bytes, message });
+            state.len += 1;
+            state.bytes += bytes;
+            let first_ready = !state.wake_armed;
+            state.wake_armed = true;
+            (state.waker.take(), first_ready.then(|| state.wake.clone()).flatten())
+        };
+        if let Some(waker) = waker {
+            waker.wake();
+        }
+        if let Some(wake) = wake {
+            wake();
+        }
+        Ok(())
+    }
+}
+
+impl ArtifactMailboxReceiver {
+    fn try_recv(&self) -> Option<ArtifactActorMsg> {
+        let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if self.generation != state.generation || state.len == 0 {
+            return None;
+        }
+        let head = state.head;
+        let slot = state.slots[head].take().expect("artifact mailbox FIFO owner disappeared");
+        state.head = (head + 1) % ARTIFACT_MAILBOX_ITEMS;
+        state.len -= 1;
+        state.bytes -= slot.bytes;
+        if state.len == 0 {
+            state.wake_armed = false;
+        }
+        (slot.generation == self.generation).then_some(slot.message)
+    }
+
+    async fn recv(&self) -> Option<ArtifactActorMsg> {
+        std::future::poll_fn(|context| {
+            if let Some(message) = self.try_recv() {
+                return std::task::Poll::Ready(Some(message));
+            }
+            let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if self.generation != state.generation || state.closed {
+                return std::task::Poll::Ready(None);
+            }
+            if state.len != 0 {
+                drop(state);
+                return std::task::Poll::Ready(self.try_recv());
+            }
+            state.waker = Some(context.waker().clone());
+            std::task::Poll::Pending
+        })
+        .await
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn set_wake(&self, wake: std::sync::Arc<dyn Fn() + Send + Sync>) {
+        let ready = {
+            let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if self.generation != state.generation || state.closed {
+                return;
+            }
+            state.wake = Some(wake.clone());
+            state.len != 0
+        };
+        if ready {
+            wake();
+        }
+    }
+
+    fn close(&self) {
+        self.close_handle().close();
+    }
+
+    fn close_one(&self) -> bool {
+        self.close_handle().close_one()
+    }
+
+    fn close_handle(&self) -> ArtifactMailboxClose {
+        ArtifactMailboxClose { authority: self.authority.clone(), generation: self.generation }
+    }
+}
+
+impl ArtifactMailboxClose {
+    fn close(&self) {
+        let waker = {
+            let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if self.generation != state.generation {
+                return;
+            }
+            state.closed = true;
+            state.generation = state.generation.wrapping_add(1);
+            state.wake_armed = false;
+            state.wake = None;
+            state.waker.take()
+        };
+        if let Some(waker) = waker {
+            waker.wake();
+        }
+    }
+
+    fn close_one(&self) -> bool {
+        let owner = {
+            let mut state = self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if state.len == 0 {
+                return false;
+            }
+            let head = state.head;
+            let slot = state.slots[head].take();
+            state.head = (head + 1) % ARTIFACT_MAILBOX_ITEMS;
+            state.len -= 1;
+            if let Some(slot) = &slot {
+                state.bytes -= slot.bytes;
+            }
+            if state.len == 0 {
+                state.wake_armed = false;
+            }
+            slot
+        };
+        drop(owner);
+        true
+    }
+
+    fn has_pending(&self) -> bool {
+        self.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len != 0
+    }
+}
+
+fn artifact_mailbox_pair() -> (ArtifactMailboxSender, ArtifactMailboxReceiver) {
+    let authority = std::sync::Arc::new(ArtifactMailboxAuthority { state: std::sync::Mutex::new(ArtifactMailboxState::new()) });
+    (ArtifactMailboxSender { authority: authority.clone(), generation: 1 }, ArtifactMailboxReceiver { authority, generation: 1 })
+}
+
+fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
+    fn field(bytes: usize) -> Option<usize> {
+        4usize.checked_add(bytes)
+    }
+    fn add(total: &mut usize, bytes: usize) -> Option<()> {
+        *total = total.checked_add(bytes)?;
+        (*total <= ARTIFACT_MAILBOX_BYTES).then_some(())
+    }
+    fn text(total: &mut usize, value: &str) -> Option<()> {
+        add(total, field(value.len())?)
+    }
+    fn optional_text(total: &mut usize, value: Option<&String>) -> Option<()> {
+        add(total, 1)?;
+        if let Some(value) = value {
+            text(total, value)?;
+        }
+        Some(())
+    }
+    fn string_vec(total: &mut usize, values: &[String]) -> Option<()> {
+        add(total, 4)?;
+        for value in values {
+            text(total, value)?;
+        }
+        Some(())
+    }
+    let mut bytes = 1usize;
+    match message {
+        ArtifactActorMsg::LocalMutations { envelopes } => {
+            add(&mut bytes, 4)?;
+            for envelope in envelopes {
+                text(&mut bytes, &envelope.mutation_id.0)?;
+                text(&mut bytes, &envelope.document_id.0)?;
+                text(&mut bytes, &envelope.actor.0)?;
+                add(&mut bytes, 4)?;
+                for dependency in &envelope.dependencies {
+                    text(&mut bytes, &dependency.0)?;
+                }
+                text(&mut bytes, &envelope.diff.schema.0)?;
+                add(&mut bytes, field(envelope.diff.payload.len())?)?;
+                text(&mut bytes, &envelope.inverse.schema.0)?;
+                add(&mut bytes, field(envelope.inverse.payload.len())?)?;
+                add(&mut bytes, 24)?;
+            }
+        }
+        ArtifactActorMsg::PresenceHeartbeat { peer } => {
+            text(&mut bytes, &peer.actor)?;
+            add(&mut bytes, 8)?;
+            optional_text(&mut bytes, peer.label.as_ref())?;
+            add(&mut bytes, 1)?;
+            if let Some(pack) = &peer.presence_pack {
+                add(&mut bytes, field(pack.len())?)?;
+            }
+            optional_text(&mut bytes, peer.user_id.as_ref())?;
+            optional_text(&mut bytes, peer.role.as_ref())?;
+            optional_text(&mut bytes, peer.drag_ghost_json.as_ref())?;
+            add(&mut bytes, 1)?;
+            if let Some(interaction) = &peer.interaction {
+                text(&mut bytes, &interaction.app_id)?;
+                add(&mut bytes, 4)?;
+                for domain in &interaction.domains {
+                    text(&mut bytes, &domain.domain)?;
+                    text(&mut bytes, &domain.granularity)?;
+                    string_vec(&mut bytes, &domain.selected)?;
+                    string_vec(&mut bytes, &domain.hovered)?;
+                }
+            }
+            add(&mut bytes, 1)?;
+            if peer.color.is_some() {
+                add(&mut bytes, 1)?;
+            }
+            optional_text(&mut bytes, peer.surface.as_ref())?;
+            add(&mut bytes, 4)?;
+            for view in &peer.views {
+                text(&mut bytes, &view.window_id)?;
+                text(&mut bytes, &view.space)?;
+                add(&mut bytes, 1)?;
+                add(
+                    &mut bytes,
+                    match &view.kind {
+                        crate::os_spr::PresenceViewKind::Canvas { .. } => 24,
+                        crate::os_spr::PresenceViewKind::Orbit { .. } => 80,
+                        crate::os_spr::PresenceViewKind::Geo { .. } => 40,
+                    },
+                )?;
+                add(&mut bytes, 17)?;
+                if view.pointer.is_some() {
+                    add(&mut bytes, 24)?;
+                }
+            }
+            add(&mut bytes, 1)?;
+            if let Some(ui) = &peer.ui {
+                optional_text(&mut bytes, ui.hovered_path.as_ref())?;
+                optional_text(&mut bytes, ui.focused_path.as_ref())?;
+                optional_text(&mut bytes, ui.pressed_path.as_ref())?;
+            }
+        }
+        ArtifactActorMsg::PublishPreview { key, seq: _, payload } => {
+            text(&mut bytes, key)?;
+            add(&mut bytes, 8)?;
+            add(&mut bytes, field(payload.len())?)?;
+        }
+        ArtifactActorMsg::ExternalChanged | ArtifactActorMsg::Detach => {}
+    }
+    (bytes <= ARTIFACT_MAILBOX_BYTES).then_some(bytes)
 }
 
 /// @emoji 📶️ Connection state of a document's remote (semio_hub) transport.
@@ -550,7 +869,7 @@ where
     Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
 {
     pub store: ArtifactStore<P, Mutation>,
-    cmd_tx: Option<mpsc::UnboundedSender<ArtifactActorMsg>>,
+    cmd_tx: Option<ArtifactMailboxSender>,
     events: Option<broadcast::Receiver<ArtifactEvent>>,
     status: ArtifactSyncStatus,
 }
@@ -598,11 +917,10 @@ where
         }
     }
 
-    /// @emoji 📥️ Drains any buffered sync status, then pumps the store's inbound backbone queue into
-    /// the edit timeline (delegating to `store.tick()`/`pump()`).
+    /// @emoji 📥️ Advances one buffered sync event, then gives the store one inbound pump opportunity.
     pub async fn tick(&mut self) -> Result<bool, SyncError> {
         if let Some(events) = &mut self.events {
-            while let Ok(event) = events.try_recv() {
+            if let Ok(event) = events.try_recv() {
                 if let ArtifactEvent::Status(status) = &event {
                     self.status = status.clone();
                 }
@@ -622,13 +940,8 @@ where
         self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
-    pub async fn reconcile_branch(&mut self, alternative_name: &str, message: Option<String>, authors: Vec<vcs::Author>) -> Result<String, SyncError> {
-        let mut envelope = self.store.envelope().await.clone();
-        let alternative_id = reconcile_alternative(&mut envelope, alternative_name, message, authors).await.map_err(|error| SyncError::Vcs(error.to_string()))?;
-        let applied = self.store.applied_edit_ids().await.to_vec();
-        let redo = self.store.redo_edit_ids().await.to_vec();
-        self.store.reset(envelope, applied, redo).await.map_err(|error| SyncError::Vcs(error.to_string()))?;
-        Ok(alternative_id)
+    pub async fn reconcile_branch(&mut self, _alternative_name: &str, _message: Option<String>, _authors: Vec<vcs::Author>) -> Result<String, SyncError> {
+        Err(SyncError::Vcs("branch reconciliation requires the retained envelope candidate job; synchronous whole-envelope duplication is forbidden".into()))
     }
 }
 //#endregion 🔖️SyncSession
@@ -682,63 +995,120 @@ impl PresenceHeartbeatProducer {
 /// @emoji 🎛️ The channels {@link ArtifactHost::open} hands back to a caller: attach `channel_backbone`
 /// to your `ArtifactStore`, and send control messages (or wakes) on `cmd_tx`.
 pub struct ArtifactChannels {
-    pub cmd_tx: mpsc::UnboundedSender<ArtifactActorMsg>,
+    pub cmd_tx: ArtifactMailboxSender,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub runner: ArtifactActorRunnerTicket,
     /// @emoji 🔗️ The store-side backbone end. The caller owns store attachment:
     /// `store.attach_backbone(Backbones::Channel(channels.channel_backbone))`.
     pub channel_backbone: ChannelBackbone,
 }
 
 struct OpenDocument {
-    cmd_tx: mpsc::UnboundedSender<ArtifactActorMsg>,
+    generation: u64,
+    cmd_tx: ArtifactMailboxSender,
     events: broadcast::Sender<ArtifactEvent>,
     presence: PresenceHeartbeatProducer,
     #[cfg(not(target_arch = "wasm32"))]
-    schedule: std::sync::Arc<dyn Fn() + Send + Sync>,
+    runner: ArtifactActorRunnerHandle,
+}
+
+struct ArtifactHostState {
+    documents: std::collections::HashMap<String, OpenDocument>,
+    #[cfg(not(target_arch = "wasm32"))]
+    closing: std::collections::HashMap<u64, ArtifactActorRunnerHandle>,
+    next_generation: u64,
+    host_references: usize,
+}
+
+impl ArtifactHostState {
+    fn new() -> Self {
+        Self {
+            documents: std::collections::HashMap::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            closing: std::collections::HashMap::new(),
+            next_generation: 1,
+            host_references: 1,
+        }
+    }
+
+    fn claim_generation(&mut self) -> u64 {
+        let generation = self.next_generation;
+        self.next_generation = self.next_generation.checked_add(1).expect("artifact actor generation exhausted");
+        generation
+    }
 }
 
 /// @emoji 🏛️ Registry of open per-document actors. One `ArtifactHost` per host process (wgpu native,
 /// tests, or the browser wgpu build) owns every open document's actor + event fan-out.
-#[derive(Clone)]
 pub struct ArtifactHost {
-    inner: std::sync::Arc<std::sync::Mutex<std::collections::HashMap<String, OpenDocument>>>,
+    inner: std::sync::Arc<std::sync::Mutex<ArtifactHostState>>,
     pool: std::sync::Arc<semio_framework_async::WorkerPool>,
+}
+
+impl Clone for ArtifactHost {
+    fn clone(&self) -> Self {
+        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.host_references = state.host_references.checked_add(1).expect("artifact host reference capacity exhausted");
+        drop(state);
+        Self { inner: self.inner.clone(), pool: self.pool.clone() }
+    }
 }
 
 impl ArtifactHost {
     /// @emoji 🧩️ Creates a host on the process WorkerPool; callers must inject the same pool
     /// used by their service and renderer runtimes.
     pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>) -> Self {
-        Self { inner: std::sync::Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())), pool }
+        Self { inner: std::sync::Arc::new(std::sync::Mutex::new(ArtifactHostState::new())), pool }
     }
 
     /// @emoji 🚀️ Spawns (or replaces) the actor for `config.document_id` and returns the channels the
     /// caller wires into its store. Idempotent per id: opening an already-open id closes the old actor.
     pub async fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
         let document_id = config.document_id.clone();
-        self.close(&document_id);
+        let _ = self.close(&document_id);
+        let generation = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).claim_generation();
         let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}")).await;
-        let (cmd_tx, cmd_rx) = mpsc::unbounded_channel();
+        let (cmd_tx, cmd_rx) = artifact_mailbox_pair();
         let (event_tx, _event_rx) = broadcast::channel(256);
         #[cfg(not(target_arch = "wasm32"))]
-        let schedule = spawn_actor(self.pool.clone(), config, remote, cmd_rx, event_tx.clone()).await;
+        let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone()).await;
         #[cfg(target_arch = "wasm32")]
         spawn_actor(self.pool.clone(), config, remote, cmd_rx, event_tx.clone()).await;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let weak_host = std::sync::Arc::downgrade(&self.inner);
+            runner.set_terminal_empty_callback(std::sync::Arc::new(move |generation| {
+                if let Some(host) = weak_host.upgrade() {
+                    host.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing.remove(&generation);
+                }
+            }));
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        let runner_ticket = runner.issue_ticket(self.inner.clone());
         let entry = OpenDocument {
+            generation,
             cmd_tx: cmd_tx.clone(),
             events: event_tx,
             presence: PresenceHeartbeatProducer::default(),
             #[cfg(not(target_arch = "wasm32"))]
-            schedule,
+            runner: runner.clone(),
         };
-        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(document_id, entry);
-        ArtifactChannels { cmd_tx, channel_backbone }
+        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.insert(document_id, entry);
+        #[cfg(not(target_arch = "wasm32"))]
+        runner.start();
+        ArtifactChannels {
+            cmd_tx,
+            #[cfg(not(target_arch = "wasm32"))]
+            runner: runner_ticket,
+            channel_backbone,
+        }
     }
 
     /// @emoji 📬️ A fresh event receiver for `document_id`. If the document is not open the receiver's
     /// sender is dropped, so it simply reports closed.
     pub async fn subscribe(&self, document_id: &str) -> broadcast::Receiver<ArtifactEvent> {
         let guard = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        match guard.get(document_id) {
+        match guard.documents.get(document_id) {
             Some(document) => document.events.subscribe(),
             None => {
                 let (_tx, rx) = broadcast::channel(1);
@@ -749,10 +1119,8 @@ impl ArtifactHost {
 
     /// @emoji 🔔️ Sends a control message to a document's actor (e.g. a presence heartbeat or a wake).
     pub async fn send(&self, document_id: &str, message: ArtifactActorMsg) {
-        if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(document_id) {
+        if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.get(document_id) {
             let _ = document.cmd_tx.send(message);
-            #[cfg(not(target_arch = "wasm32"))]
-            (document.schedule)();
         }
     }
 
@@ -760,46 +1128,62 @@ impl ArtifactHost {
     /// Returns `true` only when the host actually queued a publish; faster offers are coalesced onto
     /// the document's producer and cannot flood the preview lane.
     pub fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
-        let mut documents = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(document) = documents.get_mut(document_id) else { return false };
+        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(document) = state.documents.get_mut(document_id) else { return false };
         let Some(peer) = document.presence.offer(now_ms, peer) else { return false };
         let sent = document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer) }).is_ok();
-        #[cfg(not(target_arch = "wasm32"))]
-        (document.schedule)();
         sent
     }
 
-    /// @emoji ✂️ Stops a document's actor: sends `Detach` (the actor's own `run()` loop breaks out
-    /// and flushes pending outbound operations on that message, see `handle_cmd`) and returns
-    /// immediately — never blocks the caller waiting for the actor's task to actually finish. This
-    /// is a deliberate change from the old dedicated-OS-thread design (which `close()` used to
-    /// `JoinHandle::join()`, blocking synchronously): a cooperative tokio task keeps running to
-    /// completion on the shared runtime after its `JoinHandle` is dropped (dropping a `JoinHandle`
-    /// does not cancel the task, only `.abort()` does), so the flush still happens, just without
-    /// making `close()` — called from `impl Drop`, where blocking on a runtime task is doubly
-    /// dangerous — a blocking call.
+    /// @emoji ✂️ Transfers a document into generation-keyed retained close ownership. The runner
+    /// rejects later mailbox ingress and drains one mailbox, backbone, actor, or job owner per grant.
     // 🚫️async: E1 pure lock/remove + sync channel send, no real suspension point — consumed by
     // `impl Drop` (sync-only external trait); see R9.
-    pub fn close(&self, document_id: &str) {
-        let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(document_id);
+    pub fn close(&self, document_id: &str) -> Option<u64> {
+        let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.remove(document_id);
         if let Some(document) = document {
-            let _ = document.cmd_tx.send(ArtifactActorMsg::Detach);
             #[cfg(not(target_arch = "wasm32"))]
-            (document.schedule)();
+            {
+                let generation = document.generation;
+                let runner = document.runner;
+                self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing.insert(generation, runner.clone());
+                if matches!(runner.terminal_state(), ArtifactActorTerminalState::Complete(_)) {
+                    self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing.remove(&generation);
+                    return Some(generation);
+                }
+                runner.request_close();
+                return Some(generation);
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                let _ = document.cmd_tx.send(ArtifactActorMsg::Detach);
+                return Some(document.generation);
+            }
         }
+        None
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn closing_runner(&self, generation: u64) -> Option<ArtifactActorRunnerHandle> {
+        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).closing.get(&generation).cloned()
     }
 
     /// @emoji 🧹️ Ids of every currently-open document.
     // 🚫️async: E1 pure lock-and-collect consumed by `impl Drop` (sync-only external trait) — see
     // R9. No I/O, no suspension point.
     pub fn open_artifacts(&self) -> Vec<String> {
-        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect()
+        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).documents.keys().cloned().collect()
     }
 }
 
 impl Drop for ArtifactHost {
     fn drop(&mut self) {
-        if std::sync::Arc::strong_count(&self.inner) > 1 {
+        let is_last_host = {
+            let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            state.host_references = state.host_references.checked_sub(1).expect("artifact host reference underflow");
+            state.host_references == 0
+        };
+        if !is_last_host {
             return;
         }
         for document_id in self.open_artifacts() {
@@ -813,7 +1197,7 @@ impl Drop for ArtifactHost {
 #[cfg(not(target_arch = "wasm32"))]
 mod native_actor {
     use super::*;
-    use futures::{FutureExt, SinkExt, StreamExt};
+    use futures::{SinkExt, StreamExt};
     use std::collections::HashSet;
     use std::path::{Path, PathBuf};
     use std::sync::Arc;
@@ -824,10 +1208,30 @@ mod native_actor {
     type WsStream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
     type WsSink = futures::stream::SplitSink<WsStream, Message>;
     type WsRead = futures::stream::SplitStream<WsStream>;
+    type ConnectFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<WsStream, ()>> + Send>>;
 
     struct HubConn {
         write: WsSink,
         read: WsRead,
+    }
+
+    #[derive(Clone, Copy)]
+    enum ArtifactDrivePhase {
+        Connect,
+        Hub,
+        ConnectResult,
+        Watch,
+        Reconnect,
+        Folder,
+        Backbone,
+        Status,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ArtifactDrive {
+        MoreWork,
+        Idle { deadline: Option<Instant> },
+        Terminal,
     }
 
     /// @emoji 📁️ A folder/file binding's storage driver, keyed for multi-document sqlite or single
@@ -887,7 +1291,7 @@ mod native_actor {
         actor: String,
         remote: ChannelBackboneRemote,
         events: broadcast::Sender<ArtifactEvent>,
-        cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>,
+        cmd_rx: ArtifactMailboxReceiver,
         folder: Option<FolderEndpoint>,
         folder_watch_path: Option<PathBuf>,
         watch_external: bool,
@@ -900,8 +1304,7 @@ mod native_actor {
         /// hub). Stamped onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
         session_color: Option<u8>,
         semio_hub: Option<HubConn>,
-        connect_rx: Option<mpsc::UnboundedReceiver<Result<WsStream, ()>>>,
-        connect_task: Option<tokio::task::JoinHandle<()>>,
+        connect_future: Option<ConnectFuture>,
         /// @emoji 🏔️ Last frontier the semio_hub reported (`Welcome.server_frontier` / `Commands.frontier` /
         /// `Ack.frontier`) — the wire-v2 replacement for the old `hub_version: i64` counter.
         server_frontier: Option<crate::os_spr::RuntimeFrontierSummary>,
@@ -927,10 +1330,14 @@ mod native_actor {
         watcher: Option<semio_framework_os_services::OwnedFileChangeWatcher>,
         fs_deadline: Option<Instant>,
         started: bool,
+        command_turns: u8,
+        drive_phase: ArtifactDrivePhase,
+        closing: bool,
+        readiness: Option<Arc<dyn Fn() + Send + Sync>>,
     }
 
     impl ArtifactActor {
-        pub(super) async fn new(pool: Arc<semio_framework_async::WorkerPool>, config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Self {
+        pub(super) async fn new(pool: Arc<semio_framework_async::WorkerPool>, config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: ArtifactMailboxReceiver, events: broadcast::Sender<ArtifactEvent>) -> Self {
             let mut folder = None;
             let mut folder_watch_path = None;
             let mut hub_base_url = None;
@@ -973,8 +1380,7 @@ mod native_actor {
                 hub_surface,
                 session_color: None,
                 semio_hub: None,
-                connect_rx: None,
-                connect_task: None,
+                connect_future: None,
                 server_frontier: None,
                 resume_token: None,
                 backoff_ms: 500,
@@ -992,54 +1398,112 @@ mod native_actor {
                 watcher: None,
                 fs_deadline: None,
                 started: false,
+                command_turns: 0,
+                drive_phase: ArtifactDrivePhase::Connect,
+                closing: false,
+                readiness: None,
             }
         }
 
-        /// @emoji 🏃️ Executes one bounded actor turn and reports whether the actor detached.
-        pub(super) async fn run_turn(&mut self) -> bool {
+        fn set_readiness(&mut self, readiness: Arc<dyn Fn() + Send + Sync>) {
+            self.readiness = Some(readiness);
+        }
+
+        /// @emoji 🏃️ Advances exactly one command, readiness source, timer, backbone owner, or status turn.
+        pub(super) async fn drive_one(&mut self) -> ArtifactDrive {
             if !self.started {
                 self.started = true;
                 self.setup().await;
-                self.start_connect_hub().await;
+                return ArtifactDrive::MoreWork;
             }
-            for _ in 0..32 {
-                match self.cmd_rx.try_recv() {
-                    Ok(message) => {
-                        if self.handle_cmd(message).await {
-                            if let Some(task) = self.connect_task.take() {
-                                task.abort();
-                            }
-                            return true;
-                        }
+            if self.closing {
+                if self.cmd_rx.close_one() {
+                    return ArtifactDrive::MoreWork;
+                }
+                match self.relay_one_backbone().await {
+                    Ok(true) | Err(_) => return ArtifactDrive::MoreWork,
+                    Ok(false) => {}
+                }
+                self.connect_future = None;
+                return ArtifactDrive::Terminal;
+            }
+            if self.command_turns < 32 {
+                if let Some(message) = self.cmd_rx.try_recv() {
+                    self.command_turns += 1;
+                    if self.handle_cmd(message).await {
+                        self.closing = true;
+                        self.cmd_rx.close();
                     }
-                    Err(mpsc::error::TryRecvError::Empty) => break,
-                    Err(mpsc::error::TryRecvError::Disconnected) => return true,
+                    return ArtifactDrive::MoreWork;
                 }
             }
-            if let Some(message) = hub_next(&mut self.semio_hub).now_or_never() {
-                self.on_hub_message(message).await;
+            self.command_turns = 0;
+            let phase = self.drive_phase;
+            self.drive_phase = match phase {
+                ArtifactDrivePhase::Connect => ArtifactDrivePhase::Hub,
+                ArtifactDrivePhase::Hub => ArtifactDrivePhase::ConnectResult,
+                ArtifactDrivePhase::ConnectResult => ArtifactDrivePhase::Watch,
+                ArtifactDrivePhase::Watch => ArtifactDrivePhase::Reconnect,
+                ArtifactDrivePhase::Reconnect => ArtifactDrivePhase::Folder,
+                ArtifactDrivePhase::Folder => ArtifactDrivePhase::Backbone,
+                ArtifactDrivePhase::Backbone => ArtifactDrivePhase::Status,
+                ArtifactDrivePhase::Status => ArtifactDrivePhase::Connect,
+            };
+            match phase {
+                ArtifactDrivePhase::Connect => self.start_connect_hub().await,
+                ArtifactDrivePhase::Hub => {
+                    let message = std::future::poll_fn(|context| {
+                        let polled = self.semio_hub.as_mut().map(|connection| connection.read.poll_next_unpin(context));
+                        std::task::Poll::Ready(match polled {
+                            Some(std::task::Poll::Ready(message)) => Some(message),
+                            Some(std::task::Poll::Pending) | None => None,
+                        })
+                    })
+                    .await;
+                    if let Some(message) = message {
+                        self.on_hub_message(message).await;
+                    }
+                }
+                ArtifactDrivePhase::ConnectResult => {
+                    let connection = std::future::poll_fn(|context| {
+                        let polled = self.connect_future.as_mut().map(|future| future.as_mut().poll(context));
+                        std::task::Poll::Ready(match polled {
+                            Some(std::task::Poll::Ready(connection)) => Some(connection),
+                            Some(std::task::Poll::Pending) | None => None,
+                        })
+                    })
+                    .await;
+                    if let Some(connection) = connection {
+                        self.connect_future = None;
+                        self.finish_connect_hub(connection).await;
+                    }
+                }
+                ArtifactDrivePhase::Watch => {
+                    if self.watcher.as_mut().is_some_and(|watcher| watcher.poll_changed()) {
+                        self.fs_deadline = Some(Instant::now() + Duration::from_millis(200));
+                    }
+                }
+                ArtifactDrivePhase::Reconnect => {
+                    if self.reconnect_at.is_some_and(|deadline| deadline <= Instant::now()) {
+                        self.reconnect_at = None;
+                        self.start_connect_hub().await;
+                    }
+                }
+                ArtifactDrivePhase::Folder => {
+                    if self.fs_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
+                        self.fs_deadline = None;
+                        self.handle_external_change().await;
+                    }
+                }
+                ArtifactDrivePhase::Backbone => {
+                    let _ = self.relay_one_backbone().await;
+                }
+                ArtifactDrivePhase::Status => {
+                    self.emit_status_if_changed().await;
+                    return ArtifactDrive::Idle { deadline: [self.reconnect_at, self.fs_deadline].into_iter().flatten().min() };
+                }
             }
-            let connection = self.connect_rx.as_mut().and_then(|rx| rx.try_recv().ok());
-            if let Some(connection) = connection {
-                self.connect_rx = None;
-                self.connect_task = None;
-                self.finish_connect_hub(connection).await;
-            }
-            if self.watcher.as_mut().is_some_and(|watcher| watcher.poll_changed()) {
-                self.fs_deadline = Some(Instant::now() + Duration::from_millis(200));
-            }
-            let now = Instant::now();
-            if self.reconnect_at.is_some_and(|deadline| deadline <= now) {
-                self.reconnect_at = None;
-                self.start_connect_hub().await;
-            }
-            if self.fs_deadline.is_some_and(|deadline| deadline <= now) {
-                self.fs_deadline = None;
-                self.handle_external_change().await;
-            }
-            self.drain_and_relay().await;
-            self.emit_status_if_changed().await;
-            false
+            ArtifactDrive::MoreWork
         }
 
         /// @emoji 🌱️ Seeds persistence state from any already-stored pack+spr and installs the file watcher.
@@ -1058,7 +1522,9 @@ mod native_actor {
             }
             if self.watch_external {
                 if let Some(watch_path) = self.folder_watch_path.clone() {
-                    self.watcher = Some(install_watcher(&watch_path, self.pool.clone()));
+                    if let Some(readiness) = self.readiness.clone() {
+                        self.watcher = Some(install_watcher(&watch_path, self.pool.clone(), readiness));
+                    }
                 }
             }
         }
@@ -1067,7 +1533,7 @@ mod native_actor {
         async fn handle_cmd(&mut self, message: ArtifactActorMsg) -> bool {
             match message {
                 ArtifactActorMsg::LocalMutations { envelopes } => {
-                    let drained = self.drain_and_relay().await;
+                    let drained = self.relay_one_backbone().await.unwrap_or(false);
                     if !drained && !envelopes.is_empty() {
                         self.persist_operations(&envelopes).await;
                         self.relay_operations_to_hub(&envelopes).await;
@@ -1087,39 +1553,23 @@ mod native_actor {
                     self.handle_external_change().await;
                     false
                 }
-                ArtifactActorMsg::Detach => {
-                    self.drain_and_relay().await;
-                    true
-                }
+                ArtifactActorMsg::Detach => true,
             }
         }
 
-        /// @emoji 📤️ Drains the store's outbound queue, persisting + relaying each message. Returns
-        /// whether anything was drained.
-        async fn drain_and_relay(&mut self) -> bool {
-            let messages = self.remote.drain().await.unwrap_or_default();
-            let drained = !messages.is_empty();
-            for message in messages {
-                match message {
-                    BackboneMessage::Mutations { envelopes } => {
-                        let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
-                        self.persist_operations(&envelopes).await;
-                        self.relay_operations_to_hub(&envelopes).await;
-                    }
-                    BackboneMessage::Snapshot { pack, spr } => {
-                        self.persist_snapshot(pack, spr).await;
-                        // 📸️ No client -> semio_hub whole-envelope push exists in wire v2
-                        // (`crate::os_spr::wire::ClientFrame` has no snapshot-put variant — only
-                        // causally-ordered `Commands`; the semio_hub -> client snapshot direction is
-                        // `Bootstrap::Snapshot`/`SnapshotChunk`/`SnapshotDone`, download-only). The
-                        // folder binding above still persists this snapshot; relaying a structural
-                        // snapshot to the semio_hub is a CW6+ semio_hub-rebuild concern (documented deferral in
-                        // the CW5 report, not a bug in this actor).
-                    }
-                    BackboneMessage::Ack { .. } => {}
+        /// @emoji 📤️ Pops and advances exactly one store-to-actor FIFO owner.
+        async fn relay_one_backbone(&mut self) -> Result<bool, vcs::VcsError> {
+            let Some(message) = self.remote.try_pop_front()? else { return Ok(false) };
+            match message {
+                BackboneMessage::Mutations { envelopes } => {
+                    let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
+                    self.persist_operations(&envelopes).await;
+                    self.relay_operations_to_hub(&envelopes).await;
                 }
+                BackboneMessage::Snapshot { pack, spr } => self.persist_snapshot(pack, spr).await,
+                BackboneMessage::Ack { .. } => {}
             }
-            drained
+            Ok(true)
         }
 
         //#region 🔖️Folder
@@ -1227,18 +1677,13 @@ mod native_actor {
         //#region 🔖️Hub
         async fn start_connect_hub(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
-            if self.connect_rx.is_some() {
+            if self.connect_future.is_some() {
                 return;
             }
             let space_id = self.hub_space_id.clone().unwrap_or_default();
             let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref()).await;
             self.set_remote_state(RemoteState::Connecting).await;
-            let (tx, rx) = mpsc::unbounded_channel();
-            self.connect_rx = Some(rx);
-            self.connect_task = Some(tokio::spawn(async move {
-                let result = tokio_tungstenite::connect_async(url).await.map(|(stream, _response)| stream).map_err(|_| ());
-                let _ = tx.send(result);
-            }));
+            self.connect_future = Some(Box::pin(async move { tokio_tungstenite::connect_async(url).await.map(|(stream, _response)| stream).map_err(|_| ()) }));
         }
 
         async fn finish_connect_hub(&mut self, connection: Result<WsStream, ()>) {
@@ -1469,14 +1914,6 @@ mod native_actor {
         //#endregion 🔖️Deliver
     }
 
-    impl Drop for ArtifactActor {
-        fn drop(&mut self) {
-            if let Some(task) = self.connect_task.take() {
-                task.abort();
-            }
-        }
-    }
-
     /// @emoji 🔀️ A binding path with a file extension addresses one document's text blob directly
     /// (`Text`, generalizing the deleted single-file `FileJsonStorage` beyond `.json`); an extensionless
     /// directory path is the canonical multi-document append-only store (`EventLog`).
@@ -1502,64 +1939,514 @@ mod native_actor {
 
     /// @emoji 👁️ Creates the owned non-recursive watcher; its first probe establishes a
     /// baseline and later snapshots feed the actor's existing 200 ms debounce.
-    fn install_watcher(watch_path: &Path, pool: Arc<semio_framework_async::WorkerPool>) -> semio_framework_os_services::OwnedFileChangeWatcher {
-        semio_framework_os_services::OwnedFileChangeWatcher::new(watch_path, pool)
+    fn install_watcher(watch_path: &Path, pool: Arc<semio_framework_async::WorkerPool>, readiness: Arc<dyn Fn() + Send + Sync>) -> semio_framework_os_services::OwnedFileChangeWatcher {
+        semio_framework_os_services::OwnedFileChangeWatcher::new(watch_path, pool, readiness)
     }
 
-    async fn hub_next(conn: &mut Option<HubConn>) -> Option<Result<Message, tokio_tungstenite::tungstenite::Error>> {
-        match conn {
-            Some(conn) => conn.read.next().await,
-            None => std::future::pending().await,
-        }
+    const ACTOR_RUNNER_RETRY_MS: u64 = 1;
+    const ACTOR_RUNNER_RETRY_LIMIT: u8 = 8;
+
+    type ActorTurnFuture = std::pin::Pin<Box<dyn std::future::Future<Output = (ArtifactActor, ArtifactDrive)> + Send>>;
+
+    enum ActorTurnOwner {
+        Actor(ArtifactActor),
+        Future(ActorTurnFuture),
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum ArtifactActorTerminalReason {
+        Detached,
+        Cancelled,
+        TurnFault,
+        Pool(semio_framework_async::WorkerSubmitErrorKind),
+    }
+
+    struct ActorTerminalJob {
+        reason: ArtifactActorTerminalReason,
+        job: semio_framework_async::Job,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum ArtifactActorTerminalState {
+        Live,
+        Closing(ArtifactActorTerminalReason),
+        Complete(ArtifactActorTerminalReason),
+    }
+
+    #[derive(Clone)]
+    pub struct ArtifactActorRunnerHandle {
+        generation: u64,
+        runner: Arc<ActorRunner>,
+    }
+
+    pub struct ArtifactActorRunnerTicket {
+        generation: u64,
+        runner: std::sync::Weak<ActorRunner>,
+        host: Option<Arc<std::sync::Mutex<ArtifactHostState>>>,
+        returned: bool,
+    }
+
+    pub struct ArtifactActorTerminalJob {
+        handle: ArtifactActorRunnerHandle,
+        owner: Option<ActorTerminalJob>,
     }
 
     struct ActorRunner {
         pool: Arc<semio_framework_async::WorkerPool>,
-        runtime: tokio::runtime::Handle,
-        actor: std::sync::Mutex<Option<ArtifactActor>>,
+        generation: u64,
+        turn: std::sync::Mutex<Option<ActorTurnOwner>>,
+        terminal_turn: std::sync::Mutex<Option<ActorTurnOwner>>,
+        mailbox: ArtifactMailboxClose,
         scheduled: std::sync::atomic::AtomicBool,
-        timer_armed: std::sync::atomic::AtomicBool,
+        wake_requested: std::sync::atomic::AtomicBool,
+        turn_generation: std::sync::atomic::AtomicU64,
+        deadline_armed: std::sync::atomic::AtomicBool,
+        deadline_generation: std::sync::atomic::AtomicU64,
+        deadline_at_ms: std::sync::atomic::AtomicU64,
+        retry_armed: std::sync::atomic::AtomicBool,
+        retry_generation: std::sync::atomic::AtomicU64,
+        retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
+        terminal_job: std::sync::Mutex<Option<ActorTerminalJob>>,
+        terminal_reason: std::sync::Mutex<Option<ArtifactActorTerminalReason>>,
+        terminal_empty_callback: std::sync::Mutex<Option<Arc<dyn Fn(u64) + Send + Sync>>>,
+        self_retained: std::sync::Mutex<Option<Arc<ActorRunner>>>,
+        external_tickets: std::sync::atomic::AtomicUsize,
+        close_requested: std::sync::atomic::AtomicBool,
         terminal: std::sync::atomic::AtomicBool,
+        complete: std::sync::atomic::AtomicBool,
+    }
+
+    impl ArtifactActorRunnerHandle {
+        pub fn generation(&self) -> u64 {
+            self.generation
+        }
+
+        pub fn cancel(&self) {
+            self.runner.cancel();
+        }
+
+        pub fn terminal_state(&self) -> ArtifactActorTerminalState {
+            let reason = *self.runner.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            match reason {
+                None => ArtifactActorTerminalState::Live,
+                Some(reason) if self.runner.complete.load(std::sync::atomic::Ordering::Acquire) => ArtifactActorTerminalState::Complete(reason),
+                Some(reason) => ArtifactActorTerminalState::Closing(reason),
+            }
+        }
+
+        pub fn close_step(&self) -> bool {
+            if !self.runner.terminal.load(std::sync::atomic::Ordering::Acquire) {
+                self.runner.request_close();
+                return false;
+            }
+            let advanced = self.runner.close_one_terminal_owner();
+            if !advanced && self.runner.terminal_is_empty() {
+                self.runner.finish_terminal();
+            }
+            advanced
+        }
+
+        pub fn terminal_is_empty(&self) -> bool {
+            self.runner.terminal_is_empty()
+        }
+
+        pub fn take_terminal_job(&self) -> Option<ArtifactActorTerminalJob> {
+            self.runner.take_terminal_job().map(|owner| ArtifactActorTerminalJob { handle: self.clone(), owner: Some(owner) })
+        }
+
+        pub(super) fn start(&self) {
+            self.runner.schedule();
+        }
+
+        pub(super) fn request_close(&self) {
+            self.runner.request_close();
+        }
+
+        pub(super) fn issue_ticket(&self, host: Arc<std::sync::Mutex<ArtifactHostState>>) -> ArtifactActorRunnerTicket {
+            self.runner.external_tickets.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |count| count.checked_add(1)).expect("artifact actor ticket capacity exhausted");
+            ArtifactActorRunnerTicket { generation: self.generation, runner: Arc::downgrade(&self.runner), host: Some(host), returned: false }
+        }
+
+        pub(super) fn set_terminal_empty_callback(&self, callback: Arc<dyn Fn(u64) + Send + Sync>) {
+            *self.runner.terminal_empty_callback.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(callback);
+            if self.runner.terminal_is_empty() {
+                self.runner.finish_terminal();
+            }
+        }
+    }
+
+    impl ArtifactActorRunnerTicket {
+        pub fn generation(&self) -> u64 {
+            self.generation
+        }
+
+        pub fn terminal_state(&self) -> Option<ArtifactActorTerminalState> {
+            self.runner.upgrade().map(|runner| ArtifactActorRunnerHandle { generation: self.generation, runner }.terminal_state())
+        }
+
+        pub fn return_to_host(mut self) {
+            self.return_once();
+        }
+
+        fn return_once(&mut self) {
+            if self.returned {
+                return;
+            }
+            self.returned = true;
+            if let Some(runner) = self.runner.upgrade() {
+                if runner.generation == self.generation {
+                    runner.return_ticket();
+                }
+            }
+            self.host.take();
+        }
+    }
+
+    impl Drop for ArtifactActorRunnerTicket {
+        fn drop(&mut self) {
+            self.return_once();
+        }
+    }
+
+    impl ArtifactActorTerminalJob {
+        pub fn reason(&self) -> ArtifactActorTerminalReason {
+            self.owner.as_ref().expect("terminal job owner already resolved").reason
+        }
+
+        pub fn resume(mut self) {
+            let owner = self.owner.take().expect("terminal job owner already resolved");
+            self.handle.runner.resume_terminal_job(owner);
+        }
+
+        pub fn close(mut self) {
+            let owner = self.owner.take().expect("terminal job owner already resolved");
+            self.handle.runner.close_terminal_job(owner);
+        }
+    }
+
+    impl Drop for ArtifactActorTerminalJob {
+        fn drop(&mut self) {
+            if let Some(owner) = self.owner.take() {
+                self.handle.runner.return_terminal_job(owner);
+            }
+        }
+    }
+
+    struct ActorTurnWake {
+        runner: std::sync::Weak<ActorRunner>,
+        generation: u64,
+    }
+
+    impl std::task::Wake for ActorTurnWake {
+        fn wake(self: Arc<Self>) {
+            if let Some(runner) = self.runner.upgrade() {
+                runner.request_wake(self.generation);
+            }
+        }
+
+        fn wake_by_ref(self: &Arc<Self>) {
+            if let Some(runner) = self.runner.upgrade() {
+                runner.request_wake(self.generation);
+            }
+        }
     }
 
     impl ActorRunner {
         fn schedule(self: &Arc<Self>) {
-            if self.terminal.load(std::sync::atomic::Ordering::Acquire) || self.scheduled.swap(true, std::sync::atomic::Ordering::AcqRel) {
+            self.request_wake(self.turn_generation.load(std::sync::atomic::Ordering::Acquire));
+        }
+
+        fn request_wake(self: &Arc<Self>, generation: u64) {
+            if self.complete.load(std::sync::atomic::Ordering::Acquire) || self.terminal.load(std::sync::atomic::Ordering::Acquire) || generation != self.turn_generation.load(std::sync::atomic::Ordering::Acquire) {
+                return;
+            }
+            let _ = self.wake_requested.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
+            self.enqueue(false);
+        }
+
+        fn enqueue(self: &Arc<Self>, terminal_close: bool) {
+            if self.complete.load(std::sync::atomic::Ordering::Acquire) || (!terminal_close && self.terminal.load(std::sync::atomic::Ordering::Acquire)) {
+                return;
+            }
+            if self.scheduled.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
                 return;
             }
             let runner = self.clone();
-            self.pool.submit(semio_framework_async::Lane::UserVisible, Box::new(move || runner.run_job()));
+            self.submit_exact(Box::new(move || runner.run_job()), 0);
+        }
+
+        fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
+            match self.pool.try_submit(semio_framework_async::Lane::UserVisible, job) {
+                Ok(()) => {}
+                Err(error) => match error.kind() {
+                    kind @ (semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated) if attempt < ACTOR_RUNNER_RETRY_LIMIT => {
+                        *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
+                        self.arm_retry();
+                    }
+                    kind => {
+                        let job = error.into_job();
+                        self.begin_terminal(ArtifactActorTerminalReason::Pool(kind));
+                        *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTerminalJob { reason: ArtifactActorTerminalReason::Pool(kind), job });
+                    }
+                },
+            }
+        }
+
+        fn arm_retry(self: &Arc<Self>) {
+            if self.retry_armed.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+                return;
+            }
+            let generation = self.retry_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel).wrapping_add(1);
+            let runner = self.clone();
+            self.pool.callback_at(self.pool.now_ms().saturating_add(ACTOR_RUNNER_RETRY_MS), move || {
+                if generation != runner.retry_generation.load(std::sync::atomic::Ordering::Acquire) {
+                    return;
+                }
+                runner.retry_armed.store(false, std::sync::atomic::Ordering::Release);
+                let retry = runner.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                if let Some((job, attempt)) = retry {
+                    if runner.terminal.load(std::sync::atomic::Ordering::Acquire) {
+                        let reason = runner.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner).unwrap_or(ArtifactActorTerminalReason::Cancelled);
+                        *runner.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTerminalJob { reason, job });
+                    } else {
+                        runner.submit_exact(job, attempt);
+                    }
+                }
+            });
         }
 
         fn run_job(self: Arc<Self>) {
-            let actor = self.actor.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-            let Some(mut actor) = actor else {
+            if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
+                self.close_one_terminal_owner();
+                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                if self.has_terminal_owner() {
+                    self.enqueue(true);
+                } else {
+                    self.finish_terminal();
+                }
+                return;
+            }
+            self.wake_requested.store(false, std::sync::atomic::Ordering::Release);
+            let owner = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            let Some(owner) = owner else {
                 self.scheduled.store(false, std::sync::atomic::Ordering::Release);
                 return;
             };
-            let terminal = self.runtime.block_on(actor.run_turn());
-            if terminal {
-                self.terminal.store(true, std::sync::atomic::Ordering::Release);
-            } else {
-                *self.actor.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(actor);
-            }
-            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-            if !terminal {
-                self.arm_timer();
+            let mut future = match owner {
+                ActorTurnOwner::Actor(mut actor) => {
+                    if self.close_requested.load(std::sync::atomic::Ordering::Acquire) {
+                        actor.closing = true;
+                        actor.cmd_rx.close();
+                    }
+                    Box::pin(async move {
+                        let outcome = actor.drive_one().await;
+                        (actor, outcome)
+                    }) as ActorTurnFuture
+                }
+                ActorTurnOwner::Future(future) => future,
+            };
+            let generation = self.turn_generation.load(std::sync::atomic::Ordering::Acquire);
+            let waker = std::task::Waker::from(Arc::new(ActorTurnWake { runner: Arc::downgrade(&self), generation }));
+            let mut context = std::task::Context::from_waker(&waker);
+            let polled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| future.as_mut().poll(&mut context)));
+            match polled {
+                Ok(std::task::Poll::Pending) => {
+                    if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
+                        *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Future(future));
+                        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                        self.enqueue(true);
+                        return;
+                    }
+                    *self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Future(future));
+                    self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                    if self.wake_requested.swap(false, std::sync::atomic::Ordering::AcqRel) {
+                        self.enqueue(false);
+                    }
+                }
+                Ok(std::task::Poll::Ready((mut actor, mut outcome))) => {
+                    self.turn_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                    self.deadline_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                    self.deadline_armed.store(false, std::sync::atomic::Ordering::Release);
+                    self.deadline_at_ms.store(u64::MAX, std::sync::atomic::Ordering::Release);
+                    if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
+                        *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Actor(actor));
+                        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                        self.enqueue(true);
+                        return;
+                    }
+                    if self.close_requested.load(std::sync::atomic::Ordering::Acquire) && outcome != ArtifactDrive::Terminal {
+                        actor.closing = true;
+                        actor.cmd_rx.close();
+                        outcome = ArtifactDrive::MoreWork;
+                    }
+                    match outcome {
+                        ArtifactDrive::Terminal => {
+                            *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Actor(actor));
+                            self.begin_terminal(ArtifactActorTerminalReason::Detached);
+                            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                            self.enqueue(true);
+                        }
+                        ArtifactDrive::MoreWork | ArtifactDrive::Idle { .. } => {
+                            *self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Actor(actor));
+                            let woke = self.wake_requested.swap(false, std::sync::atomic::Ordering::AcqRel);
+                            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                            if outcome == ArtifactDrive::MoreWork || woke {
+                                self.schedule();
+                            } else if let ArtifactDrive::Idle { deadline } = outcome {
+                                self.arm_deadline(deadline);
+                            }
+                        }
+                    }
+                }
+                Err(_) => {
+                    *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTurnOwner::Future(future));
+                    self.begin_terminal(ArtifactActorTerminalReason::TurnFault);
+                    self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                    self.enqueue(true);
+                }
             }
         }
 
-        fn arm_timer(self: &Arc<Self>) {
-            if self.terminal.load(std::sync::atomic::Ordering::Acquire) || self.timer_armed.swap(true, std::sync::atomic::Ordering::AcqRel) {
+        fn arm_deadline(self: &Arc<Self>, deadline: Option<Instant>) {
+            let Some(deadline) = deadline else {
+                self.deadline_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                self.deadline_armed.store(false, std::sync::atomic::Ordering::Release);
+                self.deadline_at_ms.store(u64::MAX, std::sync::atomic::Ordering::Release);
+                return;
+            };
+            if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
                 return;
             }
+            let delay_ms = u64::try_from(deadline.saturating_duration_since(Instant::now()).as_millis()).unwrap_or(u64::MAX).max(1);
+            let at_ms = self.pool.now_ms().saturating_add(delay_ms);
+            if self.deadline_armed.load(std::sync::atomic::Ordering::Acquire) && self.deadline_at_ms.load(std::sync::atomic::Ordering::Acquire) <= at_ms {
+                return;
+            }
+            self.deadline_at_ms.store(at_ms, std::sync::atomic::Ordering::Release);
+            self.deadline_armed.store(true, std::sync::atomic::Ordering::Release);
+            let generation = self.deadline_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel).wrapping_add(1);
+            let turn_generation = self.turn_generation.load(std::sync::atomic::Ordering::Acquire);
             let runner = self.clone();
-            let deadline_ms = self.pool.now_ms().saturating_add(4);
-            self.runtime.spawn(async move {
-                runner.pool.timer().sleep_until(deadline_ms).await;
-                runner.timer_armed.store(false, std::sync::atomic::Ordering::Release);
-                runner.schedule();
+            self.pool.callback_at(at_ms, move || {
+                if generation != runner.deadline_generation.load(std::sync::atomic::Ordering::Acquire) {
+                    return;
+                }
+                runner.deadline_armed.store(false, std::sync::atomic::Ordering::Release);
+                runner.deadline_at_ms.store(u64::MAX, std::sync::atomic::Ordering::Release);
+                runner.request_wake(turn_generation);
             });
+        }
+
+        fn begin_terminal(&self, reason: ArtifactActorTerminalReason) {
+            if self.terminal.swap(true, std::sync::atomic::Ordering::AcqRel) {
+                return;
+            }
+            self.mailbox.close();
+            self.turn_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            self.deadline_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            self.deadline_armed.store(false, std::sync::atomic::Ordering::Release);
+            self.retry_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            *self.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(reason);
+            if let Some((job, _)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ActorTerminalJob { reason, job });
+            }
+            if self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+                let owner = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                *self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = owner;
+            }
+        }
+
+        fn cancel(self: &Arc<Self>) {
+            self.begin_terminal(ArtifactActorTerminalReason::Cancelled);
+            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+            self.enqueue(true);
+        }
+
+        fn request_close(self: &Arc<Self>) {
+            if self.terminal.load(std::sync::atomic::Ordering::Acquire) {
+                return;
+            }
+            self.close_requested.store(true, std::sync::atomic::Ordering::Release);
+            self.mailbox.close();
+            self.schedule();
+        }
+
+        fn close_one_terminal_owner(&self) -> bool {
+            if let Some(owner) = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                drop(owner);
+                return true;
+            }
+            if self.mailbox.close_one() {
+                return true;
+            }
+            let owner = self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            if owner.is_none() {
+                return false;
+            }
+            drop(owner);
+            true
+        }
+
+        fn has_terminal_owner(&self) -> bool {
+            self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+                || self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+                || self.mailbox.has_pending()
+                || self.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.terminal.load(std::sync::atomic::Ordering::Acquire)
+                && !self.scheduled.load(std::sync::atomic::Ordering::Acquire)
+                && self.external_tickets.load(std::sync::atomic::Ordering::Acquire) == 0
+                && !self.has_terminal_owner()
+                && self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+        }
+
+        fn finish_terminal(&self) {
+            if !self.terminal_is_empty() {
+                return;
+            }
+            if self.complete.swap(true, std::sync::atomic::Ordering::AcqRel) {
+                return;
+            }
+            if let Some(callback) = self.terminal_empty_callback.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                callback(self.generation);
+            }
+            self.self_retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        }
+
+        fn return_ticket(&self) {
+            let previous = self.external_tickets.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+            debug_assert!(previous > 0, "artifact actor ticket returned twice");
+            if previous == 1 && self.terminal_is_empty() {
+                self.finish_terminal();
+            }
+        }
+
+        fn take_terminal_job(&self) -> Option<ActorTerminalJob> {
+            self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()
+        }
+
+        fn resume_terminal_job(self: &Arc<Self>, terminal: ActorTerminalJob) {
+            self.scheduled.store(true, std::sync::atomic::Ordering::Release);
+            self.submit_exact(terminal.job, 0);
+        }
+
+        fn return_terminal_job(&self, terminal: ActorTerminalJob) {
+            let mut slot = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            debug_assert!(slot.is_none(), "terminal job handback slot already occupied");
+            if slot.is_none() {
+                *slot = Some(terminal);
+            }
+        }
+
+        fn close_terminal_job(&self, terminal: ActorTerminalJob) {
+            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+            drop(terminal);
+            if self.terminal_is_empty() {
+                self.finish_terminal();
+            }
         }
     }
 
@@ -1567,29 +2454,314 @@ mod native_actor {
     /// platform I/O reactor; it never owns an actor or timer thread.
     pub(super) async fn spawn_actor(
         pool: Arc<semio_framework_async::WorkerPool>,
+        generation: u64,
         config: ArtifactActorConfig,
         remote: ChannelBackboneRemote,
-        cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>,
+        cmd_rx: ArtifactMailboxReceiver,
         events: broadcast::Sender<ArtifactEvent>,
-    ) -> Arc<dyn Fn() + Send + Sync> {
+    ) -> ArtifactActorRunnerHandle {
+        let mailbox = cmd_rx.close_handle();
         let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events).await;
         let runner = Arc::new(ActorRunner {
             pool,
-            runtime: tokio::runtime::Handle::current(),
-            actor: std::sync::Mutex::new(Some(actor)),
+            generation,
+            turn: std::sync::Mutex::new(Some(ActorTurnOwner::Actor(actor))),
+            terminal_turn: std::sync::Mutex::new(None),
+            mailbox,
             scheduled: std::sync::atomic::AtomicBool::new(false),
-            timer_armed: std::sync::atomic::AtomicBool::new(false),
+            wake_requested: std::sync::atomic::AtomicBool::new(false),
+            turn_generation: std::sync::atomic::AtomicU64::new(1),
+            deadline_armed: std::sync::atomic::AtomicBool::new(false),
+            deadline_generation: std::sync::atomic::AtomicU64::new(1),
+            deadline_at_ms: std::sync::atomic::AtomicU64::new(u64::MAX),
+            retry_armed: std::sync::atomic::AtomicBool::new(false),
+            retry_generation: std::sync::atomic::AtomicU64::new(1),
+            retry_job: std::sync::Mutex::new(None),
+            terminal_job: std::sync::Mutex::new(None),
+            terminal_reason: std::sync::Mutex::new(None),
+            terminal_empty_callback: std::sync::Mutex::new(None),
+            self_retained: std::sync::Mutex::new(None),
+            external_tickets: std::sync::atomic::AtomicUsize::new(0),
+            close_requested: std::sync::atomic::AtomicBool::new(false),
             terminal: std::sync::atomic::AtomicBool::new(false),
+            complete: std::sync::atomic::AtomicBool::new(false),
         });
-        let runner_for_schedule = runner.clone();
-        let schedule: Arc<dyn Fn() + Send + Sync> = Arc::new(move || runner_for_schedule.schedule());
-        runner.schedule();
-        schedule
+        *runner.self_retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(runner.clone());
+        let weak = Arc::downgrade(&runner);
+        let schedule: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
+            if let Some(runner) = weak.upgrade() {
+                runner.schedule();
+            }
+        });
+        if let Some(ActorTurnOwner::Actor(actor)) = runner.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_mut() {
+            actor.cmd_rx.set_wake(schedule.clone());
+            actor.set_readiness(schedule);
+        }
+        ArtifactActorRunnerHandle { generation, runner }
+    }
+
+    #[cfg(test)]
+    pub(super) mod retained_turn_fixtures {
+        use super::*;
+
+        fn runner_with(pool: Arc<semio_framework_async::WorkerPool>, owner: Option<ActorTurnOwner>, mailbox: ArtifactMailboxClose) -> Arc<ActorRunner> {
+            Arc::new(ActorRunner {
+                pool,
+                generation: 1,
+                turn: std::sync::Mutex::new(owner),
+                terminal_turn: std::sync::Mutex::new(None),
+                mailbox,
+                scheduled: std::sync::atomic::AtomicBool::new(false),
+                wake_requested: std::sync::atomic::AtomicBool::new(false),
+                turn_generation: std::sync::atomic::AtomicU64::new(1),
+                deadline_armed: std::sync::atomic::AtomicBool::new(false),
+                deadline_generation: std::sync::atomic::AtomicU64::new(1),
+                deadline_at_ms: std::sync::atomic::AtomicU64::new(u64::MAX),
+                retry_armed: std::sync::atomic::AtomicBool::new(false),
+                retry_generation: std::sync::atomic::AtomicU64::new(1),
+                retry_job: std::sync::Mutex::new(None),
+                terminal_job: std::sync::Mutex::new(None),
+                terminal_reason: std::sync::Mutex::new(None),
+                terminal_empty_callback: std::sync::Mutex::new(None),
+                self_retained: std::sync::Mutex::new(None),
+                external_tickets: std::sync::atomic::AtomicUsize::new(0),
+                close_requested: std::sync::atomic::AtomicBool::new(false),
+                terminal: std::sync::atomic::AtomicBool::new(false),
+                complete: std::sync::atomic::AtomicBool::new(false),
+            })
+        }
+
+        pub(super) fn fixture_runner_handle(pool: Arc<semio_framework_async::WorkerPool>, generation: u64, mailbox: ArtifactMailboxClose) -> ArtifactActorRunnerHandle {
+            let runner = runner_with(pool, None, mailbox);
+            let runner = Arc::new(ActorRunner { generation, ..Arc::try_unwrap(runner).ok().expect("fixture runner has one owner") });
+            *runner.self_retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(runner.clone());
+            ArtifactActorRunnerHandle { generation, runner }
+        }
+
+        #[test]
+        fn stale_generation_wake_cannot_schedule_or_mutate_current_turn() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let (_, receiver) = artifact_mailbox_pair();
+            let runner = runner_with(pool, None, receiver.close_handle());
+            runner.request_wake(0);
+            assert!(!runner.scheduled.load(std::sync::atomic::Ordering::Acquire));
+            assert!(!runner.terminal.load(std::sync::atomic::Ordering::Acquire));
+            runner.request_wake(1);
+            assert_eq!(*runner.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner), Some(ArtifactActorTerminalReason::Pool(semio_framework_async::WorkerSubmitErrorKind::Shutdown)));
+            assert!(runner.take_terminal_job().is_some(), "shutdown returns the exact rejected closure to observable terminal ownership");
+        }
+
+        #[test]
+        fn turn_fault_and_cancel_retain_then_close_one_owner_per_grant() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let (sender, receiver) = artifact_mailbox_pair();
+            sender.send(ArtifactActorMsg::ExternalChanged).expect("first terminal mailbox owner");
+            sender.send(ArtifactActorMsg::Detach).expect("second terminal mailbox owner");
+            let fault: ActorTurnFuture = Box::pin(async { panic!("fixture turn fault") });
+            let runner = runner_with(pool, Some(ActorTurnOwner::Future(fault)), receiver.close_handle());
+            runner.scheduled.store(true, std::sync::atomic::Ordering::Release);
+            runner.clone().run_job();
+            assert_eq!(*runner.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner), Some(ArtifactActorTerminalReason::TurnFault));
+            assert!(runner.close_one_terminal_owner());
+            assert_eq!(runner.mailbox.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len, 1);
+            assert!(runner.close_one_terminal_owner());
+            assert_eq!(runner.mailbox.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len, 0);
+            assert!(runner.close_one_terminal_owner(), "retained fault future is a distinct terminal owner");
+
+            let (_, receiver) = artifact_mailbox_pair();
+            let cancelled: ActorTurnFuture = Box::pin(async { std::future::pending::<(ArtifactActor, ArtifactDrive)>().await });
+            let cancelled_runner = runner_with(runner.pool.clone(), Some(ActorTurnOwner::Future(cancelled)), receiver.close_handle());
+            cancelled_runner.cancel();
+            assert_eq!(*cancelled_runner.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner), Some(ArtifactActorTerminalReason::Cancelled));
+        }
+
+        #[test]
+        fn quiet_pool_saturation_retains_exact_successor_for_timer_wheel_retry() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            let started = Arc::new(std::sync::Barrier::new(2));
+            let release = Arc::new(std::sync::Barrier::new(2));
+            let worker_started = started.clone();
+            let worker_release = release.clone();
+            pool.submit(
+                semio_framework_async::Lane::UserVisible,
+                Box::new(move || {
+                    worker_started.wait();
+                    worker_release.wait();
+                }),
+            );
+            started.wait();
+            for _ in 0..semio_framework_async::WORKER_JOBS_PER_LANE {
+                pool.try_submit(semio_framework_async::Lane::UserVisible, Box::new(|| {})).expect("fill exact quiet queue slot");
+            }
+            let (_, receiver) = artifact_mailbox_pair();
+            let runner = runner_with(pool, None, receiver.close_handle());
+            runner.enqueue(false);
+            assert!(runner.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
+            assert!(runner.retry_armed.load(std::sync::atomic::Ordering::Acquire));
+            release.wait();
+        }
+
+        #[test]
+        fn idle_runner_is_strongly_retained_and_quiet_late_wake_schedules_once() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let (_, receiver) = artifact_mailbox_pair();
+            let handle = fixture_runner_handle(pool, 41, receiver.close_handle());
+            let weak = Arc::downgrade(&handle.runner);
+            let runner = handle.runner.clone();
+            drop(handle);
+            drop(runner);
+            let retained = weak.upgrade().expect("idle runner must retain itself until terminal close");
+            for _ in 0..8 {
+                retained.request_wake(retained.turn_generation.load(std::sync::atomic::Ordering::Acquire));
+            }
+            assert!(matches!(*retained.terminal_reason.lock().unwrap_or_else(std::sync::PoisonError::into_inner), Some(ArtifactActorTerminalReason::Pool(semio_framework_async::WorkerSubmitErrorKind::Shutdown))));
+            assert!(retained.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(), "wake storm retains one exact rejected job");
+            let cleanup = ArtifactActorRunnerHandle { generation: 41, runner: retained };
+            while cleanup.close_step() {}
+            assert!(cleanup.terminal_is_empty());
+        }
+
+        #[test]
+        fn external_ticket_held_across_close_delays_completion_until_exact_return() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let (_, receiver) = artifact_mailbox_pair();
+            let handle = fixture_runner_handle(pool, 73, receiver.close_handle());
+            let host = Arc::new(std::sync::Mutex::new(ArtifactHostState::new()));
+            let ticket = handle.issue_ticket(host);
+            handle.cancel();
+            while handle.close_step() {}
+            assert!(!handle.terminal_is_empty(), "external ticket is a retained close authority");
+            assert!(!handle.runner.complete.load(std::sync::atomic::Ordering::Acquire));
+            ticket.return_to_host();
+            assert!(handle.terminal_is_empty());
+            assert!(handle.runner.complete.load(std::sync::atomic::Ordering::Acquire));
+        }
+
+        #[test]
+        fn external_ticket_dropped_before_close_and_generation_aba_are_exact() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let (_, old_receiver) = artifact_mailbox_pair();
+            let old = fixture_runner_handle(pool.clone(), 91, old_receiver.close_handle());
+            let host = Arc::new(std::sync::Mutex::new(ArtifactHostState::new()));
+            let old_ticket = old.issue_ticket(host.clone());
+            assert_eq!(old_ticket.generation(), 91);
+            drop(old_ticket);
+            old.cancel();
+            while old.close_step() {}
+            assert!(old.terminal_is_empty(), "returned-before-close ticket cannot delay retirement");
+
+            let (_, current_receiver) = artifact_mailbox_pair();
+            let current = fixture_runner_handle(pool, 92, current_receiver.close_handle());
+            let current_ticket = current.issue_ticket(host);
+            assert_eq!(current.runner.external_tickets.load(std::sync::atomic::Ordering::Acquire), 1);
+            assert_eq!(old.runner.external_tickets.load(std::sync::atomic::Ordering::Acquire), 0, "old ticket return cannot decrement the reused generation");
+            drop(current_ticket);
+            current.cancel();
+            while current.close_step() {}
+            assert!(current.terminal_is_empty());
+        }
+
+        #[test]
+        fn terminal_job_take_resume_and_close_preserve_exact_owner() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let (_, receiver) = artifact_mailbox_pair();
+            let handle = fixture_runner_handle(pool, 101, receiver.close_handle());
+            handle.cancel();
+            let job = handle.take_terminal_job().expect("host retrieves exact rejected terminal job");
+            assert!(matches!(job.reason(), ArtifactActorTerminalReason::Pool(semio_framework_async::WorkerSubmitErrorKind::Shutdown)));
+            job.resume();
+            let resumed = handle.take_terminal_job().expect("failed resume hands the same job back to terminal ownership");
+            resumed.close();
+            while handle.close_step() {}
+            assert!(handle.terminal_is_empty());
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn idle_then_late_send_upgrades_the_host_retained_runner_once() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            let host = ArtifactHost::new(pool);
+            let channels = host.open(ArtifactActorConfig { document_id: "quiet".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
+            let runner = channels.runner.runner.upgrade().expect("host retains the quiet runner");
+            for _ in 0..10_000 {
+                if !runner.scheduled.load(std::sync::atomic::Ordering::Acquire) {
+                    break;
+                }
+                std::thread::yield_now();
+            }
+            assert!(!runner.scheduled.load(std::sync::atomic::Ordering::Acquire), "runner reaches wake-driven idle without polling");
+            channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("late owner admitted");
+            for _ in 0..10_000 {
+                if !runner.mailbox.has_pending() {
+                    break;
+                }
+                std::thread::yield_now();
+            }
+            assert!(!runner.mailbox.has_pending(), "late send wakes and consumes exactly its mailbox owner");
+            let generation = host.close("quiet").expect("host transfers the runner into closing ownership");
+            channels.runner.return_to_host();
+            assert_eq!(generation, runner.generation);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn host_close_registry_survives_external_ticket_until_return() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let host = ArtifactHost::new(pool);
+            let channels = host.open(ArtifactActorConfig { document_id: "held".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
+            let generation = channels.runner.generation();
+            assert_eq!(host.close("held"), Some(generation));
+            let control = host.closing_runner(generation).expect("closing registry owns the runner before cancellation progression");
+            while control.close_step() {}
+            assert!(!control.terminal_is_empty(), "held external ticket delays terminal-empty callback");
+            assert!(host.closing_runner(generation).is_some());
+            channels.runner.return_to_host();
+            assert!(control.terminal_is_empty());
+            assert!(host.closing_runner(generation).is_none(), "ticket return clears exactly the matching generation");
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn ticket_return_before_host_close_allows_immediate_retirement() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let host = ArtifactHost::new(pool);
+            let channels = host.open(ArtifactActorConfig { document_id: "returned".into(), schema: "fixture/v1".into(), bindings: Vec::new(), watch_external: false, actor: "fixture".into() }).await;
+            let generation = channels.runner.generation();
+            channels.runner.return_to_host();
+            assert_eq!(host.close("returned"), Some(generation));
+            let control = host.closing_runner(generation).expect("host retains terminal control");
+            while control.close_step() {}
+            assert!(control.terminal_is_empty());
+            assert!(host.closing_runner(generation).is_none());
+        }
+
+        #[test]
+        fn detach_while_pending_retains_future_then_cancel_closes_one_owner() {
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            pool.shutdown();
+            let (_, receiver) = artifact_mailbox_pair();
+            let pending: ActorTurnFuture = Box::pin(async { std::future::pending::<(ArtifactActor, ArtifactDrive)>().await });
+            let runner = runner_with(pool, Some(ActorTurnOwner::Future(pending)), receiver.close_handle());
+            *runner.self_retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(runner.clone());
+            runner.request_close();
+            assert!(runner.close_requested.load(std::sync::atomic::Ordering::Acquire));
+            assert!(runner.terminal_turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(), "fatal close scheduling retains the pending future");
+            let handle = ArtifactActorRunnerHandle { generation: 1, runner };
+            while handle.close_step() {}
+            assert!(handle.terminal_is_empty());
+        }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 use native_actor::spawn_actor;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_actor::{ArtifactActorRunnerHandle, ArtifactActorRunnerTicket, ArtifactActorTerminalJob, ArtifactActorTerminalReason, ArtifactActorTerminalState};
 //#endregion 🔖️NativeActor
 
 //#region 🔖️WasmActor
@@ -1691,29 +2863,22 @@ mod wasm_actor {
             self.send_frame(&ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
         }
 
-        async fn drain_and_relay(&mut self) -> bool {
-            let messages = self.remote.drain().await.unwrap_or_default();
-            let drained = !messages.is_empty();
-            for message in messages {
-                match message {
-                    BackboneMessage::Mutations { envelopes } => {
-                        let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
-                        self.relay_operations(&envelopes).await;
-                    }
-                    BackboneMessage::Snapshot { .. } => {
-                        // 📸️ No client -> semio_hub whole-envelope push in wire v2 — see the native actor's
-                        // matching note in `drain_and_relay` (native_actor module, above).
-                    }
-                    BackboneMessage::Ack { .. } => {}
+        async fn relay_one_backbone(&mut self) -> Result<bool, vcs::VcsError> {
+            let Some(message) = self.remote.try_pop_front()? else { return Ok(false) };
+            match message {
+                BackboneMessage::Mutations { envelopes } => {
+                    let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
+                    self.relay_operations(&envelopes).await;
                 }
+                BackboneMessage::Snapshot { .. } | BackboneMessage::Ack { .. } => {}
             }
-            drained
+            Ok(true)
         }
 
         async fn handle_cmd(&mut self, message: ArtifactActorMsg) {
             match message {
                 ArtifactActorMsg::LocalMutations { envelopes } => {
-                    let drained = self.drain_and_relay().await;
+                    let drained = self.relay_one_backbone().await.unwrap_or(false);
                     if !drained && !envelopes.is_empty() {
                         self.relay_operations(&envelopes).await;
                     }
@@ -1826,13 +2991,7 @@ mod wasm_actor {
         }
     }
 
-    pub(super) async fn spawn_actor(
-        _pool: std::sync::Arc<semio_framework_async::WorkerPool>,
-        config: ArtifactActorConfig,
-        remote: ChannelBackboneRemote,
-        mut cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>,
-        events: broadcast::Sender<ArtifactEvent>,
-    ) {
+    pub(super) async fn spawn_actor(_pool: std::sync::Arc<semio_framework_async::WorkerPool>, config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: ArtifactMailboxReceiver, events: broadcast::Sender<ArtifactEvent>) {
         let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<Vec<u8>>();
         let mut hub_base_url = None;
         let mut hub_space_id = None;
@@ -1878,7 +3037,7 @@ mod wasm_actor {
                     cmd = cmd_rx.recv() => {
                         match cmd {
                             None => break,
-                            Some(ArtifactActorMsg::Detach) => { actor.drain_and_relay().await; break; }
+                            Some(ArtifactActorMsg::Detach) => { let _ = actor.relay_one_backbone().await; break; }
                             Some(message) => actor.handle_cmd(message).await,
                         }
                     }
@@ -2457,6 +3616,98 @@ mod tests {
         POOL.get_or_init(|| std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
     }
 
+    #[test]
+    fn artifact_mailbox_item_cap_plus_one_returns_exact_owner_and_preserves_fifo() {
+        let (sender, receiver) = artifact_mailbox_pair();
+        for seq in 0..ARTIFACT_MAILBOX_ITEMS as u64 {
+            sender.send(ArtifactActorMsg::PublishPreview { key: format!("key-{seq}"), seq, payload: vec![seq as u8] }).expect("admit fixed mailbox owner");
+        }
+        let rejected = sender.send(ArtifactActorMsg::PublishPreview { key: "cap-plus-one".into(), seq: 256, payload: vec![7, 8] }).expect_err("item cap + 1 must reject");
+        assert!(matches!(rejected.into_message(), ArtifactActorMsg::PublishPreview { key, seq: 256, payload } if key == "cap-plus-one" && payload == vec![7, 8]));
+        for seq in 0..ARTIFACT_MAILBOX_ITEMS as u64 {
+            assert!(matches!(receiver.try_recv(), Some(ArtifactActorMsg::PublishPreview { seq: actual, .. }) if actual == seq));
+        }
+        assert!(receiver.try_recv().is_none());
+    }
+
+    #[test]
+    fn artifact_mailbox_byte_cap_and_plus_one_preflight_before_mutation() {
+        let exact_payload = vec![3; ARTIFACT_MAILBOX_BYTES - 17];
+        let (exact_sender, exact_receiver) = artifact_mailbox_pair();
+        exact_sender.send(ArtifactActorMsg::PublishPreview { key: String::new(), seq: 1, payload: exact_payload }).expect("exact byte cap admits");
+        assert_eq!(exact_sender.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).bytes, ARTIFACT_MAILBOX_BYTES);
+        assert!(matches!(exact_receiver.try_recv(), Some(ArtifactActorMsg::PublishPreview { seq: 1, .. })));
+
+        let (overflow_sender, overflow_receiver) = artifact_mailbox_pair();
+        let rejected = overflow_sender.send(ArtifactActorMsg::PublishPreview { key: String::new(), seq: 2, payload: vec![9; ARTIFACT_MAILBOX_BYTES - 16] }).expect_err("byte cap + 1 must reject");
+        assert!(matches!(rejected.into_message(), ArtifactActorMsg::PublishPreview { seq: 2, payload, .. } if payload.len() == ARTIFACT_MAILBOX_BYTES - 16));
+        assert!(overflow_receiver.try_recv().is_none(), "byte rejection cannot mutate FIFO state");
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn artifact_mailbox_wake_storm_coalesces_until_fifo_becomes_empty() {
+        let (sender, receiver) = artifact_mailbox_pair();
+        let wakes = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let observed = wakes.clone();
+        receiver.set_wake(std::sync::Arc::new(move || {
+            observed.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }));
+        for _ in 0..ARTIFACT_MAILBOX_ITEMS {
+            sender.send(ArtifactActorMsg::ExternalChanged).expect("wake-storm owner admitted");
+        }
+        assert_eq!(wakes.load(std::sync::atomic::Ordering::Acquire), 1);
+        while receiver.try_recv().is_some() {}
+        sender.send(ArtifactActorMsg::Detach).expect("new readiness edge admitted");
+        assert_eq!(wakes.load(std::sync::atomic::Ordering::Acquire), 2);
+    }
+
+    #[test]
+    fn artifact_mailbox_stale_late_send_hands_back_exact_owner_and_interrupted_close_drains_one_per_grant() {
+        let (sender, receiver) = artifact_mailbox_pair();
+        for seq in 0..3 {
+            sender.send(ArtifactActorMsg::PublishPreview { key: "close".into(), seq, payload: vec![seq as u8] }).expect("close fixture admission");
+        }
+        let close = receiver.close_handle();
+        close.close();
+        let late = sender.send(ArtifactActorMsg::PublishPreview { key: "late".into(), seq: 99, payload: vec![4, 5, 6] }).expect_err("late generation rejects");
+        assert!(matches!(late, ArtifactMailboxSendError::Stale { message: ArtifactActorMsg::PublishPreview { key, seq: 99, payload } } if key == "late" && payload == vec![4, 5, 6]));
+        for remaining in [2, 1, 0] {
+            assert!(close.close_one());
+            assert_eq!(close.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len, remaining);
+        }
+        assert!(!close.close_one());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_ownership_order() {
+        let nested = sample_presence_peer_with_interaction().await;
+        let bare = PresencePeer {
+            actor: nested.actor.clone(),
+            connected_at_ms: nested.connected_at_ms,
+            label: None,
+            presence_pack: None,
+            user_id: None,
+            role: None,
+            drag_ghost_json: None,
+            interaction: None,
+            color: None,
+            surface: None,
+            views: Vec::new(),
+            ui: None,
+        };
+        let nested_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(nested) }).expect("nested message fits");
+        let bare_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(bare) }).expect("bare message fits");
+        assert!(nested_bytes > bare_bytes, "all nested identifiers and collections contribute byte credit");
+
+        let (mut channel, remote) = ChannelBackbone::pair("store-sync-one-pop").await;
+        channel.send(BackboneMessage::Ack { op_ids: vec!["first".into()] }).await.expect("first backbone owner");
+        channel.send(BackboneMessage::Ack { op_ids: vec!["second".into()] }).await.expect("second backbone owner");
+        assert!(matches!(remote.try_pop_front().expect("first opportunity"), Some(BackboneMessage::Ack { op_ids }) if op_ids == vec!["first"]));
+        assert!(matches!(remote.try_pop_front().expect("second opportunity"), Some(BackboneMessage::Ack { op_ids }) if op_ids == vec!["second"]));
+        assert!(remote.try_pop_front().expect("idle opportunity").is_none());
+    }
+
     // 🎯️ `id` must be dotted `plugin.artifact` — `os_semio`'s preamble validator rejects a bare
     // extension (this crate never compiled with `--features sync` before this packet, so the
     // mismatch was never exercised at runtime). `extension_suffix` is the id's LAST segment, so
@@ -2905,23 +4156,25 @@ mod tests {
         assert!(producer.pending().is_none());
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
         let host = ArtifactHost::new(test_pool());
-        let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel();
+        let (cmd_tx, cmd_rx) = artifact_mailbox_pair();
         let (events, _) = broadcast::channel(1);
-        host.inner.lock().unwrap().insert("doc".into(), OpenDocument { cmd_tx, events, presence: PresenceHeartbeatProducer::default(), schedule: std::sync::Arc::new(|| {}) });
+        let runner = native_actor::retained_turn_fixtures::fixture_runner_handle(host.pool.clone(), 1, cmd_rx.close_handle());
+        host.inner.lock().unwrap().documents.insert("doc".into(), OpenDocument { generation: 1, cmd_tx, events, presence: PresenceHeartbeatProducer::default(), runner });
 
         let first = sample_presence_peer_with_interaction().await;
         assert!(host.presence_heartbeat("doc", 500, first.clone()));
-        assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == first));
+        assert!(matches!(cmd_rx.try_recv(), Some(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == first));
 
         let mut latest = sample_presence_peer_with_interaction().await;
         latest.ui = Some(crate::os_spr::PresenceUi { hovered_path: Some("row[0]#changed".into()), focused_path: None, pressed_path: None });
         assert!(!host.presence_heartbeat("doc", 550, latest.clone()));
-        assert!(cmd_rx.try_recv().is_err(), "sub-interval offer must not publish");
+        assert!(cmd_rx.try_recv().is_none(), "sub-interval offer must not publish");
         assert!(host.presence_heartbeat("doc", 600, latest.clone()));
-        assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == latest));
+        assert!(matches!(cmd_rx.try_recv(), Some(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == latest));
         assert!(!host.presence_heartbeat("missing", 700, sample_presence_peer_with_interaction().await));
     }
     //#endregion 🧪️PresenceInteraction

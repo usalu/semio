@@ -242,6 +242,10 @@ impl ArtifactEditor for AnimatePresentPlayApp {
     const DIALECT: Dialect = crate::artifacts::present::ANIMATE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PRESENT_DOCUMENT_SCHEMA;
 
+    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::present::spr::present_envelope_decode_owner_bundle())
+    }
+
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::animate::config::schema::app_schema_descriptor())
     }

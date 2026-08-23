@@ -11,15 +11,13 @@ use crate::engine_canvas::theme_is_dark;
 use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
-use infinite_world::world::{
-    fetch_pending_glb_meshes, fetch_pending_reference_images, fetch_pending_terrain_tiles, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
-};
+use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
 use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel};
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 #[cfg(not(target_arch = "wasm32"))]
-use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactSyncStatus, PersistenceBinding, RemoteState};
+use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::PresencePeer;
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
@@ -960,7 +958,7 @@ pub struct ShellSyncChannel {
     pub actor_uri: String,
     pub instance_id: u32,
     pub plugin_id: String,
-    pub cmd_tx: tokio::sync::mpsc::UnboundedSender<ArtifactActorMsg>,
+    pub cmd_tx: ArtifactMailboxSender,
     pub events: tokio::sync::broadcast::Receiver<ArtifactEvent>,
     pub connected_at_ms: i64,
 }
@@ -4507,45 +4505,29 @@ impl ShellState {
     }
 
     pub async fn handle_world3d_input(&mut self, x: f32, y: f32, down: bool, button: i16, shift: bool, ctrl: bool, alt: bool, meta: bool, wheel_delta: f32, drag_dx: f32, drag_dy: f32) -> Result<(), String> {
-        if wheel_delta.abs() > 0.0 {
-            for state in self.world3d_states.values_mut() {
-                if state.bounds.contains(x, y) {
-                    handle_world3d_wheel(state, wheel_delta);
-                }
-            }
-        }
-        if (drag_dx.abs() > 0.0 || drag_dy.abs() > 0.0) && down {
-            let modifiers = PointerModifiers { shift, ctrl, alt, meta };
-            for state in self.world3d_states.values_mut() {
-                if state.bounds.contains(x, y) {
-                    handle_world3d_pointer_drag(state, x, y, drag_dx, drag_dy, button, &modifiers);
-                }
-            }
-        }
-        let mut actions = Vec::new();
         let modifiers = PointerModifiers { shift, ctrl, alt, meta };
         for state in self.world3d_states.values_mut() {
             if !state.bounds.contains(x, y) {
                 continue;
             }
-            if let Some(action) = handle_world3d_pointer_button(state, x, y, down, button, &modifiers) {
-                actions.push(action);
+            let wheel = WorldInteractionIntent::wheel(x, y, wheel_delta, &modifiers);
+            let button_intent = WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers);
+            let move_intent = WorldInteractionIntent::pointer_move(x, y, drag_dx, drag_dy, down, button, &modifiers);
+            let mut drag = move_intent;
+            drag.phase = WorldInteractionPhase::PointerDrag;
+            let has_wheel = wheel_delta.abs() > 0.0;
+            let has_drag = down && (drag_dx.abs() > 0.0 || drag_dy.abs() > 0.0);
+            let admitted = match (has_wheel, has_drag) {
+                (true, true) => enqueue_world3d_events(state, [wheel, drag, button_intent, move_intent]).is_ok(),
+                (true, false) => enqueue_world3d_events(state, [wheel, button_intent, move_intent]).is_ok(),
+                (false, true) => enqueue_world3d_events(state, [drag, button_intent, move_intent]).is_ok(),
+                (false, false) => enqueue_world3d_events(state, [button_intent, move_intent]).is_ok(),
+            };
+            if !admitted {
+                return Err("world3d fixed interaction credits exhausted".into());
             }
-            actions.extend(handle_world3d_paint_actions(state, x, y, down, button));
-            if let Some(action) = handle_world3d_pointer_move(state, x, y, down, button) {
-                actions.push(action);
-            }
-        }
-        for action in actions {
-            self.dispatch_action(action).await?;
         }
         Ok(())
-    }
-
-    pub async fn poll_world3d_assets(&mut self) {
-        fetch_pending_glb_meshes(&mut self.world3d_states).await;
-        fetch_pending_reference_images(&mut self.world3d_states).await;
-        fetch_pending_terrain_tiles(&mut self.world3d_states).await;
     }
 
     async fn handle_shell_hit(&mut self, hit: &HitTarget<ActionDescriptor>) -> Result<bool, String> {

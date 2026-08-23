@@ -22,12 +22,15 @@ Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for work fleets of maximum possible parallel agents.
 Plan for a main Opus 5 High agent for plan coordination, then use multiple Sonnet 5 High agents for task execution, then use multiple Haiku 4.5 agents for read-only exploration.
 Everything end to end (ignore everything inside ./compose folder).
-Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit: 
-
+Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
 
 ---
 
 ### Local
+
+---
+
+Implement everything end to end. The plan is trusted, no need to double check it. There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---
 
@@ -14301,4 +14304,5 @@ store.tsx:1195 Executing command: "compose.sketchpad.setIsMobile"
 store.tsx:1195 Executing command: "compose.sketchpad.setIsMobile"
 store.tsx:1195 Executing command: "compose.sketchpad.syncNavigation"
 setIsMobile shouldnt be there.
+
 syncNavigation should only be called once.

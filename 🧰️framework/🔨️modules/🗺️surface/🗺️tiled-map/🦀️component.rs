@@ -331,15 +331,56 @@ pub mod tiles {
     use super::projection::WORLD_HALF;
     use super::{pick_tile_z_target, Point, MAX_VISIBLE_TILE_REQUESTS};
 
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct VisibleTile {
+        pub z: u32,
+        pub x: u32,
+        pub y: u32,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct VisibleTileCursor {
+        z: u32,
+        x: u32,
+        y: u32,
+        y0: u32,
+        y1: u32,
+        remaining: usize,
+    }
+
+    impl VisibleTileCursor {
+        pub fn peek(&self) -> Option<VisibleTile> {
+            (self.remaining != 0).then_some(VisibleTile { z: self.z, x: self.x, y: self.y })
+        }
+
+        pub fn advance(&mut self) -> bool {
+            if self.remaining == 0 {
+                return false;
+            }
+            self.remaining -= 1;
+            if self.y < self.y1 {
+                self.y += 1;
+            } else {
+                self.x += 1;
+                self.y = self.y0;
+            }
+            true
+        }
+
+        pub fn remaining(&self) -> usize {
+            self.remaining
+        }
+    }
+
     pub fn pick_zoom(camera: &Camera, viewport: &Viewport, forced_lod_id: Option<&str>) -> u32 {
         let mut z = pick_tile_z_target(camera, viewport, forced_lod_id);
-        while z > 0 && visible_tiles(camera, viewport, z).len() > MAX_VISIBLE_TILE_REQUESTS {
+        while z > 0 && visible_tile_cursor(camera, viewport, z).remaining() > MAX_VISIBLE_TILE_REQUESTS {
             z -= 1;
         }
         z
     }
 
-    pub fn visible_tiles(camera: &Camera, viewport: &Viewport, z: u32) -> Vec<(u32, u32, u32)> {
+    pub fn visible_tile_cursor(camera: &Camera, viewport: &Viewport, z: u32) -> VisibleTileCursor {
         let corners = [
             map_viewport::screen_to_world(camera, viewport, Point::new(0.0, 0.0)),
             map_viewport::screen_to_world(camera, viewport, Point::new(viewport.width as f64, 0.0)),
@@ -362,11 +403,17 @@ pub mod tiles {
         let x1 = ((max_x + WORLD_HALF) / step).ceil().min(n - 1.0) as u32;
         let y0 = ((WORLD_HALF - max_y) / step).floor().max(0.0) as u32;
         let y1 = ((WORLD_HALF - min_y) / step).ceil().min(n - 1.0) as u32;
-        let mut out = Vec::new();
-        for x in x0..=x1 {
-            for y in y0..=y1 {
-                out.push((z, x, y));
-            }
+        let columns = usize::try_from(x1.saturating_sub(x0).saturating_add(1)).unwrap_or(usize::MAX);
+        let rows = usize::try_from(y1.saturating_sub(y0).saturating_add(1)).unwrap_or(usize::MAX);
+        VisibleTileCursor { z, x: x0, y: y0, y0, y1, remaining: columns.saturating_mul(rows) }
+    }
+
+    pub fn visible_tiles(camera: &Camera, viewport: &Viewport, z: u32) -> Vec<(u32, u32, u32)> {
+        let mut cursor = visible_tile_cursor(camera, viewport, z);
+        let mut out = Vec::with_capacity(cursor.remaining().min(MAX_VISIBLE_TILE_REQUESTS));
+        while let Some(tile) = cursor.peek() {
+            out.push((tile.z, tile.x, tile.y));
+            cursor.advance();
         }
         out
     }
@@ -2144,8 +2191,24 @@ impl MapHost {
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
     }
 
+    pub fn visible_raster_tile_cursor(&self) -> tiles::VisibleTileCursor {
+        tiles::visible_tile_cursor(&self.camera, &self.viewport, self.pick_raster_tile_zoom())
+    }
+
+    pub fn visible_vector_tile_cursor(&self) -> Option<tiles::VisibleTileCursor> {
+        vector_tiles_available_at_camera_zoom(self.camera.zoom).then(|| tiles::visible_tile_cursor(&self.camera, &self.viewport, self.pick_vector_tile_zoom()))
+    }
+
+    pub fn interaction_revision(&self) -> u64 {
+        self.interaction_revision
+    }
+
     pub fn set_render_mode(&mut self, mode: &str) {
-        self.render_mode = MapTileMode::from_str(mode);
+        let next = MapTileMode::from_str(mode);
+        if self.render_mode != next {
+            self.render_mode = next;
+            self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        }
     }
 
     pub fn set_vector_style(&mut self, style: &str) {
@@ -2191,7 +2254,7 @@ impl MapHost {
         let lod_idx = resolve_map_lod_index_from_span(span);
         let mut z = if lod_idx <= 1 { span_cap } else { self.pick_raster_tile_zoom().min(span_cap) };
         z = z.min(vector_tiles::MAP_VECTOR_TILE_MAX_Z);
-        while z > 0 && tiles::visible_tiles(&self.camera, &self.viewport, z).len() > MAX_VISIBLE_TILE_REQUESTS {
+        while z > 0 && tiles::visible_tile_cursor(&self.camera, &self.viewport, z).remaining() > MAX_VISIBLE_TILE_REQUESTS {
             z -= 1;
         }
         z
@@ -3664,6 +3727,23 @@ mod tests {
         assert!(!tiles.is_empty());
         assert!(tiles.len() < 256, "world view must not enumerate excessive tiles");
         let _ = WORLD_HALF;
+    }
+
+    #[test]
+    fn typed_visible_tile_cursor_matches_legacy_order_and_resumes_one_item_at_a_time() {
+        let camera = Camera { x: 0.0, y: 0.0, zoom: 200.0 };
+        let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
+        let legacy = visible_tiles(&camera, &viewport, 3);
+        let mut cursor = tiles::visible_tile_cursor(&camera, &viewport, 3);
+        assert_eq!(cursor.remaining(), legacy.len());
+        let mut typed = Vec::new();
+        while let Some(tile) = cursor.peek() {
+            typed.push((tile.z, tile.x, tile.y));
+            assert!(cursor.advance());
+        }
+        assert_eq!(typed, legacy);
+        assert_eq!(cursor.remaining(), 0);
+        assert!(!cursor.advance());
     }
 
     #[test]

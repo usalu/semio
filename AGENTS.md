@@ -10,12 +10,16 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
     - You MUST NOT create any other script files other than `📜️script.ts`.
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
-- You MUST NOT depend on external implementation details.
+- You MUST NOT create runtime dependencies on external libraries.
   - You SHOULD NOT use external libraries for runtime purposes.
-    - You SHOULD use as many existing libraries as possible to test our implementation.
-    - You MUST use all external libraries behind an interface.
+    - You SHOULD use existing libraries as possible to test our implementation.
+    - You MUST use all external libraries behind an interface if it is not feasible in the moment to implement it in our codebase.
       - You MUST NOT export api that directly or indirectly requires an interface/class/type outside of this codebase.
         - You MUST reexport explicitly if the client needs it.
+    - You SHOULD use only system libraries provided by the frameworks.
+- You MUST develop test-driven.
+  - You MUST create at least one language-agnostic test for every feature.
+    - You MUST create the same output of a test with at least one third-party library in order to validate our own implementation.
 - You MUST develop multi-implementation.
   - You MUST use schema-first over code-first.
   - You MUST use a domain-driven taxonomy tree of files and folders that allows for implementing multiple lanuguages.
@@ -47,7 +51,9 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST register all executable commands there by following the existing order, grouping and naming.
 - You MUST work simultaneously with others on the same files.
   - You MUST NOT use any modifying git command such as `git commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
-  - You MUST NOT use git worktrees.
+    - You MUST NOT use git worktrees.
+  - You SHOULD NOT stop because of detecting others are working on the same area.
+    - You SHOULD ignore unrelated recent changes and keep on focusing on your own task.
 - You are working on a greenfield repo.
   - The codebase is under design and development and not used in production yet.
     - You MUST not care about backwards compatibility.

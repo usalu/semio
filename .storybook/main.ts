@@ -161,9 +161,6 @@ const config: StorybookConfig = {
       config.plugins.splice(indicesToRemove[i], 1);
     }
 
-    const mdx = await import("@mdx-js/rollup");
-    config.plugins.push(mdx.default({}));
-
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
     const optimizeExclude = new Set<string>([...(config.optimizeDeps.exclude || []), "@semio-tech/ui-react", "@semio-tech/infinite-canvas-react-renderer", ...findWorkspacePackages(repoRootPath), ...activeScopes.flatMap((s) => s.optimizeDepsExclude ?? [])]);

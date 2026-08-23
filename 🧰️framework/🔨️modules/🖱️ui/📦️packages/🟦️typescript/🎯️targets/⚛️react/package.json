@@ -48,7 +48,6 @@
     "xstate": "^5.25.0"
   },
   "devDependencies": {
-    "@mdx-js/rollup": "^3.1.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.18",

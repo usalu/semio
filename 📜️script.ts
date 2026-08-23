@@ -1281,6 +1281,330 @@ function toolJobChildContentRootExact(store: string, plugin: string): boolean {
   );
 }
 
+function toolJobMemberStoreOwnerExact(store: string, semio: string): boolean {
+  const ownerTraitStart = store.indexOf("pub trait MemberStoreOwner<Mutation>");
+  const ownerTraitOpen = ownerTraitStart < 0 ? -1 : store.indexOf("{", ownerTraitStart);
+  const ownerTrait = ownerTraitOpen < 0 ? undefined : toolJobRustBlock(store, ownerTraitOpen);
+  const exactInstallStart = store.indexOf("fn install_member_store_owners_exact");
+  const exactInstallOpen = exactInstallStart < 0 ? -1 : store.indexOf("{", exactInstallStart);
+  const exactInstall = exactInstallOpen < 0 ? undefined : toolJobRustBlock(store, exactInstallOpen);
+  return (
+    !!ownerTrait &&
+    !!exactInstall &&
+    ownerTrait.body.includes("fn member_store_owners() -> MemberStoreOwners<Self, Mutation>;") &&
+    !ownerTrait.body.includes("fn member_store_owners() -> MemberStoreOwners<Self, Mutation> {") &&
+    store.includes("pub struct MemberStoreOwners<P, Mutation>") &&
+    store.includes("snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>") &&
+    store.includes("initial_snapshot_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>") &&
+    store.includes("mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>") &&
+    store.includes("store_disposer: Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>") &&
+    store.includes("pub trait ArtifactOwnedValueRetirementFactory<T>: Send + Sync") &&
+    store.includes("pub struct ArtifactStoreCloseView<'a, P, Mutation>") &&
+    store.includes("pub fn take_history_mutation_at(&mut self, edit_index: usize)") &&
+    store.includes("pub fn take_last_history_edit_retirement(&mut self)") &&
+    store.includes("pub fn take_runtime_string_retirement(&mut self, lane: ArtifactStoreCloseStringLane)") &&
+    store.includes("pub fn take_history_metadata_retirement(&mut self, lane: ArtifactStoreHistoryMetadataLane)") &&
+    store.includes("pub fn take_message_ledger_retirement(&mut self, lane: ArtifactStoreMessageLedgerLane)") &&
+    store.includes("pub fn take_conflict_retirement(&mut self)") &&
+    store.includes("pub fn take_pending_report_retirement(&mut self)") &&
+    store.includes("pub fn take_envelope_metadata_string_retirement(&mut self)") &&
+    store.includes("pub fn take_tail_snapshot_retirement(&mut self)") &&
+    store.includes("pub fn take_current_snapshot_retirement(&mut self)") &&
+    store.includes("pub fn take_final_envelope_retirement(&mut self)") &&
+    store.includes("envelope: std::mem::ManuallyDrop<ArtifactEnvelope<P, Mutation>>") &&
+    store.includes("current: std::mem::ManuallyDrop<Arc<P>>") &&
+    store.includes("artifact store conflict retirement reached Drop before every envelope, message, identity, and payload owner was terminal-empty") &&
+    store.includes("artifact store edit retirement reached Drop before every exact nested owner was cursor-disposed") &&
+    store.includes("artifact store string retirement reached Drop before its exact byte owner was terminal-empty") &&
+    store.includes("artifact store history metadata retirement reached Drop before every nested owner was terminal-empty") &&
+    store.includes("artifact store message-ledger retirement reached Drop before every nested owner was terminal-empty") &&
+    store.includes("struct ArtifactEditMessageIndex") &&
+    store.includes("edit_messages: std::mem::ManuallyDrop<ArtifactEditMessageIndex>") &&
+    store.includes("const ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY: usize = 8_192") &&
+    !store.includes("edit_messages: BTreeMap<String, Vec<crate::os_spr::MutationMessage>>") &&
+    !store.includes("edit_messages: HashMap<String, Vec<crate::os_spr::MutationMessage>>") &&
+    store.includes("pub trait ArtifactStoreOwnedDisposer<P, Mutation>: Send") &&
+    store.includes("fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;") &&
+    (store.match(/ArtifactPack \+ MemberStoreOwner<Mutation>/g) ?? []).length >= 3 &&
+    (store.match(/install_member_store_owners_exact\(P::member_store_owners\(\)\)/g) ?? []).length === 2 &&
+    exactInstall.body.includes("self.snapshot_retirement_factory = Some(owners.snapshot_retirement)") &&
+    exactInstall.body.includes("self.initial_snapshot_retirement_factory = Some(owners.initial_snapshot_retirement)") &&
+    exactInstall.body.includes("self.mutation_retirement_factory = Some(owners.mutation_retirement)") &&
+    exactInstall.body.includes("self.owned_disposer = Some(owners.store_disposer)") &&
+    semio.includes("semio_subset_table!(member_owners);") &&
+    semio.includes("impl dsl::MemberStoreOwner<subsets::$module::schema::mutations::$mutation>") &&
+    semio.includes("dsl::MemberStoreOwners::new(") &&
+    semio.includes("SemioOwnedValueRetirementFactory") &&
+    semio.includes("SemioMutationRetirementFactory") &&
+    semio.includes("SemioStoreClosePhase::ReturnedLeases") &&
+    semio.includes("SemioStoreClosePhase::HistoryMutations") &&
+    semio.includes("SemioStoreClosePhase::HistoryEdits") &&
+    semio.includes("SemioStoreClosePhase::HistoryMetadata") &&
+    semio.includes("SemioStoreClosePhase::MessageLedgers") &&
+    semio.includes("SemioStoreClosePhase::Conflicts") &&
+    semio.includes("SemioStoreClosePhase::PendingReport") &&
+    semio.includes("SemioStoreClosePhase::EnvelopeMetadata") &&
+    semio.includes("SemioStoreClosePhase::RuntimeStrings") &&
+    semio.includes("SemioStoreClosePhase::TailSnapshot") &&
+    semio.includes("SemioStoreClosePhase::CurrentSnapshot") &&
+    semio.includes("SemioStoreClosePhase::FinalEnvelope") &&
+    semio.includes("SemioStoreOwnedDisposer") &&
+    !semio.includes("fn install_semio_snapshot_retirement") &&
+    !semio.includes("install_semio_snapshot_retirement(&mut member)")
+  );
+}
+
+function toolJobArtifactResolutionCandidateExact(store: string): boolean {
+  return (
+    store.includes("struct ArtifactStoreResolutionCandidateAuthority<P, Mutation>") &&
+    store.includes("struct ArtifactStoreResolutionCandidateRetirement<P, Mutation>") &&
+    store.includes("reserve_resolution_candidate(&mut self)") &&
+    store.includes("retire_resolution_candidate_reserved(&mut self, generation: u64") &&
+    store.includes("fn retire_resolution_candidate(&mut self, authority: ArtifactStoreResolutionCandidateAuthority<P, Mutation>)") &&
+    store.includes("resolution candidate authority reached Drop before exact adoption or retained retirement handoff") &&
+    store.includes("resolution candidate retirement reached Drop before its exact store and child owners were terminal-empty") &&
+    store.includes("candidate.candidate_mut().ingest_remote(envelope).await") &&
+    !store.includes("let mut candidate = self.resolution_candidate().await;")
+  );
+}
+
+function toolJobArtifactEditMessageLedgerExact(store: string): boolean {
+  return (
+    store.includes("struct ArtifactEditMessageLedger") &&
+    store.includes("buckets: Box<[u16]>") &&
+    store.includes("generations: Box<[u64]>") &&
+    store.includes("self.generations[slot].checked_add(1)") &&
+    store.includes("artifact edit-message ledger contains a duplicate identity") &&
+    store.includes("const ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES: usize = 4_096") &&
+    store.includes("const ARTIFACT_EDIT_MESSAGE_LEDGER_BYTES: usize") &&
+    store.includes("struct ArtifactEditMessageLedgerRejected") &&
+    store.includes("entries: std::mem::ManuallyDrop<Vec<crate::os_spr::EditMessages>>") &&
+    store.includes("impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRejected") &&
+    store.includes("rejected artifact edit-message authority reached Drop before every exact payload owner was cursor-retired") &&
+    store.includes("artifact edit-message fixed ledger reached Drop before every exact payload owner was cursor-retired") &&
+    !store.includes("self.generations[slot].wrapping_add(1)") &&
+    !store.includes("struct ArtifactEditMessageLedgerRejected {\n    entries: Vec<")
+  );
+}
+
+function toolJobArtifactEnvelopeOwnedCodecExact(store: string, rust: Map<string, string>): boolean {
+  const directEnvelopeSerde = [...rust.entries()].filter(
+    ([file, source]) =>
+      !file.includes("/🧪️tests/") &&
+      file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs" &&
+      /(?:let\s+[A-Za-z0-9_]+\s*:\s*(?:ArtifactEnvelope(?:<[^;\n]+>)?|[A-Za-z0-9_]+Envelope)[^;\n]*=\s*serde_json::from_(?:str|slice|value)|serde_json::from_(?:str|slice|value)::<[^;\n>]*Envelope)/.test(source),
+  );
+  const placeholderEnvelopeIngress = [...rust.entries()].filter(
+    ([file, source]) => file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs" && source.includes("reject_whole_buffer_artifact_envelope_ingress"),
+  );
+  return (
+    store.includes("pub struct OwnedSchemaDecodePages") &&
+    store.includes("slots: Box<[std::mem::MaybeUninit<OwnedSchemaDecodePage>]>") &&
+    store.includes("pub fn admit_page(&mut self, page: OwnedSchemaDecodePage) -> Result<(), (OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodePage)>") &&
+    store.includes("pub struct OwnedSchemaTokenCursor") &&
+    store.includes("pub fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaTokenStep") &&
+    store.includes("pub struct OwnedSchemaRecordSpec") &&
+    store.includes("pub struct OwnedSchemaStringAuthority<const MAXIMUM_BYTES: usize>") &&
+    store.includes("schema-json.stale-string-authority") &&
+    store.includes("schema-json.string-byte-capacity") &&
+    store.includes("fn accept_field_token(") &&
+    store.includes("fn finish_record(&mut self, cx: &mut semio_framework_job::StepContext<'_>)") &&
+    store.includes("fn terminal_is_empty(&self) -> bool;") &&
+    store.includes("pub trait ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>: Send + Sync") &&
+    store.includes("pub trait ArtifactEnvelopeVcsFieldAuthority<P, Mutation>: Send") &&
+    store.includes("pub trait ArtifactEnvelopeSnapshotFieldAuthority<P>: Send") &&
+    store.includes("pub trait ArtifactEnvelopeMutationFieldAuthority<Mutation>: Send") &&
+    store.includes("pub trait ArtifactEnvelopeSprConflictAuthority: Send") &&
+    store.includes("pub struct ArtifactEnvelopeOwners<P, Mutation>") &&
+    store.includes("owners: std::mem::ManuallyDrop<ArtifactEnvelopeOwners<P, Mutation>>") &&
+    store.includes("artifact envelope terminal shell reached Drop before its app-owned bounded retirement authority detached every nested owner") &&
+    store.includes("pub trait ArtifactEnvelopeCompletedRecordTarget<P, Mutation>") &&
+    store.includes("fn try_publish_to(&mut self, target: &mut dyn ArtifactEnvelopeCompletedRecordTarget<P, Mutation>) -> bool") &&
+    store.includes("pub fn try_request_close(&self, ticket: ArtifactEnvelopeCompletedRecordTicket)") &&
+    store.includes("fn publish_vcs_reserved(") &&
+    store.includes("fn publish_edit_messages_reserved(") &&
+    store.includes("fn publish_conflicts_reserved(") &&
+    store.includes("schema-json.unknown-field") &&
+    store.includes("schema-json.duplicate-field") &&
+    store.includes("schema-json.invalid-utf8") &&
+    store.includes("pub fn close_step(&mut self, maximum_pages: usize) -> SnapshotRetirementStep") &&
+    !store.includes("struct OwnedSchemaDecodePages {\n    pages: Vec<Vec<u8>>") &&
+    !store.includes("ArtifactEnvelopeDecodeAuthority::new(bytes: Vec<u8>") &&
+    !store.includes("serde_json::from_slice(token_bytes)") &&
+    !store.includes("fn take_envelope(&mut self) -> Option<ArtifactEnvelope") &&
+    !/#\[derive\([^\]]*Clone[^\]]*\)\]\s*#\[serde\([^\]]*\)\]\s*pub struct ArtifactEnvelope/.test(store) &&
+    store.includes("pub struct ArtifactEnvelopeDecodeAuthority<P, Mutation>") &&
+    store.includes("struct ArtifactEnvelopeDecodePage") &&
+    store.includes("impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactEnvelopeDecodeAuthority<P, Mutation>") &&
+    store.includes("struct ArtifactEnvelopeDecodeRejected") &&
+    store.includes("impl ErasedSnapshotRetirement for ArtifactEnvelopeDecodeRejected") &&
+    store.includes("artifact envelope decode authority reached Drop before terminal publication or retained close") &&
+    store.includes("artifact envelope decode rejection reached Drop before every exact page owner was cursor-retired") &&
+    store.includes("ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES: usize = 4_096") &&
+    store.includes("ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES") &&
+    !/#\[derive\([^\]]*Deserialize[^\]]*\)\]\s*#\[serde\([^\]]*\)\]\s*pub struct ArtifactEnvelope</.test(store) &&
+    directEnvelopeSerde.length === 0 &&
+    placeholderEnvelopeIngress.length === 0
+  );
+}
+
+function toolJobPresentEnvelopeCallerRetainedExact(present: string, wasm: string, plugin: string): boolean {
+  return (
+    present.includes("pub struct PresentEnvelopeOwnedFieldCatalog") &&
+    present.includes("impl store::ArtifactEnvelopeOwnedFieldCatalog<PresentSnapshot, PresentMutation> for PresentEnvelopeOwnedFieldCatalog") &&
+    present.includes("pub struct PresentEnvelopeMaterializeHandle") &&
+    present.includes("session: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSession<PresentEnvelopeMaterializeJob>>>") &&
+    present.includes("session.try_submit_step(pool, semio_framework_job::Lane::Interactive)") &&
+    present.includes("pub struct PresentEnvelopeMaterializeRegistry") &&
+    present.includes("slots: [PresentEnvelopeMaterializeSlot; PRESENT_ENVELOPE_MATERIALIZE_CAPACITY]") &&
+    present.includes("handle: std::mem::MaybeUninit<PresentEnvelopeMaterializeHandle>") &&
+    present.includes("pub fn try_submit(") &&
+    present.includes("pub fn maintenance_step(") &&
+    present.includes("pub fn try_publish_to(") &&
+    present.includes("pub fn close_step(") &&
+    present.includes("Present envelope materialize handle reached Drop before worker, result, and fault owners were terminal empty") &&
+    present.includes("Present envelope materialize registry reached Drop before every retained caller was closed and reclaimed") &&
+    present.includes("retained_present_envelope_caller_faults_and_closes_malformed_pack") &&
+    present.includes("retained_present_envelope_caller_cancels_and_closes_without_output") &&
+    present.includes("retained_present_envelope_registry_preserves_collision_capacity_and_exact_rejected_pages") &&
+    present.includes("retained_present_envelope_publication_retries_backpressure_exactly_once") &&
+    present.includes("retained_present_envelope_stale_generation_cancels_and_unpublished_output_closes") &&
+    present.includes("retained_present_envelope_materializes_populated_history_in_order") &&
+    present.includes("PresentEnvelopeMaterializeState::Materialize") &&
+    present.includes("PresentEnvelopeMaterializeState::RetireEnvelopeComplete") &&
+    present.includes("present_envelope_decode_owner_bundle().retire_envelope(envelope)") &&
+    present.includes("let (diff, messages) = mutation.diff(current).into_parts()") &&
+    present.includes("match diff.apply(current)") &&
+    !present.includes("envelope.try_into_fresh_snapshot()") &&
+    plugin.includes("fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>>") &&
+    plugin.includes("envelope_decode_jobs: ArtifactFixedRegistry<ActiveArtifactEnvelopeDecode<A::Snapshot, A::Mutation>>") &&
+    plugin.includes("pub fn submit_artifact_envelope_decode(") &&
+    plugin.includes("pub fn try_publish_artifact_envelope_decode(") &&
+    plugin.includes("fn drive_envelope_decode_jobs(") &&
+    plugin.includes("close_envelope_decode_jobs_drained") &&
+    plugin.includes("active envelope decode reached Drop before its worker and rejected owner were terminal empty") &&
+    !present.includes("pub fn begin_materialize_present_projection(") &&
+    !present.includes("materialize_present_projection_json") &&
+    !wasm.includes("materializePresentProjectionJson") &&
+    !wasm.includes("materialize_present_projection_json") &&
+    !wasm.includes("createPresentEnvelopeJson") &&
+    !wasm.includes("envelope_json") &&
+    !wasm.includes("reject_whole_buffer_artifact_envelope_ingress")
+  );
+}
+
+function toolJobHistoryLedgerAdmissionExact(store: string, vcs: string): boolean {
+  const checkpointPending = store.indexOf("let pending = uncommitted_edit_ids");
+  const checkpointStart = checkpointPending < 0 ? -1 : store.lastIndexOf("ArtifactCommand::CommitCheckpoint { message, authors } => {", checkpointPending);
+  const checkpointArm = checkpointStart < 0 ? "" : store.slice(checkpointStart, store.indexOf("ArtifactCommand::CreateAlternative { name } => {", checkpointPending));
+  const pendingHash = checkpointArm.indexOf("content_addressed_checkpoint_id_with_pending_change(");
+  const reservation = checkpointArm.indexOf("let change_reservation = self.reserve_change_history_slot()?");
+  return (
+    vcs.includes("pub struct ArtifactHistoryReservation") &&
+    vcs.includes("pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ()>") &&
+    vcs.includes("pub fn cancel_reservation(&mut self, reservation: ArtifactHistoryReservation)") &&
+    vcs.includes("pub fn insert_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T)") &&
+    vcs.includes("reservation.authority != self.authority()") &&
+    vcs.includes("fixed_history_reservation_returns_exact_rejected_owner_and_blocks_aba") &&
+    vcs.includes("pub fn content_addressed_checkpoint_id_with_pending_change(") &&
+    vcs.includes("pending_change_checkpoint_hash_is_byte_identical_before_history_reservation") &&
+    store.includes("reservation: Option<ArtifactHistoryReservation>") &&
+    store.includes("let reservation = match values.reserve_one()") &&
+    store.includes("values.insert_reserved(reservation, value)") &&
+    store.includes("values.cancel_reservation(reservation)") &&
+    store.includes("fn reserve_owner_slots(&mut self, count: usize)") &&
+    store.includes("fn push_owner_reserved(&mut self") &&
+    store.includes("fn reserve_edit_history_slot(&mut self)") &&
+    store.includes("fn insert_reserved_edit_history(&mut self") &&
+    store.includes("displaced_owner_reservations_preserve_capacity_generation_and_interrupted_close") &&
+    store.includes("rejected_history_mutation_and_metadata_owners_close_under_one_item_grants") &&
+    pendingHash >= 0 &&
+    reservation > pendingHash &&
+    !checkpointArm.slice(reservation).includes(".await")
+  );
+}
+
+function toolJobArtifactStoreStructuralOwnersExact(store: string, semio: string, causal: string, vcs: string): boolean {
+  return (
+    store.includes("struct ArtifactStoreConflictRetirement") &&
+    store.includes("struct ArtifactStoreBackboneRetirement") &&
+    store.includes("fn close_take_conflict_retirement(&mut self)") &&
+    store.includes("fn close_take_tail_snapshot_retirement(&mut self)") &&
+    store.includes("fn close_take_current_snapshot_retirement(&mut self)") &&
+    store.includes("fn close_take_final_envelope_retirement(&mut self)") &&
+    store.includes("fn close_take_backbone_retirement(&mut self)") &&
+    store.includes("fn close_take_causal_owner_retirement(&mut self)") &&
+    store.includes("const ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY: usize = 1_024") &&
+    store.includes("struct ArtifactStoreDisplacedRetirements") &&
+    store.includes("struct ArtifactStoreEnvelopeRetirement<P, Mutation>") &&
+    store.includes("struct ArtifactStoreDocumentRootCommitAuthority<P, Mutation>") &&
+    store.includes("fn prepare_document_root_commit(&mut self, additional_displaced_owners: usize)") &&
+    store.includes("fn commit_document_roots_retained(") &&
+    store.includes("fn replace_current_retained(&mut self, next: Arc<P>)") &&
+    store.includes("fn replace_causal_dag_retained(&mut self, next: crate::os_spr::MutationDag)") &&
+    store.includes("ArtifactStoreMessageLedgerRetirement::new(String::new(), previous)") &&
+    store.includes("artifact store displaced-owner authority reached Drop before bounded retirement completed") &&
+    store.includes("artifact store backbone retirement reached Drop before every exact URI, queue, message, channel, and byte owner was terminal-empty") &&
+    causal.includes("pub fn terminal_is_empty(&self) -> bool") &&
+    causal.includes("pub const MUTATION_DAG_CAPACITY: usize = 8_192") &&
+    causal.includes("pub fn take_one_close_owner(&mut self) -> Option<MutationDagCloseOwner>") &&
+    causal.includes("pub fn take_next_applied(&mut self) -> MutationDagAppliedStep") &&
+    causal.includes("mutation dag reached Drop before every exact envelope and identity owner was cursor-retired") &&
+    causal.includes("struct MutationDagFixedSlots") &&
+    causal.includes("free: Box<[u16]>") &&
+    causal.includes("generations: Box<[u32]>") &&
+    causal.includes("struct MutationDagFixedSlotsIter") &&
+    vcs.includes("pub const ARTIFACT_HISTORY_LEDGER_CAPACITY: usize = 64") &&
+    vcs.includes("pub struct ArtifactHistoryLedger<T>") &&
+    vcs.includes("slots: std::mem::ManuallyDrop<Vec<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>>") &&
+    vcs.includes("slot.generation.checked_add(1)") &&
+    vcs.includes("pub fn try_push(&mut self, value: T) -> Result<ArtifactHistoryKey, T>") &&
+    vcs.includes("pub fn remove_key(&mut self, key: ArtifactHistoryKey) -> Result<T, ArtifactHistoryKey>") &&
+    vcs.includes("artifact history ledger reached Drop before every exact entry owner was retired") &&
+    vcs.includes("pub edits: ArtifactHistoryLedger<Edit<Mutation>>") &&
+    vcs.includes("pub changes: ArtifactHistoryLedger<Change>") &&
+    vcs.includes("pub checkpoints: ArtifactHistoryLedger<Checkpoint>") &&
+    vcs.includes("pub alternatives: ArtifactHistoryLedger<Alternative>") &&
+    vcs.includes("fixed_history_ledger_preserves_order_capacity_and_aba_rejection") &&
+    store.includes("values: Option<ArtifactHistoryLedger<T>>") &&
+    store.includes("active_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>") &&
+    store.includes("struct ArtifactStoreVcsRetirement<P, Mutation>") &&
+    toolJobHistoryLedgerAdmissionExact(store, vcs) &&
+    !/#\[derive\([^\]]*(?:Clone|Deserialize)[^\]]*\)\]\s*#\[serde\([^\]]*\)\]\s*pub struct ArtifactVcs/.test(vcs) &&
+    !causal.includes("ManuallyDrop<Vec<MutationEnvelope>>") &&
+    !causal.includes("pub fn drain_applied_envelopes(") &&
+    !causal.includes("pub fn ready(&self) -> Vec<") &&
+    causal.includes("MutationDagInsertRejected { error: MutationDagError::Capacity, envelope }") &&
+    !causal.includes("envelopes: std::collections::HashMap<String, MutationEnvelope>") &&
+    !causal.includes("applied: std::collections::HashSet<String>") &&
+    !store.includes("edit_messages: BTreeMap<String, Vec<crate::os_spr::MutationMessage>>") &&
+    !store.includes("edit_messages: HashMap<String, Vec<crate::os_spr::MutationMessage>>") &&
+    toolJobArtifactEditMessageLedgerExact(store) &&
+    store.includes("edit_messages: std::mem::ManuallyDrop<ArtifactEditMessageLedger>") &&
+    store.includes("ArtifactEditMessageTicket") &&
+    store.includes("ARTIFACT_EDIT_MESSAGE_INDEX_TOMBSTONE") &&
+    !store.includes("self.envelope.edit_messages.remove(") &&
+    !store.includes("self.edit_messages.rebuild(") &&
+    !store.includes("records.truncate(") &&
+    !store.includes("self.applied_edit_ids.remove(") &&
+    !store.includes("self.redo_edit_ids.remove(") &&
+    !store.includes("self.redo_edit_ids.clear(") &&
+    toolJobArtifactResolutionCandidateExact(store) &&
+    semio.includes("SemioStoreClosePhase::CausalIndex") &&
+    semio.includes("SemioStoreClosePhase::DisplacedOwners") &&
+    (semio.match(/impl RetireOwned for [a-z_]+_mutation::Semio[A-Za-z]+Mutation/g) ?? []).length === 18 &&
+    !semio.includes("semio mutation owner has no generated field-by-field retirement cursor") &&
+    store.includes("impl<P, Mutation> Drop for ArtifactStore<P, Mutation>") &&
+    store.includes("artifact store reached Drop without its exact terminal-empty shallow-shell witness") &&
+    store.includes("backbone: std::mem::ManuallyDrop<Option<Backbones>>") &&
+    store.includes("dag: std::mem::ManuallyDrop<crate::os_spr::MutationDag>") &&
+    store.includes("applied_edit_ids: std::mem::ManuallyDrop<Vec<String>>") &&
+    store.includes("pending_report: std::mem::ManuallyDrop<PendingCommandReport>") &&
+    !store.includes("*self.current =") &&
+    !store.includes("*self.envelope =")
+  );
+}
+
 function toolJobChildRetirementInventoryExact(root: string, files: ReadonlyMap<string, string>): boolean {
   type InventoryVariant = { variant: string; dispatchKey: string; schema: string; snapshot: string; mutation: string };
   type InventoryCohort = { source: string; enum: string; ownerBindingStatus: string; variants: InventoryVariant[] };
@@ -1318,7 +1642,7 @@ function toolJobChildRetirementInventoryExact(root: string, files: ReadonlyMap<s
   const variantCount = actual.reduce((sum, cohort) => sum + cohort.variants.length, 0);
   return (
     inventory.schemaVersion === "semio.phase8.child-snapshot-retirement-cohorts.v1" &&
-    inventory.verdict === "fail-closed-pending-domain-bindings" &&
+    inventory.verdict === "fail-closed-pending-store-disassembly" &&
     canonical(actual) === canonical(cohorts) &&
     inventory.counts?.productionMacroCallsites === actual.length &&
     inventory.counts?.productionVariants === variantCount
@@ -2254,6 +2578,53 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobChildContentRootExact(permissiveMemberClose, permissiveMemberClose)) throw new Error("[verify interactivity tool-jobs] self-test default-blanket-child-member-close-proof was falsely accepted.");
   const noOpOwnerRegistryDrop = "struct ArtifactFixedRegistry<T>; impl<T> Drop for ArtifactFixedRegistry<T> { fn drop(&mut self) {} } struct ChildMemberRegistry<M>; impl<M> Drop for ChildMemberRegistry<M> { fn drop(&mut self) {} }";
   if (toolJobChildContentRootExact(noOpOwnerRegistryDrop, noOpOwnerRegistryDrop)) throw new Error("[verify interactivity tool-jobs] self-test no-op-fixed-owner-registry-drop was falsely accepted.");
+  const optionalMemberOwners = "pub struct MemberStoreOwners<P, Mutation>; pub trait MemberStoreOwner<Mutation> { fn member_store_owners() -> MemberStoreOwners<Self, Mutation> { blanket() } } pub trait ArtifactStoreOwnedDisposer<P, Mutation>: Send { fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool; }";
+  if (toolJobMemberStoreOwnerExact(optionalMemberOwners, optionalMemberOwners)) throw new Error("[verify interactivity tool-jobs] self-test optional-default-member-store-owner was falsely accepted.");
+  const snapshotOnlyMemberOwners = "pub struct MemberStoreOwners<P, Mutation> { snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>> } pub trait MemberStoreOwner<Mutation> { fn member_store_owners() -> MemberStoreOwners<Self, Mutation>; } fn install_member_store_owners_exact() { self.snapshot_retirement_factory = Some(owners.snapshot_retirement); } semio_subset_table!(member_owners);";
+  if (toolJobMemberStoreOwnerExact(snapshotOnlyMemberOwners, snapshotOnlyMemberOwners)) throw new Error("[verify interactivity tool-jobs] self-test member-store-owner-without-whole-store-disposer was falsely accepted.");
+  const wrapperOnlyMemberOwners = "pub struct MemberStoreOwners<P, Mutation> { snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>, store_disposer: Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>> } pub trait MemberStoreOwner<Mutation> { fn member_store_owners() -> MemberStoreOwners<Self, Mutation>; } fn install_semio_snapshot_retirement() {}";
+  if (toolJobMemberStoreOwnerExact(wrapperOnlyMemberOwners, wrapperOnlyMemberOwners)) throw new Error("[verify interactivity tool-jobs] self-test bypassable-wrapper-only-member-owner was falsely accepted.");
+  const monolithicHistoryOwnerDrop = "pub trait ArtifactOwnedValueRetirementFactory<T>: Send + Sync {} pub struct ArtifactStoreCloseView<'a, P, Mutation>; fn close_step() { drop(store.envelope.vcs.edits); } SemioStoreClosePhase::HistoryMutations SemioStoreClosePhase::HistoryEdits";
+  if (toolJobMemberStoreOwnerExact(monolithicHistoryOwnerDrop, monolithicHistoryOwnerDrop)) throw new Error("[verify interactivity tool-jobs] self-test member-store-whole-history-drop-without-retained-edit-cursor was falsely accepted.");
+  const resizableStructuralStore = "struct ArtifactStoreConflictRetirement; fn close_take_conflict_retirement(&mut self) {} fn close_take_tail_snapshot_retirement(&mut self) {} fn close_take_current_snapshot_retirement(&mut self) {} fn close_take_final_envelope_retirement(&mut self) {} edit_messages: BTreeMap<String, Vec<MutationMessage>> *self.current = next; *self.envelope = next; SemioStoreClosePhase::StructuralOwners => Err(\"semio member store lacks its required fixed causal-index disassembly cursor\".into()) pub fn terminal_is_empty(&self) -> bool { true } envelopes: std::collections::HashMap<String, MutationEnvelope> applied: std::collections::HashSet<String>";
+  if (toolJobArtifactStoreStructuralOwnersExact(resizableStructuralStore, resizableStructuralStore, resizableStructuralStore, resizableStructuralStore)) throw new Error("[verify interactivity tool-jobs] self-test resizable-artifact-store-structural-owner-and-direct-replacement was falsely accepted.");
+  const shallowDirectFreeStructuralStore = "struct ArtifactStoreConflictRetirement; struct ArtifactStoreBackboneRetirement; fn close_take_conflict_retirement(&mut self) {} fn close_take_tail_snapshot_retirement(&mut self) {} fn close_take_current_snapshot_retirement(&mut self) {} fn close_take_final_envelope_retirement(&mut self) {} fn close_take_backbone_retirement(&mut self) {} fn close_take_causal_owner_retirement(&mut self) {} artifact store backbone retirement reached Drop before every exact URI, queue, message, channel, and byte owner was terminal-empty pub fn terminal_is_empty(&self) -> bool { true } pub const MUTATION_DAG_CAPACITY: usize = 8_192; pub fn take_one_close_owner(&mut self) -> Option<MutationDagCloseOwner> {} MutationDagInsertRejected { error: MutationDagError::Capacity, envelope } SemioStoreClosePhase::CausalIndex";
+  if (toolJobArtifactStoreStructuralOwnersExact(shallowDirectFreeStructuralStore, shallowDirectFreeStructuralStore, shallowDirectFreeStructuralStore, shallowDirectFreeStructuralStore)) throw new Error("[verify interactivity tool-jobs] self-test direct-free-artifact-store-without-retained-displacement-authority was falsely accepted.");
+  const partialAtomicStructuralStore = "struct ArtifactStoreDocumentRootCommitAuthority<P, Mutation>; fn prepare_document_root_commit(&mut self) {} fn commit_document_roots_retained() {} struct ArtifactEditMessageIndex; self.envelope.edit_messages.remove(index); self.edit_messages.rebuild(&self.envelope.edit_messages); ManuallyDrop<Vec<MutationEnvelope>> semio mutation owner has no generated field-by-field retirement cursor";
+  if (toolJobArtifactStoreStructuralOwnersExact(partialAtomicStructuralStore, partialAtomicStructuralStore, partialAtomicStructuralStore, partialAtomicStructuralStore)) throw new Error("[verify interactivity tool-jobs] self-test partial-root-transaction-with-shifting-ledger-and-opaque-mutation-drop was falsely accepted.");
+  const resizableArtifactVcsHistory = `${partialAtomicStructuralStore} #[derive(Clone, Deserialize)] #[serde(rename_all = "camelCase")] pub struct ArtifactVcs<P, Mutation> { pub edits: Vec<Edit<Mutation>>, pub changes: Vec<Change>, pub checkpoints: Vec<Checkpoint>, pub alternatives: Vec<Alternative> }`;
+  if (toolJobArtifactStoreStructuralOwnersExact(resizableArtifactVcsHistory, resizableArtifactVcsHistory, resizableArtifactVcsHistory, resizableArtifactVcsHistory)) throw new Error("[verify interactivity tool-jobs] self-test resizable-cloneable-artifact-VCS-history-owner was falsely accepted.");
+  const unreservedFixedArtifactVcsHistory = "pub struct ArtifactHistoryLedger<T>; pub fn try_push(&mut self, value: T) -> Result<ArtifactHistoryKey, T>; pub struct OwnedSchemaBoundedArrayAuthority<T> { values: Option<ArtifactHistoryLedger<T>> } values.try_push(value);";
+  if (toolJobHistoryLedgerAdmissionExact(unreservedFixedArtifactVcsHistory, unreservedFixedArtifactVcsHistory)) throw new Error("[verify interactivity tool-jobs] self-test fixed-history-ledger-without-preconstruction-reservation-or-exact-handback was falsely accepted.");
+  const historyReservationAcrossAwait = "pub struct ArtifactHistoryReservation; pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ()>; pub fn cancel_reservation(&mut self, reservation: ArtifactHistoryReservation); pub fn insert_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T); reservation.authority != self.authority() fixed_history_reservation_returns_exact_rejected_owner_and_blocks_aba pub fn content_addressed_checkpoint_id_with_pending_change() pending_change_checkpoint_hash_is_byte_identical_before_history_reservation ArtifactCommand::CommitCheckpoint { message, authors } => { let change_reservation = self.reserve_change_history_slot()?; let id = content_addressed_checkpoint_id().await; } ArtifactCommand::CreateAlternative { name } => {} reservation: Option<ArtifactHistoryReservation> let reservation = match values.reserve_one() values.insert_reserved(reservation, value) values.cancel_reservation(reservation) fn reserve_owner_slots(&mut self, count: usize) fn push_owner_reserved(&mut self fn reserve_edit_history_slot(&mut self) fn insert_reserved_edit_history(&mut self) displaced_owner_reservations_preserve_capacity_generation_and_interrupted_close rejected_history_mutation_and_metadata_owners_close_under_one_item_grants";
+  if (toolJobHistoryLedgerAdmissionExact(historyReservationAcrossAwait, historyReservationAcrossAwait)) throw new Error("[verify interactivity tool-jobs] self-test checkpoint-history-reservation-survived-an-await was falsely accepted.");
+  const unretainedResolutionCandidate = "async fn resolution_candidate(&self) -> Self {} let mut candidate = self.resolution_candidate().await; candidate.ingest_remote(envelope).await?; adopt_resolution_candidate(candidate).await?;";
+  if (toolJobArtifactResolutionCandidateExact(unretainedResolutionCandidate)) throw new Error("[verify interactivity tool-jobs] self-test rejected-resolution-candidate-without-exact-retained-close-authority was falsely accepted.");
+  const vecRejectedEditMessageLedger = "struct ArtifactEditMessageLedger { buckets: Box<[u16]>, generations: Box<[u64]> } struct ArtifactEditMessageLedgerRejected { entries: Vec<EditMessages> } const ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES: usize = 4_096; const ARTIFACT_EDIT_MESSAGE_LEDGER_BYTES: usize = 8192 * 4096; fn admit() { self.generations[slot].checked_add(1); artifact edit-message ledger contains a duplicate identity } impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRejected {} rejected artifact edit-message authority reached Drop before every exact payload owner was cursor-retired artifact edit-message fixed ledger reached Drop before every exact payload owner was cursor-retired";
+  if (toolJobArtifactEditMessageLedgerExact(vecRejectedEditMessageLedger)) throw new Error("[verify interactivity tool-jobs] self-test fixed-ledger-with-ordinary-drop-rejected-batch was falsely accepted.");
+  const wrappingGenerationEditMessageLedger = "struct ArtifactEditMessageLedger { buckets: Box<[u16]>, generations: Box<[u64]> } struct ArtifactEditMessageLedgerRejected { entries: std::mem::ManuallyDrop<Vec<crate::os_spr::EditMessages>> } const ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES: usize = 4_096; const ARTIFACT_EDIT_MESSAGE_LEDGER_BYTES: usize = 8192 * 4096; fn admit() { self.generations[slot].wrapping_add(1); artifact edit-message ledger contains a duplicate identity } impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRejected {} rejected artifact edit-message authority reached Drop before every exact payload owner was cursor-retired artifact edit-message fixed ledger reached Drop before every exact payload owner was cursor-retired";
+  if (toolJobArtifactEditMessageLedgerExact(wrappingGenerationEditMessageLedger)) throw new Error("[verify interactivity tool-jobs] self-test fixed-ledger-with-wrapping-aba-generation was falsely accepted.");
+  const serdeEnvelopeCodec = "#[derive(Serialize, Deserialize)] #[serde(rename_all = \"camelCase\")] pub struct ArtifactEnvelope<P, Mutation>; pub struct ArtifactEnvelopeDecodeAuthority<P, Mutation>; struct ArtifactEnvelopeDecodePage; struct ArtifactEnvelopeDecodeRejected; impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactEnvelopeDecodeAuthority<P, Mutation> {} impl ErasedSnapshotRetirement for ArtifactEnvelopeDecodeRejected {} const ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES: usize = 4_096; const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES: usize = 4096; artifact envelope decode authority reached Drop before terminal publication or retained close artifact envelope decode rejection reached Drop before every exact page owner was cursor-retired";
+  if (toolJobArtifactEnvelopeOwnedCodecExact(serdeEnvelopeCodec, new Map())) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-retained-public-deserialize was falsely accepted.");
+  const envelopeCodecMarkers = "pub struct ArtifactEnvelope<P, Mutation>; pub struct ArtifactEnvelopeDecodeAuthority<P, Mutation>; struct ArtifactEnvelopeDecodePage; struct ArtifactEnvelopeDecodeRejected; impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactEnvelopeDecodeAuthority<P, Mutation> {} impl ErasedSnapshotRetirement for ArtifactEnvelopeDecodeRejected {} const ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES: usize = 4_096; const ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES: usize = 4096; artifact envelope decode authority reached Drop before terminal publication or retained close artifact envelope decode rejection reached Drop before every exact page owner was cursor-retired";
+  const directEnvelopeSerdeCaller = new Map([["plugin.rs", "let envelope: DemoEnvelope = serde_json::from_str(&json)?;"]]);
+  if (toolJobArtifactEnvelopeOwnedCodecExact(envelopeCodecMarkers, directEnvelopeSerdeCaller)) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-with-direct-production-serde-caller was falsely accepted.");
+  const placeholderEnvelopeCaller = new Map([["plugin.rs", "let envelope: DemoEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json)?;"]]);
+  if (toolJobArtifactEnvelopeOwnedCodecExact(envelopeCodecMarkers, placeholderEnvelopeCaller)) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-with-fail-closed-placeholder-caller was falsely accepted.");
+  const ordinaryDropEnvelopeShell = `${envelopeCodecMarkers} pub struct ArtifactEnvelopeOwners<P, Mutation>; pub struct ArtifactEnvelope<P, Mutation> { owners: ArtifactEnvelopeOwners<P, Mutation> } pub trait ArtifactEnvelopeCompletedRecordTarget<P, Mutation>; fn try_publish_to(&mut self, target: &mut dyn ArtifactEnvelopeCompletedRecordTarget<P, Mutation>) -> bool {} pub fn try_request_close(&self, ticket: ArtifactEnvelopeCompletedRecordTicket) {}`;
+  if (toolJobArtifactEnvelopeOwnedCodecExact(ordinaryDropEnvelopeShell, new Map())) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-with-ordinary-deep-terminal-shell was falsely accepted.");
+  const wholeVectorSchemaPages = `${envelopeCodecMarkers} pub struct OwnedSchemaDecodePages { pages: Vec<Vec<u8>> } pub struct OwnedSchemaTokenCursor; pub struct OwnedSchemaRecordSpec; pub fn admit_page(&mut self, page: OwnedSchemaDecodePage) -> Result<(), (OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodePage)> {} pub fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaTokenStep {} pub fn close_step(&mut self, maximum_pages: usize) -> SnapshotRetirementStep {} schema-json.unknown-field schema-json.duplicate-field schema-json.invalid-utf8`;
+  if (toolJobArtifactEnvelopeOwnedCodecExact(wholeVectorSchemaPages, new Map())) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-with-whole-vector-schema-pages was falsely accepted.");
+  const wholeBufferEnvelopeConstructor = `${envelopeCodecMarkers} pub struct OwnedSchemaDecodePages { slots: Box<[std::mem::MaybeUninit<OwnedSchemaDecodePage>]> } pub struct OwnedSchemaTokenCursor; pub struct OwnedSchemaRecordSpec; pub fn admit_page(&mut self, page: OwnedSchemaDecodePage) -> Result<(), (OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodePage)> {} pub fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaTokenStep {} pub fn close_step(&mut self, maximum_pages: usize) -> SnapshotRetirementStep {} schema-json.unknown-field schema-json.duplicate-field schema-json.invalid-utf8 ArtifactEnvelopeDecodeAuthority::new(bytes: Vec<u8>)`;
+  if (toolJobArtifactEnvelopeOwnedCodecExact(wholeBufferEnvelopeConstructor, new Map())) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-with-post-lift-whole-buffer-constructor was falsely accepted.");
+  const unbudgetedSchemaDecoder = `${envelopeCodecMarkers} pub struct OwnedSchemaDecodePages { slots: Box<[std::mem::MaybeUninit<OwnedSchemaDecodePage>]> } pub struct OwnedSchemaTokenCursor; pub struct OwnedSchemaRecordSpec; pub fn admit_page(&mut self, page: OwnedSchemaDecodePage) -> Result<(), (OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodePage)> {} pub fn step(&mut self) -> OwnedSchemaTokenStep {} pub fn close_step(&mut self, maximum_pages: usize) -> SnapshotRetirementStep {} schema-json.unknown-field schema-json.duplicate-field schema-json.invalid-utf8`;
+  if (toolJobArtifactEnvelopeOwnedCodecExact(unbudgetedSchemaDecoder, new Map())) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-with-unbudgeted-tokenizer was falsely accepted.");
+  const wholeStringFieldDecode = `${envelopeCodecMarkers} pub struct OwnedSchemaDecodePages { slots: Box<[std::mem::MaybeUninit<OwnedSchemaDecodePage>]> } pub struct OwnedSchemaTokenCursor; pub struct OwnedSchemaRecordSpec; pub struct OwnedSchemaStringAuthority<const MAXIMUM_BYTES: usize>; pub fn admit_page(&mut self, page: OwnedSchemaDecodePage) -> Result<(), (OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodePage)> {} pub fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaTokenStep {} pub fn close_step(&mut self, maximum_pages: usize) -> SnapshotRetirementStep {} fn accept_field_token() { serde_json::from_slice(token_bytes); } fn finish_record(&mut self, cx: &mut semio_framework_job::StepContext<'_>) {} fn terminal_is_empty(&self) -> bool; schema-json.stale-string-authority schema-json.string-byte-capacity schema-json.unknown-field schema-json.duplicate-field schema-json.invalid-utf8`;
+  if (toolJobArtifactEnvelopeOwnedCodecExact(wholeStringFieldDecode, new Map())) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-with-whole-string-field-decode was falsely accepted.");
+  const implicitFieldOwner = `${envelopeCodecMarkers} pub struct OwnedSchemaDecodePages { slots: Box<[std::mem::MaybeUninit<OwnedSchemaDecodePage>]> } pub struct OwnedSchemaTokenCursor; pub struct OwnedSchemaRecordSpec; pub struct OwnedSchemaStringAuthority<const MAXIMUM_BYTES: usize>; pub fn admit_page(&mut self, page: OwnedSchemaDecodePage) -> Result<(), (OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodePage)> {} pub fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaTokenStep {} pub fn close_step(&mut self, maximum_pages: usize) -> SnapshotRetirementStep {} fn accept_field_token() {} fn finish_record(&mut self, cx: &mut semio_framework_job::StepContext<'_>) {} schema-json.stale-string-authority schema-json.string-byte-capacity schema-json.unknown-field schema-json.duplicate-field schema-json.invalid-utf8`;
+  if (toolJobArtifactEnvelopeOwnedCodecExact(implicitFieldOwner, new Map())) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-without-required-terminal-field-owner was falsely accepted.");
+  const rawPresentEnvelopeCaller = "pub struct PresentEnvelopeOwnedFieldCatalog; impl store::ArtifactEnvelopeOwnedFieldCatalog<PresentSnapshot, PresentMutation> for PresentEnvelopeOwnedFieldCatalog {} pub fn begin_materialize_present_projection() -> (PresentEnvelopeMaterializeJob, PresentProjectionCompletion); materialize_present_projection_json";
+  if (toolJobPresentEnvelopeCallerRetainedExact(rawPresentEnvelopeCaller, "materializePresentProjectionJson", "")) throw new Error("[verify interactivity tool-jobs] self-test Present-envelope-caller-with-raw-job-and-whole-string-Wasm-export was falsely accepted.");
   const synchronousPeerRoster = "struct PeerPresenceRoot; struct VcsArtifactApp { peer_presence: Arc<PeerPresenceRoot> } impl PluginApp for VcsArtifactApp { async fn adopt_presence(&mut self, peers: &[PresencePeer]) { self.peer_presence = Arc::new(PeerPresenceRoot::from_peers(peers)); } } async fn dispatch_typed_command_inner() { let presence_peers = self.presence_store.peers().await.into_iter().map(|(actor, presence)| (actor.to_string(), presence.clone())).collect(); } let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len());";
   if (toolJobPeerInteractionRootsExact(synchronousPeerRoster, synchronousPeerRoster, synchronousPeerRoster)) throw new Error("[verify interactivity tool-jobs] self-test synchronous-whole-peer-roster-publication was falsely accepted.");
   const preadmissionRosterDecode = "pub struct PresenceRosterWire; async fn plugin_exchange(commands: &[Vec<u8>]) { let command = decode_app_command(bytes).await; reserve_presence_ingress(seq); }";
@@ -2314,7 +2685,7 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobPagedIngressExact(unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-close-registry-without-pollable-exact-owner-handle was falsely accepted.");
   const shutdownDropsClose = "pub(crate) struct KernelCloseHandle; pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle; KernelRequest::DestroyApp { owner: self.clone() }; owner.finish(KernelCloseStatus::Complete); fn shutdown_step() { drop(owner); }";
   if (toolJobPagedIngressExact(shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-queue-shutdown-dropped-close-completion-owner was falsely accepted.");
-  return fixtures.length + 114;
+  return fixtures.length + 137;
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -2363,6 +2734,8 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/📦️glue.rs");
   const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
   const store = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs");
+  const vcs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs");
+  const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️component.rs");
   const channel = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️component.rs");
   const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs");
   const pluginHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs");
@@ -2371,12 +2744,15 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs");
   const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
   const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const semio = policyReadFileSafe(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️component.rs");
   const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs");
   const componentWit = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit");
   const reactor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs");
   const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️component.rs");
   const reactorExecutor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️component.rs");
   const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️component.rs");
+  const presentEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs");
+  const presentWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const allRustFiles = new Map(policyAllRustFiles(root).map((file) => [file, policyReadFileSafe(root, file)]));
   const proofs = toolJobProofs(productionFiles);
   const proofIdentities = new Set(proofs.map(toolJobProofIdentity));
@@ -2424,6 +2800,10 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!fullToolOperationBounded && (!toolJobTypedRouteFailsClosedBeforePreparation(plugin) || !toolJobTypedPersistentFoundation(plugin))) failures.push("incomplete typed-command route is reachable before preparation or retains no saturation-safe persistent operation foundation");
   if (!toolJobImmutableOperationRootsExact(store)) failures.push("document, presence, or transient command preparation lacks exact O(1) immutable event-maintained roots");
   if (!toolJobChildContentRootExact(store, plugin)) failures.push("typed command preparation lacks a fixed-width event-maintained immutable child-content root and no-default terminal-witnessed old-root retirement authority");
+  if (!toolJobMemberStoreOwnerExact(store, semio)) failures.push("generated member create/open permits a missing, partial, default, or wrapper-bypassable snapshot/whole-store disposal owner");
+  if (!toolJobArtifactStoreStructuralOwnersExact(store, semio, causal, vcs)) failures.push("artifact store structural owners still use resizable string-key indexes, deep direct replacement, or lack bounded conflict/backbone/DAG/history disassembly and terminal Drop authority");
+  if (!toolJobArtifactEnvelopeOwnedCodecExact(store, allRustFiles)) failures.push("ArtifactEnvelope ingress retains public serde Deserialize or lacks fixed-page owned preflight/decode/error-close authority across every production caller");
+  if (!toolJobPresentEnvelopeCallerRetainedExact(presentEnvelopeCodec, presentWasm, plugin)) failures.push("Present envelope representative caller exposes a raw job/whole-string Wasm route or lacks fixed app-retained worker/result/close ownership");
   if (!toolJobChildRetirementInventoryExact(root, allRustFiles)) failures.push("child snapshot retirement domain cohorts or callsites do not match the exact machine-readable owner inventory");
   if (!toolJobPeerInteractionRootsExact(plugin, store, channel)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
@@ -3055,6 +3435,13 @@ export class VerifyScript extends Script {
  */
 const INTERACTIVITY_AUDIT_UI_ROOTS = ["🧰️framework/🔨️modules/🖱️ui/", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/", "🧰️framework/🛍️products/💻️os/🖥️host/", "✏️s/🔌️plugins/"] as const;
 
+const INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES = ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🏃️executor.rs"] as const;
+
+const INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🦀️component.rs";
+const INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🦀️component.rs";
+const INTERACTIVITY_AUDIT_MCP_ROOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🦀️component.rs";
+const INTERACTIVITY_AUDIT_STORE_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️component.rs";
+
 /**
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
  * `thread-pool`) is scoped OUTSIDE of — this is a repo-wide check (minus `compose/`), unlike the
@@ -3154,6 +3541,10 @@ function interactivityIsUiReachable(relPath: string): boolean {
   return INTERACTIVITY_AUDIT_UI_ROOTS.some((root) => relPath.startsWith(root));
 }
 
+function interactivityIsExactBlockingBridgeFile(relPath: string): boolean {
+  return INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES.some((file) => relPath === file);
+}
+
 /** ⏱️True when `relPath` sits under one of [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]. */
 function interactivityIsRuntimeSanctioned(relPath: string): boolean {
   return INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS.some((root) => relPath.startsWith(root));
@@ -3220,6 +3611,9 @@ function interactivityCfgTestItemSpans(lines: readonly string[]): PolicyModSpan[
         stack.push({ startLine: pendingStart, depth });
         pendingStart = undefined;
       } else if (/;\s*$/.test(codeOnly)) {
+        spans.push({ name: "cfg(test)", startLine: pendingStart, endLine: i + 1 });
+        pendingStart = undefined;
+      } else if (/,\s*$/.test(codeOnly)) {
         pendingStart = undefined;
       }
     }
@@ -3260,7 +3654,7 @@ function interactivityAuditScan(repoRoot: string): InteractivityFinding[] {
   const runtimePatterns = INTERACTIVITY_AUDIT_PATTERNS.filter((p) => p.scope === "runtime-repo-wide");
   const findings: InteractivityFinding[] = [];
   for (const relPath of allRustFiles) {
-    if (interactivityIsUiReachable(relPath)) findings.push(...interactivityScanFile(repoRoot, relPath, uiPatterns));
+    if (interactivityIsUiReachable(relPath) || interactivityIsExactBlockingBridgeFile(relPath)) findings.push(...interactivityScanFile(repoRoot, relPath, uiPatterns));
     if (!interactivityIsRuntimeSanctioned(relPath)) findings.push(...interactivityScanFile(repoRoot, relPath, runtimePatterns));
   }
   return findings;
@@ -3278,6 +3672,18 @@ type InteractivityAuditReport = {
 /** ⏱️Runs the scan and reconciles findings against [[INTERACTIVITY_AUDIT_ALLOWLIST]]. */
 function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const findings = interactivityAuditScan(repoRoot);
+  interactivityShardExecutorSelfTests();
+  const executor = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0]);
+  const shard = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs");
+  for (const failure of interactivityShardExecutorFailures(executor, shard)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0], line: 0, text: failure });
+  interactivityMcpHttpTransportSelfTests();
+  const mcpTransport = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE);
+  const mcpBridge = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE);
+  const mcpRoot = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_MCP_ROOT_FILE);
+  for (const failure of interactivityMcpHttpTransportFailures(mcpTransport, mcpBridge, mcpRoot)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE, line: 0, text: failure });
+  interactivityStoreSyncSelfTests();
+  const storeSync = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_STORE_SYNC_FILE);
+  for (const failure of interactivityStoreSyncFailures(storeSync)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_STORE_SYNC_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
 
@@ -3290,6 +3696,254 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const staleAllowlistEntries = inScopeAllowlist.filter((e) => !blockingBridgeFindings.some((f) => f.file === e.file && f.text.includes(e.pattern)));
 
   return { findings, byCategory, blockingBridgeUnlisted, staleAllowlistEntries, expectedNeverToMatchEntries, preDeclaredOutOfScope };
+}
+
+function interactivityShardExecutorFailures(executorSource: string, shardSource: string): string[] {
+  const executor = executorSource.split("#[cfg(test)]")[0] ?? executorSource;
+  const run = executor.slice(executor.indexOf("fn run("));
+  const failures: string[] = [];
+  if (executor.includes("block_on(")) failures.push("production ShardExecutor retains block_on");
+  if (!executor.includes("let drive = shard.drive_one().await") || (executor.match(/let drive = shard\.drive_one\(\)\.await/g) ?? []).length !== 1 || (executor.match(/poll_retained_drive_once\(/g) ?? []).length !== 2) failures.push("one pool admission is not exactly one retained shard drive opportunity");
+  if (!run.includes("if admitted_epoch != self.epoch.load(Ordering::Acquire)") || run.indexOf("if admitted_epoch != self.epoch.load(Ordering::Acquire)") > run.indexOf("self.state.lock()")) failures.push("stale admitted epoch can reach mutable shard state");
+  if (!executor.includes("self.pool.try_submit(lane, job)") || !executor.includes("rejected.into_job()") || !executor.includes("handoff: Mutex<Option<(PoolLane, PoolJob)>>")) failures.push("pool cap plus one does not retain the exact rejected closure");
+  if (!executor.includes("self.pool.callback_at(deadline") || !executor.includes("handoff_retry_generation") || !executor.includes("claim_one_shot(&self.handoff_retry_armed)") || !executor.includes("attempt > 8")) failures.push("quiet-ingress saturation has no finite generation-keyed retry trigger");
+  if (!executor.includes("WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => self.terminalize_handoff") || !executor.includes("terminal_handoff: Mutex<Option<(WorkerSubmitErrorKind, PoolLane, PoolJob)>>") || !executor.includes("pub fn take_terminal_handoff") || !executor.includes("pub fn resume_terminal_handoff")) failures.push("terminal pool rejection loses or strands the exact successor closure");
+  if (!executor.includes("executor.request_drive_wake(self.generation)") || !executor.includes("claim_drive_wake(self.drive_generation.load") || !executor.includes("drive_waiting.swap(false") || !run.includes("let Some(drive) = polled else")) failures.push("pending drive lacks a one-shot owner wake transition");
+  if (run.includes("ShardDrive::Blocked);") || run.includes("ShardDrive::MoreWork | ShardDrive::Blocked")) failures.push("pending drive is immediately resubmitted instead of wake-parked");
+  if (executor.includes("while let Some(bytes)") || executor.includes("loop {")) failures.push("executor closure can drain or loop instead of yielding");
+  if (!executor.includes("registrations: FixedOwnerRing<(ActorId, GuestInstance), SHARD_DEFERRED_ITEMS>") || !run.includes("if let Some((_, (actor, instance))) = state.registrations.pop_front()") || run.includes("while let Some((actor, instance))")) failures.push("registration authority is not fixed FIFO at one owner per closure");
+  if (!run.includes("ShardDrive::Fault { consumed_epoch, work_remains, terminal_overflow") || !run.includes("if let Some(epoch) = consumed_epoch") || !executor.includes("self.consumed_epoch.compare_exchange(previous, epoch") || !run.includes("ShardDrive::Fault { terminal_frame: true") || !run.includes("self.close_ingress(IngressCloseReason::Closing)")) failures.push("terminal frame fault does not consume its exact ingress epoch once and close ingress");
+  if (!executor.includes("pub async fn send_frame(self: &Arc<Self>, bytes: Vec<u8>, lane: ActorLane) -> FrameIngress") || !executor.includes("let ingress = self.ingress_gate.lock()") || !executor.includes("if self.ingress_state.load(Ordering::Acquire) != 0") || executor.indexOf("if self.ingress_state.load(Ordering::Acquire) != 0") > executor.indexOf("self.kernel_side.send_now(bytes)") || !executor.includes("FrameIngress::Rejected(TerminalFrameOwner") || !executor.includes("pub fn into_frame(self) -> Vec<u8>") || !executor.includes("pub fn close_terminal_frame")) failures.push("terminal ingress can enqueue or lose the exact late frame owner");
+  if (!shardSource.includes("pub async fn drive_one(&mut self) -> ShardDrive") || !shardSource.includes("rejected_frame: Option<(u64, Vec<u8>)>") || !shardSource.includes("self.rejected_frame = Some((epoch, bytes))") || shardSource.includes("while let Some(bytes) = self.transport.recv().await")) failures.push("full shard ingress can drain or lose its original epoch in one grant");
+  if (!shardSource.includes("FixedOwnerRing<T, const N: usize>") || !shardSource.includes("pub fn can_admit(&self, items: usize, bytes: usize)") || !shardSource.includes("generation: entry.generation") || !shardSource.includes("Err(AdmissionRejected { limit: AdmissionLimit::Bytes, owner })")) failures.push("deferred owners lack fixed item/byte caps, ABA keys, or exact handback");
+  if (/pending_(?:events|job_steps|cancels):\s*(?:HashMap|Vec|VecDeque|std::collections::BTreeMap)/.test(shardSource)) failures.push("a deferred event, job, or cancel owner remains dynamically queued");
+  if (!shardSource.includes("SHARD_FRAME_MAX_BYTES") || !shardSource.includes("bytes.len() > SHARD_FRAME_MAX_BYTES") || !shardSource.includes("split_frame_credit(raw_bytes, envelopes.len(), index)") || shardSource.includes("envelope.pack_encode(&mut encoded).await") || shardSource.includes("serde_json::to_vec(&event)?.len()")) failures.push("raw Grant or generated authority bytes use re-encoding instead of exact retained credit");
+  for (const authority of ["Register", "Unregister", "Event", "JobStep", "Cancel", "Suspend", "Resume"]) if (!shardSource.includes(`DeferredAuthority::${authority}`)) failures.push(`${authority} lacks fixed deferred authority admission`);
+  if (!shardSource.includes("ShardFrame::Register { .. } | ShardFrame::Unregister { .. } => return self.pending_background.can_admit(1, raw_bytes)")) failures.push("Register or Unregister lacks exact item and identifier-byte preflight");
+  if (!shardSource.includes("self.pending_interactive.can_admit(interactive_items, interactive_bytes)") || !shardSource.includes("self.pending_background.can_admit(background_items, background_bytes)")) failures.push("mixed lifecycle item and byte preflight is incomplete");
+  if (!shardSource.includes("let authority = if let Some((_, authority)) = self.pending_interactive.pop_front()") || !shardSource.includes("match authority") || !shardSource.includes("self.suspend_one(actor, operation, applied_progress).await?") || !shardSource.includes("self.resume_one(actor, operation, checkpoint).await?")) failures.push("one grant can advance multiple mixed FIFO lifecycle authorities");
+  if (!shardSource.includes("terminal_frames: FixedOwnerRing<Vec<u8>, SHARD_DEFERRED_ITEMS>") || !shardSource.includes("terminal_authorities: FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>") || !shardSource.includes("self.terminal_frames.pop_front()") || /terminal_frame\s*=\s*Some\(/.test(shardSource)) failures.push("terminal raw frames or lifecycle authorities can overwrite or remain ready after retrieval");
+  if (!shardSource.includes("terminal_frame_overflow: FixedOwnerRing<TerminalFrameOverflow, 1>") || !shardSource.includes("FrameAdmissionError::TerminalCapacity { bytes, error }") || !shardSource.includes("self.terminal_frame_overflow.try_push(TerminalFrameOverflow { epoch, bytes }") || !shardSource.includes("take_terminal_frame_and_rearm") || !shardSource.includes("self.terminal_frames.can_admit(1, overflow.bytes.len())") || !shardSource.includes("self.terminal_frames.try_push(overflow.bytes, byte_len)")) failures.push("terminal frame capacity plus one lacks one bounded FIFO re-arm owner");
+  if (!run.includes("terminal_overflow_occupied.store(true") || !run.includes("self.close_ingress(IngressCloseReason::TerminalCapacity)") || !run.includes("!terminal_overflow &&") || !executor.includes("if self.terminal_overflow_occupied.load(Ordering::Acquire)") || executor.indexOf("if self.terminal_overflow_occupied.load(Ordering::Acquire)") > executor.indexOf("self.kernel_side.send_now(bytes)") || !executor.includes("map(ShardLoop::take_terminal_frame_and_rearm)") || !executor.includes("self.terminal_overflow_occupied.store(false") || !executor.includes("self.acknowledge_consumed_epoch(epoch)")) failures.push("terminal overflow can hot-resubmit, overwrite, or strand its exact epoch owner");
+  if (!shardSource.includes("self.cancel_one(cursor, lane).await?") || !shardSource.includes("DeferredAuthority::Cancel(CancelCursor") || !shardSource.includes("interrupted close handback rejected") || /while[^{}]*\{[^{}]*self\.cancel_one\(/s.test(shardSource)) failures.push("interrupted actor close can drain or lose more than one exact job authority per grant");
+  return failures;
+}
+
+function interactivityShardExecutorSelfTests(): void {
+  const goodExecutor = `handoff: Mutex<Option<(PoolLane, PoolJob)>> terminal_handoff: Mutex<Option<(WorkerSubmitErrorKind, PoolLane, PoolJob)>> pub fn take_terminal_handoff pub fn resume_terminal_handoff registrations: FixedOwnerRing<(ActorId, GuestInstance), SHARD_DEFERRED_ITEMS> handoff_retry_generation claim_one_shot(&self.handoff_retry_armed) executor.request_drive_wake(self.generation) claim_drive_wake(self.drive_generation.load drive_waiting.swap(false self.pool.try_submit(lane, job) rejected.into_job() self.pool.callback_at(deadline attempt > 8 WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned => self.terminalize_handoff pub async fn send_frame(self: &Arc<Self>, bytes: Vec<u8>, lane: ActorLane) -> FrameIngress let ingress = self.ingress_gate.lock() if self.terminal_overflow_occupied.load(Ordering::Acquire) if self.ingress_state.load(Ordering::Acquire) != 0 FrameIngress::Rejected(TerminalFrameOwner self.kernel_side.send_now(bytes) pub fn into_frame(self) -> Vec<u8> pub fn close_terminal_frame map(ShardLoop::take_terminal_frame_and_rearm) self.terminal_overflow_occupied.store(false self.acknowledge_consumed_epoch(epoch) self.consumed_epoch.compare_exchange(previous, epoch fn poll_retained_drive_once() {} fn run() { if admitted_epoch != self.epoch.load(Ordering::Acquire) { return; } self.state.lock() if let Some((_, (actor, instance))) = state.registrations.pop_front() {} let drive = shard.drive_one().await; poll_retained_drive_once(cursor); let Some(drive) = polled else {} ShardDrive::Fault { terminal_overflow: true terminal_overflow_occupied.store(true self.close_ingress(IngressCloseReason::TerminalCapacity) ShardDrive::Fault { terminal_frame: true self.close_ingress(IngressCloseReason::Closing) ShardDrive::Fault { consumed_epoch, work_remains, terminal_overflow if let Some(epoch) = consumed_epoch !terminal_overflow && }`;
+  const goodShard = `pub struct FixedOwnerRing<T, const N: usize> generation: entry.generation Err(AdmissionRejected { limit: AdmissionLimit::Bytes, owner }) pub fn can_admit(&self, items: usize, bytes: usize) SHARD_FRAME_MAX_BYTES bytes.len() > SHARD_FRAME_MAX_BYTES rejected_frame: Option<(u64, Vec<u8>)> self.rejected_frame = Some((epoch, bytes)) split_frame_credit(raw_bytes, envelopes.len(), index) terminal_frames: FixedOwnerRing<Vec<u8>, SHARD_DEFERRED_ITEMS> terminal_authorities: FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS> terminal_frame_overflow: FixedOwnerRing<TerminalFrameOverflow, 1> FrameAdmissionError::TerminalCapacity { bytes, error } self.terminal_frame_overflow.try_push(TerminalFrameOverflow { epoch, bytes } take_terminal_frame_and_rearm self.terminal_frames.can_admit(1, overflow.bytes.len()) self.terminal_frames.try_push(overflow.bytes, byte_len) self.terminal_frames.pop_front() self.pending_interactive.can_admit(interactive_items, interactive_bytes) self.pending_background.can_admit(background_items, background_bytes) ShardFrame::Register { .. } | ShardFrame::Unregister { .. } => return self.pending_background.can_admit(1, raw_bytes) DeferredAuthority::Register DeferredAuthority::Unregister DeferredAuthority::Event DeferredAuthority::JobStep DeferredAuthority::Cancel(CancelCursor DeferredAuthority::Suspend DeferredAuthority::Resume pub async fn drive_one(&mut self) -> ShardDrive { let authority = if let Some((_, authority)) = self.pending_interactive.pop_front(); match authority { self.execute_turn_for(actor, event).await?; self.cancel_one(cursor, lane).await?; interrupted close handback rejected self.suspend_one(actor, operation, applied_progress).await?; self.resume_one(actor, operation, checkpoint).await?; return Ok(1); } if let Some((actor_id, turn)) = selected_step { return Ok(1); } }`;
+  const fixtures = [
+    ["full-queue-yields", goodExecutor + " loop {}", goodShard],
+    ["one-admission-two-steps", goodExecutor + " let drive = shard.drive_one().await; poll_retained_drive_once(cursor)", goodShard],
+    ["stale-epoch-mutates", goodExecutor.replace("if admitted_epoch != self.epoch.load(Ordering::Acquire) { return; } self.state.lock()", "self.state.lock(); if admitted_epoch != self.epoch.load(Ordering::Acquire) { return; }"), goodShard],
+    ["cap-plus-one-drops-owner", goodExecutor.replace("rejected.into_job()", "drop(rejected)"), goodShard],
+    ["pending-waker-noop", goodExecutor.replace("executor.request_drive_wake(self.generation)", ""), goodShard],
+    ["wake-storm-submits-many", goodExecutor.replace("claim_drive_wake(self.drive_generation.load", "drive_wake_queued.store(true"), goodShard],
+    ["saturation-without-later-frame", goodExecutor.replace("self.pool.callback_at(deadline", ""), goodShard],
+    ["terminal-successor-stranded", goodExecutor.replace("pub fn resume_terminal_handoff", ""), goodShard],
+    ["malformed-fault-unacknowledged", goodExecutor.replace("self.consumed_epoch.compare_exchange(previous, epoch", ""), goodShard],
+    ["terminal-retrieval-stays-ready", goodExecutor, goodShard.replace("self.terminal_frames.pop_front()", "self.terminal_frames.front()")],
+    ["terminal-cap-plus-one-transient", goodExecutor, goodShard.replace("FrameAdmissionError::TerminalCapacity { bytes, error }", "FrameAdmissionError::Full { bytes, error }")],
+    ["terminal-overflow-no-rearm", goodExecutor.replace("map(ShardLoop::take_terminal_frame_and_rearm)", "and_then(ShardLoop::take_terminal_frame)"), goodShard],
+    ["terminal-overflow-hot-resubmit", goodExecutor.replaceAll("!terminal_overflow &&", ""), goodShard],
+    ["terminal-overflow-plus-two-enqueues", goodExecutor.replace("if self.terminal_overflow_occupied.load(Ordering::Acquire)", "if false"), goodShard],
+    ["terminal-overflow-aba-unkeyed", goodExecutor, goodShard.replace("terminal_frame_overflow: FixedOwnerRing<TerminalFrameOverflow, 1>", "terminal_frame_overflow: Option<TerminalFrameOverflow>")],
+    ["late-ingress-enqueues", goodExecutor.replace("if self.ingress_state.load(Ordering::Acquire) != 0", "if false"), goodShard],
+    ["grant-raw-bytes-unbounded", goodExecutor, goodShard.replace("bytes.len() > SHARD_FRAME_MAX_BYTES", "false")],
+    ["grant-bytes-fallback-estimate", goodExecutor, goodShard.replace("split_frame_credit(raw_bytes, envelopes.len(), index)", "size_of::<DeferredAuthority>()")],
+    ["suspend-items-plus-one-inline", goodExecutor, goodShard.replace("DeferredAuthority::Suspend", "SuspendInline")],
+    ["resume-bytes-plus-one-unbounded", goodExecutor, goodShard.replace("DeferredAuthority::Resume", "ResumeInline")],
+    ["register-identifier-bytes-unbounded", goodExecutor, goodShard.replace("ShardFrame::Register { .. } | ShardFrame::Unregister { .. } => return self.pending_background.can_admit(1, raw_bytes)", "ShardFrame::Register { .. } | ShardFrame::Unregister { .. } => return Ok(())")],
+    ["mixed-lifecycle-runs-inline", goodExecutor, goodShard.replace("self.suspend_one(actor, operation, applied_progress).await?", "for envelope in envelopes { suspend_one().await }")],
+    ["items-plus-one-unbounded", goodExecutor, goodShard.replace("pub struct FixedOwnerRing<T, const N: usize>", "pending_events: Vec<T>")],
+    ["bytes-plus-one-unchecked", goodExecutor, goodShard.replace("pub fn can_admit(&self, items: usize, bytes: usize)", "")],
+    ["aba-generation-unchecked", goodExecutor, goodShard.replace("generation: entry.generation", "generation: 0")],
+    ["registration-drains-all", goodExecutor.replace("if let Some((_, (actor, instance))) = state.registrations.pop_front()", "while let Some((actor, instance)) = state.registrations.pop_front()"), goodShard],
+    ["interrupted-close-drains-many-authorities", goodExecutor, goodShard.replace("self.cancel_one(cursor, lane).await?", "while let Some(cursor) = cursors { self.cancel_one(cursor, lane).await? }")],
+  ] as const;
+  for (const [name, executor, shard] of fixtures) if (interactivityShardExecutorFailures(executor, shard).length === 0) throw new Error(`[verify interactivity] shard-executor self-test ${name} was falsely accepted.`);
+  if (interactivityShardExecutorFailures(goodExecutor, goodShard).length !== 0) throw new Error("[verify interactivity] shard-executor self-test bounded handoff was falsely rejected.");
+}
+
+function interactivityProductionSource(source: string): string {
+  const lines = source.split(/\r?\n/);
+  const spans = [...policyTestModSpans(lines), ...interactivityCfgTestItemSpans(lines)];
+  return lines.filter((_, index) => !policyLineInTestMod(spans, index + 1)).join("\n");
+}
+
+function interactivityStoreSyncFailures(source: string): string[] {
+  const production = interactivityProductionSource(source);
+  const runner = production.slice(production.indexOf("struct ActorRunner"), production.indexOf("pub(super) async fn spawn_actor", production.indexOf("struct ActorRunner")));
+  const failures: string[] = [];
+  for (const forbidden of ["runtime.block_on", "semio_framework_async::block_on", "tokio::spawn", "UnboundedSender<ArtifactActorMsg", "unbounded_channel::<ArtifactActorMsg", "self.remote.drain()", "while let Ok(event) = events.try_recv()"])
+    if (production.includes(forbidden)) failures.push(`live store-sync retains ${forbidden}`);
+  if (!production.includes("slots: [Option<ArtifactMailboxSlot>; ARTIFACT_MAILBOX_ITEMS]") || !production.includes("ARTIFACT_MAILBOX_BYTES.saturating_sub(state.bytes)") || !production.includes("artifact_actor_message_bytes(&message)") || !production.includes("pub fn into_message(self) -> ArtifactActorMsg")) failures.push("artifact mailbox lacks fixed item/byte preflight or exact rejected-owner handback");
+  if (!production.includes("wake_armed") || !production.includes("wake_requested.compare_exchange(false, true") || !runner.includes("scheduled.compare_exchange(false, true") || !runner.includes("future.as_mut().poll(&mut context)")) failures.push("actor readiness is not a generation-coalesced real-waker one-poll turn");
+  if (!production.includes("pub(super) async fn drive_one(&mut self) -> ArtifactDrive") || !production.includes("if let Some(message) = self.cmd_rx.try_recv()") || !production.includes("self.remote.try_pop_front()?") || production.includes("self.remote.drain()")) failures.push("one scheduling admission can consume more than one command or backbone owner");
+  if (!runner.includes("self.pool.try_submit(semio_framework_async::Lane::UserVisible, job)") || !runner.includes("error.into_job()") || !runner.includes("self.pool.callback_at") || !runner.includes("retry_generation") || !runner.includes("ACTOR_RUNNER_RETRY_LIMIT")) failures.push("quiet saturation lacks exact successor handback and bounded timer-wheel retry");
+  if (!runner.includes("pub fn take_terminal_job") && !runner.includes("fn take_terminal_job")) failures.push("terminal rejected job has no explicit retrieval path");
+  if (!runner.includes("close_one_terminal_owner") || !runner.includes("self.mailbox.close_one()") || !runner.includes("terminal_turn")) failures.push("cancel/fault close lacks one-owner-per-grant terminal authority");
+  if (!runner.includes("deadline_generation") || !runner.includes("deadline_armed") || runner.includes("saturating_add(4)")) failures.push("idle actor uses polling cadence instead of a coalesced exact deadline callback");
+  if (!production.includes("runner: ArtifactActorRunnerHandle") || !production.includes("closing: std::collections::HashMap<u64, ArtifactActorRunnerHandle>") || !production.includes(") -> ArtifactActorRunnerHandle") || !production.includes("runner.set_terminal_empty_callback")) failures.push("host registry lacks a durable generation-keyed strong runner handle");
+  if (!runner.includes("self_retained: std::sync::Mutex<Option<Arc<ActorRunner>>>") || !production.includes("Some(runner.clone())") || !runner.includes("self.self_retained.lock()") || !runner.includes("self.terminal_is_empty()")) failures.push("quiet or final runner Arc can deep-drop outside terminal retirement");
+  if (!production.includes("runner: ArtifactActorRunnerTicket") || !production.includes("runner: std::sync::Weak<ActorRunner>") || !production.includes("external_tickets: std::sync::atomic::AtomicUsize") || !production.includes("returned: bool") || !production.includes("runner.return_ticket()") || !runner.includes("self.external_tickets.load(std::sync::atomic::Ordering::Acquire) == 0")) failures.push("external channel ticket can outlive close without exact generation return");
+  if (!production.includes("closing.insert(generation, runner.clone())") || !production.includes("runner.request_close()") || !production.includes("pub fn closing_runner") || !production.includes("pub fn close_step") || !production.includes("pub fn terminal_is_empty") || !production.includes("pub fn take_terminal_job")) failures.push("host close cannot drive or retrieve retained terminal ownership");
+  for (const fixture of [
+    "artifact_mailbox_item_cap_plus_one_returns_exact_owner_and_preserves_fifo",
+    "artifact_mailbox_byte_cap_and_plus_one_preflight_before_mutation",
+    "artifact_mailbox_wake_storm_coalesces_until_fifo_becomes_empty",
+    "artifact_mailbox_stale_late_send_hands_back_exact_owner_and_interrupted_close_drains_one_per_grant",
+    "artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_ownership_order",
+    "stale_generation_wake_cannot_schedule_or_mutate_current_turn",
+    "turn_fault_and_cancel_retain_then_close_one_owner_per_grant",
+    "quiet_pool_saturation_retains_exact_successor_for_timer_wheel_retry",
+    "idle_runner_is_strongly_retained_and_quiet_late_wake_schedules_once",
+    "idle_then_late_send_upgrades_the_host_retained_runner_once",
+    "external_ticket_held_across_close_delays_completion_until_exact_return",
+    "external_ticket_dropped_before_close_and_generation_aba_are_exact",
+    "terminal_job_take_resume_and_close_preserve_exact_owner",
+    "host_close_registry_survives_external_ticket_until_return",
+    "ticket_return_before_host_close_allows_immediate_retirement",
+    "detach_while_pending_retains_future_then_cancel_closes_one_owner",
+  ]) if (!source.includes(fixture)) failures.push(`store-sync retained-turn fixture missing: ${fixture}`);
+  return failures;
+}
+
+function interactivityStoreSyncSelfTests(): void {
+  const good = `slots: [Option<ArtifactMailboxSlot>; ARTIFACT_MAILBOX_ITEMS] ARTIFACT_MAILBOX_BYTES.saturating_sub(state.bytes) artifact_actor_message_bytes(&message) pub fn into_message(self) -> ArtifactActorMsg wake_armed wake_requested.compare_exchange(false, true pub(super) async fn drive_one(&mut self) -> ArtifactDrive { if let Some(message) = self.cmd_rx.try_recv() self.remote.try_pop_front()? } struct OpenDocument { runner: ArtifactActorRunnerHandle } closing: std::collections::HashMap<u64, ArtifactActorRunnerHandle> runner: ArtifactActorRunnerTicket runner: std::sync::Weak<ActorRunner> returned: bool struct ActorRunner { deadline_generation deadline_armed retry_generation terminal_turn self_retained: std::sync::Mutex<Option<Arc<ActorRunner>>> external_tickets: std::sync::atomic::AtomicUsize } scheduled.compare_exchange(false, true future.as_mut().poll(&mut context) self.pool.try_submit(semio_framework_async::Lane::UserVisible, job) error.into_job() self.pool.callback_at ACTOR_RUNNER_RETRY_LIMIT fn take_terminal_job close_one_terminal_owner self.mailbox.close_one() self.terminal_is_empty() self.external_tickets.load(std::sync::atomic::Ordering::Acquire) == 0 self.self_retained.lock() Some(runner.clone()) runner.return_ticket() pub(super) async fn spawn_actor() -> ArtifactActorRunnerHandle runner.set_terminal_empty_callback closing.insert(generation, runner.clone()) runner.request_close() pub fn closing_runner pub fn close_step pub fn terminal_is_empty pub fn take_terminal_job artifact_mailbox_item_cap_plus_one_returns_exact_owner_and_preserves_fifo artifact_mailbox_byte_cap_and_plus_one_preflight_before_mutation artifact_mailbox_wake_storm_coalesces_until_fifo_becomes_empty artifact_mailbox_stale_late_send_hands_back_exact_owner_and_interrupted_close_drains_one_per_grant artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_ownership_order stale_generation_wake_cannot_schedule_or_mutate_current_turn turn_fault_and_cancel_retain_then_close_one_owner_per_grant quiet_pool_saturation_retains_exact_successor_for_timer_wheel_retry idle_runner_is_strongly_retained_and_quiet_late_wake_schedules_once idle_then_late_send_upgrades_the_host_retained_runner_once external_ticket_held_across_close_delays_completion_until_exact_return external_ticket_dropped_before_close_and_generation_aba_are_exact terminal_job_take_resume_and_close_preserve_exact_owner host_close_registry_survives_external_ticket_until_return ticket_return_before_host_close_allows_immediate_retirement detach_while_pending_retains_future_then_cancel_closes_one_owner`;
+  const mutations = [
+    ["pool-block-on", `${good} runtime.block_on`],
+    ["tokio-spawn", `${good} tokio::spawn`],
+    ["unbounded-mailbox", good.replace("slots: [Option<ArtifactMailboxSlot>; ARTIFACT_MAILBOX_ITEMS]", "UnboundedSender<ArtifactActorMsg")],
+    ["mailbox-byte-preflight", good.replace("ARTIFACT_MAILBOX_BYTES.saturating_sub(state.bytes)", "usize::MAX")],
+    ["wake-storm", good.replace("wake_requested.compare_exchange(false, true", "wake_requested.store(true")],
+    ["multi-command-drain", good.replace("if let Some(message) = self.cmd_rx.try_recv()", "while let Some(message) = self.cmd_rx.try_recv()")],
+    ["backbone-drain", `${good} self.remote.drain()`],
+    ["quiet-saturation-strand", good.replace("self.pool.callback_at", "drop")],
+    ["terminal-job-sink", good.replace("fn take_terminal_job", "fn inspect_terminal_job")],
+    ["terminal-drain-all", good.replace("close_one_terminal_owner", "close_all_terminal_owners")],
+    ["idle-poll", good.replace("deadline_generation", "deadline_generation saturating_add(4)")],
+    ["missing-strong-host-handle", good.replace("runner: ArtifactActorRunnerHandle", "runner: std::sync::Weak<ActorRunner>")],
+    ["quiet-runner-drop", good.replace("self_retained: std::sync::Mutex<Option<Arc<ActorRunner>>>", "self_retained: ()")],
+    ["strong-external-channel-handle", good.replace("runner: ArtifactActorRunnerTicket", "runner: ArtifactActorRunnerHandle")],
+    ["ticket-return-not-terminal-gated", good.replace("self.external_tickets.load(std::sync::atomic::Ordering::Acquire) == 0", "true")],
+    ["missing-host-terminal-callback", good.replace("runner.set_terminal_empty_callback", "drop")],
+  ] as const;
+  for (const [name, source] of mutations) if (interactivityStoreSyncFailures(source).length === 0) throw new Error(`[verify interactivity] store-sync self-test ${name} was falsely accepted.`);
+  if (interactivityStoreSyncFailures(good).length !== 0) throw new Error("[verify interactivity] store-sync self-test retained bounded actor turn was falsely rejected.");
+}
+
+function interactivityMcpHttpTransportFailures(transportSource: string, bridgeSource: string, rootSource: string): string[] {
+  const transport = interactivityProductionSource(transportSource);
+  const bridge = interactivityProductionSource(bridgeSource);
+  const failures: string[] = [];
+  for (const forbidden of ["tokio::runtime::Runtime", "tokio::runtime::Builder", "tokio::spawn", "tokio::sync", "axum::serve", "block_on("]) {
+    if (transport.includes(forbidden) || bridge.includes(forbidden)) failures.push(`live MCP transport retains ${forbidden}`);
+  }
+  if (!transport.includes("process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative") || !transport.includes("self.pool.try_submit(Lane::Io, job)") || !transport.includes("state.drive_one(self.pool.now_ms())")) failures.push("MCP HTTP is not one retained process-pool I/O-lane turn");
+  if (!rootSource.includes("transport.start(server)?.wait()") || rootSource.includes("Runtime::new()") || rootSource.includes("block_on(")) failures.push("MCP process entry does not own the retained HTTP completion boundary");
+  if (!transport.includes("listener.set_nonblocking(true)") || !transport.includes("stream.set_nonblocking(true)") || !transport.includes("fn accept_one(") || !transport.includes("fn read_one_page(") || !transport.includes("fn parse_one_http_token(") || !transport.includes("fn write_one_page(")) failures.push("MCP accept/read/parse/write authorities are not retained nonblocking steps");
+  if (!transport.includes("HTTP_CONNECTION_CAPACITY") || !transport.includes("FixedOwnerRing<HttpTerminalConnection, HTTP_CONNECTION_CAPACITY>") || !transport.includes("request_credits: FixedByteCredits") || !transport.includes("response_credits: FixedByteCredits") || !transport.includes("try_acquire(bytes")) failures.push("MCP connection/request/response ownership lacks fixed item and byte preflight");
+  if (!transport.includes("pub fn take_terminal_connection") || !transport.includes("pub fn take_terminal_job") || !transport.includes("error.into_job()") || !transport.includes("WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned") || !transport.includes("owner.close()")) failures.push("MCP rejected jobs or terminal connections lack exact retrieval and close");
+  if (!transport.includes("callback_at(") || !transport.includes("retry_generation") || !transport.includes("readiness_armed.compare_exchange(false, true") || !transport.includes("generation_is_current(current, run_generation)")) failures.push("MCP retry/readiness ownership lacks coalesced generation-keyed re-arm");
+  if (!transport.includes("HTTP_IO_PAGE_BYTES") || !transport.includes("connection.stream.read(&mut page[..page_bytes])") || !transport.includes("connection.stream.write(&connection.egress[connection.written..end])") || transport.includes("read_to_end(") || transport.includes("write_all(")) failures.push("MCP socket I/O is not bounded to one page per grant");
+  if (!transport.includes("find_crlf_bounded(&connection.ingress, connection.parser.cursor, search_end)") || !transport.includes("connection.ingress.len().min(line_bound)") || !transport.includes("HTTP_REQUEST_LINE_BYTES") || !transport.includes("HTTP_HEADER_CAPACITY") || !transport.includes("HTTP_HEADER_NAME_BYTES") || !transport.includes("HTTP_HEADER_VALUE_BYTES") || !transport.includes("HTTP_PATH_BYTES") || !transport.includes("HTTP_SLOWLORIS_MS")) failures.push("MCP HTTP parsing lacks bounded one-token request-line/header and slowloris limits");
+  const dispatch = transport.slice(transport.indexOf("fn dispatch_owned_http("));
+  if (!dispatch.includes("origin_allowed(") || !dispatch.includes("owned_bearer_matches(") || !dispatch.includes("state.server.lock()") || dispatch.indexOf("origin_allowed(") > dispatch.indexOf("state.server.lock()") || dispatch.indexOf("owned_bearer_matches(") > dispatch.indexOf("state.server.lock()")) failures.push("MCP authentication/origin checks can follow bridge or protocol mutation");
+  if (!transport.includes("websocket_accept(") || !transport.includes("websocket_key_nonce(key).ok_or(HttpTerminalReason::Malformed)?") || !transport.includes('head.header_occurrences("sec-websocket-key") != 1') || !transport.includes("bytes.len() != 24") || !transport.includes('bytes[22..] != *b"=="') || !transport.includes("b & 0x0f != 0") || !transport.includes("let masked = bytes[1] & 0x80 != 0") || !transport.includes("!fin || rsv != 0 || !masked") || !transport.includes("payload_len > WEBSOCKET_FRAME_BYTES") || !transport.includes("opcode & 0x8 != 0 && payload_len > 125")) failures.push("MCP WebSocket handshake key/frame limits or client-mask validation are incomplete");
+  const openedBridge = transport.slice(transport.indexOf("fn parse_one_websocket_frame"), transport.indexOf("fn consume_websocket_ingress"));
+  if (openedBridge.includes("ShellToGateway::decode") || !openedBridge.includes("ShellToGatewayDecodeCursor::new(frame.payload_len)") || !openedBridge.includes("decoder.step(|index| frame.payload_byte(&connection.ingress, index))") || !openedBridge.includes("ShellToGatewayMaterializeCursor::new(frame)") || !openedBridge.includes("materializer.step()") || !openedBridge.includes("inbound.generation != connection.key.generation") || !openedBridge.includes("ConnectionTurn::Terminal(HttpTerminalReason::Malformed)") || !openedBridge.includes("ConnectionTurn::Terminal(HttpTerminalReason::Unsupported)") || openedBridge.indexOf("self.consume_websocket_ingress(connection, consumed)") < openedBridge.indexOf("ShellMaterializeStep::Complete(message)")) failures.push("opened bridge bypasses retained validation/materialization or consumes exact raw ingress early");
+  if (!transport.includes("payload_start: usize") || !transport.includes("payload_byte(self, bytes: &[u8], index: usize)") || transport.includes("payload: Vec<u8>") || !transport.includes("copy_control_payload")) failures.push("untrusted WebSocket ingress is allocated before bounded bridge validation");
+  const boundedDecoder = bridge.slice(bridge.indexOf("pub(crate) struct ShellToGatewayDecodeCursor"), bridge.indexOf("//#endregion 🔖️BoundedShellDecode"));
+  if (!boundedDecoder.includes("ranges: [Option<ShellRange>; BRIDGE_INBOUND_MAX_RANGES]") || !boundedDecoder.includes("BRIDGE_INBOUND_MAX_ITEMS.saturating_sub(self.items)") || !boundedDecoder.includes("count.checked_mul(minimum_item_bytes)") || !boundedDecoder.includes("self.payload_len.saturating_sub(self.cursor)") || !boundedDecoder.includes("BRIDGE_INBOUND_MAX_FIELD_BYTES") || !boundedDecoder.includes("owned_bytes.checked_add(len)") || !boundedDecoder.includes("ValidateStrings") || !boundedDecoder.includes("BRIDGE_INBOUND_PAGE_BYTES.min") || !boundedDecoder.includes("try_reserve_exact") || !boundedDecoder.includes("ShellToGatewayMaterializeCursor") || boundedDecoder.includes("ShellToGateway::decode")) failures.push("ShellToGateway untrusted counts/ranges/UTF-8 or retained owner construction are not completely bounded");
+  const outboxSend = bridge.slice(bridge.indexOf("fn try_send(&self, frame: GatewayToShell)"), bridge.indexOf("fn claim(&self, bytes: usize)"));
+  if (bridge.includes("tokio::sync") || bridge.includes("mpsc::") || bridge.includes("VecDeque<GatewayToShell>") || !bridge.includes("slots: [Option<BridgeOutboxItem>; BRIDGE_OUTBOX_MAX_ITEMS]") || !bridge.includes("BRIDGE_OUTBOX_MAX_BYTES.saturating_sub(self.bytes).saturating_sub(self.reserved_bytes)") || !bridge.includes("pub fn try_send_to") || !bridge.includes("Err(frame)") || !bridge.includes("BridgeEncodedFrame") || !bridge.includes("BRIDGE_OUTBOX_PAGE_BYTES") || !transport.includes("try_recv_encoded()") || !transport.includes("fn write_one_bridge_page") || !outboxSend.includes("frame.encoded_len()") || !outboxSend.includes("self.claim(bytes)") || outboxSend.includes("frame.encode()") || outboxSend.indexOf("self.claim(bytes)") > outboxSend.indexOf("BridgeEncodedFrame::encode(&frame, bytes)")) failures.push("live bridge outbox lacks preflight-first fixed-page encoding and exact handback");
+  const broadcast = bridge.slice(bridge.indexOf("pub fn broadcast(&self, frame: GatewayToShell)"), bridge.indexOf("pub fn take_broadcast_completion"));
+  const broadcastCursor = bridge.slice(bridge.indexOf("struct BridgeBroadcastCursor"), bridge.indexOf("struct BridgeAsyncState"));
+  const broadcastStep = broadcastCursor.slice(broadcastCursor.indexOf("fn step("), broadcastCursor.indexOf("fn close_one_claim"));
+  if (!broadcast.includes("-> Result<usize, GatewayToShell>") || !broadcast.includes("frame.encoded_len()") || !broadcast.includes("bytes.checked_mul(recipients)") || !broadcast.includes("reserve_broadcast()") || !broadcast.includes("reserve_retirement()") || !broadcast.includes("[Option<BridgeRecipientState>; BRIDGE_BROADCAST_MAX_RECIPIENTS]") || !broadcast.includes("recipient_ids[..recipients].sort_unstable()") || !broadcast.includes("cancel_broadcast_reservation()") || !broadcast.includes("return Err(frame)") || broadcast.includes("frame.clone()") || broadcast.includes("BridgeEncodedFrame::encode")) failures.push("bridge broadcast clones, reorders, or encodes before atomic aggregate recipient admission");
+  if (!broadcast.includes("BridgeEncodedFrame::empty(bytes, Some((Arc::clone(&self.inner.asynchronous), retirement)))") || !broadcastCursor.includes("BridgeRecipientState::Published") || !broadcastCursor.includes("BridgeRecipientState::RecipientClosed") || !bridge.includes("struct BridgeRejectedPublish") || !broadcastCursor.includes("grant: rejected.grant") || !broadcastCursor.includes("self.recipient_cursor += 1") || !broadcastCursor.includes("BridgeBroadcastCompletion::Undelivered") || !broadcastCursor.includes("recipient_closed: self.recipient_closed") || !bridge.includes("pub fn take_broadcast_completion") || !bridge.includes("fn close_one_terminal_broadcast_claim") || !bridge.includes("let step = cursor.step();") || !bridge.includes("copy_encoded_page(self.offset") || !bridge.includes("BridgeBroadcastStep::Pending") || !bridge.includes("generation: grant.generation") || !bridge.includes("impl Drop for BridgeEncodedFrame") || !bridge.includes("authority.publish_retirement(grant, pages)") || !bridge.includes("fn close_one_terminal_retired_page") || !bridge.includes("fn take_terminal_job") || !bridge.includes("scheduled.compare_exchange(false, true") || !bridge.includes("retry_generation") || !bridge.includes("callback_at(") || /unreachable!|panic!/.test(broadcastCursor) || broadcastStep.includes("while ")) failures.push("broadcast close race lacks deterministic one-recipient results, exact completion, or retained shared-page retirement");
+  const terminalTake = transport.slice(transport.indexOf("pub fn take_terminal_connection"), transport.indexOf("pub fn take_terminal_job"));
+  const terminalDrive = transport.slice(transport.indexOf("fn drive_one(&mut self, now_ms"), transport.indexOf("fn next_non_io_connection"));
+  if (!transport.includes("terminal_policy: HttpTerminalPolicy") || !transport.includes("HttpTerminalPolicy::Handback") || !transport.includes("state.terminal_policy = HttpTerminalPolicy::Close") || !transport.includes("HttpTurn::Parked") || !terminalDrive.includes("if self.terminal_policy == HttpTerminalPolicy::Close") || !terminalTake.includes("self.inner.clear_readiness()") || !terminalTake.includes("self.inner.request_schedule()") || !transport.includes("readiness_generation: AtomicU64") || !transport.includes("generation_is_current(authority.readiness_generation.load")) failures.push("terminal connection FIFO handback can race close or leave stale readiness armed");
+  for (const fixture of [
+    "connection_cap_plus_one_returns_the_exact_owner_without_mutating_fifo",
+    "request_and_response_byte_cap_plus_one_return_the_exact_owner",
+    "stale_readiness_and_retry_generations_cannot_rearm_an_aba_run",
+    "websocket_rejects_unmasked_fragmented_and_oversize_frames_before_consumption",
+    "one_terminal_close_grant_drains_exactly_one_fifo_owner",
+    "cancellation_and_shutdown_drain_one_connection_authority_per_grant",
+    "bridge_outbox_item_cap_plus_one_returns_the_exact_frame_and_rearms_after_one_receive",
+    "bridge_outbox_byte_cap_plus_one_returns_the_exact_frame_before_queue_mutation",
+    "bridge_outbox_terminal_close_rejects_the_exact_late_frame",
+    "websocket_key_rejects_duplicate_invalid_alphabet_padding_whitespace_width_and_noncanonical_bits",
+    "request_line_and_header_delimiter_search_faults_at_cap_without_scanning_late_crlf",
+    "malformed_and_unsupported_open_bridge_binary_frames_retain_exact_raw_ingress",
+    "bridge_outbox_page_boundary_matches_the_canonical_encoder",
+    "terminal_public_fifo_preserves_generation_aba_and_process_close_is_one_owner_per_grant",
+    "bounded_shell_decoder_rejects_ffffffff_counts_and_truncated_ranges_before_owner_allocation",
+    "bounded_shell_decoder_cap_plus_one_and_every_variant_match_the_canonical_fixture",
+    "bounded_shell_decoder_and_materializer_advance_incrementally",
+    "incremental_bridge_decode_cancellation_and_stale_generation_retain_exact_raw_owner",
+    "broadcast_partial_saturation_rolls_back_every_claim_and_returns_the_exact_uncloned_message",
+    "broadcast_many_recipient_and_oversize_preflight_reject_before_encode",
+    "shared_broadcast_leases_are_generation_keyed_and_close_rejects_aba_publish",
+    "broadcast_close_before_first_publish_delivers_survivors_in_stable_admitted_order",
+    "broadcast_close_mid_recipient_list_reports_partial_counts_and_fifo_delivery",
+    "broadcast_all_close_returns_the_exact_original_completion_after_every_claim",
+    "broadcast_reopen_same_slot_aba_cannot_consume_the_stale_recipient_claim",
+    "broadcast_shutdown_cancel_poison_closes_each_remaining_claim_one_grant_then_reports_partial_delivery",
+    "last_shared_lease_transfers_pages_to_one_page_terminal_retirement_grants",
+    "terminal_broadcast_close_returns_one_exact_original_and_cancels_recipient_credit",
+  ]) if (!transportSource.includes(fixture) && !bridgeSource.includes(fixture)) failures.push(`MCP owned-transport fixture missing: ${fixture}`);
+  return failures;
+}
+
+function interactivityMcpHttpTransportSelfTests(): void {
+  const goodTransport = `process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative self.pool.try_submit(Lane::Io, job) state.drive_one(self.pool.now_ms()) listener.set_nonblocking(true) stream.set_nonblocking(true) fn accept_one( fn read_one_page( fn parse_one_http_token( fn write_one_page( fn write_one_bridge_page HTTP_CONNECTION_CAPACITY FixedOwnerRing<HttpTerminalConnection, HTTP_CONNECTION_CAPACITY> request_credits: FixedByteCredits response_credits: FixedByteCredits try_acquire(bytes pub fn take_terminal_connection { terminal.pop_front(); self.inner.clear_readiness(); self.inner.request_schedule(); } pub fn take_terminal_job error.into_job() WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned owner.close() callback_at( retry_generation readiness_armed.compare_exchange(false, true generation_is_current(current, run_generation) readiness_generation: AtomicU64 generation_is_current(authority.readiness_generation.load HTTP_IO_PAGE_BYTES connection.stream.read(&mut page[..page_bytes]) connection.stream.write(&connection.egress[connection.written..end]) find_crlf_bounded(&connection.ingress, connection.parser.cursor, search_end) connection.ingress.len().min(line_bound) HTTP_REQUEST_LINE_BYTES HTTP_HEADER_CAPACITY HTTP_HEADER_NAME_BYTES HTTP_HEADER_VALUE_BYTES HTTP_PATH_BYTES HTTP_SLOWLORIS_MS fn dispatch_owned_http() { origin_allowed(); owned_bearer_matches(); state.server.lock(); } websocket_accept( websocket_key_nonce(key).ok_or(HttpTerminalReason::Malformed)? head.header_occurrences("sec-websocket-key") != 1 bytes.len() != 24 bytes[22..] != *b"==" b & 0x0f != 0 let masked = bytes[1] & 0x80 != 0 !fin || rsv != 0 || !masked payload_len > WEBSOCKET_FRAME_BYTES opcode & 0x8 != 0 && payload_len > 125 payload_start: usize fn payload_byte(self, bytes: &[u8], index: usize) fn copy_control_payload fn parse_one_websocket_frame { ShellToGatewayDecodeCursor::new(frame.payload_len); decoder.step(|index| frame.payload_byte(&connection.ingress, index)); ShellToGatewayMaterializeCursor::new(frame); materializer.step(); inbound.generation != connection.key.generation; ConnectionTurn::Terminal(HttpTerminalReason::Malformed); ConnectionTurn::Terminal(HttpTerminalReason::Unsupported); ShellMaterializeStep::Complete(message); self.consume_websocket_ingress(connection, consumed); } fn consume_websocket_ingress try_recv_encoded() terminal_policy: HttpTerminalPolicy HttpTerminalPolicy::Handback state.terminal_policy = HttpTerminalPolicy::Close HttpTurn::Parked fn drive_one(&mut self, now_ms { if self.terminal_policy == HttpTerminalPolicy::Close {} } fn next_non_io_connection connection_cap_plus_one_returns_the_exact_owner_without_mutating_fifo request_and_response_byte_cap_plus_one_return_the_exact_owner stale_readiness_and_retry_generations_cannot_rearm_an_aba_run websocket_rejects_unmasked_fragmented_and_oversize_frames_before_consumption one_terminal_close_grant_drains_exactly_one_fifo_owner cancellation_and_shutdown_drain_one_connection_authority_per_grant websocket_key_rejects_duplicate_invalid_alphabet_padding_whitespace_width_and_noncanonical_bits request_line_and_header_delimiter_search_faults_at_cap_without_scanning_late_crlf malformed_and_unsupported_open_bridge_binary_frames_retain_exact_raw_ingress terminal_public_fifo_preserves_generation_aba_and_process_close_is_one_owner_per_grant incremental_bridge_decode_cancellation_and_stale_generation_retain_exact_raw_owner`;
+  const goodBridge = `pub(crate) struct ShellToGatewayDecodeCursor { ranges: [Option<ShellRange>; BRIDGE_INBOUND_MAX_RANGES] } BRIDGE_INBOUND_MAX_ITEMS.saturating_sub(self.items) count.checked_mul(minimum_item_bytes) self.payload_len.saturating_sub(self.cursor) BRIDGE_INBOUND_MAX_FIELD_BYTES owned_bytes.checked_add(len) ValidateStrings BRIDGE_INBOUND_PAGE_BYTES.min try_reserve_exact ShellToGatewayMaterializeCursor //#endregion 🔖️BoundedShellDecode slots: [Option<BridgeOutboxItem>; BRIDGE_OUTBOX_MAX_ITEMS] BRIDGE_OUTBOX_MAX_BYTES.saturating_sub(self.bytes).saturating_sub(self.reserved_bytes) pub fn try_send_to Err(frame) BridgeEncodedFrame BRIDGE_OUTBOX_PAGE_BYTES fn try_send(&self, frame: GatewayToShell) { let Some(bytes) = frame.encoded_len(); self.claim(bytes); let encoded = BridgeEncodedFrame::encode(&frame, bytes); } fn claim(&self, bytes: usize) struct BridgeBroadcastCursor { recipients_state: [Option<BridgeRecipientState>; BRIDGE_BROADCAST_MAX_RECIPIENTS] } enum BridgeRecipientState { Claimed, Published, RecipientClosed } struct BridgeRejectedPublish { grant: BridgeOutboxGrant } fn step() { BridgeRecipientState::Published; BridgeRecipientState::RecipientClosed; grant: rejected.grant; self.recipient_cursor += 1; BridgeBroadcastCompletion::Undelivered { recipient_closed: self.recipient_closed }; BridgeBroadcastStep::Pending; copy_encoded_page(self.offset); } fn close_one_claim() {} struct BridgeAsyncState pub fn broadcast(&self, frame: GatewayToShell) -> Result<usize, GatewayToShell> { frame.encoded_len(); bytes.checked_mul(recipients); reserve_broadcast(); reserve_retirement(); [Option<BridgeRecipientState>; BRIDGE_BROADCAST_MAX_RECIPIENTS]; recipient_ids[..recipients].sort_unstable(); cancel_broadcast_reservation(); return Err(frame); BridgeEncodedFrame::empty(bytes, Some((Arc::clone(&self.inner.asynchronous), retirement))); } pub fn take_broadcast_completion fn close_one_terminal_broadcast_claim let step = cursor.step(); generation: grant.generation impl Drop for BridgeEncodedFrame authority.publish_retirement(grant, pages) fn close_one_terminal_retired_page fn take_terminal_job scheduled.compare_exchange(false, true retry_generation callback_at( bridge_outbox_item_cap_plus_one_returns_the_exact_frame_and_rearms_after_one_receive bridge_outbox_byte_cap_plus_one_returns_the_exact_frame_before_queue_mutation bridge_outbox_terminal_close_rejects_the_exact_late_frame bridge_outbox_page_boundary_matches_the_canonical_encoder bounded_shell_decoder_rejects_ffffffff_counts_and_truncated_ranges_before_owner_allocation bounded_shell_decoder_cap_plus_one_and_every_variant_match_the_canonical_fixture bounded_shell_decoder_and_materializer_advance_incrementally broadcast_partial_saturation_rolls_back_every_claim_and_returns_the_exact_uncloned_message broadcast_many_recipient_and_oversize_preflight_reject_before_encode shared_broadcast_leases_are_generation_keyed_and_close_rejects_aba_publish broadcast_close_before_first_publish_delivers_survivors_in_stable_admitted_order broadcast_close_mid_recipient_list_reports_partial_counts_and_fifo_delivery broadcast_all_close_returns_the_exact_original_completion_after_every_claim broadcast_reopen_same_slot_aba_cannot_consume_the_stale_recipient_claim broadcast_shutdown_cancel_poison_closes_each_remaining_claim_one_grant_then_reports_partial_delivery last_shared_lease_transfers_pages_to_one_page_terminal_retirement_grants terminal_broadcast_close_returns_one_exact_original_and_cancels_recipient_credit`;
+  const goodRoot = `transport.start(server)?.wait()`;
+  const fixtures = [
+    ["runtime-builder", `${goodTransport} tokio::runtime::Runtime`, goodBridge, goodRoot],
+    ["pool-block-on", `${goodTransport} block_on(`, goodBridge, goodRoot],
+    ["live-axum", `${goodTransport} axum::serve`, goodBridge, goodRoot],
+    ["live-tokio-sync", goodTransport, `${goodBridge} tokio::sync::mpsc`, goodRoot],
+    ["dynamic-outbox", goodTransport, goodBridge.replace("slots: [Option<BridgeOutboxItem>; BRIDGE_OUTBOX_MAX_ITEMS]", "VecDeque<GatewayToShell>"), goodRoot],
+    ["unbounded-read", goodTransport.replace("connection.stream.read(&mut page[..page_bytes])", "read_to_end("), goodBridge, goodRoot],
+    ["missing-byte-preflight", goodTransport.replace("try_acquire(bytes", "unchecked(bytes"), goodBridge, goodRoot],
+    ["missing-terminal-owner", goodTransport.replace("pub fn take_terminal_connection", "fn discard_terminal_connection"), goodBridge, goodRoot],
+    ["unkeyed-readiness", goodTransport.replace("generation_is_current(current, run_generation)", "true"), goodBridge, goodRoot],
+    ["unmasked-websocket", goodTransport.replace("!fin || rsv != 0 || !masked", "!fin || rsv != 0"), goodBridge, goodRoot],
+    ["malformed-bridge-silent", goodTransport.replace("ConnectionTurn::Terminal(HttpTerminalReason::Malformed)", "ConnectionTurn::Keep(HttpConnectionPhase::DrainBridgeOutbox)"), goodBridge, goodRoot],
+    ["bridge-generated-decode", goodTransport.replace("decoder.step(|index| frame.payload_byte(&connection.ingress, index))", "ShellToGateway::decode(&frame.payload)"), goodBridge, goodRoot],
+    ["bridge-consumes-before-decode", goodTransport.replace("ShellMaterializeStep::Complete(message);", "self.consume_websocket_ingress(connection, consumed); ShellMaterializeStep::Complete(message);"), goodBridge, goodRoot],
+    ["bridge-payload-allocates", goodTransport.replace("payload_start: usize", "payload: Vec<u8>"), goodBridge, goodRoot],
+    ["websocket-key-duplicate", goodTransport.replace('head.header_occurrences("sec-websocket-key") != 1', "false"), goodBridge, goodRoot],
+    ["websocket-key-unvalidated", goodTransport.replace("websocket_key_nonce(key).ok_or(HttpTerminalReason::Malformed)?", "key"), goodBridge, goodRoot],
+    ["delimiter-unbounded", goodTransport.replace("find_crlf_bounded(&connection.ingress, connection.parser.cursor, search_end)", "find_crlf(&connection.ingress, connection.parser.cursor)"), goodBridge, goodRoot],
+    ["outbox-encodes-before-preflight", goodTransport, goodBridge.replace("let Some(bytes) = frame.encoded_len()", "let bytes = frame.encode().len()"), goodRoot],
+    ["outbox-allocates-before-claim", goodTransport, goodBridge.replace("self.claim(bytes); let encoded", "let encoded"), goodRoot],
+    ["decoder-count-unbounded", goodTransport, goodBridge.replace("BRIDGE_INBOUND_MAX_ITEMS.saturating_sub(self.items)", "usize::MAX"), goodRoot],
+    ["decoder-count-range-unchecked", goodTransport, goodBridge.replace("self.payload_len.saturating_sub(self.cursor)", "usize::MAX"), goodRoot],
+    ["decoder-owner-bytes-unbounded", goodTransport, goodBridge.replace("owned_bytes.checked_add(len)", "owned_bytes + len"), goodRoot],
+    ["decoder-generated-materialize", goodTransport, goodBridge.replace("ShellToGatewayMaterializeCursor", "ShellToGateway::decode"), goodRoot],
+    ["broadcast-clones-before-admission", goodTransport, goodBridge.replace("pub fn broadcast(&self, frame: GatewayToShell) -> Result<usize, GatewayToShell> { frame.encoded_len();", "pub fn broadcast(&self, frame: GatewayToShell) -> Result<usize, GatewayToShell> { frame.clone(); frame.encoded_len();"), goodRoot],
+    ["broadcast-encodes-before-admission", goodTransport, goodBridge.replace("pub fn broadcast(&self, frame: GatewayToShell) -> Result<usize, GatewayToShell> { frame.encoded_len();", "pub fn broadcast(&self, frame: GatewayToShell) -> Result<usize, GatewayToShell> { BridgeEncodedFrame::encode(&frame, 1); frame.encoded_len();"), goodRoot],
+    ["broadcast-aggregate-unchecked", goodTransport, goodBridge.replace("bytes.checked_mul(recipients)", "bytes * recipients"), goodRoot],
+    ["broadcast-no-retirement-claim", goodTransport, goodBridge.replace("reserve_retirement();", ""), goodRoot],
+    ["broadcast-close-race-panics", goodTransport, goodBridge.replace("grant: rejected.grant;", "unreachable!();"), goodRoot],
+    ["broadcast-close-race-loses-grant", goodTransport, goodBridge.replace("grant: rejected.grant;", "drop(rejected);"), goodRoot],
+    ["broadcast-close-race-drains-recipients", goodTransport, goodBridge.replace("self.recipient_cursor += 1;", "while self.recipient_cursor < self.recipients {}"), goodRoot],
+    ["broadcast-all-close-drops-original", goodTransport, goodBridge.replace("BridgeBroadcastCompletion::Undelivered", "BridgeBroadcastCompletion::Delivered"), goodRoot],
+    ["broadcast-recipient-order-unstable", goodTransport, goodBridge.replace("recipient_ids[..recipients].sort_unstable();", ""), goodRoot],
+    ["broadcast-terminal-claim-close-missing", goodTransport, goodBridge.replace("fn close_one_terminal_broadcast_claim", "fn close_all_terminal_broadcast_claims"), goodRoot],
+    ["last-lease-ordinary-drop", goodTransport, goodBridge.replace("authority.publish_retirement(grant, pages)", "drop(pages)"), goodRoot],
+    ["terminal-auto-close", goodTransport.replace("if self.terminal_policy == HttpTerminalPolicy::Close", "if true"), goodBridge, goodRoot],
+    ["terminal-retrieval-leaves-readiness", goodTransport.replace("self.inner.clear_readiness();", ""), goodBridge, goodRoot],
+    ["process-entry-runtime", goodTransport, goodBridge, `${goodRoot} Runtime::new()`],
+  ] as const;
+  for (const [name, transport, bridge, root] of fixtures) if (interactivityMcpHttpTransportFailures(transport, bridge, root).length === 0) throw new Error(`[verify interactivity] MCP HTTP self-test ${name} was falsely accepted.`);
+  if (interactivityMcpHttpTransportFailures(goodTransport, goodBridge, goodRoot).length !== 0) throw new Error("[verify interactivity] MCP HTTP self-test owned bounded transport was falsely rejected.");
 }
 //#endregion 🔖️InteractivityAudit
 

@@ -841,7 +841,7 @@ mod flow_vcs_wasm {
         pub async fn new(envelope_json: Option<String>) -> Result<FlowArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: FlowEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: FlowEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     FlowStore::new(envelope).await.map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
                 None => FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?,

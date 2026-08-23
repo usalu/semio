@@ -1,6 +1,6 @@
 //! ⏰️ Every source of "something is due later" this crate's own `AppRuntime` used to track as raw
-//! `app_now_ms()`-stamped fields (`wheel_zoom_deadline_ms`, `world3d_camera_dispatch_deadlines_ms`,
-//! `caret_blink_at_ms`), swept unconditionally on **every** `frame()` call under the old
+//! `app_now_ms()`-stamped fields such as `caret_blink_at_ms`, swept unconditionally on **every**
+//! `frame()` call under the old
 //! `ControlFlow::Poll` loop. This file is the ticket `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-
 //! FAMILY` (packet `os-host`) replacement: each source below is either a token-keyed re-armable
 //! deadline (camera settle, wheel-zoom settle — "the token is replaced when re-armed" per the packet
@@ -21,20 +21,11 @@
 //! docstring for why a separately-constructed clock with the same origin epoch is an accepted
 //! approximation, not a bug.
 
-use std::collections::HashMap;
 use ui_render::{FrameScheduler, InvalidationReason};
 
 //#region 🔖️Deadlines
 
 //#region ⏳️Constants
-
-/// 🕒️ World3D wheel-zoom's settled `setCamera` dispatch — ported verbatim from `AppRuntime`'s old
-/// `world3d_camera_dispatch_deadlines_ms` 350 ms constant.
-pub const CAMERA_SETTLE_SECONDS: f64 = 0.350;
-
-/// 🕒️ Node-graph wheel-zoom's settle window — ported verbatim from `AppRuntime`'s old
-/// `wheel_zoom_deadline_ms` 120 ms constant.
-pub const WHEEL_ZOOM_SETTLE_SECONDS: f64 = 0.120;
 
 /// ⌨️ Caret blink half-period — ported verbatim from `AppRuntime`'s old `caret_blink_at_ms` 500 ms
 /// constant.
@@ -45,49 +36,6 @@ pub const CARET_BLINK_SECONDS: f64 = 0.500;
 pub const NATIVE_HOT_SWAP_POLL_SECONDS: f64 = 1.0;
 
 //#endregion ⏳️Constants
-
-//#region 🔁️TokenDeadlines
-
-/// 🔁️ Sweeps a per-key deadline map (camera settle / wheel-zoom settle both use this exact shape —
-/// `AppRuntime`'s own `world3d_camera_dispatch_deadlines_ms` precedent, generalized) and returns the
-/// keys at-or-past `now_seconds`, removing them. Ported from `📦️glue.rs`'s
-/// `sweep_expired_camera_dispatch_deadlines` (moved here verbatim, generalized off any single
-/// product concept — the four `camera_dispatch_deadline_tests` below are the same tests, ported).
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn sweep_expired(pending: &mut HashMap<String, f64>, now_seconds: f64) -> Vec<String> {
-    let expired: Vec<String> = pending.iter().filter(|(_, due)| now_seconds >= **due).map(|(key, _)| key.clone()).collect();
-    for key in &expired {
-        pending.remove(key);
-    }
-    expired
-}
-
-/// 🔁️ Arms (or **replaces** — the packet brief's own words) `key`'s deadline at `now_seconds +
-/// settle_seconds`, and requests the matching `FrameScheduler` wake so the host's event loop actually
-/// resumes at that instant instead of only on the next unrelated invalidation. Calling this again for
-/// the same `key` before it fires — the debounce case every wheel tick hits — overwrites the map entry
-/// (the "replace" half of "the token is replaced when re-armed"); the *scheduler* still ends up with
-/// one stale extra deadline entry from the earlier call, which is harmless: `should_render` only folds
-/// due deadlines into the dirty mask, and `sweep_expired` above is what actually decides whether a
-/// surface fires, so a spurious extra wake that finds nothing due in `pending` is a no-op frame, not a
-/// double dispatch.
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn arm(pending: &mut HashMap<String, f64>, scheduler: &mut FrameScheduler, key: &str, now_seconds: f64, settle_seconds: f64, reason: InvalidationReason) {
-    let due = now_seconds + settle_seconds;
-    pending.insert(key.to_string(), due);
-    scheduler.request_deadline(due, reason);
-}
-
-/// ✂️ Drops `key`'s pending deadline outright — the immediate-dispatch case (a pointer-release orbit
-/// beats any still-pending wheel-settle deadline) that `AppRuntime`'s own doc comment on
-/// `world3d_camera_dispatch_deadlines_ms` already calls out: dispatch immediately, then cancel so the
-/// debounce sweep doesn't re-dispatch a now-stale pose a moment later.
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn cancel(pending: &mut HashMap<String, f64>, key: &str) {
-    pending.remove(key);
-}
-
-//#endregion 🔁️TokenDeadlines
 
 //#region ⌨️CaretBlink
 
@@ -223,70 +171,6 @@ impl Default for HotSwapPoll {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    //#region 🔖️TokenDeadlines — ported verbatim from glue.rs's camera_dispatch_deadline_tests
-
-    #[test]
-    fn not_yet_expired_deadline_is_left_pending() {
-        let mut pending = HashMap::from([("s1".to_string(), 1_000.0)]);
-        let expired = sweep_expired(&mut pending, 999.0);
-        assert!(expired.is_empty());
-        assert_eq!(pending.get("s1"), Some(&1_000.0));
-    }
-
-    #[test]
-    fn deadline_exactly_at_now_is_expired() {
-        let mut pending = HashMap::from([("s1".to_string(), 1_000.0)]);
-        let expired = sweep_expired(&mut pending, 1_000.0);
-        assert_eq!(expired, vec!["s1".to_string()]);
-        assert!(pending.is_empty(), "an expired surface is removed from the map");
-    }
-
-    #[test]
-    fn already_expired_deadline_is_swept() {
-        let mut pending = HashMap::from([("s1".to_string(), 500.0)]);
-        let expired = sweep_expired(&mut pending, 1_000.0);
-        assert_eq!(expired, vec!["s1".to_string()]);
-        assert!(pending.is_empty());
-    }
-
-    #[test]
-    fn multiple_surfaces_expire_independently() {
-        let mut pending = HashMap::from([("expired-a".to_string(), 100.0), ("expired-b".to_string(), 200.0), ("still-pending".to_string(), 5_000.0)]);
-        let mut expired = sweep_expired(&mut pending, 1_000.0);
-        expired.sort();
-        assert_eq!(expired, vec!["expired-a".to_string(), "expired-b".to_string()]);
-        assert_eq!(pending.len(), 1, "only the still-pending surface remains");
-        assert!(pending.contains_key("still-pending"));
-    }
-
-    #[test]
-    fn arming_a_key_makes_it_the_schedulers_next_deadline() {
-        let mut pending = HashMap::new();
-        let mut scheduler = FrameScheduler::new();
-        arm(&mut pending, &mut scheduler, "s1", 0.0, WHEEL_ZOOM_SETTLE_SECONDS, InvalidationReason::SURFACE);
-        assert_eq!(scheduler.next_deadline().map(|deadline| deadline.due), Some(WHEEL_ZOOM_SETTLE_SECONDS));
-        assert_eq!(pending.get("s1"), Some(&WHEEL_ZOOM_SETTLE_SECONDS));
-    }
-
-    #[test]
-    fn re_arming_before_it_fires_replaces_the_due_time() {
-        let mut pending = HashMap::new();
-        let mut scheduler = FrameScheduler::new();
-        arm(&mut pending, &mut scheduler, "s1", 0.0, CAMERA_SETTLE_SECONDS, InvalidationReason::SURFACE);
-        arm(&mut pending, &mut scheduler, "s1", 0.1, CAMERA_SETTLE_SECONDS, InvalidationReason::SURFACE);
-        assert_eq!(pending.get("s1"), Some(&(0.1 + CAMERA_SETTLE_SECONDS)), "the later arm wins the token");
-    }
-
-    #[test]
-    fn cancel_drops_a_pending_key_with_no_dispatch() {
-        let mut pending = HashMap::from([("s1".to_string(), 1_000.0)]);
-        cancel(&mut pending, "s1");
-        assert!(pending.is_empty());
-        assert!(sweep_expired(&mut pending, 1_000.0).is_empty(), "a cancelled key never fires");
-    }
-
-    //#endregion 🔖️TokenDeadlines
 
     //#region ⌨️CaretBlink
 

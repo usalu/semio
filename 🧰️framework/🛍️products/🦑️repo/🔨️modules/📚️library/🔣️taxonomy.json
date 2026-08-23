@@ -451,6 +451,119 @@
     "🦀️rust": "🦀️test.rs",
     "🟦️typescript": "🟦️test.ts"
   },
+  "_testTaxonomyComment": "🧪️ Ticket 26/08/23/END-TO-END-TESTING-REFACTOR: canonical owner-root test tree. A test belongs to the nearest LANGUAGE-NEUTRAL domain owner, never to a 📦️packages/<lang> package. `testsDirName` sits directly under an owner root (or under an 📚️examples leaf, where `exampleTestsDirName` names the same directory). `testFeatureFilename` is a DELIBERATE language-neutral filename exception — represented here rather than tolerated by an ad-hoc scanner — because a Gherkin feature is the one artifact no implementation owns. `testExcludedPathPrefixes` is the hard discovery exclusion; only `compose/` is a permanent source-area exemption, no area is excluded for being legacy, mixed or broken.",
+  "testsDirName": "🧪️tests",
+  "testFixturesDirName": "🧫️fixtures",
+  "testFeatureFilename": "component.feature",
+  "testCaseSlugPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+  "testAdapterFilenames": {
+    "🦀️rust": "🦀️component.rs",
+    "🟦️typescript": "🟦️component.ts",
+    "🐹️go": "🐹️component.go",
+    "🐍️python": "🐍️component.py",
+    "🔷️dotnet": "🔷️component.cs"
+  },
+  "testImplementationIds": {
+    "🦀️rust": "rust",
+    "🟦️typescript": "typescript",
+    "🐹️go": "go",
+    "🐍️python": "python",
+    "🔷️dotnet": "dotnet"
+  },
+  "testOwnerKinds": [
+    "🛍️products",
+    "🔌️plugins",
+    "🔨️modules",
+    "🗿️artifacts",
+    "🏅️standards",
+    "🪆️subsets",
+    "🎮️commands",
+    "🎬️actions",
+    "🧩️extensions",
+    "🧰️capabilities",
+    "🚪️io",
+    "🧬️mutations",
+    "🧱️elements",
+    "🎛️apps",
+    "🪟️windows",
+    "🎭️modes"
+  ],
+  "testLevels": [
+    "fundamental",
+    "quick",
+    "long",
+    "exhaustive"
+  ],
+  "testModes": [
+    "differential",
+    "conformance",
+    "round-trip",
+    "property",
+    "error"
+  ],
+  "testRoles": [
+    "oracle",
+    "subject"
+  ],
+  "testFixtureSchemes": {
+    "shared": "shared://",
+    "local": "local://"
+  },
+  "testFeatureRequiredFeatureTagPrefixes": [
+    "@capability-",
+    "@comparison-"
+  ],
+  "testFeatureOracleTagPrefixes": [
+    "@oracle-",
+    "@no-oracle-"
+  ],
+  "testFeatureRequiredScenarioTagPrefixes": [
+    "@id-",
+    "@level-",
+    "@mode-"
+  ],
+  "testComparisonProfiles": [
+    "exact-bytes-v1",
+    "utf8-text-v1",
+    "ordered-json-v1",
+    "unordered-json-v1",
+    "floating-point-v1",
+    "semantic-pdf-v1",
+    "filesystem-tree-v1",
+    "diagnostic-v1",
+    "event-stream-v1"
+  ],
+  "testOutputCacheDirName": "tests",
+  "testOutputMarkerFilename": "🧾️marker.json",
+  "testOutputMarkerKind": "semio-test-output",
+  "testOutputChildDirs": [
+    "work",
+    "hosts",
+    "oracles",
+    "results",
+    "diffs",
+    "reports"
+  ],
+  "testExcludedPathPrefixes": [
+    "compose/",
+    "node_modules/",
+    ".🧬semio/🦑️repo/🎫️tickets/",
+    ".🧬semio/🦑️repo/⚡️cache/",
+    ".git/",
+    ".venv/",
+    "target/",
+    "dist/",
+    "storybook-static/"
+  ],
+  "testDependencyClasses": [
+    "production-runtime",
+    "production-build",
+    "repository-tooling",
+    "test-runner",
+    "test-oracle"
+  ],
+  "testOracleRegistryPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔣️component.json",
+  "testSchemaPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "forbiddenExampleSlugs": [
     "♻️reuse",
     "♻️default",

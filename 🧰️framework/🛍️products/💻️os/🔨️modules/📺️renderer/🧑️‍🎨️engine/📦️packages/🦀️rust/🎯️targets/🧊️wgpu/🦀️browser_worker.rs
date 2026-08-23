@@ -3,7 +3,8 @@
 use crate::kernel_seam::{HostWaker, KernelSeam};
 use crate::program_bridge::{filter_plugins, parse_plugin_entries, ProgramBridgeEntry};
 use crate::shell::ShellState;
-use crate::{AppInteractionState, AppPresenter, AppRuntime, RuntimeMailbox};
+use crate::{AppInteractionState, AppPresenter, AppRuntime, RendererAssetFetchOwner, RuntimeMailbox};
+use infinite_world::world::{WorldAssetResponsePage, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -159,10 +160,92 @@ pub struct BrowserRendererWorker {
     latest_generation: u64,
     quarantined: Option<String>,
     close_phase: u8,
+    asset_fetch: Option<RendererAssetFetchOwner>,
+    asset_blocked: Option<RendererAssetFetchOwner>,
+    asset_blocked_page: Option<WorldAssetResponsePage>,
 }
 
 #[wasm_bindgen]
 impl BrowserRendererWorker {
+    #[wasm_bindgen(js_name = pollAssetRequest)]
+    pub fn poll_asset_request(&mut self) -> Result<String, JsValue> {
+        self.ensure_live()?;
+        if self.asset_fetch.is_none() {
+            self.asset_fetch = self.host.as_ref().and_then(|host| host.runtime.take_renderer_asset_step());
+        }
+        let Some(owner) = self.asset_fetch.as_ref() else {
+            return Ok("{\"available\":false}".to_string());
+        };
+        serde_json::to_string(&serde_json::json!({ "available": true, "url": owner.url(), "responseByteCapacity": WORLD_ASSET_RESPONSE_BYTE_CAPACITY, "pageByteCapacity": WORLD_ASSET_RESPONSE_PAGE_BYTES }))
+            .map_err(|error| js_error("asset-request-encode", &error.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = reserveAssetResponse)]
+    pub fn reserve_asset_response(&mut self, byte_credits: usize) -> Result<(), JsValue> {
+        let owner = self.asset_fetch.as_mut().ok_or_else(|| js_error("asset-request-state", "asset response arrived without an active request"))?;
+        let host = self.host.as_ref().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
+        if !host.runtime.reserve_renderer_asset_response(owner, byte_credits) {
+            return Err(js_error("asset-response-credits", "asset response exceeded fixed aggregate byte credits"));
+        }
+        Ok(())
+    }
+
+    #[wasm_bindgen(js_name = pushAssetResponsePage)]
+    pub fn push_asset_response_page(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
+        if bytes.len() > WORLD_ASSET_RESPONSE_PAGE_BYTES {
+            return Err(js_error("asset-page-credits", "asset response page exceeded its fixed byte credits"));
+        }
+        let owner = self.asset_fetch.as_mut().ok_or_else(|| js_error("asset-request-state", "asset page arrived without an active request"))?;
+        let page = WorldAssetResponsePage::try_from_owned(bytes.to_vec()).expect("page length was checked before bounded ownership transfer");
+        match owner.owner_mut().push_page(page) {
+            Ok(()) => Ok(()),
+            Err(page) => {
+                self.asset_blocked_page = Some(page);
+                Err(js_error("asset-response-credits", "asset response exceeded its admitted page or byte credits"))
+            }
+        }
+    }
+
+    #[wasm_bindgen(js_name = sealAssetResponse)]
+    pub fn seal_asset_response(&mut self) -> Result<(), JsValue> {
+        let mut owner = self.asset_fetch.take().ok_or_else(|| js_error("asset-request-state", "asset seal arrived without an active request"))?;
+        let Some(host) = self.host.as_ref() else {
+            owner.begin_close();
+            self.asset_blocked = Some(owner);
+            return Err(js_error("worker-closed", "renderer host is unavailable"));
+        };
+        if !host.runtime.seal_renderer_asset_response(&mut owner) {
+            owner.begin_close();
+            self.asset_blocked = Some(owner);
+            return Err(js_error("asset-seal", "asset response could not release its unused byte credits"));
+        }
+        match host.runtime.return_renderer_asset_owner(owner) {
+            Ok(()) => Ok(()),
+            Err(mut owner) => {
+                owner.begin_close();
+                self.asset_blocked = Some(owner);
+                Err(js_error("asset-return", "asset owner could not return to its generation authority"))
+            }
+        }
+    }
+
+    #[wasm_bindgen(js_name = abortAssetResponse)]
+    pub fn abort_asset_response(&mut self) -> Result<(), JsValue> {
+        let Some(mut owner) = self.asset_fetch.take() else { return Ok(()) };
+        owner.begin_close();
+        let Some(host) = self.host.as_ref() else {
+            self.asset_blocked = Some(owner);
+            return Err(js_error("worker-closed", "renderer host is unavailable"));
+        };
+        match host.runtime.return_renderer_asset_owner(owner) {
+            Ok(()) => Ok(()),
+            Err(owner) => {
+                self.asset_blocked = Some(owner);
+                Err(js_error("asset-return", "cancelled asset owner could not return to its generation authority"))
+            }
+        }
+    }
+
     #[wasm_bindgen(js_name = enqueueBatch)]
     pub fn enqueue_batch(&mut self, events_json: &str, generation: u64) -> Result<(), JsValue> {
         self.ensure_live()?;
@@ -230,7 +313,32 @@ impl BrowserRendererWorker {
 impl BrowserRendererWorker {
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&mut self) -> Result<bool, JsValue> {
+        if self.asset_blocked_page.take().is_some() {
+            return Ok(false);
+        }
+        if let Some(mut owner) = self.asset_fetch.take() {
+            owner.begin_close();
+            let Some(host) = self.host.as_ref() else {
+                self.asset_blocked = Some(owner);
+                return Ok(false);
+            };
+            if let Err(owner) = host.runtime.return_renderer_asset_owner(owner) {
+                self.asset_blocked = Some(owner);
+            }
+            return Ok(false);
+        }
+        if let Some(owner) = self.asset_blocked.as_mut() {
+            if !owner.close_step() {
+                return Ok(false);
+            }
+            self.asset_blocked = None;
+            return Ok(false);
+        }
         if self.close_phase == 0 {
+            let Some(host) = self.host.as_ref() else { return Err(js_error("host-close", "renderer host disappeared before shared asset retirement")) };
+            if !host.runtime.close_renderer_asset_step() {
+                return Ok(false);
+            }
             self.close_phase = 1;
             return Ok(false);
         }
@@ -547,10 +655,8 @@ impl BrowserRendererBootstrap {
                 wheel_delta: 0.0,
                 space_pressed: false,
                 wheel_zoom_deadline_ms: 0.0,
-                world3d_camera_dispatch_deadlines_ms: HashMap::new(),
                 caret_blink_at_ms: 0.0,
                 caret_blink_visible: true,
-                asset_poll_pending: false,
                 text_streams: std::array::from_fn(|_| None),
                 text_fault: None,
                 frame_fault: None,
@@ -578,7 +684,18 @@ impl BrowserRendererBootstrap {
             let _ = kernel_wake.call0(&JsValue::NULL);
         }));
         host.scheduler.invalidate(InvalidationReason::STRUCTURE);
-        Ok(BrowserRendererWorker { host: Some(host), retired_host: None, text_streams: std::array::from_fn(|_| None), text_bytes: 0, latest_generation: 0, quarantined: None, close_phase: 0 })
+        Ok(BrowserRendererWorker {
+            host: Some(host),
+            retired_host: None,
+            text_streams: std::array::from_fn(|_| None),
+            text_bytes: 0,
+            latest_generation: 0,
+            quarantined: None,
+            close_phase: 0,
+            asset_fetch: None,
+            asset_blocked: None,
+            asset_blocked_page: None,
+        })
     }
 }
 

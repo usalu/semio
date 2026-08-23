@@ -14,9 +14,9 @@ pub mod board_host {
     use super::{
         board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
         handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
-        normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveUtility, BoardElementStyleKind, CachedIconBody, CanvasPalette,
-        CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData,
-        NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, SceneDescriptorJson, SelectionOptions, WireData, WireKindDef,
+        normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease,
+        CanvasPalette, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule,
+        NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, SceneDescriptorJson, SelectionOptions, WireData, WireKindDef,
     };
     use crate::infinite::canvas::camera::Camera;
     use crate::infinite::canvas::geom_sel::{
@@ -25,7 +25,7 @@ pub mod board_host {
     };
     use graph::manifest::manifest_by_id;
 
-    use std::cell::RefCell;
+    use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
 
     pub use crate::infinite::canvas::camera::{CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX, CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN};
@@ -1314,6 +1314,7 @@ pub mod board_host {
         content_scene_generation: u64,
         /// @emoji 🎨️ World-space Vello content reused across pan/zoom when generation and LOD match.
         world_content_cache: RefCell<Option<(u64, BoardDrawLod, Scene)>>,
+        opaque_scene_fault: Cell<bool>,
         /// @emoji 🔍️ True while the wheel zoom gesture is active (skip grid + per-tile rebuild hot paths).
         wheel_zoom_active: bool,
         /// @emoji 📶️ LOD tier pinned for the active wheel gesture so pan/zoom does not rebuild {@link BoardHost.world_content_cache} on every band crossing.
@@ -1343,6 +1344,73 @@ pub mod board_host {
         pending_pointer_commit: Option<BoardPointerCommitOperation>,
         queued_pointer_commit: Option<BoardPointerPlan>,
         pointer_publication: Option<BoardPointerPublication>,
+        close_phase: BoardHostClosePhase,
+        close_entity_retirement: Option<BoardEntityRetirement>,
+        close_strings: [Option<String>; 16],
+        close_string_len: u8,
+        close_node_handles: Option<Vec<NodeKindHandleTemplate>>,
+    }
+
+    pub struct BoardHostRetirement {
+        host: std::mem::ManuallyDrop<BoardHost>,
+        released: bool,
+    }
+
+    impl BoardHostRetirement {
+        pub fn new(host: BoardHost) -> Self {
+            Self { host: std::mem::ManuallyDrop::new(host), released: false }
+        }
+
+        pub fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+            if self.released {
+                return true;
+            }
+            if !self.host.close_nonopaque_step(context) {
+                return false;
+            }
+            assert!(self.host.nonopaque_terminal_is_empty(), "BoardHost nonopaque terminal witness precedes shallow release");
+            unsafe { std::mem::ManuallyDrop::drop(&mut self.host) };
+            self.released = true;
+            true
+        }
+
+        pub fn terminal_nonopaque_is_empty(&self) -> bool {
+            self.released
+        }
+    }
+
+    impl Drop for BoardHostRetirement {
+        fn drop(&mut self) {
+            debug_assert!(self.released, "BoardHostRetirement must reach terminal-empty before release");
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum BoardHostClosePhase {
+        Events,
+        Pointer,
+        WorldScene,
+        Icons,
+        Nodes,
+        Handles,
+        Edges,
+        Wires,
+        Selection,
+        Preselect,
+        PreselectRemoved,
+        SelectionExit,
+        Highlighted,
+        Interaction,
+        HandleKinds,
+        WireKinds,
+        NodeKinds,
+        EdgeKinds,
+        EdgeTips,
+        LinkRules,
+        Previews,
+        Strings,
+        Weights,
+        Done,
     }
 
     #[derive(Clone, Debug)]
@@ -1432,9 +1500,12 @@ pub mod board_host {
     enum BoardDeletePlanningPhase {
         SelectedEdges,
         Nodes,
+        DiscoverNode,
         Handles,
         Wires,
         Edges,
+        Handle,
+        Node,
         SelectionEvent,
         Finish,
     }
@@ -1443,6 +1514,12 @@ pub mod board_host {
         plan: BoardDeletePlan,
         phase: BoardDeletePlanningPhase,
         scan_after: Option<String>,
+        node_after: Option<String>,
+        handle_after: Option<String>,
+        relation_after: Option<String>,
+        node_id: Option<String>,
+        handle_id: Option<String>,
+        node_relevant: bool,
         property_audit: Option<BoardPropertyAudit>,
         select_builder: BoardPayloadBuilder,
         select_first: bool,
@@ -1818,48 +1895,46 @@ pub mod board_host {
                 });
                 return false;
             }
-            let mut frame = self.stack[index].take().expect("property audit frame");
-            match &mut frame {
-                BoardPropertyAuditFrame::Array { values, index: child_index, pending } => {
-                    if *child_index == values.len() {
+            let frame = self.stack[index].take().expect("property audit frame");
+            match frame {
+                BoardPropertyAuditFrame::Array { mut values, mut index, mut pending } => {
+                    if index == values.len() {
                         self.depth -= 1;
-                        self.completed = Some(match frame {
-                            BoardPropertyAuditFrame::Array { values, .. } => graph::manifest::PropertyValue::Array(values),
-                            BoardPropertyAuditFrame::Object { .. } => unreachable!(),
-                        });
+                        self.completed = Some(graph::manifest::PropertyValue::Array(values));
                     } else {
-                        let index = *child_index;
-                        *child_index += 1;
-                        *pending = Some(index);
-                        self.current = Some(std::mem::replace(&mut values[index], graph::manifest::PropertyValue::Null));
-                        self.stack[usize::from(self.depth - 1)] = Some(frame);
+                        let child_index = index;
+                        index += 1;
+                        pending = Some(child_index);
+                        self.current = Some(std::mem::replace(&mut values[child_index], graph::manifest::PropertyValue::Null));
+                        self.stack[usize::from(self.depth - 1)] = Some(BoardPropertyAuditFrame::Array { values, index, pending });
                     }
                 }
-                BoardPropertyAuditFrame::Object { values, after, pending } => {
+                BoardPropertyAuditFrame::Object { mut values, mut after, mut pending } => {
                     let next = match after.as_ref() {
                         Some(after) => values.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
                         None => values.first_key_value(),
                     }
                     .map(|(key, _)| admitted_board_pointer_id(key));
-                    if let Some(Ok(key)) = next {
-                        self.bytes = self.bytes.checked_add(key.len()).unwrap_or(usize::MAX);
-                        if self.bytes > BOARD_POINTER_BYTE_CAPACITY {
-                            self.fault.get_or_insert(BoardEventFault::ByteCredits);
+                    match next {
+                        Some(Ok(key)) => {
+                            self.bytes = self.bytes.checked_add(key.len()).unwrap_or(usize::MAX);
+                            if self.bytes > BOARD_POINTER_BYTE_CAPACITY {
+                                self.fault.get_or_insert(BoardEventFault::ByteCredits);
+                            }
+                            after = Some(key.clone());
+                            pending = Some(key.clone());
+                            self.current = Some(std::mem::replace(values.get_mut(&key).expect("property audit key"), graph::manifest::PropertyValue::Null));
+                            self.stack[usize::from(self.depth - 1)] = Some(BoardPropertyAuditFrame::Object { values, after, pending });
                         }
-                        *after = Some(key.clone());
-                        *pending = Some(key.clone());
-                        self.current = Some(std::mem::replace(values.get_mut(&key).expect("property audit key"), graph::manifest::PropertyValue::Null));
-                        self.stack[usize::from(self.depth - 1)] = Some(frame);
-                    } else if let Some(Err(fault)) = next {
-                        self.fault = Some(fault);
-                        self.stack[usize::from(self.depth - 1)] = Some(frame);
-                    } else {
-                        self.depth -= 1;
-                        self.completed = Some(match frame {
-                            BoardPropertyAuditFrame::Object { values, .. } => graph::manifest::PropertyValue::Object(values),
-                            BoardPropertyAuditFrame::Array { .. } => unreachable!(),
-                        });
-                    };
+                        Some(Err(fault)) => {
+                            self.fault = Some(fault);
+                            self.stack[usize::from(self.depth - 1)] = Some(BoardPropertyAuditFrame::Object { values, after, pending });
+                        }
+                        None => {
+                            self.depth -= 1;
+                            self.completed = Some(graph::manifest::PropertyValue::Object(values));
+                        }
+                    }
                 }
             }
             false
@@ -2455,6 +2530,7 @@ pub mod board_host {
                 last_preselect_emit_sig: None,
                 content_scene_generation: 0,
                 world_content_cache: RefCell::new(None),
+                opaque_scene_fault: Cell::new(false),
                 wheel_zoom_active: false,
                 wheel_zoom_render_lod: None,
                 active_utility: ActiveUtility::Select,
@@ -2479,6 +2555,11 @@ pub mod board_host {
                 pending_pointer_commit: None,
                 queued_pointer_commit: None,
                 pointer_publication: None,
+                close_phase: BoardHostClosePhase::Events,
+                close_entity_retirement: None,
+                close_strings: std::array::from_fn(|_| None),
+                close_string_len: 0,
+                close_node_handles: None,
             }
         }
     }
@@ -2511,7 +2592,374 @@ pub mod board_host {
 
         fn bump_content_scene_generation(&mut self) {
             self.content_scene_generation = self.content_scene_generation.wrapping_add(1);
-            *self.world_content_cache.borrow_mut() = None;
+        }
+
+        pub fn quarantine_world_content_step(&mut self) -> bool {
+            let mut cache = self.world_content_cache.borrow_mut();
+            if cache.is_none() {
+                return true;
+            }
+            let Some(token) = crate::infinite::canvas::reserve_opaque_scene_retirement() else {
+                self.opaque_scene_fault.set(true);
+                return false;
+            };
+            let (_, _, scene) = cache.take().expect("world content cache was witnessed occupied");
+            crate::infinite::canvas::publish_opaque_scene_retirement(token, scene);
+            true
+        }
+
+        pub fn opaque_scene_faulted(&self) -> bool {
+            self.opaque_scene_fault.get()
+        }
+
+        fn push_close_string(&mut self, value: String) {
+            let index = usize::from(self.close_string_len);
+            assert!(index < self.close_strings.len(), "board close string scratch is schema bounded");
+            self.close_strings[index] = Some(value);
+            self.close_string_len += 1;
+        }
+
+        fn push_close_optional_string(&mut self, value: Option<String>) {
+            if let Some(value) = value {
+                self.push_close_string(value);
+            }
+        }
+
+        fn close_scratch_step(&mut self) -> bool {
+            if self.close_node_handles.is_some() {
+                let handle = self.close_node_handles.as_mut().and_then(Vec::pop);
+                if let Some(handle) = handle {
+                    self.push_close_string(handle.handle_kind);
+                    return true;
+                }
+                self.close_node_handles = None;
+                return true;
+            }
+            if self.close_string_len > 0 {
+                self.close_string_len -= 1;
+                drop(self.close_strings[usize::from(self.close_string_len)].take());
+                return true;
+            }
+            false
+        }
+
+        fn close_interaction_step(&mut self) -> bool {
+            match &mut self.interaction {
+                Interaction::None | Interaction::Pan { .. } => {
+                    self.interaction = Interaction::None;
+                    true
+                }
+                Interaction::DragNodes { primary_id, start_positions, proximity_pair, .. } => {
+                    if let Some((id, _)) = start_positions.pop_first() {
+                        drop(id);
+                        return false;
+                    }
+                    if let Some((left, right)) = proximity_pair.take() {
+                        if right.is_empty() {
+                            drop(left);
+                        } else {
+                            drop(right);
+                            *proximity_pair = Some((left, String::new()));
+                        }
+                        return false;
+                    }
+                    drop(std::mem::take(primary_id));
+                    self.interaction = Interaction::None;
+                    true
+                }
+                Interaction::SelectionPending { initial_ids, .. } => {
+                    if let Some(id) = initial_ids.pop_first() {
+                        drop(id);
+                        return false;
+                    }
+                    self.interaction = Interaction::None;
+                    true
+                }
+                Interaction::Selection { initial_ids, points, screen_points, .. } => {
+                    if initial_ids.pop_first().is_some() || points.pop().is_some() || screen_points.pop().is_some() {
+                        return false;
+                    }
+                    self.interaction = Interaction::None;
+                    true
+                }
+                Interaction::LinkAtSourceHandle { source_id, .. } => {
+                    drop(std::mem::take(source_id));
+                    self.interaction = Interaction::None;
+                    true
+                }
+                Interaction::LinkDragSnap { source_id, target_id, .. } => {
+                    if let Some(target) = target_id.take() {
+                        drop(target);
+                        return false;
+                    }
+                    drop(std::mem::take(source_id));
+                    self.interaction = Interaction::None;
+                    true
+                }
+                Interaction::LinkTargetNode { source_id, target_node_id } => {
+                    if !target_node_id.is_empty() {
+                        drop(std::mem::take(target_node_id));
+                        return false;
+                    }
+                    drop(std::mem::take(source_id));
+                    self.interaction = Interaction::None;
+                    true
+                }
+                Interaction::ExternalLinkPreview { source_id, compatible_node_ids, ring_node_id, ring_handle_ids, .. } => {
+                    if let Some(id) = compatible_node_ids.pop().or_else(|| ring_handle_ids.pop()).or_else(|| ring_node_id.take()) {
+                        drop(id);
+                        return false;
+                    }
+                    drop(std::mem::take(source_id));
+                    self.interaction = Interaction::None;
+                    true
+                }
+            }
+        }
+
+        pub fn close_nonopaque_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+            if context.should_yield() {
+                return false;
+            }
+            if self.close_scratch_step() {
+                context.consume_fuel(1);
+                return false;
+            }
+            if let Some(retirement) = self.close_entity_retirement.as_mut() {
+                match retirement.step() {
+                    Ok(true) => self.close_entity_retirement = None,
+                    Ok(false) => {}
+                    Err(()) => {
+                        self.event_schema_fault = true;
+                        return false;
+                    }
+                }
+                context.consume_fuel(1);
+                return false;
+            }
+            match self.close_phase {
+                BoardHostClosePhase::Events => {
+                    if self.close_event_authority_step(context) {
+                        self.close_phase = BoardHostClosePhase::Pointer;
+                    }
+                    return false;
+                }
+                BoardHostClosePhase::Pointer => {
+                    if self.close_pointer_authority_step(context) {
+                        self.close_phase = BoardHostClosePhase::WorldScene;
+                    }
+                    return false;
+                }
+                BoardHostClosePhase::WorldScene => {
+                    if self.quarantine_world_content_step() {
+                        self.close_phase = BoardHostClosePhase::Icons;
+                    }
+                }
+                BoardHostClosePhase::Icons => {
+                    if self.icon_paint_cache.close_step() {
+                        self.close_phase = BoardHostClosePhase::Nodes;
+                    }
+                }
+                BoardHostClosePhase::Nodes => {
+                    if let Some((key, value)) = self.nodes.pop_first() {
+                        drop(key);
+                        self.close_entity_retirement = Some(BoardEntityRetirement::new(BoardRemovedEntity::Node(value)));
+                    } else {
+                        self.close_phase = BoardHostClosePhase::Handles;
+                    }
+                }
+                BoardHostClosePhase::Handles => {
+                    if let Some((key, value)) = self.handles.pop_first() {
+                        drop(key);
+                        self.close_entity_retirement = Some(BoardEntityRetirement::new(BoardRemovedEntity::Handle(value)));
+                    } else {
+                        self.close_phase = BoardHostClosePhase::Edges;
+                    }
+                }
+                BoardHostClosePhase::Edges => {
+                    if let Some((key, value)) = self.edges.pop_first() {
+                        drop(key);
+                        self.close_entity_retirement = Some(BoardEntityRetirement::new(BoardRemovedEntity::Edge(value)));
+                    } else {
+                        self.close_phase = BoardHostClosePhase::Wires;
+                    }
+                }
+                BoardHostClosePhase::Wires => {
+                    if let Some((key, value)) = self.wires.pop_first() {
+                        drop(key);
+                        self.close_entity_retirement = Some(BoardEntityRetirement::new(BoardRemovedEntity::Wire(value)));
+                    } else {
+                        self.close_phase = BoardHostClosePhase::Selection;
+                    }
+                }
+                BoardHostClosePhase::Selection => {
+                    if self.selection.pop_first().is_none() {
+                        self.close_phase = BoardHostClosePhase::Preselect;
+                    }
+                }
+                BoardHostClosePhase::Preselect => {
+                    if self.preselect.pop_first().is_none() {
+                        self.close_phase = BoardHostClosePhase::PreselectRemoved;
+                    }
+                }
+                BoardHostClosePhase::PreselectRemoved => {
+                    if self.preselect_removed.pop_first().is_none() {
+                        self.close_phase = BoardHostClosePhase::SelectionExit;
+                    }
+                }
+                BoardHostClosePhase::SelectionExit => {
+                    if self.selection_exit_highlight.pop_first().is_none() {
+                        self.close_phase = BoardHostClosePhase::Highlighted;
+                    }
+                }
+                BoardHostClosePhase::Highlighted => {
+                    if self.highlighted_ids.pop_first().is_none() {
+                        self.close_phase = BoardHostClosePhase::Interaction;
+                    }
+                }
+                BoardHostClosePhase::Interaction => {
+                    if self.close_interaction_step() {
+                        self.close_phase = BoardHostClosePhase::HandleKinds;
+                    }
+                }
+                BoardHostClosePhase::HandleKinds => {
+                    if let Some((key, value)) = self.handle_kinds.pop_first() {
+                        self.push_close_string(key);
+                        self.push_close_string(value.name);
+                        self.push_close_optional_string(value.default_wire_kind);
+                    } else {
+                        self.close_phase = BoardHostClosePhase::WireKinds;
+                    }
+                }
+                BoardHostClosePhase::WireKinds => {
+                    if let Some((key, value)) = self.wire_kinds.pop_first() {
+                        self.push_close_string(key);
+                        self.push_close_string(value.name);
+                        self.push_close_optional_string(value.default_edge_kind);
+                    } else {
+                        self.close_phase = BoardHostClosePhase::NodeKinds;
+                    }
+                }
+                BoardHostClosePhase::NodeKinds => {
+                    if let Some((key, value)) = self.node_kinds.pop_first() {
+                        self.push_close_string(key);
+                        self.push_close_string(value.name);
+                        self.push_close_optional_string(value.icon);
+                        self.close_node_handles = Some(value.handles);
+                    } else {
+                        self.close_phase = BoardHostClosePhase::EdgeKinds;
+                    }
+                }
+                BoardHostClosePhase::EdgeKinds => {
+                    if let Some((key, value)) = self.edge_kinds.pop_first() {
+                        self.push_close_string(key);
+                        self.push_close_string(value.name);
+                        self.push_close_optional_string(value.source_tip);
+                        self.push_close_optional_string(value.target_tip);
+                    } else {
+                        self.close_phase = BoardHostClosePhase::EdgeTips;
+                    }
+                }
+                BoardHostClosePhase::EdgeTips => {
+                    if self.edge_tips.pop_first().is_none() {
+                        self.close_phase = BoardHostClosePhase::LinkRules;
+                    }
+                }
+                BoardHostClosePhase::LinkRules => {
+                    if let Some(rule) = self.link_compat_rules.pop() {
+                        self.push_close_string(rule.source);
+                        self.push_close_string(rule.target);
+                    } else {
+                        self.close_phase = BoardHostClosePhase::Previews;
+                    }
+                }
+                BoardHostClosePhase::Previews => {
+                    if self.selection_screen_preview.as_mut().is_some_and(|values| values.pop().is_some()) || self.link_screen_preview.as_mut().is_some_and(|values| values.pop().is_some()) {
+                    } else if let Some(preview) = self.brush_preview.take() {
+                        self.push_close_string(preview.source_handle_id);
+                        self.push_close_string(preview.node_kind_id);
+                        self.push_close_optional_string(preview.icon_kind);
+                        self.close_node_handles = Some(preview.handles);
+                    } else if let Some(preview) = self.fixture_drop_preview.take() {
+                        self.push_close_string(preview.node_kind_id);
+                        self.push_close_optional_string(preview.icon_kind);
+                    } else {
+                        self.selection_screen_preview = None;
+                        self.link_screen_preview = None;
+                        self.close_phase = BoardHostClosePhase::Strings;
+                    }
+                }
+                BoardHostClosePhase::Strings => {
+                    if let Some(value) = self
+                        .hovered_id
+                        .take()
+                        .or_else(|| self.link_compat_nodes_emit_key.take())
+                        .or_else(|| self.link_target_ring_emit_key.take())
+                        .or_else(|| self.brush_slot_source_id.take())
+                        .or_else(|| self.brush_candidates_emit_key.take())
+                        .or_else(|| self.brush_preview_emit_key.take())
+                    {
+                        drop(value);
+                    } else if let Some((left, right)) = self.hovered_kind.take() {
+                        self.push_close_string(left);
+                        self.push_close_string(right);
+                    } else if let Some((values, mode)) = self.last_select_emit_sig.as_mut() {
+                        if let Some(value) = values.pop().or_else(|| mode.take()) {
+                            drop(value);
+                        } else {
+                            self.last_select_emit_sig = None;
+                        }
+                    } else if let Some((left, right, mode)) = self.last_preselect_emit_sig.as_mut() {
+                        if let Some(value) = left.pop().or_else(|| right.pop()).or_else(|| mode.take()) {
+                            drop(value);
+                        } else {
+                            self.last_preselect_emit_sig = None;
+                        }
+                    } else {
+                        drop(std::mem::take(&mut self.world_raster_tiling));
+                        self.push_close_string(std::mem::take(&mut self.selection_options.method));
+                        self.push_close_string(std::mem::take(&mut self.selection_options.mode));
+                        self.close_phase = BoardHostClosePhase::Weights;
+                    }
+                }
+                BoardHostClosePhase::Weights => {
+                    if self.brush_node_kind_weights.keys().next().cloned().and_then(|key| self.brush_node_kind_weights.remove_entry(&key)).is_some() {
+                    } else if self.brush_handle_kind_weights.keys().next().cloned().and_then(|key| self.brush_handle_kind_weights.remove_entry(&key)).is_some() {
+                    } else {
+                        self.close_phase = BoardHostClosePhase::Done;
+                    }
+                }
+                BoardHostClosePhase::Done => return self.nonopaque_terminal_is_empty(),
+            }
+            context.consume_fuel(1);
+            false
+        }
+
+        pub fn nonopaque_terminal_is_empty(&self) -> bool {
+            self.close_phase == BoardHostClosePhase::Done
+                && self.event_authority_terminal_is_empty()
+                && self.pointer_authority_terminal_is_empty()
+                && self.close_entity_retirement.is_none()
+                && self.close_string_len == 0
+                && self.close_node_handles.is_none()
+                && self.nodes.is_empty()
+                && self.handles.is_empty()
+                && self.edges.is_empty()
+                && self.wires.is_empty()
+                && self.handle_kinds.is_empty()
+                && self.wire_kinds.is_empty()
+                && self.node_kinds.is_empty()
+                && self.edge_kinds.is_empty()
+                && self.edge_tips.is_empty()
+                && self.link_compat_rules.is_empty()
+                && self.selection.is_empty()
+                && self.preselect.is_empty()
+                && self.preselect_removed.is_empty()
+                && self.selection_exit_highlight.is_empty()
+                && self.highlighted_ids.is_empty()
+                && matches!(self.interaction, Interaction::None)
+                && self.icon_paint_cache.terminal_is_empty()
+                && self.world_content_cache.borrow().is_none()
         }
 
         #[doc(hidden)]
@@ -2670,7 +3118,7 @@ pub mod board_host {
             }
         }
 
-        fn get_or_build_icon_paint(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
+        fn get_or_build_icon_paint(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<CachedIconPaintLease<'_>> {
             self.icon_paint_cache.get_or_build(encoded, fg, bg, preserve_original_style)
         }
 
@@ -4786,9 +5234,10 @@ pub mod board_host {
             }
             let preserve_original_style = false;
             let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.canvas_theme);
-            let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(icon_kind, icon_fg, icon_bg, preserve_original_style) else {
+            let Some(paint) = self.get_or_build_icon_paint(icon_kind, icon_fg, icon_bg, preserve_original_style) else {
                 return;
             };
+            let (bx, by, bw, bh) = paint.bounds();
             let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
             let fit_inset = ui_styling::metrics::icon::FIT_INSET;
             let (sx_half, sy_half) = match shape {
@@ -4810,7 +5259,7 @@ pub mod board_host {
                     let r_clip = self.draw_space_len(radius, world_space) * clip_inset;
                     let disc = Circle::new(center_ds, r_clip);
                     scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &disc);
-                    match &body {
+                    match paint.body() {
                         CachedIconBody::Vector(icon_scene) => {
                             scene.append(icon_scene, Some(aff));
                         }
@@ -4825,7 +5274,7 @@ pub mod board_host {
                     let hh = self.draw_space_len(height, world_space) * clip_inset * 0.5;
                     let clip_r = Rect::from_points(Point::new(center_ds.x - hw, center_ds.y - hh), Point::new(center_ds.x + hw, center_ds.y + hh));
                     scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &clip_r);
-                    match &body {
+                    match paint.body() {
                         CachedIconBody::Vector(icon_scene) => {
                             scene.append(icon_scene, Some(aff));
                         }
@@ -7282,7 +7731,8 @@ pub mod board_host {
                 if let Some(k) = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
                     let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
                     let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.canvas_theme);
-                    if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, icon_fg, icon_bg, preserve_original_style) {
+                    if let Some(paint) = self.get_or_build_icon_paint(k, icon_fg, icon_bg, preserve_original_style) {
+                        let (bx, by, bw, bh) = paint.bounds();
                         let fit_inset = 0.62;
                         let s = self.draw_space_len(radius_world, world_space) * fit_inset;
                         let cx = bx + bw * 0.5;
@@ -7293,7 +7743,7 @@ pub mod board_host {
                         let r_clip = self.draw_space_len(radius_world, world_space) * 0.82;
                         let disc = Circle::new(c, r_clip);
                         scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &disc);
-                        match &body {
+                        match paint.body() {
                             CachedIconBody::Vector(icon_scene) => {
                                 scene.append(icon_scene, Some(aff));
                             }
@@ -7398,7 +7848,8 @@ pub mod board_host {
             if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
                 let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
                 let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.canvas_theme);
-                if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, icon_fg, icon_bg, preserve_original_style) {
+                if let Some(paint) = self.get_or_build_icon_paint(k, icon_fg, icon_bg, preserve_original_style) {
+                    let (bx, by, bw, bh) = paint.bounds();
                     let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
                     let fit_inset = ui_styling::metrics::icon::FIT_INSET;
                     let (sx_half, sy_half) = match n.shape {
@@ -7420,7 +7871,7 @@ pub mod board_host {
                             let r_clip = self.draw_space_len(self.scaled_node_radius(n), world_space) * clip_inset;
                             let disc = circle_clip.copied().unwrap_or_else(|| Circle::new(center, r_clip));
                             scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &disc);
-                            match &body {
+                            match paint.body() {
                                 CachedIconBody::Vector(icon_scene) => {
                                     scene.append(icon_scene, Some(aff));
                                 }
@@ -7435,7 +7886,7 @@ pub mod board_host {
                             let hh = self.draw_space_len(self.scaled_node_height(n), world_space) * clip_inset * 0.5;
                             let clip_r = rect_clip.unwrap_or_else(|| Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh)));
                             scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &clip_r);
-                            match &body {
+                            match paint.body() {
                                 CachedIconBody::Vector(icon_scene) => {
                                     scene.append(icon_scene, Some(aff));
                                 }
@@ -7645,6 +8096,14 @@ pub mod board_host {
             let mut cache = self.world_content_cache.borrow_mut();
             let needs_rebuild = cache.as_ref().map(|c| c.0 != generation || c.1 != lod).unwrap_or(true);
             if needs_rebuild {
+                if cache.is_some() {
+                    let Some(token) = crate::infinite::canvas::reserve_opaque_scene_retirement() else {
+                        self.opaque_scene_fault.set(true);
+                        return;
+                    };
+                    let (_, _, stale) = cache.take().expect("stale world content cache was witnessed occupied");
+                    crate::infinite::canvas::publish_opaque_scene_retirement(token, stale);
+                }
                 let mut content = Scene::new();
                 self.append_nodes_and_handles(&mut content, None, lod, true, None, StyleChromePass::CachedBase, NodeHandlePaintLayer::Icons);
                 *cache = Some((generation, lod, content));
@@ -7930,23 +8389,20 @@ pub mod board_host {
                         }
                     } else {
                         planning.scan_after = None;
-                        planning.phase = BoardDeletePlanningPhase::Wires;
+                        planning.phase = BoardDeletePlanningPhase::Nodes;
                     }
                 }
                 BoardDeletePlanningPhase::Wires => {
-                    let next = match planning.scan_after.as_ref() {
+                    let handle_id = planning.handle_id.as_deref().expect("wire planning owns a handle");
+                    let next = match planning.relation_after.as_ref() {
                         Some(after) => self.wires.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
                         None => self.wires.first_key_value(),
                     }
-                    .map(|(id, wire)| {
-                        let source_removed = self.handles.get(&wire.source).is_some_and(|handle| self.selection.contains(&handle.id) || self.selection.contains(&handle.node_id));
-                        let target_removed = wire.target.as_ref().and_then(|id| self.handles.get(id)).is_some_and(|handle| self.selection.contains(&handle.id) || self.selection.contains(&handle.node_id));
-                        admitted_board_pointer_id(id).map(|owned| (source_removed || target_removed, owned))
-                    });
+                    .map(|(id, wire)| admitted_board_pointer_id(id).map(|owned| (wire.source == handle_id || wire.target.as_deref() == Some(handle_id), owned)));
                     if let Some(next) = next {
                         match next {
                             Ok((remove, id)) => {
-                                planning.scan_after = Some(id.clone());
+                                planning.relation_after = Some(id.clone());
                                 if remove {
                                     self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Wire, &id);
                                 }
@@ -7954,48 +8410,45 @@ pub mod board_host {
                             Err(fault) => planning.fault = Some(fault),
                         }
                     } else {
-                        planning.scan_after = None;
-                        planning.phase = BoardDeletePlanningPhase::Handles;
+                        planning.relation_after = None;
+                        planning.phase = BoardDeletePlanningPhase::Edges;
                     }
                 }
                 BoardDeletePlanningPhase::Handles => {
-                    let next = match planning.scan_after.as_ref() {
+                    let node_id = planning.node_id.as_deref().expect("handle planning owns a node");
+                    let next = match planning.handle_after.as_ref() {
                         Some(after) => self.handles.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
                         None => self.handles.first_key_value(),
                     }
-                    .map(|(id, handle)| admitted_board_pointer_id(id).map(|owned| (self.selection.contains(id) || self.selection.contains(&handle.node_id), owned)));
+                    .map(|(id, handle)| admitted_board_pointer_id(id).map(|owned| (handle.node_id == node_id, owned)));
                     if let Some(next) = next {
                         match next {
-                            Ok((remove, id)) => {
-                                planning.scan_after = Some(id.clone());
-                                if remove {
-                                    self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Handle, &id);
+                            Ok((belongs, id)) => {
+                                planning.handle_after = Some(id.clone());
+                                if belongs {
+                                    planning.handle_id = Some(id);
+                                    planning.relation_after = None;
+                                    planning.phase = BoardDeletePlanningPhase::Wires;
                                 }
                             }
                             Err(fault) => planning.fault = Some(fault),
                         }
                     } else {
-                        planning.scan_after = None;
-                        planning.phase = BoardDeletePlanningPhase::Edges;
+                        planning.handle_after = None;
+                        planning.phase = BoardDeletePlanningPhase::Node;
                     }
                 }
                 BoardDeletePlanningPhase::Edges => {
-                    let next = match planning.scan_after.as_ref() {
+                    let endpoint_id = planning.handle_id.as_deref().or(planning.node_id.as_deref()).expect("edge planning owns an endpoint");
+                    let next = match planning.relation_after.as_ref() {
                         Some(after) => self.edges.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
                         None => self.edges.first_key_value(),
                     }
-                    .map(|(id, edge)| {
-                        let endpoint_removed = if self.has_ports() {
-                            [edge.source.as_str(), edge.target.as_str()].into_iter().any(|id| self.handles.get(id).is_some_and(|handle| self.selection.contains(&handle.id) || self.selection.contains(&handle.node_id)))
-                        } else {
-                            self.selection.contains(&edge.source) || self.selection.contains(&edge.target)
-                        };
-                        admitted_board_pointer_id(id).map(|owned| (self.selection.contains(id) || endpoint_removed, owned))
-                    });
+                    .map(|(id, edge)| admitted_board_pointer_id(id).map(|owned| (edge.source == endpoint_id || edge.target == endpoint_id, owned)));
                     if let Some(next) = next {
                         match next {
                             Ok((remove, id)) => {
-                                planning.scan_after = Some(id.clone());
+                                planning.relation_after = Some(id.clone());
                                 if remove {
                                     self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Edge, &id);
                                 }
@@ -8003,37 +8456,79 @@ pub mod board_host {
                             Err(fault) => planning.fault = Some(fault),
                         }
                     } else {
-                        planning.scan_after = None;
-                        planning.phase = BoardDeletePlanningPhase::Nodes;
+                        planning.relation_after = None;
+                        planning.phase = if planning.handle_id.is_some() { BoardDeletePlanningPhase::Handle } else { BoardDeletePlanningPhase::Node };
                     }
                 }
                 BoardDeletePlanningPhase::Nodes => {
-                    let next = match planning.scan_after.as_ref() {
+                    let next = match planning.node_after.as_ref() {
                         Some(after) => self.nodes.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
                         None => self.nodes.first_key_value(),
                     }
-                    .map(|(id, _)| {
-                        let removed_handle_on_node = planning.plan.entries[..usize::from(planning.plan.len)]
-                            .iter()
-                            .flatten()
-                            .filter(|entry| entry.kind == BoardDeleteKind::Handle)
-                            .any(|entry| self.handles.get(planning.plan.id(entry.id)).is_some_and(|handle| handle.node_id == *id));
-                        admitted_board_pointer_id(id).map(|owned| (self.selection.contains(id) || removed_handle_on_node, owned))
-                    });
+                    .map(|(id, _)| admitted_board_pointer_id(id).map(|owned| (self.selection.contains(id), owned)));
                     if let Some(next) = next {
                         match next {
-                            Ok((remove, id)) => {
-                                planning.scan_after = Some(id.clone());
-                                if remove {
-                                    self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Node, &id);
-                                }
+                            Ok((selected, id)) => {
+                                planning.node_after = Some(id.clone());
+                                planning.node_id = Some(id);
+                                planning.node_relevant = selected;
+                                planning.handle_after = None;
+                                planning.phase = BoardDeletePlanningPhase::DiscoverNode;
                             }
                             Err(fault) => planning.fault = Some(fault),
                         }
                     } else {
-                        planning.scan_after = None;
+                        planning.node_after = None;
                         planning.phase = BoardDeletePlanningPhase::SelectionEvent;
                     }
+                }
+                BoardDeletePlanningPhase::DiscoverNode => {
+                    if !self.has_ports() {
+                        if planning.node_relevant {
+                            planning.relation_after = None;
+                            planning.phase = BoardDeletePlanningPhase::Edges;
+                        } else {
+                            planning.node_id = None;
+                            planning.phase = BoardDeletePlanningPhase::Nodes;
+                        }
+                    } else {
+                        let node_id = planning.node_id.as_deref().expect("node discovery owns a node");
+                        let next = match planning.handle_after.as_ref() {
+                            Some(after) => self.handles.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
+                            None => self.handles.first_key_value(),
+                        }
+                        .map(|(id, handle)| admitted_board_pointer_id(id).map(|owned| (handle.node_id == node_id && self.selection.contains(id), owned)));
+                        if let Some(next) = next {
+                            match next {
+                                Ok((selected, id)) => {
+                                    planning.handle_after = Some(id);
+                                    if selected {
+                                        planning.node_relevant = true;
+                                        planning.handle_after = None;
+                                        planning.phase = BoardDeletePlanningPhase::Handles;
+                                    }
+                                }
+                                Err(fault) => planning.fault = Some(fault),
+                            }
+                        } else if planning.node_relevant {
+                            planning.handle_after = None;
+                            planning.phase = BoardDeletePlanningPhase::Handles;
+                        } else {
+                            planning.handle_after = None;
+                            planning.node_id = None;
+                            planning.phase = BoardDeletePlanningPhase::Nodes;
+                        }
+                    }
+                }
+                BoardDeletePlanningPhase::Handle => {
+                    let id = planning.handle_id.take().expect("handle deletion owns an id");
+                    planning.phase = BoardDeletePlanningPhase::Handles;
+                    self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Handle, &id);
+                }
+                BoardDeletePlanningPhase::Node => {
+                    let id = planning.node_id.take().expect("node deletion owns an id");
+                    planning.phase = BoardDeletePlanningPhase::Nodes;
+                    self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Node, &id);
                 }
                 BoardDeletePlanningPhase::SelectionEvent => {
                     let next = match planning.scan_after.as_ref() {
@@ -8236,6 +8731,12 @@ pub mod board_host {
                 plan: BoardDeletePlan::new(self.interaction_revision),
                 phase: BoardDeletePlanningPhase::SelectedEdges,
                 scan_after: None,
+                node_after: None,
+                handle_after: None,
+                relation_after: None,
+                node_id: None,
+                handle_id: None,
+                node_relevant: false,
                 property_audit: None,
                 select_builder,
                 select_first: true,
@@ -10091,6 +10592,102 @@ pub mod board_host {
 
     #[cfg(test)]
     #[test]
+    fn delete_property_derivation_is_one_node_per_turn_and_cancel_restores_exact_owner() {
+        let mut host = deletion_fixture("node-a");
+        host.nodes.get_mut("node-a").unwrap().properties.insert("nested".into(), graph::manifest::PropertyValue::Array((0..32).map(|index| graph::manifest::PropertyValue::String(format!("value-{index}"))).collect()));
+        host.delete_selection();
+        let live = semio_framework_job::root_cancel_token();
+        let mut observed_audit = false;
+        let mut previous_nodes = 0usize;
+        for _ in 0..128 {
+            let _ = with_board_step_context(1, live.clone(), |context| host.step_event_authority(context));
+            if let Some(audit) = host.pending_delete_planning.as_ref().and_then(|planning| planning.property_audit.as_ref()) {
+                observed_audit = true;
+                assert!(audit.nodes.saturating_sub(previous_nodes) <= 1);
+                previous_nodes = audit.nodes;
+                if audit.nodes >= 4 {
+                    break;
+                }
+            }
+        }
+        assert!(observed_audit);
+        let cancel = semio_framework_job::root_cancel_token();
+        cancel.cancel_now();
+        let mut turns = 0usize;
+        while !with_board_step_context(1, cancel.clone(), |context| host.close_event_authority_step(context)) {
+            turns += 1;
+            assert!(turns <= 256);
+        }
+        assert!(host.nodes.contains_key("node-a"));
+        let Some(graph::manifest::PropertyValue::Array(values)) = host.nodes.get("node-a").unwrap().properties.get("nested") else { panic!("cancelled property audit restored the original root") };
+        assert_eq!(values.len(), 32);
+        assert!(host.event_authority_terminal_is_empty());
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn retained_delete_plan_preserves_legacy_fifo_and_retires_mid_audit_stale_generation() {
+        let mut legacy = deletion_fixture("node-a");
+        legacy.set_selection_ids_silent(&["node-a".into(), "node-b".into()]);
+        let legacy_plan = legacy.plan_delete_selection().unwrap();
+        let legacy_order: Vec<_> = legacy_plan.entries[..usize::from(legacy_plan.len)].iter().flatten().map(|entry| (entry.kind, legacy_plan.id(entry.id).to_owned())).collect();
+
+        let mut retained = deletion_fixture("node-a");
+        retained.set_selection_ids_silent(&["node-a".into(), "node-b".into()]);
+        retained.delete_selection();
+        let live = semio_framework_job::root_cancel_token();
+        for _ in 0..512 {
+            if retained.pending_delete_operation.is_some() {
+                break;
+            }
+            assert_eq!(with_board_step_context(1, live.clone(), |context| retained.step_event_authority(context)), BoardAuthorityStep::Pending);
+        }
+        let retained_plan = &retained.pending_delete_operation.as_ref().expect("retained plan completed").plan;
+        let retained_order: Vec<_> = retained_plan.entries[..usize::from(retained_plan.len)].iter().flatten().map(|entry| (entry.kind, retained_plan.id(entry.id).to_owned())).collect();
+        assert_eq!(retained_order, legacy_order);
+
+        let mut stale = deletion_fixture("node-a");
+        stale.nodes.get_mut("node-a").unwrap().properties.insert("nested".into(), graph::manifest::PropertyValue::Array(vec![graph::manifest::PropertyValue::String("retained".into())]));
+        stale.delete_selection();
+        for _ in 0..128 {
+            let _ = with_board_step_context(1, live.clone(), |context| stale.step_event_authority(context));
+            if stale.pending_delete_planning.as_ref().is_some_and(|planning| planning.property_audit.is_some()) {
+                break;
+            }
+        }
+        stale.interaction_revision = stale.interaction_revision.wrapping_add(1);
+        for _ in 0..128 {
+            if matches!(with_board_step_context(1, live.clone(), |context| stale.step_event_authority(context)), BoardAuthorityStep::Fault) {
+                break;
+            }
+        }
+        assert!(stale.nodes.contains_key("node-a"));
+        assert!(stale.nodes.get("node-a").unwrap().properties.contains_key("nested"));
+        assert!(stale.pending_delete_planning.is_none());
+        assert!(stale.event_terminal_faulted());
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn delete_property_key_overflow_faults_after_bounded_restore_without_mutation() {
+        let mut host = deletion_fixture("node-a");
+        let hostile = "k".repeat(BOARD_POINTER_BYTE_CAPACITY + 1);
+        host.nodes.get_mut("node-a").unwrap().properties.insert(hostile.clone(), graph::manifest::PropertyValue::Null);
+        host.delete_selection();
+        let live = semio_framework_job::root_cancel_token();
+        for _ in 0..128 {
+            if matches!(with_board_step_context(1, live.clone(), |context| host.step_event_authority(context)), BoardAuthorityStep::Fault) {
+                break;
+            }
+        }
+        assert!(host.event_terminal_faulted());
+        assert!(host.nodes.contains_key("node-a"));
+        assert!(host.nodes.get("node-a").unwrap().properties.contains_key(&hostile));
+        assert!(host.pending_delete_planning.is_none());
+    }
+
+    #[cfg(test)]
+    #[test]
     fn removed_entity_retirement_witness_survives_interruption_and_releases_one_owner_per_turn() {
         let mut host = deletion_fixture("node-a");
         let node = host.nodes.remove("node-a").unwrap();
@@ -10104,6 +10701,22 @@ pub mod board_host {
         }
         assert!(turns > 4);
         assert!(retirement.terminal_is_empty());
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn board_host_nonopaque_close_is_interruptible_and_terminal_witnessed() {
+        let host = deletion_fixture("node-a");
+        let mut retirement = BoardHostRetirement::new(host);
+        let live = semio_framework_job::root_cancel_token();
+        assert!(!with_board_step_context(0, live.clone(), |context| retirement.close_step(context)));
+        let mut turns = 0usize;
+        while !with_board_step_context(1, live.clone(), |context| retirement.close_step(context)) {
+            turns += 1;
+            assert!(turns < 8_192, "fixed BoardHost close reaches an exact terminal witness");
+        }
+        assert!(turns > 16);
+        assert!(retirement.terminal_nonopaque_is_empty());
     }
     // #endregion board_host
 }

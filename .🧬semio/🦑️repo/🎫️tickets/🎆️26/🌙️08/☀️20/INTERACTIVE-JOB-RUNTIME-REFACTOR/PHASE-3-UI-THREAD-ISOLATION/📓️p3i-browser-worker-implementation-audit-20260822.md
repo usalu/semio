@@ -518,3 +518,653 @@ Exact live residual routes after this checkpoint:
   path-scoped `git diff --check`, the zero legacy-producer scans above, and a production-boundary
   `mem::forget` scan (zero hits). Cargo, Nx, Wasm, browser execution, and the authored Rust fixtures
   remain unrun under the coordinator's serialized-build instruction.
+
+### Board retained pointer transaction checkpoint
+
+- Every non-Idle `BoardPointerPlan` now requires `BoardHost.begin_pointer_commit`; the public direct
+  commit seam accepts only Idle, and the former direct semantic implementation is retained solely as
+  a `cfg(test)` differential. EngineCanvas therefore cannot route Pan, FinishPan, DragMove,
+  FinishDrag, SelectionPreview/Commit, LinkMove/Finish/Retain, Hover, Brush, or LeaveIdle through the
+  synchronous direct body.
+- The retained owner advances one funded semantic item per `StepContext` grant. Multi-node drag,
+  selection set replacement, old selection/preview/signature retirement, selection point/overlay
+  construction, link dedupe-key/state publication, and brush candidate reconstruction are explicit
+  phases. Link dedupe keys are copied into the pre-admitted fixed plan during derivation and are not
+  recomputed from host maps during commit. Completion rechecks the exact interaction revision before
+  publishing the already-sealed fixed event page; stale/faulted work publishes nothing, preserving
+  the last valid rendered generation.
+- Cancellation before semantic mutation retires one fixed-plan delta, selection owner, point, or
+  string per grant. Once a semantic transaction has begun it finishes or faults under the same
+  retained authority rather than exposing a partial event publication. Authored source fixtures
+  cover zero fuel, one-delta progress, pre-mutation cancellation, selection/link/brush multi-turn
+  progress, stale generation, and publication terminal-empty.
+- This checkpoint does not make Board or Phase 3 green. Several plan-derivation helpers still perform
+  admitted but multi-item hit/compatibility traversals, and the realm-wide BoardHost/EngineSurface
+  close witness is not complete. The `render_chrome`, assets, icon/scene caches, GPU presenter, and
+  broader dispatcher boundaries remain RED.
+
+### Retained Board delete derivation and property audit checkpoint
+
+- Production `delete_selection` no longer calls the whole-plan builder. It installs a revisioned
+  `BoardDeletePlanningOperation` and advances the legacy deterministic selected-edge, node, handle,
+  wire, incident-edge, and node order one map entry per `StepContext` grant. The old builder and its
+  whole-tree property counter are `cfg(test)` differentials only.
+- Property admission is now a reversible retained transaction. The planner temporarily owns exactly
+  one entity property root, replaces one array/object child with a scalar sentinel, visits one
+  value/key per grant, and restores the exact root before recording descriptor/property item and byte
+  credits. Its fixed 256-frame stack and 16-KiB byte ceiling fault closed; overflow, cancellation, or
+  stale generation unwinds one retained frame per grant and restores the entity before terminal
+  fault/cancel. A hostile key is length-admitted before allocation, so the +1 path does not clone the
+  rejected key.
+- The final Select payload is appended one retained selection ID per turn into the fixed payload
+  owner and transferred into `BoardOwnedEvent` by moving its slab, avoiding a terminal 16-KiB copy.
+  Exact event queue credits are still claimed before the first map mutation. Authored fixtures cover
+  hostile 257-value properties, +1 property-key bytes, one-node-per-turn progress, mid-audit cancel
+  with exact root restoration, stale generation, full-queue retry, and terminal-empty.
+- Source evidence only: `rustfmt --edition 2021` and path-scoped `git diff --check` are clean for the
+  Board file. Cargo, Nx, Wasm, browser execution, and all authored Rust fixtures remain unrun by the
+  coordinator's serialized-build direction. The ordinary BoardHost/EngineSurface destructor can
+  still bypass nested scene/cache/app retirement, so Phase 3 remains **RED**.
+
+### Board and EngineSurface retirement checkpoint
+
+- The product `ENGINE_SURFACES` authority is no longer a string-keyed `HashMap`. It is a fixed
+  256-slot registry with a 256-byte identity cap, per-slot generation tokens, reserve-before-owner
+  construction, collision/saturation faulting, frozen closing slots, and stale-token rejection.
+  Authored fixtures cover 256/+1 saturation, oversized identity rejection, slot ABA, close-time
+  registration freeze, and exact nonopaque terminal publication.
+- Board close is now an ordered retained transaction. It first cancels/drains the event and pointer
+  authorities, detaches the cached world scene and icon scenes, then advances entity/property,
+  selection, interaction, catalog, preview, string, and weight owners one `StepContext` grant at a
+  time. `BoardHostRetirement` holds the host behind `ManuallyDrop` until
+  `nonopaque_terminal_is_empty`; its unexpected release path cannot run the deep host destructor.
+  The actual EngineSurface Board field is likewise `ManuallyDrop`-protected, and its close owner
+  releases action claims, event pages, the Board retirement, Board sync fields, and scalar owners
+  before shallow surface release. A close-during-populated-Board fixture and zero-fuel interruption
+  fixture are authored.
+- `IconPaintCache` is a fixed 256-slot generation/epoch registry instead of a string `HashMap`.
+  Source and key bytes are capped before parse/build, insertion reserves before constructing a
+  vector scene, invalidation advances an epoch without dropping old owners, and close visits one
+  slot per grant. Vector scenes transfer to the shared opaque-scene owner; failed reservations are
+  observable. Epoch/rebuild, oversized-source, and terminal-empty close fixtures are authored.
+- Opaque `vello::Scene` destruction is not presented as cursorizable. Canvas owns a fixed
+  1,024-slot generation-witnessed `OpaqueSceneRetirement` quarantine whose slots contain
+  `ManuallyDrop<Scene>`. Engine packets, stale/current Board world caches, and icon vectors reserve a
+  slot before detaching a scene. Saturation fails closed before transfer; retained count/fault are
+  observable, and local capacity/+1 plus late-token fixtures are authored. This removes opaque scene
+  destruction from the Board/surface callback, but the packet remains **RED** until the renderer or
+  vello-removal lane proves an owned bounded release and measured <8 ms drop timing.
+- The EngineSurface close witness deliberately faults and remains retained if a surface still owns a
+  NodeGraph, Flow, Map, Editor, or their nonempty sync caches; those owners do not yet have honest
+  deep retirement cursors. Presenter/GPU surfaces, chrome/assets, and the full realm-close hookup
+  remain RED. The new Board-only terminal witness is therefore source progress, not Phase 3
+  acceptance.
+- Source-only evidence on 2026-08-23: `rustfmt --edition 2021` completed on the Canvas, directed
+  Board, normal Board, and EngineCanvas files; path-scoped `git diff --check` is clean; scans find no
+  `mem::forget`, old icon/engine string `HashMap`, or EngineCanvas packet call to
+  `Scene::retirement_step`. Cargo, Nx, Wasm, browser execution, and all authored fixtures remain
+  unrun by coordinator direction.
+
+### World3D fixed-plan foundation
+
+- `World3dState` now owns an interaction revision that advances on a changed scene projection. A
+  dependency-neutral `WorldInteractionIntent` and `WorldInteractionPlan` establish the shared flat
+  representation for move/button/drag/wheel/close work: a 16-KiB byte slab, 256 Copy action slots,
+  generation plus revision witnesses, fixed numeric fields, one-action cursor, fault state, and
+  one-slot close retirement. It contains no recursive `ActionDescriptor`, `Value`, or dynamic action
+  vector.
+- The wheel variant is the first end-to-end flat transaction. It derives the next camera without
+  mutating the live orbit, stores the complete camera packet in the fixed plan, revalidates exact
+  generation/revision, reserves and builds the bounded action before mutation, and changes the orbit
+  only inside successful publication. Authored fixtures cover 16-KiB/+1 bytes, 256/+1 actions, stale
+  no-mutation/no-output, one-fuel publication, FIFO output, and terminal-empty close.
+- World3D remains **RED**. The renderer still calls the legacy recursive producers for pointer move,
+  paint, pointer button/pick/marquee/gumball, drag, and wheel; the new wheel transaction is not wired
+  into the debounced camera-claim authority. Hit/pick/marquee/paint traversals are not yet retained
+  cursors, the remaining flat variants are not encoded, and glue/Shell consumer cutover has not
+  occurred. `rustfmt` and path-scoped `git diff --check` are clean; Cargo/tests remain unrun.
+
+### World3D retained ingress and ray-pick checkpoint
+
+- World intent ingress now has a fixed 64-slot FIFO owner. Saturation and close return/retain the
+  exact scalar intent, generation-gated retirement cannot consume a newer or older front entry, and
+  close advances one slot per call with a terminal-empty witness. No descriptor, JSON value, or
+  recursive payload is constructed at ingress. Authored fixtures cover 64/+1, exact FIFO retry,
+  wrong-generation non-consumption, late work after close, and one-slot close progress.
+- Camera drag (pan/orbit) and paint-stroke begin/end now share the wheel flat-plan publication seam.
+  They compute bounded numeric/string claims without mutating the live world, revalidate revision
+  and generation, reserve and finish the schema-first action, then mutate orbit or stroke state only
+  inside successful publication. Zero fuel and stale generation leave both state and output
+  unchanged.
+- Mesh hit work has a retained `WorldRayPickCursor`. It advances exactly one triangle or one
+  draw/instance boundary per `StepContext` grant, keeps only Copy indices/barycentrics/normal/point,
+  faults malformed vertex indices, and converts a terminal hit into the fixed slab. Paint and
+  surface-place publication are direct bounded-builder writes; interruption/staleness and close
+  never own a recursive descriptor. Authored fixtures cover one-triangle progress, zero fuel,
+  terminal paint publication, mid-pick staleness, and two-step retained-hit close.
+- This remains source-only **RED** progress. The cursor still looks up the current mesh by the legacy
+  string `HashMap` once per boundary; stable admitted mesh/draw registries are not yet installed.
+  Component/vortex/reference/gumball and marquee/lasso traversals remain monolithic, the instance
+  selection result schema is not yet encoded, and glue/Shell still call every legacy producer and
+  batch descriptors in `Vec`. `WorldInteractionPlan.number_len` and the unimplemented flat kinds are
+  deliberately not claimed live. `rustfmt --edition 2021` and path-scoped `git diff --check` passed;
+  Cargo, Nx, Wasm, browser execution, and authored Rust fixtures remain unrun by coordinator order.
+
+### World3D fixed-consumer cutover checkpoint
+
+- Renderer glue and Shell no longer call the recursive `handle_world3d_*` descriptor producers or
+  reconstruct a `world_actions: Vec`. Pointer button, move/drag, wheel, and the combined Shell seam
+  admit Copy-only fixed intents; a maximum four-intent Shell batch preflights all slots and
+  generations before publishing any member. The 64-slot queue has one explicit retained saturation
+  owner, so the first full-queue event remains exact FIFO work instead of being consumed/dropped;
+  a second overrun fails deterministically before state mutation.
+- `AppFrameTransaction` now owns a stable surface cursor phase that advances one World3D authority
+  step with the shared `StepContext`. Action-queue saturation is reported as `OutputBlocked` and
+  yields back to the existing one-action input drain before retry, avoiding the producer/drain
+  deadlock. Wheel no longer mutates orbit or installs a deferred recursive camera descriptor in its
+  traversal phase. Legacy producer entry points are `cfg(test)` private differentials, and a
+  compile-time source fixture rejects their names in glue/Shell and any public legacy export.
+- Flat publication now covers camera wheel/pan/orbit, paint begin/end and paint-at, surface place,
+  one-hit selection, and pointer hover/clear. Selection/hover target IDs use a new bounded-builder
+  `string_joined` operation, which writes `surface/id` directly into the pre-admitted flat slab and
+  never constructs an intermediate `String`; exact/+1 fixtures are authored at the shared action
+  authority. Hover and selection revalidate revision/generation and publish before local hover
+  mutation.
+- This checkpoint remains **RED** and compile/runtime unverified. The live retained authority
+  deliberately faults unsupported left-drag marquee, component/vortex/reference, gumball, brush,
+  context-menu, and multi-selection variants rather than falling back to UI/Worker-inline recursive
+  producers. The cursor still traverses legacy dynamic draw/mesh containers, and stable
+  generation-keyed mesh/component/reference registries plus cursorized topology/marquee/gumball
+  owners remain required. The old debounced camera deadline map and expired-descriptor seam also
+  remain pending removal. `rustfmt`, include-path existence checks, path-scoped `git diff --check`,
+  and source scans are clean; Cargo, Nx, Wasm, browser execution, and Rust fixtures remain unrun.
+
+### World3D mesh/topology registry checkpoint
+
+- Interactive mesh identity is now admitted to a deterministic fixed 256-slot registry with
+  256-byte inline IDs, per-slot generations, replacement ABA invalidation, exact vertex/triangle
+  counts, a 64-MiB topology byte ceiling, malformed triplet/UV rejection, and a sticky observable
+  fault. Re-admitting an unchanged version returns the same token; a changed version advances the
+  epoch before any new interactive job can resolve it. Authored fixtures cover 256/+1, oversized ID,
+  malformed topology, unchanged identity, replacement ABA, and stale-token rejection.
+- The ray cursor resolves its mesh token in a separate funded turn, validates generation, fixed ID,
+  version, and topology counts before each triangle, records the exact token in its best hit, and
+  revalidates it again before flat result construction. A missing render payload after an admitted
+  token faults instead of silently skipping the draw. Mesh admission happens before publication to
+  the interactive registry; if it fails, the existing renderer payload remains owned by the render
+  map while the interactive authority faults closed.
+- Token lookup is now retained: one deterministic collision slot is probed per funded turn, followed
+  by one draw/instance boundary or triangle. The renderer payload map and draw vectors are still
+  dynamic legacy owners and their removal/close is not cursorized, so this is not the final registry
+  gate.
+- A second deterministic fixed 1,024-slot registry now owns shallow Copy projections for instance,
+  vortex, and reference interaction identities. Inline IDs are capped at 256 bytes; tokens contain
+  slot generation plus scene revision; same-revision replacement and cross-revision slot reuse both
+  invalidate ABA tokens. A retained rebuild cursor admits one instance, vortex, reference, or mesh
+  collision probe per `StepContext` grant and refuses interaction until the complete revision witness
+  is published. Authored fixtures cover capacity/+1, ID +1, same/cross-revision ABA, zero fuel,
+  interruption, and three-kind terminal projection.
+- Vortex and reference ray work now has a separate retained cursor that visits one registry slot per
+  turn, retains only a Copy token/distance, revalidates at flat-plan construction, and retires that
+  token in one close grant. Live vortex hover/select and mesh-hover reference fallback publish through
+  schema-first bounded actions before local hover mutation. Component topology, marquee/lasso,
+  gumball, brush, context-menu, fixed render-payload removal, and the legacy camera deadline seam
+  remain **RED**. The reference projection still performs one capped-key lookup in the legacy aspect
+  map during its funded build turn; that map and the upstream monolithic JSON/state synchronization
+  require their own fixed/paged owners. No Cargo/Nx/Wasm/browser/Rust fixture execution was performed.
+
+### World3D component topology cursor checkpoint
+
+- Interactive mesh tokens now include exact edge count in addition to vertex/triangle counts. A
+  retained component cursor first visits one fixed instance-registry slot, then exactly one admitted
+  vertex, edge, or face per `StepContext` grant. Vertex projection, edge screen/ray comparison, and
+  face ray/triangle work retain only Copy object tokens, numeric component IDs, and two scalar ranking
+  values. Every resume revalidates scene revision, operation generation, instance ABA token, mesh ABA
+  token, and the complete object-registry witness before touching topology.
+- Component hover and click selection are wired through flat `setHover`/`worldPick` plans. Exact
+  builder reservation and payload construction happen before hover mutation; action saturation keeps
+  the plan and front intent live for retry. Close releases one retained best/current token per grant.
+  Authored fixtures cover one-topology-item advancement, exact publication, object replacement ABA,
+  stale no-publication, zero-budget behavior through the shared cursor contract, and interrupted close.
+- This checkpoint is still source-only and **RED**. Component marquee/lasso and multi-pick are not yet
+  represented by a fixed result-page authority; the vertex utility's legacy semantic preference for
+  vortex selection remains explicit. Gumball, brush, context-menu, dynamic render-map/draw retirement,
+  legacy aspect/state synchronization, and camera deadlines remain pending. Cargo, Nx, Wasm, browser,
+  and authored fixture execution remain unrun by coordinator direction.
+
+### World3D detached action draft and context-menu checkpoint
+
+- The fixed action authority now exposes a detached claimed draft: queue item/byte credits and claim
+  epoch are reserved first, then a shallow flat builder can add exactly one schema node per worker
+  turn without borrowing `InputState`; only a complete draft becomes a `PreparedClaimedAction` that
+  can consume the original claim. A stale/cancelled claim rejects later publication. This is the
+  required generic substrate for cursorized marquee/multi-target payload construction; it does not
+  itself make those consumers green. Authored fixtures cover incremental array construction,
+  complete-only publication, claim cancellation, stale-epoch rejection, and shallow owner release.
+- Right-click ownership moved into the World interaction authority as Copy press/drag state. A
+  retained context cursor captures a capped inline target ID, scans one fixed object-registry slot per
+  turn, revalidates the exact vortex/object/reference ABA token, and publishes a bounded
+  `worldContextMenuAt` action. A right drag retires its up-event without context publication; close
+  retires the press flag and one target token per funded grant. Authored fixtures cover exact target
+  publication, revision/token validation, right-drag suppression, and interrupted token close.
+- Phase 3 remains **RED**: the detached draft is not yet wired to marquee result-page production;
+  gumball and brush still use legacy state paths; ordinary World/render state synchronization and
+  retirement remain dynamic; the camera deadline map remains live. No Cargo/Nx/Wasm/browser/Rust
+  fixture execution was performed.
+
+### World3D fixed marquee ingress checkpoint
+
+- Left-button selection gestures now enter a fixed 256-point Copy-only owner instead of mutating the
+  legacy dynamic `marquee_points` vector. Down captures scene revision and start generation; each move
+  admits exactly one point and retires exactly one intent; capacity +1 faults while retaining the
+  current lossless intent. A click marks the gesture for one-point-per-grant retirement before the
+  unchanged up-intent can retry through the component/instance cursor, preserving FIFO order and
+  preventing a stale point owner from crossing generations.
+- Close and scene-revision invalidation retire one point per `StepContext` grant and require the fixed
+  array terminal witness before release. Authored fixtures cover exact 256/+1 admission, click/drag
+  threshold, generation ordering, click retry without consuming the up-intent, interrupted retirement,
+  and terminal-empty fixed storage.
+- Drag marquee/multi-pick remains deliberately **RED**: the fixed gesture detects a non-click and
+  fails closed with exact gesture/up-intent ownership until the nested entity/polygon/result-page
+  cursor and detached action draft are connected. No legacy recursive selection fallback is invoked.
+
+### World3D retained gumball checkpoint
+
+- The fixed instance projection now carries selected state and translation scalars. A retained
+  gumball cursor scans one registry slot per turn, admits at most 64 exact selected ABA tokens,
+  derives the centroid without traversing legacy draw vectors, tests one of the twelve finite handles
+  per turn, and then revalidates one selected token per turn before publishing a gesture owner. The
+  selected-capacity +1 path faults with all admitted tokens retained for one-token close.
+- A gumball gesture is Copy/token-only. Pointer moves retain the exact front intent while validating
+  one selected token per turn, then perform one finite axis/plane/ring projection and retire that
+  intent. Concurrent move replacement faults; scene revision or per-instance ABA invalidates without
+  mutation. Gesture close first retires a pending update and then one selected token per grant.
+  Authored fixtures cover 64/+1 selected tokens, one-token validation, replacement ABA, interrupted
+  pending update, and terminal-empty close.
+- This is still **RED**: renderer preview application has not consumed the fixed gesture, and pointer
+  release deliberately faults closed with the gesture/up-intent retained until the multi-target
+  detached action draft emits atomic translate/rotate/scale selection. Brush remains unconverted.
+
+### World3D atomic result pages, gumball release, and brush snapshot checkpoint
+
+- The action FIFO now supports an exact fixed batch of at most sixteen detached claims. Admission
+  preflights aggregate item and byte credits plus sixteen fixed claim slots before publishing any
+  ownership. Each claimed action is built independently, and `publish_prepared_claimed_batch`
+  validates every epoch/action/byte witness before moving the entire FIFO-ordered page batch. Close
+  can detach one prepared page and release one claim per grant. Authored fixtures cover three-page
+  FIFO publication, batch capacity +1, no partial publication, and one-claim-per-turn cancellation.
+- Non-click marquee owns sixteen fixed result pages of sixty-four Copy ABA tokens each. Object
+  registry scanning advances one slot per grant; lasso winding advances one polygon edge per grant.
+  Page publication reserves every exact page credit first, then writes one target schema field per
+  grant into detached drafts. No page reaches the lossless action FIFO until all pages are complete.
+  Result targets and gesture points retire one owner per close/publication grant. Authored fixtures
+  cover 1,024/+1 page capacity, two-page FIFO shape, output saturation with exact result retention,
+  close, and empty-page ownership.
+- Marquee selection now consumes the stable admitted instance order and retains one mesh token at a
+  time. Window selection projects one vertex per grant and requires every visible vertex to be
+  enclosed. Rectangle crossing tests one triangle per grant; lasso crossing retains a triangle and
+  advances one polygon edge per grant while accumulating vertex winding and edge intersection.
+  Object and mesh ABA plus scene revision are revalidated before result admission. Authored
+  differential fixtures compare the retained cursor with the legacy full-mesh selector for enclosed,
+  crossing, disjoint, and degenerate geometry, plus a 65-instance multi-page draw-order case. The
+  component-topology marquee variants now share that cursor: vertex, edge, and face topology advances
+  exactly one component per grant; lasso edge/face candidates retain their polygon-edge cursor; active
+  object filtering, mesh/object ABA, revision, and a fixed 64-component result cap are enforced.
+  Component output merges one existing/result identifier per grant into a fixed array, reserves one
+  exact `setSelection` claim, writes one schema node per grant, and publishes once. Authored fixtures
+  compare vertex/edge/face output with the legacy selector, cover additive atomic publication, and
+  cover capacity +1 retirement. Runtime execution remains **RED**.
+- Gumball release now reserves one detached action before construction, emits one flat node or
+  selected target per grant, revalidates each selected object token, publishes once complete, and
+  retires selected tokens one per grant. Saturation retains the whole gesture for retry; stale/ABA
+  construction transfers the draft and claim through cursorized close. Authored fixtures cover
+  exact translate publication, output saturation, replacement ABA, interrupted draft/claim close,
+  and terminal selected-byte accounting. Renderer culling consumes the fixed retained preview model
+  and applies its Copy transform to one instance per traversal turn; the former whole-state preview
+  mutation is no longer on that production render route. Preview runtime execution remains pending.
+- Brush release now snapshots target/kind strings into one fixed byte slab in 256-byte turns, repeats
+  the same chunk walk as a stability validation pass, and only then reserves and incrementally builds
+  `addBrushObject`. Numeric origin/orientation/index and a bounded scalar/three-item scale union are
+  Copy owners; recursive or oversized scale input fails closed before action ownership. Authored
+  fixtures cover multi-chunk publication, same-length source replacement, interrupted draft/claim
+  close, and terminal no-publication. Runtime fixture execution remains pending.
+- The separate reference-aspect hash map was removed; aspect now derives from the already-owned image
+  dimensions. The World3D camera deadline `HashMap`, expired-surface descriptor phase, and associated
+  frame-build cloning were removed from the active renderer transaction; camera work must now enter
+  through the retained World3D intent authority. This does not green reference/render ownership: the
+  pixel map is still dynamic and image decode/insertion is monolithic. Full scene JSON cloning/parsing,
+  dynamic draw/render maps, cursorized old-owner retirement, asset I/O/decode,
+  presenter/GPU realization, and realm-wide close remain **RED**. `rustfmt` and scoped
+  `git diff --check` were run successfully; Cargo, Nx, Wasm, browser, and all authored Rust fixtures
+  remain unrun by coordinator instruction.
+
+### World3D typed-snapshot ownership blocker
+
+- The current cross-crate `World3dScene` contract still owns camera, mesh, instance, selection,
+  topology, reference, environment, terrain, and interaction data exclusively as monolithic JSON
+  `String` fields. It exposes neither a revision witness nor an owned typed/page cursor that can be
+  retained after `render_world_3d` returns. A product-local cursor cannot safely retain the borrowed
+  `&World3dScene`, while cloning those strings into the cursor repeats the exact whole-scene work this
+  packet forbids.
+- Consequently, `sync_world3d_state` still performs whole-string equality/cloning and synchronous
+  `serde_json` parsing, clears/rebuilds dynamic mesh/draw maps, and can decode image/mesh payloads in
+  one frame step. This remains a hard **RED**, not a report-only caveat. The clean next seam is an
+  owned revisioned `World3dSnapshot` contract in the scene-schema crate with fixed typed pages and
+  explicit input/item/byte credits, produced before renderer ownership transfer; the World3D state
+  then consumes one field/item per `StepContext` grant and keeps the last complete generation. The
+  P8-owned plugin component cannot be edited by this packet, so its old JSON-only producer must be
+  coordinated rather than bypassed with a product-local compatibility parse.
+
+### World3D fixed typed snapshot lease checkpoint
+
+- The ui-scene contract now owns a fixed snapshot store: eight generation-keyed slots, at most 256
+  pages per snapshot, 64 Copy typed items and 16 KiB of admitted semantic strings per page. A
+  descriptor pre-admits exact aggregate page/item/byte credits. Page admission returns the exact
+  rejected owner; sealing requires equality with every declared credit. `World3dSnapshotLease`
+  carries slot epoch, revision, generation, and aggregate witnesses. Borrowed page access validates
+  all ABA witnesses. Lease close and interrupted writer abort detach exactly one page per call and
+  release the slot only after a terminal-empty witness. Authored ui-scene fixtures cover ABA page
+  access, page/item +1, interrupted writer abort, and one-page close.
+- `World3dScene` carries the Copy lease. The product consumer no longer reads any JSON field in its
+  production `sync_world3d_state`: absence is unavailable/fail-closed, replacement while an apply is
+  active is rejected, and the previous complete state remains published. `AppFrameTransaction`
+  advances the retained snapshot cursor before World3D input work. It reads at most one item per
+  grant; Camera accepts only ten numeric typed fields and stages the orbit until the complete lease
+  commits. A malformed/string-backed Camera page faults without parsing or fallback. Authored
+  typed-vs-current camera construction compares the typed result with the old parser only inside a
+  test-only legacy function.
+- This boundary remains **RED** beyond Camera. Mesh/topology/instance/selection and extension item
+  schemas are admitted by the page authority but not yet applied into fixed staging registries.
+  Existing draw, mesh, texture-pixel, URL, terrain, and decoded-resource owners are still dynamic and
+  lack complete one-owner retirement. The coordinated P8 producer currently copies already-built JSON
+  strings into pages and builds/hashes all pages synchronously; it marks writer abort but does not pump
+  it. That producer is explicitly rejected as typed/bounded evidence until it constructs direct typed
+  pages through a retained producer job and drains abort one page per scheduler turn.
+
+### World3D dynamic-owner retirement checkpoint
+
+- A retained `World3dDynamicRetirement` can now detach the live mesh map, draw list, reference pixel
+  map, and paint texture map from `World3dState` in O(1). It advances one nested owner per
+  `StepContext` grant: one of the nine mesh buffers, one draw instance, one pixel allocation/key, or
+  one exhausted collection shell. The terminal witness requires every detached iterator/current
+  owner and every corresponding live-state collection to be empty. An authored fixture interrupts at
+  zero fuel, retires a mesh with multiple buffers, 32 draw instances, and two pixel allocations, and
+  verifies terminal empty.
+- This is retirement progress, not fixed live ownership acceptance. Insertions still target dynamic
+  `HashMap`/`Vec` containers; identifiers and pixel allocations are not yet admitted by generation-
+  keyed fixed registries; ordinary `World3dState` destruction is not yet structurally forced through
+  this cursor; and one pixel/mesh buffer deallocation lacks a proven byte-time ceiling. These remain
+  **RED** along with the monolithic asset collector/fetch/decode/apply path.
+
+### World3D fixed live dynamic-owner checkpoint
+
+- The active World3D product state no longer stores meshes, draws, reference pixels, or paint pixels
+  in a `HashMap`/`Vec` field. Mesh and pixel authorities use fixed 256-slot registries with a checked
+  256-byte identifier ceiling, per-slot epochs, exact rejected-owner return, token-validated removal,
+  replacement ABA invalidation, and a closing admission state. Draws use a fixed 256-slot ordered
+  registry with the same checked identifier and closing contract. Direct production pixel insertion
+  and whole draw-list assignment were removed; a permanent source fixture rejects those field and
+  mutation shapes.
+- Replaced, removed, saturated, and closing owners transfer into a fixed 1,024-owner process
+  quarantine. Quarantine saturation is observable and returns the exact owner. A state-local blocked
+  owner retains the first exact owner that could not enter quarantine, faults the interaction/frame
+  authority, and is retried before any registry close work. Replacement rollback restores the prior
+  generation and retains the unpublishable replacement. Authored fixtures cover registry and ID
+  capacity +1, replacement ABA, exact quarantine saturation handback, interrupted close, and late
+  insertion rejection.
+- `World3dDynamicRetirement` now freezes all four registries and transfers at most one opaque owner to
+  quarantine per `StepContext` grant. `RuntimeMailbox::close_world3d_dynamic_step` walks the admitted
+  surface order and pumps exactly one World3D retirement grant before `OsHostRetirement` may release
+  the runtime owner. Its terminal witness requires the retirement cursor, blocked owner, and all four
+  fixed registries to be empty. Opaque mesh/draw/pixel allocation release remains quarantined and is
+  deliberately not described as timed or completed.
+- This checkpoint is still source-only and **RED**. The temporary grouped
+  `HashMap<String, Vec<Instance3d>>` rebuild was renamed test-only and removed from the production
+  render route; production now keeps the last complete draw registry rather than rebuilding from
+  the rejected JSON/`parsed_instances` path. Mesh versions have moved to the same fixed generation-keyed registry and
+  retire one bounded identifier/value owner per close grant. Production `Drop` for both registry
+  types and `World3dState` now requires the dynamic terminal-empty witness, but ordinary
+  `AppRuntime` destruction is not yet definitionally shallow for every non-dynamic field; the static opaque
+  quarantine has no renderer/GPU-owned bounded release lane; and the surface map itself still owns a
+  dynamic `HashMap`. Asset collection/fetch/decode/apply, presenter realization, GPU submission and
+  realm-wide terminal close remain **RED**. `rustfmt` on the three changed Rust sources, whole-tree
+  `git diff --check`, and the production bypass `rg` scan completed successfully. No Cargo, Nx, Wasm,
+  browser, or authored Rust fixture was run under the coordinator's serialized-build restriction.
+
+### Fixed renderer surface authority checkpoint
+
+- `AdmittedSurfaceMap<T>` no longer exposes or stores a `HashMap`. It owns 256 fixed value slots,
+  fixed epochs, and a fixed insertion-order slot page. Lookup, value-only iteration, stable O(1)
+  `id_at`, replacement, and removal are explicit methods; there is no `Deref`/`DerefMut` structural
+  bypass. Replacement and slot reuse increment the slot epoch, and token lookup fails closed on an
+  ABA witness. Existing invariant fixtures now cover order, 256/+1, replacement/removal/clear, token
+  ABA, and a permanent no-HashMap/no-structural-deref scan.
+- This remains **RED** for complete surface ownership. Exact rejected/replaced owner return and
+  one-owner close were added in the subsequent checkpoint below, but the realm-wide consumer of those
+  owners is not yet wired. The World3D runtime close pump drains its fixed dynamic registries before
+  the containing runtime releases, while every other Shell/AppRuntime owner still requires the
+  realm-wide close protocol. These fixtures remain authored but unrun.
+
+- Surface insertion now returns a generation token or the exact rejected `{id,value,fault}` owner.
+  One rejected owner and one replaced owner have dedicated retained slots; producers stop before
+  constructing another value while either is pending. `begin_close`/`close_step` detaches exactly one
+  rejected, replaced, or live surface owner and `terminal_is_empty` witnesses every slot. NodeGraph,
+  TiledMap, and Board producers use exact insertion and retain first rejection; stable identities
+  update only Copy bounds, while owned-string replacement faults closed pending a field-specific
+  publication job. This is not yet wired to a realm-wide owner disposer, so production map `Drop`
+  is not claimed terminal-shallow.
+
+### Retained fixed-credit draw rebuild checkpoint
+
+- The active World3D state now owns a revisioned/generation-keyed `WorldDrawRebuildCursor` rather
+  than admitting a production JSON/`parsed_instances` rebuild. Its descriptor reserves the exact
+  draw, instance, and aggregate byte credits before an instance owner is constructed. It admits at
+  most 256 draw drafts, 4,096 instances in aggregate, and 16 MiB aggregate bytes; mesh/instance IDs
+  are capped at 256 bytes. The public draft writers borrow identifiers, validate the exact remaining
+  credits first, and construct owned strings/instances only after admission, so saturation leaves the
+  producer's source owner untouched for FIFO retry rather than accepting and returning a rejected
+  recursive owner.
+  Draft instance storage is a fixed-length `MaybeUninit` page with an initialized-prefix witness, so
+  admission never reallocates or recopies preceding instances.
+- Worker stepping materializes one source instance into one staged draw per `StepContext` grant,
+  moves one completed draw into the fixed draw registry on a separate grant, revalidates revision and
+  generation throughout, and atomically swaps the staged registry only after every exact descriptor
+  credit seals. The previous complete registry moves to a retained displacement slot and transfers
+  one draw per later grant into the observable opaque quarantine. Stale/cancel close returns one
+  output instance, draft instance, draft shell, or staged draw per grant; production `Drop` asserts
+  terminal-empty for drafts and the rebuild cursor. The frame transaction pumps this cursor before
+  snapshot/input work, and realm close pumps it before live registry retirement.
+- Authored fixtures cover mixed two-group order, multi-instance FIFO, no partial publication,
+  byte +1 and ID +1 exact handback, stale revision, zero-fuel interruption, resumed close, draw
+  instance cap +1, registry ABA, and terminal witnesses. The old grouped rebuild remains only under
+  `cfg(test)` as a differential fixture path. These fixtures are not executed yet.
+- Remaining **RED**: the upstream typed snapshot producer does not yet fill draw drafts; the
+  `SceneDraw3d` staged output still uses an exactly pre-sized `Vec` during one-draw materialization
+  and draw-field allocation timing is unmeasured; normal terrain/overlay/render packet `Vec`s remain
+  dynamic; surface rejected/replaced owners are not yet pumped by the realm disposer; and opaque
+  quarantine release, asset I/O/decode, presenter/GPU realization, and complete AppRuntime close are
+  unresolved.
+
+### Draw writer and surface-iteration tightening
+
+- The fixed surface authority now exposes only audited `keys`, shared `IntoIterator`, `iter`, and
+  value-only iteration. There is still no structural `Deref`. The former synchronous `clear` call
+  now marks the authority closing and records an observable fault so live owners remain retained for
+  the realm close pump; it never walks or drops the fixed slots in the caller turn. This deliberately
+  makes the still-monolithic chrome rebuild fail closed until its old-frame retirement cursor is
+  connected.
+- Draw draft writers now take borrowed mesh/instance identifiers and scalar instance fields. They
+  check identifier, item, and aggregate byte credits before `to_owned` or `Instance3d`
+  construction. Descriptor admission now enforces 4,096 instances globally rather than 4,096 per
+  each of 256 drafts. `rustfmt` and whole-tree `git diff --check` completed successfully after this
+  change. Cargo, Nx, Wasm, browser, and authored Rust fixtures remain unrun by explicit coordinator
+  instruction.
+- Asset work is still **RED** at this save. `collect_pending_*` allocates/clones whole vectors,
+  `poll_pending_assets` buffers every fetched result, image/GLB/map decode and apply are monolithic,
+  and browser `array_buffer`/native file reads have no fixed aggregate byte-credit job. The next
+  authority must replace those operations; merely measuring the outer async suspension is not an
+  accepted bound.
+
+- As an initial asset-owner reduction, the async poller no longer retains three additional
+  `fetched_*` vectors containing every completed GLB, map tile, and UI image response. Each fetched
+  response is now handed to its current exact consumer before the next request starts. This removes
+  the previous multi-response byte amplification, but it is not the fixed I/O lane: request
+  discovery still clones whole pending collections, each response is still a monolithic `Vec<u8>`,
+  and decode/apply remain indivisible. This change therefore does not change the **RED** verdict.
+
+### Fixed asset request and streamed-page ownership foundation
+
+- `WorldAssetIoAuthority` is now a production-owned field of each `World3dState`. It has 64 fixed
+  generation-keyed request slots and a single exact 16 MiB aggregate response-byte authority.
+  Request reservation validates the 2 KiB URL ceiling, item credits, per-request byte credits, and
+  aggregate byte credits before copying the borrowed URL. A token carries slot epoch, generation,
+  and source revision; failed reservation does not advance the state's asset generation.
+- Fetch results enter as independently owned pages of at most 16 KiB, with at most 1,024 pages under
+  the same pre-reserved aggregate byte claim. The request owner supports exact transfer to the I/O
+  suspension, return, seal, generation/revision-validated decode checkout, and terminal finish.
+  Cancellation/close retains an in-flight claim until its external owner returns, then retires one
+  page index or the bounded URL owner per close grant. Production `Drop` for both request owners and
+  the authority asserts the exact terminal-empty witness. World3D realm retirement now closes this
+  authority before draw/mesh/pixel owners.
+- Authored, unrun fixtures cover request item +1, response byte +1, response page +1 exact return,
+  a two-page partial stream, one-page-per-close interruption, stale generation checkout, decode
+  resume across two pages, terminal finish, and full authority close. `rustfmt` and `git diff
+  --check` are green; Cargo/Nx/Wasm/browser remain unrun by instruction.
+- This foundation is not yet an accepted asset lane. Existing producers still write unbounded
+  `pending_*` collections, request discovery still uses whole `collect_pending_* -> Vec`, browser
+  fetch still materializes `Response.array_buffer`, native file fetch still performs an ungoverned
+  whole read, and GLB/image/map decoders still require a contiguous buffer and publish in one call.
+  No old collector or decoder has been relabeled as bounded; Phase 3/5 remains **RED** until those
+  producers and consumers are cut over to the fixed authority and an incremental decoder/output
+  cursor exists.
+
+### Streamed GLB transport cutover checkpoint
+
+- The compiled renderer path is `♾️infinite/🌍️world/🦀️component.rs`, mounted as
+  `infinite_world::world`. Its live URL-backed mesh producer now reserves directly in the fixed
+  `WorldAssetIoAuthority`; Shell/glue no longer collect or clone a `PendingGlbFetch` vector and the
+  compiled collector/fetch-loop symbols were removed. The stale compiled fixture now checks the
+  same exact take, close, return, and terminal-retirement ownership route rather than reconstructing
+  a temporary surface `HashMap`.
+- The dedicated browser Worker polls one exact request owner, requires a finite bounded
+  `Content-Length`, reserves aggregate response credits before reading the body, and uses a BYOB
+  `ReadableStream` reader with a fresh 16 KiB page owner. One read/page is transferred per
+  macrotask; zero, oversized, overflowing, and short pages fail closed. No `Response.arrayBuffer`
+  remains on this Worker path. Abort and Worker close return the exact fetch owner to its source
+  authority or retain it in the Worker's bounded close state. Rust rejects a page-length violation
+  before cloning borrowed Wasm bytes and requires received bytes to equal reserved bytes before a
+  response can seal.
+- The adjacent `♾️infinite/🦀️component.rs` is not an unreachable duplicate: the infinite
+  crate mounts it as private `component` and publicly reexports it, while the World3D renderer uses
+  the separate `world` module. It was therefore neither edited nor deleted. A direct path census
+  found one stale terrain doc reference, but the crate module wiring itself is authoritative.
+- Source-only gates at this checkpoint: `rustfmt --check` passed on the compiled World3D,
+  browser-worker, glue, Shell, and Scenes sources; scoped `git diff --check` passed. The Browser
+  transport fixture was updated for the BYOB page contract but was not run. Cargo, Nx, Wasm, and
+  browser runtime gates remain unrun by instruction.
+- This is still **RED**. Map-tile and UI-image producers retain dynamic global Vec/HashMap queues;
+  `poll_pending_assets` still drains those queues and invokes monolithic fetch/decode/apply. Native
+  `ReadBytes` still aggregates the whole file even though its I/O job reads 32 KiB chunks. Completed
+  GLB owners are not yet consumed by a retained GLB header/JSON/accessor/mesh publication cursor;
+  reference-image/terrain producers are not fully cut over; and realm/presenter/GPU close is not
+  terminal-complete.
+
+### Completed-response, typed-map, and native streaming checkpoint
+
+- The fixed asset authority now exposes a one-slot completed-response cursor rather than scanning
+  all 64 claims in one frame turn. A retained renderer probe owns one exact sealed response, reads
+  one 16 KiB page per governed frame grant, copies only its fixed 64-byte signature prefix, checks
+  the sealed byte witness, and rewinds valid input for the format decoder. Malformed input enters
+  cursorized page retirement and exact source-authority handback. Valid input intentionally remains
+  backpressured at the decoder boundary; no legacy whole-buffer decoder is called from the probe.
+- The compiled tiled-map request producer no longer parses a JSON array or constructs a temporary
+  tile `Vec`. `VisibleTileCursor` is a fixed shallow typed cursor, while `MapTileRequestCursor`
+  retains the map revision and bounded URL-template witnesses and advances one visible tile per
+  frame grant. Fixed authority saturation keeps the current tile unadvanced for exact FIFO retry.
+  Raster/vector upload is still monolithic and therefore remains **RED**.
+- Native file reads use one `NativeIoRequest::ReadPage` of at most 16 KiB per I/O continuation.
+  Native HTTP uses `SocketHttpTransport` for plain HTTP and an owned ureq/TLS adapter for HTTPS.
+  Both implement the same `AsyncHttpTransport`/`HttpBody` contract and return at most one 16 KiB
+  body page per pull. The ureq adapter no longer calls `read_to_end` on successful or error-status
+  responses; it admits URL/header/body limits before starting, retains one response reader, checks
+  cancellation before start and every pull, and releases the reader at EOF or body drop. Unknown or
+  chunked body length is admitted incrementally against the fixed 16 MiB response claim rather than
+  falling back to whole-body buffering. The external ureq/TLS implementation remains the explicit
+  Phase 9 dependency-removal residual; secure asset URL functionality is preserved for Phase 3.
+- Authored, unrun fixtures cover completed-slot advancement, split GLB signature validation,
+  malformed close, typed-map FIFO equivalence, native partial/eof/+1 pages, plain HTTP partial
+  Content-Length and chunked bodies, and owned HTTPS reader partial/error/terminal/backpressure and
+  cancel-before-pull behavior. `rustfmt --check` and scoped `git diff --check` passed. Cargo, Nx,
+  Wasm, browser, and network gates remain unrun by explicit instruction.
+- Phase 3/5 remains **RED**: GLB accessor/mesh construction, PNG/JPEG/SVG rasterization, MVT token
+  decode, terrain decode, typed atomic apply, cache retirement, presenter/GPU realization, and the
+  realm-wide terminal close witness are not yet governed retained jobs. The 64-byte probe is only
+  an admission stage and is not counted as a decoder.
+
+### Retained GLB schema, BIN, and paged-mesh cutover checkpoint
+
+- The completed-response probe now owns a fixed 1,024-entry response-page offset index and advances
+  from container scanning into a retained GLB JSON tokenizer/schema cursor. One call consumes at
+  most 256 input bytes or one token. Fixed schema pages admit at most 512 accessors, buffer views,
+  primitives, meshes, nodes, scene roots, and child edges. Accessor spans, component/shape pairing,
+  stride, normalized flags, triangle mode, default-scene references, node cycles/depth, and exact
+  instantiated output byte credits are checked before output page allocation.
+- The BIN materializer keeps the sealed response owner in place and reads components through the
+  fixed page index; it never flattens or rescans the response. It allocates one 16 KiB result page
+  per grant, then advances one position, explicit/generated normal, UV, triangle, or normal
+  normalization item per grant. The source-only implementation covers u8/u16/u32 indices;
+  triangles, strips, and fans; FLOAT positions; FLOAT or normalized signed byte/short normals;
+  FLOAT or normalized unsigned byte/short UVs; node TRS/matrix composition; inverse-transpose
+  normal transforms; generated normals; cap/overflow faults; and one-page-per-grant result close.
+  A retained differential fixture compares transformed positions, normals, and strip indices with
+  the existing glTF-based `mesh_from_glb` oracle. These fixtures are authored but unrun.
+- Publication is deliberately still **RED**. The repository's public `Mesh3d` owns nine contiguous
+  `Vec` fields. Flattening fixed GLB pages into that type would reintroduce an ungoverned allocation,
+  copy, and final destructor. The required boundary is now an atomic schema-first fixed-page
+  `Mesh3dLease` authority from producer birth through hit-testing, render preparation, GPU upload,
+  and retirement. A source census is saved in `mesh3d-census-20260823.txt`: 267 direct construction
+  or field-consumer references across ui-scene and OS. Both the private/reexported
+  `♾️infinite/🦀️component.rs` and the compiled World3D
+  `♾️infinite/🌍️world/🦀️component.rs` are mounted and contain live consumers. The P8-owned plugin
+  `component.rs` has no `Mesh3d` constructor or direct field consumer; its
+  `world3d_scene_extended` symbol remains a typed scene-snapshot producer and is not being edited.
+- Scoped `rustfmt --config skip_children` and `git diff --check` passed before the most recent BIN
+  fixture additions and are rerun at each save. No Cargo, Nx, Wasm, browser, or network gate has
+  run. PNG/JPEG/MVT/SVG semantics, paged mesh publication/borrow/ABA/close, cache retirement,
+  presenter/GPU realization, and realm-wide close all remain explicit **RED** gates.
+
+### Direct paged-mesh publication checkpoint
+
+- The GLB materializer no longer terminates at a private result-page owner. Its typed positions,
+  normals, UVs, and indices are born in the shared fixed `Mesh3d` page authority and the sealed
+  `Mesh3dLease` now transfers directly from the retained renderer probe into the exact World
+  surface. No intermediate contiguous mesh or `Vec` conversion is used on this route.
+- Canonical World mesh publication is now a three-authority transaction. Mesh storage, version
+  storage, and interaction topology each create a fixed-slot/epoch plan before the first mutation.
+  Closing, ID, item, byte, stale-epoch, and topology admission faults return the exact input lease.
+  A successful replacement transfers the prior generation into the existing page-stepped close
+  owner. The decoder also revalidates the source revision against the current World interaction
+  revision before publication.
+- Renderer backpressure retains ownership: capacity/closing restores the same lease into the GLB
+  probe for a later turn; a stale revision restores it and then enters the probe's page-stepped
+  mesh/response close while recording a deterministic frame fault. Only a committed publication
+  detaches the lease before response retirement.
+- The exact remaining census is refreshed in `mesh3d-census-20260823.txt`. It is deliberately not
+  zero: ui-scene retains five old-type/test references, canonical World retains 21, and the second
+  mounted/reexported World component retains 21. Canonical placeholder, terrain, legacy scene,
+  paint-bake, and test producers plus all corresponding code in the second mounted component must
+  still move to schema-first retained jobs before the Vec-backed type can be deleted.
+- Scoped parse/format evidence at this save: `rustfmt --edition 2021 --config skip_children=true`
+  passed for canonical World; `rustfmt --edition 2024 --config skip_children=true` passed for
+  renderer glue; scoped `git diff --check` passed. These are source checks only. Cargo, Nx, Wasm,
+  browser, network, and root lint remain unrun by instruction.
+- Phase 3/5 remains **RED**. The internal one-slot blocked-mesh fallback is not a complete producer
+  saturation authority, the second mounted component and old constructors are not migrated, GPU
+  upload still traverses a whole lease synchronously, and PNG/JPEG/MVT/SVG output, cache disposal,
+  presenter/GPU close, and realm terminal-empty remain incomplete. The World3D typed snapshot
+  producer is not claimed and no JSON fallback was added.
+- The canonical World consumer no longer accepts inline mesh buffers from legacy scene JSON and no
+  longer exports or calls its monolithic `mesh_from_glb -> MeshData -> Mesh3d` apply route. URL
+  meshes now stay backpressured until the retained renderer decoder publishes a paged lease. The
+  old GLB integration test that exercised the deleted contiguous path was removed; the retained
+  decoder's page/geometry differential fixture remains the intended replacement, still unrun.

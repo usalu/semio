@@ -14,15 +14,15 @@
 //! goes inside them (the real packed `ShellState`) is `💻️os/🔨️modules/🖥️shell`'s concern (P9), not
 //! this codec's.
 //!
-//! P1c (`📓️sol-P1c-packet.md`) makes the bridge LIVE: `🔖️BridgeHandle`/`🔖️BridgeToken` below plus the
-//! real `mod server` (`🔖️BridgeServer`) that mounts `/bridge` alongside `/mcp` on the same axum app
-//! `🚚️transport/🦀️component.rs`'s `HttpTransport::router` builds.
+//! The live bridge is owned by the retained HTTP transport through `🔖️BridgeHandle`; the Axum
+//! `🔖️BridgeServer` remains a `cfg(test)` differential oracle only.
 
 use crate::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_async::{Job, Lane, ProcessKind, WorkerPool, WorkerPoolConfig, WorkerSubmitErrorKind};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
 //#region 🔖️BridgeVersion
@@ -369,6 +369,913 @@ impl ShellToGateway {
 }
 //#endregion 🔖️ShellToGateway
 
+//#region 🔖️BoundedShellDecode
+pub(crate) const BRIDGE_INBOUND_PAGE_BYTES: usize = 16_384;
+const BRIDGE_INBOUND_MAX_BYTES: usize = 1_048_576;
+const BRIDGE_INBOUND_MAX_PAGES: usize = BRIDGE_INBOUND_MAX_BYTES.div_ceil(BRIDGE_INBOUND_PAGE_BYTES);
+const BRIDGE_INBOUND_MAX_ITEMS: usize = 256;
+const BRIDGE_INBOUND_MAX_RANGES: usize = 1_280;
+const BRIDGE_INBOUND_MAX_FIELD_BYTES: usize = BRIDGE_INBOUND_MAX_BYTES;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ShellFrameKind {
+    Hello,
+    ShellState,
+    ShellStatePatch,
+    Instances,
+    AppFrames,
+    ShellCommandResult,
+    Approval,
+    Ping,
+    Bye,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ShellDecodeFault {
+    Malformed,
+    Capacity,
+}
+
+pub(crate) enum ShellDecodeStep {
+    Pending,
+    Complete(ValidatedShellFrame),
+    Fault(ShellDecodeFault),
+}
+
+#[derive(Clone, Copy)]
+enum ShellRangeKind {
+    Bytes,
+    String,
+}
+
+#[derive(Clone, Copy)]
+struct ShellRange {
+    start: usize,
+    len: usize,
+    kind: ShellRangeKind,
+}
+
+#[derive(Clone, Copy)]
+enum ShellDecodePhase {
+    Tag,
+    HelloVersion,
+    HelloKind,
+    HelloSession,
+    HelloPrincipal,
+    HelloFlags,
+    StateRevision,
+    StateBytes,
+    PatchRevision,
+    PatchBaseRevision,
+    PatchBytes,
+    InstancesCount,
+    InstancePlugin { instances: usize },
+    InstanceApp { instances: usize },
+    InstanceId { instances: usize },
+    InstanceArtifact { instances: usize },
+    InstanceWindowsCount { instances: usize },
+    InstanceWindow { instances: usize, windows: usize },
+    AppReply,
+    AppInstance,
+    AppFramesCount,
+    AppFrame { frames: usize },
+    CommandReply,
+    CommandOk,
+    CommandFaultFlag,
+    CommandFaultString,
+    ApprovalId,
+    ApprovalDecision,
+    ApprovalNoteFlag,
+    ApprovalNoteString,
+    Finish,
+    ValidateStrings { range: usize, offset: usize, utf8: Utf8Cursor },
+    Copy { offset: usize },
+}
+
+#[derive(Clone, Copy)]
+struct Utf8Cursor {
+    needed: u8,
+    min: u8,
+    max: u8,
+}
+
+impl Utf8Cursor {
+    fn new() -> Self {
+        Self { needed: 0, min: 0x80, max: 0xbf }
+    }
+
+    fn push(&mut self, byte: u8) -> bool {
+        if self.needed != 0 {
+            if byte < self.min || byte > self.max {
+                return false;
+            }
+            self.needed -= 1;
+            self.min = 0x80;
+            self.max = 0xbf;
+            return true;
+        }
+        match byte {
+            0x00..=0x7f => true,
+            0xc2..=0xdf => {
+                self.needed = 1;
+                true
+            }
+            0xe0 => {
+                self.needed = 2;
+                self.min = 0xa0;
+                true
+            }
+            0xe1..=0xec | 0xee..=0xef => {
+                self.needed = 2;
+                true
+            }
+            0xed => {
+                self.needed = 2;
+                self.max = 0x9f;
+                true
+            }
+            0xf0 => {
+                self.needed = 3;
+                self.min = 0x90;
+                true
+            }
+            0xf1..=0xf3 => {
+                self.needed = 3;
+                true
+            }
+            0xf4 => {
+                self.needed = 3;
+                self.max = 0x8f;
+                true
+            }
+            _ => false,
+        }
+    }
+
+    fn complete(self) -> bool {
+        self.needed == 0
+    }
+}
+
+pub(crate) struct ShellToGatewayDecodeCursor {
+    phase: ShellDecodePhase,
+    payload_len: usize,
+    cursor: usize,
+    kind: Option<ShellFrameKind>,
+    ranges: [Option<ShellRange>; BRIDGE_INBOUND_MAX_RANGES],
+    range_count: usize,
+    items: usize,
+    owned_bytes: usize,
+    output: Option<ValidatedShellFrame>,
+}
+
+impl ShellToGatewayDecodeCursor {
+    pub(crate) fn new(payload_len: usize) -> Self {
+        Self { phase: ShellDecodePhase::Tag, payload_len, cursor: 0, kind: None, ranges: std::array::from_fn(|_| None), range_count: 0, items: 0, owned_bytes: 0, output: None }
+    }
+
+    pub(crate) fn step<F>(&mut self, mut byte_at: F) -> ShellDecodeStep
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        if self.payload_len > BRIDGE_INBOUND_MAX_BYTES {
+            return ShellDecodeStep::Fault(ShellDecodeFault::Capacity);
+        }
+        let result = match self.phase {
+            ShellDecodePhase::Tag => self.read_tag(&mut byte_at),
+            ShellDecodePhase::HelloVersion => self.read_u16(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::HelloKind)),
+            ShellDecodePhase::HelloKind => self.read_u8(&mut byte_at).and_then(|kind| if kind <= 2 { self.next(ShellDecodePhase::HelloSession) } else { Err(ShellDecodeFault::Malformed) }),
+            ShellDecodePhase::HelloSession => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::HelloPrincipal)),
+            ShellDecodePhase::HelloPrincipal => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::HelloFlags)),
+            ShellDecodePhase::HelloFlags => self.read_u8(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::Finish)),
+            ShellDecodePhase::StateRevision => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::StateBytes)),
+            ShellDecodePhase::StateBytes => self.read_range(&mut byte_at, ShellRangeKind::Bytes).and_then(|_| self.next(ShellDecodePhase::Finish)),
+            ShellDecodePhase::PatchRevision => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::PatchBaseRevision)),
+            ShellDecodePhase::PatchBaseRevision => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::PatchBytes)),
+            ShellDecodePhase::PatchBytes => self.read_range(&mut byte_at, ShellRangeKind::Bytes).and_then(|_| self.next(ShellDecodePhase::Finish)),
+            ShellDecodePhase::InstancesCount => self.read_count(&mut byte_at, 20).and_then(|count| self.next(if count == 0 { ShellDecodePhase::Finish } else { ShellDecodePhase::InstancePlugin { instances: count } })),
+            ShellDecodePhase::InstancePlugin { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::InstanceApp { instances })),
+            ShellDecodePhase::InstanceApp { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::InstanceId { instances })),
+            ShellDecodePhase::InstanceId { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::InstanceArtifact { instances })),
+            ShellDecodePhase::InstanceArtifact { instances } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::InstanceWindowsCount { instances })),
+            ShellDecodePhase::InstanceWindowsCount { instances } => self.read_count(&mut byte_at, 4).and_then(|windows| {
+                self.next(if windows == 0 {
+                    if instances == 1 {
+                        ShellDecodePhase::Finish
+                    } else {
+                        ShellDecodePhase::InstancePlugin { instances: instances - 1 }
+                    }
+                } else {
+                    ShellDecodePhase::InstanceWindow { instances, windows }
+                })
+            }),
+            ShellDecodePhase::InstanceWindow { instances, windows } => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| {
+                self.next(if windows > 1 {
+                    ShellDecodePhase::InstanceWindow { instances, windows: windows - 1 }
+                } else if instances > 1 {
+                    ShellDecodePhase::InstancePlugin { instances: instances - 1 }
+                } else {
+                    ShellDecodePhase::Finish
+                })
+            }),
+            ShellDecodePhase::AppReply => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::AppInstance)),
+            ShellDecodePhase::AppInstance => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::AppFramesCount)),
+            ShellDecodePhase::AppFramesCount => self.read_count(&mut byte_at, 4).and_then(|count| self.next(if count == 0 { ShellDecodePhase::Finish } else { ShellDecodePhase::AppFrame { frames: count } })),
+            ShellDecodePhase::AppFrame { frames } => self.read_range(&mut byte_at, ShellRangeKind::Bytes).and_then(|_| self.next(if frames == 1 { ShellDecodePhase::Finish } else { ShellDecodePhase::AppFrame { frames: frames - 1 } })),
+            ShellDecodePhase::CommandReply => self.read_u64(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::CommandOk)),
+            ShellDecodePhase::CommandOk => self.read_bool(&mut byte_at).and_then(|_| self.next(ShellDecodePhase::CommandFaultFlag)),
+            ShellDecodePhase::CommandFaultFlag => self.read_bool(&mut byte_at).and_then(|present| self.next(if present { ShellDecodePhase::CommandFaultString } else { ShellDecodePhase::Finish })),
+            ShellDecodePhase::CommandFaultString => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::Finish)),
+            ShellDecodePhase::ApprovalId => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::ApprovalDecision)),
+            ShellDecodePhase::ApprovalDecision => self.read_u8(&mut byte_at).and_then(|decision| if decision <= 2 { self.next(ShellDecodePhase::ApprovalNoteFlag) } else { Err(ShellDecodeFault::Malformed) }),
+            ShellDecodePhase::ApprovalNoteFlag => self.read_bool(&mut byte_at).and_then(|present| self.next(if present { ShellDecodePhase::ApprovalNoteString } else { ShellDecodePhase::Finish })),
+            ShellDecodePhase::ApprovalNoteString => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|_| self.next(ShellDecodePhase::Finish)),
+            ShellDecodePhase::Finish => self.finish_preflight(),
+            ShellDecodePhase::ValidateStrings { range, offset, utf8 } => self.validate_string(range, offset, utf8, &mut byte_at),
+            ShellDecodePhase::Copy { offset } => return self.copy_page(offset, &mut byte_at),
+        };
+        match result {
+            Ok(()) => ShellDecodeStep::Pending,
+            Err(fault) => ShellDecodeStep::Fault(fault),
+        }
+    }
+
+    fn read_tag<F>(&mut self, byte_at: &mut F) -> Result<(), ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let tag = self.read_u8(byte_at)?;
+        let (kind, phase) = match tag {
+            0 => (ShellFrameKind::Hello, ShellDecodePhase::HelloVersion),
+            1 => (ShellFrameKind::ShellState, ShellDecodePhase::StateRevision),
+            2 => (ShellFrameKind::ShellStatePatch, ShellDecodePhase::PatchRevision),
+            3 => (ShellFrameKind::Instances, ShellDecodePhase::InstancesCount),
+            4 => (ShellFrameKind::AppFrames, ShellDecodePhase::AppReply),
+            5 => (ShellFrameKind::ShellCommandResult, ShellDecodePhase::CommandReply),
+            6 => (ShellFrameKind::Approval, ShellDecodePhase::ApprovalId),
+            7 => (ShellFrameKind::Ping, ShellDecodePhase::Finish),
+            8 => (ShellFrameKind::Bye, ShellDecodePhase::Finish),
+            _ => return Err(ShellDecodeFault::Malformed),
+        };
+        self.kind = Some(kind);
+        self.phase = phase;
+        Ok(())
+    }
+
+    fn read_u8<F>(&mut self, byte_at: &mut F) -> Result<u8, ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let value = byte_at(self.cursor).ok_or(ShellDecodeFault::Malformed)?;
+        self.cursor += 1;
+        Ok(value)
+    }
+
+    fn read_u16<F>(&mut self, byte_at: &mut F) -> Result<u16, ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let mut bytes = [0; 2];
+        self.read_fixed(byte_at, &mut bytes)?;
+        Ok(u16::from_le_bytes(bytes))
+    }
+
+    fn read_u32<F>(&mut self, byte_at: &mut F) -> Result<u32, ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let mut bytes = [0; 4];
+        self.read_fixed(byte_at, &mut bytes)?;
+        Ok(u32::from_le_bytes(bytes))
+    }
+
+    fn read_u64<F>(&mut self, byte_at: &mut F) -> Result<u64, ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let mut bytes = [0; 8];
+        self.read_fixed(byte_at, &mut bytes)?;
+        Ok(u64::from_le_bytes(bytes))
+    }
+
+    fn read_fixed<F>(&mut self, byte_at: &mut F, output: &mut [u8]) -> Result<(), ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let end = self.cursor.checked_add(output.len()).ok_or(ShellDecodeFault::Capacity)?;
+        if end > self.payload_len {
+            return Err(ShellDecodeFault::Malformed);
+        }
+        for (offset, target) in output.iter_mut().enumerate() {
+            *target = byte_at(self.cursor + offset).ok_or(ShellDecodeFault::Malformed)?;
+        }
+        self.cursor = end;
+        Ok(())
+    }
+
+    fn read_bool<F>(&mut self, byte_at: &mut F) -> Result<bool, ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        match self.read_u8(byte_at)? {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => Err(ShellDecodeFault::Malformed),
+        }
+    }
+
+    fn read_count<F>(&mut self, byte_at: &mut F, minimum_item_bytes: usize) -> Result<usize, ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let count = self.read_u32(byte_at)? as usize;
+        if count > BRIDGE_INBOUND_MAX_ITEMS.saturating_sub(self.items) {
+            return Err(ShellDecodeFault::Capacity);
+        }
+        let minimum = count.checked_mul(minimum_item_bytes).ok_or(ShellDecodeFault::Capacity)?;
+        if minimum > self.payload_len.saturating_sub(self.cursor) {
+            return Err(ShellDecodeFault::Malformed);
+        }
+        self.items += count;
+        Ok(count)
+    }
+
+    fn read_range<F>(&mut self, byte_at: &mut F, kind: ShellRangeKind) -> Result<(), ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let len = self.read_u32(byte_at)? as usize;
+        if len > BRIDGE_INBOUND_MAX_FIELD_BYTES || self.range_count == BRIDGE_INBOUND_MAX_RANGES {
+            return Err(ShellDecodeFault::Capacity);
+        }
+        let end = self.cursor.checked_add(len).ok_or(ShellDecodeFault::Capacity)?;
+        if end > self.payload_len {
+            return Err(ShellDecodeFault::Malformed);
+        }
+        let owned_bytes = self.owned_bytes.checked_add(len).ok_or(ShellDecodeFault::Capacity)?;
+        if owned_bytes > BRIDGE_INBOUND_MAX_BYTES {
+            return Err(ShellDecodeFault::Capacity);
+        }
+        self.ranges[self.range_count] = Some(ShellRange { start: self.cursor, len, kind });
+        self.range_count += 1;
+        self.owned_bytes = owned_bytes;
+        self.cursor = end;
+        Ok(())
+    }
+
+    fn next(&mut self, phase: ShellDecodePhase) -> Result<(), ShellDecodeFault> {
+        self.phase = phase;
+        Ok(())
+    }
+
+    fn finish_preflight(&mut self) -> Result<(), ShellDecodeFault> {
+        if self.cursor != self.payload_len {
+            return Err(ShellDecodeFault::Malformed);
+        }
+        self.phase = if self.range_count == 0 { ShellDecodePhase::Copy { offset: 0 } } else { ShellDecodePhase::ValidateStrings { range: 0, offset: 0, utf8: Utf8Cursor::new() } };
+        Ok(())
+    }
+
+    fn validate_string<F>(&mut self, range_index: usize, offset: usize, mut utf8: Utf8Cursor, byte_at: &mut F) -> Result<(), ShellDecodeFault>
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let range = self.ranges[range_index].ok_or(ShellDecodeFault::Malformed)?;
+        if matches!(range.kind, ShellRangeKind::Bytes) || offset == range.len {
+            if matches!(range.kind, ShellRangeKind::String) && !utf8.complete() {
+                return Err(ShellDecodeFault::Malformed);
+            }
+            self.phase = if range_index + 1 == self.range_count { ShellDecodePhase::Copy { offset: 0 } } else { ShellDecodePhase::ValidateStrings { range: range_index + 1, offset: 0, utf8: Utf8Cursor::new() } };
+            return Ok(());
+        }
+        let byte = byte_at(range.start + offset).ok_or(ShellDecodeFault::Malformed)?;
+        if !utf8.push(byte) {
+            return Err(ShellDecodeFault::Malformed);
+        }
+        self.phase = ShellDecodePhase::ValidateStrings { range: range_index, offset: offset + 1, utf8 };
+        Ok(())
+    }
+
+    fn copy_page<F>(&mut self, offset: usize, byte_at: &mut F) -> ShellDecodeStep
+    where
+        F: FnMut(usize) -> Option<u8>,
+    {
+        let output = self.output.get_or_insert_with(|| ValidatedShellFrame::new(self.kind.expect("validated bridge tag missing"), self.payload_len));
+        let bytes = BRIDGE_INBOUND_PAGE_BYTES.min(self.payload_len.saturating_sub(offset));
+        if bytes == 0 {
+            return ShellDecodeStep::Complete(self.output.take().expect("validated bridge output missing"));
+        }
+        let mut page = Box::new([0; BRIDGE_INBOUND_PAGE_BYTES]);
+        for (index, target) in page[..bytes].iter_mut().enumerate() {
+            let Some(value) = byte_at(offset + index) else { return ShellDecodeStep::Fault(ShellDecodeFault::Malformed) };
+            *target = value;
+        }
+        output.pages[offset / BRIDGE_INBOUND_PAGE_BYTES] = Some(page);
+        let next = offset + bytes;
+        if next == self.payload_len {
+            ShellDecodeStep::Complete(self.output.take().expect("validated bridge output missing"))
+        } else {
+            self.phase = ShellDecodePhase::Copy { offset: next };
+            ShellDecodeStep::Pending
+        }
+    }
+}
+
+pub(crate) struct ValidatedShellFrame {
+    kind: ShellFrameKind,
+    len: usize,
+    pages: [Option<Box<[u8; BRIDGE_INBOUND_PAGE_BYTES]>>; BRIDGE_INBOUND_MAX_PAGES],
+}
+
+impl ValidatedShellFrame {
+    fn new(kind: ShellFrameKind, len: usize) -> Self {
+        Self { kind, len, pages: std::array::from_fn(|_| None) }
+    }
+
+    pub(crate) fn kind(&self) -> ShellFrameKind {
+        self.kind
+    }
+
+    fn byte(&self, index: usize) -> Result<u8, ShellDecodeFault> {
+        if index >= self.len {
+            return Err(ShellDecodeFault::Malformed);
+        }
+        let page = self.pages[index / BRIDGE_INBOUND_PAGE_BYTES].as_ref().ok_or(ShellDecodeFault::Malformed)?;
+        Ok(page[index % BRIDGE_INBOUND_PAGE_BYTES])
+    }
+
+    fn copy_into(&self, offset: usize, output: &mut [u8]) -> Result<(), ShellDecodeFault> {
+        if offset.checked_add(output.len()).ok_or(ShellDecodeFault::Capacity)? > self.len {
+            return Err(ShellDecodeFault::Malformed);
+        }
+        for (index, target) in output.iter_mut().enumerate() {
+            *target = self.byte(offset + index)?;
+        }
+        Ok(())
+    }
+}
+
+pub(crate) enum ShellMaterializeStep {
+    Pending,
+    Complete(ShellToGateway),
+    Fault(ShellDecodeFault),
+}
+
+enum OwnedRange {
+    Bytes { len: usize, copied: usize, value: Vec<u8> },
+    String { end: usize, value: String },
+}
+
+impl OwnedRange {
+    fn bytes(len: usize) -> Result<Self, ShellDecodeFault> {
+        let mut value = Vec::new();
+        value.try_reserve_exact(len).map_err(|_| ShellDecodeFault::Capacity)?;
+        Ok(Self::Bytes { len, copied: 0, value })
+    }
+
+    fn string(start: usize, len: usize) -> Result<Self, ShellDecodeFault> {
+        let mut value = String::new();
+        value.try_reserve_exact(len).map_err(|_| ShellDecodeFault::Capacity)?;
+        Ok(Self::String { end: start.checked_add(len).ok_or(ShellDecodeFault::Capacity)?, value })
+    }
+
+    fn step(&mut self, frame: &ValidatedShellFrame, position: &mut usize) -> Result<bool, ShellDecodeFault> {
+        match self {
+            Self::Bytes { len, copied, value } => {
+                let bytes = BRIDGE_INBOUND_PAGE_BYTES.min(len.saturating_sub(*copied));
+                if bytes == 0 {
+                    return Ok(true);
+                }
+                let start = value.len();
+                value.resize(start + bytes, 0);
+                frame.copy_into(*position, &mut value[start..])?;
+                *position += bytes;
+                *copied += bytes;
+                Ok(*copied == *len)
+            }
+            Self::String { end, value } => {
+                if *position == *end {
+                    return Ok(true);
+                }
+                let first = frame.byte(*position)?;
+                let width = match first {
+                    0x00..=0x7f => 1,
+                    0xc2..=0xdf => 2,
+                    0xe0..=0xef => 3,
+                    0xf0..=0xf4 => 4,
+                    _ => return Err(ShellDecodeFault::Malformed),
+                };
+                if position.checked_add(width).ok_or(ShellDecodeFault::Capacity)? > *end {
+                    return Err(ShellDecodeFault::Malformed);
+                }
+                let mut bytes = [0; 4];
+                frame.copy_into(*position, &mut bytes[..width])?;
+                let text = std::str::from_utf8(&bytes[..width]).map_err(|_| ShellDecodeFault::Malformed)?;
+                value.push_str(text);
+                *position += width;
+                Ok(*position == *end)
+            }
+        }
+    }
+
+    fn take_bytes(self) -> Result<Vec<u8>, ShellDecodeFault> {
+        match self {
+            Self::Bytes { value, .. } => Ok(value),
+            Self::String { .. } => Err(ShellDecodeFault::Malformed),
+        }
+    }
+
+    fn take_string(self) -> Result<String, ShellDecodeFault> {
+        match self {
+            Self::String { value, .. } => Ok(value),
+            Self::Bytes { .. } => Err(ShellDecodeFault::Malformed),
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+enum ShellMaterializePhase {
+    Tag,
+    HelloVersion,
+    HelloKind,
+    HelloSession,
+    HelloPrincipal,
+    HelloFlags,
+    StateRevision,
+    StateBytes,
+    PatchRevision,
+    PatchBaseRevision,
+    PatchBytes,
+    InstancesCount,
+    InstancePlugin { remaining: usize },
+    InstanceApp { remaining: usize },
+    InstanceId { remaining: usize },
+    InstanceArtifact { remaining: usize },
+    InstanceWindowsCount { remaining: usize },
+    InstanceWindow { remaining: usize, windows: usize },
+    InstanceCommit { remaining: usize },
+    AppReply,
+    AppInstance,
+    AppFramesCount,
+    AppFrame { remaining: usize },
+    AppFrameCommit { remaining: usize },
+    CommandReply,
+    CommandOk,
+    CommandFaultFlag,
+    CommandFault,
+    ApprovalId,
+    ApprovalDecision,
+    ApprovalNoteFlag,
+    ApprovalNote,
+    Finish,
+}
+
+pub(crate) struct ShellToGatewayMaterializeCursor {
+    frame: ValidatedShellFrame,
+    phase: ShellMaterializePhase,
+    position: usize,
+    range: Option<OwnedRange>,
+    u64_a: u64,
+    u64_b: u64,
+    bool_a: bool,
+    u16_a: u16,
+    u8_a: u8,
+    text_a: Option<String>,
+    text_b: Option<String>,
+    text_c: Option<String>,
+    text_d: Option<String>,
+    bytes_a: Option<Vec<u8>>,
+    entries: Vec<BridgeInstanceRef>,
+    windows: Vec<String>,
+    frames: Vec<Vec<u8>>,
+}
+
+impl ShellToGatewayMaterializeCursor {
+    pub(crate) fn new(frame: ValidatedShellFrame) -> Self {
+        Self {
+            frame,
+            phase: ShellMaterializePhase::Tag,
+            position: 0,
+            range: None,
+            u64_a: 0,
+            u64_b: 0,
+            bool_a: false,
+            u16_a: 0,
+            u8_a: 0,
+            text_a: None,
+            text_b: None,
+            text_c: None,
+            text_d: None,
+            bytes_a: None,
+            entries: Vec::new(),
+            windows: Vec::new(),
+            frames: Vec::new(),
+        }
+    }
+
+    pub(crate) fn kind(&self) -> ShellFrameKind {
+        self.frame.kind()
+    }
+
+    pub(crate) fn step(&mut self) -> ShellMaterializeStep {
+        let result = self.step_inner();
+        match result {
+            Ok(Some(frame)) => ShellMaterializeStep::Complete(frame),
+            Ok(None) => ShellMaterializeStep::Pending,
+            Err(fault) => ShellMaterializeStep::Fault(fault),
+        }
+    }
+
+    fn step_inner(&mut self) -> Result<Option<ShellToGateway>, ShellDecodeFault> {
+        match self.phase {
+            ShellMaterializePhase::Tag => {
+                let tag = self.read_u8()?;
+                self.phase = match tag {
+                    0 => ShellMaterializePhase::HelloVersion,
+                    1 => ShellMaterializePhase::StateRevision,
+                    2 => ShellMaterializePhase::PatchRevision,
+                    3 => ShellMaterializePhase::InstancesCount,
+                    4 => ShellMaterializePhase::AppReply,
+                    5 => ShellMaterializePhase::CommandReply,
+                    6 => ShellMaterializePhase::ApprovalId,
+                    7 | 8 => ShellMaterializePhase::Finish,
+                    _ => return Err(ShellDecodeFault::Malformed),
+                };
+            }
+            ShellMaterializePhase::HelloVersion => {
+                self.u16_a = self.read_u16()?;
+                self.phase = ShellMaterializePhase::HelloKind;
+            }
+            ShellMaterializePhase::HelloKind => {
+                self.u8_a = self.read_u8()?;
+                self.phase = ShellMaterializePhase::HelloSession;
+            }
+            ShellMaterializePhase::HelloSession => {
+                if let Some(value) = self.step_string()? {
+                    self.text_a = Some(value);
+                    self.phase = ShellMaterializePhase::HelloPrincipal;
+                }
+            }
+            ShellMaterializePhase::HelloPrincipal => {
+                if let Some(value) = self.step_string()? {
+                    self.text_b = Some(value);
+                    self.phase = ShellMaterializePhase::HelloFlags;
+                }
+            }
+            ShellMaterializePhase::HelloFlags => {
+                self.bool_a = false;
+                self.u64_a = self.read_u8()? as u64;
+                self.phase = ShellMaterializePhase::Finish;
+            }
+            ShellMaterializePhase::StateRevision => {
+                self.u64_a = self.read_u64()?;
+                self.phase = ShellMaterializePhase::StateBytes;
+            }
+            ShellMaterializePhase::StateBytes => {
+                if let Some(value) = self.step_bytes()? {
+                    self.bytes_a = Some(value);
+                    self.phase = ShellMaterializePhase::Finish;
+                }
+            }
+            ShellMaterializePhase::PatchRevision => {
+                self.u64_a = self.read_u64()?;
+                self.phase = ShellMaterializePhase::PatchBaseRevision;
+            }
+            ShellMaterializePhase::PatchBaseRevision => {
+                self.u64_b = self.read_u64()?;
+                self.phase = ShellMaterializePhase::PatchBytes;
+            }
+            ShellMaterializePhase::PatchBytes => {
+                if let Some(value) = self.step_bytes()? {
+                    self.bytes_a = Some(value);
+                    self.phase = ShellMaterializePhase::Finish;
+                }
+            }
+            ShellMaterializePhase::InstancesCount => {
+                let count = self.read_u32()? as usize;
+                self.entries.try_reserve_exact(count).map_err(|_| ShellDecodeFault::Capacity)?;
+                self.phase = if count == 0 { ShellMaterializePhase::Finish } else { ShellMaterializePhase::InstancePlugin { remaining: count } };
+            }
+            ShellMaterializePhase::InstancePlugin { remaining } => {
+                if let Some(value) = self.step_string()? {
+                    self.text_a = Some(value);
+                    self.phase = ShellMaterializePhase::InstanceApp { remaining };
+                }
+            }
+            ShellMaterializePhase::InstanceApp { remaining } => {
+                if let Some(value) = self.step_string()? {
+                    self.text_b = Some(value);
+                    self.phase = ShellMaterializePhase::InstanceId { remaining };
+                }
+            }
+            ShellMaterializePhase::InstanceId { remaining } => {
+                if let Some(value) = self.step_string()? {
+                    self.text_c = Some(value);
+                    self.phase = ShellMaterializePhase::InstanceArtifact { remaining };
+                }
+            }
+            ShellMaterializePhase::InstanceArtifact { remaining } => {
+                if let Some(value) = self.step_string()? {
+                    self.text_d = Some(value);
+                    self.phase = ShellMaterializePhase::InstanceWindowsCount { remaining };
+                }
+            }
+            ShellMaterializePhase::InstanceWindowsCount { remaining } => {
+                let windows = self.read_u32()? as usize;
+                self.windows.try_reserve_exact(windows).map_err(|_| ShellDecodeFault::Capacity)?;
+                if windows == 0 {
+                    self.phase = ShellMaterializePhase::InstanceCommit { remaining };
+                } else {
+                    self.phase = ShellMaterializePhase::InstanceWindow { remaining, windows };
+                }
+            }
+            ShellMaterializePhase::InstanceWindow { remaining, windows } => {
+                if let Some(value) = self.step_string()? {
+                    self.windows.push(value);
+                    if windows == 1 {
+                        self.phase = ShellMaterializePhase::InstanceCommit { remaining };
+                    } else {
+                        self.phase = ShellMaterializePhase::InstanceWindow { remaining, windows: windows - 1 };
+                    }
+                }
+            }
+            ShellMaterializePhase::InstanceCommit { remaining } => self.finish_instance(remaining)?,
+            ShellMaterializePhase::AppReply => {
+                self.u64_a = self.read_u64()?;
+                self.phase = ShellMaterializePhase::AppInstance;
+            }
+            ShellMaterializePhase::AppInstance => {
+                if let Some(value) = self.step_string()? {
+                    self.text_a = Some(value);
+                    self.phase = ShellMaterializePhase::AppFramesCount;
+                }
+            }
+            ShellMaterializePhase::AppFramesCount => {
+                let count = self.read_u32()? as usize;
+                self.frames.try_reserve_exact(count).map_err(|_| ShellDecodeFault::Capacity)?;
+                self.phase = if count == 0 { ShellMaterializePhase::Finish } else { ShellMaterializePhase::AppFrame { remaining: count } };
+            }
+            ShellMaterializePhase::AppFrame { remaining } => {
+                if let Some(value) = self.step_bytes()? {
+                    self.bytes_a = Some(value);
+                    self.phase = ShellMaterializePhase::AppFrameCommit { remaining };
+                }
+            }
+            ShellMaterializePhase::AppFrameCommit { remaining } => {
+                self.frames.push(self.bytes_a.take().ok_or(ShellDecodeFault::Malformed)?);
+                self.phase = if remaining == 1 { ShellMaterializePhase::Finish } else { ShellMaterializePhase::AppFrame { remaining: remaining - 1 } };
+            }
+            ShellMaterializePhase::CommandReply => {
+                self.u64_a = self.read_u64()?;
+                self.phase = ShellMaterializePhase::CommandOk;
+            }
+            ShellMaterializePhase::CommandOk => {
+                self.bool_a = self.read_bool()?;
+                self.phase = ShellMaterializePhase::CommandFaultFlag;
+            }
+            ShellMaterializePhase::CommandFaultFlag => {
+                self.phase = if self.read_bool()? { ShellMaterializePhase::CommandFault } else { ShellMaterializePhase::Finish };
+            }
+            ShellMaterializePhase::CommandFault => {
+                if let Some(value) = self.step_string()? {
+                    self.text_a = Some(value);
+                    self.phase = ShellMaterializePhase::Finish;
+                }
+            }
+            ShellMaterializePhase::ApprovalId => {
+                if let Some(value) = self.step_string()? {
+                    self.text_a = Some(value);
+                    self.phase = ShellMaterializePhase::ApprovalDecision;
+                }
+            }
+            ShellMaterializePhase::ApprovalDecision => {
+                self.u8_a = self.read_u8()?;
+                self.phase = ShellMaterializePhase::ApprovalNoteFlag;
+            }
+            ShellMaterializePhase::ApprovalNoteFlag => {
+                self.phase = if self.read_bool()? { ShellMaterializePhase::ApprovalNote } else { ShellMaterializePhase::Finish };
+            }
+            ShellMaterializePhase::ApprovalNote => {
+                if let Some(value) = self.step_string()? {
+                    self.text_b = Some(value);
+                    self.phase = ShellMaterializePhase::Finish;
+                }
+            }
+            ShellMaterializePhase::Finish => return self.finish().map(Some),
+        }
+        Ok(None)
+    }
+
+    fn finish_instance(&mut self, remaining: usize) -> Result<(), ShellDecodeFault> {
+        self.entries.push(BridgeInstanceRef {
+            plugin_id: self.text_a.take().ok_or(ShellDecodeFault::Malformed)?,
+            app_id: self.text_b.take().ok_or(ShellDecodeFault::Malformed)?,
+            instance_id: self.text_c.take().ok_or(ShellDecodeFault::Malformed)?,
+            artifact_ref: self.text_d.take().ok_or(ShellDecodeFault::Malformed)?,
+            window_ids: std::mem::take(&mut self.windows),
+        });
+        self.phase = if remaining == 1 { ShellMaterializePhase::Finish } else { ShellMaterializePhase::InstancePlugin { remaining: remaining - 1 } };
+        Ok(())
+    }
+
+    fn step_string(&mut self) -> Result<Option<String>, ShellDecodeFault> {
+        if self.range.is_none() {
+            let len = self.read_u32()? as usize;
+            self.range = Some(OwnedRange::string(self.position, len)?);
+            return Ok(None);
+        }
+        if !self.range.as_mut().expect("bridge range missing").step(&self.frame, &mut self.position)? {
+            return Ok(None);
+        }
+        self.range.take().expect("bridge range missing").take_string().map(Some)
+    }
+
+    fn step_bytes(&mut self) -> Result<Option<Vec<u8>>, ShellDecodeFault> {
+        if self.range.is_none() {
+            let len = self.read_u32()? as usize;
+            self.range = Some(OwnedRange::bytes(len)?);
+            return Ok(None);
+        }
+        if !self.range.as_mut().expect("bridge range missing").step(&self.frame, &mut self.position)? {
+            return Ok(None);
+        }
+        self.range.take().expect("bridge range missing").take_bytes().map(Some)
+    }
+
+    fn read_u8(&mut self) -> Result<u8, ShellDecodeFault> {
+        let value = self.frame.byte(self.position)?;
+        self.position += 1;
+        Ok(value)
+    }
+
+    fn read_bool(&mut self) -> Result<bool, ShellDecodeFault> {
+        match self.read_u8()? {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => Err(ShellDecodeFault::Malformed),
+        }
+    }
+
+    fn read_u16(&mut self) -> Result<u16, ShellDecodeFault> {
+        let mut bytes = [0; 2];
+        self.frame.copy_into(self.position, &mut bytes)?;
+        self.position += bytes.len();
+        Ok(u16::from_le_bytes(bytes))
+    }
+
+    fn read_u32(&mut self) -> Result<u32, ShellDecodeFault> {
+        let mut bytes = [0; 4];
+        self.frame.copy_into(self.position, &mut bytes)?;
+        self.position += bytes.len();
+        Ok(u32::from_le_bytes(bytes))
+    }
+
+    fn read_u64(&mut self) -> Result<u64, ShellDecodeFault> {
+        let mut bytes = [0; 8];
+        self.frame.copy_into(self.position, &mut bytes)?;
+        self.position += bytes.len();
+        Ok(u64::from_le_bytes(bytes))
+    }
+
+    fn finish(&mut self) -> Result<ShellToGateway, ShellDecodeFault> {
+        if self.position != self.frame.len {
+            return Err(ShellDecodeFault::Malformed);
+        }
+        Ok(match self.frame.kind() {
+            ShellFrameKind::Hello => ShellToGateway::Hello {
+                bridge_version: self.u16_a,
+                shell_kind: match self.u8_a {
+                    0 => ShellKind::React,
+                    1 => ShellKind::WgpuWeb,
+                    2 => ShellKind::WgpuNative,
+                    _ => return Err(ShellDecodeFault::Malformed),
+                },
+                shell_session_id: self.text_a.take().ok_or(ShellDecodeFault::Malformed)?,
+                principal_actor: self.text_b.take().ok_or(ShellDecodeFault::Malformed)?,
+                flags: BridgeFlags::from_bits(self.u64_a as u8),
+            },
+            ShellFrameKind::ShellState => ShellToGateway::ShellState { revision: self.u64_a, state: self.bytes_a.take().ok_or(ShellDecodeFault::Malformed)? },
+            ShellFrameKind::ShellStatePatch => ShellToGateway::ShellStatePatch { revision: self.u64_a, base_revision: self.u64_b, patch: self.bytes_a.take().ok_or(ShellDecodeFault::Malformed)? },
+            ShellFrameKind::Instances => ShellToGateway::Instances { entries: std::mem::take(&mut self.entries) },
+            ShellFrameKind::AppFrames => ShellToGateway::AppFrames { in_reply_to: self.u64_a, instance_id: self.text_a.take().ok_or(ShellDecodeFault::Malformed)?, frames: std::mem::take(&mut self.frames) },
+            ShellFrameKind::ShellCommandResult => ShellToGateway::ShellCommandResult { in_reply_to: self.u64_a, ok: self.bool_a, fault: self.text_a.take() },
+            ShellFrameKind::Approval => ShellToGateway::Approval {
+                approval_id: self.text_a.take().ok_or(ShellDecodeFault::Malformed)?,
+                decision: match self.u8_a {
+                    0 => ApprovalDecision::Deny,
+                    1 => ApprovalDecision::Once,
+                    2 => ApprovalDecision::Session,
+                    _ => return Err(ShellDecodeFault::Malformed),
+                },
+                note: self.text_b.take(),
+            },
+            ShellFrameKind::Ping => ShellToGateway::Ping,
+            ShellFrameKind::Bye => ShellToGateway::Bye,
+        })
+    }
+}
+//#endregion 🔖️BoundedShellDecode
+
 //#region 🔖️GatewayToShell
 /// 📤️ Gateway→Shell frames, tag 0..7 in this exact declaration order (`📋️master.md` §2.2).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -385,6 +1292,22 @@ pub enum GatewayToShell {
 }
 
 impl GatewayToShell {
+    pub fn encoded_len(&self) -> Option<usize> {
+        match self {
+            GatewayToShell::Welcome { connection, principal, .. } => 3usize.checked_add(bridge_wire_field_len(connection.len())?)?.checked_add(bridge_wire_field_len(principal.len())?),
+            GatewayToShell::ShellCommand { command, .. } => 9usize.checked_add(bridge_wire_field_len(command.len())?),
+            GatewayToShell::AppCommand { instance_id, command, .. } => 9usize.checked_add(bridge_wire_field_len(instance_id.len())?)?.checked_add(bridge_wire_field_len(command.len())?),
+            GatewayToShell::ApprovalRequested { approval_id, summary } => 1usize.checked_add(bridge_wire_field_len(approval_id.len())?)?.checked_add(bridge_wire_field_len(summary.len())?),
+            GatewayToShell::ApprovalResolved { approval_id, .. } => 2usize.checked_add(bridge_wire_field_len(approval_id.len())?),
+            GatewayToShell::AgentPresence { label, invocation_id, .. } => {
+                let base = 3usize.checked_add(bridge_wire_field_len(label.len())?)?;
+                invocation_id.as_ref().map_or(Some(base), |value| base.checked_add(bridge_wire_field_len(value.len())?))
+            }
+            GatewayToShell::Pong => Some(1),
+            GatewayToShell::Bye { reason } => 1usize.checked_add(bridge_wire_field_len(reason.len())?),
+        }
+    }
+
     pub fn encode(&self) -> Vec<u8> {
         let mut buf = Vec::new();
         match self {
@@ -430,6 +1353,53 @@ impl GatewayToShell {
         buf
     }
 
+    fn copy_encoded_page(&self, offset: usize, output: &mut [u8]) -> usize {
+        let mut writer = BridgeEncodedPageWriter::new(offset, output);
+        match self {
+            Self::Welcome { bridge_version, connection, principal } => {
+                writer.push(&[0]);
+                writer.push(&bridge_version.to_le_bytes());
+                writer.field(connection.as_bytes());
+                writer.field(principal.as_bytes());
+            }
+            Self::ShellCommand { seq, command } => {
+                writer.push(&[1]);
+                writer.push(&seq.to_le_bytes());
+                writer.field(command);
+            }
+            Self::AppCommand { seq, instance_id, command } => {
+                writer.push(&[2]);
+                writer.push(&seq.to_le_bytes());
+                writer.field(instance_id.as_bytes());
+                writer.field(command);
+            }
+            Self::ApprovalRequested { approval_id, summary } => {
+                writer.push(&[3]);
+                writer.field(approval_id.as_bytes());
+                writer.field(summary.as_bytes());
+            }
+            Self::ApprovalResolved { approval_id, decision } => {
+                writer.push(&[4]);
+                writer.field(approval_id.as_bytes());
+                writer.push(&[decision.to_tag()]);
+            }
+            Self::AgentPresence { active, label, invocation_id } => {
+                writer.push(&[5, *active as u8]);
+                writer.field(label.as_bytes());
+                writer.push(&[invocation_id.is_some() as u8]);
+                if let Some(invocation_id) = invocation_id {
+                    writer.field(invocation_id.as_bytes());
+                }
+            }
+            Self::Pong => writer.push(&[6]),
+            Self::Bye { reason } => {
+                writer.push(&[7]);
+                writer.field(reason.as_bytes());
+            }
+        }
+        writer.written
+    }
+
     pub fn decode(bytes: &[u8]) -> Result<Self, GatewayError> {
         let mut reader = wire::Reader::new(bytes);
         let tag = reader.read_u8()?;
@@ -448,12 +1418,50 @@ impl GatewayToShell {
         Ok(frame)
     }
 }
+
+struct BridgeEncodedPageWriter<'a> {
+    offset: usize,
+    position: usize,
+    output: &'a mut [u8],
+    written: usize,
+}
+
+impl<'a> BridgeEncodedPageWriter<'a> {
+    fn new(offset: usize, output: &'a mut [u8]) -> Self {
+        Self { offset, position: 0, output, written: 0 }
+    }
+
+    fn field(&mut self, bytes: &[u8]) {
+        self.push(&(bytes.len() as u32).to_le_bytes());
+        self.push(bytes);
+    }
+
+    fn push(&mut self, bytes: &[u8]) {
+        let start = self.position;
+        self.position += bytes.len();
+        let overlap_start = self.offset.max(start);
+        let overlap_end = (self.offset + self.output.len()).min(self.position);
+        if overlap_start >= overlap_end {
+            return;
+        }
+        let source = overlap_start - start;
+        let count = overlap_end - overlap_start;
+        let target = overlap_start - self.offset;
+        self.output[target..target + count].copy_from_slice(&bytes[source..source + count]);
+        self.written = self.written.max(target + count);
+    }
+}
+
+fn bridge_wire_field_len(bytes: usize) -> Option<usize> {
+    u32::try_from(bytes).ok()?;
+    4usize.checked_add(bytes)
+}
 //#endregion 🔖️GatewayToShell
 
 //#region 🔖️BridgeHandle
 /// 🆔️ One live `/bridge` connection's id — `Copy`/`Eq`/`Hash` so it keys a map and passes around
 /// freely; `Display` is the same string the connection's own `Welcome.connection` field carries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ShellConnectionId(u64);
 
 impl std::fmt::Display for ShellConnectionId {
@@ -463,17 +1471,792 @@ impl std::fmt::Display for ShellConnectionId {
 }
 
 struct ConnectionEntry {
-    outbox: tokio::sync::mpsc::UnboundedSender<GatewayToShell>,
+    generation: u64,
+    outbox: Arc<BridgeOutbox>,
     last_shell_state: Option<ShellToGateway>,
     last_instances: Option<Vec<BridgeInstanceRef>>,
     last_command_result: Option<(u64, bool, Option<String>)>,
     last_approval: Option<(String, ApprovalDecision, Option<String>)>,
 }
 
-#[derive(Default)]
+const BRIDGE_OUTBOX_MAX_ITEMS: usize = 64;
+const BRIDGE_OUTBOX_MAX_BYTES: usize = 1_048_576;
+const BRIDGE_BROADCAST_MAX_RECIPIENTS: usize = 64;
+const BRIDGE_BROADCAST_MAX_BYTES: usize = BRIDGE_OUTBOX_MAX_BYTES * BRIDGE_BROADCAST_MAX_RECIPIENTS;
+pub(crate) const BRIDGE_OUTBOX_PAGE_BYTES: usize = 16_384;
+const BRIDGE_OUTBOX_MAX_PAGES: usize = BRIDGE_OUTBOX_MAX_BYTES.div_ceil(BRIDGE_OUTBOX_PAGE_BYTES);
+const BRIDGE_BROADCAST_MAX_PENDING: usize = 64;
+const BRIDGE_RETIREMENT_MAX_PENDING: usize = 256;
+const BRIDGE_ASYNC_RETRY_MS: u64 = 1;
+
+#[derive(Clone, Copy)]
+struct BridgeRetirementGrant {
+    generation: u64,
+}
+
+struct BridgeRetirementCursor {
+    pages: [Option<Box<[u8; BRIDGE_OUTBOX_PAGE_BYTES]>>; BRIDGE_OUTBOX_MAX_PAGES],
+    page: usize,
+}
+
+enum BridgeRecipientState {
+    Claimed { id: ShellConnectionId, outbox: Arc<BridgeOutbox>, grant: BridgeOutboxGrant },
+    Published { id: ShellConnectionId },
+    RecipientClosed { id: ShellConnectionId, grant: BridgeOutboxGrant },
+}
+
+struct BridgeBroadcastCursor {
+    frame: Option<GatewayToShell>,
+    expected: usize,
+    offset: usize,
+    encoded: BridgeEncodedFrame,
+    shared: Option<Arc<BridgeEncodedFrame>>,
+    recipients_state: [Option<BridgeRecipientState>; BRIDGE_BROADCAST_MAX_RECIPIENTS],
+    recipients: usize,
+    recipient_cursor: usize,
+    delivered: usize,
+    recipient_closed: usize,
+}
+
+enum BridgeBroadcastStep {
+    Pending(BridgeBroadcastCursor),
+    Complete(BridgeBroadcastCompletion),
+}
+
+#[derive(Debug, PartialEq)]
+pub enum BridgeBroadcastCompletion {
+    Delivered { delivered: usize, recipient_closed: usize },
+    Undelivered { frame: GatewayToShell, recipient_closed: usize },
+}
+
+impl BridgeBroadcastCursor {
+    fn step(mut self) -> BridgeBroadcastStep {
+        if self.offset != self.expected {
+            let bytes = BRIDGE_OUTBOX_PAGE_BYTES.min(self.expected - self.offset);
+            let mut page = Box::new([0; BRIDGE_OUTBOX_PAGE_BYTES]);
+            let written = self.frame.as_ref().expect("bridge broadcast frame disappeared").copy_encoded_page(self.offset, &mut page[..bytes]);
+            assert_eq!(written, bytes, "bridge broadcast page preflight changed");
+            self.encoded.pages[self.offset / BRIDGE_OUTBOX_PAGE_BYTES] = Some(page);
+            self.offset += bytes;
+            return BridgeBroadcastStep::Pending(self);
+        }
+        if self.shared.is_none() {
+            self.shared = Some(Arc::new(std::mem::replace(&mut self.encoded, BridgeEncodedFrame::empty(0, None))));
+            return BridgeBroadcastStep::Pending(self);
+        }
+        if self.recipient_cursor < self.recipients {
+            let index = self.recipient_cursor;
+            let state = self.recipients_state[index].take().expect("bridge recipient state disappeared");
+            match state {
+                BridgeRecipientState::Claimed { id, outbox, grant } => match outbox.publish(grant, Arc::clone(self.shared.as_ref().expect("shared bridge frame disappeared"))) {
+                    Ok(()) => {
+                        self.recipients_state[index] = Some(BridgeRecipientState::Published { id });
+                        self.delivered += 1;
+                    }
+                    Err(rejected) => {
+                        self.recipients_state[index] = Some(BridgeRecipientState::RecipientClosed { id, grant: rejected.grant });
+                        self.recipient_closed += 1;
+                        drop(rejected.encoded);
+                    }
+                },
+                BridgeRecipientState::Published { id } => self.recipients_state[index] = Some(BridgeRecipientState::Published { id }),
+                BridgeRecipientState::RecipientClosed { id, grant } => self.recipients_state[index] = Some(BridgeRecipientState::RecipientClosed { id, grant }),
+            }
+            self.recipient_cursor += 1;
+            return BridgeBroadcastStep::Pending(self);
+        }
+        let completion = if self.delivered == 0 {
+            BridgeBroadcastCompletion::Undelivered { frame: self.frame.take().expect("undelivered bridge frame disappeared"), recipient_closed: self.recipient_closed }
+        } else {
+            self.frame.take();
+            BridgeBroadcastCompletion::Delivered { delivered: self.delivered, recipient_closed: self.recipient_closed }
+        };
+        BridgeBroadcastStep::Complete(completion)
+    }
+
+    fn close_one_claim(mut self) -> BridgeBroadcastStep {
+        while self.recipient_cursor < self.recipients {
+            let index = self.recipient_cursor;
+            self.recipient_cursor += 1;
+            let state = self.recipients_state[index].take().expect("bridge recipient state disappeared");
+            match state {
+                BridgeRecipientState::Claimed { id, outbox, grant } => {
+                    outbox.cancel(grant);
+                    self.recipients_state[index] = Some(BridgeRecipientState::RecipientClosed { id, grant });
+                    self.recipient_closed += 1;
+                    return BridgeBroadcastStep::Pending(self);
+                }
+                BridgeRecipientState::Published { id } => self.recipients_state[index] = Some(BridgeRecipientState::Published { id }),
+                BridgeRecipientState::RecipientClosed { id, grant } => self.recipients_state[index] = Some(BridgeRecipientState::RecipientClosed { id, grant }),
+            }
+        }
+        let completion = if self.delivered == 0 {
+            BridgeBroadcastCompletion::Undelivered { frame: self.frame.take().expect("terminal bridge frame disappeared"), recipient_closed: self.recipient_closed }
+        } else {
+            self.frame.take();
+            BridgeBroadcastCompletion::Delivered { delivered: self.delivered, recipient_closed: self.recipient_closed }
+        };
+        BridgeBroadcastStep::Complete(completion)
+    }
+}
+
+struct BridgeAsyncState {
+    broadcasts: [Option<BridgeBroadcastCursor>; BRIDGE_BROADCAST_MAX_PENDING],
+    broadcast_head: usize,
+    broadcast_len: usize,
+    broadcast_reserved: usize,
+    broadcast_driving: bool,
+    completions: [Option<BridgeBroadcastCompletion>; BRIDGE_BROADCAST_MAX_PENDING],
+    completion_head: usize,
+    completion_len: usize,
+    completion_reserved: usize,
+    retirements: [Option<BridgeRetirementCursor>; BRIDGE_RETIREMENT_MAX_PENDING],
+    retirement_head: usize,
+    retirement_len: usize,
+    retirement_reserved: usize,
+    retirement_generation: u64,
+}
+
+impl BridgeAsyncState {
+    fn new() -> Self {
+        Self {
+            broadcasts: std::array::from_fn(|_| None),
+            broadcast_head: 0,
+            broadcast_len: 0,
+            broadcast_reserved: 0,
+            broadcast_driving: false,
+            completions: std::array::from_fn(|_| None),
+            completion_head: 0,
+            completion_len: 0,
+            completion_reserved: 0,
+            retirements: std::array::from_fn(|_| None),
+            retirement_head: 0,
+            retirement_len: 0,
+            retirement_reserved: 0,
+            retirement_generation: 1,
+        }
+    }
+
+    fn has_work(&self) -> bool {
+        self.broadcast_len != 0 || self.retirement_len != 0
+    }
+}
+
+struct BridgeAsyncAuthority {
+    pool: WorkerPool,
+    state: Mutex<BridgeAsyncState>,
+    scheduled: AtomicBool,
+    retry_armed: AtomicBool,
+    retry_generation: AtomicU64,
+    retry_job: Mutex<Option<Job>>,
+    terminal_job: Mutex<Option<(WorkerSubmitErrorKind, Job)>>,
+    terminal: AtomicBool,
+}
+
+impl BridgeAsyncAuthority {
+    fn new(pool: WorkerPool) -> Arc<Self> {
+        Arc::new(Self {
+            pool,
+            state: Mutex::new(BridgeAsyncState::new()),
+            scheduled: AtomicBool::new(false),
+            retry_armed: AtomicBool::new(false),
+            retry_generation: AtomicU64::new(0),
+            retry_job: Mutex::new(None),
+            terminal_job: Mutex::new(None),
+            terminal: AtomicBool::new(false),
+        })
+    }
+
+    fn reserve_broadcast(&self) -> Result<(), ()> {
+        let mut state = self.state.lock().expect("bridge async lock poisoned");
+        if self.terminal.load(Ordering::Acquire) || state.broadcast_len.saturating_add(state.broadcast_reserved) == BRIDGE_BROADCAST_MAX_PENDING || state.completion_len.saturating_add(state.completion_reserved) == BRIDGE_BROADCAST_MAX_PENDING {
+            return Err(());
+        }
+        state.broadcast_reserved += 1;
+        state.completion_reserved += 1;
+        Ok(())
+    }
+
+    fn cancel_broadcast_reservation(&self) {
+        let mut state = self.state.lock().expect("bridge async lock poisoned");
+        state.broadcast_reserved = state.broadcast_reserved.saturating_sub(1);
+        state.completion_reserved = state.completion_reserved.saturating_sub(1);
+    }
+
+    fn reserve_retirement(&self) -> Result<BridgeRetirementGrant, ()> {
+        let mut state = self.state.lock().expect("bridge async lock poisoned");
+        if self.terminal.load(Ordering::Acquire) || state.retirement_len.saturating_add(state.retirement_reserved) == BRIDGE_RETIREMENT_MAX_PENDING {
+            return Err(());
+        }
+        state.retirement_reserved += 1;
+        Ok(BridgeRetirementGrant { generation: state.retirement_generation })
+    }
+
+    fn cancel_retirement(&self, grant: BridgeRetirementGrant) {
+        let mut state = self.state.lock().expect("bridge async lock poisoned");
+        if grant.generation == state.retirement_generation {
+            state.retirement_reserved = state.retirement_reserved.saturating_sub(1);
+        }
+    }
+
+    fn enqueue_broadcast(self: &Arc<Self>, cursor: BridgeBroadcastCursor) {
+        let mut state = self.state.lock().expect("bridge async lock poisoned");
+        state.broadcast_reserved = state.broadcast_reserved.saturating_sub(1);
+        let index = (state.broadcast_head + state.broadcast_len) % BRIDGE_BROADCAST_MAX_PENDING;
+        state.broadcasts[index] = Some(cursor);
+        state.broadcast_len += 1;
+        drop(state);
+        self.request_schedule();
+    }
+
+    fn retain_completion(state: &mut BridgeAsyncState, completion: BridgeBroadcastCompletion) {
+        state.completion_reserved = state.completion_reserved.saturating_sub(1);
+        let index = (state.completion_head + state.completion_len) % BRIDGE_BROADCAST_MAX_PENDING;
+        state.completions[index] = Some(completion);
+        state.completion_len += 1;
+    }
+
+    fn publish_retirement(self: &Arc<Self>, grant: BridgeRetirementGrant, pages: [Option<Box<[u8; BRIDGE_OUTBOX_PAGE_BYTES]>>; BRIDGE_OUTBOX_MAX_PAGES]) {
+        let mut state = self.state.lock().expect("bridge async lock poisoned");
+        if grant.generation != state.retirement_generation || state.retirement_reserved == 0 {
+            drop(state);
+            drop(pages);
+            return;
+        }
+        state.retirement_reserved -= 1;
+        let index = (state.retirement_head + state.retirement_len) % BRIDGE_RETIREMENT_MAX_PENDING;
+        state.retirements[index] = Some(BridgeRetirementCursor { pages, page: 0 });
+        state.retirement_len += 1;
+        drop(state);
+        self.request_schedule();
+    }
+
+    fn request_schedule(self: &Arc<Self>) {
+        if self.terminal.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let authority = Arc::clone(self);
+        self.submit_exact(Box::new(move || authority.drive_one()));
+    }
+
+    fn submit_exact(self: &Arc<Self>, job: Job) {
+        match self.pool.try_submit(Lane::Io, job) {
+            Ok(()) => {}
+            Err(error) => match error.kind() {
+                WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated => {
+                    *self.retry_job.lock().expect("bridge retry lock poisoned") = Some(error.into_job());
+                    self.arm_retry();
+                }
+                kind @ (WorkerSubmitErrorKind::Shutdown | WorkerSubmitErrorKind::Poisoned) => {
+                    self.terminal.store(true, Ordering::Release);
+                    self.retry_generation.fetch_add(1, Ordering::AcqRel);
+                    *self.terminal_job.lock().expect("bridge terminal lock poisoned") = Some((kind, error.into_job()));
+                }
+            },
+        }
+    }
+
+    fn arm_retry(self: &Arc<Self>) {
+        if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let generation = self.retry_generation.fetch_add(1, Ordering::AcqRel).wrapping_add(1);
+        let authority = Arc::clone(self);
+        self.pool.callback_at(self.pool.now_ms().saturating_add(BRIDGE_ASYNC_RETRY_MS), move || {
+            if generation != authority.retry_generation.load(Ordering::Acquire) {
+                return;
+            }
+            authority.retry_armed.store(false, Ordering::Release);
+            let job = authority.retry_job.lock().expect("bridge retry lock poisoned").take();
+            if let Some(job) = job {
+                authority.submit_exact(job);
+            }
+        });
+    }
+
+    fn drive_one(self: Arc<Self>) {
+        if self.terminal.load(Ordering::Acquire) {
+            self.scheduled.store(false, Ordering::Release);
+            return;
+        }
+        let broadcast = {
+            let mut state = self.state.lock().expect("bridge async lock poisoned");
+            if state.broadcast_len == 0 || state.broadcast_driving {
+                None
+            } else {
+                let head = state.broadcast_head;
+                state.broadcast_driving = true;
+                state.broadcasts[head].take()
+            }
+        };
+        if let Some(cursor) = broadcast {
+            let step = cursor.step();
+            let mut state = self.state.lock().expect("bridge async lock poisoned");
+            state.broadcast_driving = false;
+            let head = state.broadcast_head;
+            match step {
+                BridgeBroadcastStep::Pending(cursor) => state.broadcasts[head] = Some(cursor),
+                BridgeBroadcastStep::Complete(completion) => {
+                    state.broadcast_head = (head + 1) % BRIDGE_BROADCAST_MAX_PENDING;
+                    state.broadcast_len -= 1;
+                    Self::retain_completion(&mut state, completion);
+                }
+            }
+        } else {
+            let page = {
+                let mut state = self.state.lock().expect("bridge async lock poisoned");
+                if state.retirement_len == 0 {
+                    None
+                } else {
+                    let head = state.retirement_head;
+                    let cursor = state.retirements[head].as_mut().expect("bridge retirement cursor disappeared");
+                    while cursor.page < BRIDGE_OUTBOX_MAX_PAGES && cursor.pages[cursor.page].is_none() {
+                        cursor.page += 1;
+                    }
+                    if cursor.page == BRIDGE_OUTBOX_MAX_PAGES {
+                        state.retirements[head] = None;
+                        state.retirement_head = (head + 1) % BRIDGE_RETIREMENT_MAX_PENDING;
+                        state.retirement_len -= 1;
+                        None
+                    } else {
+                        let page = cursor.pages[cursor.page].take();
+                        cursor.page += 1;
+                        page
+                    }
+                }
+            };
+            drop(page);
+        }
+        self.scheduled.store(false, Ordering::Release);
+        if self.state.lock().expect("bridge async lock poisoned").has_work() {
+            self.request_schedule();
+        }
+    }
+
+    fn take_terminal_job(&self) -> Option<(WorkerSubmitErrorKind, Job)> {
+        self.terminal_job.lock().expect("bridge terminal lock poisoned").take()
+    }
+
+    fn cancel(&self) {
+        self.terminal.store(true, Ordering::Release);
+        self.retry_generation.fetch_add(1, Ordering::AcqRel);
+    }
+
+    fn take_broadcast_completion(&self) -> Option<BridgeBroadcastCompletion> {
+        let mut state = self.state.lock().expect("bridge async lock poisoned");
+        if state.completion_len == 0 {
+            return None;
+        }
+        let head = state.completion_head;
+        let completion = state.completions[head].take();
+        state.completion_head = (head + 1) % BRIDGE_BROADCAST_MAX_PENDING;
+        state.completion_len -= 1;
+        completion
+    }
+
+    fn close_one_terminal_broadcast_claim(&self) -> bool {
+        if !self.terminal.load(Ordering::Acquire) {
+            return false;
+        }
+        let cursor = {
+            let mut state = self.state.lock().expect("bridge async lock poisoned");
+            if state.broadcast_len == 0 || state.broadcast_driving {
+                return false;
+            }
+            let head = state.broadcast_head;
+            state.broadcast_driving = true;
+            state.broadcasts[head].take().expect("terminal bridge broadcast cursor disappeared")
+        };
+        let step = cursor.close_one_claim();
+        let mut state = self.state.lock().expect("bridge async lock poisoned");
+        state.broadcast_driving = false;
+        let head = state.broadcast_head;
+        match step {
+            BridgeBroadcastStep::Pending(cursor) => state.broadcasts[head] = Some(cursor),
+            BridgeBroadcastStep::Complete(completion) => {
+                state.broadcast_head = (head + 1) % BRIDGE_BROADCAST_MAX_PENDING;
+                state.broadcast_len -= 1;
+                Self::retain_completion(&mut state, completion);
+            }
+        }
+        true
+    }
+
+    fn close_one_terminal_retired_page(&self) -> bool {
+        if !self.terminal.load(Ordering::Acquire) {
+            return false;
+        }
+        let page = {
+            let mut state = self.state.lock().expect("bridge async lock poisoned");
+            if state.retirement_len == 0 {
+                return false;
+            }
+            let head = state.retirement_head;
+            let cursor = state.retirements[head].as_mut().expect("bridge retirement cursor disappeared");
+            while cursor.page < BRIDGE_OUTBOX_MAX_PAGES && cursor.pages[cursor.page].is_none() {
+                cursor.page += 1;
+            }
+            let page = if cursor.page < BRIDGE_OUTBOX_MAX_PAGES {
+                let page = cursor.pages[cursor.page].take();
+                cursor.page += 1;
+                page
+            } else {
+                None
+            };
+            if cursor.page == BRIDGE_OUTBOX_MAX_PAGES || cursor.pages[cursor.page..].iter().all(Option::is_none) {
+                state.retirements[head] = None;
+                state.retirement_head = (head + 1) % BRIDGE_RETIREMENT_MAX_PENDING;
+                state.retirement_len -= 1;
+            }
+            page
+        };
+        drop(page);
+        true
+    }
+}
+
+pub(crate) struct BridgeEncodedFrame {
+    pages: [Option<Box<[u8; BRIDGE_OUTBOX_PAGE_BYTES]>>; BRIDGE_OUTBOX_MAX_PAGES],
+    len: usize,
+    retirement: Option<(Arc<BridgeAsyncAuthority>, BridgeRetirementGrant)>,
+}
+
+impl BridgeEncodedFrame {
+    fn empty(len: usize, retirement: Option<(Arc<BridgeAsyncAuthority>, BridgeRetirementGrant)>) -> Self {
+        Self { pages: std::array::from_fn(|_| None), len, retirement }
+    }
+
+    fn encode(frame: &GatewayToShell, expected: usize) -> Self {
+        let mut encoded = Self::empty(0, None);
+        match frame {
+            GatewayToShell::Welcome { bridge_version, connection, principal } => {
+                encoded.write_u8(0);
+                encoded.write_bytes(&bridge_version.to_le_bytes());
+                encoded.write_field(connection.as_bytes());
+                encoded.write_field(principal.as_bytes());
+            }
+            GatewayToShell::ShellCommand { seq, command } => {
+                encoded.write_u8(1);
+                encoded.write_bytes(&seq.to_le_bytes());
+                encoded.write_field(command);
+            }
+            GatewayToShell::AppCommand { seq, instance_id, command } => {
+                encoded.write_u8(2);
+                encoded.write_bytes(&seq.to_le_bytes());
+                encoded.write_field(instance_id.as_bytes());
+                encoded.write_field(command);
+            }
+            GatewayToShell::ApprovalRequested { approval_id, summary } => {
+                encoded.write_u8(3);
+                encoded.write_field(approval_id.as_bytes());
+                encoded.write_field(summary.as_bytes());
+            }
+            GatewayToShell::ApprovalResolved { approval_id, decision } => {
+                encoded.write_u8(4);
+                encoded.write_field(approval_id.as_bytes());
+                encoded.write_u8(decision.to_tag());
+            }
+            GatewayToShell::AgentPresence { active, label, invocation_id } => {
+                encoded.write_u8(5);
+                encoded.write_u8(*active as u8);
+                encoded.write_field(label.as_bytes());
+                encoded.write_u8(invocation_id.is_some() as u8);
+                if let Some(invocation_id) = invocation_id {
+                    encoded.write_field(invocation_id.as_bytes());
+                }
+            }
+            GatewayToShell::Pong => encoded.write_u8(6),
+            GatewayToShell::Bye { reason } => {
+                encoded.write_u8(7);
+                encoded.write_field(reason.as_bytes());
+            }
+        }
+        assert_eq!(encoded.len, expected, "preflighted bridge frame length changed during encode");
+        encoded
+    }
+
+    fn write_u8(&mut self, value: u8) {
+        self.write_bytes(&[value]);
+    }
+
+    fn write_field(&mut self, value: &[u8]) {
+        self.write_bytes(&(value.len() as u32).to_le_bytes());
+        self.write_bytes(value);
+    }
+
+    fn write_bytes(&mut self, mut value: &[u8]) {
+        while !value.is_empty() {
+            let page_index = self.len / BRIDGE_OUTBOX_PAGE_BYTES;
+            let page_offset = self.len % BRIDGE_OUTBOX_PAGE_BYTES;
+            if self.pages[page_index].is_none() {
+                self.pages[page_index] = Some(Box::new([0; BRIDGE_OUTBOX_PAGE_BYTES]));
+            }
+            let bytes = value.len().min(BRIDGE_OUTBOX_PAGE_BYTES - page_offset);
+            self.pages[page_index].as_mut().expect("bridge encode page disappeared")[page_offset..page_offset + bytes].copy_from_slice(&value[..bytes]);
+            self.len += bytes;
+            value = &value[bytes..];
+        }
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.len
+    }
+
+    pub(crate) fn copy_into(&self, offset: usize, output: &mut [u8]) -> usize {
+        if offset >= self.len {
+            return 0;
+        }
+        let mut source = offset;
+        let mut written = 0;
+        while written < output.len() && source < self.len {
+            let page_index = source / BRIDGE_OUTBOX_PAGE_BYTES;
+            let page_offset = source % BRIDGE_OUTBOX_PAGE_BYTES;
+            let bytes = (output.len() - written).min(BRIDGE_OUTBOX_PAGE_BYTES - page_offset).min(self.len - source);
+            output[written..written + bytes].copy_from_slice(&self.pages[page_index].as_ref().expect("bridge encoded page disappeared")[page_offset..page_offset + bytes]);
+            written += bytes;
+            source += bytes;
+        }
+        written
+    }
+
+    #[cfg(test)]
+    fn page_count(&self) -> usize {
+        self.pages.iter().filter(|page| page.is_some()).count()
+    }
+
+    #[cfg(test)]
+    fn decode(&self) -> GatewayToShell {
+        let mut bytes = Vec::new();
+        bytes.try_reserve_exact(self.len).expect("bridge test decode reservation failed");
+        for offset in (0..self.len).step_by(BRIDGE_OUTBOX_PAGE_BYTES) {
+            let bytes_in_page = BRIDGE_OUTBOX_PAGE_BYTES.min(self.len - offset);
+            let start = bytes.len();
+            bytes.resize(start + bytes_in_page, 0);
+            assert_eq!(self.copy_into(offset, &mut bytes[start..]), bytes_in_page);
+        }
+        GatewayToShell::decode(&bytes).expect("bridge fixed-page encode did not decode")
+    }
+}
+
+impl Drop for BridgeEncodedFrame {
+    fn drop(&mut self) {
+        let Some((authority, grant)) = self.retirement.take() else { return };
+        let mut pages = std::array::from_fn(|_| None);
+        for (target, source) in pages.iter_mut().zip(self.pages.iter_mut()) {
+            *target = source.take();
+        }
+        authority.publish_retirement(grant, pages);
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct BridgeEncodedLease {
+    generation: u64,
+    encoded: Arc<BridgeEncodedFrame>,
+}
+
+impl BridgeEncodedLease {
+    pub(crate) fn len(&self) -> usize {
+        self.encoded.len()
+    }
+
+    pub(crate) fn copy_into(&self, offset: usize, output: &mut [u8]) -> usize {
+        self.encoded.copy_into(offset, output)
+    }
+}
+
+struct BridgeOutboxItem {
+    lease: BridgeEncodedLease,
+    bytes: usize,
+}
+
+#[derive(Clone, Copy)]
+struct BridgeOutboxGrant {
+    generation: u64,
+    bytes: usize,
+}
+
+struct BridgeRejectedPublish {
+    grant: BridgeOutboxGrant,
+    encoded: Arc<BridgeEncodedFrame>,
+}
+
+struct BridgeOutboxState {
+    slots: [Option<BridgeOutboxItem>; BRIDGE_OUTBOX_MAX_ITEMS],
+    head: usize,
+    len: usize,
+    bytes: usize,
+    generation: u64,
+    reserved_items: usize,
+    reserved_bytes: usize,
+    closed: bool,
+    #[cfg(test)]
+    encode_count: usize,
+    #[cfg(test)]
+    waker: Option<std::task::Waker>,
+}
+
+impl BridgeOutboxState {
+    fn new(generation: u64) -> Self {
+        Self {
+            slots: std::array::from_fn(|_| None),
+            head: 0,
+            len: 0,
+            bytes: 0,
+            generation,
+            reserved_items: 0,
+            reserved_bytes: 0,
+            closed: false,
+            #[cfg(test)]
+            encode_count: 0,
+            #[cfg(test)]
+            waker: None,
+        }
+    }
+
+    fn claim(&mut self, generation: u64, bytes: usize) -> Result<BridgeOutboxGrant, ()> {
+        if self.closed || generation != self.generation || self.len.saturating_add(self.reserved_items) == BRIDGE_OUTBOX_MAX_ITEMS || bytes > BRIDGE_OUTBOX_MAX_BYTES.saturating_sub(self.bytes).saturating_sub(self.reserved_bytes) {
+            return Err(());
+        }
+        self.reserved_items += 1;
+        self.reserved_bytes += bytes;
+        Ok(BridgeOutboxGrant { generation, bytes })
+    }
+
+    fn cancel(&mut self, grant: BridgeOutboxGrant) {
+        if grant.generation == self.generation {
+            self.reserved_items = self.reserved_items.saturating_sub(1);
+            self.reserved_bytes = self.reserved_bytes.saturating_sub(grant.bytes);
+        }
+    }
+
+    fn publish(&mut self, grant: BridgeOutboxGrant, encoded: Arc<BridgeEncodedFrame>) -> Result<(), BridgeRejectedPublish> {
+        if self.closed || grant.generation != self.generation || self.reserved_items == 0 || grant.bytes > self.reserved_bytes {
+            return Err(BridgeRejectedPublish { grant, encoded });
+        }
+        self.reserved_items -= 1;
+        self.reserved_bytes -= grant.bytes;
+        let index = (self.head + self.len) % BRIDGE_OUTBOX_MAX_ITEMS;
+        self.len += 1;
+        self.bytes += grant.bytes;
+        #[cfg(test)]
+        {
+            self.encode_count += 1;
+        }
+        self.slots[index] = Some(BridgeOutboxItem { lease: BridgeEncodedLease { generation: grant.generation, encoded }, bytes: grant.bytes });
+        #[cfg(test)]
+        if let Some(waker) = self.waker.take() {
+            waker.wake();
+        }
+        Ok(())
+    }
+
+    fn pop_front(&mut self) -> Option<BridgeOutboxItem> {
+        if self.len == 0 {
+            return None;
+        }
+        let item = self.slots[self.head].take().expect("bridge outbox FIFO slot disappeared");
+        self.head = (self.head + 1) % BRIDGE_OUTBOX_MAX_ITEMS;
+        self.len -= 1;
+        self.bytes = self.bytes.saturating_sub(item.bytes);
+        Some(item)
+    }
+}
+
+struct BridgeOutbox {
+    state: Mutex<BridgeOutboxState>,
+}
+
+impl BridgeOutbox {
+    fn new(generation: u64) -> Self {
+        Self { state: Mutex::new(BridgeOutboxState::new(generation)) }
+    }
+
+    fn try_send(&self, frame: GatewayToShell) -> Result<(), GatewayToShell> {
+        let Some(bytes) = frame.encoded_len() else { return Err(frame) };
+        let grant = match self.claim(bytes) {
+            Ok(grant) => grant,
+            Err(()) => return Err(frame),
+        };
+        let encoded = Arc::new(BridgeEncodedFrame::encode(&frame, bytes));
+        if self.publish(grant, encoded).is_err() {
+            return Err(frame);
+        }
+        Ok(())
+    }
+
+    fn claim(&self, bytes: usize) -> Result<BridgeOutboxGrant, ()> {
+        let mut state = self.state.lock().expect("bridge outbox lock poisoned");
+        let generation = state.generation;
+        state.claim(generation, bytes)
+    }
+
+    fn publish(&self, grant: BridgeOutboxGrant, encoded: Arc<BridgeEncodedFrame>) -> Result<(), BridgeRejectedPublish> {
+        self.state.lock().expect("bridge outbox lock poisoned").publish(grant, encoded)
+    }
+
+    fn cancel(&self, grant: BridgeOutboxGrant) {
+        self.state.lock().expect("bridge outbox lock poisoned").cancel(grant);
+    }
+
+    fn try_recv(&self) -> Option<BridgeOutboxItem> {
+        let mut state = self.state.lock().expect("bridge outbox lock poisoned");
+        let item = state.pop_front()?;
+        if item.lease.generation != state.generation {
+            return None;
+        }
+        Some(item)
+    }
+
+    fn close(&self) {
+        let mut state = self.state.lock().expect("bridge outbox lock poisoned");
+        state.closed = true;
+        state.generation = state.generation.wrapping_add(1);
+        state.reserved_items = 0;
+        state.reserved_bytes = 0;
+        #[cfg(test)]
+        if let Some(waker) = state.waker.take() {
+            waker.wake();
+        }
+    }
+}
+
+pub(crate) struct BridgeOutboxReceiver(Arc<BridgeOutbox>);
+
+impl BridgeOutboxReceiver {
+    #[cfg(test)]
+    pub(crate) async fn recv(&mut self) -> Option<GatewayToShell> {
+        std::future::poll_fn(|context| {
+            let mut state = self.0.state.lock().expect("bridge outbox lock poisoned");
+            if let Some(item) = state.pop_front() {
+                if item.lease.generation == state.generation {
+                    return std::task::Poll::Ready(Some(item.lease.encoded.decode()));
+                }
+                return std::task::Poll::Ready(None);
+            }
+            if state.closed {
+                return std::task::Poll::Ready(None);
+            }
+            state.waker = Some(context.waker().clone());
+            std::task::Poll::Pending
+        })
+        .await
+    }
+
+    #[cfg(test)]
+    pub(crate) fn try_recv(&mut self) -> Option<GatewayToShell> {
+        self.0.try_recv().map(|item| item.lease.encoded.decode())
+    }
+
+    pub(crate) fn try_recv_encoded(&mut self) -> Option<BridgeEncodedLease> {
+        self.0.try_recv().map(|item| item.lease)
+    }
+}
+
 struct BridgeInner {
     next_id: AtomicU64,
     connections: Mutex<HashMap<ShellConnectionId, ConnectionEntry>>,
+    asynchronous: Arc<BridgeAsyncAuthority>,
 }
 
 /// 🖇️ The seam a later packet reaches live `/bridge` connections through WITHOUT this facet
@@ -482,31 +2265,49 @@ struct BridgeInner {
 /// `ShellCommand` the same way; `semio://ui/shell`/`context_resolve` read
 /// [`last_shell_state`](Self::last_shell_state). None of that wiring happens in THIS file
 /// (`📓️sol-P1c-packet.md` §3: "do not wire it into P6's files … just publish the API") — obtain a
-/// `BridgeHandle` from [`server::bridge_router`] or [`crate::HttpTransport::router`]'s returned tuple.
-#[derive(Clone, Default)]
+/// `BridgeHandle` from the live [`crate::HttpTransportRun::bridge`] owner; the Axum router is a
+/// test-only differential oracle.
+#[derive(Clone)]
 pub struct BridgeHandle {
     inner: Arc<BridgeInner>,
 }
 
+impl Default for BridgeHandle {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BridgeHandle {
     pub fn new() -> Self {
-        Self::default()
+        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+        Self::with_pool(semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores)))
     }
 
-    fn register(&self) -> (ShellConnectionId, tokio::sync::mpsc::UnboundedReceiver<GatewayToShell>) {
+    pub(crate) fn with_pool(pool: WorkerPool) -> Self {
+        Self { inner: Arc::new(BridgeInner { next_id: AtomicU64::new(0), connections: Mutex::new(HashMap::new()), asynchronous: BridgeAsyncAuthority::new(pool) }) }
+    }
+
+    pub(crate) fn register(&self) -> (ShellConnectionId, BridgeOutboxReceiver) {
         let id = ShellConnectionId(self.inner.next_id.fetch_add(1, Ordering::Relaxed));
-        let (outbox, inbox) = tokio::sync::mpsc::unbounded_channel();
-        self.inner.connections.lock().expect("bridge connections lock poisoned").insert(id, ConnectionEntry { outbox, last_shell_state: None, last_instances: None, last_command_result: None, last_approval: None });
-        (id, inbox)
+        let outbox = Arc::new(BridgeOutbox::new(id.0));
+        self.inner
+            .connections
+            .lock()
+            .expect("bridge connections lock poisoned")
+            .insert(id, ConnectionEntry { generation: id.0, outbox: Arc::clone(&outbox), last_shell_state: None, last_instances: None, last_command_result: None, last_approval: None });
+        (id, BridgeOutboxReceiver(outbox))
     }
 
-    fn unregister(&self, id: ShellConnectionId) {
-        self.inner.connections.lock().expect("bridge connections lock poisoned").remove(&id);
+    pub(crate) fn unregister(&self, id: ShellConnectionId) {
+        if let Some(entry) = self.inner.connections.lock().expect("bridge connections lock poisoned").remove(&id) {
+            entry.outbox.close();
+        }
     }
 
     /// 📝️ Records the effect of one received [`ShellToGateway`] frame against its connection —
     /// `Hello`/`Ping`/`Bye` never reach here (the read loop handles all three inline).
-    fn record(&self, id: ShellConnectionId, frame: ShellToGateway) {
+    pub(crate) fn record(&self, id: ShellConnectionId, frame: ShellToGateway) {
         let mut connections = self.inner.connections.lock().expect("bridge connections lock poisoned");
         let Some(entry) = connections.get_mut(&id) else { return };
         match frame {
@@ -521,17 +2322,110 @@ impl BridgeHandle {
     /// 📤️ Pushes one frame to exactly one live connection — `false` if that connection no longer
     /// exists or its outbox is closed (the connection's own task will unregister it shortly after).
     pub fn send_to(&self, id: ShellConnectionId, frame: GatewayToShell) -> bool {
+        self.try_send_to(id, frame).is_ok()
+    }
+
+    /// 📦️ Fixed-credit bridge admission with exact rejected-frame handback.
+    pub fn try_send_to(&self, id: ShellConnectionId, frame: GatewayToShell) -> Result<(), GatewayToShell> {
         let connections = self.inner.connections.lock().expect("bridge connections lock poisoned");
         match connections.get(&id) {
-            Some(entry) => entry.outbox.send(frame).is_ok(),
-            None => false,
+            Some(entry) => try_send_bridge_frame(entry, frame),
+            None => Err(frame),
         }
     }
 
-    /// 📢️ Pushes one frame to EVERY live connection — returns how many it actually reached.
-    pub fn broadcast(&self, frame: GatewayToShell) -> usize {
+    /// 📢️ Atomically admits one shared encoded frame to every live connection.
+    pub fn broadcast(&self, frame: GatewayToShell) -> Result<usize, GatewayToShell> {
+        let Some(bytes) = frame.encoded_len() else { return Err(frame) };
         let connections = self.inner.connections.lock().expect("bridge connections lock poisoned");
-        connections.values().filter(|entry| entry.outbox.send(frame.clone()).is_ok()).count()
+        let recipients = connections.len();
+        if recipients > BRIDGE_BROADCAST_MAX_RECIPIENTS || bytes.checked_mul(recipients).map_or(true, |total| total > BRIDGE_BROADCAST_MAX_BYTES) {
+            return Err(frame);
+        }
+        if recipients == 0 {
+            return Ok(0);
+        }
+        if self.inner.asynchronous.reserve_broadcast().is_err() {
+            return Err(frame);
+        }
+        let retirement = match self.inner.asynchronous.reserve_retirement() {
+            Ok(grant) => grant,
+            Err(()) => {
+                self.inner.asynchronous.cancel_broadcast_reservation();
+                return Err(frame);
+            }
+        };
+        let mut recipient_ids: [Option<ShellConnectionId>; BRIDGE_BROADCAST_MAX_RECIPIENTS] = [None; BRIDGE_BROADCAST_MAX_RECIPIENTS];
+        for (index, id) in connections.keys().copied().enumerate() {
+            recipient_ids[index] = Some(id);
+        }
+        recipient_ids[..recipients].sort_unstable();
+        let mut recipients_state: [Option<BridgeRecipientState>; BRIDGE_BROADCAST_MAX_RECIPIENTS] = std::array::from_fn(|_| None);
+        let mut admitted = 0;
+        for id in recipient_ids[..recipients].iter().flatten().copied() {
+            let entry = connections.get(&id).expect("stable bridge recipient disappeared under admission lock");
+            let grant = match entry.outbox.claim(bytes) {
+                Ok(grant) if grant.generation == entry.generation => grant,
+                Ok(grant) => {
+                    entry.outbox.cancel(grant);
+                    for state in recipients_state[..admitted].iter_mut().filter_map(Option::take) {
+                        if let BridgeRecipientState::Claimed { outbox, grant, .. } = state {
+                            outbox.cancel(grant);
+                        }
+                    }
+                    self.inner.asynchronous.cancel_retirement(retirement);
+                    self.inner.asynchronous.cancel_broadcast_reservation();
+                    return Err(frame);
+                }
+                Err(()) => {
+                    for state in recipients_state[..admitted].iter_mut().filter_map(Option::take) {
+                        if let BridgeRecipientState::Claimed { outbox, grant, .. } = state {
+                            outbox.cancel(grant);
+                        }
+                    }
+                    self.inner.asynchronous.cancel_retirement(retirement);
+                    self.inner.asynchronous.cancel_broadcast_reservation();
+                    return Err(frame);
+                }
+            };
+            recipients_state[admitted] = Some(BridgeRecipientState::Claimed { id, outbox: Arc::clone(&entry.outbox), grant });
+            admitted += 1;
+        }
+        let cursor = BridgeBroadcastCursor {
+            frame: Some(frame),
+            expected: bytes,
+            offset: 0,
+            encoded: BridgeEncodedFrame::empty(bytes, Some((Arc::clone(&self.inner.asynchronous), retirement))),
+            shared: None,
+            recipients_state,
+            recipients,
+            recipient_cursor: 0,
+            delivered: 0,
+            recipient_closed: 0,
+        };
+        drop(connections);
+        self.inner.asynchronous.enqueue_broadcast(cursor);
+        Ok(recipients)
+    }
+
+    pub fn take_broadcast_completion(&self) -> Option<BridgeBroadcastCompletion> {
+        self.inner.asynchronous.take_broadcast_completion()
+    }
+
+    pub fn close_one_terminal_broadcast_claim(&self) -> bool {
+        self.inner.asynchronous.close_one_terminal_broadcast_claim()
+    }
+
+    pub fn cancel_broadcasts(&self) {
+        self.inner.asynchronous.cancel();
+    }
+
+    pub(crate) fn take_terminal_broadcast_job(&self) -> Option<(WorkerSubmitErrorKind, Job)> {
+        self.inner.asynchronous.take_terminal_job()
+    }
+
+    pub fn close_one_terminal_retired_page(&self) -> bool {
+        self.inner.asynchronous.close_one_terminal_retired_page()
     }
 
     pub fn connections(&self) -> Vec<ShellConnectionId> {
@@ -556,6 +2450,10 @@ impl BridgeHandle {
     pub fn last_approval(&self, id: ShellConnectionId) -> Option<(String, ApprovalDecision, Option<String>)> {
         self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).and_then(|entry| entry.last_approval.clone())
     }
+}
+
+fn try_send_bridge_frame(entry: &ConnectionEntry, frame: GatewayToShell) -> Result<(), GatewayToShell> {
+    entry.outbox.try_send(frame)
 }
 //#endregion 🔖️BridgeHandle
 
@@ -613,6 +2511,7 @@ pub fn write_bridge_token_file(path: &Path, token: &str) -> Result<(), GatewayEr
 /// token (`401` otherwise, constant-time compared via `crate::transport::constant_time_eq`) — BOTH
 /// checked before the websocket upgrade completes, so a rejected client gets a plain HTTP error
 /// status, never a silently-closed socket.
+#[cfg(test)]
 pub mod server {
     use super::{BridgeHandle, GatewayToShell, ShellToGateway, BRIDGE_VERSION};
     use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
@@ -719,6 +2618,64 @@ pub mod server {
 mod quick {
     use super::*;
 
+    fn bounded_shell_decode(bytes: &[u8]) -> Result<ShellToGateway, ShellDecodeFault> {
+        let mut decoder = ShellToGatewayDecodeCursor::new(bytes.len());
+        let validated = loop {
+            match decoder.step(|index| bytes.get(index).copied()) {
+                ShellDecodeStep::Pending => {}
+                ShellDecodeStep::Complete(frame) => break frame,
+                ShellDecodeStep::Fault(fault) => return Err(fault),
+            }
+        };
+        let mut materializer = ShellToGatewayMaterializeCursor::new(validated);
+        loop {
+            match materializer.step() {
+                ShellMaterializeStep::Pending => {}
+                ShellMaterializeStep::Complete(frame) => return Ok(frame),
+                ShellMaterializeStep::Fault(fault) => return Err(fault),
+            }
+        }
+    }
+
+    fn retained_broadcast_cursor(handle: &BridgeHandle, ids: &[ShellConnectionId], frame: GatewayToShell) -> BridgeBroadcastCursor {
+        let expected = frame.encoded_len().unwrap();
+        handle.inner.asynchronous.reserve_broadcast().unwrap();
+        let retirement = handle.inner.asynchronous.reserve_retirement().unwrap();
+        let connections = handle.inner.connections.lock().unwrap();
+        let mut recipients_state = std::array::from_fn(|_| None);
+        for (index, id) in ids.iter().copied().enumerate() {
+            let outbox = Arc::clone(&connections.get(&id).unwrap().outbox);
+            let grant = outbox.claim(expected).unwrap();
+            recipients_state[index] = Some(BridgeRecipientState::Claimed { id, outbox, grant });
+        }
+        BridgeBroadcastCursor {
+            frame: Some(frame),
+            expected,
+            offset: 0,
+            encoded: BridgeEncodedFrame::empty(expected, Some((Arc::clone(&handle.inner.asynchronous), retirement))),
+            shared: None,
+            recipients_state,
+            recipients: ids.len(),
+            recipient_cursor: 0,
+            delivered: 0,
+            recipient_closed: 0,
+        }
+    }
+
+    fn pending_broadcast(step: BridgeBroadcastStep) -> BridgeBroadcastCursor {
+        match step {
+            BridgeBroadcastStep::Pending(cursor) => cursor,
+            BridgeBroadcastStep::Complete(_) => panic!("broadcast completed before requested fixture boundary"),
+        }
+    }
+
+    fn encoded_broadcast(mut cursor: BridgeBroadcastCursor) -> BridgeBroadcastCursor {
+        while cursor.offset != cursor.expected || cursor.shared.is_none() {
+            cursor = pending_broadcast(cursor.step());
+        }
+        cursor
+    }
+
     fn sample_shell_frames() -> Vec<ShellToGateway> {
         vec![
             ShellToGateway::Hello {
@@ -793,6 +2750,315 @@ mod quick {
     fn decode_rejects_an_unknown_tag() {
         let error = ShellToGateway::decode(&[99]).unwrap_err();
         assert_eq!(error.code, GatewayErrorCode::InputInvalid);
+    }
+
+    #[test]
+    fn bounded_shell_decoder_rejects_ffffffff_counts_and_truncated_ranges_before_owner_allocation() {
+        let mut instances = vec![3];
+        instances.extend_from_slice(&u32::MAX.to_le_bytes());
+        assert!(matches!(bounded_shell_decode(&instances), Err(ShellDecodeFault::Capacity)));
+
+        let mut windows = vec![3];
+        windows.extend_from_slice(&1u32.to_le_bytes());
+        for _ in 0..4 {
+            windows.extend_from_slice(&0u32.to_le_bytes());
+        }
+        windows.extend_from_slice(&u32::MAX.to_le_bytes());
+        assert!(matches!(bounded_shell_decode(&windows), Err(ShellDecodeFault::Capacity)));
+
+        let mut frames = vec![4];
+        frames.extend_from_slice(&7u64.to_le_bytes());
+        frames.extend_from_slice(&0u32.to_le_bytes());
+        frames.extend_from_slice(&u32::MAX.to_le_bytes());
+        assert!(matches!(bounded_shell_decode(&frames), Err(ShellDecodeFault::Capacity)));
+
+        assert!(matches!(bounded_shell_decode(&[3, 1, 0]), Err(ShellDecodeFault::Malformed)));
+        let mut truncated_range = vec![1];
+        truncated_range.extend_from_slice(&1u64.to_le_bytes());
+        truncated_range.extend_from_slice(&4u32.to_le_bytes());
+        truncated_range.extend_from_slice(&[1, 2, 3]);
+        assert!(matches!(bounded_shell_decode(&truncated_range), Err(ShellDecodeFault::Malformed)));
+    }
+
+    #[test]
+    fn bounded_shell_decoder_cap_plus_one_and_every_variant_match_the_canonical_fixture() {
+        let mut cap_plus_one = vec![1];
+        cap_plus_one.extend_from_slice(&1u64.to_le_bytes());
+        cap_plus_one.extend_from_slice(&((BRIDGE_INBOUND_MAX_FIELD_BYTES + 1) as u32).to_le_bytes());
+        assert!(matches!(bounded_shell_decode(&cap_plus_one), Err(ShellDecodeFault::Capacity)));
+        for frame in sample_shell_frames() {
+            assert_eq!(bounded_shell_decode(&frame.encode()), Ok(frame));
+        }
+    }
+
+    #[test]
+    fn bounded_shell_decoder_and_materializer_advance_incrementally() {
+        let bytes = ShellToGateway::ShellState { revision: 9, state: vec![7; BRIDGE_INBOUND_PAGE_BYTES + 1] }.encode();
+        let mut decoder = ShellToGatewayDecodeCursor::new(bytes.len());
+        assert!(matches!(decoder.step(|index| bytes.get(index).copied()), ShellDecodeStep::Pending));
+        assert!(matches!(decoder.step(|index| bytes.get(index).copied()), ShellDecodeStep::Pending));
+        assert!(matches!(decoder.step(|index| bytes.get(index).copied()), ShellDecodeStep::Pending));
+        assert_eq!(decoder.cursor, 9, "one preflight grant may consume only one scalar token");
+    }
+
+    #[test]
+    fn bridge_outbox_item_cap_plus_one_returns_the_exact_frame_and_rearms_after_one_receive() {
+        let handle = BridgeHandle::new();
+        let (id, mut outbox) = handle.register();
+        for _ in 0..BRIDGE_OUTBOX_MAX_ITEMS {
+            assert!(handle.try_send_to(id, GatewayToShell::Pong).is_ok());
+        }
+        let rejected = GatewayToShell::Bye { reason: "cap-plus-one".into() };
+        assert_eq!(handle.try_send_to(id, rejected.clone()), Err(rejected));
+        assert_eq!(outbox.try_recv(), Some(GatewayToShell::Pong));
+        assert!(handle.try_send_to(id, GatewayToShell::Pong).is_ok());
+    }
+
+    #[test]
+    fn bridge_outbox_byte_cap_plus_one_returns_the_exact_frame_before_queue_mutation() {
+        let outbox = BridgeOutbox::new(7);
+        let accepted = GatewayToShell::ShellCommand { seq: 7, command: vec![9; BRIDGE_OUTBOX_MAX_BYTES - 13] };
+        assert_eq!(accepted.encoded_len(), Some(BRIDGE_OUTBOX_MAX_BYTES));
+        assert_eq!(outbox.try_send(accepted), Ok(()));
+        let encoded = outbox.try_recv().unwrap().lease.encoded;
+        assert_eq!(encoded.len(), BRIDGE_OUTBOX_MAX_BYTES);
+        assert_eq!(encoded.page_count(), BRIDGE_OUTBOX_MAX_PAGES);
+
+        let rejected = GatewayToShell::ShellCommand { seq: 8, command: vec![7; BRIDGE_OUTBOX_MAX_BYTES - 12] };
+        let rejected_copy = rejected.clone();
+        let encodes_before = outbox.state.lock().unwrap().encode_count;
+        assert_eq!(outbox.try_send(rejected), Err(rejected_copy));
+        let state = outbox.state.lock().unwrap();
+        assert_eq!(state.encode_count, encodes_before, "cap+1 must reject before page allocation/encode");
+        assert_eq!(state.len, 0);
+        assert_eq!(state.bytes, 0);
+        assert!(bridge_wire_field_len(usize::MAX).is_none(), "checked wire-size overflow must fail before admission");
+    }
+
+    #[test]
+    fn bridge_outbox_page_boundary_matches_the_canonical_encoder() {
+        for reason_bytes in [BRIDGE_OUTBOX_PAGE_BYTES - 5, BRIDGE_OUTBOX_PAGE_BYTES - 4] {
+            let frame = GatewayToShell::Bye { reason: "x".repeat(reason_bytes) };
+            let expected = frame.encode();
+            let outbox = BridgeOutbox::new(9);
+            outbox.try_send(frame).unwrap();
+            let encoded = outbox.try_recv().unwrap().lease.encoded;
+            let mut actual = vec![0; encoded.len()];
+            assert_eq!(encoded.copy_into(0, &mut actual), actual.len());
+            assert_eq!(actual, expected);
+            assert_eq!(encoded.page_count(), if reason_bytes == BRIDGE_OUTBOX_PAGE_BYTES - 5 { 1 } else { 2 });
+        }
+    }
+
+    #[test]
+    fn bridge_outbox_terminal_close_rejects_the_exact_late_frame() {
+        let handle = BridgeHandle::new();
+        let (id, mut outbox) = handle.register();
+        handle.unregister(id);
+        let rejected = GatewayToShell::Bye { reason: "late-after-close".into() };
+        assert_eq!(handle.try_send_to(id, rejected.clone()), Err(rejected));
+        assert!(outbox.try_recv().is_none());
+    }
+
+    #[test]
+    fn broadcast_partial_saturation_rolls_back_every_claim_and_returns_the_exact_uncloned_message() {
+        let handle = BridgeHandle::new();
+        let (first, _first_receiver) = handle.register();
+        let (_second, mut second_receiver) = handle.register();
+        for _ in 0..BRIDGE_OUTBOX_MAX_ITEMS {
+            assert!(handle.try_send_to(first, GatewayToShell::Pong).is_ok());
+        }
+        let original = GatewayToShell::Bye { reason: "partial-saturation".into() };
+        assert_eq!(handle.broadcast(original.clone()), Err(original));
+        assert!(second_receiver.try_recv().is_none());
+        assert_eq!(handle.inner.asynchronous.state.lock().unwrap().broadcast_len, 0);
+    }
+
+    #[test]
+    fn broadcast_many_recipient_and_oversize_preflight_reject_before_encode() {
+        let handle = BridgeHandle::new();
+        for _ in 0..=BRIDGE_BROADCAST_MAX_RECIPIENTS {
+            handle.register();
+        }
+        let many = GatewayToShell::Pong;
+        assert_eq!(handle.broadcast(many.clone()), Err(many));
+
+        let other = BridgeHandle::new();
+        other.register();
+        let oversized = GatewayToShell::ShellCommand { seq: 1, command: vec![0; BRIDGE_OUTBOX_MAX_BYTES] };
+        assert_eq!(other.broadcast(oversized.clone()), Err(oversized));
+        assert_eq!(other.inner.asynchronous.state.lock().unwrap().broadcast_len, 0);
+    }
+
+    #[test]
+    fn shared_broadcast_leases_are_generation_keyed_and_close_rejects_aba_publish() {
+        let first = Arc::new(BridgeOutbox::new(11));
+        let second = Arc::new(BridgeOutbox::new(12));
+        let frame = GatewayToShell::Bye { reason: "shared".into() };
+        let bytes = frame.encoded_len().unwrap();
+        let first_grant = first.claim(bytes).unwrap();
+        let second_grant = second.claim(bytes).unwrap();
+        let encoded = Arc::new(BridgeEncodedFrame::encode(&frame, bytes));
+        assert!(first.publish(first_grant, Arc::clone(&encoded)).is_ok());
+        assert!(second.publish(second_grant, Arc::clone(&encoded)).is_ok());
+        let first_lease = first.try_recv().unwrap().lease;
+        let second_lease = second.try_recv().unwrap().lease;
+        assert!(Arc::ptr_eq(&first_lease.encoded, &second_lease.encoded));
+
+        let stale = first.claim(bytes).unwrap();
+        first.close();
+        assert!(first.publish(stale, Arc::clone(&encoded)).is_err());
+        assert!(first.try_recv().is_none(), "closed generation must not yield an ABA lease");
+    }
+
+    #[test]
+    fn broadcast_close_before_first_publish_delivers_survivors_in_stable_admitted_order() {
+        let handle = BridgeHandle::new();
+        let (first, mut first_receiver) = handle.register();
+        let (second, mut second_receiver) = handle.register();
+        let original = GatewayToShell::Bye { reason: "x".repeat(BRIDGE_OUTBOX_PAGE_BYTES + 1) };
+        let mut cursor = encoded_broadcast(retained_broadcast_cursor(&handle, &[first, second], original));
+        handle.unregister(first);
+        cursor = pending_broadcast(cursor.step());
+        assert!(matches!(cursor.recipients_state[0].as_ref(), Some(BridgeRecipientState::RecipientClosed { id, .. }) if *id == first));
+        cursor = pending_broadcast(cursor.step());
+        assert!(matches!(cursor.recipients_state[1].as_ref(), Some(BridgeRecipientState::Published { id }) if *id == second));
+        assert!(matches!(cursor.step(), BridgeBroadcastStep::Complete(BridgeBroadcastCompletion::Delivered { delivered: 1, recipient_closed: 1 })));
+        assert!(first_receiver.try_recv().is_none());
+        assert!(second_receiver.try_recv().is_some());
+    }
+
+    #[test]
+    fn broadcast_close_mid_recipient_list_reports_partial_counts_and_fifo_delivery() {
+        let handle = BridgeHandle::new();
+        let (first, mut first_receiver) = handle.register();
+        let (second, mut second_receiver) = handle.register();
+        let (third, mut third_receiver) = handle.register();
+        let mut cursor = encoded_broadcast(retained_broadcast_cursor(&handle, &[first, second, third], GatewayToShell::Pong));
+        cursor = pending_broadcast(cursor.step());
+        handle.unregister(second);
+        cursor = pending_broadcast(cursor.step());
+        cursor = pending_broadcast(cursor.step());
+        assert!(matches!(cursor.recipients_state[0].as_ref(), Some(BridgeRecipientState::Published { id }) if *id == first));
+        assert!(matches!(cursor.recipients_state[1].as_ref(), Some(BridgeRecipientState::RecipientClosed { id, .. }) if *id == second));
+        assert!(matches!(cursor.recipients_state[2].as_ref(), Some(BridgeRecipientState::Published { id }) if *id == third));
+        assert!(matches!(cursor.step(), BridgeBroadcastStep::Complete(BridgeBroadcastCompletion::Delivered { delivered: 2, recipient_closed: 1 })));
+        assert_eq!(first_receiver.try_recv(), Some(GatewayToShell::Pong));
+        assert!(second_receiver.try_recv().is_none());
+        assert_eq!(third_receiver.try_recv(), Some(GatewayToShell::Pong));
+    }
+
+    #[test]
+    fn broadcast_all_close_returns_the_exact_original_completion_after_every_claim() {
+        let handle = BridgeHandle::new();
+        let (first, _first_receiver) = handle.register();
+        let (second, _second_receiver) = handle.register();
+        let original = GatewayToShell::Bye { reason: "all-closed".into() };
+        let mut cursor = encoded_broadcast(retained_broadcast_cursor(&handle, &[first, second], original.clone()));
+        handle.unregister(first);
+        handle.unregister(second);
+        cursor = pending_broadcast(cursor.step());
+        cursor = pending_broadcast(cursor.step());
+        assert_eq!(
+            match cursor.step() {
+                BridgeBroadcastStep::Complete(completion) => completion,
+                BridgeBroadcastStep::Pending(_) => panic!("all-close completion remained pending"),
+            },
+            BridgeBroadcastCompletion::Undelivered { frame: original, recipient_closed: 2 }
+        );
+    }
+
+    #[test]
+    fn broadcast_reopen_same_slot_aba_cannot_consume_the_stale_recipient_claim() {
+        let old = Arc::new(BridgeOutbox::new(41));
+        let frame = GatewayToShell::Pong;
+        let bytes = frame.encoded_len().unwrap();
+        let stale = old.claim(bytes).unwrap();
+        old.close();
+        let reopened = Arc::new(BridgeOutbox::new(42));
+        let encoded = Arc::new(BridgeEncodedFrame::encode(&frame, bytes));
+        let rejected = old.publish(stale, Arc::clone(&encoded)).unwrap_err();
+        assert_eq!(rejected.grant.generation, 41);
+        assert_eq!(reopened.state.lock().unwrap().len, 0);
+        assert_eq!(reopened.state.lock().unwrap().reserved_items, 0);
+    }
+
+    #[test]
+    fn broadcast_shutdown_cancel_poison_closes_each_remaining_claim_one_grant_then_reports_partial_delivery() {
+        let handle = BridgeHandle::new();
+        let (first, mut first_receiver) = handle.register();
+        let (second, _second_receiver) = handle.register();
+        let (third, _third_receiver) = handle.register();
+        let cursor = encoded_broadcast(retained_broadcast_cursor(&handle, &[first, second, third], GatewayToShell::Pong));
+        let cursor = pending_broadcast(cursor.step());
+        {
+            let mut state = handle.inner.asynchronous.state.lock().unwrap();
+            state.broadcast_reserved -= 1;
+            state.broadcasts[0] = Some(cursor);
+            state.broadcast_len = 1;
+        }
+        handle.cancel_broadcasts();
+        assert!(handle.close_one_terminal_broadcast_claim());
+        assert!(handle.close_one_terminal_broadcast_claim());
+        assert!(handle.close_one_terminal_broadcast_claim());
+        assert_eq!(handle.take_broadcast_completion(), Some(BridgeBroadcastCompletion::Delivered { delivered: 1, recipient_closed: 2 }));
+        assert_eq!(first_receiver.try_recv(), Some(GatewayToShell::Pong));
+    }
+
+    #[test]
+    fn last_shared_lease_transfers_pages_to_one_page_terminal_retirement_grants() {
+        let handle = BridgeHandle::new();
+        let retirement = handle.inner.asynchronous.reserve_retirement().unwrap();
+        handle.inner.asynchronous.terminal.store(true, Ordering::Release);
+        let mut encoded = BridgeEncodedFrame::empty(BRIDGE_OUTBOX_PAGE_BYTES + 1, Some((Arc::clone(&handle.inner.asynchronous), retirement)));
+        encoded.pages[0] = Some(Box::new([1; BRIDGE_OUTBOX_PAGE_BYTES]));
+        encoded.pages[1] = Some(Box::new([2; BRIDGE_OUTBOX_PAGE_BYTES]));
+        drop(encoded);
+        assert_eq!(handle.inner.asynchronous.state.lock().unwrap().retirement_len, 1);
+        assert!(handle.close_one_terminal_retired_page());
+        assert!(handle.close_one_terminal_retired_page());
+        assert_eq!(handle.inner.asynchronous.state.lock().unwrap().retirement_len, 0);
+    }
+
+    #[test]
+    fn terminal_broadcast_close_returns_one_exact_original_and_cancels_recipient_credit() {
+        let handle = BridgeHandle::new();
+        let (id, _receiver) = handle.register();
+        let original = GatewayToShell::Bye { reason: "terminal-broadcast".into() };
+        let bytes = original.encoded_len().unwrap();
+        handle.inner.asynchronous.reserve_broadcast().unwrap();
+        let retirement = handle.inner.asynchronous.reserve_retirement().unwrap();
+        let outbox = Arc::clone(&handle.inner.connections.lock().unwrap().get(&id).unwrap().outbox);
+        let grant = outbox.claim(bytes).unwrap();
+        let mut recipients_state: [Option<BridgeRecipientState>; BRIDGE_BROADCAST_MAX_RECIPIENTS] = std::array::from_fn(|_| None);
+        recipients_state[0] = Some(BridgeRecipientState::Claimed { id, outbox: Arc::clone(&outbox), grant });
+        let cursor = BridgeBroadcastCursor {
+            frame: Some(original.clone()),
+            expected: bytes,
+            offset: 0,
+            encoded: BridgeEncodedFrame::empty(bytes, Some((Arc::clone(&handle.inner.asynchronous), retirement))),
+            shared: None,
+            recipients_state,
+            recipients: 1,
+            recipient_cursor: 0,
+            delivered: 0,
+            recipient_closed: 0,
+        };
+        {
+            let mut state = handle.inner.asynchronous.state.lock().unwrap();
+            state.broadcast_reserved -= 1;
+            state.broadcasts[0] = Some(cursor);
+            state.broadcast_len = 1;
+        }
+        handle.inner.asynchronous.terminal.store(true, Ordering::Release);
+        assert!(handle.close_one_terminal_broadcast_claim());
+        assert!(handle.close_one_terminal_broadcast_claim());
+        assert_eq!(handle.take_broadcast_completion(), Some(BridgeBroadcastCompletion::Undelivered { frame: original, recipient_closed: 1 }));
+        let state = outbox.state.lock().unwrap();
+        assert_eq!(state.reserved_items, 0);
+        assert_eq!(state.reserved_bytes, 0);
+        drop(state);
+        assert!(handle.close_one_terminal_retired_page());
     }
     //#endregion 🔖️RoundTrip
 
@@ -944,7 +3210,7 @@ mod long {
         assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
         assert_eq!(handle.last_command_result(id), Some((7, true, None)));
 
-        assert_eq!(handle.broadcast(GatewayToShell::Pong), 1, "broadcast must reach exactly the one live connection");
+        assert_eq!(handle.broadcast(GatewayToShell::Pong), Ok(1), "broadcast must reach exactly the one live connection");
         assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
 
         drop(socket);

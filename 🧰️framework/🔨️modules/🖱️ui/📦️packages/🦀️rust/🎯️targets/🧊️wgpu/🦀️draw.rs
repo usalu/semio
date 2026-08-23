@@ -852,23 +852,42 @@ impl MeshGpuTable {
         self.get(&Self::lookup_key(mesh_key, version))
     }
 
-    pub fn ensure_mesh(&mut self, device: &wgpu::Device, key: &str, version: u64, positions: &[f32], normals: &[f32], indices: &[u32]) {
+    pub fn ensure_mesh(&mut self, device: &wgpu::Device, key: &str, version: u64, lease: crate::wgpu::kernel_3d_scene::Mesh3dLease) {
         let store_key = format!("{key}:{version}");
         if self.meshes.contains_key(&store_key) {
             return;
         }
         let prefix = format!("{key}:");
         self.meshes.retain(|existing, _| !existing.starts_with(&prefix) || existing == &store_key);
-        let mut vertices = Vec::with_capacity(positions.len() / 3);
-        for index in 0..positions.len() / 3 {
-            vertices.push(World3dVertex {
-                position: [positions[index * 3], positions[index * 3 + 1], positions[index * 3 + 2]],
-                normal: [normals.get(index * 3).copied().unwrap_or(0.0), normals.get(index * 3 + 1).copied().unwrap_or(1.0), normals.get(index * 3 + 2).copied().unwrap_or(0.0)],
-            });
+        let Ok(schema) = lease.schema() else { return };
+        let vertex_bytes = u64::from(schema.vertices).saturating_mul(std::mem::size_of::<World3dVertex>() as u64);
+        let index_bytes = u64::from(schema.indices).saturating_mul(std::mem::size_of::<u32>() as u64);
+        if vertex_bytes == 0 || index_bytes == 0 {
+            return;
         }
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("world3d_vertices"), contents: bytemuck::cast_slice(&vertices), usage: wgpu::BufferUsages::VERTEX });
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("world3d_indices"), contents: bytemuck::cast_slice(indices), usage: wgpu::BufferUsages::INDEX });
-        self.meshes.insert(store_key, GpuMeshBuffers { vertex_buffer, index_buffer, index_count: indices.len() as u32 });
+        let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_vertices"), size: vertex_bytes, usage: wgpu::BufferUsages::VERTEX, mapped_at_creation: true });
+        {
+            let mut mapped = vertex_buffer.slice(..).get_mapped_range_mut();
+            for index in 0..schema.vertices {
+                let Ok(position) = lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Positions, index) else { return };
+                let normal = lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Normals, index).unwrap_or([0.0, 1.0, 0.0]);
+                let vertex = World3dVertex { position, normal };
+                let start = index as usize * std::mem::size_of::<World3dVertex>();
+                mapped[start..start + std::mem::size_of::<World3dVertex>()].copy_from_slice(bytemuck::bytes_of(&vertex));
+            }
+        }
+        vertex_buffer.unmap();
+        let index_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_indices"), size: index_bytes, usage: wgpu::BufferUsages::INDEX, mapped_at_creation: true });
+        {
+            let mut mapped = index_buffer.slice(..).get_mapped_range_mut();
+            for index in 0..schema.indices {
+                let Ok(value) = lease.u32(crate::wgpu::kernel_3d_scene::Mesh3dField::Indices, index) else { return };
+                let start = index as usize * std::mem::size_of::<u32>();
+                mapped[start..start + std::mem::size_of::<u32>()].copy_from_slice(&value.to_le_bytes());
+            }
+        }
+        index_buffer.unmap();
+        self.meshes.insert(store_key, GpuMeshBuffers { vertex_buffer, index_buffer, index_count: schema.indices });
     }
 
     pub fn evict_mesh(&mut self, key: &str) {

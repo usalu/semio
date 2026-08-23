@@ -11307,6 +11307,28 @@ pub mod app {
             None
         }
 
+        /// 🧬️ Installs the exact domain-owned catalog and nested retirement factories for
+        /// retained envelope decode. `None` grants no decoder authority.
+        fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+            None
+        }
+
+        /// 🔐️ Supplies the exact snapshot/mutation/store disposal catalog used by document
+        /// replacement and close. `None` keeps both routes fail closed.
+        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+            None
+        }
+
+        /// 🏗️ Begins the app's retained semantic-validation/replay/store-construction job.
+        /// Rejection returns the exact completed envelope and grants no replacement authority.
+        fn build_document_store_initialization_job(
+            envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+            _operation: semio_framework_job::OperationId,
+            _generation: semio_framework_job::Generation,
+        ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+            Err(envelope)
+        }
+
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             None
         }
@@ -12822,6 +12844,119 @@ pub mod app {
     pub trait ArtifactOwnedDisposer<T>: Send {
         fn close_step(&mut self, owner: &mut T, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
         fn terminal_is_empty(&self, owner: &T) -> bool;
+    }
+
+    /// @emoji 🧹️ Explicit adapter from an app-owned document-store close catalog to the
+    /// plugin close protocol. Apps must return this adapter themselves; the framework never installs
+    /// one from type bounds or a permissive default.
+    pub struct ArtifactDocumentStoreDisposer<P, Mutation>(std::marker::PhantomData<fn() -> (P, Mutation)>);
+
+    impl<P, Mutation> ArtifactDocumentStoreDisposer<P, Mutation> {
+        pub fn new() -> Self {
+            Self(std::marker::PhantomData)
+        }
+    }
+
+    impl<P, Mutation> ArtifactOwnedDisposer<ArtifactStore<P, Mutation>> for ArtifactDocumentStoreDisposer<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        fn close_step(&mut self, owner: &mut ArtifactStore<P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            match store::SpaceMember::close_owned_step(owner, maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)? {
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => {
+                    Ok(PluginCloseStep::Pending { released_items, released_bytes })
+                }
+                store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(
+                    FaultOrigin::Framework,
+                    FaultCode::new("interactive-job.document-store-close-over-budget"),
+                    "document store close exceeded its exact one-owner grant",
+                )),
+                store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "document store close awaits a retained reader or owner" }),
+                store::SnapshotRetirementStep::Complete => Ok(PluginCloseStep::Complete),
+            }
+        }
+
+        fn terminal_is_empty(&self, owner: &ArtifactStore<P, Mutation>) -> bool {
+            store::SpaceMember::close_owned_terminal_is_empty(owner)
+        }
+    }
+
+    /// @emoji 🏗️ Domain-owned persistent initializer for one completed envelope. A terminal
+    /// success retains exactly one fully prepared store until the wrapper takes it; fault/cancel may
+    /// become terminal only after the envelope and every partial owner have been cursor-retired.
+    pub trait ArtifactStoreInitializationAuthority<P, Mutation>: Send {
+        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome;
+        fn request_cancel(&mut self);
+        fn take_candidate(&mut self) -> Option<ArtifactStore<P, Mutation>>;
+        fn terminal_is_empty(&self) -> bool;
+    }
+
+    pub struct ArtifactStoreInitializationJob<P, Mutation> {
+        authority: std::mem::ManuallyDrop<Option<Box<dyn ArtifactStoreInitializationAuthority<P, Mutation>>>>,
+        cancel_requested: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        terminal_handoff: bool,
+    }
+
+    impl<P, Mutation> ArtifactStoreInitializationJob<P, Mutation> {
+        pub fn new(authority: Box<dyn ArtifactStoreInitializationAuthority<P, Mutation>>) -> Self {
+            Self { authority: std::mem::ManuallyDrop::new(Some(authority)), cancel_requested: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), terminal_handoff: false }
+        }
+
+        fn cancel_signal(&self) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
+            std::sync::Arc::clone(&self.cancel_requested)
+        }
+
+        fn request_cancel_now(&self) {
+            self.cancel_requested.store(true, std::sync::atomic::Ordering::Release);
+        }
+
+        fn take_candidate(&mut self) -> Option<ArtifactStore<P, Mutation>> {
+            let candidate = self.authority.as_mut()?.take_candidate()?;
+            self.terminal_handoff = true;
+            if self.authority.as_ref().is_some_and(|authority| authority.terminal_is_empty()) {
+                drop(self.authority.take());
+            }
+            Some(candidate)
+        }
+
+        fn release_terminal_failure(&mut self) -> bool {
+            if !self.authority.as_ref().is_some_and(|authority| authority.terminal_is_empty()) {
+                return false;
+            }
+            drop(self.authority.take());
+            self.terminal_handoff = true;
+            true
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.authority.is_none() && self.terminal_handoff
+        }
+    }
+
+    impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactStoreInitializationJob<P, Mutation>
+    where
+        P: Send,
+        Mutation: Send,
+    {
+        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+            match self.authority.as_mut() {
+                Some(authority) => {
+                    if self.cancel_requested.load(std::sync::atomic::Ordering::Acquire) {
+                        authority.request_cancel();
+                    }
+                    authority.step(cx)
+                }
+                None if self.terminal_handoff => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() }),
+                None => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"artifact-store.initializer-owner-missing".to_vec() }),
+            }
+        }
+    }
+
+    impl<P, Mutation> Drop for ArtifactStoreInitializationJob<P, Mutation> {
+        fn drop(&mut self) {
+            assert!(self.authority.is_none() && self.terminal_handoff, "artifact store initialization job reached Drop before exact candidate handoff or terminal retained close");
+        }
     }
 
     fn drive_artifact_owned_disposer<T>(lane: &'static str, owner: &mut T, disposer: &mut std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<T>>>>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
@@ -14462,6 +14597,491 @@ pub mod app {
     }
     //#endregion 🎯️ToolCommandJobs
 
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct ArtifactEnvelopeDecodeOperationHandle {
+        pub operation: semio_framework_job::OperationId,
+        pub generation: semio_framework_job::Generation,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum ArtifactEnvelopeDecodeOperationPoll {
+        Pending,
+        Progress,
+        Ready,
+        Cancelled,
+        Fault,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ActiveArtifactEnvelopeDecodeState {
+        Active,
+        Ready,
+        ClosingCancelled,
+        ClosingFault,
+        Complete,
+    }
+
+    struct ActiveArtifactEnvelopeDecode<P, Mutation> {
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        cancel: semio_framework_job::CancelToken,
+        session: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSession<store::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
+        pending: std::mem::ManuallyDrop<Option<semio_framework_async::oneshot::Receiver<semio_framework_job::StepOutcome>>>,
+        rejected: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+        completion: std::sync::Arc<store::ArtifactEnvelopeDecodeCompletion>,
+        completed_close_requested: bool,
+        state: ActiveArtifactEnvelopeDecodeState,
+    }
+
+    impl<P, Mutation> ActiveArtifactEnvelopeDecode<P, Mutation>
+    where
+        P: Send + 'static,
+        Mutation: Send + 'static,
+    {
+        fn admitted(
+            operation: semio_framework_job::OperationId,
+            generation: semio_framework_job::Generation,
+            decode: store::ArtifactEnvelopeDecodeAuthority<P, Mutation>,
+            completion: std::sync::Arc<store::ArtifactEnvelopeDecodeCompletion>,
+        ) -> Self {
+            let cancel = semio_framework_job::CancelToken::root_now();
+            let params = semio_framework_job::BatchJobParams {
+                operation,
+                generation,
+                cancel: cancel.clone(),
+                config: semio_framework_job::BatchDriveConfig {
+                    site: "artifact_envelope_decode",
+                    stage: semio_framework_job::InteractiveStage::InteractiveStep,
+                    fuel_per_step: 64,
+                    step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS,
+                },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            Self {
+                operation,
+                generation,
+                cancel,
+                session: std::mem::ManuallyDrop::new(Some(semio_framework_job::WorkerJobSession::new(decode, params))),
+                pending: std::mem::ManuallyDrop::new(None),
+                rejected: std::mem::ManuallyDrop::new(None),
+                completion,
+                completed_close_requested: false,
+                state: ActiveArtifactEnvelopeDecodeState::Active,
+            }
+        }
+
+        fn rejected(
+            operation: semio_framework_job::OperationId,
+            generation: semio_framework_job::Generation,
+            rejected: Box<dyn store::ErasedSnapshotRetirement>,
+            completion: std::sync::Arc<store::ArtifactEnvelopeDecodeCompletion>,
+        ) -> Self {
+            Self {
+                operation,
+                generation,
+                cancel: semio_framework_job::CancelToken::root_now(),
+                session: std::mem::ManuallyDrop::new(None),
+                pending: std::mem::ManuallyDrop::new(None),
+                rejected: std::mem::ManuallyDrop::new(Some(rejected)),
+                completion,
+                completed_close_requested: false,
+                state: ActiveArtifactEnvelopeDecodeState::ClosingFault,
+            }
+        }
+
+        fn recover_terminal_job(&mut self) -> bool {
+            let Some(session) = self.session.take() else { return true };
+            match session.try_into_job() {
+                Ok(job) if job.terminal_is_empty() => {
+                    drop(job);
+                    true
+                }
+                Ok(_job) => panic!("terminal envelope worker returned a nonempty decode authority"),
+                Err(session) => {
+                    *self.session = Some(session);
+                    false
+                }
+            }
+        }
+
+        fn request_completed_close(&mut self, completed: &store::ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>) -> Result<bool, Fault> {
+            let Some(ticket) = self.completion.ticket() else { return Ok(true) };
+            if !self.completed_close_requested {
+                match completed.try_request_close(ticket) {
+                    Ok(()) => self.completed_close_requested = true,
+                    Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => return Ok(false),
+                    Err(store::ArtifactEnvelopeCompletedRecordFault::Stale) if completed.ticket_reclaimed(ticket) => return Ok(true),
+                    Err(_) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-close"), "completed envelope result lost its exact close authority")),
+                }
+            }
+            Ok(completed.ticket_reclaimed(ticket))
+        }
+
+        fn drive(
+            &mut self,
+            pool: &semio_framework_async::WorkerPool,
+            live_generation: semio_framework_job::Generation,
+            completed: &store::ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>,
+            maximum_items: usize,
+            maximum_bytes: usize,
+        ) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(rejected) = self.rejected.as_mut() {
+                let step = rejected.close_step(maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(plugin_sdk_fault)?;
+                return match step {
+                    store::SnapshotRetirementStep::Complete if rejected.terminal_is_empty() => {
+                        drop(self.rejected.take());
+                        self.state = ActiveArtifactEnvelopeDecodeState::Complete;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    store::SnapshotRetirementStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.rejected-false-terminal"), "rejected envelope owner reported Complete without terminal-empty authority")),
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "rejected envelope owner is temporarily blocked" }),
+                };
+            }
+            if live_generation != self.generation && self.state == ActiveArtifactEnvelopeDecodeState::Active {
+                self.cancel.cancel_now();
+            }
+            if self.state == ActiveArtifactEnvelopeDecodeState::Ready && self.cancel.is_cancelled_now() {
+                self.state = ActiveArtifactEnvelopeDecodeState::ClosingCancelled;
+            }
+            if matches!(self.state, ActiveArtifactEnvelopeDecodeState::ClosingCancelled | ActiveArtifactEnvelopeDecodeState::ClosingFault) {
+                if self.request_completed_close(completed)? {
+                    self.state = ActiveArtifactEnvelopeDecodeState::Complete;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                return Ok(PluginCloseStep::Blocked { reason: "cancelled envelope output awaits the completed-record close pump" });
+            }
+            if matches!(self.state, ActiveArtifactEnvelopeDecodeState::Ready | ActiveArtifactEnvelopeDecodeState::Complete) {
+                return Ok(if self.state == ActiveArtifactEnvelopeDecodeState::Complete {
+                    PluginCloseStep::Complete
+                } else {
+                    PluginCloseStep::Blocked { reason: "decoded envelope awaits exact consumer publication" }
+                });
+            }
+            if let Some(pending) = self.pending.as_mut() {
+                return match pending.try_recv() {
+                    Err(semio_framework_async::oneshot::TryRecvError::Empty) => Ok(PluginCloseStep::Blocked { reason: "envelope worker step is pending" }),
+                    Err(semio_framework_async::oneshot::TryRecvError::Closed) => {
+                        drop(self.pending.take());
+                        self.cancel.cancel_now();
+                        self.state = ActiveArtifactEnvelopeDecodeState::ClosingFault;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    Ok(outcome) => {
+                        drop(self.pending.take());
+                        if !outcome.is_terminal() {
+                            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                        }
+                        if !self.recover_terminal_job() {
+                            return Ok(PluginCloseStep::Blocked { reason: "terminal envelope worker still owns its bounded task shell" });
+                        }
+                        self.state = match outcome {
+                            semio_framework_job::StepOutcome::Complete(_) if self.completion.ticket().is_some() => ActiveArtifactEnvelopeDecodeState::Ready,
+                            semio_framework_job::StepOutcome::Cancelled => ActiveArtifactEnvelopeDecodeState::ClosingCancelled,
+                            _ => ActiveArtifactEnvelopeDecodeState::ClosingFault,
+                        };
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                };
+            }
+            let session = self.session.as_ref().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?;
+            match session.try_submit_step(pool, semio_framework_async::Lane::Interactive) {
+                Ok(pending) => {
+                    *self.pending = Some(pending);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                Err(_) => Ok(PluginCloseStep::Blocked { reason: "envelope worker lane is saturated or contended" }),
+            }
+        }
+
+        fn poll(&self) -> ArtifactEnvelopeDecodeOperationPoll {
+            match self.state {
+                ActiveArtifactEnvelopeDecodeState::Active => ArtifactEnvelopeDecodeOperationPoll::Pending,
+                ActiveArtifactEnvelopeDecodeState::Ready => ArtifactEnvelopeDecodeOperationPoll::Ready,
+                ActiveArtifactEnvelopeDecodeState::ClosingCancelled => ArtifactEnvelopeDecodeOperationPoll::Cancelled,
+                ActiveArtifactEnvelopeDecodeState::ClosingFault => ArtifactEnvelopeDecodeOperationPoll::Fault,
+                ActiveArtifactEnvelopeDecodeState::Complete if self.cancel.is_cancelled_now() => ArtifactEnvelopeDecodeOperationPoll::Cancelled,
+                ActiveArtifactEnvelopeDecodeState::Complete => ArtifactEnvelopeDecodeOperationPoll::Fault,
+            }
+        }
+
+        fn terminal_is_empty(&self, completed: &store::ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>) -> bool {
+            let output_terminal = self.completion.ticket().is_none_or(|ticket| completed.ticket_reclaimed(ticket));
+            self.state == ActiveArtifactEnvelopeDecodeState::Complete && self.session.is_none() && self.pending.is_none() && self.rejected.is_none() && output_terminal
+        }
+    }
+
+    impl<P, Mutation> Drop for ActiveArtifactEnvelopeDecode<P, Mutation> {
+        fn drop(&mut self) {
+            assert!(self.session.is_none() && self.pending.is_none() && self.rejected.is_none() && self.state == ActiveArtifactEnvelopeDecodeState::Complete, "active envelope decode reached Drop before its worker and rejected owner were terminal empty");
+        }
+    }
+
+    struct ActiveArtifactEnvelopeIngress {
+        pages: std::mem::ManuallyDrop<Option<store::OwnedSchemaDecodePages>>,
+        closing: bool,
+    }
+
+    impl ActiveArtifactEnvelopeIngress {
+        fn new(pages: store::OwnedSchemaDecodePages) -> Self {
+            Self { pages: std::mem::ManuallyDrop::new(Some(pages)), closing: false }
+        }
+
+        fn take_pages(&mut self) -> Option<store::OwnedSchemaDecodePages> {
+            self.pages.take()
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            let Some(pages) = self.pages.as_mut() else { return PluginCloseStep::Complete };
+            if maximum_items == 0 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(page) = pages.close_take_page() {
+                let released_bytes = page.len();
+                if released_bytes > maximum_bytes {
+                    pages.admit_page(page).expect("an exact ingress page returns to its pre-admitted slot when the close byte grant is insufficient");
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(page);
+                return PluginCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            let pages = self.pages.take().expect("terminal ingress pages remain retained");
+            assert!(pages.terminal_is_empty());
+            drop(pages);
+            PluginCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.pages.is_none()
+        }
+    }
+
+    impl Drop for ActiveArtifactEnvelopeIngress {
+        fn drop(&mut self) {
+            assert!(self.terminal_is_empty(), "artifact envelope ingress reached Drop before every admitted page was transferred or bounded-closed");
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ActiveArtifactStoreReplacementState {
+        Initializing,
+        CandidateReady,
+        RetiringCommittedStore,
+        RetiringRejectedCandidate,
+        Complete,
+    }
+
+    struct ActiveArtifactStoreReplacement<P, Mutation> {
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        cancel: semio_framework_job::CancelToken,
+        cancel_signal: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        session: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>,
+        pending: std::mem::ManuallyDrop<Option<semio_framework_async::oneshot::Receiver<semio_framework_job::StepOutcome>>>,
+        retained_store: std::mem::ManuallyDrop<Option<ArtifactStore<P, Mutation>>>,
+        retained_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<P, Mutation>>>>>,
+        committed: bool,
+        faulted: bool,
+        state: ActiveArtifactStoreReplacementState,
+    }
+
+    impl<P, Mutation> ActiveArtifactStoreReplacement<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        fn session_params(&self) -> semio_framework_job::BatchJobParams {
+            semio_framework_job::BatchJobParams {
+                operation: self.operation,
+                generation: self.generation,
+                cancel: semio_framework_job::CancelToken::root_now(),
+                config: semio_framework_job::BatchDriveConfig {
+                    site: "artifact_store_replacement",
+                    stage: semio_framework_job::InteractiveStage::InteractiveStep,
+                    fuel_per_step: 64,
+                    step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS,
+                },
+                now_ms: semio_framework_job::default_now_ms,
+            }
+        }
+
+        fn new(
+            operation: semio_framework_job::OperationId,
+            generation: semio_framework_job::Generation,
+            job: ArtifactStoreInitializationJob<P, Mutation>,
+        ) -> Self {
+            let cancel = semio_framework_job::CancelToken::root_now();
+            let cancel_signal = job.cancel_signal();
+            let params = semio_framework_job::BatchJobParams {
+                operation,
+                generation,
+                cancel: semio_framework_job::CancelToken::root_now(),
+                config: semio_framework_job::BatchDriveConfig {
+                    site: "artifact_store_replacement",
+                    stage: semio_framework_job::InteractiveStage::InteractiveStep,
+                    fuel_per_step: 64,
+                    step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS,
+                },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            Self {
+                operation,
+                generation,
+                cancel,
+                cancel_signal,
+                session: std::mem::ManuallyDrop::new(Some(semio_framework_job::WorkerJobSession::new(job, params))),
+                pending: std::mem::ManuallyDrop::new(None),
+                retained_store: std::mem::ManuallyDrop::new(None),
+                retained_disposer: std::mem::ManuallyDrop::new(None),
+                committed: false,
+                faulted: false,
+                state: ActiveArtifactStoreReplacementState::Initializing,
+            }
+        }
+
+        fn retain_initializer_for_close(&mut self, job: ArtifactStoreInitializationJob<P, Mutation>) {
+            job.request_cancel_now();
+            self.request_cancel();
+            *self.session = Some(semio_framework_job::WorkerJobSession::new(job, self.session_params()));
+            self.faulted = true;
+            self.state = ActiveArtifactStoreReplacementState::Initializing;
+        }
+
+        fn recover_job(&mut self, outcome: semio_framework_job::StepOutcome) -> Result<(), Fault> {
+            let Some(session) = self.session.take() else {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained worker session"));
+            };
+            let mut job = match session.try_into_job() {
+                Ok(job) => job,
+                Err(session) => {
+                    *self.session = Some(session);
+                    return Ok(());
+                }
+            };
+            match outcome {
+                semio_framework_job::StepOutcome::Complete(_) => {
+                    let Some(candidate) = job.take_candidate() else {
+                        self.retain_initializer_for_close(job);
+                        return Ok(());
+                    };
+                    if !job.terminal_is_empty() {
+                        *self.retained_store = Some(candidate);
+                        self.retain_initializer_for_close(job);
+                        return Ok(());
+                    }
+                    drop(job);
+                    *self.retained_store = Some(candidate);
+                    self.state = ActiveArtifactStoreReplacementState::CandidateReady;
+                }
+                semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => {
+                    if !job.release_terminal_failure() || !job.terminal_is_empty() {
+                        self.retain_initializer_for_close(job);
+                        return Ok(());
+                    }
+                    drop(job);
+                    self.faulted = true;
+                    self.state = if self.retained_store.is_some() { ActiveArtifactStoreReplacementState::CandidateReady } else { ActiveArtifactStoreReplacementState::Complete };
+                }
+                _ => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-nonterminal-recovery"), "store initializer recovery received a nonterminal outcome")),
+            }
+            Ok(())
+        }
+
+        fn request_cancel(&self) {
+            self.cancel.cancel_now();
+            self.cancel_signal.store(true, std::sync::atomic::Ordering::Release);
+        }
+
+        fn drive_initializer(&mut self, pool: &semio_framework_async::WorkerPool) -> Result<PluginCloseStep, Fault> {
+            if self.state != ActiveArtifactStoreReplacementState::Initializing {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(pending) = self.pending.as_mut() {
+                return match pending.try_recv() {
+                    Err(semio_framework_async::oneshot::TryRecvError::Empty) => Ok(PluginCloseStep::Blocked { reason: "store initializer worker step is pending" }),
+                    Err(semio_framework_async::oneshot::TryRecvError::Closed) => {
+                        drop(self.pending.take());
+                        self.request_cancel();
+                        self.faulted = true;
+                        Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+                    }
+                    Ok(outcome) => {
+                        drop(self.pending.take());
+                        if outcome.is_terminal() {
+                            self.recover_job(outcome)?;
+                        }
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                };
+            }
+            let session = self.session.as_ref().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
+            match session.try_submit_step(pool, semio_framework_async::Lane::Interactive) {
+                Ok(pending) => {
+                    *self.pending = Some(pending);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                Err(_) => Ok(PluginCloseStep::Blocked { reason: "store initializer worker lane is saturated or contended" }),
+            }
+        }
+
+        fn drive_retained_store(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            let Some(store) = self.retained_store.as_mut() else {
+                self.state = ActiveArtifactStoreReplacementState::Complete;
+                return Ok(PluginCloseStep::Complete);
+            };
+            let Some(disposer) = self.retained_disposer.as_mut() else {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-disposer-missing"), "retained replacement store lost its exact disposer"));
+            };
+            match disposer.close_step(store, maximum_items.min(1), maximum_bytes)? {
+                PluginCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                PluginCloseStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-close-over-budget"), "retained replacement store exceeded its exact close grant")),
+                step @ PluginCloseStep::Blocked { .. } => Ok(step),
+                PluginCloseStep::Complete if disposer.terminal_is_empty(store) => {
+                    drop(self.retained_disposer.take());
+                    let store = self.retained_store.take().expect("terminal replacement store remains retained");
+                    drop(store);
+                    self.state = ActiveArtifactStoreReplacementState::Complete;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                PluginCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-false-terminal"), "retained replacement store disposer reported Complete without terminal-empty ownership")),
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.state == ActiveArtifactStoreReplacementState::Complete && self.session.is_none() && self.pending.is_none() && self.retained_store.is_none() && self.retained_disposer.is_none()
+        }
+    }
+
+    impl<P, Mutation> Drop for ActiveArtifactStoreReplacement<P, Mutation> {
+        fn drop(&mut self) {
+            assert!(
+                self.state == ActiveArtifactStoreReplacementState::Complete && self.session.is_none() && self.pending.is_none() && self.retained_store.is_none() && self.retained_disposer.is_none(),
+                "artifact store replacement reached Drop before initializer/candidate/displaced-store ownership was terminal empty"
+            );
+        }
+    }
+
+    struct ArtifactStoreReplacementAdmissionTarget<'a, A: ArtifactApp> {
+        jobs: &'a mut ArtifactFixedRegistry<ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation>>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        marker: std::marker::PhantomData<fn() -> A>,
+    }
+
+    impl<A: ArtifactApp> store::ArtifactEnvelopeCompletedRecordTarget<A::Snapshot, A::Mutation> for ArtifactStoreReplacementAdmissionTarget<'_, A> {
+        fn try_adopt_completed(&mut self, envelope: ArtifactEnvelope<A::Snapshot, A::Mutation>) -> Result<(), ArtifactEnvelope<A::Snapshot, A::Mutation>> {
+            if !self.jobs.can_insert(self.operation.0) {
+                return Err(envelope);
+            }
+            let job = A::build_document_store_initialization_job(envelope, self.operation, self.generation)?;
+            self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation, self.generation, job));
+            Ok(())
+        }
+    }
+
     /// 🚫️async: `M` (`SpaceMember + MemberFactory`, default `store::NoMembers`) types this app's
     /// composed CHILDREN only — the STORE-side dedyn shape (see `📓️terra-store-dedyn-report.md`),
     /// threaded through `children`/`register_child`/`open_child`/`absorb_created_children` below.
@@ -14550,6 +15170,29 @@ pub mod app {
         maintenance_peer_presence_cursor: usize,
         maintenance_presence_peer_cursor: usize,
         maintenance_peer_roster_cursor: usize,
+        envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>,
+        maintenance_envelope_ingress_cursor: usize,
+        close_envelope_ingress_cursor: usize,
+        close_envelope_ingress_drained: bool,
+        envelope_decode_jobs: ArtifactFixedRegistry<ActiveArtifactEnvelopeDecode<A::Snapshot, A::Mutation>>,
+        maintenance_envelope_decode_cursor: usize,
+        close_envelope_decode_cursor: usize,
+        close_envelope_decode_stage: u8,
+        close_envelope_decode_jobs_drained: bool,
+        store_replacement_jobs: ArtifactFixedRegistry<ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation>>,
+        maintenance_store_replacement_cursor: usize,
+        close_store_replacement_cursor: usize,
+        close_store_replacement_jobs_drained: bool,
+        envelope_field_decoders: std::sync::Arc<store::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot, A::Mutation>>,
+        envelope_field_decoder_retirements: ArtifactFixedRegistry<store::ArtifactEnvelopeReturnedFieldDecoder<A::Snapshot, A::Mutation>>,
+        maintenance_envelope_field_decoder_cursor: usize,
+        close_envelope_field_decoder_cursor: usize,
+        close_envelope_field_decoders_drained: bool,
+        envelope_completed_records: std::sync::Arc<store::ArtifactEnvelopeCompletedRecordRegistry<A::Snapshot, A::Mutation>>,
+        envelope_completed_record_retirements: ArtifactFixedRegistry<Box<dyn store::ArtifactEnvelopeCompletedRecord<A::Snapshot, A::Mutation>>>,
+        maintenance_envelope_completed_record_cursor: usize,
+        close_envelope_completed_record_cursor: usize,
+        close_envelope_completed_records_drained: bool,
         document_snapshot_read_returns: SnapshotReadReturnPump,
         close_snapshot_reads_drained: bool,
         close_owned_stage: u8,
@@ -14860,6 +15503,9 @@ pub mod app {
             let interaction_id = format!("{}-interaction", app_id);
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
             let mut store = ArtifactStore::new(envelope).await.expect("failed to create document store");
+            if let Some(owners) = A::build_document_store_owners() {
+                store.install_member_store_owners_exact(owners);
+            }
             let config_store = ConfigStore::new(config_envelope.await).await.expect("failed to create config store");
             let draft_store = store::DraftStore::new(draft_envelope).await.expect("failed to create draft store");
             let interaction_store = ConfigStore::new(interaction_envelope).await.expect("failed to create interaction store");
@@ -14938,6 +15584,29 @@ pub mod app {
                 maintenance_peer_presence_cursor: 0,
                 maintenance_presence_peer_cursor: 0,
                 maintenance_peer_roster_cursor: 0,
+                envelope_ingress: ArtifactFixedRegistry::new(),
+                maintenance_envelope_ingress_cursor: 0,
+                close_envelope_ingress_cursor: 0,
+                close_envelope_ingress_drained: false,
+                envelope_decode_jobs: ArtifactFixedRegistry::new(),
+                maintenance_envelope_decode_cursor: 0,
+                close_envelope_decode_cursor: 0,
+                close_envelope_decode_stage: 0,
+                close_envelope_decode_jobs_drained: false,
+                store_replacement_jobs: ArtifactFixedRegistry::new(),
+                maintenance_store_replacement_cursor: 0,
+                close_store_replacement_cursor: 0,
+                close_store_replacement_jobs_drained: false,
+                envelope_field_decoders: store::ArtifactEnvelopeFieldDecoderRegistry::new(),
+                envelope_field_decoder_retirements: ArtifactFixedRegistry::new(),
+                maintenance_envelope_field_decoder_cursor: 0,
+                close_envelope_field_decoder_cursor: 0,
+                close_envelope_field_decoders_drained: false,
+                envelope_completed_records: store::ArtifactEnvelopeCompletedRecordRegistry::new(),
+                envelope_completed_record_retirements: ArtifactFixedRegistry::new(),
+                maintenance_envelope_completed_record_cursor: 0,
+                close_envelope_completed_record_cursor: 0,
+                close_envelope_completed_records_drained: false,
                 document_snapshot_read_returns: SnapshotReadReturnPump::new(),
                 close_snapshot_reads_drained: false,
                 close_owned_stage: 0,
@@ -14965,6 +15634,434 @@ pub mod app {
                 pending_transaction_proposal: None,
                 pending_presence: Vec::new(),
             }
+        }
+
+        pub fn artifact_generation_now(&self) -> semio_framework_job::Generation {
+            semio_framework_job::Generation(self.store.generation_now())
+        }
+
+        /// 🎟️ Pre-admits the exact page and byte extent before a producer constructs any
+        /// envelope input owner. Occupied fixed slots and allocation failure leave no input owner.
+        pub fn begin_artifact_envelope_ingress(
+            &mut self,
+            maximum_pages: usize,
+            maximum_bytes: usize,
+        ) -> Result<ArtifactEnvelopeDecodeOperationHandle, Fault> {
+            let operation = semio_framework_job::allocate_operation_id();
+            let generation = self.artifact_generation_now();
+            if !self.envelope_ingress.can_insert(operation.0) || !self.envelope_decode_jobs.can_insert(operation.0) || !self.store_replacement_jobs.can_insert(operation.0) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-saturated"), "artifact envelope ingress has no exact fixed operation slot"));
+            }
+            let pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages, maximum_bytes }).map_err(|fault| {
+                Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-credits"), format!("artifact envelope ingress credits were rejected: {fault:?}"))
+            })?;
+            self.envelope_ingress.insert_admitted(operation.0, ActiveArtifactEnvelopeIngress::new(pages));
+            Ok(ArtifactEnvelopeDecodeOperationHandle { operation, generation })
+        }
+
+        /// 📥️ Moves one exact fixed page into a pre-admitted operation or returns that page
+        /// untouched with the fault. No page clone or aggregate command buffer is constructed.
+        pub fn admit_artifact_envelope_ingress_page(
+            &mut self,
+            handle: ArtifactEnvelopeDecodeOperationHandle,
+            page: store::ArtifactEnvelopeDecodePage,
+        ) -> Result<(), (Fault, store::ArtifactEnvelopeDecodePage)> {
+            if self.artifact_generation_now() != handle.generation {
+                return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-stale"), "artifact envelope generation changed before page admission"), page));
+            }
+            let Some(ingress) = self.envelope_ingress.get_mut(handle.operation.0) else {
+                return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-handle"), "unknown artifact envelope ingress handle"), page));
+            };
+            if ingress.closing {
+                return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-closing"), "artifact envelope ingress is closing"), page));
+            }
+            let Some(pages) = ingress.pages.as_mut() else {
+                return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-owner"), "artifact envelope ingress lost its exact page authority"), page));
+            };
+            page.admit_into(pages).map_err(|(fault, page)| {
+                (Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-page"), format!("artifact envelope page was rejected untouched: {fault:?}")), page)
+            })
+        }
+
+        /// 🔒️ Seals and transfers the exact page authority into the retained decoder. A
+        /// saturated decoder keeps the sealed ingress owner in its original fixed slot for retry.
+        pub fn seal_artifact_envelope_ingress(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<bool, Fault> {
+            if self.artifact_generation_now() != handle.generation {
+                self.cancel_artifact_envelope_load(handle)?;
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-stale"), "artifact envelope generation changed before sealing"));
+            }
+            if !self.envelope_decode_jobs.can_insert(handle.operation.0) {
+                return Ok(false);
+            }
+            {
+                let ingress = self
+                    .envelope_ingress
+                    .get_mut(handle.operation.0)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-handle"), "unknown artifact envelope ingress handle"))?;
+                if ingress.closing {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-closing"), "artifact envelope ingress is closing"));
+                }
+                let pages = ingress.pages.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-owner"), "artifact envelope ingress lost its exact page authority"))?;
+                if !pages.is_sealed() {
+                    pages.seal().map_err(|fault| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-seal"), format!("artifact envelope ingress could not seal: {fault:?}")))?;
+                }
+            }
+            let mut ingress = self
+                .envelope_ingress
+                .remove(handle.operation.0)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-owner"), "artifact envelope ingress changed before exact transfer"))?;
+            let pages = ingress.take_pages().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-owner"), "artifact envelope ingress lost its exact transfer owner"))?;
+            match self.submit_artifact_envelope_decode(handle.operation, handle.generation, pages) {
+                Ok(submitted) if submitted == handle => {
+                    drop(ingress);
+                    Ok(true)
+                }
+                Ok(_) => unreachable!("exact envelope transfer preserves its operation and generation"),
+                Err(pages) => {
+                    *ingress.pages = Some(pages);
+                    self.envelope_ingress.insert_admitted(handle.operation.0, ingress);
+                    Ok(false)
+                }
+            }
+        }
+
+        /// 🔄️ Advances decode-to-initializer handoff without running either job inline.
+        pub fn advance_artifact_envelope_load(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<ArtifactEnvelopeDecodeOperationPoll, Fault> {
+            if let Some(active) = self.store_replacement_jobs.get(handle.operation.0) {
+                if active.operation != handle.operation || active.generation != handle.generation {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-stale-handle"), "store replacement handle is stale"));
+                }
+                return Ok(self.poll_artifact_store_replacement(handle));
+            }
+            if let Some(active) = self.envelope_decode_jobs.get(handle.operation.0) {
+                if active.operation != handle.operation || active.generation != handle.generation {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.stale-handle"), "envelope decode handle is stale"));
+                }
+                if active.poll() == ArtifactEnvelopeDecodeOperationPoll::Ready {
+                    if !self.try_begin_artifact_store_replacement(handle)? {
+                        return Ok(ArtifactEnvelopeDecodeOperationPoll::Progress);
+                    }
+                }
+                return Ok(self.poll_artifact_store_replacement(handle));
+            }
+            if self.envelope_ingress.get(handle.operation.0).is_some() {
+                return Ok(ArtifactEnvelopeDecodeOperationPoll::Pending);
+            }
+            Ok(ArtifactEnvelopeDecodeOperationPoll::Fault)
+        }
+
+        pub fn cancel_artifact_envelope_load(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<(), Fault> {
+            if let Some(ingress) = self.envelope_ingress.get_mut(handle.operation.0) {
+                ingress.closing = true;
+                return Ok(());
+            }
+            if self.envelope_decode_jobs.get(handle.operation.0).is_some() {
+                return self.cancel_artifact_envelope_decode(handle);
+            }
+            if self.store_replacement_jobs.get(handle.operation.0).is_some() {
+                return self.cancel_artifact_store_replacement(handle);
+            }
+            Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.load-stale-handle"), "unknown artifact envelope load handle"))
+        }
+
+        /// 📥️ Admits one exact fixed-page envelope owner into app maintenance. A missing
+        /// domain catalog or occupied operation slot returns every page untouched.
+        pub fn submit_artifact_envelope_decode(
+            &mut self,
+            operation: semio_framework_job::OperationId,
+            generation: semio_framework_job::Generation,
+            pages: store::OwnedSchemaDecodePages,
+        ) -> Result<ArtifactEnvelopeDecodeOperationHandle, store::OwnedSchemaDecodePages> {
+            if !self.envelope_decode_jobs.can_insert(operation.0) {
+                return Err(pages);
+            }
+            let Some(bundle) = A::build_envelope_decode_owner_bundle() else { return Err(pages) };
+            let record = store::artifact_envelope_decode_record(operation, generation, pages)?;
+            let completion = store::ArtifactEnvelopeDecodeCompletion::new();
+            let fields = bundle.begin_fresh_decoder(operation, generation, std::sync::Arc::clone(&self.envelope_completed_records), std::sync::Arc::clone(&completion));
+            let active = match store::ArtifactEnvelopeDecodeAuthority::try_new(record, &self.envelope_field_decoders, fields) {
+                Ok(decode) => ActiveArtifactEnvelopeDecode::admitted(operation, generation, decode, completion),
+                Err((record, _fault, fields)) => ActiveArtifactEnvelopeDecode::rejected(
+                    operation,
+                    generation,
+                    Box::new(store::ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields)),
+                    completion,
+                ),
+            };
+            self.envelope_decode_jobs.insert_admitted(operation.0, active);
+            Ok(ArtifactEnvelopeDecodeOperationHandle { operation, generation })
+        }
+
+        pub fn poll_artifact_envelope_decode(&self, handle: ArtifactEnvelopeDecodeOperationHandle) -> ArtifactEnvelopeDecodeOperationPoll {
+            self.envelope_decode_jobs
+                .get(handle.operation.0)
+                .filter(|active| active.operation == handle.operation && active.generation == handle.generation)
+                .map_or(ArtifactEnvelopeDecodeOperationPoll::Fault, ActiveArtifactEnvelopeDecode::poll)
+        }
+
+        /// 📤️ Applies the sole non-suspending completed-record publication after exact live
+        /// generation validation. Backpressure leaves both the record and active operation retained.
+        pub fn try_publish_artifact_envelope_decode(
+            &mut self,
+            handle: ArtifactEnvelopeDecodeOperationHandle,
+            target: &mut dyn store::ArtifactEnvelopeCompletedRecordTarget<A::Snapshot, A::Mutation>,
+        ) -> Result<bool, Fault> {
+            if semio_framework_job::Generation(self.store.generation_now()) != handle.generation {
+                self.cancel_artifact_envelope_decode(handle)?;
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.stale-publication"), "decoded envelope generation changed before exact publication"));
+            }
+            let active = self
+                .envelope_decode_jobs
+                .get_mut(handle.operation.0)
+                .filter(|active| active.operation == handle.operation && active.generation == handle.generation)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.stale-handle"), "unknown or stale envelope decode handle"))?;
+            if active.state != ActiveArtifactEnvelopeDecodeState::Ready || active.cancel.is_cancelled_now() {
+                return Ok(false);
+            }
+            let ticket = active.completion.ticket().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.output-missing"), "ready envelope decode has no exact completed-record ticket"))?;
+            match self.envelope_completed_records.try_publish_to(ticket, target) {
+                Ok(false) | Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => Ok(false),
+                Ok(true) => {
+                    active.state = ActiveArtifactEnvelopeDecodeState::Complete;
+                    if !active.terminal_is_empty(&self.envelope_completed_records) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.publication-terminal"), "published envelope operation retained a nonterminal owner"));
+                    }
+                    let active = self.envelope_decode_jobs.remove(handle.operation.0).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.publication-owner"), "published envelope operation changed before exact removal"))?;
+                    drop(active);
+                    Ok(true)
+                }
+                Err(_) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.publication-ticket"), "completed envelope ticket was stale or invalid")),
+            }
+        }
+
+        pub fn cancel_artifact_envelope_decode(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<(), Fault> {
+            let active = self
+                .envelope_decode_jobs
+                .get_mut(handle.operation.0)
+                .filter(|active| active.operation == handle.operation && active.generation == handle.generation)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.stale-handle"), "unknown or stale envelope decode handle"))?;
+            active.cancel.cancel_now();
+            Ok(())
+        }
+
+        /// 🏗️ Atomically transfers one decoded envelope into the app-owned retained store
+        /// initializer. Capacity or factory rejection leaves the completed record in its exact slot.
+        pub fn try_begin_artifact_store_replacement(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<bool, Fault> {
+            if semio_framework_job::Generation(self.store.generation_now()) != handle.generation {
+                self.cancel_artifact_envelope_decode(handle)?;
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-stale-admission"), "store replacement generation changed before initializer admission"));
+            }
+            if !self.store_replacement_jobs.can_insert(handle.operation.0) {
+                return Ok(false);
+            }
+            let ticket = self
+                .envelope_decode_jobs
+                .get(handle.operation.0)
+                .filter(|active| active.operation == handle.operation && active.generation == handle.generation && active.state == ActiveArtifactEnvelopeDecodeState::Ready && !active.cancel.is_cancelled_now())
+                .and_then(|active| active.completion.ticket())
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-output-not-ready"), "decoded envelope is not ready for retained store initialization"))?;
+            let mut target = ArtifactStoreReplacementAdmissionTarget::<A> {
+                jobs: &mut self.store_replacement_jobs,
+                operation: handle.operation,
+                generation: handle.generation,
+                marker: std::marker::PhantomData,
+            };
+            match self.envelope_completed_records.try_publish_to(ticket, &mut target) {
+                Ok(false) | Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => Ok(false),
+                Ok(true) => {
+                    let active = self
+                        .envelope_decode_jobs
+                        .get_mut(handle.operation.0)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-decode-owner"), "decoded envelope owner changed during exact initializer admission"))?;
+                    active.state = ActiveArtifactEnvelopeDecodeState::Complete;
+                    if !active.terminal_is_empty(&self.envelope_completed_records) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-decode-terminal"), "decoded envelope retained an owner after initializer transfer"));
+                    }
+                    let active = self
+                        .envelope_decode_jobs
+                        .remove(handle.operation.0)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-decode-owner"), "terminal decoded envelope changed before exact removal"))?;
+                    drop(active);
+                    Ok(true)
+                }
+                Err(_) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-completed-ticket"), "decoded envelope completed-record ticket was stale or invalid")),
+            }
+        }
+
+        pub fn poll_artifact_store_replacement(&self, handle: ArtifactEnvelopeDecodeOperationHandle) -> ArtifactEnvelopeDecodeOperationPoll {
+            self.store_replacement_jobs
+                .get(handle.operation.0)
+                .filter(|active| active.operation == handle.operation && active.generation == handle.generation)
+                .map_or(ArtifactEnvelopeDecodeOperationPoll::Fault, |active| match active.state {
+                    ActiveArtifactStoreReplacementState::Initializing | ActiveArtifactStoreReplacementState::CandidateReady => ArtifactEnvelopeDecodeOperationPoll::Pending,
+                    ActiveArtifactStoreReplacementState::RetiringCommittedStore | ActiveArtifactStoreReplacementState::RetiringRejectedCandidate => ArtifactEnvelopeDecodeOperationPoll::Progress,
+                    ActiveArtifactStoreReplacementState::Complete if active.committed && !active.faulted => ArtifactEnvelopeDecodeOperationPoll::Ready,
+                    ActiveArtifactStoreReplacementState::Complete if active.cancel.is_cancelled_now() => ArtifactEnvelopeDecodeOperationPoll::Cancelled,
+                    ActiveArtifactStoreReplacementState::Complete => ArtifactEnvelopeDecodeOperationPoll::Fault,
+                })
+        }
+
+        pub fn acknowledge_artifact_store_replacement(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<bool, Fault> {
+            let Some(active) = self.store_replacement_jobs.get(handle.operation.0) else { return Ok(false) };
+            if active.operation != handle.operation || active.generation != handle.generation || !active.terminal_is_empty() {
+                return Ok(false);
+            }
+            let active = self
+                .store_replacement_jobs
+                .remove(handle.operation.0)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-terminal-owner"), "terminal store replacement changed before exact acknowledgement"))?;
+            drop(active);
+            Ok(true)
+        }
+
+        pub fn cancel_artifact_store_replacement(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<(), Fault> {
+            let active = self
+                .store_replacement_jobs
+                .get_mut(handle.operation.0)
+                .filter(|active| active.operation == handle.operation && active.generation == handle.generation)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-stale-handle"), "unknown or stale store replacement handle"))?;
+            if !active.committed {
+                active.request_cancel();
+            }
+            Ok(())
+        }
+
+        fn drive_store_replacement_jobs(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
+            let cursor = if closing { &mut self.close_store_replacement_cursor } else { &mut self.maintenance_store_replacement_cursor };
+            let Some((index, operation_id)) = self.store_replacement_jobs.next_id_from(*cursor) else {
+                return Ok(PluginCloseStep::Complete);
+            };
+            *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(
+                semio_framework_async::ProcessKind::InteractiveNative,
+                std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1),
+            ));
+            if closing {
+                if let Some(active) = self.store_replacement_jobs.get_mut(operation_id) {
+                    active.request_cancel();
+                }
+            }
+            let state = self
+                .store_replacement_jobs
+                .get(operation_id)
+                .map(|active| active.state)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-owner"), "store replacement changed during one fixed maintenance step"))?;
+            if state == ActiveArtifactStoreReplacementState::Initializing {
+                return self
+                    .store_replacement_jobs
+                    .get_mut(operation_id)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-owner"), "store initializer changed before one worker step"))?
+                    .drive_initializer(&pool);
+            }
+            if state == ActiveArtifactStoreReplacementState::CandidateReady {
+                let live_generation = semio_framework_job::Generation(self.store.generation_now());
+                let active = self
+                    .store_replacement_jobs
+                    .get_mut(operation_id)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-owner"), "ready store candidate changed before exact commit validation"))?;
+                let disposer = A::build_document_store_disposer().ok_or_else(|| {
+                    Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-disposer-missing"), "app did not supply the required displaced-store disposer")
+                })?;
+                if closing || active.cancel.is_cancelled_now() || active.generation != live_generation {
+                    *active.retained_disposer = Some(disposer);
+                    active.faulted = true;
+                    active.state = ActiveArtifactStoreReplacementState::RetiringRejectedCandidate;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                let candidate = active.retained_store.take().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-candidate-missing"), "ready store replacement lost its exact candidate"))?;
+                let displaced = std::mem::replace(&mut self.store, candidate);
+                *active.retained_store = Some(displaced);
+                *active.retained_disposer = Some(disposer);
+                active.committed = true;
+                active.state = ActiveArtifactStoreReplacementState::RetiringCommittedStore;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if matches!(state, ActiveArtifactStoreReplacementState::RetiringCommittedStore | ActiveArtifactStoreReplacementState::RetiringRejectedCandidate) {
+                return self
+                    .store_replacement_jobs
+                    .get_mut(operation_id)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-owner"), "retained store changed before one close step"))?
+                    .drive_retained_store(maximum_items, maximum_bytes);
+            }
+            if closing {
+                let active = self
+                    .store_replacement_jobs
+                    .get(operation_id)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-owner"), "terminal store replacement changed before close acknowledgement"))?;
+                if !active.terminal_is_empty() {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-terminal-not-empty"), "store replacement reported terminal before every exact owner was empty"));
+                }
+                let active = self
+                    .store_replacement_jobs
+                    .remove(operation_id)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-owner"), "terminal store replacement changed before exact close removal"))?;
+                drop(active);
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn drive_envelope_ingress(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
+            let cursor = if closing { &mut self.close_envelope_ingress_cursor } else { &mut self.maintenance_envelope_ingress_cursor };
+            let Some((index, operation_id)) = self.envelope_ingress.next_id_from(*cursor) else {
+                return Ok(PluginCloseStep::Complete);
+            };
+            *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            let ingress = self
+                .envelope_ingress
+                .get_mut(operation_id)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-owner"), "artifact envelope ingress changed during one bounded maintenance step"))?;
+            if closing {
+                ingress.closing = true;
+            }
+            if !ingress.closing {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let step = ingress.close_step(maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES));
+            if step == PluginCloseStep::Complete {
+                let ingress = self
+                    .envelope_ingress
+                    .remove(operation_id)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-owner"), "terminal artifact envelope ingress changed before exact removal"))?;
+                if !ingress.terminal_is_empty() {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-false-terminal"), "artifact envelope ingress reported Complete before every page was released"));
+                }
+                drop(ingress);
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(step)
+        }
+
+        fn drive_envelope_decode_jobs(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
+            let cursor = if closing { &mut self.close_envelope_decode_cursor } else { &mut self.maintenance_envelope_decode_cursor };
+            let Some((index, operation_id)) = self.envelope_decode_jobs.next_id_from(*cursor) else {
+                return Ok(PluginCloseStep::Complete);
+            };
+            *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(
+                semio_framework_async::ProcessKind::InteractiveNative,
+                std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1),
+            ));
+            let live_generation = if closing {
+                self.envelope_decode_jobs.get(operation_id).map(|active| {
+                    active.cancel.cancel_now();
+                    active.generation
+                })
+            } else {
+                Some(semio_framework_job::Generation(self.store.generation_now()))
+            }
+            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed during one fixed maintenance step"))?;
+            let step = self
+                .envelope_decode_jobs
+                .get_mut(operation_id)
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed before worker advancement"))?
+                .drive(&pool, live_generation, &self.envelope_completed_records, maximum_items, maximum_bytes)?;
+            if self.envelope_decode_jobs.get(operation_id).is_some_and(|active| active.terminal_is_empty(&self.envelope_completed_records)) {
+                let active = self.envelope_decode_jobs.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "terminal envelope operation changed before exact removal"))?;
+                drop(active);
+                return Ok(if self.envelope_decode_jobs.is_empty() { PluginCloseStep::Complete } else { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } });
+            }
+            Ok(step)
         }
 
         fn admit_child_content_publication(&self) -> Result<u64, Fault> {
@@ -15763,7 +16860,7 @@ pub mod app {
 
             // 📝️ Draft lane — ephemeral; applied without command-log rows (never checkpoints).
             if !draft_mutations.is_empty() {
-                self.draft_store.set_local_actor_id(Some(meta.actor.clone())).await;
+                self.draft_store.set_local_actor_id(Some(meta.actor.clone())).await.map_err(|error| error.into_fault())?;
                 self.draft_store.dispatch(ArtifactCommand::Apply { mutations: draft_mutations, description: None }).await.map_err(|error| error.into_fault())?;
             }
 
@@ -15771,7 +16868,7 @@ pub mod app {
             // — captures the resulting (possibly amended) config edit id for the command-log row below.
             let mut config_edit_id: Option<String> = None;
             if !config_mutations.is_empty() {
-                self.config_store.set_local_actor_id(Some(meta.actor.clone())).await;
+                self.config_store.set_local_actor_id(Some(meta.actor.clone())).await.map_err(|error| error.into_fault())?;
                 let before_config_edit_id = self.config_store.envelope().await.vcs.edits.last().map(|edit| edit.id.clone());
                 let config_command = match &coalesce_key {
                     Some(key) => ArtifactCommand::AmendLast { mutations: config_mutations, coalesce_key: Some(format!("config:{key}")) },
@@ -15812,7 +16909,7 @@ pub mod app {
                 self.record_command(verb, kind, description.clone(), None, config_edit_id, None).await;
                 return Ok(Self::empty_result(verb, meta, effects, events, ui_scope).await);
             }
-            self.store.set_local_actor_id(Some(meta.actor.clone())).await;
+            self.store.set_local_actor_id(Some(meta.actor.clone())).await.map_err(|error| error.into_fault())?;
             // 🪢️ Captured before dispatch so `result_from_last_edit` can report only the operations THIS dispatch
             // added — if `AmendLast` amends the same edit (`before_edit_id` unchanged after dispatch), these
             // are the tail offsets into that edit's now-longer forwards/inverse; if a new edit was created
@@ -15928,7 +17025,7 @@ pub mod app {
                 parent_ops.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
             }
 
-            self.store.set_local_actor_id(Some(meta.actor.clone())).await;
+            self.store.set_local_actor_id(Some(meta.actor.clone())).await.map_err(|error| error.into_fault())?;
             let mut seen_keys = ::std::collections::HashSet::with_capacity(child_emits.len());
             let mut child_ptrs: Vec<(*mut M, ChildDispatch)> = Vec::with_capacity(child_emits.len());
             for child_emit in &child_emits {
@@ -16262,7 +17359,7 @@ pub mod app {
             let persisted_before = self.interaction_store.snapshot().await.unwrap_or_default();
             let persisted = protocol::InteractionState { selection: validated.selection, hover: BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
             if persisted != persisted_before {
-                self.interaction_store.set_local_actor_id(Some(meta.actor.clone())).await;
+                self.interaction_store.set_local_actor_id(Some(meta.actor.clone())).await.map_err(|error| error.into_fault())?;
                 self.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::SetState(persisted)], description: None, lane: HistoryLane::Interaction }).await.map_err(|error| error.into_fault())?;
             }
             Ok(())
@@ -17255,7 +18352,7 @@ pub mod app {
             if permit.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "configuration binary was cancelled before config-store commit"));
             }
-            self.config_store.set_local_actor_id(Some(meta.actor.clone())).await;
+            self.config_store.set_local_actor_id(Some(meta.actor.clone())).await.map_err(|error| error.into_fault())?;
             self.config_store.dispatch(command).await.map_err(|error| error.into_fault())?;
             self.cache = None;
             let config_edit_id = self.config_store.envelope().await.vcs.edits.last().map(|edit| edit.id.clone());
@@ -17271,6 +18368,161 @@ pub mod app {
                 result.history_patch = self.history_patch(false).await.ok();
             }
             result
+        }
+
+        fn drive_envelope_field_decoder_returns(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let cursor = if closing { &mut self.close_envelope_field_decoder_cursor } else { &mut self.maintenance_envelope_field_decoder_cursor };
+            if let Some((index, id)) = self.envelope_field_decoder_retirements.next_id_from(*cursor) {
+                let retirement = self.envelope_field_decoder_retirements.get_mut(id).ok_or_else(|| {
+                    Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-retirement-authority"), "returned envelope field decoder changed during one bounded maintenance step")
+                })?;
+                let step = store::ErasedSnapshotRetirement::close_step(retirement, maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(plugin_sdk_fault)?;
+                match step {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_items <= maximum_items && released_bytes <= maximum_bytes => {
+                        *cursor = index;
+                        return Ok(PluginCloseStep::Pending { released_items, released_bytes });
+                    }
+                    store::SnapshotRetirementStep::Pending { .. } => {
+                        return Err(Fault::new(
+                            FaultOrigin::Framework,
+                            FaultCode::new("artifact-envelope.field-retirement-over-budget"),
+                            "returned envelope field decoder exceeded its exact one-owner maintenance grant",
+                        ));
+                    }
+                    store::SnapshotRetirementStep::Blocked => {
+                        *cursor = index;
+                        return Ok(PluginCloseStep::Blocked { reason: "returned envelope field decoder is externally blocked" });
+                    }
+                    store::SnapshotRetirementStep::Complete => {}
+                }
+                if !store::ErasedSnapshotRetirement::terminal_is_empty(retirement) {
+                    return Err(Fault::new(
+                        FaultOrigin::Framework,
+                        FaultCode::new("artifact-envelope.field-retirement-false-terminal"),
+                        "returned envelope field decoder reported Complete without terminal-empty ownership",
+                    ));
+                }
+                let retirement = self.envelope_field_decoder_retirements.remove(id).ok_or_else(|| {
+                    Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-retirement-authority"), "terminal envelope field decoder changed before exact removal")
+                })?;
+                drop(retirement);
+                *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            let Some(ticket) = self.envelope_field_decoders.next_returned_ticket() else {
+                return if closing && !self.envelope_field_decoders.terminal_is_empty() {
+                    Ok(PluginCloseStep::Blocked { reason: "artifact envelope field lease remains live outside the bounded app return pump" })
+                } else {
+                    Ok(PluginCloseStep::Complete)
+                };
+            };
+            let id = ticket.index() as u64;
+            if !self.envelope_field_decoder_retirements.can_insert(id) {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let retirement = match self.envelope_field_decoders.take_returned_ticket(ticket) {
+                Ok(retirement) => retirement,
+                Err(store::ArtifactEnvelopeFieldDecoderRegistryFault::Contended | store::ArtifactEnvelopeFieldDecoderRegistryFault::Returned | store::ArtifactEnvelopeFieldDecoderRegistryFault::Stale) => {
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                Err(_) => {
+                    return Err(Fault::new(
+                        FaultOrigin::Framework,
+                        FaultCode::new("artifact-envelope.field-return-invalid"),
+                        "returned envelope field decoder lost its exact registry generation before bounded handoff",
+                    ));
+                }
+            };
+            self.envelope_field_decoder_retirements.insert_admitted(id, retirement);
+            *cursor = ticket.index();
+            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+        }
+
+        fn drive_envelope_completed_record_returns(&mut self, maximum_items: usize, maximum_bytes: usize, closing: bool) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let cursor = if closing { &mut self.close_envelope_completed_record_cursor } else { &mut self.maintenance_envelope_completed_record_cursor };
+            if let Some((index, id)) = self.envelope_completed_record_retirements.next_id_from(*cursor) {
+                let retirement = self.envelope_completed_record_retirements.get_mut(id).ok_or_else(|| {
+                    Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-retirement-authority"), "completed envelope changed during one bounded maintenance step")
+                })?;
+                match retirement.close_step(maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(plugin_sdk_fault)? {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_items <= maximum_items && released_bytes <= maximum_bytes => {
+                        *cursor = index;
+                        return Ok(PluginCloseStep::Pending { released_items, released_bytes });
+                    }
+                    store::SnapshotRetirementStep::Pending { .. } => {
+                        return Err(Fault::new(
+                            FaultOrigin::Framework,
+                            FaultCode::new("artifact-envelope.completed-retirement-over-budget"),
+                            "completed envelope exceeded its exact one-owner maintenance grant",
+                        ));
+                    }
+                    store::SnapshotRetirementStep::Blocked => {
+                        *cursor = index;
+                        return Ok(PluginCloseStep::Blocked { reason: "completed envelope retirement is externally blocked" });
+                    }
+                    store::SnapshotRetirementStep::Complete => {}
+                }
+                if !retirement.terminal_is_empty() {
+                    return Err(Fault::new(
+                        FaultOrigin::Framework,
+                        FaultCode::new("artifact-envelope.completed-retirement-false-terminal"),
+                        "completed envelope reported Complete without terminal-empty ownership",
+                    ));
+                }
+                let retirement = self.envelope_completed_record_retirements.remove(id).ok_or_else(|| {
+                    Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-retirement-authority"), "terminal completed envelope changed before exact removal")
+                })?;
+                drop(retirement);
+                *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            let ticket = match if closing { self.envelope_completed_records.try_next_ticket(cursor) } else { self.envelope_completed_records.try_next_close_ticket(cursor) } {
+                Ok(ticket) => ticket,
+                Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                Err(_) => {
+                    return Err(Fault::new(
+                        FaultOrigin::Framework,
+                        FaultCode::new("artifact-envelope.completed-registry-invalid"),
+                        "completed envelope registry lost its exact generation authority",
+                    ));
+                }
+            };
+            let Some(ticket) = ticket else {
+                return if closing && !self.envelope_completed_records.terminal_is_empty() {
+                    Ok(PluginCloseStep::Blocked { reason: "completed envelope owner remains live outside the bounded app close pump" })
+                } else {
+                    Ok(PluginCloseStep::Complete)
+                };
+            };
+            let id = ticket
+                .generation()
+                .checked_mul(ARTIFACT_LIVE_OUTPUT_SLOTS as u64)
+                .and_then(|base| base.checked_add(ticket.index() as u64))
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-generation-exhausted"), "completed envelope retirement identity overflowed"))?;
+            if !self.envelope_completed_record_retirements.can_insert(id) {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let retirement = match self.envelope_completed_records.try_detach(ticket) {
+                Ok(retirement) => retirement,
+                Err(store::ArtifactEnvelopeCompletedRecordFault::Contended | store::ArtifactEnvelopeCompletedRecordFault::Stale) => {
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                Err(_) => {
+                    return Err(Fault::new(
+                        FaultOrigin::Framework,
+                        FaultCode::new("artifact-envelope.completed-detach-invalid"),
+                        "completed envelope could not transfer its exact owner into bounded retirement",
+                    ));
+                }
+            };
+            self.envelope_completed_record_retirements.insert_admitted(id, retirement);
+            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
         }
     }
 
@@ -17624,6 +18876,56 @@ pub mod app {
                 self.close_peer_presence_detached = true;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
+            if !self.close_envelope_ingress_drained {
+                let step = self.drive_envelope_ingress(maximum_items, maximum_bytes, true)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                self.close_envelope_ingress_drained = true;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.close_envelope_decode_jobs_drained {
+                let stage = self.close_envelope_decode_stage;
+                self.close_envelope_decode_stage = (stage + 1) % 3;
+                let step = match stage {
+                    0 => self.drive_envelope_decode_jobs(maximum_items, maximum_bytes, true)?,
+                    1 => self.drive_envelope_field_decoder_returns(maximum_items, maximum_bytes, true)?,
+                    2 => self.drive_envelope_completed_record_returns(maximum_items, maximum_bytes, true)?,
+                    _ => unreachable!("fixed envelope close stage"),
+                };
+                if self.envelope_decode_jobs.is_empty() {
+                    self.close_envelope_decode_jobs_drained = true;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                return Ok(step);
+            }
+            if !self.close_envelope_field_decoders_drained {
+                let step = self.drive_envelope_field_decoder_returns(maximum_items, maximum_bytes, true)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                self.close_envelope_field_decoders_drained = true;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.close_envelope_completed_records_drained {
+                let step = self.drive_envelope_completed_record_returns(maximum_items, maximum_bytes, true)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                self.close_envelope_completed_records_drained = true;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.close_store_replacement_jobs_drained {
+                let step = self.drive_store_replacement_jobs(maximum_items, maximum_bytes, true)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                if !self.store_replacement_jobs.is_empty() {
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                self.close_store_replacement_jobs_drained = true;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
             if !self.close_snapshot_reads_drained {
                 let pump = &mut self.document_snapshot_read_returns;
                 let store = &mut self.store;
@@ -17674,14 +18976,22 @@ pub mod app {
                 && self.peer_roster_publications.is_empty()
                 && self.peer_presence_retirements.is_empty()
                 && self.presence_peer_retirements.is_empty()
+                && self.envelope_ingress.is_empty()
+                && self.envelope_decode_jobs.is_empty()
+                && self.store_replacement_jobs.is_empty()
+                && self.envelope_field_decoder_retirements.is_empty()
+                && self.envelope_field_decoders.next_returned_ticket().is_none()
+                && self.envelope_completed_record_retirements.is_empty()
+                && self.envelope_completed_records.terminal_is_empty()
                 && self.document_snapshot_read_returns.terminal_is_empty()
+                && self.store.maintenance_retirements_terminal_is_empty()
             {
                 let pump = &mut self.document_snapshot_read_returns;
                 let store = &mut self.store;
                 return pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes);
             }
             let stage = self.maintenance_stage;
-            self.maintenance_stage = (self.maintenance_stage + 1) % 9;
+            self.maintenance_stage = (self.maintenance_stage + 1) % 15;
             match stage {
                 0 => {
                     let Some((index, operation_id)) = self.tool_operations.next_id_from(self.maintenance_tool_cursor) else {
@@ -17982,6 +19292,31 @@ pub mod app {
                     let store = &mut self.store;
                     pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes)
                 }
+                9 => match self.store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "artifact store displaced owner remains externally shared" }),
+                    store::SnapshotRetirementStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                },
+                10 => match self.drive_envelope_ingress(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                11 => match self.drive_envelope_decode_jobs(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                12 => match self.drive_envelope_field_decoder_returns(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                13 => match self.drive_envelope_completed_record_returns(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                14 => match self.drive_store_replacement_jobs(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
                 _ => unreachable!("fixed maintenance stage"),
             }
         }
@@ -18210,7 +19545,7 @@ pub mod app {
             }
             let PendingTransaction { txn_id, ops, label, origin, .. } = pending;
             let description = if label.is_empty() { None } else { Some(label) };
-            self.store.set_local_actor_id(Some(meta.actor.clone())).await;
+            self.store.set_local_actor_id(Some(meta.actor.clone())).await.map_err(|error| error.into_fault())?;
             // 🔀️ Contract §5.6: this member's prepared ops land as exactly ONE `Edit` — the
             // one-edit-per-member invariant `CompositionCoordinator::undo_group`'s tail-based group
             // undo depends on — stamped with `group_id = txn_id` and every `MutationMeta.origin`.
@@ -19505,6 +20840,22 @@ pub mod app {
             None
         }
 
+        fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+            None
+        }
+
+        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+            None
+        }
+
+        fn build_document_store_initialization_job(
+            envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+            _operation: semio_framework_job::OperationId,
+            _generation: semio_framework_job::Generation,
+        ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+            Err(envelope)
+        }
+
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             None
         }
@@ -19864,6 +21215,19 @@ pub mod app {
         }
         fn build_snapshot_disposer() -> Option<Box<dyn ArtifactSnapshotDisposer<Self::Snapshot>>> {
             E::build_snapshot_disposer()
+        }
+        fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+            E::build_envelope_decode_owner_bundle()
+        }
+        fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+            E::build_document_store_owners()
+        }
+        fn build_document_store_initialization_job(
+            envelope: ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+            operation: semio_framework_job::OperationId,
+            generation: semio_framework_job::Generation,
+        ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+            E::build_document_store_initialization_job(envelope, operation, generation)
         }
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             E::build_document_store_disposer()
@@ -25741,6 +27105,142 @@ pub mod plugin_runtime {
         }
 
         #[semio_framework_async_macros::async_test]
+        async fn app_maintenance_reclaims_late_envelope_field_returns_before_close_terminal() {
+            struct ReturnedDecoder {
+                terminal: bool,
+                drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+            }
+
+            impl store::ArtifactEnvelopeFieldDecoder<TestSnapshot, TestMutation> for ReturnedDecoder {
+                fn accept_field_token(
+                    &mut self,
+                    _field_id: u16,
+                    _token: store::OwnedSchemaToken,
+                    _terminal: bool,
+                    _source: &store::OwnedSchemaRecordCursor,
+                    _cx: &mut semio_framework_job::StepContext<'_>,
+                ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+                    Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
+                }
+
+                fn finish_record(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+                    Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
+                }
+
+                fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, store::OwnedSchemaDecodeDiagnostic> {
+                    if maximum_items == 0 {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    self.terminal = true;
+                    Ok(store::SnapshotRetirementStep::Complete)
+                }
+
+                fn terminal_is_empty(&self) -> bool {
+                    self.terminal
+                }
+            }
+
+            impl Drop for ReturnedDecoder {
+                fn drop(&mut self) {
+                    self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                }
+            }
+
+            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::default()).await;
+            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let lease = app
+                .envelope_field_decoders
+                .try_admit(Box::new(ReturnedDecoder { terminal: false, drops: drops.clone() }))
+                .unwrap_or_else(|_| panic!("app decoder return registry admits one exact owner"));
+            let ticket = lease.ticket();
+            drop(lease);
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
+
+            for _ in 0..4 {
+                app.maintenance_stage = 10;
+                let _ = PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("production maintenance pumps one returned decoder owner");
+            }
+            assert!(app.envelope_field_decoders.ticket_reclaimed(ticket));
+            assert!(app.envelope_field_decoder_retirements.is_empty());
+            assert!(app.envelope_field_decoders.terminal_is_empty());
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
+            assert_eq!(app.drive_envelope_field_decoder_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, true).expect("close hierarchy observes exact terminal state"), PluginCloseStep::Complete);
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn app_maintenance_and_close_retain_completed_envelope_results_until_terminal_empty() {
+            struct CompletedRecordSentinel {
+                remaining: usize,
+                terminal: bool,
+                drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+            }
+
+            impl store::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation> for CompletedRecordSentinel {
+                fn try_publish_to(&mut self, _target: &mut dyn store::ArtifactEnvelopeCompletedRecordTarget<TestSnapshot, TestMutation>) -> bool {
+                    false
+                }
+
+                fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+                    if maximum_items == 0 {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    if self.remaining != 0 {
+                        self.remaining -= 1;
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                    self.terminal = true;
+                    Ok(store::SnapshotRetirementStep::Complete)
+                }
+
+                fn terminal_is_empty(&self) -> bool {
+                    self.terminal
+                }
+            }
+
+            impl Drop for CompletedRecordSentinel {
+                fn drop(&mut self) {
+                    assert!(self.terminal);
+                    self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                }
+            }
+
+            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::default()).await;
+            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let owner: Box<dyn store::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation>> = Box::new(CompletedRecordSentinel { remaining: 2, terminal: false, drops: drops.clone() });
+            let ticket = match app.envelope_completed_records.try_admit(owner) {
+                Ok(ticket) => ticket,
+                Err((_fault, mut owner)) => {
+                    while !owner.terminal_is_empty() {
+                        let _ = owner.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("rejected completed owner bounded close");
+                    }
+                    panic!("app completed-record registry must admit one exact owner")
+                }
+            };
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
+            app.maintenance_stage = 11;
+            assert_eq!(PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("ordinary maintenance preserves unconsumed completed output"), PluginCloseStep::Complete);
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
+            app.envelope_completed_records.try_request_close(ticket).expect("cancelled consumer hands exact completed output to maintenance");
+            for _ in 0..6 {
+                app.maintenance_stage = 11;
+                let _ = PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("production maintenance pumps one completed-record owner");
+            }
+            match app.envelope_completed_records.try_detach(ticket) {
+                Err(fault) => assert_eq!(fault, store::ArtifactEnvelopeCompletedRecordFault::Stale),
+                Ok(mut owner) => {
+                    while !owner.terminal_is_empty() {
+                        let _ = owner.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("unexpected completed owner bounded close");
+                    }
+                    panic!("maintenance did not reclaim the exact completed record")
+                }
+            }
+            assert!(app.envelope_completed_record_retirements.is_empty());
+            assert!(app.envelope_completed_records.terminal_is_empty());
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
+            assert_eq!(app.drive_envelope_completed_record_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, true).expect("close observes exact completed terminal state"), PluginCloseStep::Complete);
+        }
+
+        #[semio_framework_async_macros::async_test]
         async fn app_close_step_drains_at_most_one_segment_and_one_chunk_budget() {
             let mut app = contract_app_under_test().await;
             app.close_started = true;
@@ -25874,7 +27374,8 @@ pub mod plugin_runtime {
             app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("seed one durable edit");
             let (mut envelope, applied_edit_ids) = {
                 let store = app.test_store().await;
-                (store.envelope().await.clone(), store.applied_edit_ids().await.to_vec())
+                let files = store::print_document_pack(store.envelope().await).await.expect("print retained test envelope");
+                (store::parse_document_pack::<TestSnapshot, TestMutation>(&files.pack, &files.spr).await.expect("parse retained test envelope").envelope, store.applied_edit_ids().await.to_vec())
             };
             let kind = protocol::ConflictKind::Degraded { edit_ids: applied_edit_ids.clone() };
             let timestamp = protocol::HybridLogicalTimestamp::new(1, u64::MAX);
@@ -26187,6 +27688,55 @@ pub mod plugin_runtime {
         impl store::SnapshotRetirementFactory<TestSnapshot> for TestSnapshotRetirementFactory {
             fn retire(&self, snapshot: std::sync::Arc<TestSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
                 Box::new(TestSnapshotRetirement { snapshot: Some(snapshot), lie_about_terminal: self.lie_about_terminal })
+            }
+        }
+
+        struct TestStoreOwnedDisposer;
+
+        impl store::ArtifactStoreOwnedDisposer<TestSnapshot, TestMutation> for TestStoreOwnedDisposer {
+            fn close_step(&mut self, _store: &mut store::ArtifactStoreCloseView<'_, TestSnapshot, TestMutation>, _maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+                Ok(store::SnapshotRetirementStep::Blocked)
+            }
+
+            fn terminal_is_empty(&self, _store: &store::ArtifactStore<TestSnapshot, TestMutation>) -> bool {
+                false
+            }
+        }
+
+        struct TestOwnedValueRetirement<T: Send + 'static>(Option<T>);
+
+        impl<T: Send + 'static> store::ErasedSnapshotRetirement for TestOwnedValueRetirement<T> {
+            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+                if maximum_items == 0 {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if self.0.take().is_some() {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                Ok(store::SnapshotRetirementStep::Complete)
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                self.0.is_none()
+            }
+        }
+
+        struct TestOwnedValueRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
+
+        impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for TestOwnedValueRetirementFactory<T> {
+            fn retire_owned(&self, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
+                Box::new(TestOwnedValueRetirement(Some(value)))
+            }
+        }
+
+        impl store::MemberStoreOwner<TestMutation> for TestSnapshot {
+            fn member_store_owners() -> store::MemberStoreOwners<Self, TestMutation> {
+                store::MemberStoreOwners::new(
+                    std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal: false }),
+                    std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestSnapshot>(std::marker::PhantomData)),
+                    std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestMutation>(std::marker::PhantomData)),
+                    Box::new(TestStoreOwnedDisposer),
+                )
             }
         }
 
@@ -28290,6 +29840,7 @@ pub mod world3d_host {
         domain_granularity_id: Option<String>,
     ) -> World3dScene {
         World3dScene {
+            snapshot: None,
             camera_json,
             meshes_json,
             instances_json,

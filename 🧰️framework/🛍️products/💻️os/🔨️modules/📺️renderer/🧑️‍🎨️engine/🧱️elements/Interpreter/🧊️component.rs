@@ -8,6 +8,7 @@
 //! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
 
 use crate::scenes::{decode_canvas_image, queue_canvas_image_upload, render_component_scene, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 #[cfg(test)]
@@ -232,8 +233,7 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
 /* 🧵️ The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::wgpu::engine::Ui`
  * (retained-mode `apply_tree`/`frame`/`dispatch_event`), not `ui_node_to_widget`+`render_widget`.
  * One process-wide `Ui` façade (its own internal `HashMap<window_id, UiWindow>` already partitions
- * per-window retained state — see `report-w0-engine-facade.md`) lives in a `thread_local!`, mirroring
- * this same region's pre-existing `UI_IMAGE_FETCH_QUEUE`-style statics, since neither call site of
+ * per-window retained state — see `report-w0-engine-facade.md`) lives in a `thread_local!`, since neither call site of
  * `render_ui_node` (`shell::ShellChrome`'s `render_window_content`/`render_floating_panel`) is in a
  * region this ticket may touch, so there was no `ShellTypes` struct field available to hang it on
  * (struct field additions there are an Integrator choke point per `region-claims.json`).
@@ -1480,44 +1480,23 @@ mod ui_command_wiring_tests {
 //#endregion RetainedEngineCutover
 
 //#region UiImageLoading
-/** 🌐️ A pending async fetch for a plain `Image` UiNode whose `src` is an `http(s)://` or relative
- * URL (i.e. not a `data:` URL) — polled once per frame by the host runtime and fed back through
- * `apply_ui_image_bytes`. Mirrors the `scenes::PendingMapTileFetch` queue pattern
- * (`scenes::collect_pending_map_tile_fetches` / `scenes::apply_map_tile_bytes`) used for GIS tile
- * loading, kept local to `interpreter` since that queue is private to the `scenes` module. */
-#[derive(Clone, Debug)]
-pub struct PendingUiImageFetch {
-    pub id: String,
-    pub url: String,
-}
-
-static UI_IMAGE_FETCH_QUEUE: WorkerCell<Vec<PendingUiImageFetch>> = WorkerCell::new();
-static UI_IMAGE_FETCH_INFLIGHT: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
 static UI_IMAGE_FETCH_MISS: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
 static UI_IMAGE_LAST_URL: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
 static UI_IMAGE_URL_CACHE: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
 static UI_IMAGE_SIZES: WorkerCell<std::collections::HashMap<String, (u32, u32)>> = WorkerCell::new();
 static UI_IMAGE_SVG_CACHE: WorkerCell<std::collections::HashMap<String, (u64, String, u32, u32)>> = WorkerCell::new();
+static UI_IMAGE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new();
 
-/** 📥️ Drains and returns the `http(s)`/relative-URL image fetches queued this frame by
- * `render_ui_image` — the host runtime (native I/O lane or wasm `fetch`, see
- * `poll_pending_assets`'s existing `collect_pending_map_tile_fetches` stanza for the established
- * driver-loop shape) fetches each `url` and reports the bytes back via `apply_ui_image_bytes`. Not
- * yet wired into `poll_pending_assets` — that function lives in the `shell` module, out of scope
- * for this ticket's Canvas2d/Paint2d/render_ui_image regions; see ticket report. */
-pub fn collect_pending_ui_image_fetches() -> Vec<PendingUiImageFetch> {
-    UI_IMAGE_FETCH_QUEUE.with(|cell| std::mem::take(&mut *cell.borrow_mut()))
+pub fn take_ui_image_asset_fault() -> Option<WorldAssetFault> {
+    UI_IMAGE_ASSET_FAULT.with(|cell| cell.borrow_mut().take())
 }
 
-/** 📥️ Applies fetched bytes for a pending `PendingUiImageFetch` — SVG content (sniffed from the
+/** 📥️ Applies fetched bytes from the retained renderer asset authority — SVG content (sniffed from the
  * `.svg` extension or a `<svg`/`<?xml` prefix) is rasterized via `rasterize_svg_to_rgba`, everything
  * else decoded as a raster image via the `image` crate — then re-encoded as a `data:image/png;
  * base64,` URL and pushed through the same `queue_canvas_image_upload` path plain base64 images
  * already use, so it benefits from that function's "skip decode when unchanged" digest cache too. */
 pub fn apply_ui_image_bytes(id: &str, url: &str, bytes: &[u8]) {
-    UI_IMAGE_FETCH_INFLIGHT.with(|cell| {
-        cell.borrow_mut().remove(id);
-    });
     let decoded = if ui_image_looks_like_svg(url, bytes) { std::str::from_utf8(bytes).ok().and_then(rasterize_svg_to_rgba) } else { decode_raster_bytes(bytes) };
     let Some((pixels, width, height)) = decoded else {
         UI_IMAGE_FETCH_MISS.with(|cell| {
@@ -1548,20 +1527,15 @@ fn queue_ui_image_url_fetch(id: &str, url: &str) {
     if already_current {
         return;
     }
-    let already_inflight = UI_IMAGE_FETCH_INFLIGHT.with(|cell| cell.borrow().get(id).map(String::as_str) == Some(url));
-    if already_inflight {
-        return;
-    }
     let already_failed = UI_IMAGE_FETCH_MISS.with(|cell| cell.borrow().get(id).map(String::as_str) == Some(url));
     if already_failed {
         return;
     }
-    UI_IMAGE_FETCH_INFLIGHT.with(|cell| {
-        cell.borrow_mut().insert(id.to_string(), url.to_string());
-    });
-    UI_IMAGE_FETCH_QUEUE.with(|cell| {
-        cell.borrow_mut().push(PendingUiImageFetch { id: id.to_string(), url: url.to_string() });
-    });
+    let kind = WorldAssetMetadataId::try_from_str(id).map(|id| WorldAssetRequestKind::UiImage { id });
+    let result = kind.and_then(|kind| crate::reserve_renderer_asset_request(kind, url).map(|_| ()));
+    if let Err(fault) = result {
+        UI_IMAGE_ASSET_FAULT.with(|cell| *cell.borrow_mut() = Some(fault));
+    }
 }
 
 fn ui_image_looks_like_svg(url: &str, bytes: &[u8]) -> bool {
@@ -1688,8 +1662,8 @@ fn resolve_ui_image_url(id: &str, url: &str) -> (Option<String>, Option<(u32, u3
 
 /** 🧭️ Resolves a plain `Image` UiNode's `src` to an uploaded raster key + natural pixel size:
  * `data:image/svg+xml` and `data:image/{png,jpeg}` decode synchronously; any other non-empty `src`
- * (`http(s)://` absolute or a relative path) is treated as a URL and queued for async fetch via
- * `collect_pending_ui_image_fetches`, rendering whatever was previously cached (or nothing) in the
+ * (`http(s)://` absolute or a relative path) is treated as a URL and admitted to the fixed renderer
+ * asset authority, rendering whatever was previously cached (or nothing) in the
  * meantime — matches the React reference's plain `<img src>`, which resolves any URL natively. */
 pub(crate) fn resolve_ui_image(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
     if src.is_empty() {
@@ -1777,6 +1751,7 @@ mod render_plan_validator_tests {
             "world",
             "controller",
             World3dScene {
+                snapshot: None,
                 camera_json: "{}".into(),
                 meshes_json,
                 instances_json: "[]".into(),
@@ -1857,8 +1832,12 @@ mod render_plan_validator_tests {
         let (key, size) = resolve_ui_image(id, "https://example.invalid/pic.png");
         assert!(key.is_none(), "an unresolved http(s) url should not yet have a raster key");
         assert!(size.is_none());
-        let pending = collect_pending_ui_image_fetches();
-        assert!(pending.iter().any(|fetch| fetch.id == id && fetch.url == "https://example.invalid/pic.png"), "the http(s) url should be queued for the host runtime to fetch");
+        let mut pending = crate::take_next_renderer_asset().expect("the http(s) URL reserves one fixed request owner");
+        assert_eq!(pending.url(), "https://example.invalid/pic.png");
+        assert_eq!(pending.kind(), WorldAssetRequestKind::UiImage { id: WorldAssetMetadataId::try_from_str(id).unwrap() });
+        pending.begin_close();
+        crate::return_renderer_asset(pending).expect("cancelled UI image request returns to the shared authority");
+        while crate::retire_cancelled_renderer_asset_step() {}
     }
 
     #[test]
@@ -1866,6 +1845,10 @@ mod render_plan_validator_tests {
         let id = "http-image-test-b";
         let url = "https://example.invalid/tiny.png";
         let _ = resolve_ui_image(id, url);
+        let mut pending = crate::take_next_renderer_asset().expect("UI image request owner");
+        pending.begin_close();
+        crate::return_renderer_asset(pending).expect("test request handback");
+        while crate::retire_cancelled_renderer_asset_step() {}
         apply_ui_image_bytes(id, url, &tiny_png_bytes(9, 8, 7));
         let (key, size) = resolve_ui_image(id, url);
         assert!(key.is_some(), "a completed fetch should resolve to a raster key on the next render pass");

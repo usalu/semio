@@ -22,8 +22,9 @@ pub use crate::os_spr::materialize::{BaseBytes, BaseSnapshot, CheckpointPolicy, 
 pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
 
 pub use crate::os_spr::causal::{
-    ArtifactDiff, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseMutation, MutationDag, MutationDagError, MutationEnvelope, MutationTransform, TransformOutcome, decode_envelope,
-    decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit,
+    ArtifactDiff, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseMutation, MutationDag, MutationDagCloseOwner, MutationDagError, MutationDagInsertRejected, MutationDagSeedRejected,
+    MutationEnvelope, MutationTransform, TransformOutcome, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta,
+    mutation_envelope_from_edit, mutation_ids_for_edit,
 };
 pub use crate::os_spr::channel::{AppCommand, AppFrame, CHANNEL_VERSION, ChildPackEntry, decode_app_frame, encode_app_command, encode_app_frame};
 pub use crate::os_spr::command::{

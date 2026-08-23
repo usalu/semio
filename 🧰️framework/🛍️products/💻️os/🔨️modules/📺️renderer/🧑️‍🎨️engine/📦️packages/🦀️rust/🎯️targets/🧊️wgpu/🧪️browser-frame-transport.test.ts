@@ -279,7 +279,15 @@ describe("browser frame worker transport", () => {
     expect(workerSource).toContain('monitoredSuspension("renderer-module", () => import');
     expect(workerSource).toContain('closeOwner === "runtime"');
     expect(workerSource).toContain("interactiveJobs?.close()");
+    expect(workerSource).toContain('getReader({ mode: "byob" })');
+    expect(workerSource).toContain("new Uint8Array(ASSET_RESPONSE_PAGE_BYTES)");
+    expect(workerSource).toContain("declared ?? ASSET_RESPONSE_BYTE_CAPACITY");
+    expect(workerSource).toContain("declared !== undefined && received !== declared");
+    expect(workerSource).toContain("ASSET_RESPONSE_PAGE_BYTES");
+    expect(workerSource).toContain("assetAbort?.abort()");
+    expect(workerSource).not.toContain("response.arrayBuffer()");
     expect(rustSource).toContain("OffscreenPresentToken::mint_for_dedicated_worker");
+    expect(rustSource).toContain("WorldAssetResponsePage::try_from_owned");
     expect(rustSource).not.toContain("UiPresentToken");
     expect(rustSource).toContain("OsHost::into_retirement");
     expect(rustSource).not.toContain("drop(self.host.take())");

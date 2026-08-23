@@ -8922,7 +8922,7 @@ mod wasm_bridge {
         pub async fn create(envelope_json: Option<String>) -> Result<DagSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: DagEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: DagEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     DagStore::new(envelope).await.map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
                 None => DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?,

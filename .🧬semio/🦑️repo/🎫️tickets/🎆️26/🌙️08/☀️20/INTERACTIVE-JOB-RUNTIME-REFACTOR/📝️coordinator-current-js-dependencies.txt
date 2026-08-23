@@ -56,18 +56,6 @@
   },
   {
     "ecosystem": "js",
-    "name": "@mdx-js/rollup",
-    "version": "^3.1.1",
-    "kinds": [
-      "tooling"
-    ],
-    "users": [
-      "package.json",
-      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
-    ]
-  },
-  {
-    "ecosystem": "js",
     "name": "@modelcontextprotocol/sdk",
     "version": "^1.30.0",
     "kinds": [
@@ -510,17 +498,6 @@
   },
   {
     "ecosystem": "js",
-    "name": "eslint-plugin-react-hooks",
-    "version": "^7.1.1",
-    "kinds": [
-      "tooling"
-    ],
-    "users": [
-      "package.json"
-    ]
-  },
-  {
-    "ecosystem": "js",
     "name": "eslint-plugin-storybook",
     "version": "10.4.0",
     "kinds": [
@@ -707,18 +684,6 @@
       "runtime"
     ],
     "users": [
-      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
-    ]
-  },
-  {
-    "ecosystem": "js",
-    "name": "rehype-autolink-headings",
-    "version": "^7.1.0",
-    "kinds": [
-      "tooling"
-    ],
-    "users": [
-      "package.json",
       "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json"
     ]
   },

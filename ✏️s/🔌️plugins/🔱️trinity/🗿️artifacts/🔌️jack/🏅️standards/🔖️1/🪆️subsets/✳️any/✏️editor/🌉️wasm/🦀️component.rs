@@ -20,7 +20,7 @@ mod wasm_bridge {
         pub async fn new(envelope_json: Option<String>) -> Result<JackSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: TrinityGraphEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: TrinityGraphEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     TrinityGraphStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
                 None => TrinityGraphStore::new(create_trinity_graph_envelope("trinity", empty_trinity_graph_fixture())).map_err(|e| JsValue::from_str(&e.to_string()))?,

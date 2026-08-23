@@ -33,7 +33,7 @@ mod wasm_bridge {
         pub async fn new(envelope_json: Option<String>) -> Result<Process3dSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: Process3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: Process3dEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Process3dStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
                 None => Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", crate::artifacts::process3d::empty_process3d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,

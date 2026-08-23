@@ -10,6 +10,11 @@ import { loadPluginModule, pluginHandleForBridge } from "./🐚️plugin-bridge.
 type BrowserRendererWorkerHandle = {
   enqueueBatch(eventsJson: string, generation: number): void;
   tick(timestampMs: number, sequence: number, generation: number): string;
+  pollAssetRequest(): string;
+  reserveAssetResponse(byteCredits: number): void;
+  pushAssetResponsePage(bytes: Uint8Array): void;
+  sealAssetResponse(): void;
+  abortAssetResponse(): void;
   closeStep(): boolean;
 };
 
@@ -42,6 +47,8 @@ const WORKER_STEP_BUDGET_MS = 8;
 const BOOT_HEARTBEAT_MS = 2;
 const PLUGIN_BOOT_CAPACITY = 32;
 const PLUGIN_MANIFEST_CODE_UNIT_CAPACITY = 64 * 1024;
+const ASSET_RESPONSE_BYTE_CAPACITY = 16 * 1024 * 1024;
+const ASSET_RESPONSE_PAGE_BYTES = 16 * 1024;
 
 function ownedStep<T>(stage: string, callback: () => T): T {
   const startedAt = performance.now();
@@ -91,6 +98,8 @@ let pendingFault: { readonly code: string; readonly detail: string } | undefined
 let runtimeCloseComplete = false;
 let jobsCloseComplete = false;
 let closeOwner: "runtime" | "jobs" = "runtime";
+let assetPumping = false;
+let assetAbort: AbortController | undefined;
 
 scope.onmessage = (event: MessageEvent<BrowserFrameUiMessage>) => void receive(event.data);
 
@@ -130,6 +139,7 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     if (result.quarantined || duration >= WORKER_STEP_BUDGET_MS) quarantined = { code: result.faultCode ?? "worker-step-overrun", detail: result.faultDetail ?? `frame step took ${duration.toFixed(3)} ms` };
     post({ kind: "frame", lifecycle, sequence: message.sequence, generation: message.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, progress: result.progress, workerDurationMs: duration, quarantined: quarantined !== undefined, faultCode: quarantined?.code, faultDetail: quarantined?.detail });
     if (quarantined) requestFault(quarantined.code, quarantined.detail);
+    else scheduleAssetPump();
   } catch (error) {
     fault("frame-runtime-fault", error instanceof Error ? error.message : String(error));
   }
@@ -165,6 +175,15 @@ function beginClose(): void {
   failed = pendingFault !== undefined;
   runtimeCloseComplete = runtime === undefined;
   jobsCloseComplete = interactiveJobs === undefined;
+  assetAbort?.abort();
+  assetAbort = undefined;
+  if (runtime) {
+    try {
+      ownedStep("asset-abort", () => runtime!.abortAssetResponse());
+    } catch (error) {
+      pendingFault ??= { code: "asset-abort-fault", detail: error instanceof Error ? error.message : String(error) };
+    }
+  }
   interactiveJobs?.close();
   void closeRuntime();
 }
@@ -220,8 +239,67 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     interactiveJobs = ownedStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)));
     progress("ready", 1);
     post({ kind: "booted", lifecycle });
+    scheduleAssetPump();
   } catch (error) {
     fault("worker-boot-failed", error instanceof Error ? error.message : String(error));
+  }
+}
+
+type AssetRequest = {
+  readonly available: boolean;
+  readonly url?: string;
+  readonly responseByteCapacity?: number;
+  readonly pageByteCapacity?: number;
+};
+
+function scheduleAssetPump(): void {
+  if (assetPumping || !runtime || closed || closing || failed || quarantined) return;
+  assetPumping = true;
+  setTimeout(() => void pumpAsset(), 0);
+}
+
+async function pumpAsset(): Promise<void> {
+  try {
+    if (!runtime || closed || closing || failed || quarantined) return;
+    const request = ownedStep("asset-request", () => JSON.parse(runtime!.pollAssetRequest()) as AssetRequest);
+    if (!request.available) return;
+    if (!request.url || request.responseByteCapacity !== ASSET_RESPONSE_BYTE_CAPACITY || request.pageByteCapacity !== ASSET_RESPONSE_PAGE_BYTES) {
+      throw new Error("asset-request-protocol: request descriptor did not match fixed Worker credits");
+    }
+    assetAbort = new AbortController();
+    const response = await monitoredSuspension("asset-fetch", () => fetch(request.url!, { signal: assetAbort!.signal }));
+    if (!response.ok || !response.body) throw new Error(`asset-fetch-status: ${response.status}`);
+    const declaredHeader = ownedStep("asset-response-headers", () => response.headers.get("content-length"));
+    const declared = declaredHeader === null ? undefined : Number(declaredHeader);
+    if (declared !== undefined && (!Number.isSafeInteger(declared) || declared < 0 || declared > ASSET_RESPONSE_BYTE_CAPACITY)) throw new Error("asset-response-length: Content-Length exceeded fixed aggregate credits");
+    ownedStep("asset-response-reserve", () => runtime!.reserveAssetResponse(declared ?? ASSET_RESPONSE_BYTE_CAPACITY));
+    const reader = ownedStep("asset-stream-reader", () => response.body!.getReader({ mode: "byob" }) as ReadableStreamBYOBReader);
+    let received = 0;
+    for (;;) {
+      const pageOwner = ownedStep("asset-page-owner", () => new Uint8Array(ASSET_RESPONSE_PAGE_BYTES));
+      const chunk = await monitoredSuspension("asset-stream-read", () => reader.read(pageOwner));
+      if (chunk.done) break;
+      const bytes = chunk.value;
+      if (bytes.byteLength === 0 || bytes.byteLength > ASSET_RESPONSE_PAGE_BYTES) throw new Error("asset-response-page: stream violated fixed BYOB page credits");
+      received += bytes.byteLength;
+      if (received > (declared ?? ASSET_RESPONSE_BYTE_CAPACITY)) throw new Error("asset-response-overflow: stream exceeded admitted bytes");
+      ownedStep("asset-page", () => runtime!.pushAssetResponsePage(bytes));
+      await macrotask();
+    }
+    ownedStep("asset-stream-release", () => reader.releaseLock());
+    if (declared !== undefined && received !== declared) throw new Error("asset-response-short-read: stream ended before declared bytes");
+    ownedStep("asset-seal", () => runtime!.sealAssetResponse());
+    post({ kind: "wake", lifecycle });
+  } catch (error) {
+    if (runtime) {
+      try {
+        ownedStep("asset-abort", () => runtime!.abortAssetResponse());
+      } catch {}
+    }
+    if (!closing && !closed) fault("asset-stream-fault", error instanceof Error ? error.message : String(error));
+  } finally {
+    assetAbort = undefined;
+    assetPumping = false;
   }
 }
 

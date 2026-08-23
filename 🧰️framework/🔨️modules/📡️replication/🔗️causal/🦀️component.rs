@@ -70,21 +70,202 @@ pub struct InverseMutation {
 
 /// @emoji 🕸️ Causal DAG of exchanged `MutationEnvelope`s: buffers envelopes until their
 /// dependencies are applied.
-#[derive(Clone, Debug, Default, PartialEq)]
+pub const MUTATION_DAG_CAPACITY: usize = 8_192;
+pub const MUTATION_DAG_IDENTIFIER_BYTES: usize = 256;
+
+struct MutationDagFixedSlots<T> {
+    slots: Box<[std::mem::MaybeUninit<T>]>,
+    generations: Box<[u32]>,
+    occupied: Box<[bool]>,
+    next: Box<[u16]>,
+    previous: Box<[u16]>,
+    free: Box<[u16]>,
+    free_len: usize,
+    head: u16,
+    tail: u16,
+    len: usize,
+}
+
+const MUTATION_DAG_SLOT_NONE: u16 = u16::MAX;
+
+struct MutationDagFixedSlotsIter<'a, T> {
+    owner: &'a MutationDagFixedSlots<T>,
+    next: u16,
+}
+
+impl<'a, T> Iterator for MutationDagFixedSlotsIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.next == MUTATION_DAG_SLOT_NONE {
+            return None;
+        }
+        let slot = usize::from(self.next);
+        self.next = self.owner.next[slot];
+        Some(unsafe { self.owner.slots[slot].assume_init_ref() })
+    }
+}
+
+impl<T> MutationDagFixedSlots<T> {
+    fn new() -> Self {
+        let free = (0..MUTATION_DAG_CAPACITY).rev().map(|slot| slot as u16).collect::<Vec<_>>().into_boxed_slice();
+        Self {
+            slots: Box::<[T]>::new_uninit_slice(MUTATION_DAG_CAPACITY),
+            generations: vec![0; MUTATION_DAG_CAPACITY].into_boxed_slice(),
+            occupied: vec![false; MUTATION_DAG_CAPACITY].into_boxed_slice(),
+            next: vec![MUTATION_DAG_SLOT_NONE; MUTATION_DAG_CAPACITY].into_boxed_slice(),
+            previous: vec![MUTATION_DAG_SLOT_NONE; MUTATION_DAG_CAPACITY].into_boxed_slice(),
+            free,
+            free_len: MUTATION_DAG_CAPACITY,
+            head: MUTATION_DAG_SLOT_NONE,
+            tail: MUTATION_DAG_SLOT_NONE,
+            len: 0,
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.len
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    fn get(&self, index: usize) -> Option<&T> {
+        self.iter().nth(index)
+    }
+
+    fn iter(&self) -> MutationDagFixedSlotsIter<'_, T> {
+        MutationDagFixedSlotsIter { owner: self, next: self.head }
+    }
+
+    fn push(&mut self, value: T) -> Result<(), T> {
+        if self.len == MUTATION_DAG_CAPACITY {
+            return Err(value);
+        }
+        self.push_reserved(value);
+        Ok(())
+    }
+
+    fn push_reserved(&mut self, value: T) {
+        assert!(self.free_len > 0, "fixed causal slot reservation was not established");
+        self.free_len -= 1;
+        let slot = usize::from(self.free[self.free_len]);
+        self.slots[slot].write(value);
+        self.generations[slot] = self.generations[slot].wrapping_add(1).max(1);
+        self.occupied[slot] = true;
+        self.previous[slot] = self.tail;
+        self.next[slot] = MUTATION_DAG_SLOT_NONE;
+        if self.tail == MUTATION_DAG_SLOT_NONE {
+            self.head = slot as u16;
+        } else {
+            self.next[usize::from(self.tail)] = slot as u16;
+        }
+        self.tail = slot as u16;
+        self.len += 1;
+    }
+
+    fn pop(&mut self) -> Option<T> {
+        (self.tail != MUTATION_DAG_SLOT_NONE).then(|| self.remove_slot(self.tail))
+    }
+
+    fn swap_remove(&mut self, index: usize) -> Option<T> {
+        let mut ticket = self.head;
+        for _ in 0..index {
+            if ticket == MUTATION_DAG_SLOT_NONE {
+                return None;
+            }
+            ticket = self.next[usize::from(ticket)];
+        }
+        (ticket != MUTATION_DAG_SLOT_NONE).then(|| self.remove_slot(ticket))
+    }
+
+    fn remove_slot(&mut self, ticket: u16) -> T {
+        let slot = usize::from(ticket);
+        assert!(self.occupied[slot], "fixed causal generation ticket addressed a vacant slot");
+        let previous = self.previous[slot];
+        let next = self.next[slot];
+        if previous == MUTATION_DAG_SLOT_NONE {
+            self.head = next;
+        } else {
+            self.next[usize::from(previous)] = next;
+        }
+        if next == MUTATION_DAG_SLOT_NONE {
+            self.tail = previous;
+        } else {
+            self.previous[usize::from(next)] = previous;
+        }
+        self.occupied[slot] = false;
+        self.next[slot] = MUTATION_DAG_SLOT_NONE;
+        self.previous[slot] = MUTATION_DAG_SLOT_NONE;
+        self.generations[slot] = self.generations[slot].wrapping_add(1).max(1);
+        self.free[self.free_len] = ticket;
+        self.free_len += 1;
+        self.len -= 1;
+        unsafe { self.slots[slot].assume_init_read() }
+    }
+}
+
+impl<T: Clone> Clone for MutationDagFixedSlots<T> {
+    fn clone(&self) -> Self {
+        let mut clone = Self::new();
+        for value in self.iter() {
+            clone.push_reserved(value.clone());
+        }
+        clone
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for MutationDagFixedSlots<T> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_list().entries(self.iter()).finish()
+    }
+}
+
+impl<T: PartialEq> PartialEq for MutationDagFixedSlots<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.iter().eq(other.iter())
+    }
+}
+
+impl<T> Drop for MutationDagFixedSlots<T> {
+    fn drop(&mut self) {
+        assert!(self.is_empty(), "fixed causal slots reached Drop before every exact nested owner was detached");
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct MutationDag {
-    envelopes: std::collections::HashMap<String, MutationEnvelope>,
-    applied: std::collections::HashSet<String>,
-    applied_order: Vec<String>,
+    envelopes: MutationDagFixedSlots<MutationEnvelope>,
+    applied: MutationDagFixedSlots<String>,
     drained: usize,
-    pending: Vec<String>,
+    pending: MutationDagFixedSlots<String>,
+}
+
+impl Default for MutationDag {
+    fn default() -> Self {
+        Self { envelopes: MutationDagFixedSlots::new(), applied: MutationDagFixedSlots::new(), drained: 0, pending: MutationDagFixedSlots::new() }
+    }
+}
+
+impl Clone for MutationDag {
+    fn clone(&self) -> Self {
+        Self { envelopes: self.envelopes.clone(), applied: self.applied.clone(), drained: self.drained, pending: self.pending.clone() }
+    }
+}
+
+impl Drop for MutationDag {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "mutation dag reached Drop before every exact envelope and identity owner was cursor-retired");
+    }
 }
 
 /// @emoji 🚦️ The outcome of one `MutationDag::insert` call.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum InsertResult {
     Applied,
     Pending,
-    AlreadyApplied,
+    AlreadyApplied(MutationEnvelope),
 }
 
 /// @emoji 🚨️ `MutationDag`'s one failure mode: the same operation id inserted twice while still pending.
@@ -93,59 +274,111 @@ pub enum InsertResult {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MutationDagError {
     Duplicate,
+    Capacity,
+    IdentifierTooLong,
 }
 
 impl std::fmt::Display for MutationDagError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             MutationDagError::Duplicate => write!(f, "duplicate mutation id"),
+            MutationDagError::Capacity => write!(f, "mutation dag fixed capacity exhausted"),
+            MutationDagError::IdentifierTooLong => write!(f, "mutation dag identifier exceeds its fixed byte authority"),
         }
     }
 }
 
 impl std::error::Error for MutationDagError {}
 
+#[derive(Debug, PartialEq)]
+pub struct MutationDagInsertRejected {
+    pub error: MutationDagError,
+    pub envelope: MutationEnvelope,
+}
+
+impl std::fmt::Display for MutationDagInsertRejected {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.error, formatter)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct MutationDagSeedRejected {
+    pub error: MutationDagError,
+    pub mutation_id: crate::ids::MutationId,
+}
+
+impl std::fmt::Display for MutationDagSeedRejected {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.error, formatter)
+    }
+}
+
+pub enum MutationDagCloseOwner {
+    Envelope(MutationEnvelope),
+    Identity(String),
+}
+
+pub enum MutationDagAppliedStep {
+    Envelope(MutationEnvelope),
+    SeededIdentity,
+    Complete,
+}
+
 impl MutationDag {
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// 🧹 Proves the causal owner shell contains no mutation, identity, or ordering allocation.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.envelopes.is_empty() && self.applied.is_empty() && self.pending.is_empty()
+    }
+
     /// @emoji ➕️ Inserts one envelope. Returns `AlreadyApplied` if its id was applied before,
     /// `Err(Duplicate)` if it's already buffered as pending, `Pending` if any dependency is wholly
     /// unknown to this dag, else `Applied` (and cascades `drain_ready` for anything it unblocks).
-    pub fn insert(&mut self, envelope: MutationEnvelope) -> Result<InsertResult, MutationDagError> {
+    pub fn insert(&mut self, envelope: MutationEnvelope) -> Result<InsertResult, MutationDagInsertRejected> {
+        let id = envelope.mutation_id.0.as_str();
+        if id.len() > MUTATION_DAG_IDENTIFIER_BYTES || envelope.dependencies.iter().any(|dependency| dependency.0.len() > MUTATION_DAG_IDENTIFIER_BYTES) {
+            return Err(MutationDagInsertRejected { error: MutationDagError::IdentifierTooLong, envelope });
+        }
+        if self.applied.iter().any(|applied| applied == id) {
+            return Ok(InsertResult::AlreadyApplied(envelope));
+        }
+        if self.envelopes.iter().any(|known| known.mutation_id.0 == id) {
+            return Err(MutationDagInsertRejected { error: MutationDagError::Duplicate, envelope });
+        }
+        let seeded_only = self.applied.iter().filter(|applied| !self.envelopes.iter().any(|known| known.mutation_id.0.as_str() == applied.as_str())).count();
+        if self.envelopes.len() + seeded_only == MUTATION_DAG_CAPACITY {
+            return Err(MutationDagInsertRejected { error: MutationDagError::Capacity, envelope });
+        }
+        let pending = envelope.dependencies.iter().any(|dependency| !self.applied.iter().any(|applied| applied == &dependency.0) && !self.envelopes.iter().any(|known| known.mutation_id.0 == dependency.0));
         let id = envelope.mutation_id.0.clone();
-        if self.applied.contains(&id) {
-            return Ok(InsertResult::AlreadyApplied);
+        self.envelopes.push_reserved(envelope);
+        if pending {
+            self.pending.push_reserved(id);
+            return Ok(InsertResult::Pending);
         }
-        if self.envelopes.contains_key(&id) {
-            return Err(MutationDagError::Duplicate);
-        }
-        for dependency in &envelope.dependencies {
-            if !self.applied.contains(&dependency.0) && !self.envelopes.contains_key(&dependency.0) {
-                self.envelopes.insert(id.clone(), envelope);
-                if !self.pending.contains(&id) {
-                    self.pending.push(id);
-                }
-                return Ok(InsertResult::Pending);
-            }
-        }
-        self.envelopes.insert(id.clone(), envelope);
         self.mark_applied(&id);
-        self.drain_ready();
+        self.advance_ready_one();
         Ok(InsertResult::Applied)
     }
 
-    /// @emoji ✅️ Ids of currently-pending envelopes whose dependencies are all applied.
-    pub fn ready(&self) -> Vec<crate::ids::MutationId> {
-        self.pending.iter().filter_map(|id| self.envelopes.get(id)).filter(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.contains(&dependency.0))).map(|envelope| envelope.mutation_id.clone()).collect()
+    /// @emoji ✅️ Borrows one ready identity at a caller-owned cursor without materializing a list.
+    pub fn ready_identity_at(&self, cursor: usize) -> Option<&str> {
+        let id = self.pending.get(cursor)?;
+        self.envelopes.iter().find(|envelope| envelope.mutation_id.0 == *id).filter(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.iter().any(|applied| applied == &dependency.0))).map(|envelope| envelope.mutation_id.0.as_str())
     }
 
-    /// @emoji 🧺️ Drains envelopes applied since the last drain, in causal application order.
-    pub fn drain_applied_envelopes(&mut self) -> Vec<MutationEnvelope> {
-        let fresh: Vec<String> = self.applied_order[self.drained..].to_vec();
-        self.drained = self.applied_order.len();
-        fresh.iter().filter_map(|id| self.envelopes.get(id).cloned()).collect()
+    /// @emoji 🧺️ Transfers at most one exact applied owner at the retained drain cursor.
+    pub fn take_next_applied(&mut self) -> MutationDagAppliedStep {
+        let Some(id) = self.applied.get(self.drained) else { return MutationDagAppliedStep::Complete };
+        self.drained += 1;
+        let Some(index) = self.envelopes.iter().position(|envelope| envelope.mutation_id.0 == *id) else {
+            return MutationDagAppliedStep::SeededIdentity;
+        };
+        MutationDagAppliedStep::Envelope(self.envelopes.swap_remove(index).expect("validated applied envelope slot remains occupied"))
     }
 
     /// @emoji 🌱️ Seeds one id into the applied-set from out-of-band knowledge (e.g. a full-document
@@ -153,29 +386,51 @@ impl MutationDag {
     /// stays `Pending` forever, since `insert` only recognizes a dependency as satisfied through
     /// this dag's own `envelopes`/`applied` bookkeeping, never through edits a peer adopted by some
     /// other route.
-    pub fn seed_applied(&mut self, mutation_id: crate::ids::MutationId) {
-        let id = mutation_id.0;
-        if !self.applied.contains(&id) {
-            self.mark_applied(&id);
+    pub fn seed_applied(&mut self, mutation_id: crate::ids::MutationId) -> Result<(), MutationDagSeedRejected> {
+        if mutation_id.0.len() > MUTATION_DAG_IDENTIFIER_BYTES {
+            return Err(MutationDagSeedRejected { error: MutationDagError::IdentifierTooLong, mutation_id });
         }
+        if self.applied.iter().any(|applied| applied == &mutation_id.0) {
+            return Err(MutationDagSeedRejected { error: MutationDagError::Duplicate, mutation_id });
+        }
+        let unique_seed = !self.envelopes.iter().any(|envelope| envelope.mutation_id == mutation_id);
+        let seeded_only = self.applied.iter().filter(|id| !self.envelopes.iter().any(|envelope| envelope.mutation_id.0.as_str() == id.as_str())).count();
+        if unique_seed && self.envelopes.len() + seeded_only == MUTATION_DAG_CAPACITY {
+            return Err(MutationDagSeedRejected { error: MutationDagError::Capacity, mutation_id });
+        }
+        self.mark_applied(&mutation_id.0);
+        Ok(())
+    }
+
+    pub fn take_one_close_owner(&mut self) -> Option<MutationDagCloseOwner> {
+        if let Some(id) = self.pending.pop() {
+            return Some(MutationDagCloseOwner::Identity(id));
+        }
+        if let Some(id) = self.applied.pop() {
+            self.drained = self.drained.min(self.applied.len());
+            return Some(MutationDagCloseOwner::Identity(id));
+        }
+        self.envelopes.pop().map(MutationDagCloseOwner::Envelope)
     }
 
     fn mark_applied(&mut self, id: &str) {
-        self.applied.insert(id.to_string());
-        self.applied_order.push(id.to_string());
-        self.pending.retain(|pending| pending != id);
+        if let Some(index) = self.pending.iter().position(|pending| pending == id) {
+            let pending = self.pending.swap_remove(index).expect("validated pending causal identity remains occupied");
+            self.applied.push_reserved(pending);
+        } else {
+            self.applied.push_reserved(id.to_string());
+        }
     }
 
-    fn drain_ready(&mut self) {
-        loop {
-            let ready: Vec<String> = self.pending.iter().filter(|id| self.envelopes.get(*id).is_some_and(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.contains(&dependency.0)))).cloned().collect();
-            if ready.is_empty() {
-                break;
-            }
-            for id in ready {
-                self.mark_applied(&id);
-            }
-        }
+    pub fn advance_ready_one(&mut self) -> bool {
+        let ready = self
+            .pending
+            .iter()
+            .find(|id| self.envelopes.iter().find(|envelope| envelope.mutation_id.0.as_str() == id.as_str()).is_some_and(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.iter().any(|applied| applied == &dependency.0))))
+            .cloned();
+        let Some(id) = ready else { return false };
+        self.mark_applied(&id);
+        true
     }
 }
 //#endregion 🔖️MutationDag
@@ -532,6 +787,22 @@ mod tests {
             timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
         }
     }
+
+    fn take_applied(dag: &mut MutationDag) -> Vec<MutationEnvelope> {
+        let mut envelopes = Vec::new();
+        loop {
+            match dag.take_next_applied() {
+                MutationDagAppliedStep::Envelope(envelope) => envelopes.push(envelope),
+                MutationDagAppliedStep::SeededIdentity => {}
+                MutationDagAppliedStep::Complete => return envelopes,
+            }
+        }
+    }
+
+    fn retire_dag_shell(dag: &mut MutationDag) {
+        while dag.take_one_close_owner().is_some() {}
+        assert!(dag.terminal_is_empty());
+    }
     //#endregion 🧸️Fixtures
 
     //#region 🔖️Envelope
@@ -553,6 +824,7 @@ mod tests {
         assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap(), InsertResult::Pending);
         assert_eq!(dag.insert(sample_envelope("operation-1", vec![])).unwrap(), InsertResult::Applied);
         assert_eq!(dag.applied.len(), 2);
+        retire_dag_shell(&mut dag);
     }
 
     #[test]
@@ -560,13 +832,14 @@ mod tests {
         let mut dag = MutationDag::new();
         dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap();
         dag.insert(sample_envelope("operation-1", vec![])).unwrap();
-        let drained = dag.drain_applied_envelopes();
+        let drained = take_applied(&mut dag);
         assert_eq!(drained.iter().map(|envelope| envelope.mutation_id.0.clone()).collect::<Vec<_>>(), vec!["operation-1".to_string(), "operation-2".to_string()]);
-        assert!(dag.drain_applied_envelopes().is_empty(), "second drain yields nothing new");
+        assert!(take_applied(&mut dag).is_empty(), "second drain yields nothing new");
         dag.insert(sample_envelope("operation-3", vec![])).unwrap();
-        let drained = dag.drain_applied_envelopes();
+        let drained = take_applied(&mut dag);
         assert_eq!(drained.len(), 1);
         assert_eq!(drained[0].mutation_id.0, "operation-3");
+        retire_dag_shell(&mut dag);
     }
 
     #[test]
@@ -574,7 +847,9 @@ mod tests {
         let mut dag = MutationDag::new();
         dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap();
         let err = dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap_err();
-        assert_eq!(err, MutationDagError::Duplicate);
+        assert_eq!(err.error, MutationDagError::Duplicate);
+        assert_eq!(err.envelope.mutation_id.0, "operation-2");
+        retire_dag_shell(&mut dag);
     }
 
     #[test]
@@ -582,22 +857,78 @@ mod tests {
         let mut dag = MutationDag::new();
         dag.insert(sample_envelope("operation-1", vec![])).unwrap();
         let result = dag.insert(sample_envelope("operation-1", vec![])).unwrap();
-        assert_eq!(result, InsertResult::AlreadyApplied);
+        assert!(matches!(result, InsertResult::AlreadyApplied(envelope) if envelope.mutation_id.0 == "operation-1"));
+        retire_dag_shell(&mut dag);
     }
 
     #[test]
     fn seed_applied_unblocks_pending_envelopes_that_reference_out_of_band_deps() {
         let mut dag = MutationDag::new();
         assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap(), InsertResult::Pending);
-        assert!(dag.ready().is_empty(), "dependency is not yet known to this dag");
-        dag.seed_applied(crate::ids::MutationId("operation-1".to_string()));
-        let ready_ids: Vec<String> = dag.ready().iter().map(|id| id.0.clone()).collect();
-        assert_eq!(ready_ids, vec!["operation-2".to_string()]);
+        assert!(dag.ready_identity_at(0).is_none(), "dependency is not yet known to this dag");
+        dag.seed_applied(crate::ids::MutationId("operation-1".to_string())).unwrap();
+        assert_eq!(dag.ready_identity_at(0), Some("operation-2"));
+        retire_dag_shell(&mut dag);
+    }
+
+    #[test]
+    fn duplicate_seed_returns_the_exact_unadopted_identity_owner() {
+        let mut dag = MutationDag::new();
+        dag.seed_applied(crate::ids::MutationId("operation-1".to_string())).unwrap();
+        let rejected = dag.seed_applied(crate::ids::MutationId("operation-1".to_string())).expect_err("duplicate seed must not consume its exact owner");
+        assert_eq!(rejected.error, MutationDagError::Duplicate);
+        assert_eq!(rejected.mutation_id.0, "operation-1");
+        retire_dag_shell(&mut dag);
+    }
+
+    #[test]
+    fn fixed_slot_free_ring_reuses_generation_without_reordering_live_owners() {
+        let mut slots = MutationDagFixedSlots::new();
+        slots.push("first".to_string()).unwrap();
+        slots.push("second".to_string()).unwrap();
+        let first_slot = usize::from(slots.head);
+        let first_generation = slots.generations[first_slot];
+        assert_eq!(slots.swap_remove(0).as_deref(), Some("first"));
+        slots.push("third".to_string()).unwrap();
+        assert_eq!(usize::from(slots.tail), first_slot, "LIFO free ring reuses the exact detached slot");
+        assert_ne!(slots.generations[first_slot], first_generation, "reused slot advances its ABA generation");
+        assert_eq!(slots.iter().map(String::as_str).collect::<Vec<_>>(), vec!["second", "third"], "live traversal remains deterministic insertion order");
+        assert_eq!(slots.pop().as_deref(), Some("third"));
+        assert_eq!(slots.pop().as_deref(), Some("second"));
+        assert!(slots.is_empty());
     }
 
     #[test]
     fn opdagerror_display_is_non_empty() {
         assert!(!MutationDagError::Duplicate.to_string().is_empty());
+    }
+
+    #[test]
+    fn fixed_causal_authority_rejects_capacity_plus_one_with_exact_identity_and_closes_one_owner_at_a_time() {
+        let mut dag = MutationDag::new();
+        for index in 0..MUTATION_DAG_CAPACITY {
+            dag.seed_applied(crate::ids::MutationId(format!("seed-{index:04}"))).expect("exact fixed capacity is admitted");
+        }
+        let rejected = dag.seed_applied(crate::ids::MutationId("capacity-plus-one".into())).expect_err("capacity plus one must retain its exact identity owner");
+        assert_eq!(rejected.error, MutationDagError::Capacity);
+        assert_eq!(rejected.mutation_id.0, "capacity-plus-one");
+        let mut released = 0;
+        while let Some(owner) = dag.take_one_close_owner() {
+            assert!(matches!(owner, MutationDagCloseOwner::Identity(_)));
+            released += 1;
+        }
+        assert_eq!(released, MUTATION_DAG_CAPACITY);
+        assert!(dag.terminal_is_empty());
+    }
+
+    #[test]
+    fn causal_insert_rejects_oversized_identity_without_losing_the_envelope_owner() {
+        let mut dag = MutationDag::new();
+        let envelope = sample_envelope(&"x".repeat(MUTATION_DAG_IDENTIFIER_BYTES + 1), vec![]);
+        let rejected = dag.insert(envelope).expect_err("oversized identity is rejected before fixed-slot adoption");
+        assert_eq!(rejected.error, MutationDagError::IdentifierTooLong);
+        assert_eq!(rejected.envelope.mutation_id.0.len(), MUTATION_DAG_IDENTIFIER_BYTES + 1);
+        assert!(dag.terminal_is_empty());
     }
 
     //#region 🏃️quick
@@ -621,10 +952,11 @@ mod tests {
                 let result = dag.insert(envelope).expect("insert never duplicates in a fresh dag");
                 assert_eq!(result, InsertResult::Applied, "insertion order {order:?} must stay fully topological");
             }
-            let drained = dag.drain_applied_envelopes();
+            let drained = take_applied(&mut dag);
             let mut ids: Vec<String> = drained.iter().map(|e| e.mutation_id.0.clone()).collect();
             ids.sort();
             assert_eq!(ids, vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()]);
+            retire_dag_shell(&mut dag);
         }
 
         #[test]
@@ -656,6 +988,7 @@ mod tests {
             let mut ids: Vec<String> = dag.applied.iter().cloned().collect();
             ids.sort();
             assert_eq!(ids, vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()], "once c arrives, d converges too");
+            retire_dag_shell(&mut dag);
         }
     }
     //#endregion 🏃️quick

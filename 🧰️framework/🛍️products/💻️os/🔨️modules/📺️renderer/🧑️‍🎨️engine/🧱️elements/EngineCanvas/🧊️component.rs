@@ -11,10 +11,12 @@ use crate::interpreter::FrameworkWidgetContext;
 use flow::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
-use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent};
+use framework_surface_tiled_map::tiled_map::{tiles::VisibleTileCursor, MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
+use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind, WORLD_ASSET_URL_BYTE_CAPACITY};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
+use std::mem::ManuallyDrop;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
 use ui_wgpu::wgpu::{ActionDescriptor, UiComponentSceneNode};
@@ -69,7 +71,8 @@ struct EngineSurface {
     sync_cache: NodeGraphSyncCache,
     map_host: Option<MapHost>,
     map_sync_cache: MapSyncCache,
-    board_host: Option<puzzle::editor::puzzle2d::engine::BoardHost>,
+    map_tile_requests: Option<MapTileRequestCursor>,
+    board_host: Option<ManuallyDrop<puzzle::editor::puzzle2d::engine::BoardHost>>,
     board_sync_cache: BoardSyncCache,
     board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue,
     board_retiring_events: Option<puzzle::editor::puzzle2d::engine::BoardEventQueue>,
@@ -81,6 +84,260 @@ struct EngineSurface {
     width: u32,
     height: u32,
     last_note_click: Option<(String, f64)>,
+}
+
+const ENGINE_SURFACE_CAPACITY: usize = 256;
+const ENGINE_SURFACE_ID_BYTE_CAPACITY: usize = 256;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct EngineSurfaceToken {
+    slot: u16,
+    generation: u64,
+}
+
+struct EngineSurfaceSlot {
+    id: Option<String>,
+    generation: u64,
+    value: Option<EngineSurface>,
+    retirement: Option<EngineSurfaceRetirement>,
+}
+
+struct EngineSurfaceRegistry {
+    slots: Box<[EngineSurfaceSlot; ENGINE_SURFACE_CAPACITY]>,
+    faulted: bool,
+}
+
+impl Default for EngineSurfaceRegistry {
+    fn default() -> Self {
+        Self { slots: Box::new(std::array::from_fn(|_| EngineSurfaceSlot { id: None, generation: 0, value: None, retirement: None })), faulted: false }
+    }
+}
+
+impl EngineSurfaceRegistry {
+    fn slot_index(&self, id: &str) -> Option<usize> {
+        self.slots.iter().position(|slot| slot.id.as_deref() == Some(id))
+    }
+
+    fn contains_key(&self, id: &str) -> bool {
+        self.slot_index(id).is_some()
+    }
+
+    fn get(&self, id: &str) -> Option<&EngineSurface> {
+        self.slots.get(self.slot_index(id)?)?.value.as_ref()
+    }
+
+    fn get_mut(&mut self, id: &str) -> Option<&mut EngineSurface> {
+        let index = self.slot_index(id)?;
+        self.slots[index].value.as_mut()
+    }
+
+    fn token(&self, id: &str) -> Option<EngineSurfaceToken> {
+        let index = self.slot_index(id)?;
+        Some(EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation })
+    }
+
+    fn get_token_mut(&mut self, token: EngineSurfaceToken) -> Option<&mut EngineSurface> {
+        let slot = self.slots.get_mut(usize::from(token.slot))?;
+        (slot.generation == token.generation).then_some(())?;
+        slot.value.as_mut()
+    }
+
+    fn reserve(&mut self, id: &str) -> Option<EngineSurfaceToken> {
+        if id.len() > ENGINE_SURFACE_ID_BYTE_CAPACITY || self.contains_key(id) {
+            self.faulted = true;
+            return None;
+        }
+        let Some(index) = self.slots.iter().position(|slot| slot.value.is_none() && slot.retirement.is_none() && slot.id.is_none()) else {
+            self.faulted = true;
+            return None;
+        };
+        let slot = &mut self.slots[index];
+        slot.generation = slot.generation.wrapping_add(1).max(1);
+        slot.id = Some(id.to_owned());
+        Some(EngineSurfaceToken { slot: index as u16, generation: slot.generation })
+    }
+
+    fn publish_reserved(&mut self, token: EngineSurfaceToken, value: EngineSurface) {
+        let slot = self.slots.get_mut(usize::from(token.slot)).expect("reserved surface token slot remains in the fixed registry");
+        assert_eq!(slot.generation, token.generation, "reserved surface token generation remains current");
+        assert!(slot.id.is_some() && slot.value.is_none(), "reserved surface slot remains unpublished");
+        slot.value = Some(value);
+    }
+
+    #[cfg(test)]
+    fn remove(&mut self, id: &str) -> Option<EngineSurface> {
+        let index = self.slot_index(id)?;
+        let slot = &mut self.slots[index];
+        slot.generation = slot.generation.wrapping_add(1).max(1);
+        slot.id = None;
+        slot.value.take()
+    }
+
+    fn values_mut(&mut self) -> impl Iterator<Item = &mut EngineSurface> {
+        self.slots.iter_mut().filter_map(|slot| slot.value.as_mut())
+    }
+
+    fn begin_close(&mut self, token: EngineSurfaceToken) -> bool {
+        let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
+            return false;
+        };
+        if slot.generation != token.generation || slot.retirement.is_some() {
+            return false;
+        }
+        let Some(surface) = slot.value.take() else {
+            return false;
+        };
+        slot.retirement = Some(EngineSurfaceRetirement::new(surface));
+        true
+    }
+
+    fn close_step(&mut self, token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+        let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
+            return false;
+        };
+        if slot.generation != token.generation {
+            return false;
+        }
+        let Some(retirement) = slot.retirement.as_mut() else {
+            return false;
+        };
+        if !retirement.close_step(context, input) {
+            return false;
+        }
+        assert!(retirement.terminal_nonopaque_is_empty());
+        slot.retirement = None;
+        slot.id = None;
+        slot.generation = slot.generation.wrapping_add(1).max(1);
+        true
+    }
+
+    fn terminal_nonopaque_is_empty(&self, token: EngineSurfaceToken) -> bool {
+        match self.slots.get(usize::from(token.slot)) {
+            None => true,
+            Some(slot) => slot.generation != token.generation || (slot.value.is_none() && slot.retirement.is_none() && slot.id.is_none()),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EngineSurfaceClosePhase {
+    Claim,
+    Events,
+    Board,
+    BoardSync,
+    Scalars,
+    Witness,
+    Released,
+}
+
+struct EngineSurfaceRetirement {
+    surface: ManuallyDrop<EngineSurface>,
+    board: Option<puzzle::editor::puzzle2d::engine::BoardHostRetirement>,
+    phase: EngineSurfaceClosePhase,
+    faulted: bool,
+}
+
+impl EngineSurfaceRetirement {
+    fn new(surface: EngineSurface) -> Self {
+        Self { surface: ManuallyDrop::new(surface), board: None, phase: EngineSurfaceClosePhase::Claim, faulted: false }
+    }
+
+    fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+        if context.should_yield() || self.faulted {
+            return false;
+        }
+        match self.phase {
+            EngineSurfaceClosePhase::Claim => {
+                if let Some(claim) = self.surface.board_pointer_claim.take() {
+                    if input.release_action_claim(claim).is_err() {
+                        self.faulted = true;
+                        return false;
+                    }
+                } else if let Some(controller) = self.surface.board_pointer_controller_id.take() {
+                    drop(controller);
+                } else {
+                    self.phase = EngineSurfaceClosePhase::Events;
+                }
+            }
+            EngineSurfaceClosePhase::Events => {
+                if let Some(events) = self.surface.board_retiring_events.as_mut() {
+                    if events.close_step() {
+                        self.surface.board_retiring_events = None;
+                    }
+                } else if self.surface.board_pending_events.close_step() {
+                    self.phase = EngineSurfaceClosePhase::Board;
+                }
+            }
+            EngineSurfaceClosePhase::Board => {
+                if self.board.is_none() {
+                    if let Some(host) = self.surface.board_host.take() {
+                        self.board = Some(puzzle::editor::puzzle2d::engine::BoardHostRetirement::new(ManuallyDrop::into_inner(host)));
+                        context.consume_fuel(1);
+                    } else {
+                        self.phase = EngineSurfaceClosePhase::BoardSync;
+                        context.consume_fuel(1);
+                    }
+                } else if self.board.as_mut().expect("board retirement owner").close_step(context) {
+                    assert!(self.board.as_ref().is_some_and(puzzle::editor::puzzle2d::engine::BoardHostRetirement::terminal_nonopaque_is_empty));
+                    self.board = None;
+                    self.phase = EngineSurfaceClosePhase::BoardSync;
+                }
+                return false;
+            }
+            EngineSurfaceClosePhase::BoardSync => {
+                let cache = &mut self.surface.board_sync_cache;
+                if cache.fixture_json.take().is_some()
+                    || cache.glyph_catalogs_json.take().is_some()
+                    || cache.placement_compatibility_json.take().is_some()
+                    || cache.selection_json.take().is_some()
+                    || cache.camera_json.take().is_some()
+                    || cache.hovered_id.take().is_some()
+                    || cache.active_utility.take().is_some()
+                    || cache.selection_method.take().is_some()
+                    || cache.grid_snap_enabled.take().is_some()
+                    || cache.grid_factor.take().is_some()
+                    || cache.suggestion_offset.take().is_some()
+                    || cache.brush_weights_json.take().is_some()
+                    || cache.lod_mode.take().is_some()
+                    || cache.size_key.take().is_some()
+                {
+                } else {
+                    self.phase = EngineSurfaceClosePhase::Scalars;
+                }
+            }
+            EngineSurfaceClosePhase::Scalars => {
+                if let Some((id, _)) = self.surface.last_note_click.take() {
+                    drop(id);
+                } else if let Some(pack) = self.surface.editor_scene_pack.take() {
+                    drop(pack);
+                } else if self.surface.map_tile_requests.take().is_some() {
+                } else {
+                    self.phase = EngineSurfaceClosePhase::Witness;
+                }
+            }
+            EngineSurfaceClosePhase::Witness => {
+                if self.surface.node_graph.is_some() || self.surface.map_host.is_some() || self.surface.editor.is_some() || !node_graph_sync_terminal(&self.surface.sync_cache) || !map_sync_terminal(&self.surface.map_sync_cache) {
+                    self.faulted = true;
+                    return false;
+                }
+                unsafe { ManuallyDrop::drop(&mut self.surface) };
+                self.phase = EngineSurfaceClosePhase::Released;
+            }
+            EngineSurfaceClosePhase::Released => return true,
+        }
+        context.consume_fuel(1);
+        self.phase == EngineSurfaceClosePhase::Released
+    }
+
+    fn terminal_nonopaque_is_empty(&self) -> bool {
+        self.phase == EngineSurfaceClosePhase::Released && self.board.is_none() && !self.faulted
+    }
+}
+
+impl Drop for EngineSurfaceRetirement {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_nonopaque_is_empty(), "EngineSurfaceRetirement must reach terminal-empty before release");
+    }
 }
 
 //#region 📦️PreparedEngineCanvas
@@ -101,7 +358,15 @@ impl EngineCanvasPacket {
         if self.surface_id.pop().is_some() {
             return false;
         }
-        self.scene.retirement_step()
+        if self.scene.retirement_is_empty() {
+            return true;
+        }
+        let Some(token) = canvas::reserve_opaque_scene_retirement() else {
+            return false;
+        };
+        let scene = std::mem::take(&mut self.scene);
+        canvas::publish_opaque_scene_retirement(token, scene);
+        true
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
@@ -225,15 +490,32 @@ struct BoardSyncCache {
     size_key: Option<String>,
 }
 
-#[derive(Clone, Debug)]
-pub struct PendingMapTileFetch {
-    pub surface_id: String,
-    pub key: String,
-    pub url: String,
-    pub vector: bool,
-    pub z: u32,
-    pub x: u32,
-    pub y: u32,
+fn node_graph_sync_terminal(cache: &NodeGraphSyncCache) -> bool {
+    cache.fixture_json.is_none()
+        && cache.selection.is_none()
+        && cache.preview_off_json.is_none()
+        && cache.catalogue_json.is_none()
+        && cache.operators.is_none()
+        && cache.computing_json.is_none()
+        && cache.status_json.is_none()
+        && cache.eval_json.is_none()
+        && cache.lod_json.is_none()
+        && cache.viewport.is_none()
+        && cache.scene_pack.is_none()
+}
+
+fn map_sync_terminal(cache: &MapSyncCache) -> bool {
+    cache.map_fixture_json.is_none()
+        && cache.camera_json.is_none()
+        && cache.render_mode.is_none()
+        && cache.vector_style.is_none()
+        && cache.lod_mode.is_none()
+        && cache.layer_visibility_json.is_none()
+        && cache.layer_stroke_scale_json.is_none()
+        && cache.selection_json.is_none()
+        && cache.hover_json.is_none()
+        && cache.theme_json.is_none()
+        && cache.size_key.is_none()
 }
 
 /// 🧵️ Worker-safe retained cell whose existing `with`/`borrow` call shape keeps scene code concise.
@@ -265,8 +547,7 @@ impl<T: Default> WorkerCell<T> {
     }
 }
 
-static PENDING_MAP_TILE_FETCHES: WorkerCell<Vec<PendingMapTileFetch>> = WorkerCell::new();
-static MAP_TILE_MISS: WorkerCell<HashSet<String>> = WorkerCell::new();
+static MAP_TILE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new();
 
 fn sync_field(cache: &mut Option<String>, value: &str) -> bool {
     if cache.as_deref() == Some(value) {
@@ -322,7 +603,66 @@ fn sync_graph_canvas_theme_dark(_cache: &mut NodeGraphSyncCache, dark: bool, gra
     graph.set_canvas_theme_dark(dark);
 }
 
-static ENGINE_SURFACES: WorkerCell<HashMap<String, EngineSurface>> = WorkerCell::new();
+static ENGINE_SURFACES: WorkerCell<EngineSurfaceRegistry> = WorkerCell::new();
+
+#[cfg(test)]
+#[test]
+fn engine_surface_registry_is_fixed_and_generation_keyed() {
+    let mut registry = EngineSurfaceRegistry::default();
+    let first = registry.reserve("surface-0").expect("first fixed surface slot");
+    assert_eq!(registry.token("surface-0"), Some(first));
+    assert!(registry.remove("surface-0").is_none());
+    let replacement = registry.reserve("surface-0").expect("released fixed surface slot");
+    assert_ne!(first.generation, replacement.generation);
+    assert_eq!(registry.token("surface-0"), Some(replacement));
+    for index in 1..ENGINE_SURFACE_CAPACITY {
+        assert!(registry.reserve(&format!("surface-{index}")).is_some());
+    }
+    assert!(registry.reserve("surface-overflow").is_none());
+    assert!(registry.faulted);
+}
+
+#[cfg(test)]
+#[test]
+fn engine_surface_registry_rejects_oversized_identity_before_reservation() {
+    let mut registry = EngineSurfaceRegistry::default();
+    assert!(registry.reserve(&"s".repeat(ENGINE_SURFACE_ID_BYTE_CAPACITY + 1)).is_none());
+    assert!(registry.slots.iter().all(|slot| slot.id.is_none() && slot.value.is_none()));
+}
+
+#[cfg(test)]
+fn with_engine_close_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
+    let mut sequence = 0;
+    let mut context = semio_framework_job::StepContext::new(
+        semio_framework_job::OperationId(1),
+        semio_framework_job::Generation(1),
+        semio_framework_job::StepBudget::new(fuel, u64::MAX),
+        semio_framework_job::root_cancel_token(),
+        semio_framework_job::default_now_ms,
+        &mut sequence,
+    );
+    step(&mut context)
+}
+
+#[cfg(test)]
+#[test]
+fn board_surface_close_freezes_registration_and_reaches_nonopaque_terminal() {
+    let mut registry = EngineSurfaceRegistry::default();
+    let token = registry.reserve("board-close").expect("fixed surface reservation");
+    let mut surface = empty_engine_surface(800, 600);
+    surface.board_host = Some(ManuallyDrop::new(puzzle::editor::puzzle2d::engine::BoardHost::default()));
+    registry.publish_reserved(token, surface);
+    assert!(registry.begin_close(token));
+    assert!(registry.get("board-close").is_none());
+    assert!(registry.reserve("board-close").is_none());
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut turns = 0usize;
+    while !with_engine_close_context(1, |context| registry.close_step(token, context, &mut input)) {
+        turns += 1;
+        assert!(turns < 8_192, "board surface close reaches a fixed terminal witness");
+    }
+    assert!(registry.terminal_nonopaque_is_empty(token));
+}
 
 fn raster_key(surface_id: &str) -> String {
     format!("engine:{surface_id}")
@@ -337,6 +677,28 @@ fn is_flow_graph(graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
 
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+}
+
+fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
+    EngineSurface {
+        node_graph: None,
+        sync_cache: NodeGraphSyncCache::default(),
+        map_host: None,
+        map_sync_cache: MapSyncCache::default(),
+        map_tile_requests: None,
+        board_host: None,
+        board_sync_cache: BoardSyncCache::default(),
+        board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue::default(),
+        board_retiring_events: None,
+        board_pointer_inside: false,
+        board_pointer_claim: None,
+        board_pointer_controller_id: None,
+        editor: None,
+        editor_scene_pack: None,
+        width: pw.max(1),
+        height: ph.max(1),
+        last_note_click: None,
+    }
 }
 
 #[cfg(test)]
@@ -446,27 +808,11 @@ fn ensure_surface(surface_id: &str, pw: u32, ph: u32) {
         let needs_create = !map.contains_key(surface_id);
         let needs_resize = map.get(surface_id).is_some_and(|entry| entry.width != pw.max(1) || entry.height != ph.max(1));
         if needs_create {
-            map.insert(
-                surface_id.to_string(),
-                EngineSurface {
-                    node_graph: None,
-                    sync_cache: NodeGraphSyncCache::default(),
-                    map_host: None,
-                    map_sync_cache: MapSyncCache::default(),
-                    board_host: None,
-                    board_sync_cache: BoardSyncCache::default(),
-                    board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue::default(),
-                    board_retiring_events: None,
-                    board_pointer_inside: false,
-                    board_pointer_claim: None,
-                    board_pointer_controller_id: None,
-                    editor: None,
-                    editor_scene_pack: None,
-                    width: pw.max(1),
-                    height: ph.max(1),
-                    last_note_click: None,
-                },
-            );
+            let Some(token) = map.reserve(surface_id) else {
+                return;
+            };
+            let surface = empty_engine_surface(pw, ph);
+            map.publish_reserved(token, surface);
             return;
         }
         if needs_resize {
@@ -475,6 +821,26 @@ fn ensure_surface(surface_id: &str, pw: u32, ph: u32) {
             entry.height = ph.max(1);
         }
     });
+}
+
+pub(crate) fn begin_engine_surface_close(surface_id: &str) -> Option<EngineSurfaceToken> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let token = registry.token(surface_id)?;
+        registry.begin_close(token).then_some(token)
+    })
+}
+
+pub(crate) fn close_engine_surface_step(token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().close_step(token, context, input))
+}
+
+pub(crate) fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceToken) -> bool {
+    ENGINE_SURFACES.with(|cell| cell.borrow().terminal_nonopaque_is_empty(token))
+}
+
+pub(crate) fn opaque_scene_quarantine_status() -> (usize, bool) {
+    canvas::opaque_scene_retirement_status()
 }
 
 fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgpu::Texture, wgpu::TextureView) {
@@ -1349,6 +1715,20 @@ fn map_tile_url(template: &str, z: u32, x: u32, y: u32) -> String {
     template.replace("{z}", &z.to_string()).replace("{x}", &x.to_string()).replace("{y}", &y.to_string())
 }
 
+fn reserve_map_tile_fetch(surface_id: &str, key: &str, template: &str, vector: bool, z: u32, x: u32, y: u32) -> Result<(), WorldAssetFault> {
+    if template.len().checked_add(30).is_none_or(|bytes| bytes > WORLD_ASSET_URL_BYTE_CAPACITY) {
+        return Err(WorldAssetFault::UrlCapacity);
+    }
+    let surface = WorldAssetMetadataId::try_from_str(surface_id)?;
+    let key = WorldAssetMetadataId::try_from_str(key)?;
+    let url = map_tile_url(template, z, x, y);
+    crate::reserve_renderer_asset_request(WorldAssetRequestKind::MapTile { surface, key, vector, z, x, y }, &url).map(|_| ())
+}
+
+pub fn take_map_tile_asset_fault() -> Option<WorldAssetFault> {
+    MAP_TILE_ASSET_FAULT.with(|cell| cell.borrow_mut().take())
+}
+
 fn map_theme_json_from_ui_theme(theme: &Theme) -> String {
     let rgba = |color: Rgba| {
         let r = (color.r.clamp(0.0, 1.0) * 255.0).round() as u8;
@@ -1422,88 +1802,113 @@ fn sync_map_host(host: &mut MapHost, scene: &ui_wgpu::wgpu::TiledMapScene, cache
     }
 }
 
-fn queue_map_tile_fetches(surface_id: &str, scene: &ui_wgpu::wgpu::TiledMapScene, host: &mut MapHost) {
-    host.prepare_visible_tiles();
-    let needs_raster = scene.render_mode == "image" || scene.render_mode == "combined";
-    let needs_vector = scene.render_mode == "vector" || scene.render_mode == "combined";
-    PENDING_MAP_TILE_FETCHES.with(|pending| {
-        let mut queue = pending.borrow_mut();
-        if needs_raster {
-            let rows: Vec<Value> = serde_json::from_str(&host.visible_tiles_json()).unwrap_or_default();
-            for row in rows {
-                let (Some(z), Some(x), Some(y), Some(key)) = (
-                    row.get("z").and_then(|value| value.as_u64()).map(|value| value as u32),
-                    row.get("x").and_then(|value| value.as_u64()).map(|value| value as u32),
-                    row.get("y").and_then(|value| value.as_u64()).map(|value| value as u32),
-                    row.get("key").and_then(|value| value.as_str()),
-                ) else {
-                    continue;
-                };
-                if host.has_tile(key) {
-                    continue;
-                }
-                let miss_key = format!("raster:{key}");
-                if MAP_TILE_MISS.with(|cell| cell.borrow().contains(&miss_key)) {
-                    continue;
-                }
-                if queue.iter().any(|item| item.key == key && item.surface_id == surface_id) {
-                    continue;
-                }
-                queue.push(PendingMapTileFetch { surface_id: surface_id.to_string(), key: key.to_string(), url: map_tile_url(&scene.tile_url_template, z, x, y), vector: false, z, x, y });
-            }
-        }
-        if needs_vector {
-            let rows: Vec<Value> = serde_json::from_str(&host.visible_vector_tiles_json()).unwrap_or_default();
-            for row in rows {
-                let (Some(z), Some(x), Some(y), Some(key)) = (
-                    row.get("z").and_then(|value| value.as_u64()).map(|value| value as u32),
-                    row.get("x").and_then(|value| value.as_u64()).map(|value| value as u32),
-                    row.get("y").and_then(|value| value.as_u64()).map(|value| value as u32),
-                    row.get("key").and_then(|value| value.as_str()),
-                ) else {
-                    continue;
-                };
-                if host.has_vector_tile(key) {
-                    continue;
-                }
-                let miss_key = format!("vector:{key}");
-                if MAP_TILE_MISS.with(|cell| cell.borrow().contains(&miss_key)) {
-                    continue;
-                }
-                if queue.iter().any(|item| item.key == key && item.surface_id == surface_id) {
-                    continue;
-                }
-                queue.push(PendingMapTileFetch { surface_id: surface_id.to_string(), key: key.to_string(), url: map_tile_url(&scene.vector_tile_url_template, z, x, y), vector: true, z, x, y });
-            }
-        }
-    });
+#[derive(Clone, Copy)]
+enum MapTileRequestPhase {
+    Raster,
+    Vector,
+    Terminal,
 }
 
-pub fn collect_pending_map_tile_fetches() -> Vec<PendingMapTileFetch> {
-    PENDING_MAP_TILE_FETCHES.with(|cell| {
-        let mut queue = cell.borrow_mut();
-        let out = queue.clone();
-        queue.clear();
-        out
-    })
+#[derive(Clone, Copy)]
+struct MapTileRequestCursor {
+    revision: u64,
+    raster_template: u64,
+    vector_template: u64,
+    raster: Option<VisibleTileCursor>,
+    vector: Option<VisibleTileCursor>,
+    phase: MapTileRequestPhase,
 }
 
-pub fn apply_map_tile_bytes(surface_id: &str, fetch: &PendingMapTileFetch, bytes: &[u8]) {
+fn bounded_map_template_witness(template: &str) -> Result<u64, WorldAssetFault> {
+    if template.len().checked_add(30).is_none_or(|bytes| bytes > WORLD_ASSET_URL_BYTE_CAPACITY) {
+        return Err(WorldAssetFault::UrlCapacity);
+    }
+    Ok(template.bytes().fold(0xcbf29ce484222325u64, |hash, byte| hash.wrapping_mul(0x100000001b3) ^ u64::from(byte)))
+}
+
+impl MapTileRequestCursor {
+    fn new(scene: &ui_wgpu::wgpu::TiledMapScene, host: &MapHost) -> Result<Self, WorldAssetFault> {
+        let raster_template = bounded_map_template_witness(&scene.tile_url_template)?;
+        let vector_template = bounded_map_template_witness(&scene.vector_tile_url_template)?;
+        let raster = (scene.render_mode == "image" || scene.render_mode == "combined").then(|| host.visible_raster_tile_cursor());
+        let vector = (scene.render_mode == "vector" || scene.render_mode == "combined").then(|| host.visible_vector_tile_cursor()).flatten();
+        let phase = if raster.is_some() {
+            MapTileRequestPhase::Raster
+        } else if vector.is_some() {
+            MapTileRequestPhase::Vector
+        } else {
+            MapTileRequestPhase::Terminal
+        };
+        Ok(Self { revision: host.interaction_revision(), raster_template, vector_template, raster, vector, phase })
+    }
+
+    fn matches(&self, scene: &ui_wgpu::wgpu::TiledMapScene, host: &MapHost) -> bool {
+        self.revision == host.interaction_revision() && bounded_map_template_witness(&scene.tile_url_template).ok() == Some(self.raster_template) && bounded_map_template_witness(&scene.vector_tile_url_template).ok() == Some(self.vector_template)
+    }
+
+    fn current(&self) -> Option<(bool, framework_surface_tiled_map::tiled_map::tiles::VisibleTile)> {
+        match self.phase {
+            MapTileRequestPhase::Raster => self.raster.as_ref()?.peek().map(|tile| (false, tile)),
+            MapTileRequestPhase::Vector => self.vector.as_ref()?.peek().map(|tile| (true, tile)),
+            MapTileRequestPhase::Terminal => None,
+        }
+    }
+
+    fn advance(&mut self) {
+        match self.phase {
+            MapTileRequestPhase::Raster => {
+                if self.raster.as_mut().is_none_or(|cursor| !cursor.advance() || cursor.remaining() == 0) {
+                    self.phase = if self.vector.as_ref().is_some_and(|cursor| cursor.remaining() != 0) { MapTileRequestPhase::Vector } else { MapTileRequestPhase::Terminal };
+                }
+            }
+            MapTileRequestPhase::Vector => {
+                if self.vector.as_mut().is_none_or(|cursor| !cursor.advance() || cursor.remaining() == 0) {
+                    self.phase = MapTileRequestPhase::Terminal;
+                }
+            }
+            MapTileRequestPhase::Terminal => {}
+        }
+    }
+}
+
+fn queue_map_tile_fetch_step(surface_id: &str, scene: &ui_wgpu::wgpu::TiledMapScene, host: &MapHost, cursor: &mut Option<MapTileRequestCursor>) {
+    if cursor.as_ref().is_none_or(|cursor| !cursor.matches(scene, host)) {
+        match MapTileRequestCursor::new(scene, host) {
+            Ok(next) => *cursor = Some(next),
+            Err(fault) => {
+                MAP_TILE_ASSET_FAULT.with(|cell| *cell.borrow_mut() = Some(fault));
+                return;
+            }
+        }
+    }
+    let Some(cursor) = cursor.as_mut() else { return };
+    let Some((vector, tile)) = cursor.current() else {
+        *cursor = MapTileRequestCursor::new(scene, host).ok();
+        return;
+    };
+    let key = format!("{}/{}/{}", tile.z, tile.x, tile.y);
+    if if vector { host.has_vector_tile(&key) } else { host.has_tile(&key) } {
+        cursor.advance();
+        return;
+    }
+    let template = if vector { &scene.vector_tile_url_template } else { &scene.tile_url_template };
+    match reserve_map_tile_fetch(surface_id, &key, template, vector, tile.z, tile.x, tile.y) {
+        Ok(()) => cursor.advance(),
+        Err(fault) => MAP_TILE_ASSET_FAULT.with(|cell| *cell.borrow_mut() = Some(fault)),
+    }
+}
+
+pub fn apply_map_tile_bytes(kind: WorldAssetRequestKind, bytes: &[u8]) {
+    let WorldAssetRequestKind::MapTile { surface, key: _, vector, z, x, y } = kind else { return };
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(surface_id) else {
+        let Some(entry) = map.get_mut(surface.as_str()) else {
             return;
         };
         let Some(host) = entry.map_host.as_mut() else {
             return;
         };
-        let result = if fetch.vector { host.upload_vector_tile(fetch.z, fetch.x, fetch.y, bytes) } else { host.upload_tile(fetch.z, fetch.x, fetch.y, bytes) };
-        if result.is_err() {
-            let miss_key = if fetch.vector { format!("vector:{}", fetch.key) } else { format!("raster:{}", fetch.key) };
-            MAP_TILE_MISS.with(|cell| {
-                cell.borrow_mut().insert(miss_key);
-            });
-        }
+        let _ = if vector { host.upload_vector_tile(z, x, y, bytes) } else { host.upload_tile(z, x, y, bytes) };
     });
 }
 
@@ -1524,9 +1929,10 @@ pub fn paint_tiled_map(resources: &mut EngineCanvasBuildContext, ctx: &mut Frame
             entry.map_host = Some(MapHost::new());
             entry.map_sync_cache = MapSyncCache::default();
         }
-        let host = entry.map_host.as_mut().expect("map host");
-        sync_map_host(host, map_scene, &mut entry.map_sync_cache, pw, ph, dpr, &theme_json);
-        queue_map_tile_fetches(&scene.surface_id, map_scene, host);
+        let EngineSurface { map_host, map_sync_cache, map_tile_requests, .. } = entry;
+        let host = map_host.as_mut().expect("map host");
+        sync_map_host(host, map_scene, map_sync_cache, pw, ph, dpr, &theme_json);
+        queue_map_tile_fetch_step(&scene.surface_id, map_scene, host, map_tile_requests);
         host.build_render_scene()
     });
     render_vello_scene(resources, &scene.surface_id, canvas_scene, clear, pw, ph);
@@ -1814,7 +2220,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
 
     let board_id = "board-plan-saturation";
     ensure_surface(board_id, 800, 600);
-    ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).unwrap().board_host = Some(puzzle::editor::puzzle2d::engine::BoardHost::default()));
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).unwrap().board_host = Some(ManuallyDrop::new(puzzle::editor::puzzle2d::engine::BoardHost::default())));
     let board_before = with_board_host(board_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
     let mut board_input = ui_wgpu::wgpu::InputState::default();
     saturate(&mut board_input);
@@ -1997,7 +2403,7 @@ pub fn paint_puzzle_board(resources: &mut EngineCanvasBuildContext, ctx: &mut Fr
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
         if entry.board_host.is_none() {
-            entry.board_host = Some(puzzle::editor::puzzle2d::engine::board_host::puzzle_board_host());
+            entry.board_host = Some(ManuallyDrop::new(puzzle::editor::puzzle2d::engine::board_host::puzzle_board_host()));
             entry.board_sync_cache = BoardSyncCache::default();
         }
         let host = entry.board_host.as_mut().expect("board host");

@@ -20,7 +20,7 @@ impl Procedural3dSnapshotVcs {
     pub async fn new(envelope_json: Option<String>) -> Result<Procedural3dSnapshotVcs, JsValue> {
         let store = match envelope_json {
             Some(json) => {
-                let envelope: Procedural3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let envelope: Procedural3dEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Procedural3dStore::new(envelope).await.map_err(|e| JsValue::from_str(&e.to_string()))?
             }
             None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?,

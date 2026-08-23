@@ -533,20 +533,18 @@ pub mod types {
     }
 
     // #region 🔖️Icons
-    use std::cell::RefCell;
-    use std::collections::HashMap;
+    use std::cell::{Cell, RefCell};
     use std::hash::{Hash, Hasher};
+    use std::mem::ManuallyDrop;
     use std::sync::Arc;
 
     use super::canvas::{append_svg_document, Affine, FillRule, RasterImage, Rect, Scene, SvgDocument};
 
-    #[derive(Clone)]
     pub enum CachedIconBody {
         Vector(Scene),
         Raster(Arc<RasterImage>),
     }
 
-    #[derive(Clone)]
     struct CachedIconPaint {
         bx: f64,
         by: f64,
@@ -555,21 +553,125 @@ pub mod types {
         body: CachedIconBody,
     }
 
+    const ICON_PAINT_CACHE_CAPACITY: usize = 256;
+    const ICON_PAINT_CACHE_KEY_BYTE_CAPACITY: usize = 256;
+    const ICON_PAINT_SOURCE_BYTE_CAPACITY: usize = 16 * 1024;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    struct IconPaintToken {
+        slot: u16,
+        generation: u64,
+    }
+
+    struct IconPaintSlot {
+        key: Option<String>,
+        epoch: u64,
+        generation: u64,
+        value: Option<CachedIconPaint>,
+    }
+
+    struct IconPaintRegistry {
+        slots: Box<[IconPaintSlot; ICON_PAINT_CACHE_CAPACITY]>,
+        epoch: u64,
+        faulted: bool,
+    }
+
+    impl Default for IconPaintRegistry {
+        fn default() -> Self {
+            Self { slots: Box::new(std::array::from_fn(|_| IconPaintSlot { key: None, epoch: 0, generation: 0, value: None })), epoch: 1, faulted: false }
+        }
+    }
+
+    impl IconPaintRegistry {
+        fn index(&self, key: &str) -> Option<usize> {
+            self.slots.iter().position(|slot| slot.epoch == self.epoch && slot.key.as_deref() == Some(key) && slot.value.is_some())
+        }
+
+        fn get(&self, key: &str) -> Option<&CachedIconPaint> {
+            self.slots.get(self.index(key)?)?.value.as_ref()
+        }
+
+        fn reserve(&mut self, key: &str) -> Option<IconPaintToken> {
+            if key.len() > ICON_PAINT_CACHE_KEY_BYTE_CAPACITY || self.get(key).is_some() {
+                self.faulted = true;
+                return None;
+            }
+            let Some(index) = self.slots.iter().position(|slot| slot.key.is_none() && slot.value.is_none()) else {
+                self.faulted = true;
+                return None;
+            };
+            let slot = &mut self.slots[index];
+            slot.generation = slot.generation.wrapping_add(1).max(1);
+            slot.epoch = self.epoch;
+            slot.key = Some(key.to_owned());
+            Some(IconPaintToken { slot: index as u16, generation: slot.generation })
+        }
+
+        fn publish(&mut self, token: IconPaintToken, value: CachedIconPaint) {
+            let slot = self.slots.get_mut(usize::from(token.slot)).expect("reserved icon cache slot remains present");
+            assert_eq!(slot.generation, token.generation, "reserved icon cache generation remains current");
+            assert_eq!(slot.epoch, self.epoch, "reserved icon cache epoch remains current");
+            assert!(slot.key.is_some() && slot.value.is_none(), "reserved icon cache slot remains unpublished");
+            slot.value = Some(value);
+        }
+
+        fn abort(&mut self, token: IconPaintToken) {
+            let slot = self.slots.get_mut(usize::from(token.slot)).expect("reserved icon cache slot remains present");
+            assert_eq!(slot.generation, token.generation, "aborted icon cache generation remains current");
+            assert!(slot.value.is_none(), "only an unpublished icon cache reservation can abort");
+            slot.key = None;
+            slot.epoch = 0;
+            slot.generation = slot.generation.wrapping_add(1).max(1);
+        }
+
+        fn invalidate(&mut self) {
+            self.epoch = self.epoch.wrapping_add(1).max(1);
+        }
+    }
+
     /// 🖼️ Shared SVG/raster icon decode cache for board and DAG hosts.
     pub struct IconPaintCache {
-        cache: RefCell<HashMap<String, CachedIconPaint>>,
+        cache: RefCell<ManuallyDrop<IconPaintRegistry>>,
+        retirement_cursor: Cell<u16>,
+        closing: Cell<bool>,
         pub themed_icon_lookup: infinite::canvas::icon_codec::ThemedSvgLookup,
+    }
+
+    pub struct CachedIconPaintLease<'a> {
+        cache: std::cell::Ref<'a, ManuallyDrop<IconPaintRegistry>>,
+        slot: usize,
+    }
+
+    impl CachedIconPaintLease<'_> {
+        pub fn bounds(&self) -> (f64, f64, f64, f64) {
+            let paint = self.cache.slots[self.slot].value.as_ref().expect("leased icon cache slot remains published");
+            (paint.bx, paint.by, paint.bw, paint.bh)
+        }
+
+        pub fn body(&self) -> &CachedIconBody {
+            &self.cache.slots[self.slot].value.as_ref().expect("leased icon cache slot remains published").body
+        }
     }
 
     impl Default for IconPaintCache {
         fn default() -> Self {
-            Self { cache: RefCell::new(HashMap::new()), themed_icon_lookup: |_| None }
+            Self { cache: RefCell::new(ManuallyDrop::new(IconPaintRegistry::default())), retirement_cursor: Cell::new(0), closing: Cell::new(false), themed_icon_lookup: |_| None }
         }
     }
 
     impl Clone for IconPaintCache {
         fn clone(&self) -> Self {
-            Self { cache: RefCell::new(HashMap::new()), themed_icon_lookup: self.themed_icon_lookup }
+            Self { cache: RefCell::new(ManuallyDrop::new(IconPaintRegistry::default())), retirement_cursor: Cell::new(0), closing: Cell::new(false), themed_icon_lookup: self.themed_icon_lookup }
+        }
+    }
+
+    impl Drop for IconPaintCache {
+        fn drop(&mut self) {
+            let terminal = self.terminal_is_empty();
+            debug_assert!(terminal, "IconPaintCache must reach terminal-empty through close_step before release");
+            if terminal {
+                unsafe { ManuallyDrop::drop(self.cache.get_mut()) };
+            }
         }
     }
 
@@ -579,7 +681,49 @@ pub mod types {
         }
 
         pub fn clear(&self) {
-            self.cache.borrow_mut().clear();
+            self.cache.borrow_mut().invalidate();
+            self.retirement_cursor.set(0);
+        }
+
+        pub fn close_step(&self) -> bool {
+            self.closing.set(true);
+            let index = usize::from(self.retirement_cursor.get());
+            if index == ICON_PAINT_CACHE_CAPACITY {
+                return true;
+            }
+            let mut cache = self.cache.borrow_mut();
+            let slot = &mut cache.slots[index];
+            if let Some(CachedIconPaint { body: CachedIconBody::Vector(_), .. }) = slot.value.as_ref() {
+                let Some(token) = infinite::canvas::reserve_opaque_scene_retirement() else {
+                    cache.faulted = true;
+                    return false;
+                };
+                let paint = slot.value.take().expect("vector icon retirement slot remains occupied");
+                let CachedIconBody::Vector(scene) = paint.body else {
+                    unreachable!("vector icon retirement was witnessed before ownership transfer");
+                };
+                infinite::canvas::publish_opaque_scene_retirement(token, scene);
+            } else {
+                slot.value = None;
+            }
+            slot.key = None;
+            slot.epoch = 0;
+            slot.generation = slot.generation.wrapping_add(1).max(1);
+            self.retirement_cursor.set((index + 1) as u16);
+            false
+        }
+
+        pub fn terminal_is_empty(&self) -> bool {
+            self.closing.get() && usize::from(self.retirement_cursor.get()) == ICON_PAINT_CACHE_CAPACITY && self.cache.borrow().slots.iter().all(|slot| slot.key.is_none() && slot.value.is_none())
+        }
+
+        pub fn faulted(&self) -> bool {
+            self.cache.borrow().faulted
+        }
+
+        #[cfg(test)]
+        pub(crate) fn occupied_slots(&self) -> usize {
+            self.cache.borrow().slots.iter().filter(|slot| slot.key.is_some()).count()
         }
 
         fn icon_vector_cache_key(tag: &str, svg: &str, fg: Color, bg: Color) -> String {
@@ -598,7 +742,14 @@ pub mod types {
             format!("v8|r|{w}x{h}|{hx:x}|{}", rgba.len())
         }
 
-        pub fn get_or_build(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
+        pub fn get_or_build(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<CachedIconPaintLease<'_>> {
+            if self.closing.get() {
+                return None;
+            }
+            if encoded.len() > ICON_PAINT_SOURCE_BYTE_CAPACITY {
+                self.cache.borrow_mut().faulted = true;
+                return None;
+            }
             let resolved = infinite::canvas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
             let key = match &resolved {
                 infinite::canvas::icon_codec::BoardResolvedIcon::None => return None,
@@ -607,16 +758,24 @@ pub mod types {
             };
             {
                 let g = self.cache.borrow();
-                if let Some(c) = g.get(&key) {
-                    return Some((c.bx, c.by, c.bw, c.bh, c.body.clone()));
+                if let Some(slot) = g.index(&key) {
+                    return Some(CachedIconPaintLease { cache: g, slot });
                 }
             }
+            let token = self.cache.borrow_mut().reserve(&key)?;
             let (bx, by, bw, bh, body) = match resolved {
-                infinite::canvas::icon_codec::BoardResolvedIcon::None => return None,
+                infinite::canvas::icon_codec::BoardResolvedIcon::None => {
+                    self.cache.borrow_mut().abort(token);
+                    return None;
+                }
                 infinite::canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
-                    let doc = SvgDocument::parse_icons(s.trim()).ok()?;
+                    let Some(doc) = SvgDocument::parse_icons(s.trim()).ok() else {
+                        self.cache.borrow_mut().abort(token);
+                        return None;
+                    };
                     let (bx, by, bw, bh) = doc.content_bounds();
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
+                        self.cache.borrow_mut().abort(token);
                         return None;
                     }
                     let mut s = Scene::new();
@@ -628,9 +787,13 @@ pub mod types {
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
                 infinite::canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
-                    let doc = SvgDocument::parse_icons(s.trim()).ok()?;
+                    let Some(doc) = SvgDocument::parse_icons(s.trim()).ok() else {
+                        self.cache.borrow_mut().abort(token);
+                        return None;
+                    };
                     let (bx, by, bw, bh) = doc.content_bounds();
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
+                        self.cache.borrow_mut().abort(token);
                         return None;
                     }
                     let mut s = Scene::new();
@@ -650,16 +813,18 @@ pub mod types {
                     (bx, by, bw, bh, CachedIconBody::Raster(Arc::new(img)))
                 }
             };
-            let cached = CachedIconPaint { bx, by, bw, bh, body: body.clone() };
-            self.cache.borrow_mut().insert(key, cached);
-            Some((bx, by, bw, bh, body))
+            self.cache.borrow_mut().publish(token, CachedIconPaint { bx, by, bw, bh, body });
+            let cache = self.cache.borrow();
+            let slot = cache.index(&key).expect("published icon cache key remains indexed");
+            Some(CachedIconPaintLease { cache, slot })
         }
 
         /// @emoji 🖼️ Paints an icon centered in a screen-space rectangle.
         pub fn append_icon_at_screen_rect(&self, scene: &mut Scene, icon_kind: &str, center: Point, avail_w: f64, avail_h: f64, fg: Color, bg: Color, preserve_original_style: bool) {
-            let Some((bx, by, bw, bh, body)) = self.get_or_build(icon_kind, fg, bg, preserve_original_style) else {
+            let Some(paint) = self.get_or_build(icon_kind, fg, bg, preserve_original_style) else {
                 return;
             };
+            let (bx, by, bw, bh) = paint.bounds();
             if !(avail_w > 0.0 && avail_h > 0.0) {
                 return;
             }
@@ -675,7 +840,7 @@ pub mod types {
             let hh = avail_h * clip_inset * 0.5;
             let clip_r = Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh));
             scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &clip_r);
-            match &body {
+            match paint.body() {
                 CachedIconBody::Vector(icon_scene) => {
                     scene.append(icon_scene, Some(aff));
                 }
@@ -1597,6 +1762,31 @@ mod quadrant_tests {
         assert_eq!(fg, Color::new(ui_styling::CANVAS_LIGHT.icon_fg));
         assert_eq!(bg, Color::new(ui_styling::CANVAS_LIGHT.icon_bg));
         assert_ne!(fg.to_rgba8(), theme.node_stroke.to_rgba8());
+    }
+
+    #[test]
+    fn icon_cache_epoch_invalidation_retains_owner_until_cursor_close() {
+        let cache = IconPaintCache::new();
+        let svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><path d='M0 0L1 0L1 1Z'/></svg>";
+        let fg = Color::new([1.0, 1.0, 1.0, 1.0]);
+        let bg = Color::new([0.0, 0.0, 0.0, 1.0]);
+        assert!(cache.get_or_build(svg, fg, bg, true).is_some());
+        assert_eq!(cache.occupied_slots(), 1);
+        cache.clear();
+        assert!(cache.get_or_build(svg, fg, bg, true).is_some());
+        assert_eq!(cache.occupied_slots(), 2);
+        while !cache.close_step() {}
+        assert!(cache.terminal_is_empty());
+    }
+
+    #[test]
+    fn icon_cache_rejects_oversized_source_before_owner_construction() {
+        let cache = IconPaintCache::new();
+        let source = "x".repeat(16 * 1024 + 1);
+        assert!(cache.get_or_build(&source, Color::new([1.0; 4]), Color::new([0.0; 4]), false).is_none());
+        assert!(cache.faulted());
+        assert_eq!(cache.occupied_slots(), 0);
+        while !cache.close_step() {}
     }
 
     #[test]

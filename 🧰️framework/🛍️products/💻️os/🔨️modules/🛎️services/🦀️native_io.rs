@@ -3,7 +3,7 @@
 use semio_framework_job::{CommitCandidate, InteractiveJob, StepContext, StepOutcome};
 use std::fs::{File, ReadDir};
 use std::future::Future;
-use std::io::{Read, Write};
+use std::io::{Read, Seek, Write};
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
@@ -14,6 +14,7 @@ use std::task::{Context, Poll, Waker};
 #[derive(Clone, Debug)]
 pub enum NativeIoRequest {
     ReadBytes(PathBuf),
+    ReadPage { path: PathBuf, offset: u64, max_bytes: usize },
     ScanDirectory { path: PathBuf, directories_only: bool, extension: Option<String>, first_only: bool },
     Modified(Vec<PathBuf>),
     WriteBytes { path: PathBuf, bytes: Vec<u8>, create_parent: bool },
@@ -23,6 +24,7 @@ pub enum NativeIoRequest {
 #[derive(Debug)]
 pub enum NativeIoValue {
     Bytes(Vec<u8>),
+    Page { bytes: Vec<u8>, eof: bool },
     Paths(Vec<PathBuf>),
     Modified(Vec<(PathBuf, std::time::SystemTime)>),
     Written,
@@ -81,6 +83,7 @@ impl Future for NativeIoCompletion {
 enum NativeIoState {
     Pending(NativeIoRequest),
     Reading { file: File, bytes: Vec<u8> },
+    ReadingPage { file: File, offset: u64, length: u64, max_bytes: usize },
     Scanning { entries: ReadDir, paths: Vec<PathBuf>, directories_only: bool, extension: Option<String>, first_only: bool },
     Writing { file: File, bytes: Vec<u8>, cursor: usize },
     Finished,
@@ -113,6 +116,28 @@ impl NativeIoJob {
                 }
                 Err(error) => self.finish(Err(format!("{}: {error}", path.display()))),
             },
+            NativeIoRequest::ReadPage { path, offset, max_bytes } => {
+                if max_bytes == 0 || max_bytes > 64 * 1024 {
+                    return self.finish(Err("native I/O page exceeded fixed byte credits".into()));
+                }
+                match File::open(&path) {
+                    Ok(mut file) => {
+                        let length = match file.metadata() {
+                            Ok(metadata) => metadata.len(),
+                            Err(error) => return self.finish(Err(format!("{}: {error}", path.display()))),
+                        };
+                        if offset > length {
+                            return self.finish(Err(format!("{}: page offset exceeds file length", path.display())));
+                        }
+                        if let Err(error) = file.seek(std::io::SeekFrom::Start(offset)) {
+                            return self.finish(Err(format!("{}: {error}", path.display())));
+                        }
+                        self.state = NativeIoState::ReadingPage { file, offset, length, max_bytes };
+                        StepOutcome::Yield
+                    }
+                    Err(error) => self.finish(Err(format!("{}: {error}", path.display()))),
+                }
+            }
             NativeIoRequest::ScanDirectory { path, directories_only, extension, first_only } => match std::fs::read_dir(&path) {
                 Ok(entries) => {
                     self.state = NativeIoState::Scanning { entries, paths: Vec::new(), directories_only, extension, first_only };
@@ -167,6 +192,17 @@ impl InteractiveJob for NativeIoJob {
                         bytes.extend_from_slice(&chunk[..count]);
                         self.state = NativeIoState::Reading { file, bytes };
                         StepOutcome::Yield
+                    }
+                    Err(error) => self.finish(Err(error.to_string())),
+                }
+            }
+            NativeIoState::ReadingPage { mut file, offset, length, max_bytes } => {
+                let remaining = usize::try_from(length.saturating_sub(offset)).unwrap_or(usize::MAX);
+                let mut bytes = vec![0; max_bytes.min(remaining)];
+                match file.read(&mut bytes) {
+                    Ok(count) => {
+                        bytes.truncate(count);
+                        self.finish(Ok(NativeIoValue::Page { bytes, eof: offset.saturating_add(count as u64) >= length }))
                     }
                     Err(error) => self.finish(Err(error.to_string())),
                 }
@@ -294,6 +330,12 @@ mod tests {
         assert!(matches!(run(NativeIoRequest::WriteBytes { path: path.clone(), bytes: bytes.clone(), create_parent: true }).unwrap(), NativeIoValue::Written));
         let NativeIoValue::Bytes(actual) = run(NativeIoRequest::ReadBytes(path.clone())).unwrap() else { panic!("read value") };
         assert_eq!(actual, bytes);
+        let NativeIoValue::Page { bytes: first, eof: false } = run(NativeIoRequest::ReadPage { path: path.clone(), offset: 0, max_bytes: 16 * 1024 }).unwrap() else { panic!("first page") };
+        assert_eq!(first, bytes[..16 * 1024]);
+        let offset = (bytes.len() - 7) as u64;
+        let NativeIoValue::Page { bytes: last, eof: true } = run(NativeIoRequest::ReadPage { path: path.clone(), offset, max_bytes: 16 * 1024 }).unwrap() else { panic!("last page") };
+        assert_eq!(last, bytes[bytes.len() - 7..]);
+        assert!(run(NativeIoRequest::ReadPage { path: path.clone(), offset: 0, max_bytes: 64 * 1024 + 1 }).is_err());
         let NativeIoValue::Paths(paths) = run(NativeIoRequest::ScanDirectory { path: root.clone(), directories_only: false, extension: Some("wasm".into()), first_only: true }).unwrap() else { panic!("scan value") };
         assert_eq!(paths, vec![path.clone()]);
         let NativeIoValue::Modified(modified) = run(NativeIoRequest::Modified(vec![path])).unwrap() else { panic!("modified value") };

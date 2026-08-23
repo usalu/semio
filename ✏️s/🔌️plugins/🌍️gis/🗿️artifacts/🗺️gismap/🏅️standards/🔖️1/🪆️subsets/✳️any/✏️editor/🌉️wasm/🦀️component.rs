@@ -24,7 +24,7 @@ mod wasm_bridge {
         pub async fn new(envelope_json: Option<String>) -> Result<GisMapSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: GisMapEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: GisMapEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     GisMapStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
                 None => GisMapStore::new(store::create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,

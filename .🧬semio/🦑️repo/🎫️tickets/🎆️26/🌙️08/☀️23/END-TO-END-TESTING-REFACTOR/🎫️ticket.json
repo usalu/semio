@@ -1,0 +1,13 @@
+{
+  "title": "End To End Testing Refactor",
+  "emoji": "🧪️",
+  "status": "open",
+  "description": "Implement the end-to-end testing refactor plan: make the nearest language-neutral domain owner the unit of test ownership. Deliver a new repo test domain (🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test) owning taxonomy, Gherkin feature parsing, case discovery, scenario planning, oracle registry, native host protocols, result schemas, semantic comparison profiles, reporting, test-output cleanup and multi-ecosystem test dependency classification. Add Nx per-test-case project generation from **/🧪️tests/*/component.feature, native hosts for TypeScript/Rust/Go/Python/.NET, oracle-first development protocol, PDF pilots (pdf-writer creation oracle, lopdf editing oracle) on the ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf owner, safe `clean test`, taxonomy/testing policy breach families, multi-ecosystem dependency baseline with production reachability, CI gates, and launch.json entries. compose/** is a hard forbidden path for discovery, migration, cleaning, coverage and reports.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2585"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪100a7a9427c54499a7ceb042237bc1a7"
+  ]
+}

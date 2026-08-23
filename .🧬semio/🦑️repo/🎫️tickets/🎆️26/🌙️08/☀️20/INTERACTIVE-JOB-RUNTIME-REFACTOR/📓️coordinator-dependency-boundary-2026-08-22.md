@@ -9,8 +9,8 @@ bun ./📜️script.ts verify dependencies list rust
 bun ./📜️script.ts verify dependencies list js
 ```
 
-The fresh lists contain exactly **63 Rust** and **69 JavaScript** third-party identities, for an
-accepted current boundary of **132 identities**. The complete machine-readable results are retained
+The fresh lists contain exactly **63 Rust** and **66 JavaScript** third-party identities, for an
+accepted current boundary of **129 identities**. The complete machine-readable results are retained
 in `📝️coordinator-current-rust-dependencies.txt` and
 `📝️coordinator-current-js-dependencies.txt` in this ticket.
 
@@ -101,3 +101,43 @@ source/manifest/Compose-lock, syntax, formatter-baseline, and all diff gates pas
 accepted the wave in
 `OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-rehype-slug-audit-2026-08-23.md`.
 `rehype-autolink-headings`, MDX Rollup, Dagre, and the permanent guard remain unchanged.
+
+The direct `rehype-autolink-headings` identity was then removed under a fresh repetition of the same
+installed-source reachability proof. The pre/post uncached Storybook indexes remain byte-identical at
+231 entries, with 61 Autodocs entries sourced from 61 TSX modules and zero Markdown/MDX. The complete
+724-test UI quick suite, lint, typecheck, frozen install, dependency/list/parity,
+source/manifest/Compose-lock, syntax, formatter-baseline, and all diff gates pass. Terra independently
+accepted the wave in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-rehype-autolink-headings-audit-2026-08-23.md`.
+The auditor's initially misplaced quick-test capture was moved unchanged into the ticket before
+completion; no temporary audit artifact remains outside the required boundary.
+
+The direct `@mdx-js/rollup` identity was removed after its now-empty adapter was proved unreachable.
+The root continues to remove Storybook's injected MDX plugin, then no longer appends the empty Rollup
+adapter; a live plugin-order probe confirmed every surviving plugin and sentinel retains its position.
+The pre/post uncached Storybook indexes remain byte-identical at 231 TSX/Autodocs entries. The complete
+724-test UI quick suite, lint, typecheck, frozen install, dependency/list/parity, exact
+source/manifest/Compose-lock chain, syntax, formatter baseline, and all diff gates pass. Terra
+independently accepted the wave in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-mdx-rollup-audit-2026-08-23.md`.
+Compose retains the three direct tuples, shared `3.1.1` resolution, and its transitive MDX chain.
+
+The direct root `eslint-plugin-react-hooks` tooling identity was removed after an exhaustive
+zero-reachability audit proved it had no import, registration, Nx, script, or test binding. Both the
+UI entry and the representative comment-bearing `PanelTabBar` resolve to the same normalized ESLint
+configuration hash and the same 19-diagnostic baseline; the package was never registered in the flat
+configuration. The complete 724-test UI quick suite, lint, typecheck, uncached Storybook build and
+exact 231-entry discovery hash, frozen install, dependency/list/parity, exact lock orphan removal,
+formatting, and all diff gates pass. Terra independently accepted the narrow wave in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-eslint-plugin-react-hooks-audit-2026-08-23.md`.
+The nine existing disable comments and their already-existing unknown-rule diagnostic are unchanged;
+the broad root lint remains unrelated red context and is not represented as passing.
+
+`@vscode/test-electron` remains in the accepted boundary. A zero-reference declaration scout was
+rejected when independent installed-source inspection proved that the active
+`@vscode/test-cli@0.0.10` desktop runner resolves and dynamically imports the package before
+`runTests`. The declaration and complete Bun lock closure were restored, frozen installation again
+resolves the package from the CLI's absolute configuration directory, and both dependency lists
+byte-match this 129-identity boundary. The rejection and independently accepted rollback are retained
+in `OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-vscode-test-electron-audit-2026-08-23.md` and
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-vscode-test-electron-rollback-audit-2026-08-23.md`.

@@ -119,6 +119,8 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::arti
 pub enum PresentError {
     /// 🧾️ The stored envelope JSON was malformed.
     DeserializeEnvelope(serde_json::Error),
+    /// 🧬️ Whole-buffer envelope ingress was rejected in favor of the persistent fixed-page decoder.
+    EnvelopeIngress(store::ArtifactEnvelopeWholeBufferIngressError),
     /// 📐️ VCS replay failed while materializing the projection.
     Vcs(vcs::VcsError),
 }
@@ -127,6 +129,7 @@ impl std::fmt::Display for PresentError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::DeserializeEnvelope(error) => write!(formatter, "deserialize envelope: {error}"),
+            Self::EnvelopeIngress(error) => write!(formatter, "{error}"),
             Self::Vcs(error) => write!(formatter, "{error}"),
         }
     }
@@ -136,6 +139,7 @@ impl std::error::Error for PresentError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::DeserializeEnvelope(error) => Some(error),
+            Self::EnvelopeIngress(error) => Some(error),
             Self::Vcs(error) => std::error::Error::source(error),
         }
     }
@@ -144,6 +148,12 @@ impl std::error::Error for PresentError {
 impl From<serde_json::Error> for PresentError {
     fn from(error: serde_json::Error) -> Self {
         Self::DeserializeEnvelope(error)
+    }
+}
+
+impl From<store::ArtifactEnvelopeWholeBufferIngressError> for PresentError {
+    fn from(error: store::ArtifactEnvelopeWholeBufferIngressError) -> Self {
+        Self::EnvelopeIngress(error)
     }
 }
 

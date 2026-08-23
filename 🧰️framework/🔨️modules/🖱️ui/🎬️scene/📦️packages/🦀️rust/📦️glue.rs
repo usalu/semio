@@ -25,6 +25,9 @@ pub mod pack;
 mod scenes;
 #[path = "🦀️surface.rs"]
 mod surface;
+#[path = "🦀️world3d_snapshot.rs"]
+mod world3d_snapshot;
 
 pub use scenes::*;
 pub use surface::*;
+pub use world3d_snapshot::*;

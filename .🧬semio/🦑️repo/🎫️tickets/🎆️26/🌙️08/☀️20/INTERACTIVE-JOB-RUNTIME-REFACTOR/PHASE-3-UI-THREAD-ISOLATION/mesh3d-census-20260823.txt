@@ -1,0 +1,56 @@
+Paged Mesh3d cutover census — 2026-08-23 source-only checkpoint
+
+Authority invariants present in ui-scene/math.rs
+- fixed owner slots: 256
+- fixed owner page size: 16 KiB
+- fixed owner bytes: 16 MiB
+- fixed process pages: 4,096
+- generation + revision + per-slot epoch ABA witness
+- schema-first begin/allocate/write/seal
+- abort and ready-owner close retire one page per step with terminal-empty witness
+
+Completed production seams
+- ui-scene ray pick, UV interpolation, component marquee, and instance marquee consume Mesh3dLease items directly.
+- PreparedRenderUpload::Mesh carries only a Mesh3dLease; no CPU Vec is copied into the packet.
+- GLB semantic materialization writes directly into the global paged authority, one page/item per turn.
+- renderer Ready transfers the sealed lease directly to the exact target World3dState.
+- canonical World publication preflights mesh/version/interaction fixed slots before mutation and hands the exact lease back on closing/capacity/stale.
+- canonical World interaction and primary render consumers read typed lease items directly.
+
+Exact remaining `Mesh3d` symbol census
+- ui-scene/math.rs: 5 references.
+  - 3 are the obsolete Vec-backed public type/impl/conversion at lines 954/968/986.
+  - 2 are the legacy test fixture at lines 1925/1926.
+- infinite/world/component.rs: 21 references.
+  - production Vec-backed producers: terrain-band builder and placeholder/overlay constructors.
+  - The WorldMeshBuffers->Mesh3d paint-bake path and old apply_glb_bytes/ingest route were deleted; URL GLB input now has only the retained renderer decoder/publication route.
+  - remaining references after the production constructors are legacy test fixtures/source scans.
+- infinite/component.rs: 21 references.
+  - this mounted/reexported module still owns HashMap<String, Mesh3d>, Vec producers, direct hit/render/upload consumers, and legacy tests.
+
+Field-pattern census (conservative; includes non-Mesh payload structs and test oracles)
+- infinite/world/component.rs: 76 `Mesh3d::`/return/HashMap/direct-field patterns.
+- infinite/component.rs: 80 such patterns.
+- These counts are intentionally not called zero and are the deletion gate for the Vec-backed type.
+
+Current atomic publication boundary
+- `publish_world3d_mesh_lease` derives the stable version from generation/revision.
+- It rejects and returns `{ fault, id, value: Mesh3dLease }` before mutation if close is active or any fixed registry cannot admit.
+- Mesh registry, version registry, and interaction metadata each produce an observed slot/epoch plan.
+- Commit runs only after all three plans exist; replacement mesh ownership moves into the one-page close owner.
+- `publish_world3d_asset_mesh_lease` additionally rejects a decoder lease whose revision no longer equals the World interaction revision.
+- Renderer saturation restores the exact lease into the retained GLB probe for FIFO retry; stale publication transitions the probe into cursorized lease/response close and records a deterministic frame fault.
+
+Explicit RED residuals
+- Internal placeholder/terrain/legacy scene producers do not yet use a fixed producer job and the current single blocked internal lease slot is not a complete saturation authority.
+- The second mounted/reexported infinite/component.rs has not been migrated.
+- GPU ensure_mesh traverses the complete lease synchronously; retained page/item upload and GPU-close witnesses are absent.
+- Legacy Mesh3d and its tests cannot be deleted until both component censuses reach zero.
+- PNG/JPEG/MVT/SVG semantic outputs, cache retirement, presenter/GPU close, and realm terminal close remain incomplete.
+- World3d snapshot producer remains explicitly unclaimed; no JSON fallback is being introduced.
+
+Source-only checks run at this checkpoint
+- rustfmt --edition 2021 --config skip_children=true: canonical World source — passed.
+- rustfmt --edition 2024 --config skip_children=true: renderer glue — passed.
+- scoped git diff --check for those two files — passed.
+- Cargo, Nx, Wasm, browser, network, and root lint — not run by instruction.

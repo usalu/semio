@@ -24,7 +24,7 @@ impl Puzzle5dArtifactVcs {
     pub async fn new(envelope_json: Option<String>) -> Result<Puzzle5dArtifactVcs, JsValue> {
         let store = match envelope_json {
             Some(json) => {
-                let envelope: Puzzle5dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let envelope: Puzzle5dEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Puzzle5dStore::new(envelope).await
             }
             None => Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None)).await,

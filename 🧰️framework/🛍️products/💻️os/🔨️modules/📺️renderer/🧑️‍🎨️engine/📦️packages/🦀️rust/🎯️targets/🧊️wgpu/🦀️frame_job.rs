@@ -5,14 +5,13 @@
 //! shell traversal, layout/tessellation, engine-scene directives, and prepared-packet creation;
 //! `AppPresenter` retains platform/GPU presentation authority.
 //!
-//! The deadline candidates remain non-authoritative: `AppRuntime::frame` revalidates them against live
-//! state before applying them. The wasm implementation drives the job synchronously only after the
+//! The scalar wheel deadline candidate remains non-authoritative: `AppRuntime::frame` revalidates it
+//! against live state before applying it. The wasm implementation drives the job only after the
 //! renderer has booted inside its dedicated Worker isolate; calls from a browser UI isolate fail
 //! closed and never execute the transaction inline.
 
 use semio_framework_job::{root_cancel_token, BatchDriveConfig, BatchJobParams, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
-use std::collections::{hash_map::IntoIter, HashMap};
 use std::sync::Arc;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -21,27 +20,18 @@ use semio_framework_async::Lane;
 use std::sync::mpsc::{Receiver, TryRecvError};
 
 //#region 📥️FrameBuildInputs
-/// 📥️ The `Send`-safe slice of `AppRuntime` this job needs — cloned out of `self` once per submission
-/// (all `f64`/`bool`/small `HashMap<String, f64>`, cheap to copy; never `AppRuntime`, `ShellState`,
-/// or `GpuContext`).
+/// 📥️ The fixed scalar `Send`-safe slice of `AppRuntime` this job needs.
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub(crate) struct FrameBuildInputs {
-    pub world3d_camera_dispatch_deadlines_ms: HashMap<String, f64>,
     pub wheel_zoom_deadline_ms: f64,
     pub now_ms: f64,
 }
 //#endregion 📥️FrameBuildInputs
 
 //#region 📤️FrameDirectives
-/// 📤️ What the worker found — a CANDIDATE list, not an authoritative replacement.
-/// `expired_world3d_surfaces` names surfaces the job believes are past their settle deadline as of its
-/// (possibly stale) `FrameBuildInputs` snapshot; `frame()` re-checks each one against the LIVE
-/// `AppRuntime::world3d_camera_dispatch_deadlines_ms` before removing it or dispatching a camera action
-/// — see this module's own doc comment for why that re-validation, not blind trust, is what makes a
-/// stale result safe.
+/// 📤️ The worker's fixed scalar candidate, revalidated against live state before use.
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub(crate) struct FrameDirectives {
-    pub expired_world3d_surfaces: Vec<String>,
     pub wheel_zoom_deadline_cleared: bool,
 }
 //#endregion 📤️FrameDirectives
@@ -52,25 +42,13 @@ pub(crate) struct FrameDirectives {
 /// step; `cx.consume_fuel` is still called so a future, larger stage added to this same job under
 /// Phase 5 inherits real yield-on-overrun behaviour instead of it being bolted on later).
 pub(crate) struct FrameBuildJob {
-    deadlines: IntoIter<String, f64>,
-    expired: Vec<String>,
     wheel_zoom_deadline_cleared: bool,
-    now_ms: f64,
-    invalid: bool,
     complete: Option<FrameDirectives>,
 }
 
 impl FrameBuildJob {
     pub(crate) fn new(inputs: FrameBuildInputs) -> Self {
-        let invalid = inputs.world3d_camera_dispatch_deadlines_ms.len() > 256 || inputs.world3d_camera_dispatch_deadlines_ms.keys().any(|key| key.len() > 256);
-        Self {
-            deadlines: inputs.world3d_camera_dispatch_deadlines_ms.into_iter(),
-            expired: Vec::with_capacity(256),
-            wheel_zoom_deadline_cleared: inputs.wheel_zoom_deadline_ms > 0.0 && inputs.now_ms >= inputs.wheel_zoom_deadline_ms,
-            now_ms: inputs.now_ms,
-            invalid,
-            complete: None,
-        }
+        Self { wheel_zoom_deadline_cleared: inputs.wheel_zoom_deadline_ms > 0.0 && inputs.now_ms >= inputs.wheel_zoom_deadline_ms, complete: None }
     }
 
     pub(crate) fn take_directives(&mut self) -> Option<FrameDirectives> {
@@ -78,16 +56,6 @@ impl FrameBuildJob {
     }
 
     fn close_step(&mut self) -> bool {
-        if let Some(surface) = self.expired.last_mut() {
-            if surface.pop().is_some() {
-                return false;
-            }
-            self.expired.pop();
-            return false;
-        }
-        if self.deadlines.next().is_some() {
-            return false;
-        }
         if let Some(directives) = self.complete.as_mut() {
             if !directives.close_step() {
                 return false;
@@ -101,39 +69,18 @@ impl FrameBuildJob {
 
 impl FrameDirectives {
     fn close_step(&mut self) -> bool {
-        if let Some(surface) = self.expired_world3d_surfaces.last_mut() {
-            if surface.pop().is_some() {
-                return false;
-            }
-            self.expired_world3d_surfaces.pop();
-            return false;
-        }
         true
     }
 }
 
 impl InteractiveJob for FrameBuildJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if self.invalid {
-            return StepOutcome::Fault(semio_framework_job::JobFault { detail: b"frame deadline credits exceeded".to_vec() });
-        }
         if cx.is_cancelled() {
             return StepOutcome::Cancelled;
         }
-        for _ in 0..16 {
-            let Some((surface, deadline)) = self.deadlines.next() else {
-                self.complete = Some(FrameDirectives { expired_world3d_surfaces: std::mem::take(&mut self.expired), wheel_zoom_deadline_cleared: self.wheel_zoom_deadline_cleared });
-                return StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() });
-            };
-            if self.now_ms >= deadline {
-                self.expired.push(surface);
-            }
-            cx.consume_fuel(1);
-            if cx.should_yield() || cx.is_cancelled() {
-                return if cx.is_cancelled() { StepOutcome::Cancelled } else { StepOutcome::Yield };
-            }
-        }
-        StepOutcome::Yield
+        self.complete = Some(FrameDirectives { wheel_zoom_deadline_cleared: self.wheel_zoom_deadline_cleared });
+        cx.consume_fuel(1);
+        StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() })
     }
 }
 //#endregion 🧩️FrameBuildJob
@@ -523,7 +470,7 @@ mod tests {
     use super::*;
 
     fn inputs(now_ms: f64) -> FrameBuildInputs {
-        FrameBuildInputs { world3d_camera_dispatch_deadlines_ms: HashMap::from([("s1".to_string(), 1_000.0)]), wheel_zoom_deadline_ms: 500.0, now_ms }
+        FrameBuildInputs { wheel_zoom_deadline_ms: 500.0, now_ms }
     }
 
     fn compute(inputs: FrameBuildInputs) -> FrameDirectives {
@@ -540,37 +487,13 @@ mod tests {
         // standalone verify crate's real `cargo test` run (`🧪️frame-job-verify`), not by inspection —
         // see `📓️p3b-frame-building.md` §7 for why this file itself cannot be `cargo test`-ed directly.
         let directives = compute(inputs(100.0));
-        assert!(directives.expired_world3d_surfaces.is_empty());
         assert!(!directives.wheel_zoom_deadline_cleared);
     }
 
     #[test]
     fn expired_deadline_is_reported() {
         let directives = compute(inputs(1_000.0));
-        assert_eq!(directives.expired_world3d_surfaces, vec!["s1".to_string()]);
         assert!(directives.wheel_zoom_deadline_cleared);
-    }
-
-    #[test]
-    fn multiple_surfaces_expire_independently() {
-        let mut inputs = inputs(1_000.0);
-        inputs.world3d_camera_dispatch_deadlines_ms.insert("s2".to_string(), 5_000.0);
-        let mut directives = compute(inputs);
-        directives.expired_world3d_surfaces.sort();
-        assert_eq!(directives.expired_world3d_surfaces, vec!["s1".to_string()]);
-    }
-
-    #[test]
-    fn deadline_scan_yields_at_a_fixed_page_boundary() {
-        let mut values = HashMap::new();
-        for index in 0..33 {
-            values.insert(format!("surface-{index}"), 1.0);
-        }
-        let mut job = FrameBuildJob::new(FrameBuildInputs { world3d_camera_dispatch_deadlines_ms: values, wheel_zoom_deadline_ms: 0.0, now_ms: 2.0 });
-        let mut sequence = 0;
-        let mut cx = StepContext::new(OperationId(1), Generation(1), semio_framework_job::StepBudget::new(2_000_000, u64::MAX), root_cancel_token(), semio_framework_job::default_now_ms, &mut sequence);
-        assert_eq!(job.step(&mut cx), StepOutcome::Yield);
-        assert!(job.take_directives().is_none());
     }
 
     #[test]
@@ -581,15 +504,7 @@ mod tests {
 
     #[test]
     fn cancellation_retires_deadline_apply_and_build_phases_to_terminal_empty() {
-        let mut deadlines = HashMap::new();
-        for index in 0..33 {
-            deadlines.insert(format!("surface-{index}"), 1.0);
-        }
-        let mut phases = [
-            ActiveFramePhase::Deadlines(FrameBuildJob::new(FrameBuildInputs { world3d_camera_dispatch_deadlines_ms: deadlines, wheel_zoom_deadline_ms: 0.0, now_ms: 2.0 })),
-            ActiveFramePhase::ApplyPending(FrameDirectives { expired_world3d_surfaces: vec!["a".repeat(256), "b".repeat(256)], wheel_zoom_deadline_cleared: false }),
-            ActiveFramePhase::Build(FrameDirectives { expired_world3d_surfaces: vec!["c".repeat(256)], wheel_zoom_deadline_cleared: false }),
-        ];
+        let mut phases = [ActiveFramePhase::Deadlines(FrameBuildJob::new(FrameBuildInputs { wheel_zoom_deadline_ms: 0.0, now_ms: 2.0 })), ActiveFramePhase::ApplyPending(FrameDirectives { wheel_zoom_deadline_cleared: false })];
         for phase in &mut phases {
             for _ in 0..2_000 {
                 if retire_active_phase(phase) {

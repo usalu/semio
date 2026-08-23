@@ -20,7 +20,13 @@ async fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, Draw
     let envelope = store::ArtifactEnvelope::<DrawSnapshot, DrawMutation> {
         schema: DRAW_DOCUMENT_SCHEMA.into(),
         id: snapshot.id.clone(),
-        vcs: store::ArtifactVcs { initial_snapshot: snapshot, edits: Vec::new(), changes: Vec::new(), checkpoints: Vec::new(), alternatives: Vec::new() },
+        vcs: store::ArtifactVcs {
+            initial_snapshot: snapshot,
+            edits: store::ArtifactHistoryLedger::new(),
+            changes: store::ArtifactHistoryLedger::new(),
+            checkpoints: store::ArtifactHistoryLedger::new(),
+            alternatives: store::ArtifactHistoryLedger::new(),
+        },
         backbone: None,
         active_alternative_id: None,
         cursor: None,
@@ -28,7 +34,7 @@ async fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, Draw
         migrated_from: None,
         owner: None,
         lanes: Default::default(),
-        edit_messages: Vec::new(),
+        edit_messages: store::ArtifactEditMessageLedger::new(),
         conflicts: Vec::new(),
     };
     match store::print_document_pack(&envelope) {

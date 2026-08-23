@@ -20,7 +20,7 @@ mod document_vcs {
     impl RasterArtifactVcs {
         #[wasm_bindgen(constructor)]
         pub async fn new(envelope_json: &str) -> Result<RasterArtifactVcs, JsValue> {
-            let envelope: RasterEnvelope = serde_json::from_str(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let envelope: RasterEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(Self { store: RefCell::new(RasterStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?) })
         }
 

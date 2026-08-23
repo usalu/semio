@@ -84,6 +84,8 @@ impl SceneDoc for Canvas2dScene {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct World3dScene {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<crate::World3dSnapshotLease>,
     pub camera_json: String,
     #[serde(default = "world3d_default_meshes_json")]
     pub meshes_json: String,
@@ -127,6 +129,7 @@ pub struct World3dScene {
 }
 
 scene_pack_wire!(World3dScenePack, World3dScene {
+    snapshot: Option<crate::World3dSnapshotLease>,
     camera_json: String,
     meshes_json: String,
     instances_json: String,
@@ -176,6 +179,7 @@ impl World3dScene {
     /** @emoji 🌐️ Builds a world-3d scene with optional extensions unset. */
     pub fn base(camera_json: String, meshes_json: String, instances_json: String, selection_json: String) -> Self {
         Self {
+            snapshot: None,
             camera_json,
             meshes_json,
             instances_json,

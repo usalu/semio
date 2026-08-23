@@ -21,7 +21,6 @@ use crate::deadlines::{CaretBlink, HotSwapPoll};
 use crate::kernel_seam::{default_intent_exchange, AppKernelSeam};
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
 use crate::{AppPresenter, RuntimeMailbox};
-use std::collections::HashMap;
 use ui_render::{CursorRequest, FrameScheduler};
 
 //#region 🔖️OsHost
@@ -107,10 +106,6 @@ pub struct OsHost {
     pub clock: OsClock,
     pub caret: CaretBlink,
     pub hot_swap: HotSwapPoll,
-    /// 🕒️ Node-graph wheel-zoom settle tokens, keyed by surface id — `deadlines::arm`/`sweep_expired`.
-    pub wheel_zoom_settle: HashMap<String, f64>,
-    /// 🕒️ World3D camera-settle tokens, keyed by surface id — `deadlines::arm`/`sweep_expired`.
-    pub camera_settle: HashMap<String, f64>,
     /// ⏱️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): monotonically incremented
     /// once per `redraw()` call — the `Generation` `winit_app.rs` stamps its
     /// `semio_framework_trace::Watchdog` with, so two consecutive frame-callback overruns are
@@ -146,8 +141,6 @@ pub(crate) struct OsHostRetirement {
     clock: Option<OsClock>,
     caret: Option<CaretBlink>,
     hot_swap: Option<HotSwapPoll>,
-    wheel_zoom_settle: Option<std::collections::hash_map::IntoIter<String, f64>>,
-    camera_settle: Option<std::collections::hash_map::IntoIter<String, f64>>,
     events: Option<ui_host::EventQueue>,
     ui_token: Option<ui_host::UiThreadToken>,
     snapshot_sink: Option<RenderSnapshotSink>,
@@ -165,8 +158,6 @@ impl OsHost {
             clock: OsClock::new(),
             caret: CaretBlink::new(),
             hot_swap: HotSwapPoll::new(),
-            wheel_zoom_settle: HashMap::new(),
-            camera_settle: HashMap::new(),
             frame_generation: 0,
             frame_ready: false,
             platform_fullscreen: None,
@@ -185,7 +176,7 @@ impl OsHost {
     }
 
     pub(crate) fn into_retirement(self) -> OsHostRetirement {
-        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, wheel_zoom_settle, camera_settle, frame_generation: _, frame_ready: _, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build } = self;
+        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, frame_generation: _, frame_ready: _, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build } = self;
         OsHostRetirement {
             runtime: Some(runtime),
             presenter: Some(presenter),
@@ -194,8 +185,6 @@ impl OsHost {
             clock: Some(clock),
             caret: Some(caret),
             hot_swap: Some(hot_swap),
-            wheel_zoom_settle: Some(wheel_zoom_settle.into_iter()),
-            camera_settle: Some(camera_settle.into_iter()),
             events: Some(events),
             ui_token: Some(ui_token),
             snapshot_sink: Some(snapshot_sink),
@@ -223,19 +212,10 @@ impl OsHostRetirement {
             self.events = None;
             return false;
         }
-        if let Some(entries) = self.wheel_zoom_settle.as_mut() {
-            if entries.next().is_some() {
+        if let Some(runtime) = self.runtime.as_ref() {
+            if !runtime.close_world3d_dynamic_step() {
                 return false;
             }
-            self.wheel_zoom_settle = None;
-            return false;
-        }
-        if let Some(entries) = self.camera_settle.as_mut() {
-            if entries.next().is_some() {
-                return false;
-            }
-            self.camera_settle = None;
-            return false;
         }
         for owner in [&mut self.snapshot_sink as &mut dyn RetirementOwner, &mut self.ui_token, &mut self.hot_swap, &mut self.caret, &mut self.clock, &mut self.kernel, &mut self.scheduler, &mut self.runtime, &mut self.presenter] {
             if owner.retire() {
@@ -253,8 +233,6 @@ impl OsHostRetirement {
             && self.clock.is_none()
             && self.caret.is_none()
             && self.hot_swap.is_none()
-            && self.wheel_zoom_settle.is_none()
-            && self.camera_settle.is_none()
             && self.events.is_none()
             && self.ui_token.is_none()
             && self.snapshot_sink.is_none()
@@ -278,12 +256,6 @@ impl Drop for OsHostRetirement {
             &mut self.frame_build,
         ] {
             owner.forget();
-        }
-        if let Some(entries) = self.wheel_zoom_settle.take() {
-            std::mem::forget(entries);
-        }
-        if let Some(entries) = self.camera_settle.take() {
-            std::mem::forget(entries);
         }
     }
 }

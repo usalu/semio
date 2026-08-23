@@ -25,127 +25,242 @@ use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPrese
 pub const SCENE_SURFACE_CAPACITY: usize = 256;
 pub const SCENE_SURFACE_ID_BYTE_CAPACITY: usize = 256;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AdmittedSurfaceToken {
+    slot: u16,
+    epoch: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AdmittedSurfaceFault {
+    IdCapacity,
+    ItemCapacity,
+    ReplacementPending,
+    RejectedPending,
+    Closing,
+}
+
+#[derive(Debug)]
+pub struct AdmittedSurfaceRejected<T> {
+    pub fault: AdmittedSurfaceFault,
+    pub id: String,
+    pub value: T,
+}
+
+pub struct AdmittedSurfaceCloseOwner<T> {
+    pub id: String,
+    pub value: T,
+}
+
+struct AdmittedSurfaceEntry<T> {
+    id: String,
+    epoch: u64,
+    value: T,
+}
+
 pub struct AdmittedSurfaceMap<T> {
-    values: HashMap<String, T>,
-    order: Box<[Option<String>; SCENE_SURFACE_CAPACITY]>,
+    slots: Box<[Option<AdmittedSurfaceEntry<T>>; SCENE_SURFACE_CAPACITY]>,
+    epochs: [u64; SCENE_SURFACE_CAPACITY],
+    order: [Option<u16>; SCENE_SURFACE_CAPACITY],
     order_len: usize,
     fault: Option<&'static str>,
+    rejected: Option<AdmittedSurfaceRejected<T>>,
+    retired: Option<AdmittedSurfaceCloseOwner<T>>,
+    closing: bool,
 }
 
 impl<T> Default for AdmittedSurfaceMap<T> {
     fn default() -> Self {
-        Self { values: HashMap::with_capacity(SCENE_SURFACE_CAPACITY), order: Box::new(std::array::from_fn(|_| None)), order_len: 0, fault: None }
+        Self { slots: Box::new([const { None }; SCENE_SURFACE_CAPACITY]), epochs: [0; SCENE_SURFACE_CAPACITY], order: [None; SCENE_SURFACE_CAPACITY], order_len: 0, fault: None, rejected: None, retired: None, closing: false }
     }
 }
 
 impl<T> AdmittedSurfaceMap<T> {
-    fn admit(&mut self, id: &str) -> bool {
-        if self.values.contains_key(id) {
-            return true;
+    fn existing_slot(&self, id: &str) -> Option<usize> {
+        self.slots.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.id == id))
+    }
+
+    fn admit_slot(&mut self, id: &str) -> Result<usize, AdmittedSurfaceFault> {
+        if self.closing {
+            return Err(AdmittedSurfaceFault::Closing);
+        }
+        if let Some(slot) = self.existing_slot(id) {
+            return Ok(slot);
         }
         if id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
             self.fault = Some("scene surface identifier exceeded fixed credits");
-            return false;
+            return Err(AdmittedSurfaceFault::IdCapacity);
         }
         if self.order_len == SCENE_SURFACE_CAPACITY {
             self.fault = Some("scene surface item credits exceeded");
-            return false;
+            return Err(AdmittedSurfaceFault::ItemCapacity);
         }
-        self.order[self.order_len] = Some(id.to_string());
+        let slot = self.slots.iter().position(Option::is_none).expect("surface order credits imply one free fixed slot");
+        self.order[self.order_len] = Some(slot as u16);
         self.order_len += 1;
-        true
+        Ok(slot)
     }
 
-    pub fn insert(&mut self, id: String, value: T) -> Option<T> {
-        if !self.admit(&id) {
-            return None;
+    pub fn try_insert(&mut self, id: String, value: T) -> Result<AdmittedSurfaceToken, AdmittedSurfaceRejected<T>> {
+        let slot = match self.admit_slot(&id) {
+            Ok(slot) => slot,
+            Err(fault) => return Err(AdmittedSurfaceRejected { fault, id, value }),
+        };
+        if let Some(entry) = self.slots[slot].as_mut() {
+            if self.retired.is_some() {
+                return Err(AdmittedSurfaceRejected { fault: AdmittedSurfaceFault::ReplacementPending, id, value });
+            }
+            self.epochs[slot] = self.epochs[slot].wrapping_add(1).max(1);
+            entry.epoch = self.epochs[slot];
+            let previous = std::mem::replace(&mut entry.value, value);
+            self.retired = Some(AdmittedSurfaceCloseOwner { id, value: previous });
+            return Ok(AdmittedSurfaceToken { slot: slot as u16, epoch: entry.epoch });
         }
-        self.values.insert(id, value)
+        self.epochs[slot] = self.epochs[slot].wrapping_add(1).max(1);
+        self.slots[slot] = Some(AdmittedSurfaceEntry { id, epoch: self.epochs[slot], value });
+        Ok(AdmittedSurfaceToken { slot: slot as u16, epoch: self.epochs[slot] })
+    }
+
+    pub fn retain_rejected(&mut self, rejected: AdmittedSurfaceRejected<T>) -> Result<(), AdmittedSurfaceRejected<T>> {
+        if self.rejected.is_some() {
+            return Err(AdmittedSurfaceRejected { fault: AdmittedSurfaceFault::RejectedPending, ..rejected });
+        }
+        self.rejected = Some(rejected);
+        Ok(())
+    }
+
+    pub fn retain_first_rejected(&mut self, rejected: AdmittedSurfaceRejected<T>) {
+        assert!(self.rejected.is_none(), "surface producer must stop while one exact rejected owner is retained");
+        self.rejected = Some(rejected);
+    }
+
+    pub fn admission_blocked(&self) -> bool {
+        self.closing || self.rejected.is_some() || self.retired.is_some()
     }
 
     pub fn get_or_insert_with(&mut self, id: String, create: impl FnOnce() -> T) -> Option<&mut T> {
-        if !self.admit(&id) {
-            return None;
+        let slot = self.admit_slot(&id).ok()?;
+        if self.slots[slot].is_none() {
+            self.epochs[slot] = self.epochs[slot].wrapping_add(1).max(1);
+            self.slots[slot] = Some(AdmittedSurfaceEntry { id, epoch: self.epochs[slot], value: create() });
         }
-        Some(self.values.entry(id).or_insert_with(create))
+        self.slots[slot].as_mut().map(|entry| &mut entry.value)
     }
 
     pub fn id_at(&self, index: usize) -> Option<&str> {
-        self.order.get(index).and_then(Option::as_deref)
+        let slot = usize::from(self.order.get(index).copied().flatten()?);
+        self.slots.get(slot).and_then(Option::as_ref).map(|entry| entry.id.as_str())
     }
 
     pub fn len(&self) -> usize {
-        self.values.len()
+        self.order_len
     }
 
     pub fn is_empty(&self) -> bool {
-        self.values.is_empty()
+        self.order_len == 0
     }
 
     pub fn contains_key(&self, id: &str) -> bool {
-        self.values.contains_key(id)
+        self.existing_slot(id).is_some()
+    }
+
+    pub fn token(&self, id: &str) -> Option<AdmittedSurfaceToken> {
+        let slot = self.existing_slot(id)?;
+        Some(AdmittedSurfaceToken { slot: slot as u16, epoch: self.slots[slot].as_ref()?.epoch })
+    }
+
+    pub fn get_token(&self, token: AdmittedSurfaceToken) -> Option<&T> {
+        self.slots.get(usize::from(token.slot)).and_then(Option::as_ref).filter(|entry| entry.epoch == token.epoch).map(|entry| &entry.value)
     }
 
     pub fn get(&self, id: &str) -> Option<&T> {
-        self.values.get(id)
+        self.existing_slot(id).and_then(|slot| self.slots[slot].as_ref().map(|entry| &entry.value))
     }
 
     pub fn get_mut(&mut self, id: &str) -> Option<&mut T> {
-        self.values.get_mut(id)
+        let slot = self.existing_slot(id)?;
+        self.slots[slot].as_mut().map(|entry| &mut entry.value)
     }
 
-    pub fn iter(&self) -> std::collections::hash_map::Iter<'_, String, T> {
-        self.values.iter()
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &T)> {
+        self.order[..self.order_len].iter().filter_map(|slot| {
+            let entry = self.slots[usize::from((*slot).expect("admitted surface order slot"))].as_ref()?;
+            Some((&entry.id, &entry.value))
+        })
     }
 
-    pub fn values(&self) -> std::collections::hash_map::Values<'_, String, T> {
-        self.values.values()
+    pub fn keys(&self) -> impl Iterator<Item = &String> {
+        self.iter().map(|(id, _)| id)
     }
 
-    pub fn values_mut(&mut self) -> std::collections::hash_map::ValuesMut<'_, String, T> {
-        self.values.values_mut()
+    pub fn values(&self) -> impl Iterator<Item = &T> {
+        self.slots.iter().flatten().map(|entry| &entry.value)
+    }
+
+    pub fn values_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        self.slots.iter_mut().flatten().map(|entry| &mut entry.value)
     }
 
     pub fn remove(&mut self, id: &str) -> Option<T> {
-        let value = self.values.remove(id)?;
-        let Some(index) = (0..self.order_len).find(|index| self.order[*index].as_deref() == Some(id)) else {
+        let slot = self.existing_slot(id)?;
+        let Some(index) = (0..self.order_len).find(|index| self.order[*index] == Some(slot as u16)) else {
             self.fault = Some("scene surface order lost ownership");
-            return Some(value);
+            return self.slots[slot].take().map(|entry| entry.value);
         };
+        let value = self.slots[slot].take().map(|entry| entry.value);
         for cursor in index..self.order_len - 1 {
-            self.order[cursor] = self.order[cursor + 1].take();
+            self.order[cursor] = self.order[cursor + 1];
         }
         self.order_len -= 1;
         self.order[self.order_len] = None;
-        Some(value)
+        value
+    }
+
+    pub fn clear(&mut self) {
+        self.closing = true;
+        self.record_fault("scene surface clear requires retained close pumping");
     }
 
     pub fn take_fault(&mut self) -> Option<&'static str> {
         self.fault.take()
     }
 
-    pub fn clear(&mut self) {
-        self.values.clear();
-        while self.order_len > 0 {
-            self.order_len -= 1;
-            self.order[self.order_len] = None;
+    pub fn record_fault(&mut self, fault: &'static str) {
+        if self.fault.is_none() {
+            self.fault = Some(fault);
         }
-        self.fault = None;
+    }
+
+    pub fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    pub fn close_step(&mut self) -> Option<AdmittedSurfaceCloseOwner<T>> {
+        if let Some(rejected) = self.rejected.take() {
+            return Some(AdmittedSurfaceCloseOwner { id: rejected.id, value: rejected.value });
+        }
+        if let Some(retired) = self.retired.take() {
+            return Some(retired);
+        }
+        if self.order_len == 0 {
+            return None;
+        }
+        self.order_len -= 1;
+        let slot = usize::from(self.order[self.order_len].take().expect("admitted close order slot"));
+        self.slots[slot].take().map(|entry| AdmittedSurfaceCloseOwner { id: entry.id, value: entry.value })
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.order_len == 0 && self.slots.iter().all(Option::is_none) && self.rejected.is_none() && self.retired.is_none()
     }
 }
 
-impl infinite_world::world::World3dStateAccess for AdmittedSurfaceMap<World3dState> {
-    type Iter<'a>
-        = std::collections::hash_map::Iter<'a, String, World3dState>
-    where
-        Self: 'a;
+impl<'a, T> IntoIterator for &'a AdmittedSurfaceMap<T> {
+    type Item = (&'a String, &'a T);
+    type IntoIter = Box<dyn Iterator<Item = Self::Item> + 'a>;
 
-    fn iter_states(&self) -> Self::Iter<'_> {
-        self.values.iter()
-    }
-
-    fn get_state_mut(&mut self, id: &str) -> Option<&mut World3dState> {
-        self.values.get_mut(id)
+    fn into_iter(self) -> Self::IntoIter {
+        Box::new(self.iter())
     }
 }
 
@@ -156,9 +271,9 @@ mod admitted_surface_map_tests {
     #[test]
     fn preserves_admission_order_with_constant_index_access() {
         let mut surfaces = AdmittedSurfaceMap::default();
-        surfaces.insert("third".to_string(), 3usize);
-        surfaces.insert("first".to_string(), 1usize);
-        surfaces.insert("third".to_string(), 30usize);
+        surfaces.try_insert("third".to_string(), 3usize).unwrap();
+        surfaces.try_insert("first".to_string(), 1usize).unwrap();
+        surfaces.try_insert("third".to_string(), 30usize).unwrap();
         assert_eq!(surfaces.id_at(0), Some("third"));
         assert_eq!(surfaces.id_at(1), Some("first"));
         assert_eq!(surfaces.id_at(2), None);
@@ -169,9 +284,11 @@ mod admitted_surface_map_tests {
     fn rejects_the_257th_surface_before_map_ownership() {
         let mut surfaces = AdmittedSurfaceMap::default();
         for index in 0..SCENE_SURFACE_CAPACITY {
-            surfaces.insert(format!("surface-{index}"), index);
+            surfaces.try_insert(format!("surface-{index}"), index).unwrap();
         }
-        surfaces.insert("overflow".to_string(), SCENE_SURFACE_CAPACITY);
+        let rejected = surfaces.try_insert("overflow".to_string(), SCENE_SURFACE_CAPACITY).expect_err("exact capacity owner");
+        assert_eq!((rejected.id.as_str(), rejected.value), ("overflow", SCENE_SURFACE_CAPACITY));
+        surfaces.retain_rejected(rejected).unwrap();
         assert_eq!(surfaces.len(), SCENE_SURFACE_CAPACITY);
         assert_eq!(surfaces.id_at(SCENE_SURFACE_CAPACITY), None);
         assert_eq!(surfaces.take_fault(), Some("scene surface item credits exceeded"));
@@ -180,18 +297,47 @@ mod admitted_surface_map_tests {
     #[test]
     fn replacement_removal_and_clear_preserve_order_invariants() {
         let mut surfaces = AdmittedSurfaceMap::default();
-        surfaces.insert("a".to_string(), 1usize);
-        surfaces.insert("b".to_string(), 2usize);
-        surfaces.insert("a".to_string(), 3usize);
+        surfaces.try_insert("a".to_string(), 1usize).unwrap();
+        surfaces.try_insert("b".to_string(), 2usize).unwrap();
+        surfaces.try_insert("a".to_string(), 3usize).unwrap();
         assert_eq!(surfaces.id_at(0), Some("a"));
         assert_eq!(surfaces.id_at(1), Some("b"));
         assert_eq!(surfaces.remove("a"), Some(3));
         assert_eq!(surfaces.id_at(0), Some("b"));
         assert_eq!(surfaces.id_at(1), None);
-        surfaces.clear();
+        surfaces.begin_close();
+        let mut closed = Vec::new();
+        while let Some(owner) = surfaces.close_step() {
+            closed.push((owner.id, owner.value));
+        }
         assert!(surfaces.is_empty());
+        assert!(surfaces.terminal_is_empty());
         assert_eq!(surfaces.id_at(0), None);
         assert_eq!(surfaces.take_fault(), None);
+    }
+
+    #[test]
+    fn replacement_and_slot_reuse_invalidate_surface_aba_tokens() {
+        let mut surfaces = AdmittedSurfaceMap::default();
+        surfaces.try_insert("surface".to_string(), 1usize).unwrap();
+        let first = surfaces.token("surface").unwrap();
+        surfaces.try_insert("surface".to_string(), 2usize).unwrap();
+        let second = surfaces.token("surface").unwrap();
+        assert_ne!(first, second);
+        assert_eq!(surfaces.get_token(first), None);
+        assert_eq!(surfaces.get_token(second), Some(&2));
+        assert_eq!(surfaces.remove("surface"), Some(2));
+        surfaces.try_insert("replacement".to_string(), 3usize).unwrap();
+        assert_eq!(surfaces.get_token(second), None);
+    }
+
+    #[test]
+    fn production_surface_authority_has_no_hash_map_or_structural_deref() {
+        let source = include_str!("component.rs");
+        let authority = source.split("#[cfg(test)]\nmod admitted_surface_map_tests").next().unwrap();
+        assert!(!authority.contains("values: HashMap<String, T>"));
+        assert!(!authority.contains("DerefMut"));
+        assert!(authority.contains("slots: Box<[Option<AdmittedSurfaceEntry<T>>; SCENE_SURFACE_CAPACITY]>"));
     }
 }
 
@@ -6712,7 +6858,21 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
         push_find_item(ShellFindItem { id: node.id.clone(), label: label.to_string(), description: node.instance_id.clone(), category: Some("Nodes".into()), surface_id: scene.surface_id.clone(), node_id: node.id.clone() });
     }
     let inner = bounds;
-    node_graph_states.insert(scene.surface_id.clone(), NodeGraphSurface { bounds: inner, controller_id: scene.controller_id.clone() });
+    if let Some(surface) = node_graph_states.get_mut(&scene.surface_id) {
+        if surface.controller_id != scene.controller_id {
+            node_graph_states.record_fault("node graph controller replacement requires retained publication");
+            return;
+        }
+        surface.bounds = inner;
+    } else {
+        if node_graph_states.admission_blocked() {
+            return;
+        }
+        if let Err(rejected) = node_graph_states.try_insert(scene.surface_id.clone(), NodeGraphSurface { bounds: inner, controller_id: scene.controller_id.clone() }) {
+            node_graph_states.retain_first_rejected(rejected);
+            return;
+        }
+    }
     engine_canvas::paint_node_graph(engine_resources, ctx, scene, inner);
     engine_canvas::paint_node_graph_labels(ctx, scene, inner);
     engine_canvas::paint_node_graph_overlays(ctx, scene, inner);
@@ -7107,7 +7267,21 @@ fn render_tiled_map(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         return render_placeholder("tiled-map", bounds, ctx);
     };
     let inner = bounds;
-    tiled_map_states.insert(scene.surface_id.clone(), TiledMapSurface { bounds: inner, controller_id: scene.controller_id.clone(), selection_method: map_scene.selection_method.clone() });
+    if let Some(surface) = tiled_map_states.get_mut(&scene.surface_id) {
+        if surface.controller_id != scene.controller_id || surface.selection_method != map_scene.selection_method {
+            tiled_map_states.record_fault("tiled map owned string replacement requires retained publication");
+            return;
+        }
+        surface.bounds = inner;
+    } else {
+        if tiled_map_states.admission_blocked() {
+            return;
+        }
+        if let Err(rejected) = tiled_map_states.try_insert(scene.surface_id.clone(), TiledMapSurface { bounds: inner, controller_id: scene.controller_id.clone(), selection_method: map_scene.selection_method.clone() }) {
+            tiled_map_states.retain_first_rejected(rejected);
+            return;
+        }
+    }
     engine_canvas::paint_tiled_map(engine_resources, ctx, scene, inner);
     paint_tiled_map_marquee(ctx, &scene.surface_id, inner, ctx.theme);
 }
@@ -7395,7 +7569,21 @@ fn render_board2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framewor
         return render_placeholder("board-2d", bounds, ctx);
     };
     let inner = bounds;
-    board2d_states.insert(scene.surface_id.clone(), Board2dSurface { bounds: inner, controller_id: scene.controller_id.clone(), fixture_json: board_scene.fixture_json.clone() });
+    if let Some(surface) = board2d_states.get_mut(&scene.surface_id) {
+        if surface.controller_id != scene.controller_id || surface.fixture_json != board_scene.fixture_json {
+            board2d_states.record_fault("board owned string replacement requires retained publication");
+            return;
+        }
+        surface.bounds = inner;
+    } else {
+        if board2d_states.admission_blocked() {
+            return;
+        }
+        if let Err(rejected) = board2d_states.try_insert(scene.surface_id.clone(), Board2dSurface { bounds: inner, controller_id: scene.controller_id.clone(), fixture_json: board_scene.fixture_json.clone() }) {
+            board2d_states.retain_first_rejected(rejected);
+            return;
+        }
+    }
     engine_canvas::paint_puzzle_board(engine_resources, ctx, scene, inner);
 }
 

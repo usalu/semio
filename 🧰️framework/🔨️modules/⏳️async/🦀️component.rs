@@ -1694,6 +1694,14 @@ mod native_pool {
             self.inner.notify_idle();
         }
 
+        /// 🔔️ Registers one bounded owner callback directly with the pool timer wheel. Unlike
+        /// [`WorkerPool::submit_at`], firing does not require a second lane admission, so an owner
+        /// can use it to retry a previously rejected exact closure without depending on ingress.
+        pub fn callback_at(&self, deadline_ms: u64, callback: impl FnOnce() + Send + 'static) {
+            self.inner.wheel.schedule_callback(deadline_ms, Box::new(callback));
+            self.inner.notify_idle();
+        }
+
         pub fn is_shutdown(&self) -> bool {
             self.inner.shutdown.load(Ordering::SeqCst)
         }
@@ -1871,6 +1879,11 @@ mod wasm_pool {
                     }
                 }),
             );
+        }
+
+        /// 🔔️ Cooperative counterpart of native [`WorkerPool::callback_at`].
+        pub fn callback_at(&self, deadline_ms: u64, callback: impl FnOnce() + Send + 'static) {
+            self.inner.wheel.schedule_callback(deadline_ms, Box::new(callback));
         }
 
         pub fn is_shutdown(&self) -> bool {

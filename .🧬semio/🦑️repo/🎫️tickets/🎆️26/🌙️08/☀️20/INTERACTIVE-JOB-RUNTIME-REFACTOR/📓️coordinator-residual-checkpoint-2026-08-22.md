@@ -989,3 +989,49 @@ acceptance is retained in
 `OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-rehype-slug-audit-2026-08-23.md`.
 The accepted boundary is now **69 JavaScript + 63 Rust = 132 identities**. Phase 10 and the overall
 zero-dependency exit gate remain open.
+
+## Accepted Rehype Autolink Headings Retirement
+
+The direct root/UI `rehype-autolink-headings` identity is retired. Installed Storybook source and the
+fresh build again prove that generated Autodocs reuse TSX CSF import paths while actual MDX follows a
+separate extension-gated extractor/transform path with no owned input. Both complete uncached builds
+produced the same 231-entry hash: 170 stories, 61 Autodocs, 61 unique TSX inputs, and zero MDX.
+
+Terra independently reproduced the complete 724-test UI quick suite, lint, typecheck, frozen install,
+dependency/list/parity, exact source/manifest/Compose-lock ownership, installed-source reachability,
+root syntax, formatter baseline, and all scoped and whole working/staged/HEAD diff gates. Its audit is
+retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-rehype-autolink-headings-audit-2026-08-23.md`,
+and its quick-test capture was relocated unchanged from `/tmp` into the ticket before completion.
+The accepted boundary is now **68 JavaScript + 63 Rust = 131 identities**. Phase 10 and the overall
+zero-dependency exit gate remain open.
+
+## Accepted MDX Rollup Retirement
+
+The direct root/UI `@mdx-js/rollup` tooling identity and its empty adapter are retired. The root still
+removes Storybook's injected `.mdx` plugin, while the former trailing empty Rollup plugin is absent.
+A live before/after plugin-order probe proved all surviving Vite plugins and sentinels retain order.
+The complete uncached builds again produced the same 231-entry hash: 170 stories, 61 Autodocs,
+61 unique TSX inputs, and zero Markdown/MDX.
+
+Terra independently reproduced the complete 724-test UI quick suite, lint, typecheck, frozen install,
+dependency/list/parity, source/manifest/Compose-lock chain, plugin-order behavior, root syntax,
+formatter baseline, and all scoped and whole working/staged/HEAD diff gates. Its acceptance is
+retained in `OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-mdx-rollup-audit-2026-08-23.md`.
+The accepted boundary is now **67 JavaScript + 63 Rust = 130 identities**. Phase 10 and the overall
+zero-dependency exit gate remain open.
+
+## Accepted ESLint React Hooks Plugin Retirement
+
+The direct root `eslint-plugin-react-hooks` tooling identity is retired. An exhaustive source,
+configuration, Nx, script, test, manifest, and lock reachability census proved that the installed
+package had no active binding. The resolved UI lint configuration remains byte-for-byte equivalent
+after normalization, including its existing absence of `react-hooks/*` rules; the representative
+comment-bearing file retains its exact 19-diagnostic baseline.
+
+Terra independently reproduced UI lint and typecheck, all 724 quick tests, the uncached 231-entry
+Storybook discovery hash, frozen install, dependency/list/parity, exact target-plus-orphan lock
+removal, formatter scope, and all working/staged/HEAD diff gates. Its acceptance is retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-eslint-plugin-react-hooks-audit-2026-08-23.md`.
+The accepted boundary is now **66 JavaScript + 63 Rust = 129 identities**. Phase 10 and the overall
+zero-dependency exit gate remain open.

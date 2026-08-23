@@ -478,52 +478,140 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
 pub mod native {
     use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
     use semio_framework_actor::{ActorId, PackageId};
-    use semio_framework_async::{HostAsyncRuntime, OperationContext, ScopeHandle};
-    use semio_framework_os_services::{ComputeError, ComputePool, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponse as PoolHttpResponse, HttpTransport};
+    use semio_framework_async::{HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle, TokioHostRuntime};
+    use semio_framework_os_services::{AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead};
     use std::io::Read;
     use std::net::{TcpStream, ToSocketAddrs};
-    use std::sync::Arc;
+    use std::sync::{Arc, Mutex};
     use std::time::Duration;
     use tokio_tungstenite::tungstenite::{self, client::IntoClientRequest, stream::MaybeTlsStream, Message};
 
-    /// 🐎️ The ONE place this crate still names `ureq` directly — a plain, SYNCHRONOUS
-    /// `HttpTransport` for `HttpPool`. No thread spawn here anymore: `HttpPool::request` runs this
-    /// through `ComputePool::run_io`, which admits it onto a BOUNDED semaphore (replacing the
-    /// old unbounded `std::thread::spawn` per call) and races it against `ctx.deadline_ms` via the
-    /// shared `HostAsyncRuntime`.
-    struct UreqHttpTransport {
+    const UREQ_HTTP_URL_BYTES: usize = 2_048;
+    const UREQ_HTTP_HEADER_ITEMS: usize = 64;
+    const UREQ_HTTP_HEADER_BYTES: usize = 16 * 1024;
+    const UREQ_HTTP_REQUEST_BODY_BYTES: usize = 16 * 1024 * 1024;
+    const UREQ_HTTP_BODY_PAGE_BYTES: usize = 16 * 1024;
+
+    type UreqBodyReader = Box<dyn Read + Send + Sync + 'static>;
+
+    pub struct UreqStreamingHttpTransport {
         agent: ureq::Agent,
+        compute: Arc<ComputePool>,
+        runtime: Arc<TokioHostRuntime>,
+        scope: ScopeHandle,
     }
 
-    impl HttpTransport for UreqHttpTransport {
-        // 🚫️async: E1-adjacent — `HttpTransport::call` is deliberately sync in its trait
-        // definition (🛎️services/🦀️component.rs) so `Arc<dyn HttpTransport>` stays dyn-object-safe
-        // (documented there); no suspension point in this body either (ureq is a sync HTTP client).
-        fn call(&self, request: PoolHttpRequest) -> Result<PoolHttpResponse, std::io::Error> {
+    impl UreqStreamingHttpTransport {
+        pub fn new(compute: Arc<ComputePool>, runtime: Arc<TokioHostRuntime>, scope: ScopeHandle) -> Self {
+            Self { agent: ureq::Agent::new(), compute, runtime, scope }
+        }
+    }
+
+    struct UreqStreamingHttpBody {
+        reader: Arc<Mutex<Option<UreqBodyReader>>>,
+        compute: Arc<ComputePool>,
+        runtime: Arc<TokioHostRuntime>,
+        scope: ScopeHandle,
+        ctx: OperationContext,
+    }
+
+    impl HttpBody for UreqStreamingHttpBody {
+        fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
+            if self.ctx.cancel.is_cancelled_now() {
+                return Box::pin(async { Err(HttpPoolError::Transport("ureq HTTP body cancelled".into())) });
+            }
+            let reader = self.reader.clone();
+            let compute = self.compute.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            let ctx = self.ctx.clone();
+            Box::pin(async move { compute.run_io(runtime.as_ref(), &scope, ctx, move || ureq_stream_read_page(&reader)).await.map_err(HttpPoolError::Compute)? })
+        }
+    }
+
+    impl AsyncHttpTransport for UreqStreamingHttpTransport {
+        fn start(&self, ctx: &OperationContext, request: PoolHttpRequest) -> HostFuture<Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>> {
+            if ctx.cancel.is_cancelled_now() {
+                return Box::pin(async { Err(HttpPoolError::Transport("ureq HTTP request cancelled".into())) });
+            }
+            let agent = self.agent.clone();
+            let compute = self.compute.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            let connect_compute = compute.clone();
+            let connect_runtime = runtime.clone();
+            let connect_scope = scope.clone();
+            let connect_ctx = ctx.clone();
+            let body_ctx = ctx.clone();
+            Box::pin(async move {
+                let (head, reader) = connect_compute.run_io(connect_runtime.as_ref(), &connect_scope, connect_ctx, move || ureq_stream_start(&agent, request)).await.map_err(HttpPoolError::Compute)??;
+                let body: Box<dyn HttpBody> = Box::new(UreqStreamingHttpBody { reader: Arc::new(Mutex::new(Some(reader))), compute, runtime, scope, ctx: body_ctx });
+                Ok((head, body))
+            })
+        }
+    }
+
+    fn ureq_stream_start(agent: &ureq::Agent, request: PoolHttpRequest) -> Result<(HttpResponseHead, UreqBodyReader), HttpPoolError> {
+        if request.url.len() > UREQ_HTTP_URL_BYTES || request.headers.len() > UREQ_HTTP_HEADER_ITEMS || request.body.len() > UREQ_HTTP_REQUEST_BODY_BYTES {
+            return Err(HttpPoolError::Transport("ureq HTTP request exceeded fixed credits".into()));
+        }
+        let mut header_bytes = 0usize;
+        for (name, value) in &request.headers {
+            if name.bytes().any(|byte| byte <= b' ' || byte == b':') || value.bytes().any(|byte| byte == b'\r' || byte == b'\n') {
+                return Err(HttpPoolError::Transport("ureq HTTP request contained invalid header bytes".into()));
+            }
+            header_bytes = header_bytes
+                .checked_add(name.len())
+                .and_then(|total| total.checked_add(value.len()))
+                .and_then(|total| total.checked_add(4))
+                .filter(|total| *total <= UREQ_HTTP_HEADER_BYTES)
+                .ok_or_else(|| HttpPoolError::Transport("ureq HTTP request headers exceeded fixed credits".into()))?;
+        }
+        let _ = header_bytes;
+        let response = {
             let mut builder = match request.method.as_str() {
-                "GET" => self.agent.get(&request.url),
-                "POST" => self.agent.post(&request.url),
-                "DELETE" => self.agent.delete(&request.url),
-                other => return Err(std::io::Error::other(format!("NativeDirectoryTransport: unsupported HTTP method {other}"))),
+                "GET" => agent.get(&request.url),
+                "POST" => agent.post(&request.url),
+                "DELETE" => agent.delete(&request.url),
+                other => return Err(HttpPoolError::Transport(format!("ureq HTTP transport does not admit method {other}"))),
             };
             for (name, value) in &request.headers {
                 builder = builder.set(name, value);
             }
             let outcome = if request.body.is_empty() { builder.call() } else { builder.set("Content-Type", "application/json").send_bytes(&request.body) };
-            let response = match outcome {
+            match outcome {
                 Ok(response) => response,
-                Err(ureq::Error::Status(status, response)) => {
-                    let mut bytes = Vec::new();
-                    let _ = response.into_reader().read_to_end(&mut bytes);
-                    return Ok(PoolHttpResponse { status, headers: Vec::new(), body: bytes });
-                }
-                Err(error) => return Err(std::io::Error::other(error.to_string())),
-            };
-            let status = response.status();
-            let mut bytes = Vec::new();
-            response.into_reader().read_to_end(&mut bytes).map_err(std::io::Error::other)?;
-            Ok(PoolHttpResponse { status, headers: Vec::new(), body: bytes })
+                Err(ureq::Error::Status(_, response)) => response,
+                Err(error) => return Err(HttpPoolError::Transport(error.to_string())),
+            }
+        };
+        let status = response.status();
+        let mut headers = Vec::with_capacity(4);
+        let mut response_header_bytes = 0usize;
+        for name in ["Content-Length", "Content-Type", "ETag", "Last-Modified"] {
+            if let Some(value) = response.header(name) {
+                response_header_bytes = response_header_bytes
+                    .checked_add(name.len())
+                    .and_then(|total| total.checked_add(value.len()))
+                    .filter(|total| *total <= UREQ_HTTP_HEADER_BYTES)
+                    .ok_or_else(|| HttpPoolError::Transport("ureq HTTP response headers exceeded fixed credits".into()))?;
+                headers.push((name.to_string(), value.to_string()));
+            }
         }
+        Ok((HttpResponseHead { status, headers }, response.into_reader()))
+    }
+
+    fn ureq_stream_read_page(reader: &Arc<Mutex<Option<UreqBodyReader>>>) -> Result<Option<Vec<u8>>, HttpPoolError> {
+        let mut slot = reader.lock().map_err(|_| HttpPoolError::Transport("ureq HTTP body lock poisoned".into()))?;
+        let body = slot.as_mut().ok_or_else(|| HttpPoolError::Transport("ureq HTTP body reached terminal ownership".into()))?;
+        let mut page = vec![0u8; UREQ_HTTP_BODY_PAGE_BYTES];
+        let count = body.read(&mut page).map_err(|error| HttpPoolError::Transport(error.to_string()))?;
+        if count == 0 {
+            slot.take();
+            return Ok(None);
+        }
+        page.truncate(count);
+        Ok(Some(page))
     }
 
     async fn http_method_str(method: HttpMethod) -> &'static str {
@@ -595,17 +683,16 @@ pub mod native {
         pub fn new_now(runtime: Arc<R>, scope: ScopeHandle, http_pool: Arc<HttpPool>, package: PackageId, actor: ActorId) -> Self {
             Self { runtime, scope, http_pool, package, actor }
         }
+    }
 
-        /// 🐎️ Convenience constructor: builds its own `HttpPool` (and the one `ureq::Agent` behind
-        /// it) over a caller-supplied `runtime`/`scope`/`ComputePool` — still never constructs the
-        /// runtime itself.
-        pub async fn with_new_http_pool(runtime: Arc<R>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
+    impl NativeDirectoryTransport<TokioHostRuntime> {
+        pub async fn with_new_http_pool(runtime: Arc<TokioHostRuntime>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
             Self::with_new_http_pool_now(runtime, scope, compute, bytes_per_minute_cap, outstanding_cap, package, actor)
         }
 
-        pub fn with_new_http_pool_now(runtime: Arc<R>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
-            let transport: Arc<dyn HttpTransport> = Arc::new(UreqHttpTransport { agent: ureq::Agent::new() });
-            Self::new_now(runtime, scope, Arc::new(HttpPool::new_now(transport, compute, bytes_per_minute_cap, outstanding_cap)), package, actor)
+        pub fn with_new_http_pool_now(runtime: Arc<TokioHostRuntime>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
+            let transport: Arc<dyn AsyncHttpTransport> = Arc::new(UreqStreamingHttpTransport::new(compute, runtime.clone(), scope.clone()));
+            Self::new_now(runtime, scope, Arc::new(HttpPool::new_with_async_transport_now(transport, bytes_per_minute_cap, outstanding_cap)), package, actor)
         }
     }
 
@@ -662,6 +749,78 @@ pub mod native {
                 _ => return Err(TransportError::Io("nonblocking TLS directory sockets are not enabled".to_string())),
             }
             Ok(TungsteniteConnection(socket))
+        }
+    }
+
+    #[cfg(test)]
+    mod streaming_tests {
+        use super::*;
+        use semio_framework_async::{CancelToken, ScopeOwner, TraceId};
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        struct MockReader {
+            bytes: Vec<u8>,
+            cursor: usize,
+            page: usize,
+            reads: Arc<AtomicUsize>,
+            fail_at: Option<usize>,
+        }
+
+        impl Read for MockReader {
+            fn read(&mut self, output: &mut [u8]) -> std::io::Result<usize> {
+                let turn = self.reads.fetch_add(1, Ordering::SeqCst);
+                if self.fail_at == Some(turn) {
+                    return Err(std::io::Error::other("scripted reader failure"));
+                }
+                if self.cursor == self.bytes.len() {
+                    return Ok(0);
+                }
+                let count = self.page.min(output.len()).min(self.bytes.len() - self.cursor);
+                output[..count].copy_from_slice(&self.bytes[self.cursor..self.cursor + count]);
+                self.cursor += count;
+                Ok(count)
+            }
+        }
+
+        fn mock_reader(bytes: Vec<u8>, page: usize, reads: Arc<AtomicUsize>, fail_at: Option<usize>) -> Arc<Mutex<Option<UreqBodyReader>>> {
+            Arc::new(Mutex::new(Some(Box::new(MockReader { bytes, cursor: 0, page, reads, fail_at }))))
+        }
+
+        #[test]
+        fn https_owned_reader_yields_one_bounded_page_per_pull_and_reaches_terminal() {
+            let reads = Arc::new(AtomicUsize::new(0));
+            let reader = mock_reader(vec![1, 2, 3, 4, 5, 6, 7], 3, reads.clone(), None);
+            assert_eq!(reads.load(Ordering::SeqCst), 0);
+            assert_eq!(ureq_stream_read_page(&reader).expect("first page"), Some(vec![1, 2, 3]));
+            assert_eq!(reads.load(Ordering::SeqCst), 1);
+            assert_eq!(ureq_stream_read_page(&reader).expect("second page"), Some(vec![4, 5, 6]));
+            assert_eq!(ureq_stream_read_page(&reader).expect("third page"), Some(vec![7]));
+            assert_eq!(ureq_stream_read_page(&reader).expect("eof"), None);
+            assert!(reader.lock().expect("reader lock").is_none());
+        }
+
+        #[test]
+        fn https_owned_reader_reports_partial_failure_without_an_implicit_retry() {
+            let reads = Arc::new(AtomicUsize::new(0));
+            let reader = mock_reader(vec![1, 2, 3, 4], 2, reads.clone(), Some(1));
+            assert_eq!(ureq_stream_read_page(&reader).expect("first page"), Some(vec![1, 2]));
+            assert!(matches!(ureq_stream_read_page(&reader), Err(HttpPoolError::Transport(message)) if message == "scripted reader failure"));
+            assert_eq!(reads.load(Ordering::SeqCst), 2);
+        }
+
+        #[test]
+        fn https_owned_reader_honours_cancel_before_pulling_the_next_page() {
+            let runtime = Arc::new(TokioHostRuntime::new());
+            let scope = runtime.open_scope_now(ScopeOwner::Service("ureq_stream_test"), None);
+            let compute = Arc::new(runtime.block_on(ComputePool::new(1)));
+            let cancel = CancelToken::root_now();
+            cancel.cancel_now();
+            let reads = Arc::new(AtomicUsize::new(0));
+            let reader = mock_reader(vec![1, 2, 3], 1, reads.clone(), None);
+            let mut body = UreqStreamingHttpBody { reader, compute, runtime: runtime.clone(), scope, ctx: OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel, capability: None } };
+            let result = runtime.block_on(body.next_chunk());
+            assert!(matches!(result, Err(HttpPoolError::Transport(message)) if message == "ureq HTTP body cancelled"));
+            assert_eq!(reads.load(Ordering::SeqCst), 0);
         }
     }
 }

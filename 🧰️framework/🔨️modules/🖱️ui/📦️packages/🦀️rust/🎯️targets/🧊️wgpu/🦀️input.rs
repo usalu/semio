@@ -326,8 +326,24 @@ impl<E: Clone> InputState<E> {
         self.pending_actions.claim(byte_credits)
     }
 
+    pub fn claim_actions(&mut self, byte_credits: &[usize]) -> Result<crate::wgpu::BoundedActionClaimBatch, BoundedActionFault> {
+        self.pending_actions.claim_batch(byte_credits)
+    }
+
     pub fn reserve_claimed_action<'a>(&'a mut self, claim: crate::wgpu::BoundedActionClaim, controller_id: &str, action: &str) -> Result<crate::wgpu::BoundedClaimedActionReservation<'a>, BoundedActionFault> {
         self.pending_actions.reserve_claimed(claim, controller_id, action)
+    }
+
+    pub fn draft_claimed_action(&self, claim: crate::wgpu::BoundedActionClaim, controller_id: &str, action: &str) -> Result<crate::wgpu::BoundedClaimedActionDraft, BoundedActionFault> {
+        self.pending_actions.draft_claimed(claim, controller_id, action)
+    }
+
+    pub fn publish_prepared_claimed_action(&mut self, prepared: crate::wgpu::PreparedClaimedAction) -> Result<(), BoundedActionFault> {
+        self.pending_actions.publish_prepared_claimed(prepared)
+    }
+
+    pub fn publish_prepared_claimed_actions(&mut self, prepared: crate::wgpu::PreparedClaimedActionBatch) -> Result<(), BoundedActionFault> {
+        self.pending_actions.publish_prepared_claimed_batch(prepared)
     }
 
     pub fn release_action_claim(&mut self, claim: crate::wgpu::BoundedActionClaim) -> Result<(), BoundedActionFault> {

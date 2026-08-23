@@ -371,7 +371,7 @@ pub mod host {
         P: Clone,
         Op: Clone,
     {
-        ArtifactEnvelope {
+        ArtifactEnvelope::from_owners(store::ArtifactEnvelopeOwners {
             schema: document.schema.clone(),
             id: document.id.clone(),
             vcs: document.vcs.clone(),
@@ -382,9 +382,9 @@ pub mod host {
             migrated_from: None,
             owner: None,
             lanes: std::collections::BTreeMap::new(),
-            edit_messages: document.edit_messages.clone(),
+            edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages.clone()),
             conflicts: document.conflicts.clone(),
-        }
+        })
     }
 
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
@@ -662,7 +662,7 @@ pub mod host {
     impl OsWorkflowStore {
         pub fn new(document: OsWorkflowArtifactDocument) -> Result<Self, VcsError> {
             let cursor = document.cursor.clone();
-            let envelope = ArtifactEnvelope {
+            let envelope = ArtifactEnvelope::from_owners(store::ArtifactEnvelopeOwners {
                 schema: document.schema,
                 id: document.id,
                 vcs: document.vcs,
@@ -673,9 +673,9 @@ pub mod host {
                 migrated_from: None,
                 owner: None,
                 lanes: std::collections::BTreeMap::new(),
-                edit_messages: document.edit_messages,
+                edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
                 conflicts: document.conflicts,
-            };
+            });
             let inner = ArtifactStore::new(envelope)?;
             Ok(Self { inner, name: document.name })
         }

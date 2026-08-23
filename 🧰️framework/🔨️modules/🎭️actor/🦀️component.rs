@@ -2735,21 +2735,32 @@ mod thread_transport {
             }
             self.inbound.lock().ok().and_then(|rx| rx.recv_timeout(timeout).ok())
         }
-    }
 
-    impl ShardTransport for ThreadTransport {
-        async fn send(&self, bytes: &[u8]) {
-            if self.killed.load(Ordering::SeqCst) {
-                return;
-            }
-            let _ = self.outbound.send(bytes.to_vec());
-        }
-
-        async fn recv(&self) -> Option<Vec<u8>> {
+        /// 🤝️ Takes one currently buffered frame without parking the caller.
+        pub fn try_recv_now(&self) -> Option<Vec<u8>> {
             if self.killed.load(Ordering::SeqCst) {
                 return None;
             }
             self.inbound.lock().ok().and_then(|rx| rx.try_recv().ok())
+        }
+
+        /// 🛡️ Attempts one owned send without suspension and returns the exact frame when the
+        /// transport is terminal or disconnected.
+        pub fn send_now(&self, bytes: Vec<u8>) -> Result<(), Vec<u8>> {
+            if self.killed.load(Ordering::SeqCst) {
+                return Err(bytes);
+            }
+            self.outbound.send(bytes).map_err(|error| error.0)
+        }
+    }
+
+    impl ShardTransport for ThreadTransport {
+        async fn send(&self, bytes: &[u8]) {
+            let _ = self.send_now(bytes.to_vec());
+        }
+
+        async fn recv(&self) -> Option<Vec<u8>> {
+            self.try_recv_now()
         }
 
         async fn heartbeat(&self) -> u64 {

@@ -494,7 +494,7 @@ mod wasm_bridge {
         pub async fn new(envelope_json: Option<String>) -> Result<DrawSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: DrawEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: DrawEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     DrawStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
                 None => DrawStore::new(create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw", crate::artifacts::draw::schema::empty_draw_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,

@@ -21,7 +21,7 @@ mod bridge {
         pub async fn new(envelope_json: Option<String>) -> Result<CadArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: CadEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: CadEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     CadStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
                 None => CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,

@@ -283,6 +283,673 @@ impl OrbitController {
 //#endregion Camera
 
 //#region Mesh
+pub const MESH3D_AUTHORITY_CAPACITY: usize = 256;
+pub const MESH3D_PAGE_BYTES: usize = 16 * 1024;
+pub const MESH3D_OWNER_PAGE_CAPACITY: usize = 1_024;
+pub const MESH3D_AUTHORITY_PAGE_CAPACITY: usize = 4_096;
+pub const MESH3D_OWNER_BYTE_CAPACITY: usize = MESH3D_PAGE_BYTES * MESH3D_OWNER_PAGE_CAPACITY;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Mesh3dField {
+    Positions,
+    Normals,
+    Indices,
+    FaceIds,
+    VertexIds,
+    Edges,
+    EdgeIds,
+    Uvs,
+    Colors,
+}
+
+impl Mesh3dField {
+    fn index(self) -> usize {
+        match self {
+            Self::Positions => 0,
+            Self::Normals => 1,
+            Self::Indices => 2,
+            Self::FaceIds => 3,
+            Self::VertexIds => 4,
+            Self::Edges => 5,
+            Self::EdgeIds => 6,
+            Self::Uvs => 7,
+            Self::Colors => 8,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Mesh3dSchema {
+    pub vertices: u32,
+    pub indices: u32,
+    pub face_ids: u32,
+    pub vertex_ids: u32,
+    pub edges: u32,
+    pub edge_ids: u32,
+    pub uvs: u32,
+    pub colors: u32,
+}
+
+impl Mesh3dSchema {
+    pub fn triangle_mesh(vertices: u32, indices: u32) -> Self {
+        Self { vertices, indices, face_ids: 0, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: 0, colors: 0 }
+    }
+
+    fn field_items(self, field: Mesh3dField) -> u32 {
+        match field {
+            Mesh3dField::Positions | Mesh3dField::Normals => self.vertices,
+            Mesh3dField::Indices => self.indices,
+            Mesh3dField::FaceIds => self.face_ids,
+            Mesh3dField::VertexIds => self.vertex_ids,
+            Mesh3dField::Edges => self.edges,
+            Mesh3dField::EdgeIds => self.edge_ids,
+            Mesh3dField::Uvs => self.uvs,
+            Mesh3dField::Colors => self.colors,
+        }
+    }
+
+    fn field_item_bytes(field: Mesh3dField) -> usize {
+        match field {
+            Mesh3dField::Positions | Mesh3dField::Normals => 12,
+            Mesh3dField::Edges => 24,
+            Mesh3dField::Uvs => 8,
+            Mesh3dField::Colors => 16,
+            Mesh3dField::Indices | Mesh3dField::FaceIds | Mesh3dField::VertexIds | Mesh3dField::EdgeIds => 4,
+        }
+    }
+
+    fn validate(self) -> Result<Mesh3dLayout, Mesh3dFault> {
+        if self.vertices == 0
+            || self.indices == 0
+            || !self.indices.is_multiple_of(3)
+            || (self.face_ids != 0 && self.face_ids != self.indices / 3)
+            || (self.vertex_ids != 0 && self.vertex_ids != self.vertices)
+            || (self.edge_ids != 0 && self.edge_ids != self.edges)
+            || (self.uvs != 0 && self.uvs != self.vertices)
+            || (self.colors != 0 && self.colors != self.vertices)
+        {
+            return Err(Mesh3dFault::Schema);
+        }
+        let mut offsets = [0usize; 9];
+        let mut total = 0usize;
+        for field in [Mesh3dField::Positions, Mesh3dField::Normals, Mesh3dField::Indices, Mesh3dField::FaceIds, Mesh3dField::VertexIds, Mesh3dField::Edges, Mesh3dField::EdgeIds, Mesh3dField::Uvs, Mesh3dField::Colors] {
+            offsets[field.index()] = total;
+            let bytes = usize::try_from(self.field_items(field)).ok().and_then(|items| items.checked_mul(Self::field_item_bytes(field))).ok_or(Mesh3dFault::ByteCapacity)?;
+            total = total.checked_add(bytes).ok_or(Mesh3dFault::ByteCapacity)?;
+        }
+        if total > MESH3D_OWNER_BYTE_CAPACITY {
+            return Err(Mesh3dFault::ByteCapacity);
+        }
+        Ok(Mesh3dLayout { offsets, total_bytes: total, page_count: total.div_ceil(MESH3D_PAGE_BYTES) as u16 })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Mesh3dFault {
+    Closing,
+    ItemCapacity,
+    PageCapacity,
+    ByteCapacity,
+    Schema,
+    Stale,
+    Order,
+    Incomplete,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Mesh3dWriteToken {
+    slot: u16,
+    epoch: u64,
+    generation: u64,
+    revision: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct Mesh3dLease {
+    slot: u16,
+    epoch: u64,
+    generation: u64,
+    revision: u64,
+}
+
+#[derive(Clone, Copy)]
+struct Mesh3dLayout {
+    offsets: [usize; 9],
+    total_bytes: usize,
+    page_count: u16,
+}
+
+struct Mesh3dPage {
+    bytes: Box<[u8; MESH3D_PAGE_BYTES]>,
+}
+
+struct Mesh3dOwner {
+    generation: u64,
+    revision: u64,
+    schema: Mesh3dSchema,
+    layout: Mesh3dLayout,
+    pages: Box<[Option<Mesh3dPage>; MESH3D_OWNER_PAGE_CAPACITY]>,
+    allocated_pages: u16,
+    written: [u32; 9],
+    aabb_min: [f32; 3],
+    aabb_max: [f32; 3],
+    closing: bool,
+    close_page: u16,
+}
+
+impl Mesh3dOwner {
+    fn new(generation: u64, revision: u64, schema: Mesh3dSchema, layout: Mesh3dLayout) -> Self {
+        Self { generation, revision, schema, layout, pages: Box::new(std::array::from_fn(|_| None)), allocated_pages: 0, written: [0; 9], aabb_min: [f32::INFINITY; 3], aabb_max: [f32::NEG_INFINITY; 3], closing: false, close_page: 0 }
+    }
+
+    fn allocate_step(&mut self) -> bool {
+        if self.allocated_pages == self.layout.page_count {
+            return true;
+        }
+        let slot = usize::from(self.allocated_pages);
+        self.pages[slot] = Some(Mesh3dPage { bytes: Box::new([0; MESH3D_PAGE_BYTES]) });
+        self.allocated_pages += 1;
+        self.allocated_pages == self.layout.page_count
+    }
+
+    fn write(&mut self, field: Mesh3dField, bytes: &[u8]) -> Result<u32, Mesh3dFault> {
+        if self.closing || self.allocated_pages != self.layout.page_count {
+            return Err(if self.closing { Mesh3dFault::Closing } else { Mesh3dFault::Incomplete });
+        }
+        let field_index = field.index();
+        let item = self.written[field_index];
+        if item >= self.schema.field_items(field) || bytes.len() != Mesh3dSchema::field_item_bytes(field) {
+            return Err(Mesh3dFault::Order);
+        }
+        let absolute = self.layout.offsets[field_index].checked_add(item as usize * bytes.len()).ok_or(Mesh3dFault::ByteCapacity)?;
+        self.write_at(absolute, bytes)?;
+        self.written[field_index] += 1;
+        Ok(item)
+    }
+
+    fn write_at(&mut self, absolute: usize, bytes: &[u8]) -> Result<(), Mesh3dFault> {
+        let end = absolute.checked_add(bytes.len()).ok_or(Mesh3dFault::ByteCapacity)?;
+        if end > self.layout.total_bytes {
+            return Err(Mesh3dFault::ByteCapacity);
+        }
+        for (delta, byte) in bytes.iter().enumerate() {
+            let at = absolute + delta;
+            let page = self.pages[at / MESH3D_PAGE_BYTES].as_mut().ok_or(Mesh3dFault::Incomplete)?;
+            page.bytes[at % MESH3D_PAGE_BYTES] = *byte;
+        }
+        Ok(())
+    }
+
+    fn read<const N: usize>(&self, absolute: usize) -> Result<[u8; N], Mesh3dFault> {
+        let end = absolute.checked_add(N).ok_or(Mesh3dFault::ByteCapacity)?;
+        if self.closing || end > self.layout.total_bytes {
+            return Err(if self.closing { Mesh3dFault::Closing } else { Mesh3dFault::ByteCapacity });
+        }
+        let mut result = [0; N];
+        for (delta, output) in result.iter_mut().enumerate() {
+            let at = absolute + delta;
+            let page = self.pages[at / MESH3D_PAGE_BYTES].as_ref().ok_or(Mesh3dFault::Incomplete)?;
+            *output = page.bytes[at % MESH3D_PAGE_BYTES];
+        }
+        Ok(result)
+    }
+
+    fn item_bytes<const N: usize>(&self, field: Mesh3dField, item: u32) -> Result<[u8; N], Mesh3dFault> {
+        if N != Mesh3dSchema::field_item_bytes(field) || item >= self.schema.field_items(field) {
+            return Err(Mesh3dFault::Schema);
+        }
+        let absolute = self.layout.offsets[field.index()].checked_add(item as usize * N).ok_or(Mesh3dFault::ByteCapacity)?;
+        self.read(absolute)
+    }
+
+    fn terminal_is_complete(&self) -> bool {
+        self.allocated_pages == self.layout.page_count
+            && self.written.iter().enumerate().all(|(index, count)| {
+                *count
+                    == self.schema.field_items([Mesh3dField::Positions, Mesh3dField::Normals, Mesh3dField::Indices, Mesh3dField::FaceIds, Mesh3dField::VertexIds, Mesh3dField::Edges, Mesh3dField::EdgeIds, Mesh3dField::Uvs, Mesh3dField::Colors][index])
+            })
+    }
+
+    fn close_step(&mut self) -> bool {
+        self.closing = true;
+        if self.close_page < self.allocated_pages {
+            self.pages[usize::from(self.close_page)] = None;
+            self.close_page += 1;
+            return false;
+        }
+        self.layout.total_bytes = 0;
+        self.layout.page_count = 0;
+        self.allocated_pages = 0;
+        self.written = [0; 9];
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.layout.total_bytes == 0 && self.pages.iter().all(Option::is_none)
+    }
+}
+
+enum Mesh3dSlotState {
+    Writing(Mesh3dOwner),
+    Ready(Mesh3dOwner),
+    Closing(Mesh3dOwner),
+    Transition,
+}
+
+struct Mesh3dSlot {
+    epoch: u64,
+    reserved_pages: u16,
+    state: Mesh3dSlotState,
+}
+
+struct Mesh3dAuthority {
+    slots: Box<[Option<Mesh3dSlot>; MESH3D_AUTHORITY_CAPACITY]>,
+    epochs: [u64; MESH3D_AUTHORITY_CAPACITY],
+    reserved_pages: usize,
+}
+
+impl Mesh3dAuthority {
+    fn new() -> Self {
+        Self { slots: Box::new(std::array::from_fn(|_| None)), epochs: [0; MESH3D_AUTHORITY_CAPACITY], reserved_pages: 0 }
+    }
+
+    fn begin(&mut self, generation: u64, revision: u64, schema: Mesh3dSchema) -> Result<Mesh3dWriteToken, Mesh3dFault> {
+        let layout = schema.validate()?;
+        let pages = usize::from(layout.page_count);
+        if self.reserved_pages.checked_add(pages).is_none_or(|pages| pages > MESH3D_AUTHORITY_PAGE_CAPACITY) {
+            return Err(Mesh3dFault::PageCapacity);
+        }
+        let slot = self.slots.iter().position(Option::is_none).ok_or(Mesh3dFault::ItemCapacity)?;
+        let epoch = self.epochs[slot].wrapping_add(1).max(1);
+        self.epochs[slot] = epoch;
+        self.slots[slot] = Some(Mesh3dSlot { epoch, reserved_pages: layout.page_count, state: Mesh3dSlotState::Writing(Mesh3dOwner::new(generation, revision, schema, layout)) });
+        self.reserved_pages += pages;
+        Ok(Mesh3dWriteToken { slot: slot as u16, epoch, generation, revision })
+    }
+
+    fn writing(&mut self, token: Mesh3dWriteToken) -> Result<&mut Mesh3dOwner, Mesh3dFault> {
+        let slot = self.slots.get_mut(usize::from(token.slot)).and_then(Option::as_mut).filter(|slot| slot.epoch == token.epoch).ok_or(Mesh3dFault::Stale)?;
+        match &mut slot.state {
+            Mesh3dSlotState::Writing(owner) if owner.generation == token.generation && owner.revision == token.revision => Ok(owner),
+            Mesh3dSlotState::Closing(_) => Err(Mesh3dFault::Closing),
+            _ => Err(Mesh3dFault::Stale),
+        }
+    }
+
+    fn writing_ref(&self, token: Mesh3dWriteToken) -> Result<&Mesh3dOwner, Mesh3dFault> {
+        let slot = self.slots.get(usize::from(token.slot)).and_then(Option::as_ref).filter(|slot| slot.epoch == token.epoch).ok_or(Mesh3dFault::Stale)?;
+        match &slot.state {
+            Mesh3dSlotState::Writing(owner) if owner.generation == token.generation && owner.revision == token.revision => Ok(owner),
+            Mesh3dSlotState::Closing(_) => Err(Mesh3dFault::Closing),
+            _ => Err(Mesh3dFault::Stale),
+        }
+    }
+
+    fn ready(&self, lease: Mesh3dLease) -> Result<&Mesh3dOwner, Mesh3dFault> {
+        let slot = self.slots.get(usize::from(lease.slot)).and_then(Option::as_ref).filter(|slot| slot.epoch == lease.epoch).ok_or(Mesh3dFault::Stale)?;
+        match &slot.state {
+            Mesh3dSlotState::Ready(owner) if owner.generation == lease.generation && owner.revision == lease.revision => Ok(owner),
+            Mesh3dSlotState::Closing(_) => Err(Mesh3dFault::Closing),
+            _ => Err(Mesh3dFault::Stale),
+        }
+    }
+
+    fn seal(&mut self, token: Mesh3dWriteToken) -> Result<Mesh3dLease, Mesh3dFault> {
+        let slot = self.slots.get_mut(usize::from(token.slot)).and_then(Option::as_mut).filter(|slot| slot.epoch == token.epoch).ok_or(Mesh3dFault::Stale)?;
+        let Mesh3dSlotState::Writing(owner) = &slot.state else { return Err(Mesh3dFault::Stale) };
+        if !owner.terminal_is_complete() {
+            return Err(Mesh3dFault::Incomplete);
+        }
+        let owner = match std::mem::replace(&mut slot.state, Mesh3dSlotState::Transition) {
+            Mesh3dSlotState::Writing(owner) => owner,
+            other => {
+                slot.state = other;
+                return Err(Mesh3dFault::Stale);
+            }
+        };
+        slot.state = Mesh3dSlotState::Ready(owner);
+        Ok(Mesh3dLease { slot: token.slot, epoch: token.epoch, generation: token.generation, revision: token.revision })
+    }
+
+    fn begin_close_write(&mut self, token: Mesh3dWriteToken) -> Result<(), Mesh3dFault> {
+        let slot = self.slots.get_mut(usize::from(token.slot)).and_then(Option::as_mut).filter(|slot| slot.epoch == token.epoch).ok_or(Mesh3dFault::Stale)?;
+        if matches!(slot.state, Mesh3dSlotState::Closing(_)) {
+            return Ok(());
+        }
+        let mut owner = match std::mem::replace(&mut slot.state, Mesh3dSlotState::Transition) {
+            Mesh3dSlotState::Writing(owner) => owner,
+            other => {
+                slot.state = other;
+                return Err(Mesh3dFault::Stale);
+            }
+        };
+        owner.closing = true;
+        slot.state = Mesh3dSlotState::Closing(owner);
+        Ok(())
+    }
+
+    fn begin_close(&mut self, lease: Mesh3dLease) -> Result<(), Mesh3dFault> {
+        let slot = self.slots.get_mut(usize::from(lease.slot)).and_then(Option::as_mut).filter(|slot| slot.epoch == lease.epoch).ok_or(Mesh3dFault::Stale)?;
+        if matches!(slot.state, Mesh3dSlotState::Closing(_)) {
+            return Ok(());
+        }
+        let mut owner = match std::mem::replace(&mut slot.state, Mesh3dSlotState::Transition) {
+            Mesh3dSlotState::Ready(owner) => owner,
+            other => {
+                slot.state = other;
+                return Err(Mesh3dFault::Stale);
+            }
+        };
+        owner.closing = true;
+        slot.state = Mesh3dSlotState::Closing(owner);
+        Ok(())
+    }
+
+    fn close_step(&mut self, slot_index: u16, epoch: u64) -> Result<bool, Mesh3dFault> {
+        let index = usize::from(slot_index);
+        let slot = self.slots.get_mut(index).and_then(Option::as_mut).filter(|slot| slot.epoch == epoch).ok_or(Mesh3dFault::Stale)?;
+        let Mesh3dSlotState::Closing(owner) = &mut slot.state else { return Err(Mesh3dFault::Closing) };
+        if !owner.close_step() {
+            return Ok(false);
+        }
+        let pages = usize::from(slot.reserved_pages);
+        let _ = owner;
+        self.slots[index] = None;
+        self.reserved_pages = self.reserved_pages.saturating_sub(pages);
+        Ok(true)
+    }
+}
+
+fn mesh3d_authority() -> &'static std::sync::Mutex<Mesh3dAuthority> {
+    static AUTHORITY: std::sync::OnceLock<std::sync::Mutex<Mesh3dAuthority>> = std::sync::OnceLock::new();
+    AUTHORITY.get_or_init(|| std::sync::Mutex::new(Mesh3dAuthority::new()))
+}
+
+pub fn mesh3d_begin(generation: u64, revision: u64, schema: Mesh3dSchema) -> Result<Mesh3dWriteToken, Mesh3dFault> {
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.begin(generation, revision, schema)
+}
+
+pub fn mesh3d_allocate_step(token: Mesh3dWriteToken) -> Result<bool, Mesh3dFault> {
+    Ok(mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.allocate_step())
+}
+
+pub fn mesh3d_write_vec3(token: Mesh3dWriteToken, field: Mesh3dField, value: [f32; 3]) -> Result<(), Mesh3dFault> {
+    if !matches!(field, Mesh3dField::Positions | Mesh3dField::Normals) || !value.iter().all(|value| value.is_finite()) {
+        return Err(Mesh3dFault::Schema);
+    }
+    let mut bytes = [0; 12];
+    for (index, value) in value.into_iter().enumerate() {
+        bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
+    }
+    let mut authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let owner = authority.writing(token)?;
+    let item = owner.write(field, &bytes)?;
+    if field == Mesh3dField::Positions {
+        for axis in 0..3 {
+            owner.aabb_min[axis] = owner.aabb_min[axis].min(value[axis]);
+            owner.aabb_max[axis] = owner.aabb_max[axis].max(value[axis]);
+        }
+    }
+    let _ = item;
+    Ok(())
+}
+
+pub fn mesh3d_write_edge(token: Mesh3dWriteToken, value: [[f32; 3]; 2]) -> Result<(), Mesh3dFault> {
+    if !value.iter().flatten().all(|value| value.is_finite()) {
+        return Err(Mesh3dFault::Schema);
+    }
+    let mut bytes = [0; 24];
+    for (index, value) in value.into_iter().flatten().enumerate() {
+        bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
+    }
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.write(Mesh3dField::Edges, &bytes)?;
+    Ok(())
+}
+
+pub fn mesh3d_write_vec2(token: Mesh3dWriteToken, field: Mesh3dField, value: [f32; 2]) -> Result<(), Mesh3dFault> {
+    if field != Mesh3dField::Uvs || !value.iter().all(|value| value.is_finite()) {
+        return Err(Mesh3dFault::Schema);
+    }
+    let mut bytes = [0; 8];
+    for (index, value) in value.into_iter().enumerate() {
+        bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
+    }
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.write(field, &bytes)?;
+    Ok(())
+}
+
+pub fn mesh3d_write_vec4(token: Mesh3dWriteToken, field: Mesh3dField, value: [f32; 4]) -> Result<(), Mesh3dFault> {
+    if field != Mesh3dField::Colors || !value.iter().all(|value| value.is_finite()) {
+        return Err(Mesh3dFault::Schema);
+    }
+    let mut bytes = [0; 16];
+    for (index, value) in value.into_iter().enumerate() {
+        bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
+    }
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.write(field, &bytes)?;
+    Ok(())
+}
+
+pub fn mesh3d_write_u32(token: Mesh3dWriteToken, field: Mesh3dField, value: u32) -> Result<(), Mesh3dFault> {
+    if !matches!(field, Mesh3dField::Indices | Mesh3dField::FaceIds | Mesh3dField::VertexIds | Mesh3dField::EdgeIds) {
+        return Err(Mesh3dFault::Schema);
+    }
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.writing(token)?.write(field, &value.to_le_bytes())?;
+    Ok(())
+}
+
+pub fn mesh3d_read_write_vec3(token: Mesh3dWriteToken, field: Mesh3dField, item: u32) -> Result<[f32; 3], Mesh3dFault> {
+    if !matches!(field, Mesh3dField::Positions | Mesh3dField::Normals) {
+        return Err(Mesh3dFault::Schema);
+    }
+    let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let owner = authority.writing_ref(token)?;
+    if item >= owner.written[field.index()] {
+        return Err(Mesh3dFault::Incomplete);
+    }
+    let bytes = owner.item_bytes::<12>(field, item)?;
+    Ok([f32::from_le_bytes(bytes[..4].try_into().expect("fixed mesh scalar")), f32::from_le_bytes(bytes[4..8].try_into().expect("fixed mesh scalar")), f32::from_le_bytes(bytes[8..].try_into().expect("fixed mesh scalar"))])
+}
+
+pub fn mesh3d_read_write_u32(token: Mesh3dWriteToken, field: Mesh3dField, item: u32) -> Result<u32, Mesh3dFault> {
+    if !matches!(field, Mesh3dField::Indices | Mesh3dField::FaceIds | Mesh3dField::VertexIds | Mesh3dField::EdgeIds) {
+        return Err(Mesh3dFault::Schema);
+    }
+    let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let owner = authority.writing_ref(token)?;
+    if item >= owner.written[field.index()] {
+        return Err(Mesh3dFault::Incomplete);
+    }
+    Ok(u32::from_le_bytes(owner.item_bytes::<4>(field, item)?))
+}
+
+pub fn mesh3d_update_vec3(token: Mesh3dWriteToken, field: Mesh3dField, item: u32, value: [f32; 3]) -> Result<(), Mesh3dFault> {
+    if !matches!(field, Mesh3dField::Positions | Mesh3dField::Normals) || !value.iter().all(|value| value.is_finite()) {
+        return Err(Mesh3dFault::Schema);
+    }
+    let mut authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+    let owner = authority.writing(token)?;
+    if item >= owner.written[field.index()] {
+        return Err(Mesh3dFault::Incomplete);
+    }
+    let absolute = owner.layout.offsets[field.index()].checked_add(item as usize * 12).ok_or(Mesh3dFault::ByteCapacity)?;
+    let mut bytes = [0; 12];
+    for (index, value) in value.into_iter().enumerate() {
+        bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
+    }
+    owner.write_at(absolute, &bytes)
+}
+
+pub fn mesh3d_seal(token: Mesh3dWriteToken) -> Result<Mesh3dLease, Mesh3dFault> {
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.seal(token)
+}
+
+pub fn mesh3d_abort(token: Mesh3dWriteToken) -> Result<(), Mesh3dFault> {
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.begin_close_write(token)
+}
+
+pub fn mesh3d_abort_step(token: Mesh3dWriteToken) -> Result<bool, Mesh3dFault> {
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.close_step(token.slot, token.epoch)
+}
+
+pub fn mesh3d_begin_close(lease: Mesh3dLease) -> Result<(), Mesh3dFault> {
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.begin_close(lease)
+}
+
+pub fn mesh3d_close_step(lease: Mesh3dLease) -> Result<bool, Mesh3dFault> {
+    mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.close_step(lease.slot, lease.epoch)
+}
+
+pub fn mesh3d_terminal_is_empty(lease: Mesh3dLease) -> bool {
+    mesh3d_authority().lock().map_or(false, |authority| authority.slots.get(usize::from(lease.slot)).and_then(Option::as_ref).is_none_or(|slot| slot.epoch != lease.epoch))
+}
+
+impl Mesh3dLease {
+    pub fn generation(self) -> u64 {
+        self.generation
+    }
+
+    pub fn revision(self) -> u64 {
+        self.revision
+    }
+
+    pub fn schema(self) -> Result<Mesh3dSchema, Mesh3dFault> {
+        Ok(mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.ready(self)?.schema)
+    }
+
+    pub fn aabb(self) -> Result<([f32; 3], [f32; 3]), Mesh3dFault> {
+        let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+        let owner = authority.ready(self)?;
+        Ok((owner.aabb_min, owner.aabb_max))
+    }
+
+    pub fn cursor(self, field: Mesh3dField) -> Result<Mesh3dItemCursor, Mesh3dFault> {
+        let len = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.ready(self)?.schema.field_items(field);
+        Ok(Mesh3dItemCursor { lease: self, field, index: 0, len })
+    }
+
+    pub fn page_cursor(self, field: Mesh3dField) -> Result<Mesh3dPageCursor, Mesh3dFault> {
+        let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+        let owner = authority.ready(self)?;
+        let start = owner.layout.offsets[field.index()];
+        let bytes = usize::try_from(owner.schema.field_items(field)).ok().and_then(|items| items.checked_mul(Mesh3dSchema::field_item_bytes(field))).ok_or(Mesh3dFault::ByteCapacity)?;
+        Ok(Mesh3dPageCursor { lease: self, absolute: start, end: start + bytes })
+    }
+
+    pub fn vec2(self, field: Mesh3dField, item: u32) -> Result<[f32; 2], Mesh3dFault> {
+        if field != Mesh3dField::Uvs {
+            return Err(Mesh3dFault::Schema);
+        }
+        let bytes = self.read::<8>(field, item)?;
+        Ok([f32::from_le_bytes(bytes[..4].try_into().expect("fixed mesh scalar")), f32::from_le_bytes(bytes[4..].try_into().expect("fixed mesh scalar"))])
+    }
+
+    pub fn vec3(self, field: Mesh3dField, item: u32) -> Result<[f32; 3], Mesh3dFault> {
+        if !matches!(field, Mesh3dField::Positions | Mesh3dField::Normals) {
+            return Err(Mesh3dFault::Schema);
+        }
+        let bytes = self.read::<12>(field, item)?;
+        Ok([f32::from_le_bytes(bytes[..4].try_into().expect("fixed mesh scalar")), f32::from_le_bytes(bytes[4..8].try_into().expect("fixed mesh scalar")), f32::from_le_bytes(bytes[8..].try_into().expect("fixed mesh scalar"))])
+    }
+
+    pub fn vec4(self, field: Mesh3dField, item: u32) -> Result<[f32; 4], Mesh3dFault> {
+        if field != Mesh3dField::Colors {
+            return Err(Mesh3dFault::Schema);
+        }
+        let bytes = self.read::<16>(field, item)?;
+        Ok(std::array::from_fn(|index| f32::from_le_bytes(bytes[index * 4..index * 4 + 4].try_into().expect("fixed mesh scalar"))))
+    }
+
+    pub fn edge(self, item: u32) -> Result<[[f32; 3]; 2], Mesh3dFault> {
+        let bytes = self.read::<24>(Mesh3dField::Edges, item)?;
+        let values: [f32; 6] = std::array::from_fn(|index| f32::from_le_bytes(bytes[index * 4..index * 4 + 4].try_into().expect("fixed mesh scalar")));
+        Ok([[values[0], values[1], values[2]], [values[3], values[4], values[5]]])
+    }
+
+    pub fn u32(self, field: Mesh3dField, item: u32) -> Result<u32, Mesh3dFault> {
+        if !matches!(field, Mesh3dField::Indices | Mesh3dField::FaceIds | Mesh3dField::VertexIds | Mesh3dField::EdgeIds) {
+            return Err(Mesh3dFault::Schema);
+        }
+        Ok(u32::from_le_bytes(self.read::<4>(field, item)?))
+    }
+
+    fn read<const N: usize>(self, field: Mesh3dField, item: u32) -> Result<[u8; N], Mesh3dFault> {
+        mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?.ready(self)?.item_bytes(field, item)
+    }
+}
+
+pub struct Mesh3dItemCursor {
+    lease: Mesh3dLease,
+    field: Mesh3dField,
+    index: u32,
+    len: u32,
+}
+
+pub struct Mesh3dPageCursor {
+    lease: Mesh3dLease,
+    absolute: usize,
+    end: usize,
+}
+
+impl Mesh3dPageCursor {
+    pub fn next<R>(&mut self, read: impl FnOnce(&[u8]) -> R) -> Result<Option<R>, Mesh3dFault> {
+        if self.absolute == self.end {
+            return Ok(None);
+        }
+        let authority = mesh3d_authority().lock().map_err(|_| Mesh3dFault::Closing)?;
+        let owner = authority.ready(self.lease)?;
+        let page_index = self.absolute / MESH3D_PAGE_BYTES;
+        let page_offset = self.absolute % MESH3D_PAGE_BYTES;
+        let page = owner.pages.get(page_index).and_then(Option::as_ref).ok_or(Mesh3dFault::Incomplete)?;
+        let count = (MESH3D_PAGE_BYTES - page_offset).min(self.end - self.absolute);
+        let result = read(&page.bytes[page_offset..page_offset + count]);
+        self.absolute += count;
+        Ok(Some(result))
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Mesh3dItem {
+    Vec2([f32; 2]),
+    Vec3([f32; 3]),
+    Vec4([f32; 4]),
+    Edge([[f32; 3]; 2]),
+    U32(u32),
+}
+
+impl Mesh3dItemCursor {
+    pub fn next(&mut self) -> Result<Option<Mesh3dItem>, Mesh3dFault> {
+        if self.index == self.len {
+            return Ok(None);
+        }
+        let bytes = match self.field {
+            Mesh3dField::Positions | Mesh3dField::Normals => {
+                let bytes = self.lease.read::<12>(self.field, self.index)?;
+                Mesh3dItem::Vec3([f32::from_le_bytes(bytes[..4].try_into().expect("fixed mesh scalar")), f32::from_le_bytes(bytes[4..8].try_into().expect("fixed mesh scalar")), f32::from_le_bytes(bytes[8..].try_into().expect("fixed mesh scalar"))])
+            }
+            Mesh3dField::Edges => {
+                let bytes = self.lease.read::<24>(self.field, self.index)?;
+                let mut values = [0.0; 6];
+                for (index, value) in values.iter_mut().enumerate() {
+                    *value = f32::from_le_bytes(bytes[index * 4..index * 4 + 4].try_into().expect("fixed mesh scalar"));
+                }
+                Mesh3dItem::Edge([[values[0], values[1], values[2]], [values[3], values[4], values[5]]])
+            }
+            Mesh3dField::Uvs => {
+                let bytes = self.lease.read::<8>(self.field, self.index)?;
+                Mesh3dItem::Vec2([f32::from_le_bytes(bytes[..4].try_into().expect("fixed mesh scalar")), f32::from_le_bytes(bytes[4..].try_into().expect("fixed mesh scalar"))])
+            }
+            Mesh3dField::Colors => {
+                let bytes = self.lease.read::<16>(self.field, self.index)?;
+                Mesh3dItem::Vec4(std::array::from_fn(|index| f32::from_le_bytes(bytes[index * 4..index * 4 + 4].try_into().expect("fixed mesh scalar"))))
+            }
+            Mesh3dField::Indices | Mesh3dField::FaceIds | Mesh3dField::VertexIds | Mesh3dField::EdgeIds => Mesh3dItem::U32(u32::from_le_bytes(self.lease.read::<4>(self.field, self.index)?)),
+        };
+        self.index += 1;
+        Ok(Some(bytes))
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Mesh3d {
     pub positions: Vec<f32>,
@@ -471,14 +1138,17 @@ pub fn ray_aabb_slab(origin: Vec3, dir: Vec3, min: [f32; 3], max: [f32; 3]) -> O
     Some(if t_min >= 0.0 { t_min } else { t_max })
 }
 
-pub fn ray_pick_instance(origin: Vec3, dir: Vec3, mesh: &Mesh3d, instance: &Instance3d) -> Option<f32> {
-    let (world_min, world_max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
+pub fn ray_pick_instance(origin: Vec3, dir: Vec3, mesh: Mesh3dLease, instance: &Instance3d) -> Option<f32> {
+    let (min, max) = mesh.aabb().ok()?;
+    let (world_min, world_max) = transform_aabb(instance.model, min, max);
     ray_aabb_slab(origin, dir, world_min, world_max)?;
     let mut best = None;
-    for tri in mesh.indices.as_chunks::<3>().0 {
-        let a = instance.model.transform_point_m(vertex(mesh, tri[0]));
-        let b = instance.model.transform_point_m(vertex(mesh, tri[1]));
-        let c = instance.model.transform_point_m(vertex(mesh, tri[2]));
+    let triangles = mesh.schema().ok()?.indices / 3;
+    for triangle in 0..triangles {
+        let tri = mesh_triangle(mesh, triangle)?;
+        let a = instance.model.transform_point_m(vertex(mesh, tri[0])?);
+        let b = instance.model.transform_point_m(vertex(mesh, tri[1])?);
+        let c = instance.model.transform_point_m(vertex(mesh, tri[2])?);
         if let Some(t) = ray_triangle(origin, dir, a, b, c) {
             best = Some(best.map_or(t, |prev: f32| prev.min(t)));
         }
@@ -495,14 +1165,17 @@ pub struct RayMeshHit {
     pub normal: Vec3,
 }
 
-pub fn ray_pick_mesh_detail(origin: Vec3, dir: Vec3, mesh: &Mesh3d, instance: &Instance3d) -> Option<RayMeshHit> {
-    let (world_min, world_max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
+pub fn ray_pick_mesh_detail(origin: Vec3, dir: Vec3, mesh: Mesh3dLease, instance: &Instance3d) -> Option<RayMeshHit> {
+    let (min, max) = mesh.aabb().ok()?;
+    let (world_min, world_max) = transform_aabb(instance.model, min, max);
     ray_aabb_slab(origin, dir, world_min, world_max)?;
     let mut best: Option<RayMeshHit> = None;
-    for (triangle_index, tri) in mesh.indices.as_chunks::<3>().0.iter().enumerate() {
-        let a = instance.model.transform_point_m(vertex(mesh, tri[0]));
-        let b = instance.model.transform_point_m(vertex(mesh, tri[1]));
-        let c = instance.model.transform_point_m(vertex(mesh, tri[2]));
+    let triangles = mesh.schema().ok()?.indices / 3;
+    for triangle in 0..triangles {
+        let tri = mesh_triangle(mesh, triangle)?;
+        let a = instance.model.transform_point_m(vertex(mesh, tri[0])?);
+        let b = instance.model.transform_point_m(vertex(mesh, tri[1])?);
+        let c = instance.model.transform_point_m(vertex(mesh, tri[2])?);
         if let Some((t, u, v)) = ray_triangle_barycentric(origin, dir, a, b, c) {
             if best.as_ref().is_none_or(|hit| t < hit.distance) {
                 let point = origin.add_m(dir.scale_m(t));
@@ -512,7 +1185,7 @@ pub fn ray_pick_mesh_detail(origin: Vec3, dir: Vec3, mesh: &Mesh3d, instance: &I
                 if normal.length_m() > 1e-6 {
                     normal = normal.normalize_m();
                 }
-                best = Some(RayMeshHit { distance: t, triangle_index, bary_u: u, bary_v: v, point, normal });
+                best = Some(RayMeshHit { distance: t, triangle_index: triangle as usize, bary_u: u, bary_v: v, point, normal });
             }
         }
     }
@@ -546,19 +1219,16 @@ fn ray_triangle_barycentric(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) 
     }
 }
 
-pub fn interpolate_mesh_uv(mesh: &Mesh3d, triangle_index: usize, bary_u: f32, bary_v: f32) -> Option<(f32, f32)> {
-    if mesh.uvs.len() < 6 {
+pub fn interpolate_mesh_uv(mesh: Mesh3dLease, triangle_index: usize, bary_u: f32, bary_v: f32) -> Option<(f32, f32)> {
+    let schema = mesh.schema().ok()?;
+    if schema.uvs == 0 {
         return None;
     }
-    let base = triangle_index * 3;
-    let tri = mesh.indices.get(base..base + 3)?;
-    let uv = |index: u32| {
-        let i = index as usize * 2;
-        (mesh.uvs[i], mesh.uvs[i + 1])
-    };
-    let (u0, v0) = uv(tri[0]);
-    let (u1, v1) = uv(tri[1]);
-    let (u2, v2) = uv(tri[2]);
+    let tri = mesh_triangle(mesh, u32::try_from(triangle_index).ok()?)?;
+    let uv = |index: u32| mesh.vec2(Mesh3dField::Uvs, index).ok().map(|uv| (uv[0], uv[1]));
+    let (u0, v0) = uv(tri[0])?;
+    let (u1, v1) = uv(tri[1])?;
+    let (u2, v2) = uv(tri[2])?;
     let w = 1.0 - bary_u - bary_v;
     Some((u0 * w + u1 * bary_u + u2 * bary_v, v0 * w + v1 * bary_u + v2 * bary_v))
 }
@@ -706,7 +1376,7 @@ fn marquee_rect_bounds(polygon: &[[f32; 2]]) -> Option<[f32; 4]> {
 /// positionally and this crate must not restructure a signature consumed outside its own scope.
 #[allow(clippy::too_many_arguments, reason = "flat picking-context args match the two infinite/world/rs call sites; a params struct would be a cross-crate signature change out of this crate's scope")]
 pub fn screen_select_components(
-    mesh_lookup: &std::collections::HashMap<String, Mesh3d>,
+    mesh_lookup: &std::collections::HashMap<String, Mesh3dLease>,
     draws: &[SceneDraw3d],
     view_proj: Mat4,
     width: f32,
@@ -722,48 +1392,53 @@ pub fn screen_select_components(
     let local_polygon: Vec<[f32; 2]> = polygon.iter().map(|point| [point[0], point[1]]).collect();
     let rect_bounds = marquee_rect_bounds(&local_polygon);
     for draw in draws {
-        let Some(mesh) = mesh_lookup.get(&draw.mesh_key) else {
+        let Some(&mesh) = mesh_lookup.get(&draw.mesh_key) else {
             continue;
         };
+        let Ok(schema) = mesh.schema() else { continue };
         for instance in &draw.instances {
             if active_instance_id.is_some_and(|active| instance.id != active) {
                 continue;
             }
             match granularity {
-                "vertex" if !mesh.vertex_ids.is_empty() => {
-                    for (vertex_index, chunk) in mesh.positions.as_chunks::<3>().0.iter().enumerate() {
-                        let world = instance.model.transform_point_m(vec3_new_m(chunk[0], chunk[1], chunk[2]));
+                "vertex" if schema.vertex_ids != 0 => {
+                    for vertex_index in 0..schema.vertices {
+                        let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
+                        let world = instance.model.transform_point_m(vec3_new_m(point[0], point[1], point[2]));
                         let Some(screen) = project_point(view_proj, world, width, height) else {
                             continue;
                         };
                         let point = [screen[0], screen[1]];
                         let inside = marquee_contains_point(point, &local_polygon, rectangle, rect_bounds);
                         if inside {
-                            let id = mesh.vertex_ids.get(vertex_index).map_or_else(|| vertex_index.to_string(), |value| value.to_string());
+                            let id = mesh.u32(Mesh3dField::VertexIds, vertex_index).unwrap_or(vertex_index).to_string();
                             selected.insert(id);
                         }
                     }
                 }
-                "edge" if !mesh.edge_positions.is_empty() => {
-                    for (edge_index, chunk) in mesh.edge_positions.as_chunks::<6>().0.iter().enumerate() {
-                        let a_world = instance.model.transform_point_m(vec3_new_m(chunk[0], chunk[1], chunk[2]));
-                        let b_world = instance.model.transform_point_m(vec3_new_m(chunk[3], chunk[4], chunk[5]));
+                "edge" if schema.edges != 0 => {
+                    for edge_index in 0..schema.edges {
+                        let Ok(edge) = mesh.edge(edge_index) else { continue };
+                        let a_world = instance.model.transform_point_m(vec3_new_m(edge[0][0], edge[0][1], edge[0][2]));
+                        let b_world = instance.model.transform_point_m(vec3_new_m(edge[1][0], edge[1][1], edge[1][2]));
                         let (Some(a_screen), Some(b_screen)) = (project_point(view_proj, a_world, width, height), project_point(view_proj, b_world, width, height)) else {
                             continue;
                         };
                         if !marquee_segment_selected(a_screen, b_screen, &local_polygon, rectangle, rect_bounds, crossing) {
                             continue;
                         }
-                        let id = mesh.edge_ids.get(edge_index).map_or_else(|| edge_index.to_string(), |value| value.to_string());
+                        let id = mesh.u32(Mesh3dField::EdgeIds, edge_index).unwrap_or(edge_index).to_string();
                         selected.insert(id);
                     }
                 }
                 "face" => {
-                    for (tri_index, tri) in mesh.indices.as_chunks::<3>().0.iter().enumerate() {
+                    for tri_index in 0..schema.indices / 3 {
+                        let Some(tri) = mesh_triangle(mesh, tri_index) else { continue };
                         let mut screens = [[0.0_f32; 2]; 3];
                         let mut visible = 0usize;
                         for (slot, index) in tri.iter().enumerate() {
-                            let world = instance.model.transform_point_m(vertex(mesh, *index));
+                            let Some(point) = vertex(mesh, *index) else { continue };
+                            let world = instance.model.transform_point_m(point);
                             if let Some(screen) = project_point(view_proj, world, width, height) {
                                 screens[slot] = screen;
                                 visible += 1;
@@ -775,12 +1450,13 @@ pub fn screen_select_components(
                         if !marquee_triangle_selected(&screens, &local_polygon, rectangle, rect_bounds, crossing) {
                             continue;
                         }
-                        let id = mesh.face_ids.get(tri_index).map_or_else(|| tri_index.to_string(), |value| value.to_string());
+                        let id = mesh.u32(Mesh3dField::FaceIds, tri_index).unwrap_or(tri_index).to_string();
                         selected.insert(id);
                     }
                 }
                 _ => {
-                    let Some(projected) = projected_aabb_bounds(view_proj, instance.model, mesh.aabb_min, mesh.aabb_max, width, height) else {
+                    let Ok((min, max)) = mesh.aabb() else { continue };
+                    let Some(projected) = projected_aabb_bounds(view_proj, instance.model, min, max, width, height) else {
                         continue;
                     };
                     if aabb_overlaps_marquee(projected, &local_polygon, rectangle) {
@@ -793,9 +1469,14 @@ pub fn screen_select_components(
     selected.into_iter().collect()
 }
 
-fn vertex(mesh: &Mesh3d, index: u32) -> Vec3 {
-    let i = index as usize * 3;
-    vec3_new_m(mesh.positions[i], mesh.positions[i + 1], mesh.positions[i + 2])
+fn vertex(mesh: Mesh3dLease, index: u32) -> Option<Vec3> {
+    let point = mesh.vec3(Mesh3dField::Positions, index).ok()?;
+    Some(vec3_new_m(point[0], point[1], point[2]))
+}
+
+fn mesh_triangle(mesh: Mesh3dLease, triangle: u32) -> Option<[u32; 3]> {
+    let base = triangle.checked_mul(3)?;
+    Some([mesh.u32(Mesh3dField::Indices, base).ok()?, mesh.u32(Mesh3dField::Indices, base + 1).ok()?, mesh.u32(Mesh3dField::Indices, base + 2).ok()?])
 }
 
 pub fn ray_triangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Option<f32> {
@@ -920,19 +1601,21 @@ fn aabb_overlaps_marquee(projected: [f32; 4], polygon: &[[f32; 2]], rectangle: b
 /// 🎯️ Screen-space whole-instance picking within a marquee/lasso polygon; kept as a flat argument list rather
 /// than a params struct for the same cross-crate-scope reason as `screen_select_components`.
 #[allow(clippy::too_many_arguments, reason = "flat picking-context args match the two infinite/world/rs call sites; a params struct would be a cross-crate signature change out of this crate's scope")]
-pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, Mesh3d>, draws: &[SceneDraw3d], view_proj: Mat4, width: f32, height: f32, polygon: &[[f32; 2]], rectangle: bool, crossing: bool) -> Vec<String> {
+pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, Mesh3dLease>, draws: &[SceneDraw3d], view_proj: Mat4, width: f32, height: f32, polygon: &[[f32; 2]], rectangle: bool, crossing: bool) -> Vec<String> {
     let rect_bounds = marquee_rect_bounds(polygon);
     let mut selected = Vec::new();
     for draw in draws {
-        let Some(mesh) = mesh_lookup.get(&draw.mesh_key) else {
+        let Some(&mesh) = mesh_lookup.get(&draw.mesh_key) else {
             continue;
         };
+        let Ok(schema) = mesh.schema() else { continue };
         for instance in &draw.instances {
             if !crossing {
                 let mut all_inside = true;
                 let mut any_visible = false;
-                for chunk in mesh.positions.as_chunks::<3>().0 {
-                    let world = instance.model.transform_point_m(vec3_new_m(chunk[0], chunk[1], chunk[2]));
+                for vertex_index in 0..schema.vertices {
+                    let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
+                    let world = instance.model.transform_point_m(vec3_new_m(point[0], point[1], point[2]));
                     if let Some(screen) = project_point(view_proj, world, width, height) {
                         any_visible = true;
                         if !marquee_contains_point(screen, polygon, rectangle, rect_bounds) {
@@ -946,18 +1629,21 @@ pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, M
                 }
                 continue;
             }
-            let Some(projected) = projected_aabb_bounds(view_proj, instance.model, mesh.aabb_min, mesh.aabb_max, width, height) else {
+            let Ok((min, max)) = mesh.aabb() else { continue };
+            let Some(projected) = projected_aabb_bounds(view_proj, instance.model, min, max, width, height) else {
                 continue;
             };
             if !aabb_overlaps_marquee(projected, polygon, rectangle) {
                 continue;
             }
             let mut covered = false;
-            for tri in mesh.indices.as_chunks::<3>().0 {
+            for triangle in 0..schema.indices / 3 {
+                let Some(tri) = mesh_triangle(mesh, triangle) else { continue };
                 let mut screens = [[0.0_f32; 2]; 3];
                 let mut visible = 0usize;
                 for (slot, &index) in tri.iter().enumerate() {
-                    let world = instance.model.transform_point_m(vertex(mesh, index));
+                    let Some(point) = vertex(mesh, index) else { continue };
+                    let world = instance.model.transform_point_m(point);
                     if let Some(screen) = project_point(view_proj, world, width, height) {
                         screens[slot] = screen;
                         visible += 1;
@@ -1182,6 +1868,59 @@ pub fn grid_placement_anchor(orbit_target: Vec3, datum: [f64; 3]) -> Vec3 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn paged_mesh_authority_preserves_order_aba_and_interrupted_close() {
+        let mut authority = Mesh3dAuthority::new();
+        let schema = Mesh3dSchema::triangle_mesh(3, 3);
+        let token = authority.begin(7, 11, schema).expect("fixed mesh claim");
+        assert!(authority.writing(token).unwrap().allocate_step());
+        for position in [[0.0f32, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] {
+            let mut bytes = [0; 12];
+            for (index, value) in position.into_iter().enumerate() {
+                bytes[index * 4..index * 4 + 4].copy_from_slice(&value.to_le_bytes());
+            }
+            authority.writing(token).unwrap().write(Mesh3dField::Positions, &bytes).unwrap();
+        }
+        for _ in 0..3 {
+            let mut bytes = [0; 12];
+            bytes[8..].copy_from_slice(&1.0f32.to_le_bytes());
+            authority.writing(token).unwrap().write(Mesh3dField::Normals, &bytes).unwrap();
+        }
+        for index in [0u32, 1, 2] {
+            authority.writing(token).unwrap().write(Mesh3dField::Indices, &index.to_le_bytes()).unwrap();
+        }
+        let lease = authority.seal(token).expect("terminal mesh publication");
+        let first = authority.ready(lease).unwrap().item_bytes::<12>(Mesh3dField::Positions, 0).unwrap();
+        assert_eq!(f32::from_le_bytes(first[..4].try_into().unwrap()), 0.0);
+        authority.begin_close(lease).unwrap();
+        assert!(!authority.close_step(lease.slot, lease.epoch).unwrap());
+        assert!(authority.close_step(lease.slot, lease.epoch).unwrap());
+        let replacement = authority.begin(8, 12, schema).expect("reused fixed slot");
+        assert_eq!(replacement.slot, token.slot);
+        assert_ne!(replacement.epoch, token.epoch);
+        assert_eq!(authority.ready(lease).unwrap_err(), Mesh3dFault::Stale);
+        authority.begin_close_write(replacement).unwrap();
+        assert!(authority.close_step(replacement.slot, replacement.epoch).unwrap());
+    }
+
+    #[test]
+    fn paged_mesh_authority_rejects_aggregate_page_plus_one_before_allocation() {
+        let mut authority = Mesh3dAuthority::new();
+        let vertices = ((MESH3D_OWNER_BYTE_CAPACITY / 28) / 3 * 3) as u32;
+        let indices = vertices;
+        let schema = Mesh3dSchema::triangle_mesh(vertices, indices);
+        let mut tokens = Vec::new();
+        for generation in 1..=MESH3D_AUTHORITY_PAGE_CAPACITY / MESH3D_OWNER_PAGE_CAPACITY {
+            tokens.push(authority.begin(generation as u64, 1, schema).expect("aggregate admitted mesh"));
+        }
+        assert_eq!(authority.begin(99, 1, Mesh3dSchema::triangle_mesh(3, 3)).unwrap_err(), Mesh3dFault::PageCapacity);
+        for token in tokens {
+            authority.begin_close_write(token).unwrap();
+            assert!(authority.close_step(token.slot, token.epoch).unwrap());
+        }
+        assert_eq!(authority.reserved_pages, 0);
+    }
 
     fn test_box_mesh() -> Mesh3d {
         Mesh3d::from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])

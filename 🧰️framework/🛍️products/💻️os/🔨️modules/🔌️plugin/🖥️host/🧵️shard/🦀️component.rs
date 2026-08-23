@@ -34,7 +34,8 @@ use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, Packag
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
 use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobCommitCandidate, JobOperation, JobPublication, JobStepOutcome, JobTurn, Payload, ShardTransport};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId, Watchdog};
-use std::collections::{BTreeSet, HashMap, VecDeque};
+use std::collections::{BTreeSet, HashMap};
+use std::mem::size_of;
 use std::sync::Arc;
 #[cfg(test)]
 use std::sync::Mutex;
@@ -291,7 +292,7 @@ pub struct ShardLoop {
     /// Completed` would reach the guest's `RequestRegistry` (`job == req.0`, see `🌐host/
     /// 🦀️component.rs`'s `Host::spawn_job` / `⚛️reactor/🦀️component.rs`'s `Event::JobCompleted`
     /// routing step).
-    pending_completions: HashMap<u64, Vec<Event>>,
+    terminal_authorities: FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
     /// ⚖️ terra-shard-grants: the budget from the LAST [`ShardFrame::Grant`] seen for each actor —
     /// replaces the deleted `budget_for` closure / `TURN_BUDGET` / `JOB_STEP_BUDGET` constants.
     /// Read by [`Self::granted_budget`]; an actor with no entry (never granted) falls back to the
@@ -307,11 +308,206 @@ pub struct ShardLoop {
     /// field was added). Read by [`Self::actor_lane`]; an actor with no entry (never seen an
     /// envelope) falls back to Maintenance — same fallback convention as [`Self::granted_budget`].
     actor_lanes: HashMap<u64, semio_framework_actor::Lane>,
+    pending_interactive: FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
+    pending_background: FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
+    rejected_frame: Option<(u64, Vec<u8>)>,
+    terminal_frames: FixedOwnerRing<Vec<u8>, SHARD_DEFERRED_ITEMS>,
+    terminal_frame_overflow: FixedOwnerRing<TerminalFrameOverflow, 1>,
+    next_frame_epoch: u64,
+    last_drive_consumed_epoch: Option<u64>,
 }
+
+pub enum ShardDrive {
+    Idle { consumed_epoch: Option<u64> },
+    MoreWork { consumed_epoch: Option<u64> },
+    Blocked,
+    Fault { error: PluginHostError, consumed_epoch: Option<u64>, work_remains: bool, terminal_frame: bool, terminal_overflow: bool },
+}
+
+//#region 🚦DeferredOwnerRing
+pub(super) const SHARD_DEFERRED_ITEMS: usize = 256;
+pub(super) const SHARD_DEFERRED_BYTES: usize = 16 * 1024 * 1024;
+pub(super) const SHARD_FRAME_MAX_BYTES: usize = SHARD_DEFERRED_BYTES;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) struct OwnerKey {
+    slot: usize,
+    generation: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AdmissionLimit {
+    Items,
+    Bytes,
+}
+
+#[derive(Debug)]
+pub(super) struct AdmissionRejected<T> {
+    pub limit: AdmissionLimit,
+    pub owner: T,
+}
+
+struct OwnerSlot<T> {
+    generation: u64,
+    bytes: usize,
+    owner: T,
+}
+
+pub(super) struct FixedOwnerRing<T, const N: usize> {
+    slots: [Option<OwnerSlot<T>>; N],
+    head: usize,
+    tail: usize,
+    len: usize,
+    bytes: usize,
+    byte_capacity: usize,
+    next_generation: u64,
+}
+
+impl<T, const N: usize> FixedOwnerRing<T, N> {
+    pub fn new(byte_capacity: usize) -> Self {
+        Self { slots: std::array::from_fn(|_| None), head: 0, tail: 0, len: 0, bytes: 0, byte_capacity, next_generation: 1 }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    #[cfg(test)]
+    fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn can_admit(&self, items: usize, bytes: usize) -> Result<(), AdmissionLimit> {
+        if items > N.saturating_sub(self.len) {
+            return Err(AdmissionLimit::Items);
+        }
+        if bytes > self.byte_capacity.saturating_sub(self.bytes) {
+            return Err(AdmissionLimit::Bytes);
+        }
+        Ok(())
+    }
+
+    pub fn try_push(&mut self, owner: T, bytes: usize) -> Result<OwnerKey, AdmissionRejected<T>> {
+        if self.len == N {
+            return Err(AdmissionRejected { limit: AdmissionLimit::Items, owner });
+        }
+        if bytes > self.byte_capacity.saturating_sub(self.bytes) {
+            return Err(AdmissionRejected { limit: AdmissionLimit::Bytes, owner });
+        }
+        let generation = self.next_generation;
+        self.next_generation = self.next_generation.wrapping_add(1).max(1);
+        let slot = self.tail;
+        debug_assert!(self.slots[slot].is_none());
+        self.slots[slot] = Some(OwnerSlot { generation, bytes, owner });
+        self.tail = (self.tail + 1) % N;
+        self.len += 1;
+        self.bytes += bytes;
+        Ok(OwnerKey { slot, generation })
+    }
+
+    pub fn pop_front(&mut self) -> Option<(OwnerKey, T)> {
+        if self.len == 0 {
+            return None;
+        }
+        let slot = self.head;
+        let entry = self.slots[slot].take().expect("FixedOwnerRing: occupied head invariant");
+        self.head = (self.head + 1) % N;
+        self.len -= 1;
+        self.bytes -= entry.bytes;
+        Some((OwnerKey { slot, generation: entry.generation }, entry.owner))
+    }
+
+    pub fn front(&self) -> Option<&T> {
+        self.slots.get(self.head).and_then(Option::as_ref).map(|slot| &slot.owner)
+    }
+
+    #[cfg(test)]
+    fn contains(&self, key: OwnerKey) -> bool {
+        self.slots.get(key.slot).and_then(Option::as_ref).is_some_and(|slot| slot.generation == key.generation)
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct CancelCursor {
+    actor: u64,
+    after_job: Option<u64>,
+    owner_bytes: usize,
+}
+
+#[derive(Debug)]
+pub enum DeferredAuthority {
+    Register { actor: ActorId },
+    Unregister { actor: ActorId },
+    Event { actor: u64, event: Event },
+    JobStep { actor: u64, turn: JobTurn },
+    Cancel(CancelCursor),
+    Suspend { actor: u64, operation: JobOperation, applied_progress: u64 },
+    Resume { actor: u64, operation: JobOperation, checkpoint: JobCheckpoint },
+}
+
+fn split_frame_credit(raw_bytes: usize, items: usize, index: usize) -> usize {
+    if items == 0 {
+        return 0;
+    }
+    raw_bytes / items + usize::from(index < raw_bytes % items)
+}
+
+enum FrameAdmissionError {
+    Full { limit: AdmissionLimit, bytes: Vec<u8> },
+    TerminalCapacity { bytes: Vec<u8>, error: PluginHostError },
+    Fault(PluginHostError),
+}
+
+#[derive(Debug)]
+struct TerminalFrameOverflow {
+    epoch: u64,
+    bytes: Vec<u8>,
+}
+
+fn defer_completion(
+    interactive: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
+    background: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
+    terminal: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>,
+    lane: semio_framework_actor::Lane,
+    actor: u64,
+    event: Event,
+) -> Result<(), PluginHostError> {
+    let bytes = size_of::<Event>()
+        + match &event {
+            Event::JobCompleted { result: RequestOutcome::Ok(bytes) | RequestOutcome::Err(bytes), .. } => bytes.capacity(),
+            _ => unreachable!("ShardLoop: only job completions use generated authority admission"),
+        };
+    let ring = if ShardLoop::is_high_priority_lane(lane) { interactive } else { background };
+    match ring.try_push(DeferredAuthority::Event { actor, event }, bytes) {
+        Ok(_) => Ok(()),
+        Err(rejected) => {
+            let _ = terminal.try_push(rejected.owner, bytes).expect("ShardLoop: terminal completion ring owns every rejected completion");
+            Err(PluginHostError::Plugin(format!("ShardLoop: completion {:?} capacity retained one terminal event for actor {actor}", rejected.limit)))
+        }
+    }
+}
+//#endregion 🚦DeferredOwnerRing
 
 impl ShardLoop {
     pub async fn new(runtime: Arc<GuestRuntimes>, transport: ShardTransports) -> Self {
-        Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), job_turns: HashMap::new(), job_placement: HashMap::new(), pending_completions: HashMap::new(), granted_budgets: HashMap::new(), actor_lanes: HashMap::new() }
+        Self {
+            runtime,
+            transport,
+            instances: HashMap::new(),
+            running_jobs: BTreeSet::new(),
+            job_turns: HashMap::new(),
+            job_placement: HashMap::new(),
+            terminal_authorities: FixedOwnerRing::new(SHARD_DEFERRED_BYTES.saturating_mul(SHARD_DEFERRED_ITEMS)),
+            granted_budgets: HashMap::new(),
+            actor_lanes: HashMap::new(),
+            pending_interactive: FixedOwnerRing::new(SHARD_DEFERRED_BYTES),
+            pending_background: FixedOwnerRing::new(SHARD_DEFERRED_BYTES),
+            rejected_frame: None,
+            terminal_frames: FixedOwnerRing::new(SHARD_FRAME_MAX_BYTES.saturating_mul(SHARD_DEFERRED_ITEMS)),
+            terminal_frame_overflow: FixedOwnerRing::new(usize::MAX),
+            next_frame_epoch: 1,
+            last_drive_consumed_epoch: None,
+        }
     }
 
     /// ⚖️ `actor`'s last [`ShardFrame::Grant`]ed budget — used for both turn execution and job
@@ -373,7 +569,6 @@ impl ShardLoop {
         self.running_jobs.retain(|&(job_actor, _)| job_actor != actor.0);
         self.job_turns.retain(|&(job_actor, _), _| job_actor != actor.0);
         self.job_placement.retain(|&(job_actor, _), _| job_actor != actor.0);
-        self.pending_completions.remove(&actor.0);
         self.actor_lanes.remove(&actor.0);
     }
 
@@ -391,6 +586,63 @@ impl ShardLoop {
         self.pump_primed(None).await
     }
 
+    /// 🤝️ Admits at most one transport frame and grants exactly one actor turn or one job-step
+    /// opportunity. All other decoded authorities remain owned by this shard for a later grant.
+    pub async fn drive_one(&mut self) -> ShardDrive {
+        self.last_drive_consumed_epoch = None;
+        match self.pump_primed(None).await {
+            Ok(_) if self.has_pending_work() => ShardDrive::MoreWork { consumed_epoch: self.last_drive_consumed_epoch },
+            Ok(_) => ShardDrive::Idle { consumed_epoch: self.last_drive_consumed_epoch },
+            Err(error) => {
+                ShardDrive::Fault { error, consumed_epoch: self.last_drive_consumed_epoch, work_remains: self.has_pending_work(), terminal_frame: !self.terminal_frames.is_empty(), terminal_overflow: !self.terminal_frame_overflow.is_empty() }
+            }
+        }
+    }
+
+    pub fn has_pending_work(&self) -> bool {
+        !self.pending_interactive.is_empty() || !self.pending_background.is_empty() || self.rejected_frame.is_some() || !self.running_jobs.is_empty()
+    }
+
+    pub fn take_terminal_frame(&mut self) -> Option<Vec<u8>> {
+        self.terminal_frames.pop_front().map(|(_, bytes)| bytes)
+    }
+
+    pub(super) fn take_terminal_frame_and_rearm(&mut self) -> (Option<Vec<u8>>, Option<u64>) {
+        let frame = self.terminal_frames.pop_front().map(|(_, bytes)| bytes);
+        if frame.is_none() {
+            return (None, None);
+        }
+        let Some(overflow) = self.terminal_frame_overflow.front() else {
+            return (frame, None);
+        };
+        if self.terminal_frames.can_admit(1, overflow.bytes.len()).is_err() {
+            return (frame, None);
+        }
+        let (_, overflow) = self.terminal_frame_overflow.pop_front().expect("ShardLoop: terminal overflow front");
+        let epoch = overflow.epoch;
+        let byte_len = overflow.bytes.len();
+        let _ = self.terminal_frames.try_push(overflow.bytes, byte_len).expect("ShardLoop: freed terminal capacity owns one overflow frame");
+        (frame, Some(epoch))
+    }
+
+    pub fn take_terminal_completion(&mut self) -> Option<(u64, Event)> {
+        if !matches!(self.terminal_authorities.front(), Some(DeferredAuthority::Event { .. })) {
+            return None;
+        }
+        let (_, DeferredAuthority::Event { actor, event }) = self.terminal_authorities.pop_front().expect("ShardLoop: terminal completion front") else { unreachable!("ShardLoop: terminal completion kind changed") };
+        Some((actor, event))
+    }
+
+    pub fn take_terminal_authority(&mut self) -> Option<DeferredAuthority> {
+        self.terminal_authorities.pop_front().map(|(_, authority)| authority)
+    }
+
+    fn claim_frame_epoch(&mut self) -> u64 {
+        let epoch = self.next_frame_epoch;
+        self.next_frame_epoch = self.next_frame_epoch.checked_add(1).expect("ShardLoop: ingress epoch exhausted");
+        epoch
+    }
+
     /// 🅿️ Same as [`Self::pump`], but takes one frame's bytes that were ALREADY read off the
     /// transport (e.g. by `ShardExecutor`'s blocking park on `ThreadTransport::recv_deadline`)
     /// before the normal non-blocking drain loop continues — lets a blocking wait and this
@@ -398,94 +650,83 @@ impl ShardLoop {
     /// `primed: None` (what [`Self::pump`] passes) behaves identically to the pre-`ShardFrame`
     /// `pump()`.
     pub async fn pump_primed(&mut self, primed: Option<Vec<u8>>) -> Result<usize, PluginHostError> {
-        // 💼️ Completions queued by the PREVIOUS `pump()` call (bottom of this function) are
-        // delivered as ordinary events on THIS call — the same channel envelope-sourced events
-        // arrive on, so the originating actor's `execute_turn` sees `Event::JobCompleted` exactly
-        // like any other inbound event, with no separate delivery path.
-        let mut events_by_actor: HashMap<u64, Vec<Event>> = std::mem::take(&mut self.pending_completions);
-        let mut jobs_by_actor: Vec<(u64, JobTurn)> = Vec::new();
-
-        if let Some(bytes) = primed {
-            self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor).await?;
-        }
-        while let Some(bytes) = self.transport.recv().await {
-            self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor).await?;
-        }
-
-        //#region 🚦LanePriority (terra-shard-lane piece 1)
-        // 🚦 Two priority queues, classified by `Self::actor_lane` — `pump_primed` drains
-        // `interactive_queue` EXHAUSTIVELY before taking any grant off `background_queue`, closing
-        // the head-of-line blocking `📓️terra-shard-lane-report.md` diagnosed: a shard holding both
-        // an interactive actor and dozens of CPU-bound background actors used to run whichever
-        // grant this initial drain happened to collect first (`HashMap` iteration order — never
-        // meaningfully "arrival order" to begin with), with nothing to prefer the interactive one.
-        let mut interactive_queue: VecDeque<u64> = VecDeque::new();
-        let mut background_queue: VecDeque<u64> = VecDeque::new();
-        let mut queued: BTreeSet<u64> = BTreeSet::new();
-        for &actor_id in events_by_actor.keys() {
-            self.enqueue_by_lane(actor_id, &mut interactive_queue, &mut background_queue, &mut queued).await;
-        }
-
-        let mut driven = 0usize;
-        loop {
-            while let Some(actor_id) = interactive_queue.pop_front() {
-                queued.remove(&actor_id);
-                self.execute_turn_for(actor_id, &mut events_by_actor, &mut driven).await?;
-            }
-            let Some(actor_id) = background_queue.pop_front() else { break };
-            queued.remove(&actor_id);
-            self.execute_turn_for(actor_id, &mut events_by_actor, &mut driven).await?;
-
-            // 🚦 Re-check the transport BETWEEN background turns (never blocks past what is
-            // CURRENTLY buffered — same non-blocking contract `self.transport.recv()` has
-            // everywhere else in this file): an interactive grant the kernel pushed onto the wire
-            // WHILE this shard was busy running a background turn must jump the remaining
-            // background queue at THIS turn boundary, not wait for the next `pump()` call.
-            while let Some(bytes) = self.transport.recv().await {
-                self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor).await?;
-            }
-            let newly_arrived: Vec<u64> = events_by_actor.keys().copied().filter(|actor_id| !queued.contains(actor_id)).collect();
-            for actor_id in newly_arrived {
-                self.enqueue_by_lane(actor_id, &mut interactive_queue, &mut background_queue, &mut queued).await;
+        let has_deferred = !self.pending_interactive.is_empty() || !self.pending_background.is_empty() || !self.running_jobs.is_empty();
+        let mut frame = self.rejected_frame.take();
+        if frame.is_none() {
+            if let Some(bytes) = primed {
+                frame = Some((self.claim_frame_epoch(), bytes));
             }
         }
-        //#endregion 🚦LanePriority
-
-        // 💼️ Step every job still live — both envelope-driven (`Payload::JobStep`, explicit
-        // external re-arming) and self-tracked (`running_jobs`, admitted from a `SpawnJob` effect
-        // THIS pump or an earlier one — including one admitted just above, in the SAME pump call
-        // that started it). ONE `step_job` per job per `pump()`, deliberately never a loop to
-        // completion here (that is `PluginInstanceHandle::run_job_to_completion`'s DIFFERENT,
-        // deliberately-synchronous relay for the three hardcoded io/infer kinds) — a job needing N
-        // steps needs N `pump()` calls, which is the entire resumability proof.
-        let mut to_step_by_actor: std::collections::BTreeMap<u64, JobTurn> = jobs_by_actor.into_iter().collect();
-        for &pair in &self.running_jobs {
-            let Some(turn) = self.job_turns.get(&pair).copied() else { continue };
-            let replace = to_step_by_actor.get(&pair.0).map(|active| matches!(self.job_placement.get(&pair), Some(JobPlacement::Exclusive)) && !matches!(self.job_placement.get(&(pair.0, active.job)), Some(JobPlacement::Exclusive))).unwrap_or(true);
-            if replace {
-                to_step_by_actor.insert(pair.0, turn);
+        if frame.is_none() && !has_deferred {
+            if let Some(bytes) = self.transport.recv().await {
+                frame = Some((self.claim_frame_epoch(), bytes));
             }
         }
-        let mut to_step: Vec<(u64, JobTurn)> = to_step_by_actor.into_iter().collect();
-        // 🚦 MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `Exclusive`-placed jobs step FIRST this
-        // pump, ahead of `Inline`/`Isolated` ones — a stable sort, so relative order within each
-        // group is otherwise unchanged. This is the honest, IN-SHARD-ONLY approximation of
-        // "dedicated" access `ShardLoop` can give on its own (priority within this shard's single
-        // step phase); it is NOT cross-shard/thread isolation — that needs `Kernel::request_exclusive`
-        // plus a job-forwarding envelope between shards, neither of which exists yet (K1 report's
-        // lease-request). `job_placement` may not have an entry for an externally re-armed
-        // `Payload::JobStep` that this shard never admitted itself (no `SpawnJob` seen) — such a job
-        // sorts as non-exclusive, which is correct: this shard has no placement to honour for it.
-        to_step.sort_by_key(|(actor, turn)| if matches!(self.job_placement.get(&(*actor, turn.job)), Some(JobPlacement::Exclusive)) { 0u8 } else { 1u8 });
+        if let Some((epoch, bytes)) = frame {
+            if let Err(rejected) = self.consume_frame(bytes).await {
+                match rejected {
+                    FrameAdmissionError::Full { bytes, .. } => self.rejected_frame = Some((epoch, bytes)),
+                    FrameAdmissionError::TerminalCapacity { bytes, error } => {
+                        let byte_len = bytes.len();
+                        let _ = self.terminal_frame_overflow.try_push(TerminalFrameOverflow { epoch, bytes }, byte_len).expect("ShardLoop: one terminal overflow owner while drive is parked");
+                        return Err(error);
+                    }
+                    FrameAdmissionError::Fault(error) => {
+                        self.last_drive_consumed_epoch = Some(epoch);
+                        return Err(error);
+                    }
+                }
+            } else {
+                self.last_drive_consumed_epoch = Some(epoch);
+            }
+        }
 
-        for (actor_id, turn) in to_step {
+        let authority = if let Some((_, authority)) = self.pending_interactive.pop_front() {
+            Some((semio_framework_actor::Lane::Interactive, authority))
+        } else {
+            self.pending_background.pop_front().map(|(_, authority)| (semio_framework_actor::Lane::Maintenance, authority))
+        };
+        let mut selected_step = None;
+        if let Some((lane, authority)) = authority {
+            match authority {
+                DeferredAuthority::Register { actor: _ } => return Ok(1),
+                DeferredAuthority::Unregister { actor } => {
+                    if self.actor_generation_is_current(actor) {
+                        self.unregister(actor).await;
+                    }
+                    return Ok(1);
+                }
+                DeferredAuthority::Event { actor, event } => {
+                    if self.actor_generation_is_current(ActorId(actor)) {
+                        self.execute_turn_for(actor, event).await?;
+                    }
+                    return Ok(1);
+                }
+                DeferredAuthority::JobStep { actor, turn } => selected_step = Some((actor, turn)),
+                DeferredAuthority::Cancel(cursor) => {
+                    self.cancel_one(cursor, lane).await?;
+                    return Ok(1);
+                }
+                DeferredAuthority::Suspend { actor, operation, applied_progress } => {
+                    self.suspend_one(actor, operation, applied_progress).await?;
+                    return Ok(1);
+                }
+                DeferredAuthority::Resume { actor, operation, checkpoint } => {
+                    self.resume_one(actor, operation, checkpoint).await?;
+                    return Ok(1);
+                }
+            }
+        }
+        let selected_step = selected_step.or_else(|| self.running_jobs.iter().find_map(|pair| self.job_turns.get(pair).copied().map(|turn| (pair.0, turn))));
+        if let Some((actor_id, turn)) = selected_step {
             let job = turn.job;
             // 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
             let job_budget = job_budget_from_grant(self.granted_budget(actor_id).await);
-            let watchdog_stage = interactive_stage_for(self.actor_lane(actor_id).await);
+            let actor_lane = self.actor_lane(actor_id).await;
+            let watchdog_stage = interactive_stage_for(actor_lane);
             let Some(instance) = self.instances.get_mut(&actor_id) else {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
-                continue;
+                return Ok(1);
             };
             // 🐕️ P1c: same watchdog treatment as `Self::execute_turn_for` — see that call site's doc.
             let job_outcome = {
@@ -502,14 +743,14 @@ impl ShardLoop {
                             self.running_jobs.remove(&(actor_id, job));
                             self.job_turns.remove(&(actor_id, job));
                             self.job_placement.remove(&(actor_id, job));
-                            self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) });
+                            defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) })?;
                             JobStepOutcome::Complete { candidate: JobCommitCandidate { state, output } }
                         }
                         JobStep::Failed { error } => {
                             self.running_jobs.remove(&(actor_id, job));
                             self.job_turns.remove(&(actor_id, job));
                             self.job_placement.remove(&(actor_id, job));
-                            self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) });
+                            defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) })?;
                             JobStepOutcome::Fault { detail: error }
                         }
                     };
@@ -526,40 +767,28 @@ impl ShardLoop {
                     self.running_jobs.remove(&(actor_id, job));
                     self.job_turns.remove(&(actor_id, job));
                     self.job_placement.remove(&(actor_id, job));
-                    self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) });
+                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) })?;
                     ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await }
                 }
             };
             self.send_outcome(&outcome).await?;
-            driven += 1;
+            return Ok(1);
         }
 
-        Ok(driven)
-    }
-
-    /// 🚦 terra-shard-lane piece 1: classifies `actor_id` by [`Self::actor_lane`] into the
-    /// interactive or background queue and marks it `queued` — shared by [`Self::pump_primed`]'s
-    /// up-front classification and its between-background-turns re-check, so both go through the
-    /// exact same rule.
-    async fn enqueue_by_lane(&self, actor_id: u64, interactive: &mut VecDeque<u64>, background: &mut VecDeque<u64>, queued: &mut BTreeSet<u64>) {
-        queued.insert(actor_id);
-        if Self::is_high_priority_lane(self.actor_lane(actor_id).await) {
-            interactive.push_back(actor_id);
-        } else {
-            background.push_back(actor_id);
-        }
+        Ok(0)
     }
 
     /// 🚦 One actor's turn: takes its collected `events` out of `events_by_actor`, runs
     /// [`super::GuestRuntime::execute_turn`], admits `SpawnJob`/`CancelJob` effects, and sends the
     /// resulting [`ShardOutcome`]. A failed guest cancellation retires the actor before reuse.
-    async fn execute_turn_for(&mut self, actor_id: u64, events_by_actor: &mut HashMap<u64, Vec<Event>>, driven: &mut usize) -> Result<(), PluginHostError> {
-        let Some(events) = events_by_actor.remove(&actor_id) else { return Ok(()) };
+    async fn execute_turn_for(&mut self, actor_id: u64, event: Event) -> Result<(), PluginHostError> {
+        let events = [event];
         // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)`/`self.actor_lane(..)`
         // need `&self` (the whole struct), which conflicts with the `&mut self.instances` borrow
         // `instance` holds for the rest of this call (E0502).
         let turn_budget = turn_budget_from_grant(self.granted_budget(actor_id).await);
-        let watchdog_stage = interactive_stage_for(self.actor_lane(actor_id).await);
+        let actor_lane = self.actor_lane(actor_id).await;
+        let watchdog_stage = interactive_stage_for(actor_lane);
         let Some(instance) = self.instances.get_mut(&actor_id) else {
             self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
             return Ok(());
@@ -601,7 +830,14 @@ impl ShardLoop {
                                 self.job_placement.insert((actor_id, *job), *placement);
                             }
                             Err(fault) => {
-                                self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) });
+                                defer_completion(
+                                    &mut self.pending_interactive,
+                                    &mut self.pending_background,
+                                    &mut self.terminal_authorities,
+                                    actor_lane,
+                                    actor_id,
+                                    Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) },
+                                )?;
                             }
                         },
                         Effect::CancelJob { job } => {
@@ -616,7 +852,6 @@ impl ShardLoop {
                                         let message = format!("ShardLoop::pump: cancel-job {job} failed; actor {actor_id} retired: {}", turn_fault_message(&fault).await);
                                         self.unregister(ActorId(actor_id)).await;
                                         self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message }).await?;
-                                        *driven += 1;
                                         return Ok(());
                                     }
                                 }
@@ -645,35 +880,147 @@ impl ShardLoop {
                 // wire-shape-mismatch sites this packet's report flags (`🦀️component.rs`'s
                 // `execute_turn`, `⏳️runtime.rs`'s `convert_poll_success`): nothing was dropped
                 // here, there was simply nothing produced.
-                result: to_actor_turn_result(&TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::MoreWork, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }, 0, 0).await,
+                result: to_actor_turn_result(
+                    &TurnResult {
+                        ui_patches: Vec::new(),
+                        effects: Vec::new(),
+                        presence: Vec::new(),
+                        next_wake: None,
+                        status: semio_framework::kernel::TurnStatus::MoreWork,
+                        fuel_used: 0,
+                        command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                    },
+                    0,
+                    0,
+                )
+                .await,
             },
             Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await },
         };
         self.send_outcome(&outcome).await?;
-        *driven += 1;
         Ok(())
     }
 
     /// 📨️ Decodes one [`ShardFrame`] and dispatches it — the drain loop's per-frame body, factored
     /// out so both [`Self::pump_primed`]'s "one primed frame, then the non-blocking drain" shape
     /// and `ShardFrame::Grant`'s own per-envelope loop (below) can share it.
-    async fn consume_frame(&mut self, bytes: &[u8], events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, JobTurn)>) -> Result<(), PluginHostError> {
+    async fn consume_frame(&mut self, bytes: Vec<u8>) -> Result<(), FrameAdmissionError> {
+        if bytes.len() > SHARD_FRAME_MAX_BYTES {
+            let byte_len = bytes.len();
+            return Err(self.retain_terminal_frame(bytes, PluginHostError::Plugin(format!("ShardLoop: raw frame exceeds {SHARD_FRAME_MAX_BYTES} bytes ({byte_len}); exact bytes retained for terminal close"))));
+        }
         let mut pos = 0usize;
-        let frame = ShardFrame::pack_decode(bytes, &mut pos).await.map_err(|error| PluginHostError::Plugin(format!("ShardLoop::pump: malformed frame: {error:?}")))?;
+        let frame = match ShardFrame::pack_decode(&bytes, &mut pos).await {
+            Ok(frame) if pos == bytes.len() => frame,
+            Ok(_) => {
+                return Err(self.retain_terminal_frame(bytes, PluginHostError::Plugin("ShardLoop::pump: malformed frame has trailing bytes; exact bytes retained for terminal close".to_string())));
+            }
+            Err(error) => {
+                return Err(self.retain_terminal_frame(bytes, PluginHostError::Plugin(format!("ShardLoop::pump: malformed frame: {error:?}; exact bytes retained for terminal close"))));
+            }
+        };
+        if let Err(error) = self.validate_frame(&frame) {
+            return Err(self.retain_terminal_frame(bytes, error));
+        }
+        if let Err(limit) = self.preflight_frame(&frame, bytes.len()) {
+            let deferred_empty = self.pending_interactive.is_empty() && self.pending_background.is_empty();
+            if deferred_empty {
+                let byte_len = bytes.len();
+                return Err(self.retain_terminal_frame(bytes, PluginHostError::Plugin(format!("ShardLoop: one frame permanently exceeds deferred {limit:?} capacity ({byte_len} bytes); exact frame retained for terminal close"))));
+            }
+            return Err(FrameAdmissionError::Full { limit, bytes });
+        }
         match frame {
-            // 📌️ Wire-symmetry only — see `ShardFrame::Register`'s own doc for why an INCOMING
-            // `Register` has no local state to mutate (a `GuestInstance` cannot cross a transport).
-            ShardFrame::Register { actor: _ } => {}
-            ShardFrame::Unregister { actor } => self.unregister(actor).await,
+            ShardFrame::Register { actor } => self.enqueue_authority(semio_framework_actor::Lane::Maintenance, DeferredAuthority::Register { actor }, bytes.len()).map_err(FrameAdmissionError::Fault)?,
+            ShardFrame::Unregister { actor } => self.enqueue_authority(semio_framework_actor::Lane::Maintenance, DeferredAuthority::Unregister { actor }, bytes.len()).map_err(FrameAdmissionError::Fault)?,
             ShardFrame::Grant { actor, budget, envelopes } => {
+                if !self.actor_generation_is_current(actor) {
+                    return Ok(());
+                }
                 self.granted_budgets.insert(actor.0, budget);
-                for envelope in envelopes {
-                    self.dispatch_envelope(envelope, events_by_actor, jobs_by_actor).await?;
+                let item_count = envelopes.len();
+                for (index, envelope) in envelopes.into_iter().enumerate() {
+                    if let Err(error) = self.dispatch_envelope(envelope, split_frame_credit(bytes.len(), item_count, index)).await {
+                        return Err(self.retain_terminal_frame(bytes, error));
+                    }
                 }
             }
-            ShardFrame::Envelope(envelope) => self.dispatch_envelope(envelope, events_by_actor, jobs_by_actor).await?,
+            ShardFrame::Envelope(envelope) => {
+                if self.actor_generation_is_current(envelope.to) {
+                    if let Err(error) = self.dispatch_envelope(envelope, bytes.len()).await {
+                        return Err(self.retain_terminal_frame(bytes, error));
+                    }
+                }
+            }
         }
         Ok(())
+    }
+
+    fn retain_terminal_frame(&mut self, bytes: Vec<u8>, error: PluginHostError) -> FrameAdmissionError {
+        let byte_len = bytes.len();
+        match self.terminal_frames.try_push(bytes, byte_len) {
+            Ok(_) => FrameAdmissionError::Fault(error),
+            Err(rejected) => FrameAdmissionError::TerminalCapacity { bytes: rejected.owner, error },
+        }
+    }
+
+    fn preflight_frame(&self, frame: &ShardFrame, raw_bytes: usize) -> Result<(), AdmissionLimit> {
+        let envelopes: &[Envelope] = match frame {
+            ShardFrame::Grant { envelopes, .. } => envelopes,
+            ShardFrame::Envelope(envelope) => std::slice::from_ref(envelope),
+            ShardFrame::Register { .. } | ShardFrame::Unregister { .. } => return self.pending_background.can_admit(1, raw_bytes),
+        };
+        let mut interactive_items = 0usize;
+        let mut interactive_bytes = 0usize;
+        let mut background_items = 0usize;
+        let mut background_bytes = 0usize;
+        for (index, envelope) in envelopes.iter().enumerate() {
+            let credit = split_frame_credit(raw_bytes, envelopes.len(), index);
+            if Self::is_high_priority_lane(envelope.lane) {
+                interactive_items = interactive_items.saturating_add(1);
+                interactive_bytes = interactive_bytes.saturating_add(credit);
+            } else {
+                background_items = background_items.saturating_add(1);
+                background_bytes = background_bytes.saturating_add(credit);
+            }
+        }
+        self.pending_interactive.can_admit(interactive_items, interactive_bytes)?;
+        self.pending_background.can_admit(background_items, background_bytes)
+    }
+
+    fn validate_frame(&self, frame: &ShardFrame) -> Result<(), PluginHostError> {
+        let envelopes: &[Envelope] = match frame {
+            ShardFrame::Grant { envelopes, .. } => envelopes,
+            ShardFrame::Envelope(envelope) => std::slice::from_ref(envelope),
+            ShardFrame::Register { .. } | ShardFrame::Unregister { .. } => return Ok(()),
+        };
+        for envelope in envelopes {
+            match &envelope.payload {
+                Payload::Event { bytes } => {
+                    serde_json::from_slice::<Event>(bytes)?;
+                }
+                Payload::JobStep { turn } => self.validate_job_turn(envelope.to.0, *turn)?,
+                Payload::Suspend { .. } | Payload::Resume { .. } | Payload::Cancel { .. } => {}
+            }
+        }
+        Ok(())
+    }
+
+    fn enqueue_authority(&mut self, lane: semio_framework_actor::Lane, authority: DeferredAuthority, owner_bytes: usize) -> Result<(), PluginHostError> {
+        let result = if Self::is_high_priority_lane(lane) { self.pending_interactive.try_push(authority, owner_bytes) } else { self.pending_background.try_push(authority, owner_bytes) };
+        if let Err(rejected) = result {
+            let _ = self.terminal_authorities.try_push(rejected.owner, owner_bytes).expect("ShardLoop: terminal authority ring owns every rejected authority");
+            return Err(PluginHostError::Plugin(format!("ShardLoop: release admission rejected a preflighted {lane:?} authority at {:?}", rejected.limit)));
+        }
+        Ok(())
+    }
+
+    fn actor_generation_is_current(&self, actor: ActorId) -> bool {
+        let current = self.instances.keys().copied().find(|raw| {
+            let candidate = ActorId(*raw);
+            candidate.plugin_ordinal() == actor.plugin_ordinal() && candidate.kind_tag() == actor.kind_tag() && candidate.ordinal() == actor.ordinal()
+        });
+        current.is_none_or(|raw| raw == actor.0)
     }
 
     /// ✉️ One [`Envelope`]'s payload, dispatched — the exact per-envelope body `pump()` used to run
@@ -687,88 +1034,104 @@ impl ShardLoop {
     /// (not yet built, `🎠️kernel` is out of this packet's `path_scope`); JSON is what every OTHER
     /// wire boundary in this crate already uses (`IoRouter`/`EffectEventMarshal`), so this is a
     /// documented, consistent placeholder, not an invented one-off.
-    async fn dispatch_envelope(&mut self, envelope: Envelope, events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, JobTurn)>) -> Result<(), PluginHostError> {
+    async fn dispatch_envelope(&mut self, envelope: Envelope, owner_bytes: usize) -> Result<(), PluginHostError> {
+        if !self.actor_generation_is_current(envelope.to) {
+            return Ok(());
+        }
         // 🚦 terra-shard-lane piece 1: records the LAST-seen lane for `envelope.to`, covering both
         // standalone `ShardFrame::Envelope` frames and every envelope bundled inside a
         // `ShardFrame::Grant` (`Self::consume_frame`'s `Grant` arm calls this per envelope) — see
         // `Self::actor_lane`'s own doc for why this, not a `ShardFrame::Grant`-level field, is where
         // the lane classification comes from.
-        self.actor_lanes.insert(envelope.to.0, envelope.lane);
-        match envelope.payload {
-            Payload::Event { bytes: event_bytes } => {
-                let event: Event = serde_json::from_slice(&event_bytes)?;
-                events_by_actor.entry(envelope.to.0).or_default().push(event);
-            }
+        let actor = envelope.to.0;
+        let lane = envelope.lane;
+        self.actor_lanes.insert(actor, lane);
+        let authority = match envelope.payload {
+            Payload::Event { bytes: event_bytes } => DeferredAuthority::Event { actor, event: serde_json::from_slice(&event_bytes)? },
             Payload::JobStep { turn } => {
-                self.accept_job_turn(envelope.to.0, turn)?;
-                jobs_by_actor.push((envelope.to.0, turn));
+                self.accept_job_turn(actor, turn)?;
+                DeferredAuthority::JobStep { actor, turn }
             }
-            // 📸️ The runtime state and incoming applied-progress boundary are published together.
-            Payload::Suspend { operation, applied_progress } => {
-                let actor_id = envelope.to.0;
-                let outcome = match self.instances.get_mut(&actor_id) {
-                    None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend for actor {actor_id} which is not registered on this shard") },
-                    Some(instance) => match self.runtime.checkpoint(instance).await {
-                        Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, operation, checkpoint: JobCheckpoint { state, applied_progress } },
-                        Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend checkpoint failed for actor {actor_id}: {error}") },
-                    },
-                };
-                self.send_outcome(&outcome).await?;
-            }
-            // ▶️ Resume always restores the explicit operation-bound checkpoint.
-            Payload::Resume { operation, checkpoint } => {
-                let actor_id = envelope.to.0;
-                let outcome = match self.instances.get_mut(&actor_id) {
-                    None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume for actor {actor_id} which is not registered on this shard") },
-                    Some(instance) => match self.runtime.restore(instance, &checkpoint.state).await {
-                        Ok(()) => ShardOutcome::Resumed { actor: actor_id, operation },
-                        Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
-                    },
-                };
-                self.send_outcome(&outcome).await?;
-            }
-            // 🛑️ `Payload::Cancel { seq }` carries no doc comment of its own beyond the enum-level
-            // one (`✉️Envelope` region, `🎭️actor/🦀️component.rs`) and there is no OTHER caller
-            // anywhere in the tree to infer intent from — read and confirmed empty before writing
-            // this. Grouped with `Suspend`/`Resume` (actor lifecycle), not `JobStep` (single-job
-            // control, which already has its own guest-side path via `Effect::CancelJob`), so
-            // this is read as actor-level teardown: cancel every job in stable order, then retire
-            // the instance. The first failure is reported instead of claiming cancellation.
-            Payload::Cancel { seq: _ } => {
-                let actor_id = envelope.to.0;
-                if self.instances.contains_key(&actor_id) {
-                    let jobs: Vec<u64> = self.running_jobs.iter().filter(|&&(job_actor, _)| job_actor == actor_id).map(|&(_, job)| job).collect();
-                    let mut cancel_failure = None;
-                    if let Some(instance) = self.instances.get_mut(&actor_id) {
-                        for job in jobs {
-                            if let Err(fault) = self.runtime.cancel_job(instance, job).await {
-                                cancel_failure = Some((job, fault));
-                                break;
-                            }
-                        }
-                    }
-                    self.unregister(ActorId(actor_id)).await;
-                    let outcome = match cancel_failure {
-                        Some((job, fault)) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor cancel-job {job} failed before retirement: {}", turn_fault_message(&fault).await) },
-                        None => ShardOutcome::Cancelled { actor: actor_id },
-                    };
-                    self.send_outcome(&outcome).await?;
-                } else {
-                    self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Cancel for actor {actor_id} which is not registered on this shard") }).await?;
-                }
-            }
+            Payload::Suspend { operation, applied_progress } => DeferredAuthority::Suspend { actor, operation, applied_progress },
+            Payload::Resume { operation, checkpoint } => DeferredAuthority::Resume { actor, operation, checkpoint },
+            Payload::Cancel { seq: _ } => DeferredAuthority::Cancel(CancelCursor { actor, after_job: None, owner_bytes }),
+        };
+        self.enqueue_authority(lane, authority, owner_bytes)
+    }
+
+    async fn suspend_one(&mut self, actor_id: u64, operation: JobOperation, applied_progress: u64) -> Result<(), PluginHostError> {
+        if !self.actor_generation_is_current(ActorId(actor_id)) {
+            return Ok(());
         }
-        Ok(())
+        let outcome = match self.instances.get_mut(&actor_id) {
+            None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend for actor {actor_id} which is not registered on this shard") },
+            Some(instance) => match self.runtime.checkpoint(instance).await {
+                Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, operation, checkpoint: JobCheckpoint { state, applied_progress } },
+                Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend checkpoint failed for actor {actor_id}: {error}") },
+            },
+        };
+        self.send_outcome(&outcome).await
+    }
+
+    async fn resume_one(&mut self, actor_id: u64, operation: JobOperation, checkpoint: JobCheckpoint) -> Result<(), PluginHostError> {
+        if !self.actor_generation_is_current(ActorId(actor_id)) {
+            return Ok(());
+        }
+        let outcome = match self.instances.get_mut(&actor_id) {
+            None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume for actor {actor_id} which is not registered on this shard") },
+            Some(instance) => match self.runtime.restore(instance, &checkpoint.state).await {
+                Ok(()) => ShardOutcome::Resumed { actor: actor_id, operation },
+                Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
+            },
+        };
+        self.send_outcome(&outcome).await
+    }
+
+    async fn cancel_one(&mut self, cursor: CancelCursor, lane: semio_framework_actor::Lane) -> Result<(), PluginHostError> {
+        let actor_id = cursor.actor;
+        if !self.actor_generation_is_current(ActorId(actor_id)) {
+            return Ok(());
+        }
+        let job = self.running_jobs.range((actor_id, cursor.after_job.map_or(0, |job| job.saturating_add(1)))..).next().copied().filter(|(job_actor, _)| *job_actor == actor_id).map(|(_, job)| job);
+        if let Some(job) = job {
+            let result = match self.instances.get_mut(&actor_id) {
+                Some(instance) => self.runtime.cancel_job(instance, job).await,
+                None => {
+                    self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Cancel for actor {actor_id} lost its registered instance") }).await?;
+                    return Ok(());
+                }
+            };
+            if let Err(fault) = result {
+                self.unregister(ActorId(actor_id)).await;
+                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor cancel-job {job} failed before retirement: {}", turn_fault_message(&fault).await) }).await?;
+                return Ok(());
+            }
+            self.running_jobs.remove(&(actor_id, job));
+            self.job_turns.remove(&(actor_id, job));
+            self.job_placement.remove(&(actor_id, job));
+            let authority = DeferredAuthority::Cancel(CancelCursor { actor: actor_id, after_job: Some(job), owner_bytes: cursor.owner_bytes });
+            let result = if Self::is_high_priority_lane(lane) { self.pending_interactive.try_push(authority, cursor.owner_bytes) } else { self.pending_background.try_push(authority, cursor.owner_bytes) };
+            if let Err(rejected) = result {
+                let _ = self.terminal_authorities.try_push(rejected.owner, cursor.owner_bytes).expect("ShardLoop: terminal authority ring owns every rejected close cursor");
+                return Err(PluginHostError::Plugin(format!("ShardLoop: interrupted close handback rejected at {:?}; exact cursor retained", rejected.limit)));
+            }
+            return Ok(());
+        }
+        self.unregister(ActorId(actor_id)).await;
+        self.send_outcome(&ShardOutcome::Cancelled { actor: actor_id }).await
     }
 
     /// 🔐️ Validates a requested turn against the active replay cursor before publication.
     fn accept_job_turn(&mut self, actor: u64, turn: JobTurn) -> Result<(), PluginHostError> {
+        self.validate_job_turn(actor, turn)?;
         let key = (actor, turn.job);
-        match self.job_turns.get(&key) {
-            None if turn.step_sequence == 0 => {
-                self.job_turns.insert(key, turn);
-                Ok(())
-            }
+        self.job_turns.entry(key).or_insert(turn);
+        Ok(())
+    }
+
+    fn validate_job_turn(&self, actor: u64, turn: JobTurn) -> Result<(), PluginHostError> {
+        match self.job_turns.get(&(actor, turn.job)) {
+            None if turn.step_sequence == 0 => Ok(()),
             None => Err(PluginHostError::Plugin(format!("ShardLoop::job bridge: first step for actor {actor}, job {} had sequence {}, expected 0", turn.job, turn.step_sequence))),
             Some(active)
                 if active.operation.operation == turn.operation.operation
@@ -1746,7 +2109,15 @@ mod tests {
     //#region 🔖️BudgetBridge
     #[semio_framework_async_macros::async_test]
     async fn to_actor_turn_result_maps_status_and_carries_host_measured_usage() {
-        let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: Some(42), status: semio_framework::kernel::TurnStatus::Faulted(b"trap".to_vec()), fuel_used: 999, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
+        let kernel_result = TurnResult {
+            ui_patches: vec![],
+            effects: vec![],
+            presence: vec![],
+            next_wake: Some(42),
+            status: semio_framework::kernel::TurnStatus::Faulted(b"trap".to_vec()),
+            fuel_used: 999,
+            command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+        };
         let bridged = to_actor_turn_result(&kernel_result, 1234, 5678).await;
         assert_eq!(bridged.next_wake, Some(42));
         assert_eq!(bridged.status, semio_framework_actor::TurnStatus::Faulted { detail: b"trap".to_vec() }, "status must map 1:1, and the actor crate's struct-variant Faulted (Part A) must be what this bridge constructs");
@@ -1883,6 +2254,196 @@ mod tests {
             other => panic!("expected ShardOutcome::Turn{{status: MoreWork}}, got {other:?} — DeadlineExceeded must never become a Fault"),
         }
         assert!(shard.is_registered(actor).await, "the actor's instance must stay registered — an epoch interrupt does not lose state");
+    }
+
+    #[test]
+    fn fixed_owner_ring_hands_back_items_and_bytes_at_the_exact_boundary() {
+        let mut items = FixedOwnerRing::<u64, 2>::new(16);
+        items.try_push(11, 8).expect("first exact owner");
+        items.try_push(12, 8).expect("item and byte caps exactly full");
+        let rejected = items.try_push(13, 0).expect_err("capacity plus one");
+        assert_eq!(rejected.limit, AdmissionLimit::Items);
+        assert_eq!(rejected.owner, 13, "the exact rejected owner is handed back");
+        assert_eq!(items.pop_front().map(|(_, owner)| owner), Some(11));
+        assert_eq!(items.len(), 1, "one scheduling grant pops one FIFO owner and leaves the next retained");
+
+        let mut bytes = FixedOwnerRing::<u64, 2>::new(8);
+        bytes.try_push(21, 8).expect("exact byte cap");
+        let rejected = bytes.try_push(22, 1).expect_err("byte cap plus one");
+        assert_eq!(rejected.limit, AdmissionLimit::Bytes);
+        assert_eq!(rejected.owner, 22, "bytes plus one returns the exact authority");
+    }
+
+    #[test]
+    fn fixed_owner_ring_generation_rejects_an_aba_key_after_slot_reuse() {
+        let mut ring = FixedOwnerRing::<u64, 1>::new(8);
+        let stale = ring.try_push(31, 1).expect("first generation");
+        assert_eq!(ring.pop_front().map(|(_, owner)| owner), Some(31));
+        let current = ring.try_push(32, 1).expect("reused physical slot");
+        assert!(!ring.contains(stale), "an ABA-stale generation must not address current work");
+        assert!(ring.contains(current));
+    }
+
+    #[test]
+    fn interrupted_close_ring_releases_one_authority_per_grant() {
+        let mut closes = FixedOwnerRing::<CancelCursor, 2>::new(2 * size_of::<CancelCursor>());
+        closes.try_push(CancelCursor { actor: 41, after_job: None, owner_bytes: size_of::<CancelCursor>() }, size_of::<CancelCursor>()).expect("first close");
+        closes.try_push(CancelCursor { actor: 42, after_job: None, owner_bytes: size_of::<CancelCursor>() }, size_of::<CancelCursor>()).expect("second close");
+        assert!(closes.pop_front().is_some());
+        assert_eq!(closes.len(), 1, "one scheduling grant releases exactly one close authority");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn malformed_frame_terminalizes_once_without_self_resubmission_readiness() {
+        let raw = vec![0xff, 0x7f, 0x01];
+        let (transport, probe) = LoopbackTransport::paired().await;
+        probe.push_inbound(raw.clone()).await;
+        let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
+        let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport)).await;
+
+        match shard.drive_one().await {
+            ShardDrive::Fault { consumed_epoch: Some(1), work_remains: false, terminal_frame: true, .. } => {}
+            _ => panic!("malformed ingress must consume epoch one and terminalize without retained work"),
+        }
+        assert_eq!(shard.take_terminal_frame(), Some(raw), "terminal retrieval transfers the exact raw frame");
+        assert!(shard.take_terminal_frame().is_none(), "one terminal owner is retrieved exactly once");
+        assert!(!shard.has_pending_work(), "terminal ownership is observable, not a hot-resubmit readiness condition");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn terminal_capacity_plus_one_parks_then_rearms_once_at_the_fifo_tail() {
+        let (transport, probe) = LoopbackTransport::paired().await;
+        let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
+        let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport)).await;
+        for epoch in 1..=SHARD_DEFERRED_ITEMS as u64 {
+            let raw = vec![0xff, (epoch >> 8) as u8, epoch as u8];
+            probe.push_inbound(raw).await;
+            assert!(matches!(shard.drive_one().await, ShardDrive::Fault { consumed_epoch: Some(consumed), terminal_overflow: false, .. } if consumed == epoch));
+        }
+        let overflow_raw = vec![0xfe, 0x01, 0x01];
+        probe.push_inbound(overflow_raw.clone()).await;
+        match shard.drive_one().await {
+            ShardDrive::Fault { consumed_epoch: None, work_remains: false, terminal_frame: true, terminal_overflow: true, .. } => {}
+            _ => panic!("terminal capacity plus one must park without acknowledgement or readiness"),
+        }
+        assert!(!shard.has_pending_work(), "no retrieval means no self-resubmit readiness");
+        assert_eq!(shard.terminal_frame_overflow.len(), 1, "one exact overflow owner is retained");
+
+        let (oldest, rearmed_epoch) = shard.take_terminal_frame_and_rearm();
+        assert_eq!(oldest, Some(vec![0xff, 0, 1]), "retrieval preserves the older FIFO head");
+        assert_eq!(rearmed_epoch, Some(SHARD_DEFERRED_ITEMS as u64 + 1), "one freed slot re-arms the original overflow epoch exactly once");
+        assert!(shard.terminal_frame_overflow.is_empty());
+        assert_eq!(shard.terminal_frames.len(), SHARD_DEFERRED_ITEMS, "re-arm fills only the one freed terminal slot");
+        for _ in 1..SHARD_DEFERRED_ITEMS {
+            assert!(shard.take_terminal_frame().is_some());
+        }
+        assert_eq!(shard.take_terminal_frame(), Some(overflow_raw), "overflow appends after every older terminal owner");
+        assert!(shard.take_terminal_frame().is_none());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn permanently_over_capacity_frame_uses_the_same_bounded_overflow_handoff() {
+        let actor = ActorId(54);
+        let (transport, probe) = LoopbackTransport::paired().await;
+        let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
+        let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(transport)).await;
+        for index in 0..SHARD_DEFERRED_ITEMS {
+            let raw = vec![0xfd, index as u8];
+            shard.terminal_frames.try_push(raw.clone(), raw.len()).expect("fill terminal ring exactly");
+        }
+        let envelopes = (0..=SHARD_DEFERRED_ITEMS)
+            .map(|seq| Envelope {
+                to: actor,
+                from: semio_framework_actor::Origin::Kernel,
+                lane: semio_framework_actor::Lane::Background,
+                seq: seq as u64,
+                deadline_ms: None,
+                coalesce: None,
+                cancel_of: None,
+                payload: Payload::Cancel { seq: seq as u64 },
+            })
+            .collect();
+        let mut raw = Vec::new();
+        ShardFrame::Grant { actor, budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background), envelopes }.pack_encode(&mut raw).await;
+        probe.push_inbound(raw.clone()).await;
+
+        assert!(matches!(shard.drive_one().await, ShardDrive::Fault { consumed_epoch: None, terminal_overflow: true, work_remains: false, .. }));
+        let (_, rearmed_epoch) = shard.take_terminal_frame_and_rearm();
+        assert_eq!(rearmed_epoch, Some(1));
+        for _ in 1..SHARD_DEFERRED_ITEMS {
+            assert!(shard.take_terminal_frame().is_some());
+        }
+        assert_eq!(shard.take_terminal_frame(), Some(raw), "permanent-cap raw owner is retained without re-encoding");
+    }
+
+    #[test]
+    fn terminal_overflow_slot_rejects_an_aba_key_after_rearm() {
+        let mut overflow = FixedOwnerRing::<TerminalFrameOverflow, 1>::new(usize::MAX);
+        let stale = overflow.try_push(TerminalFrameOverflow { epoch: 1, bytes: vec![1] }, 1).expect("first overflow generation");
+        assert_eq!(overflow.pop_front().map(|(_, owner)| owner.epoch), Some(1));
+        let current = overflow.try_push(TerminalFrameOverflow { epoch: 2, bytes: vec![2] }, 1).expect("rearmed overflow generation");
+        assert!(!overflow.contains(stale), "an ABA-stale overflow generation cannot address the rearmed owner");
+        assert!(overflow.contains(current));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn transient_frame_rejection_keeps_its_original_epoch_until_admission() {
+        let actor = ActorId(51);
+        let mut bytes = Vec::new();
+        ShardFrame::Register { actor }.pack_encode(&mut bytes).await;
+        let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
+        let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default())).await;
+        shard.rejected_frame = Some((9, bytes));
+
+        match shard.drive_one().await {
+            ShardDrive::Idle { consumed_epoch: Some(9) } => {}
+            _ => panic!("a retained frame must acknowledge its original epoch only after admission"),
+        }
+    }
+
+    #[test]
+    fn grant_raw_credit_is_exact_at_bytes_plus_one() {
+        let raw_bytes = 17usize;
+        let credits = [split_frame_credit(raw_bytes, 3, 0), split_frame_credit(raw_bytes, 3, 1), split_frame_credit(raw_bytes, 3, 2)];
+        assert_eq!(credits.iter().sum::<usize>(), raw_bytes, "nested authorities split the admitted Grant bytes exactly");
+        let mut ring = FixedOwnerRing::<u8, 4>::new(raw_bytes);
+        for (owner, bytes) in credits.into_iter().enumerate() {
+            ring.try_push(owner as u8, bytes).expect("exact Grant byte credit");
+        }
+        let rejected = ring.try_push(4, 1).expect_err("Grant raw bytes plus one");
+        assert_eq!(rejected.limit, AdmissionLimit::Bytes);
+        assert_eq!(rejected.owner, 4);
+    }
+
+    #[test]
+    fn suspend_and_resume_authorities_have_exact_item_and_byte_handback() {
+        let actor = ActorId(52);
+        let operation = test_job_operation(actor, 7, 0);
+        let mut items = FixedOwnerRing::<DeferredAuthority, 1>::new(32);
+        items.try_push(DeferredAuthority::Suspend { actor: actor.0, operation, applied_progress: 3 }, 16).expect("Suspend exact item cap");
+        let rejected = items.try_push(DeferredAuthority::Resume { actor: actor.0, operation, checkpoint: JobCheckpoint { state: vec![1, 2], applied_progress: 3 } }, 16).expect_err("Resume item cap plus one");
+        assert_eq!(rejected.limit, AdmissionLimit::Items);
+        assert!(matches!(rejected.owner, DeferredAuthority::Resume { actor: owner, .. } if owner == actor.0));
+
+        let mut bytes = FixedOwnerRing::<DeferredAuthority, 2>::new(16);
+        bytes.try_push(DeferredAuthority::Resume { actor: actor.0, operation, checkpoint: JobCheckpoint { state: vec![3], applied_progress: 4 } }, 16).expect("Resume exact byte cap");
+        let rejected = bytes.try_push(DeferredAuthority::Suspend { actor: actor.0, operation, applied_progress: 4 }, 1).expect_err("Suspend bytes plus one");
+        assert_eq!(rejected.limit, AdmissionLimit::Bytes);
+        assert!(matches!(rejected.owner, DeferredAuthority::Suspend { actor: owner, .. } if owner == actor.0));
+    }
+
+    #[test]
+    fn mixed_lifecycle_authorities_remain_fifo_and_pop_one_per_grant() {
+        let actor = ActorId(53);
+        let operation = test_job_operation(actor, 8, 0);
+        let mut ring = FixedOwnerRing::<DeferredAuthority, 3>::new(3);
+        ring.try_push(DeferredAuthority::Register { actor }, 1).expect("Register");
+        ring.try_push(DeferredAuthority::Suspend { actor: actor.0, operation, applied_progress: 5 }, 1).expect("Suspend");
+        ring.try_push(DeferredAuthority::Resume { actor: actor.0, operation, checkpoint: JobCheckpoint { state: vec![], applied_progress: 5 } }, 1).expect("Resume");
+        assert!(matches!(ring.pop_front(), Some((_, DeferredAuthority::Register { actor: owner })) if owner == actor));
+        assert_eq!(ring.len(), 2, "one grant advances one mixed lifecycle authority");
+        assert!(matches!(ring.pop_front(), Some((_, DeferredAuthority::Suspend { actor: owner, .. })) if owner == actor.0));
+        assert!(matches!(ring.pop_front(), Some((_, DeferredAuthority::Resume { actor: owner, .. })) if owner == actor.0));
     }
     //#endregion 🔖️LanePriorityAndEpochYield
 }

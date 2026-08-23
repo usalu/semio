@@ -1,6 +1,7 @@
 //! 📦️ Worker-owned render preparation and UI-authorized presentation contract.
 
 use crate::wgpu::draw::{DrawLayer, DrawList, ScissorRect};
+use crate::wgpu::kernel_3d_scene::Mesh3dLease;
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, StepContext, StepOutcome};
 use std::mem::size_of;
 use std::rc::Rc;
@@ -63,7 +64,7 @@ pub enum PreparedRenderUpload {
     GlyphAtlas { pixels: Vec<u8>, width: u32, height: u32 },
     IconAtlas { pixels: Vec<u8>, width: u32, height: u32 },
     Raster { key: String, pixels: Vec<u8>, width: u32, height: u32 },
-    Mesh { key: String, version: u64, positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32> },
+    Mesh { key: String, version: u64, lease: Mesh3dLease },
 }
 
 /// 🧹️ UI-thread GPU cache invalidation selected during worker preparation.
@@ -85,9 +86,18 @@ impl PreparedRenderUpload {
         match self {
             Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } => pixels.len(),
             Self::Raster { key, pixels, .. } => key.len().saturating_add(pixels.len()),
-            Self::Mesh { key, positions, normals, indices, .. } => {
-                key.len().saturating_add(positions.len().saturating_mul(size_of::<f32>())).saturating_add(normals.len().saturating_mul(size_of::<f32>())).saturating_add(indices.len().saturating_mul(size_of::<u32>()))
-            }
+            Self::Mesh { key, lease, .. } => key.len().saturating_add(lease.schema().map_or(0, |schema| {
+                usize::try_from(schema.vertices)
+                    .unwrap_or(usize::MAX)
+                    .saturating_mul(24)
+                    .saturating_add(usize::try_from(schema.indices).unwrap_or(usize::MAX).saturating_mul(4))
+                    .saturating_add(usize::try_from(schema.face_ids).unwrap_or(usize::MAX).saturating_mul(4))
+                    .saturating_add(usize::try_from(schema.vertex_ids).unwrap_or(usize::MAX).saturating_mul(4))
+                    .saturating_add(usize::try_from(schema.edges).unwrap_or(usize::MAX).saturating_mul(24))
+                    .saturating_add(usize::try_from(schema.edge_ids).unwrap_or(usize::MAX).saturating_mul(4))
+                    .saturating_add(usize::try_from(schema.uvs).unwrap_or(usize::MAX).saturating_mul(8))
+                    .saturating_add(usize::try_from(schema.colors).unwrap_or(usize::MAX).saturating_mul(16))
+            })),
         }
     }
 }
@@ -278,7 +288,7 @@ impl PreparedRenderJob {
             let retained = match upload {
                 PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. } => pixels.pop().is_some(),
                 PreparedRenderUpload::Raster { key, pixels, .. } => pixels.pop().is_some() || key.pop().is_some(),
-                PreparedRenderUpload::Mesh { key, positions, normals, indices, .. } => indices.pop().is_some() || normals.pop().is_some() || positions.pop().is_some() || key.pop().is_some(),
+                PreparedRenderUpload::Mesh { key, .. } => key.pop().is_some(),
             };
             if retained {
                 return false;
