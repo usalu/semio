@@ -559,8 +559,8 @@ impl SegmentWriter {
         }
         let commit_offset = self.writer.commit().await.map_err(protocol_err)?;
         let snapshot = self.buf.snapshot();
-        let delta = &snapshot[self.flushed_len as usize..];
-        let new_len = storage.append(&self.document, self.index, delta).await?;
+        let pages = db_storage::DbIoPages::try_range(snapshot, self.flushed_len as usize).map_err(|_| DbError::LimitExceeded("WAL flush pages"))?;
+        let new_len = storage.append(&self.document, self.index, pages).await?;
         storage.sync(&self.document, self.index, class).await?;
         self.flushed_len = new_len;
         self.pending_records = 0;
@@ -748,6 +748,10 @@ mod tests {
     use db_storage::{MemoryStorage, WalStorage};
     use {ArtifactId, DurabilityClass, Frontier};
 
+    fn pages(bytes: &[u8]) -> db_storage::DbIoPages {
+        db_storage::DbIoPages::try_new(bytes.to_vec()).expect("test WAL bytes must fit the fixed page owner")
+    }
+
     async fn doc(id: &str) -> ArtifactId {
         ArtifactId::from(id)
     }
@@ -932,7 +936,7 @@ mod tests {
 
         // Simulate a crash mid-append: bytes physically present past the last trusted commit,
         // written directly to storage (bypassing SprWriter, exactly like a torn OS-level write).
-        db_actor::block_on(storage.append(&document, 0, b"\x0Fgarbage-not-a-valid-frame-tail")).unwrap();
+        db_actor::block_on(storage.append(&document, 0, pages(b"\x0Fgarbage-not-a-valid-frame-tail"))).unwrap();
 
         let (wal, report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100)).unwrap();
         assert!(report.torn_tail_bytes > 0);
@@ -1038,7 +1042,7 @@ mod tests {
         let seg0_bytes = db_actor::block_on(storage.read(&document, 0, pack::ByteRange { offset: 0, len: seg0_len })).unwrap();
         db_actor::block_on(storage.delete_segment(&document, 0)).unwrap();
         db_actor::block_on(storage.create_segment(&document, 0)).unwrap();
-        db_actor::block_on(storage.append(&document, 0, &seg0_bytes[..seg0_bytes.len() - 1])).unwrap();
+        db_actor::block_on(storage.append(&document, 0, pages(&seg0_bytes[..seg0_bytes.len() - 1]))).unwrap();
         db_actor::block_on(storage.seal(&document, 0)).unwrap();
 
         let result = db_actor::block_on(ArtifactWal::open(&storage, document, GroupCommitPolicy::default(), 100));

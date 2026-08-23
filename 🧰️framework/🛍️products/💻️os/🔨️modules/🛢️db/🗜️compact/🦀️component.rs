@@ -437,6 +437,10 @@ mod tests {
     use db_wal::{WalPayloadRef, WalRecord};
     use {DurabilityClass, Frontier};
 
+    fn pages(bytes: &[u8]) -> db_storage::DbIoPages {
+        db_storage::DbIoPages::try_new(bytes.to_vec()).expect("test compaction bytes must fit the fixed page owner")
+    }
+
     async fn doc(id: &str) -> ArtifactId {
         ArtifactId::from(id)
     }
@@ -549,8 +553,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn sweep_payloads_deletes_orphaned_candidates_but_keeps_hashes_still_referenced_elsewhere() {
         let storage = MemoryStorage::new().await;
-        let orphan_hash = db_actor::block_on(storage.put(b"orphan-payload")).unwrap();
-        let shared_hash = db_actor::block_on(storage.put(b"shared-payload")).unwrap();
+        let orphan_hash = db_actor::block_on(storage.put(pages(b"orphan-payload"))).unwrap();
+        let shared_hash = db_actor::block_on(storage.put(pages(b"shared-payload"))).unwrap();
         let document = doc("doc-1").await;
 
         let records = vec![
@@ -571,8 +575,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn sweep_payloads_respects_the_budget_cap() {
         let storage = MemoryStorage::new().await;
-        let hash_a = db_actor::block_on(storage.put(b"a")).unwrap();
-        let hash_b = db_actor::block_on(storage.put(b"b")).unwrap();
+        let hash_a = db_actor::block_on(storage.put(pages(b"a"))).unwrap();
+        let hash_b = db_actor::block_on(storage.put(pages(b"b"))).unwrap();
         let document = doc("doc-1").await;
         let records = vec![WalRecord::SegmentHeader { document, segment_index: 0, prev_chain_hash: None }, WalRecord::Payload(WalPayloadRef::CasRef(hash_a)), WalRecord::Payload(WalPayloadRef::CasRef(hash_b))];
         let budget = CompactionBudget { max_payloads: 1, ..CompactionBudget::default() };
@@ -741,7 +745,7 @@ mod tests {
         let storage = MemoryStorage::new().await;
         let document = doc("doc-1").await;
         db_actor::block_on(storage.create_segment(&document, 0)).unwrap();
-        db_actor::block_on(storage.append(&document, 0, b"not a valid spr segment at all")).unwrap();
+        db_actor::block_on(storage.append(&document, 0, pages(b"not a valid spr segment at all"))).unwrap();
         db_actor::block_on(storage.seal(&document, 0)).unwrap();
         let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
 

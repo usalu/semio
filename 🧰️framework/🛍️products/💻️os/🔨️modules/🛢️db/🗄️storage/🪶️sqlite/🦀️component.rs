@@ -47,7 +47,7 @@
 mod sqlite_storage {
     use crate::db_durability::{DurabilityClass, EpochFence};
     use crate::db_ids::{check_len, ArtifactId, DbError};
-    use crate::db_storage::{run_blocking_op, CatalogStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+    use crate::db_storage::{run_blocking_op, CatalogStorage, DbIoPages, DbIoRequest, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
     use semio_framework_async::WorkerPool;
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS lease (
     /// `db_storage::MemoryStorage`/`FsStorage`'s own `MAX_READ_BYTES` choice (same number, kept
     /// in lock-step deliberately: a caller swapping backends should hit the same ceiling on
     /// every backend).
-    const MAX_BLOB_BYTES: u64 = 1024 * 1024 * 1024;
+    const MAX_BLOB_BYTES: u64 = 496 * 1024;
     //#endregion 🔖️Limits
 
     //#region 🔖️Errors
@@ -135,12 +135,12 @@ CREATE TABLE IF NOT EXISTS lease (
     /// @emoji 🗄️ SQLite-backed `DbStorage`. One `rusqlite::Connection` behind an `Arc<Mutex<_>>`
     /// (the `Arc` is what lets every trait method's blocking closure — dispatched through
     /// `run_blocking_op`, see module doc — carry its own `'static` handle to the same connection)
-    /// — `rusqlite` is synchronous, and every method here is a short, bounded query/transaction,
-    /// so holding the mutex for a call's duration never becomes a real bottleneck at this crate's
-    /// scope.
+    /// — `rusqlite` is synchronous. Each call is an explicitly indivisible backend residual on
+    /// the shared I/O lane; the retained authority bounds admission and ownership, not syscall
+    /// duration. Phase 9 replaces that residual with the owned event log.
     pub struct SqliteStorage {
         conn: Arc<Mutex<Connection>>,
-        pool: Option<Arc<WorkerPool>>,
+        pool: Arc<WorkerPool>,
     }
 
     /// @emoji 🩹️ Recovers the connection mutex from a poisoned lock instead of panicking — a
@@ -156,37 +156,42 @@ CREATE TABLE IF NOT EXISTS lease (
         /// `SqliteStorage` at `path` and bootstraps the schema. Safe to call repeatedly against
         /// the same path (schema DDL is `IF NOT EXISTS`, data is untouched). Dispatches every
         /// subsequent trait call's blocking body through `run_blocking_op` onto `pool`'s
-        /// `Lane::Io` (or inline, if `pool` is `None`) — this constructor itself stays synchronous
-        /// (a one-time, small open+DDL, not part of any `DbStorage` trait method's hot path),
-        /// mirroring `FsStorage::open`.
-        pub async fn open(pool: Option<Arc<WorkerPool>>, path: &std::path::Path) -> Result<Self, DbError> {
-            if let Some(parent) = path.parent() {
-                if !parent.as_os_str().is_empty() {
-                    std::fs::create_dir_all(parent).map_err(|err| DbError::Io(err.to_string()))?;
+        /// `Lane::Io`; open and schema setup use that same retained authority.
+        pub async fn open(pool: Arc<WorkerPool>, path: &std::path::Path) -> Result<Self, DbError> {
+            let admitted_path = path.to_path_buf();
+            let conn = run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
+                if let Some(parent) = admitted_path.parent() {
+                    if !parent.as_os_str().is_empty() {
+                        std::fs::create_dir_all(parent).map_err(|err| DbError::Io(err.to_string()))?;
+                    }
                 }
-            }
-            let conn = Connection::open(path).map_err(sqlite_err)?;
-            Self::init(conn, pool).await
+                let conn = Connection::open(admitted_path).map_err(sqlite_err)?;
+                init_connection(&conn)?;
+                Ok(conn)
+            })
+            .await?;
+            Ok(Self { conn: Arc::new(Mutex::new(conn)), pool })
         }
 
         /// @emoji 🧪️ Opens a private, in-memory `SqliteStorage` — never durable across process
         /// exit; exists for fast unit tests that don't care about on-disk persistence (the
         /// crash/reopen laws are exercised against a real file in `//#region 🧪️Tests` instead).
-        pub async fn open_in_memory(pool: Option<Arc<WorkerPool>>) -> Result<Self, DbError> {
-            let conn = Connection::open_in_memory().map_err(sqlite_err)?;
-            Self::init(conn, pool).await
-        }
-
-        async fn init(conn: Connection, pool: Option<Arc<WorkerPool>>) -> Result<Self, DbError> {
-            // 🎯️ `journal_mode = WAL` is a no-op (silently stays `memory`) on an in-memory
-            // connection — SQLite doesn't error on the pragma either way, so `open_in_memory`
-            // shares this path.
-            conn.pragma_update(None, "journal_mode", "WAL").map_err(sqlite_err)?;
-            conn.pragma_update(None, "synchronous", "FULL").map_err(sqlite_err)?;
-            conn.pragma_update(None, "foreign_keys", "OFF").map_err(sqlite_err)?;
-            conn.execute_batch(SCHEMA).map_err(sqlite_err)?;
+        pub async fn open_in_memory(pool: Arc<WorkerPool>) -> Result<Self, DbError> {
+            let conn = run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
+                let conn = Connection::open_in_memory().map_err(sqlite_err)?;
+                init_connection(&conn)?;
+                Ok(conn)
+            })
+            .await?;
             Ok(Self { conn: Arc::new(Mutex::new(conn)), pool })
         }
+    }
+
+    fn init_connection(conn: &Connection) -> Result<(), DbError> {
+        conn.pragma_update(None, "journal_mode", "WAL").map_err(sqlite_err)?;
+        conn.pragma_update(None, "synchronous", "FULL").map_err(sqlite_err)?;
+        conn.pragma_update(None, "foreign_keys", "OFF").map_err(sqlite_err)?;
+        conn.execute_batch(SCHEMA).map_err(sqlite_err)
     }
     //#endregion 🔖️Connection
 
@@ -197,7 +202,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let index = to_sql_i64(index, "wal_storage::create_segment index")?;
                     let conn = lock(&conn);
                     let exists: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM wal_segment WHERE document = ?1 AND segment_index = ?2)", params![document.0, index], |row| row.get(0)).map_err(sqlite_err)?;
@@ -211,16 +216,16 @@ CREATE TABLE IF NOT EXISTS lease (
             }
         }
 
-        async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+        async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "wal_storage::append") {
                 return { Err(err) };
             }
             let conn = self.conn.clone();
             let document = document.clone();
-            let bytes = bytes.to_vec();
             let pool = self.pool.clone();
+            let byte_len = bytes.len() as u64;
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::append index")?;
                     let conn = lock(&conn);
                     let sealed: i64 = conn
@@ -236,7 +241,7 @@ CREATE TABLE IF NOT EXISTS lease (
                     // literal from `create_segment` — an explicit cast keeps the column's stored type
                     // BLOB regardless, so a later `row.get::<_, Vec<u8>>` never sees `Invalid column
                     // type Text`.
-                    conn.execute("UPDATE wal_segment SET bytes = CAST(bytes || ?3 AS BLOB) WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, bytes]).map_err(sqlite_err)?;
+                    conn.execute("UPDATE wal_segment SET bytes = CAST(bytes || ?3 AS BLOB) WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, bytes.as_slice()]).map_err(sqlite_err)?;
                     let new_len: i64 = conn.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0)).map_err(sqlite_err)?;
                     Ok(new_len as u64)
                 })
@@ -257,7 +262,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::seal index")?;
                     let conn = lock(&conn);
                     // 🎯️ `changes()` counts rows matched by the WHERE clause regardless of whether
@@ -282,20 +287,22 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::read(range.len), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::read index")?;
+                    let sql_start = to_sql_i64(range.offset.checked_add(1).ok_or_else(|| DbError::InvalidArgument("wal read offset overflows u64".to_string()))?, "wal_storage::read offset")?;
+                    let sql_len = to_sql_i64(range.len, "wal_storage::read len")?;
                     let conn = lock(&conn);
-                    let bytes: Vec<u8> = conn
-                        .query_row("SELECT bytes FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
+                    let (bytes, current_len): (Vec<u8>, i64) = conn
+                        .query_row("SELECT CAST(substr(bytes, ?3, ?4) AS BLOB), length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, sql_start, sql_len], |row| Ok((row.get(0)?, row.get(1)?)))
                         .optional()
                         .map_err(sqlite_err)?
                         .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
                     let start = range.offset as usize;
                     let end = start.checked_add(range.len as usize).ok_or_else(|| DbError::InvalidArgument("wal read range overflows usize".to_string()))?;
-                    if end > bytes.len() {
-                        return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {})", bytes.len())));
+                    if end > current_len as usize {
+                        return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {current_len})")));
                     }
-                    Ok(bytes[start..end].to_vec())
+                    Ok(bytes)
                 })
                 .await
             }
@@ -306,7 +313,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::segment_len index")?;
                     let conn = lock(&conn);
                     let len: i64 = conn
@@ -325,12 +332,15 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || {
                     let conn = lock(&conn);
                     let mut stmt = conn.prepare("SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC").map_err(sqlite_err)?;
                     let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
                     let mut out = Vec::new();
                     for row in rows {
+                        if out.len() == 4096 {
+                            return Err(DbError::LimitExceeded("db_io list item credit"));
+                        }
                         out.push(row.map_err(sqlite_err)? as u64);
                     }
                     Ok(out)
@@ -344,7 +354,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::truncate_tail index")?;
                     let conn = lock(&conn);
                     let (sealed, current_len): (i64, i64) = conn
@@ -371,7 +381,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::delete_segment index")?;
                     let conn = lock(&conn);
                     conn.execute("DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
@@ -385,22 +395,22 @@ CREATE TABLE IF NOT EXISTS lease (
 
     //#region 🔖️SnapshotStorage
     impl SnapshotStorage for SqliteStorage {
-        async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+        async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "snapshot_storage::write_generation") {
                 return { Err(err) };
             }
             let conn = self.conn.clone();
             let document = document.clone();
-            let bytes = bytes.to_vec();
             let pool = self.pool.clone();
+            let byte_len = bytes.len() as u64;
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
                     let sql_generation = to_sql_i64(generation, "snapshot_storage::write_generation generation")?;
                     let conn = lock(&conn);
                     conn.execute(
                         "INSERT INTO snapshot_generation (document, generation, bytes) VALUES (?1, ?2, ?3)
                      ON CONFLICT(document, generation) DO UPDATE SET bytes = excluded.bytes",
-                        params![document.0, sql_generation, bytes],
+                        params![document.0, sql_generation, bytes.as_slice()],
                     )
                     .map_err(sqlite_err)?;
                     Ok(())
@@ -414,10 +424,16 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_BLOB_BYTES), move || {
                     let sql_generation = to_sql_i64(generation, "snapshot_storage::read_generation generation")?;
                     let conn = lock(&conn);
-                    conn.query_row("SELECT bytes FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation], |row| row.get(0))
+                    let len: i64 = conn
+                        .query_row("SELECT length(bytes) FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![&document.0, sql_generation], |row| row.get(0))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?;
+                    check_len(len as u64, MAX_BLOB_BYTES, "snapshot_storage::read_generation")?;
+                    conn.query_row("SELECT bytes FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![&document.0, sql_generation], |row| row.get(0))
                         .optional()
                         .map_err(sqlite_err)?
                         .ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
@@ -431,7 +447,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let conn = lock(&conn);
                     let max: Option<i64> = conn.query_row("SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1", params![document.0], |row| row.get(0)).map_err(sqlite_err)?;
                     Ok(max.map(|value| value as u64))
@@ -445,12 +461,15 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || {
                     let conn = lock(&conn);
                     let mut stmt = conn.prepare("SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC").map_err(sqlite_err)?;
                     let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
                     let mut out = Vec::new();
                     for row in rows {
+                        if out.len() == 4096 {
+                            return Err(DbError::LimitExceeded("db_io list item credit"));
+                        }
                         out.push(row.map_err(sqlite_err)? as u64);
                     }
                     Ok(out)
@@ -464,7 +483,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let sql_generation = to_sql_i64(generation, "snapshot_storage::delete_generation generation")?;
                     let conn = lock(&conn);
                     conn.execute("DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation]).map_err(sqlite_err)?;
@@ -478,18 +497,18 @@ CREATE TABLE IF NOT EXISTS lease (
 
     //#region 🔖️PayloadStorage
     impl PayloadStorage for SqliteStorage {
-        async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
+        async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "payload_storage::put") {
                 return { Err(err) };
             }
             let conn = self.conn.clone();
-            let bytes = bytes.to_vec();
             let pool = self.pool.clone();
+            let byte_len = bytes.len() as u64;
             {
-                run_blocking_op(pool.as_deref(), move || {
-                    let hash = ContentHash(*blake3::hash(&bytes).as_bytes());
+                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
+                    let hash = ContentHash(*blake3::hash(bytes.as_slice()).as_bytes());
                     let conn = lock(&conn);
-                    conn.execute("INSERT INTO payload (hash, bytes, len) VALUES (?1, ?2, ?3) ON CONFLICT(hash) DO NOTHING", params![hash.to_string(), bytes, bytes.len() as i64]).map_err(sqlite_err)?;
+                    conn.execute("INSERT INTO payload (hash, bytes, len) VALUES (?1, ?2, ?3) ON CONFLICT(hash) DO NOTHING", params![hash.to_string(), bytes.as_slice(), bytes.len() as i64]).map_err(sqlite_err)?;
                     Ok(hash)
                 })
                 .await
@@ -501,8 +520,10 @@ CREATE TABLE IF NOT EXISTS lease (
             let hash = *hash;
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_BLOB_BYTES), move || {
                     let conn = lock(&conn);
+                    let len: i64 = conn.query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
+                    check_len(len as u64, MAX_BLOB_BYTES, "payload_storage::get")?;
                     conn.query_row("SELECT bytes FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
                 })
                 .await
@@ -514,7 +535,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let hash = *hash;
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let conn = lock(&conn);
                     conn.query_row("SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)", params![hash.to_string()], |row| row.get(0)).map_err(sqlite_err)
                 })
@@ -527,7 +548,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let hash = *hash;
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let conn = lock(&conn);
                     conn.execute("DELETE FROM payload WHERE hash = ?1", params![hash.to_string()]).map_err(sqlite_err)?;
                     Ok(())
@@ -541,7 +562,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let hash = *hash;
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let conn = lock(&conn);
                     let len: i64 = conn.query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
                     Ok(len as u64)
@@ -558,8 +579,12 @@ CREATE TABLE IF NOT EXISTS lease (
             let conn = self.conn.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_BLOB_BYTES), move || {
                     let conn = lock(&conn);
+                    let len: Option<i64> = conn.query_row("SELECT length(bytes) FROM catalog_root WHERE id = 0", [], |row| row.get(0)).optional().map_err(sqlite_err)?;
+                    if let Some(len) = len {
+                        check_len(len as u64, MAX_BLOB_BYTES, "catalog_storage::read_root")?;
+                    }
                     let row: Option<(Vec<u8>, i64)> = conn.query_row("SELECT bytes, epoch FROM catalog_root WHERE id = 0", [], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
                     Ok(row.map(|(bytes, epoch)| (bytes, EpochFence { epoch: epoch as u64 })))
                 })
@@ -567,15 +592,15 @@ CREATE TABLE IF NOT EXISTS lease (
             }
         }
 
-        async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
+        async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
             if let Err(err) = check_len(new_bytes.len() as u64, MAX_BLOB_BYTES, "catalog_storage::cas_root") {
                 return { Err(err) };
             }
             let conn = self.conn.clone();
-            let new_bytes = new_bytes.to_vec();
             let pool = self.pool.clone();
+            let byte_len = new_bytes.len() as u64;
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
                     let mut conn = lock(&conn);
                     // 🎯️ `IMMEDIATE` acquires SQLite's write lock before the read, so a concurrent writer
                     // (another thread OR another OS process against the same file) can't slip a write in
@@ -589,7 +614,7 @@ CREATE TABLE IF NOT EXISTS lease (
                     tx.execute(
                         "INSERT INTO catalog_root (id, bytes, epoch) VALUES (0, ?1, ?2)
                      ON CONFLICT(id) DO UPDATE SET bytes = excluded.bytes, epoch = excluded.epoch",
-                        params![new_bytes, sql_epoch],
+                        params![new_bytes.as_slice(), sql_epoch],
                     )
                     .map_err(sqlite_err)?;
                     tx.commit().map_err(sqlite_err)?;
@@ -603,22 +628,22 @@ CREATE TABLE IF NOT EXISTS lease (
 
     //#region 🔖️IndexStorage
     impl IndexStorage for SqliteStorage {
-        async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+        async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "index_storage::write_run") {
                 return { Err(err) };
             }
             let conn = self.conn.clone();
             let document = document.clone();
-            let bytes = bytes.to_vec();
             let pool = self.pool.clone();
+            let byte_len = bytes.len() as u64;
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
                     let sql_run_id = to_sql_i64(run_id, "index_storage::write_run run_id")?;
                     let conn = lock(&conn);
                     conn.execute(
                         "INSERT INTO index_run (document, run_id, bytes) VALUES (?1, ?2, ?3)
                      ON CONFLICT(document, run_id) DO UPDATE SET bytes = excluded.bytes",
-                        params![document.0, sql_run_id, bytes],
+                        params![document.0, sql_run_id, bytes.as_slice()],
                     )
                     .map_err(sqlite_err)?;
                     Ok(())
@@ -632,10 +657,16 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_BLOB_BYTES), move || {
                     let sql_run_id = to_sql_i64(run_id, "index_storage::read_run run_id")?;
                     let conn = lock(&conn);
-                    conn.query_row("SELECT bytes FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id], |row| row.get(0))
+                    let len: i64 = conn
+                        .query_row("SELECT length(bytes) FROM index_run WHERE document = ?1 AND run_id = ?2", params![&document.0, sql_run_id], |row| row.get(0))
+                        .optional()
+                        .map_err(sqlite_err)?
+                        .ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?;
+                    check_len(len as u64, MAX_BLOB_BYTES, "index_storage::read_run")?;
+                    conn.query_row("SELECT bytes FROM index_run WHERE document = ?1 AND run_id = ?2", params![&document.0, sql_run_id], |row| row.get(0))
                         .optional()
                         .map_err(sqlite_err)?
                         .ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
@@ -649,12 +680,15 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || {
                     let conn = lock(&conn);
                     let mut stmt = conn.prepare("SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC").map_err(sqlite_err)?;
                     let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
                     let mut out = Vec::new();
                     for row in rows {
+                        if out.len() == 4096 {
+                            return Err(DbError::LimitExceeded("db_io list item credit"));
+                        }
                         out.push(row.map_err(sqlite_err)? as u64);
                     }
                     Ok(out)
@@ -668,7 +702,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let document = document.clone();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let sql_run_id = to_sql_i64(run_id, "index_storage::delete_run run_id")?;
                     let conn = lock(&conn);
                     conn.execute("DELETE FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id]).map_err(sqlite_err)?;
@@ -688,7 +722,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let holder = holder.to_string();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let mut conn = lock(&conn);
                     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
                     let existing: Option<(String, i64, i64)> = tx.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
@@ -723,7 +757,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let holder = holder.to_string();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let mut conn = lock(&conn);
                     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
                     let (existing_holder, epoch, expires_at_ms): (String, i64, i64) = tx
@@ -753,7 +787,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let holder = holder.to_string();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let mut conn = lock(&conn);
                     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
                     let (existing_holder, epoch): (String, i64) = tx
@@ -778,7 +812,7 @@ CREATE TABLE IF NOT EXISTS lease (
             let resource = resource.to_string();
             let pool = self.pool.clone();
             {
-                run_blocking_op(pool.as_deref(), move || {
+                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
                     let conn = lock(&conn);
                     let existing: Option<(String, i64, i64)> =
                         conn.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
@@ -813,18 +847,16 @@ CREATE TABLE IF NOT EXISTS lease (
         use super::*;
         use std::future::Future;
 
+        fn pages(bytes: &[u8]) -> DbIoPages {
+            DbIoPages::try_new(bytes.to_vec()).expect("test sqlite bytes must fit the fixed page owner")
+        }
+
         /// @emoji ✅️ Test-only sync/async bridge. 🚫️async: E5 executor bridge — poll-once: every
         /// future a `SqliteStorage` driven by `semio_framework_async::testkit::ManualRuntime` hands
         /// back resolves on its first poll (`ManualRuntime::run_blocking` executes synchronously),
         /// so this drives one to completion without needing a real executor.
         async fn poll_once<T>(fut: impl Future<Output = T>) -> T {
-            let mut fut = std::pin::pin!(fut);
-            let waker = std::task::Waker::noop();
-            let mut cx = std::task::Context::from_waker(waker);
-            match fut.as_mut().poll(&mut cx) {
-                std::task::Poll::Ready(value) => value,
-                std::task::Poll::Pending => panic!("db_storage_sqlite test helper expected an already-ready future"),
-            }
+            fut.await
         }
 
         async fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
@@ -843,11 +875,9 @@ CREATE TABLE IF NOT EXISTS lease (
             std::env::temp_dir().join(format!("db_storage_sqlite_test_{name}_{pid}_{counter}.sqlite3"))
         }
 
-        /// @emoji 🎲️ Opened with `pool: None` (every blocking body runs inline), so every
-        /// `DbFuture` this storage hands back resolves on its very first poll — [`poll_once`]
-        /// above never actually parks.
+        /// @emoji 🎲️ Opened on the test-owned process pool, exercising the retained path.
         async fn sqlite_scratch(name: &str) -> SqliteStorage {
-            poll_once(SqliteStorage::open(None, &sqlite_scratch_path(name))).await.unwrap()
+            poll_once(SqliteStorage::open(crate::db_storage::db_io_test_pool(), &sqlite_scratch_path(name))).await.unwrap()
         }
 
         //#region 🔖️WalStorage
@@ -859,9 +889,9 @@ CREATE TABLE IF NOT EXISTS lease (
             block_on_ready(storage.create_segment(&document, 0)).await.unwrap();
             assert!(matches!(block_on_ready(storage.create_segment(&document, 0)).await, Err(DbError::AlreadyExists(_))));
 
-            let len_after_first = block_on_ready(storage.append(&document, 0, b"hello ")).await.unwrap();
+            let len_after_first = block_on_ready(storage.append(&document, 0, pages(b"hello "))).await.unwrap();
             assert_eq!(len_after_first, 6);
-            let len_after_second = block_on_ready(storage.append(&document, 0, b"world")).await.unwrap();
+            let len_after_second = block_on_ready(storage.append(&document, 0, pages(b"world"))).await.unwrap();
             assert_eq!(len_after_second, 11);
             assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 11);
 
@@ -880,13 +910,13 @@ CREATE TABLE IF NOT EXISTS lease (
 
             block_on_ready(storage.seal(&document, 0)).await.unwrap();
             block_on_ready(storage.seal(&document, 0)).await.unwrap(); // idempotent
-            assert!(matches!(block_on_ready(storage.append(&document, 0, b"!")).await, Err(DbError::InvalidArgument(_))));
+            assert!(matches!(block_on_ready(storage.append(&document, 0, pages(b"!"))).await, Err(DbError::InvalidArgument(_))));
             assert!(matches!(block_on_ready(storage.truncate_tail(&document, 0, 0)).await, Err(DbError::InvalidArgument(_))));
 
             block_on_ready(storage.delete_segment(&document, 1)).await.unwrap();
             assert_eq!(block_on_ready(storage.list_segments(&document)).await.unwrap(), vec![0]);
 
-            assert!(matches!(block_on_ready(storage.append(&document, 99, b"x")).await, Err(DbError::NotFound(_))));
+            assert!(matches!(block_on_ready(storage.append(&document, 99, pages(b"x"))).await, Err(DbError::NotFound(_))));
         }
         //#endregion 🔖️WalStorage
 
@@ -897,13 +927,13 @@ CREATE TABLE IF NOT EXISTS lease (
             let document: ArtifactId = "doc-snap".into();
             assert_eq!(block_on_ready(storage.latest_generation(&document)).await.unwrap(), None);
 
-            block_on_ready(storage.write_generation(&document, 0, b"gen-zero-bytes")).await.unwrap();
-            block_on_ready(storage.write_generation(&document, 1, b"gen-one-bytes")).await.unwrap();
+            block_on_ready(storage.write_generation(&document, 0, pages(b"gen-zero-bytes"))).await.unwrap();
+            block_on_ready(storage.write_generation(&document, 1, pages(b"gen-one-bytes"))).await.unwrap();
             assert_eq!(block_on_ready(storage.list_generations(&document)).await.unwrap(), vec![0, 1]);
             assert_eq!(block_on_ready(storage.latest_generation(&document)).await.unwrap(), Some(1));
             assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"gen-zero-bytes");
 
-            block_on_ready(storage.write_generation(&document, 0, b"gen-zero-overwritten")).await.unwrap();
+            block_on_ready(storage.write_generation(&document, 0, pages(b"gen-zero-overwritten"))).await.unwrap();
             assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"gen-zero-overwritten");
 
             block_on_ready(storage.delete_generation(&document, 0)).await.unwrap();
@@ -917,8 +947,8 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn payload_storage_is_content_addressed_and_idempotent() {
             let storage = sqlite_scratch("payload_laws").await;
             let bytes = b"a payload blob that gets content-addressed";
-            let hash_a = block_on_ready(storage.put(bytes)).await.unwrap();
-            let hash_b = block_on_ready(storage.put(bytes)).await.unwrap();
+            let hash_a = block_on_ready(storage.put(pages(bytes))).await.unwrap();
+            let hash_b = block_on_ready(storage.put(pages(bytes))).await.unwrap();
             assert_eq!(hash_a, hash_b, "put is idempotent under content equality");
             assert_eq!(hash_a, ContentHash(*blake3::hash(bytes).as_bytes()));
 
@@ -942,16 +972,16 @@ CREATE TABLE IF NOT EXISTS lease (
             let storage = sqlite_scratch("catalog_laws").await;
             assert_eq!(block_on_ready(storage.read_root()).await.unwrap(), None);
 
-            let epoch_1 = block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-v1")).await.unwrap();
+            let epoch_1 = block_on_ready(storage.cas_root(EpochFence::INITIAL, pages(b"root-v1"))).await.unwrap();
             assert_eq!(epoch_1, EpochFence::INITIAL.next());
             let (bytes, fence) = block_on_ready(storage.read_root()).await.unwrap().unwrap();
             assert_eq!(bytes, b"root-v1");
             assert_eq!(fence, epoch_1);
 
             // A stale `expected` (still `INITIAL`, but the root already moved to `epoch_1`) is fenced.
-            assert!(matches!(block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-stale")).await, Err(DbError::Fenced { .. })));
+            assert!(matches!(block_on_ready(storage.cas_root(EpochFence::INITIAL, pages(b"root-stale"))).await, Err(DbError::Fenced { .. })));
 
-            let epoch_2 = block_on_ready(storage.cas_root(epoch_1, b"root-v2")).await.unwrap();
+            let epoch_2 = block_on_ready(storage.cas_root(epoch_1, pages(b"root-v2"))).await.unwrap();
             assert_eq!(epoch_2, epoch_1.next());
             assert_eq!(block_on_ready(storage.read_root()).await.unwrap().unwrap().0, b"root-v2");
         }
@@ -962,8 +992,8 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn index_storage_runs_list_read_and_delete_laws() {
             let storage = sqlite_scratch("index_laws").await;
             let document: ArtifactId = "doc-index".into();
-            block_on_ready(storage.write_run(&document, 0, b"run-zero")).await.unwrap();
-            block_on_ready(storage.write_run(&document, 1, b"run-one")).await.unwrap();
+            block_on_ready(storage.write_run(&document, 0, pages(b"run-zero"))).await.unwrap();
+            block_on_ready(storage.write_run(&document, 1, pages(b"run-one"))).await.unwrap();
             assert_eq!(block_on_ready(storage.list_runs(&document)).await.unwrap(), vec![0, 1]);
             assert_eq!(block_on_ready(storage.read_run(&document, 1)).await.unwrap(), b"run-one");
 
@@ -1013,11 +1043,11 @@ CREATE TABLE IF NOT EXISTS lease (
         //#region 🔖️DbBackend
         #[semio_framework_async_macros::async_test]
         async fn db_backend_accessors_and_capabilities() {
-            let storage: crate::db_storage::DbBackend = crate::db_storage::DbBackend::Sqlite(poll_once(SqliteStorage::open(None, &sqlite_scratch_path("umbrella"))).await.unwrap());
+            let storage: crate::db_storage::DbBackend = crate::db_storage::DbBackend::Sqlite(poll_once(SqliteStorage::open(crate::db_storage::db_io_test_pool(), &sqlite_scratch_path("umbrella"))).await.unwrap());
             let document: ArtifactId = "doc-umbrella".into();
             block_on_ready(poll_once(storage.wal()).await.create_segment(&document, 0)).await.unwrap();
-            block_on_ready(poll_once(storage.catalog()).await.cas_root(EpochFence::INITIAL, b"root")).await.unwrap();
-            block_on_ready(poll_once(storage.index()).await.write_run(&document, 0, b"run")).await.unwrap();
+            block_on_ready(poll_once(storage.catalog()).await.cas_root(EpochFence::INITIAL, pages(b"root"))).await.unwrap();
+            block_on_ready(poll_once(storage.index()).await.write_run(&document, 0, pages(b"run"))).await.unwrap();
             assert_eq!(block_on_ready(poll_once(storage.index()).await.read_run(&document, 0)).await.unwrap(), b"run");
 
             let capabilities = poll_once(storage.capabilities()).await;
@@ -1033,13 +1063,13 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn write_survives_reopen_across_instances_against_a_real_file() {
             let path = sqlite_scratch_path("reopen");
             {
-                let storage = poll_once(SqliteStorage::open(None, &path)).await.unwrap();
+                let storage = poll_once(SqliteStorage::open(crate::db_storage::db_io_test_pool(), &path)).await.unwrap();
                 let document: ArtifactId = "doc-reopen".into();
-                block_on_ready(storage.write_generation(&document, 0, b"persisted across reopen")).await.unwrap();
-                block_on_ready(storage.put(b"payload persisted across reopen")).await.unwrap();
+                block_on_ready(storage.write_generation(&document, 0, pages(b"persisted across reopen"))).await.unwrap();
+                block_on_ready(storage.put(pages(b"payload persisted across reopen"))).await.unwrap();
             }
             {
-                let storage = poll_once(SqliteStorage::open(None, &path)).await.unwrap();
+                let storage = poll_once(SqliteStorage::open(crate::db_storage::db_io_test_pool(), &path)).await.unwrap();
                 let document: ArtifactId = "doc-reopen".into();
                 assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"persisted across reopen");
                 let hash = ContentHash(*blake3::hash(b"payload persisted across reopen").as_bytes());
@@ -1049,10 +1079,10 @@ CREATE TABLE IF NOT EXISTS lease (
 
         #[semio_framework_async_macros::async_test]
         async fn in_memory_storage_works_without_a_file() {
-            let storage = poll_once(SqliteStorage::open_in_memory(None)).await.unwrap();
+            let storage = poll_once(SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool())).await.unwrap();
             let document: ArtifactId = "doc-mem".into();
             block_on_ready(storage.create_segment(&document, 0)).await.unwrap();
-            assert_eq!(block_on_ready(storage.append(&document, 0, b"in memory")).await.unwrap(), 9);
+            assert_eq!(block_on_ready(storage.append(&document, 0, pages(b"in memory"))).await.unwrap(), 9);
         }
         //#endregion 🔖️Connection
     }

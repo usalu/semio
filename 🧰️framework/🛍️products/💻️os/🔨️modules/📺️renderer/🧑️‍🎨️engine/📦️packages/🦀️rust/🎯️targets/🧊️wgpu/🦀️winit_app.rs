@@ -20,12 +20,12 @@
 //! the just-created `Window` (or an explicit two-phase `NativeHost::new_pending()` API) would let a
 //! future revision drop this file's hand-rolled `ApplicationHandler` entirely.
 
-use crate::kernel_seam::KernelSeam;
-use crate::os_host::OsHost;
 use crate::AppInteractionState;
 use crate::RuntimeMailbox;
+use crate::kernel_seam::KernelSeam;
+use crate::os_host::OsHost;
 use std::sync::Arc;
-use ui_host::{should_request_redraw, RedrawOutcome, WindowDelegate, WindowMetrics};
+use ui_host::{RedrawOutcome, WindowDelegate, WindowMetrics, should_request_redraw};
 use ui_render::{CursorRequest, DispatchEvent, EventModifiers, InvalidationReason, PhysicalSize, PointerButton, PointerInfo};
 #[cfg(target_arch = "wasm32")]
 use ui_render::{PointerId, PointerKind};
@@ -165,13 +165,24 @@ impl OsHost {
         let build_inputs = self.runtime.frame_inputs(crate::app_now_ms());
         let build_operation = render_frame_operation_id();
         let build_generation = semio_framework_trace::Generation(self.frame_generation);
-        let frame = self.frame_build.poll_runtime_and_resubmit(self.runtime.clone(), build_inputs, build_operation, build_generation, self.presenter.dpr());
+        let frame = (!self.presenter.has_pending_presentation()).then(|| self.frame_build.poll_runtime_and_resubmit(self.runtime.clone(), build_inputs, build_operation, build_generation, self.presenter.dpr())).flatten();
         let cursor = frame.as_ref().map(|frame| semio_cursor_to_request(frame.cursor)).unwrap_or_else(|| self.snapshot_sink.acquire().cursor);
         if let Some(frame) = frame {
-            match self.presenter.present(frame) {
-                Ok(fullscreen) => self.platform_fullscreen = fullscreen,
-                Err(error) => self.present_fault = Some(error),
+            if self.presenter.begin_present(frame).is_err() {
+                self.present_fault = Some("presentation authority rejected a second in-flight frame".to_string());
             }
+        }
+        match self.presenter.present_step() {
+            Ok(crate::AppPresentStep::Complete { fullscreen, request_frame }) => {
+                self.platform_fullscreen = fullscreen;
+                if request_frame {
+                    self.cursor_wake_requested = true;
+                    self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+                }
+            }
+            Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
+            Ok(crate::AppPresentStep::Idle) => {}
+            Err(error) => self.present_fault = Some(error),
         }
         let revision = self.snapshot_sink.next_revision();
         let generation = semio_framework_trace::Generation(self.frame_generation);

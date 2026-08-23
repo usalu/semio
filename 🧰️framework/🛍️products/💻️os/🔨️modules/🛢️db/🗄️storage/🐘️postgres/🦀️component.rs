@@ -79,7 +79,7 @@ async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
 //#region 🔖️Connection
 use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
-use crate::db_storage::{CatalogStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use crate::db_storage::{CatalogStorage, DbIoPages, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use pack::{ByteRange, ContentHash};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 
@@ -194,7 +194,7 @@ impl WalStorage for PostgresStorage {
         Ok(())
     }
 
-    async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+    async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
         let idx = to_i64(index)?;
         let doc = document.0.as_str();
         let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
@@ -204,7 +204,7 @@ impl WalStorage for PostgresStorage {
             return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
         }
         let (new_len,): (i64,) =
-            sqlx::query_as("UPDATE db_wal_segment SET bytes = bytes || $1 WHERE document_id = $2 AND segment_index = $3 RETURNING octet_length(bytes)").bind(bytes).bind(doc).bind(idx).fetch_one(&mut *tx).await.map_err(map_sqlx_error)?;
+            sqlx::query_as("UPDATE db_wal_segment SET bytes = bytes || $1 WHERE document_id = $2 AND segment_index = $3 RETURNING octet_length(bytes)").bind(bytes.as_slice()).bind(doc).bind(idx).fetch_one(&mut *tx).await.map_err(map_sqlx_error)?;
         tx.commit().await.map_err(map_sqlx_error)?;
         Ok(new_len as u64)
     }
@@ -275,7 +275,7 @@ impl WalStorage for PostgresStorage {
 
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for PostgresStorage {
-    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         let gen = to_i64(generation)?;
         sqlx::query(
             "INSERT INTO db_snapshot_generation (document_id, generation, bytes) VALUES ($1, $2, $3)
@@ -283,7 +283,7 @@ impl SnapshotStorage for PostgresStorage {
         )
         .bind(document.0.as_str())
         .bind(gen)
-        .bind(bytes)
+        .bind(bytes.as_slice())
         .execute(&self.pool)
         .await
         .map_err(map_sqlx_error)?;
@@ -320,10 +320,10 @@ impl SnapshotStorage for PostgresStorage {
 
 //#region 🔖️PayloadStorage
 impl PayloadStorage for PostgresStorage {
-    async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
+    async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
-        let hash = ContentHash(*blake3::hash(bytes).as_bytes());
-        sqlx::query("INSERT INTO db_payload (hash, bytes) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING").bind(&hash.0[..]).bind(bytes).execute(&self.pool).await.map_err(map_sqlx_error)?;
+        let hash = ContentHash(*blake3::hash(bytes.as_slice()).as_bytes());
+        sqlx::query("INSERT INTO db_payload (hash, bytes) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING").bind(&hash.0[..]).bind(bytes.as_slice()).execute(&self.pool).await.map_err(map_sqlx_error)?;
         Ok(hash)
     }
 
@@ -359,7 +359,7 @@ impl CatalogStorage for PostgresStorage {
         Ok(bytes.map(|bytes| (bytes, EpochFence { epoch: epoch as u64 })))
     }
 
-    async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
+    async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
         check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
         let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
         // 🎯️ The bootstrap-seeded singleton row (`id = 1`) always exists, so `SELECT ... FOR
@@ -370,7 +370,7 @@ impl CatalogStorage for PostgresStorage {
         let current_fence = EpochFence { epoch: current_epoch as u64 };
         expected.check(current_fence)?;
         let new_fence = expected.next();
-        sqlx::query("UPDATE db_catalog_root SET epoch = $1, bytes = $2 WHERE id = 1").bind(to_i64(new_fence.epoch)?).bind(new_bytes).execute(&mut *tx).await.map_err(map_sqlx_error)?;
+        sqlx::query("UPDATE db_catalog_root SET epoch = $1, bytes = $2 WHERE id = 1").bind(to_i64(new_fence.epoch)?).bind(new_bytes.as_slice()).execute(&mut *tx).await.map_err(map_sqlx_error)?;
         tx.commit().await.map_err(map_sqlx_error)?;
         Ok(new_fence)
     }
@@ -379,7 +379,7 @@ impl CatalogStorage for PostgresStorage {
 
 //#region 🔖️IndexStorage
 impl IndexStorage for PostgresStorage {
-    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
         let run = to_i64(run_id)?;
         sqlx::query(
             "INSERT INTO db_index_run (document_id, run_id, bytes) VALUES ($1, $2, $3)
@@ -387,7 +387,7 @@ impl IndexStorage for PostgresStorage {
         )
         .bind(document.0.as_str())
         .bind(run)
-        .bind(bytes)
+        .bind(bytes.as_slice())
         .execute(&self.pool)
         .await
         .map_err(map_sqlx_error)?;

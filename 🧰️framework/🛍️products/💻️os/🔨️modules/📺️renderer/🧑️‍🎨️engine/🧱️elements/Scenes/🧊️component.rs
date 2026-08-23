@@ -7415,7 +7415,7 @@ fn render_icon_render_empty(bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, 
     draw_text(ctx, message, bounds.x + (bounds.w - width) * 0.5, bounds.y + bounds.h * 0.5, size, theme.text_muted);
 }
 
-/** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
+/** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
 fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, world_resources: &mut World3dBuildContext, icon_render_states: &mut HashMap<String, World3dState>) {
     let Some(icon_render) = &scene.icon_render else {
         return render_icon_render_empty(bounds, ctx, "No shot");

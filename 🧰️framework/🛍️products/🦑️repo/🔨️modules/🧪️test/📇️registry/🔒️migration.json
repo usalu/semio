@@ -1,0 +1,20 @@
+{
+  "$schema": "../🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🔒️ Shrink-only migration baseline. `unmanagedTests` counts executable test files that still live outside the canonical owner-root test tree, per area. The contract phase fails when a count GROWS; removing a legacy test in the same change that adds its replacement case always passes. An owner may not be declared migrated while its area count is above zero. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR.",
+  "unmanagedTests": {
+    "total": 48,
+    "byArea": {
+      ".storybook": 10,
+      "✏️s": 1,
+      "🌎️hub": 2,
+      "🧰️framework": 35
+    }
+  },
+  "ownerStatus": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf": "oracle-green",
+    "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition": "legacy-removed",
+    "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️style-variants": "legacy-removed",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test": "complete"
+  }
+}

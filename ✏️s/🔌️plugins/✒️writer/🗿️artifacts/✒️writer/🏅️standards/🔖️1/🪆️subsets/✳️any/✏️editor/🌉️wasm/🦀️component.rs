@@ -37,10 +37,7 @@ mod document_vcs {
 
     impl WriterEnvelopeLoadHandle {
         fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle {
-            ArtifactEnvelopeDecodeOperationHandle {
-                operation: semio_framework_job::OperationId(self.operation),
-                generation: semio_framework_job::Generation(self.generation),
-            }
+            ArtifactEnvelopeDecodeOperationHandle { operation: semio_framework_job::OperationId(self.operation), generation: semio_framework_job::Generation(self.generation) }
         }
     }
 

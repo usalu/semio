@@ -25,7 +25,7 @@
 //#region 🔖️Database
 /// 🗄️🚪️ The frozen `Database`/`ArtifactHandle` API and its companion types, promoted verbatim from
 /// `db_engine` — see the module doc's "Design choice (layout)" note. This is the primary entry
-/// point: `db::Database::open_at(root, db::Profile::Dev)` is the zero-touch way to stand up a
+/// point: `db::Database::open_at(pool, root, db::Profile::Dev)` stands up a
 /// document database over `FsStorage`.
 pub use crate::db_engine::{
     ArtifactHandle, ArtifactSpec, CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind,
@@ -200,6 +200,10 @@ pub mod storage_neo4j {
 mod tests {
     use super::*;
 
+    fn test_pool() -> std::sync::Arc<semio_framework_async::WorkerPool> {
+        std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)))
+    }
+
     //#region 🧸️Fixtures
     async fn tempdir(name: &str) -> std::path::PathBuf {
         let mut dir = std::env::temp_dir();
@@ -235,7 +239,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn full_round_trip_reachable_purely_through_facade_reexports() {
         let root = tempdir("round-trip").await;
-        let database = Database::open_at(&root, Profile::Dev).await.unwrap();
+        let database = Database::open_at(test_pool(), &root, Profile::Dev).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
@@ -262,7 +266,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn database_error_type_is_reachable_at_the_facade_root() {
         let root = tempdir("db-error").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_pool(), &root, Profile::Test).await.unwrap();
         let never_created = protocol::ArtifactId("never-created".to_string());
         let result = database.document(&never_created);
         assert!(matches!(result.await, Err(DbError::NotFound(_))));

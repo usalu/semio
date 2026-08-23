@@ -1134,18 +1134,8 @@ struct WriterStoreInitializationAuthority {
 }
 
 impl WriterStoreInitializationAuthority {
-    fn new(
-        envelope: store::ArtifactEnvelope<WriterSnapshot, WriterMutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-    ) -> Self {
-        let empty_document = store::ArtifactChild::new(
-            String::new(),
-            store::os_io::ArtifactRef {
-                artifact_id: String::new(),
-                dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() },
-            },
-        );
+    fn new(envelope: store::ArtifactEnvelope<WriterSnapshot, WriterMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Self {
+        let empty_document = store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
         Self {
             operation,
             generation,
@@ -1545,8 +1535,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
                 };
                 let envelope = self.envelope.take().expect("Writer envelope remains retained until atomic store construction");
                 let runtime = self.runtime.take().expect("Writer runtime remains retained until atomic store construction");
-                let mut candidate = store::ArtifactStore::from_initialized_runtime(envelope, runtime, candidate_generation);
-                candidate.install_member_store_owners_exact(writer_document_store_owners());
+                let candidate = store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, writer_document_store_owners());
                 *self.candidate = Some(candidate);
                 self.phase = WriterStoreInitializationPhase::Complete;
                 semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() })
@@ -1731,6 +1720,75 @@ mod tests {
         while !retirement.terminal_is_empty() {
             retirement.close_step(1, WRITER_ENVELOPE_FIELD_BYTES).expect("decoded mutation closes");
         }
+    }
+
+    fn empty_writer_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> WriterStoreInitializationAuthority {
+        let envelope = store::create_document_envelope(crate::artifacts::writer::WRITER_DOCUMENT_SCHEMA, "writer-retained-load", schema::empty_writer_snapshot(), None);
+        WriterStoreInitializationAuthority::new(envelope, operation, generation)
+    }
+
+    fn drive_writer_initializer(authority: &mut WriterStoreInitializationAuthority, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::StepOutcome {
+        let cancel = semio_framework_job::root_cancel_token();
+        let mut preview_sequence = 0;
+        for _ in 0..10_000 {
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let outcome = semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, &mut context);
+            if outcome.is_terminal() {
+                return outcome;
+            }
+        }
+        panic!("Writer retained initializer did not reach a bounded terminal")
+    }
+
+    fn close_writer_candidate(mut candidate: store::ArtifactStore<WriterSnapshot, WriterMutation>) {
+        use semio_framework_plugin::ArtifactOwnedDisposer;
+
+        let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<WriterSnapshot, WriterMutation>::new();
+        for _ in 0..10_000 {
+            match disposer.close_step(&mut candidate, 1, WRITER_ENVELOPE_FIELD_BYTES).expect("Writer candidate close step") {
+                semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1);
+                    assert!(released_bytes <= WRITER_ENVELOPE_FIELD_BYTES);
+                }
+                semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("fresh Writer candidate close unexpectedly blocked: {reason}"),
+                semio_framework_plugin::PluginCloseStep::Complete => {
+                    assert!(disposer.terminal_is_empty(&candidate));
+                    drop(disposer);
+                    drop(candidate);
+                    return;
+                }
+            }
+        }
+        panic!("Writer candidate did not reach terminal-empty close")
+    }
+
+    #[test]
+    fn writer_store_initializer_publishes_exact_next_generation_and_candidate_closes_incrementally() {
+        let operation = semio_framework_job::OperationId(401);
+        let generation = semio_framework_job::Generation(9);
+        let mut authority = empty_writer_initializer(operation, generation);
+        assert!(matches!(drive_writer_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
+        let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("exact Writer candidate");
+        assert_eq!(candidate.generation_now(), 10);
+        assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
+        drop(authority);
+        close_writer_candidate(candidate);
+    }
+
+    #[test]
+    fn writer_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty() {
+        let operation = semio_framework_job::OperationId(402);
+        let generation = semio_framework_job::Generation(11);
+        let mut cancelled = empty_writer_initializer(operation, generation);
+        semio_framework_plugin::ArtifactStoreInitializationAuthority::request_cancel(&mut cancelled);
+        assert!(matches!(drive_writer_initializer(&mut cancelled, operation, generation), semio_framework_job::StepOutcome::Cancelled));
+        assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&cancelled));
+        drop(cancelled);
+
+        let mut stale = empty_writer_initializer(operation, generation);
+        assert!(matches!(drive_writer_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1)), semio_framework_job::StepOutcome::Fault(_)));
+        assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
+        drop(stale);
     }
 
     #[semio_framework_async_macros::async_test]

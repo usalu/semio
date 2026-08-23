@@ -10,7 +10,7 @@
 //! renderer has booted inside its dedicated Worker isolate; calls from a browser UI isolate fail
 //! closed and never execute the transaction inline.
 
-use semio_framework_job::{root_cancel_token, BatchDriveConfig, BatchJobParams, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+use semio_framework_job::{BatchDriveConfig, BatchJobParams, CancelToken, CommitCandidate, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveJob, StepContext, StepOutcome, root_cancel_token};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::sync::Arc;
 
@@ -517,8 +517,14 @@ mod tests {
 
     #[test]
     fn cancellation_retires_empty_preparation_to_terminal_empty() {
-        let build =
-            crate::AppFrameBuild { input: ui_wgpu::wgpu::PreparedRenderInput::new(1, 1, ui_wgpu::wgpu::DrawList::default(), None, 0.0), engine_packets: Vec::new(), cursor: ui_wgpu::wgpu::SemioCursor::Default, theme_dark: false, fullscreen: None };
+        let build = crate::AppFrameBuild {
+            input: ui_wgpu::wgpu::PreparedRenderInput::new(1, 1, ui_wgpu::wgpu::DrawList::default(), None, 0.0),
+            engine_packets: Vec::new(),
+            cursor: ui_wgpu::wgpu::SemioCursor::Default,
+            theme_dark: false,
+            fullscreen: None,
+            request_frame: false,
+        };
         let mut phase = ActiveFramePhase::Prepare(build.into_preparation());
         for _ in 0..100 {
             if retire_active_phase(&mut phase) {

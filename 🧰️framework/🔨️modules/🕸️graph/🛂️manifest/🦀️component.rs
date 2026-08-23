@@ -216,6 +216,28 @@ pub struct PropertyDef {
     pub expr: Option<String>,
 }
 
+impl PropertyDef {
+    /// @emoji 🧹️ Detaches at most one exact nested value-type string or list box. A terminal
+    /// definition has only the definitionally shallow `Any` tag left for its final drop.
+    pub fn retire_value_type_step(&mut self, maximum_bytes: usize) -> Result<Option<String>, ()> {
+        if matches!(&self.value_type, ValueType::Schema(value) if value.len() > maximum_bytes) {
+            return Err(());
+        }
+        match std::mem::take(&mut self.value_type) {
+            ValueType::Schema(value) => Ok(Some(value)),
+            ValueType::List(value) => {
+                self.value_type = *value;
+                Ok(None)
+            }
+            _ => Ok(None),
+        }
+    }
+
+    pub fn value_type_terminal_is_empty(&self) -> bool {
+        matches!(self.value_type, ValueType::Any)
+    }
+}
+
 pub type PropertyBag = std::collections::BTreeMap<String, PropertyValue>;
 
 // #endregion 🔖️Property

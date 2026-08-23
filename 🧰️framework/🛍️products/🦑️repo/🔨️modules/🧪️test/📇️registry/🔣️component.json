@@ -1,0 +1,104 @@
+{
+  "$schema": "../🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "📇️ Test-only oracle registry. An oracle is a third-party reference implementation used ONLY by the test/oracle host to produce the reference projection a repository implementation is compared against. Nothing here may appear in a production manifest or be reachable from a production target — `bun ./📜️script.ts dependency check` enforces that. Exact resolved versions and checksums live in the ecosystem lockfile, not here.",
+  "oracles": [
+    {
+      "id": "pdf-writer",
+      "ecosystem": "rust",
+      "package": "pdf-writer",
+      "version": "0.15",
+      "capabilities": [
+        "pdf-create"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/typst/pdf-writer",
+      "rationale": "Typed, step-by-step PDF writer with explicit control over catalog, page tree, media boxes and content streams — the creation reference. Deterministic given the same call sequence, no network, no system dependencies, runs on Windows/macOS/Linux.",
+      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust"
+    },
+    {
+      "id": "lopdf",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": [
+        "pdf-edit",
+        "pdf-parse"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "PDF document-manipulation library exposing object-level editing, page insert/delete, content-stream rewriting and an independent parser — serves both as the editing oracle and as the independent reader that proves a subject's output is parseable.",
+      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust"
+    },
+    {
+      "id": "clsx",
+      "ecosystem": "javascript",
+      "package": "clsx",
+      "version": "2.1.1",
+      "capabilities": [
+        "class-name-flattening"
+      ],
+      "comparisonProfiles": [
+        "utf8-text-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/lukeed/clsx",
+      "rationale": "The de-facto specification of recursive class-name flattening: nested arrays, truthy object keys, falsey suppression and numeric coercion. Deterministic, dependency-free, no network, no system dependencies, runs on every platform. Deliberately scoped to the FLATTENING half of the repository's cn() — clsx knows nothing about conflicting utility families, so it is not, and must not be used as, an oracle for conflict resolution.",
+      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"
+    },
+    {
+      "id": "cva",
+      "ecosystem": "javascript",
+      "package": "class-variance-authority",
+      "version": "0.7.1",
+      "capabilities": [
+        "style-variant-compilation"
+      ],
+      "comparisonProfiles": [
+        "utf8-text-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/joe-bell/cva",
+      "rationale": "The published contract that this repository's styleVariants() re-implements: base class, finite variant schema, defaultVariants, boolean choices, compoundVariants with array conditions, and caller class/className overrides. Deterministic, dependency-light, no network. Valid only over UNCLASSIFIED class tokens: styleVariants() finishes through cn(), which additionally resolves repository-owned utility conflicts that cva knows nothing about — the vectors are scoped accordingly.",
+      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "repo-test-platform",
+      "capabilities": [
+        "test-discovery",
+        "test-contract",
+        "test-comparison",
+        "test-clean",
+        "test-dependency"
+      ],
+      "rationale": "The repository test platform is the thing under test; no third-party library implements this repository's taxonomy, feature profile or cache contract, so an external reference would be meaningless. Confidence comes from specification vectors (the frozen contract), metamorphic laws (discovery is idempotent, clean is a no-op on a clean tree) and independently written assertions per behaviour.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    },
+    {
+      "id": "repository-owned-utility-groups",
+      "capabilities": [
+        "class-name-conflict-resolution"
+      ],
+      "rationale": "cn() resolves conflicts over a finite table of REPOSITORY-OWNED utility families (ui-surface/ui-glass/ui-veil fills, px-single/px-tiny spacing, text-element sizing, border-accent colours). tailwind-merge and every other third-party merger resolve against Tailwind's default scale and know none of these families, so agreeing with one would prove nothing and disagreeing with it would prove nothing either. Choosing such a library purely to satisfy the workflow would be selecting a weak oracle mechanically. The group table in 🟦️component.ts is the specification, and the vectors in the feature carry it.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ]
+}

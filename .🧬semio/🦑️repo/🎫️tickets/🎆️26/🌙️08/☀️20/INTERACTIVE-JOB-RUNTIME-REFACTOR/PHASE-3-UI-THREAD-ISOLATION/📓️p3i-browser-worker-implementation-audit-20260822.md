@@ -1168,3 +1168,169 @@ Exact live residual routes after this checkpoint:
   meshes now stay backpressured until the retained renderer decoder publishes a paged lease. The
   old GLB integration test that exercised the deleted contiguous path was removed; the retained
   decoder's page/geometry differential fixture remains the intended replacement, still unrun.
+
+### Retained GPU mesh and presentation staging checkpoint
+
+- `MeshGpuTable` no longer maps a full vertex/index buffer and loops over an entire lease. A
+  retained cursor owns the exact key, version, lease, schema, destination buffers, and independent
+  vertex/index positions. Each presentation turn reads and writes one typed vertex or one index;
+  another generation is rejected while the cursor owns the fixed upload authority. The completed
+  buffers become visible in the mesh table only after both cursors reach terminal.
+- Prepared presentation is now a retained phase machine: gate admission, one EngineCanvas packet,
+  one eviction, one upload step, final render, fullscreen, and cursor directive are distinct turns.
+  Mesh uploads remain in the Uploads phase across as many turns as their admitted items require.
+  The old all-upload loop, direct `submit_prepared` call, full-lease vertex/index loops, and
+  all-EngineCanvas-packets loop are absent. While a presentation is pending, OsHost does not take a
+  second frame, native scheduling requests another resource-ready turn, and the browser Worker
+  reports `request_frame` until completion.
+- A permanent source fixture now rejects reintroduction of direct submit, all-upload, and whole
+  schema vertex/index loops. It is authored but unrun. Scoped rustfmt passed for draw/gpu with
+  edition 2021 and renderer glue/winit/browser/EngineCanvas with edition 2024; scoped diff-check
+  passed. No Cargo, Nx, Wasm, browser, network, or root-lint gate ran.
+- This boundary remains **RED**: EngineCanvas `realize_one` and final wgpu render/submit are opaque
+  one-turn operations; atlas/raster uploads and dynamic cache eviction are monolithic; upload and
+  pending-presentation failure/realm-close retirement are not terminally cursorized; the mounted
+  root `infinite/component.rs`, schema-first placeholder/terrain builders, and legacy Mesh3d tests
+  remain unmigrated.
+
+### Active-upload close and mounted-root placeholder checkpoint
+
+- The retained mesh upload cursor now has an exact abort path. Key bytes retire one scalar per
+  turn, each optional destination buffer is explicitly destroyed and detached in its own turn, and
+  only the empty scalar lease/schema/version shell is released. `OsHostRetirement` pumps this
+  witness before beginning World mesh-authority retirement, preventing a live upload from reading a
+  lease after its paged owner begins closing. A permanent source fixture asserts this order.
+- This is deliberately narrower than presenter acceptance. Pending prepared packets, the completed
+  GPU mesh table, atlas/raster resources, EngineCanvas realization, and final render/queue submit do
+  not yet have exact deep-close/timing witnesses. The platform-bound render/submit step remains
+  **RED** and is not described as bounded.
+- The mounted `♾️infinite/🦀️component.rs` was a second complete World implementation but had no
+  production consumer of its bespoke API; every renderer path imports `infinite_world::world`.
+  The mounted root now reexports that canonical authority, reducing its compiled Mesh3d/direct-field
+  census from 21/80 conservative hits to zero without a Vec adapter or fallback.
+- Canonical placeholder production no longer constructs `WorldMeshBuffers -> Mesh3d`. A retained
+  analytic writer covers box, plane, cylinder, cone, and subdivision-1 icosphere geometry. It owns
+  an epoch/generation/revision write token, allocates one 16 KiB authority page or writes one typed
+  position/normal/index per call, seals before publication, and aborts one page per close call.
+  An authored differential fixture compares its complete geometry with the former generator and
+  covers interrupted terminal close; it has not run because Cargo remains prohibited.
+- Source gates run at this save: scoped rustfmt for draw/gpu (edition 2021), renderer glue/host
+  (edition 2024), and both mounted/canonical World files (edition 2021); scoped `git diff --check`;
+  exact `rg` census. All passed. Cargo, Nx, Wasm, browser, network, and root lint were not run.
+- Phase 3/5 remains **RED**. Terrain-band and face-overlay producers still construct contiguous
+  Mesh3d values; legacy tests remain Vec-backed; placeholder progress currently depends on a later
+  render invalidation instead of an explicit scheduler-ready signal; and semantic PNG/JPEG/MVT/SVG
+  decode, cache retirement, full presenter/GPU close, realm terminal-empty, and browser runtime
+  evidence remain outstanding. The World3d snapshot producer is still unclaimed.
+
+### Retained terrain-band output checkpoint
+
+- Production terrain-band output no longer scans a tile into temporary positions/normals/indices
+  vectors or constructs `Mesh3d`. A retained tile cursor first counts one triangle per turn for the
+  current band, then allocates one paged-authority page per turn and writes one position, normal, or
+  index item per turn. Each nonempty band seals and publishes independently under ten reserved mesh
+  generations and a terrain-revision witness; the tile becomes built only after every band and the
+  flat source owner reach terminal.
+- Style replacement, invisible tiles, malformed indices/floats, paged-authority rejection,
+  publication saturation, cancellation, and realm close converge on the same write-token/lease
+  abort cursor. It retires one authority page, one flat Copy-vector allocation, or one surface-id
+  scalar per call. An authored differential fixture compares low/high bands against the former test
+  oracle and covers malformed admission plus interrupted terminal close. It is unrun.
+- The input side is not relabeled bounded: `terrain_tile_mesh_json` and serde still materialize the
+  whole decoded `TerrainTileMeshPayload` before this cursor owns it. The required upstream typed
+  terrain page producer remains **RED**, as does explicit scheduler-ready signalling for cursor
+  progress without another render invalidation.
+- Current compiled census: mounted root 0 Mesh3d symbols; canonical World 17 total symbols, with
+  one remaining production constructor in the face-overlay path and the rest in cfg(test)/oracle
+  code. Stale prose references to `infinite_world::render_world_3d`/root `World3dState` were updated
+  to the canonical `infinite_world::world` spelling.
+- Scoped rustfmt (edition/style 2021) and scoped `git diff --check` passed for canonical/mounted
+  World plus the two comment-only renderer files. No Cargo, Nx, Wasm, browser, network, or root lint
+  ran. Phase 3/5 remains **RED** for face-overlay production, terrain input materialization, legacy
+  tests/type validation, explicit progress scheduling, semantic image/map decoders, cache close,
+  final presenter/GPU/realm close, and browser evidence.
+
+### Retained face-overlay output checkpoint
+
+- The last non-test production `Mesh3d::from_buffers` route is removed. Face overlays now use a
+  retained `WorldFaceOverlayMeshCursor` with fixed three-category state, an exact mesh write
+  token/lease owner, interaction-revision and draw-generation witnesses, and first-seen bucket
+  ordering matching the prior traversal. One turn advances one draw/instance/triangle boundary,
+  one preview/selected identifier comparison, one authority page, one position/normal, one index,
+  one seal/publication transition, or one stale-key removal. Removal advances only after the
+  registry accepts it; a busy close owner leaves the exact bucket/key stage at the FIFO front.
+- The writer preserves the former preview > hovered > selected color precedence, hovered full
+  offset versus half offset, and double-sided `[0,1,2,0,2,1]` winding. It never constructs a
+  bucket `Vec` or whole overlay mesh. Sealed leases enter the observed-slot publication authority;
+  a rejected lease and bounded key return to the same cursor's publish stage for exact FIFO retry.
+  Stale revisions, realm close, write faults,
+  and interruption converge on the page-stepped token/lease abort cursor. Dynamic realm close now
+  drains this cursor before the World mesh registry.
+- Authored, unrun fixtures compare positions, colors, offset, winding, stale-generation
+  retirement, empty-bucket removal order, identifier-cap rejection, and terminal-empty close. A
+  permanent source fixture rejects `Mesh3d::from_buffers`, `FaceOverlayBucket`, selection
+  `HashSet` construction, and contiguous float buckets in the production face route.
+- Source gates run at this save: `rustfmt --edition 2021 --config style_edition=2021 --check` and
+  scoped `git diff --check` for canonical World passed. The exact face-route negative scan passed.
+  Cargo, Nx, Wasm, browser, network, and root lint were not run by instruction.
+- The non-test production constructor census is zero, but the public obsolete Vec-backed
+  `Mesh3d` type and cfg(test) oracles/fixtures remain. They are not called migrated or compile
+  validated. The next serialized packet must replace those fixtures with paged leases, delete the
+  old type/import, and run the Rust type gate. Phase 3/5 remains **RED** for that test/type gate,
+  explicit wake scheduling for retained builders, presenter-witnessed normal replacement close
+  (the face cursor retains its retry lease rather than closing a generation that an active upload
+  may still read), atomic visibility for a multi-bucket overlay-family replacement, typed terrain
+  input, PNG/JPEG/MVT/SVG semantics, cache close, final presenter/GPU/realm close, and real
+  Wasm/browser evidence.
+
+### Scoped paged-mesh audit formatting repair
+
+- Repaired the sole blocker in
+  `📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs`: edition-2021 rustfmt now
+  orders `default_intent_exchange` before `AppKernelSeam`. The working-tree diff against the
+  staged source contains exactly that one import-order line and no semantic change.
+- Reran the Terra audit cohort exactly at source scope. Edition-2021 rustfmt passed for the mounted
+  root, canonical World, ui-scene math, draw, GPU, and `os_host`; edition-2024 rustfmt passed for
+  renderer glue. Mounted-root forbidden census remained 0, face-route forbidden census remained
+  0, and the exact legacy `Mesh3d::from_buffers` census remained 12. The authority constants remain
+  256 slots, 16 KiB pages, 1,024 pages/16 MiB per owner, and 4,096 process pages. The source order
+  still drains `close_active_upload_step` and its terminal witness before
+  `close_world3d_dynamic_step`.
+- Whole working, staged, and HEAD `git diff --check`, plus the exact scoped diff check, all passed.
+  Cargo, Nx, Wasm, browser, network, and root lint were not run by instruction. This repairs only
+  the audit's isolated formatting rejection; all independently listed Phase 3 residuals remain
+  **RED**.
+
+### Atomic mesh-family visibility and explicit cursor wake checkpoint
+
+- The obsolete public Vec-backed mesh type and its conversions are removed. Production and tests
+  consume only the generation/revision/epoch-witnessed paged lease. Differential inputs are named
+  `LegacyMeshOracleData`, are confined to `cfg(test)`, and must publish through the real paged
+  writer before any shared consumer observes them. The exact framework-wide old-type/constructor
+  spelling census is zero; `mesh3d-census-20260823.txt` records the superseding command and result.
+- Face overlay publication is now family-atomic. Each fixed category is sealed under a staging key
+  containing the candidate generation. The visible generation plus fixed color table swaps only
+  when the retained cursor reports the whole family complete. Partial and stale superseding builds
+  preserve the last complete family. Realm retirement clears colors and generation witnesses one
+  owner per grant before the mesh registry terminal witness.
+- Terrain bands remain invisible until the retained ten-band builder publishes its complete tile
+  marker. This closes partial-family visibility, but normal style replacement still retires the old
+  family too early and therefore remains RED for last-valid/presenter-witnessed replacement.
+- Retained placeholder, terrain, and face cursors now request progress through a fixed
+  generation/armed `WorldCursorWake`, not polling. Duplicate requests coalesce until one exact
+  take. The bit is retained through frame build, render preparation, and presentation completion;
+  native scheduling records RESOURCE_READY and the browser Worker consumes the host bit exactly
+  once into `request_frame`. A resumed cursor creates a fresh ABA-distinguishable generation.
+- Authored source fixtures cover partial face invisibility, whole-family atomic publication, stale
+  supersede preserving last-valid, complete-marker terrain visibility, duplicate wake coalescing,
+  exact wake handoff, and rearming. They were not executed because Cargo remains prohibited.
+- Executed source-only gates all passed: framework-wide legacy spelling negative scan; obsolete
+  face-removal and tuple-completion negative scans; required fixture/wake/terminal positive scans;
+  `rustfmt --edition 2024 --check` for ui-scene math, canonical World, winit app, frame job, OsHost,
+  and browser worker; renderer glue parse through rustfmt stdout; scoped `git diff --check`.
+  Cargo, Nx, Wasm, browser, network, and root lint were not run.
+- Phase 3/5 remains **RED**. Normal face replacement intentionally blocks while one retired
+  generation lacks a presenter acknowledgment and bounded registry-lease retirement. Terrain
+  last-valid replacement is also absent. Typed terrain input, dynamic collection/frame-owner
+  retirement, semantic PNG/JPEG/MVT/SVG jobs, full pending-packet/GPU-table/atlas/raster/cache
+  close, opaque render/submit timing, realm terminal-empty, and real Wasm/browser evidence remain.

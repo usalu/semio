@@ -4,128 +4,36 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Root Vitest configuration for the monorepo test runner.
-
 // #endregion 🧲️Header
 
 // #region 🗄️Configuration
-// Root Vitest configuration aggregating all workspace test projects.
+// 🧪️ Root Vitest configuration — deliberately NOT a repository-wide aggregator.
 //
-// #region ⚠️Why This Is Not A Plain Path List
-// Vitest 4's `test.projects` resolver validates every path (literal or glob match)
-// against `/^vite(?:st)?(?:\.[\w-]+)?\.config\./` — the basename MUST start with the
-// literal ASCII string "vite"/"vitest". None of this repo's emoji-prefixed
-// `🧪️vitest.config.ts` files satisfy that regex, so referencing them as path *strings*
-// (literal or glob) always throws, even when the path genuinely exists. Discovered while
-// fixing this file in ticket 26/08/05/STALE-CONFIG-FIXES-AND-CAPABILITY-LINT-REVIVAL.
-// The workaround: glob-discover the real files ourselves, then load each one with Vite's
-// own `loadConfigFromFile` (the same esbuild-backed loader Vite uses for `--config`) and
-// hand Vitest the resolved config *objects* instead of path strings — `test.projects`
-// accepts inline `UserWorkspaceConfig` objects too, and object entries skip the filename
-// regex entirely. `import.meta.url`-derived `root` fields inside each project config
-// resolve correctly this way (unlike a same-directory-external symlink workaround, which
-// was also tried and found to break `include` glob resolution intermittently).
-// #endregion ⚠️Why This Is Not A Plain Path List
+// Until ticket 26/08/23/END-TO-END-TESTING-REFACTOR this file glob-discovered every emoji-named
+// `🧪️vitest.config.ts` in the tree, loaded each one through Vite's own config loader, carried a
+// hand-maintained `KNOWN_BROKEN_IN_AGGREGATOR` allowlist and explicitly pulled in a `compose`
+// project. That made one runner responsible for discovering, ordering and excusing every test in
+// the repository — a defensive aggregator rather than a discovery system, and it turned any single
+// project's collection error into a blank listing for all of them.
+//
+// Test discovery is now owned by the testing domain
+// (`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`): cases are found from
+// `**/🧪️tests/*/component.feature`, one cacheable Nx project is generated per case, and each
+// project runs through its own native host. `compose/**` is excluded in that discovery library, not
+// here and not by a CI path filter. No allowlist may turn a failure into a skip.
+//
+// What remains is the host-local config for the root itself: nothing to collect. Each package keeps
+// its own `🧪️vitest.config.ts` and runs it through its own `📜️script.ts test` target. Note there is
+// deliberately no `projects` key at all — Vitest rejects an explicitly EMPTY `projects: []` with
+// "No projects were found", whereas omitting it leaves just this one root project collecting nothing.
+import { defineConfig } from "vitest/config";
 
-// #region 🔌️Adapters
-import { globSync } from "node:fs";
-import { dirname } from "node:path";
-import { defineOwnedTestConfig, type OwnedTestProjectConfig } from "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
-import { loadOwnedTestProjectConfig } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/🟦️config-tooling.ts";
-// #endregion 🔌️Adapters
-
-// #region 🔍️Discovery
-const root = process.cwd();
-
-/** 🚫️ Directories that must never feed the workspace aggregator: node_modules, ticket
- * scratch trees, and other-technology sibling stacks (`♻️mit-bestand`) per CLAUDE.md's
- * no-technology-mixing rule. */
-function isDiscoverable(relPath: string): boolean {
-  return (
-    !relPath.includes("node_modules") &&
-    !relPath.startsWith(".🧬semio/🦑️repo/") &&
-    !relPath.startsWith("♻️mit-bestand/") &&
-    relPath !== "🧪️vitest.config.ts"
-  );
-}
-
-/** 🧵️ Projects that are individually healthy (pass standalone via their own `nx test`
- * target — the mechanism CI/devs actually use) but currently fail when *collected inside
- * this aggregator*, for reasons unrelated to path correctness. Verified standalone-clean
- * and aggregator-broken one by one while fixing this file in ticket
- * 26/08/05/STALE-CONFIG-FIXES-AND-CAPABILITY-LINT-REVIVAL; each entry documents the
- * specific pre-existing breakage so it isn't mistaken for a path bug. Excluded here rather
- * than left to abort the whole `list`/`run` (Vitest's workspace collection is all-or-nothing
- * — one project's collection error blanks the successful listing of every other project).
- * Re-include as each underlying bug is fixed by its owning team. */
-const KNOWN_BROKEN_IN_AGGREGATOR = new Map<string, string>([
-  [
-    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-    "custom nested-worker test environment (backbone-worker.ts) throws EnvironmentTeardownError when collected alongside sibling projects, even with --no-file-parallelism",
-  ],
-  [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-    "📜️script.ts has a pre-existing 'Cannot access join before initialization' bug reproducible standalone (bun:sqlite/env-transform ordering) — unrelated to this file",
-  ],
-  [
-    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️vitest.config.ts",
-    "imports the unresolved package '@semio-tech/assets' — pre-existing, unrelated to this file",
-  ],
-  [
-    "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/🧪️vitest.config.ts",
-    "imports the unresolved package '@semio-tech/animate-present-core' — pre-existing, unrelated to this file",
-  ],
-]);
-
-const discoveredConfigPaths = globSync("**/🧪️vitest.config.ts", { cwd: root })
-  .filter(isDiscoverable)
-  .filter((relPath) => !KNOWN_BROKEN_IN_AGGREGATOR.has(relPath));
-
-const discoveredProjects = (
-  await Promise.all(
-    discoveredConfigPaths.map(async (relPath) => {
-      const absPath = `${root}/${relPath}`;
-      try {
-        const loaded = await loadOwnedTestProjectConfig(absPath, dirname(absPath));
-        if (!loaded) {
-          console.warn(`[🧪️vitest.config.ts] no config export found, skipping: ${relPath}`);
-          return null;
-        }
-        // 🧭️ `loadConfigFromFile` does NOT backfill `root` onto the returned config object
-        // even when several project configs rely on Vite's CLI default of "directory
-        // containing the config file" (they never set `root:` themselves). Left as `undefined`,
-        // Vitest falls back to the WORKSPACE root for that project, silently rebasing its
-        // relative `include`/`coverage.include` patterns onto the whole monorepo — turning a
-        // 2-file project into an accidental full-repo scan. Backfill explicitly here.
-        return { ...loaded, root: loaded.root ?? dirname(absPath) };
-      } catch (err) {
-        console.warn(`[🧪️vitest.config.ts] failed to load, skipping: ${relPath} -> ${(err as Error).message.split("\n")[0]}`);
-        return null;
-      }
-    }),
-  )
-).filter((project): project is OwnedTestProjectConfig => project !== null);
-
-/** 🧭️ `compose/**` keeps non-emoji-prefixed `vite(st)?.config.ts` filenames (a separate,
- * older technology stack — see CLAUDE.md's no-technology-mixing rule), so those pass the
- * CONFIG_REGEXP check natively and can stay as plain path strings.
- * `sketchpad/js` and `dev/algorithm/js` are deliberately omitted: both transitively import
- * an unresolved package (`@semio-tech/framework-platform-core` and `@semio-tech/assets`
- * respectively — the latter via `🧰️framework/🔨️modules/🖱️ui/⚛️react`, also excluded above),
- * reproducible standalone — pre-existing, unrelated to this file. Re-include once those
- * packages resolve. */
-const composeProjectPaths = ["./compose/client/lib/js/vite.config.ts"];
-// #endregion 🔍️Discovery
-
-export default defineOwnedTestConfig({
+export default defineConfig({
   test: {
-    // 🚫️ Without an explicit empty `include`, Vitest's own implicit root/core project
-    // additionally collects with its DEFAULT include glob (`**/*.{test,spec}.*`) across
-    // the whole repo, alongside the real discovered projects below — picking up unrelated
-    // Playwright specs, stray ticket-folder scratch tests, etc. `include: []` disables that
-    // phantom project without disabling any of the real `projects` entries.
+    // 🚫️ Without an explicit empty `include`, Vitest's implicit root project collects with its
+    // DEFAULT glob (`**/*.{test,spec}.*`) across the whole repository, picking up Playwright specs
+    // and ticket-folder scratch files. The root owns no tests of its own.
     include: [],
-    projects: [...composeProjectPaths, ...discoveredProjects],
   },
 });
 

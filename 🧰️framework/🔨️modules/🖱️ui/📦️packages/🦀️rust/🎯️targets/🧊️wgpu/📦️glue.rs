@@ -263,7 +263,7 @@ pub use kernel_3d_scene::{
     lod_progressive_grid_layers, marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal,
     mesh3d_terminal_is_empty, mesh3d_update_vec3, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, pick_closest_mesh_url, point_in_polygon, project_point, quat_from_basis, ray_aabb_slab,
     ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rect_contains, rotate_vector, screen_segment_distance, screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d,
-    LineDraw3d, LineVertex3d, Mat4, Mat4Math, Mesh3d, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dItemCursor, Mesh3dLease, Mesh3dPageCursor, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneDraw3d, ScenePass3d, TexturedDraw3d,
+    LineDraw3d, LineVertex3d, Mat4, Mat4Math, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dItemCursor, Mesh3dLease, Mesh3dPageCursor, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneDraw3d, ScenePass3d, TexturedDraw3d,
     TexturedInstance3d, Vec3, Vec3Math,
 };
 #[cfg(feature = "wgpu-engine")]

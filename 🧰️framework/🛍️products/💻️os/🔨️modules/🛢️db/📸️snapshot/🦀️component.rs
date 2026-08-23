@@ -511,7 +511,8 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             created_at_ms: body.created_at_ms,
         };
         let bytes = build_generation(&descriptor, new_pages, parent_footer_position).await?;
-        self.storage.write_generation(document, generation, &bytes).await?;
+        let pages = db_storage::DbIoPages::try_new(bytes).map_err(|_| DbError::LimitExceeded("snapshot generation pages"))?;
+        self.storage.write_generation(document, generation, pages).await?;
         Ok(generation)
     }
 
@@ -652,6 +653,10 @@ impl SnapshotLease {
 mod tests {
     use super::*;
     use db_storage::MemoryStorage;
+
+    fn pages(bytes: &[u8]) -> db_storage::DbIoPages {
+        db_storage::DbIoPages::try_new(bytes.to_vec()).expect("test snapshot bytes must fit the fixed page owner")
+    }
 
     //#region 🔖️Descriptor
     async fn sample_descriptor(generation: u64, parent: Option<u64>) -> SnapshotDescriptor {
@@ -930,7 +935,7 @@ mod tests {
         let mut corrupted = db_actor::block_on(storage.read_generation(&document, 0)).unwrap();
         let last = corrupted.len() - 1;
         corrupted[last] ^= 0xFF;
-        db_actor::block_on(storage.write_generation(&document, 0, &corrupted)).unwrap();
+        db_actor::block_on(storage.write_generation(&document, 0, pages(&corrupted))).unwrap();
         assert!(db_actor::block_on(manager.verify(&document, 0, pack::os_pack::VerificationLevel::Standard)).is_err());
     }
     //#endregion 🔖️Manager

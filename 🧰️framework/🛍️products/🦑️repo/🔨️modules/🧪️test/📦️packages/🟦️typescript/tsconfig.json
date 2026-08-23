@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
+    "rootDir": "../../../../../../..",
+    "resolveJsonModule": true
+  },
+  "include": ["📦️index.ts", "🏃️host.ts"],
+  "exclude": ["🧪️index.test.ts"]
+}

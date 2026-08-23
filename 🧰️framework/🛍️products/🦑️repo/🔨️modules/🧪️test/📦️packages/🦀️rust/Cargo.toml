@@ -1,0 +1,23 @@
+# 🧭️ Own workspace root: this crate is linked by generated cache-local hosts by path and must not
+# be a member of the repository workspace, whose root manifest is a shared, leased file.
+[workspace]
+
+[package]
+name = "semio-repo-test-host"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🧪️ Rust native host of the semio repository test platform."
+
+[lib]
+name = "semio_repo_test_host"
+path = "📦️lib.rs"
+
+[features]
+# 🔮️ Links the registered third-party reference implementations. Enabled only by a generated oracle
+# host, never by any production target — `bun ./📜️script.ts dependency` enforces that.
+oracles = ["dep:pdf-writer", "dep:lopdf"]
+
+[dependencies]
+pdf-writer = { version = "0.15", optional = true }
+lopdf = { version = "0.44", optional = true }

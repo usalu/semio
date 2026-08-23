@@ -951,45 +951,6 @@ impl Mesh3dItemCursor {
 }
 
 #[derive(Clone, Debug)]
-pub struct Mesh3d {
-    pub positions: Vec<f32>,
-    pub normals: Vec<f32>,
-    pub indices: Vec<u32>,
-    pub aabb_min: [f32; 3],
-    pub aabb_max: [f32; 3],
-    pub face_ids: Vec<u32>,
-    pub vertex_ids: Vec<u32>,
-    pub edge_positions: Vec<f32>,
-    pub edge_ids: Vec<u32>,
-    pub uvs: Vec<f32>,
-    pub colors: Vec<f32>,
-}
-
-impl Mesh3d {
-    pub fn from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> Self {
-        let mut aabb_min = [f32::INFINITY; 3];
-        let mut aabb_max = [f32::NEG_INFINITY; 3];
-        for chunk in positions.as_chunks::<3>().0 {
-            for axis in 0..3 {
-                aabb_min[axis] = aabb_min[axis].min(chunk[axis]);
-                aabb_max[axis] = aabb_max[axis].max(chunk[axis]);
-            }
-        }
-        Self { positions, normals, indices, aabb_min, aabb_max, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() }
-    }
-
-    pub fn has_vertex_colors(&self) -> bool {
-        self.colors.len() == self.positions.len()
-    }
-}
-
-impl From<(&[f32], &[f32], &[u32])> for Mesh3d {
-    fn from((positions, normals, indices): (&[f32], &[f32], &[u32])) -> Self {
-        Self::from_buffers(positions.to_vec(), normals.to_vec(), indices.to_vec())
-    }
-}
-
-#[derive(Clone, Debug)]
 pub struct Instance3d {
     pub id: String,
     pub model: Mat4,
@@ -1212,11 +1173,7 @@ fn ray_triangle_barycentric(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) 
         return None;
     }
     let t = f * edge2.dot_m(q);
-    if t > 1e-4 {
-        Some((t, u, v))
-    } else {
-        None
-    }
+    if t > 1e-4 { Some((t, u, v)) } else { None }
 }
 
 pub fn interpolate_mesh_uv(mesh: Mesh3dLease, triangle_index: usize, bary_u: f32, bary_v: f32) -> Option<(f32, f32)> {
@@ -1317,11 +1274,7 @@ fn segment_intersects_polygon(a: [f32; 2], b: [f32; 2], polygon: &[[f32; 2]]) ->
 }
 
 fn marquee_contains_point(point: [f32; 2], polygon: &[[f32; 2]], rectangle: bool, rect_bounds: Option<[f32; 4]>) -> bool {
-    if rectangle {
-        rect_bounds.is_some_and(|bounds| rect_contains(bounds, point))
-    } else {
-        point_in_polygon(point, polygon)
-    }
+    if rectangle { rect_bounds.is_some_and(|bounds| rect_contains(bounds, point)) } else { point_in_polygon(point, polygon) }
 }
 
 fn marquee_segment_selected(a: [f32; 2], b: [f32; 2], polygon: &[[f32; 2]], rectangle: bool, rect_bounds: Option<[f32; 4]>, crossing: bool) -> bool {
@@ -1329,11 +1282,7 @@ fn marquee_segment_selected(a: [f32; 2], b: [f32; 2], polygon: &[[f32; 2]], rect
         if marquee_contains_point(a, polygon, rectangle, rect_bounds) || marquee_contains_point(b, polygon, rectangle, rect_bounds) {
             return true;
         }
-        if rectangle {
-            rect_bounds.is_some_and(|bounds| segment_intersects_rect(a, b, bounds))
-        } else {
-            segment_intersects_polygon(a, b, polygon)
-        }
+        if rectangle { rect_bounds.is_some_and(|bounds| segment_intersects_rect(a, b, bounds)) } else { segment_intersects_polygon(a, b, polygon) }
     } else {
         marquee_contains_point(a, polygon, rectangle, rect_bounds) && marquee_contains_point(b, polygon, rectangle, rect_bounds)
     }
@@ -1499,11 +1448,7 @@ pub fn ray_triangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Optio
         return None;
     }
     let t = f * edge2.dot_m(q);
-    if t > 1e-4 {
-        Some(t)
-    } else {
-        None
-    }
+    if t > 1e-4 { Some(t) } else { None }
 }
 
 pub fn project_point(view_proj: Mat4, point: Vec3, width: f32, height: f32) -> Option<[f32; 2]> {
@@ -1697,11 +1642,7 @@ pub fn gumball_axis_drag_plane_normal(axis: Vec3, eye: Vec3) -> Vec3 {
     if align.length_m() > 1e-6 {
         return align.cross_m(axis).normalize_m();
     }
-    if axis.z.abs() < 0.9 {
-        vec3_new_m(0.0, 0.0, 1.0).cross_m(axis).normalize_m()
-    } else {
-        vec3_new_m(0.0, 1.0, 0.0).cross_m(axis).normalize_m()
-    }
+    if axis.z.abs() < 0.9 { vec3_new_m(0.0, 0.0, 1.0).cross_m(axis).normalize_m() } else { vec3_new_m(0.0, 1.0, 0.0).cross_m(axis).normalize_m() }
 }
 
 pub fn gumball_project_ray_onto_axis(origin: Vec3, dir: Vec3, pivot: Vec3, axis: Vec3, eye: Vec3) -> Option<f32> {
@@ -1869,6 +1810,77 @@ pub fn grid_placement_anchor(orbit_target: Vec3, datum: [f64; 3]) -> Vec3 {
 mod tests {
     use super::*;
 
+    struct LegacyMeshOracleData {
+        positions: Vec<[f32; 3]>,
+        normals: Vec<[f32; 3]>,
+        indices: Vec<u32>,
+        face_ids: Vec<u32>,
+        vertex_ids: Vec<u32>,
+        edges: Vec<[[f32; 3]; 2]>,
+        edge_ids: Vec<u32>,
+        uvs: Vec<[f32; 2]>,
+        colors: Vec<[f32; 4]>,
+    }
+
+    impl LegacyMeshOracleData {
+        fn triangle() -> Self {
+            Self {
+                positions: vec![[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0], [0.0, 1.0, 0.0]],
+                normals: vec![[0.0, 0.0, 1.0]; 3],
+                indices: vec![0, 1, 2],
+                face_ids: Vec::new(),
+                vertex_ids: Vec::new(),
+                edges: Vec::new(),
+                edge_ids: Vec::new(),
+                uvs: Vec::new(),
+                colors: Vec::new(),
+            }
+        }
+    }
+
+    fn paged_mesh_fixture(data: LegacyMeshOracleData) -> Mesh3dLease {
+        let schema = Mesh3dSchema {
+            vertices: data.positions.len() as u32,
+            indices: data.indices.len() as u32,
+            face_ids: data.face_ids.len() as u32,
+            vertex_ids: data.vertex_ids.len() as u32,
+            edges: data.edges.len() as u32,
+            edge_ids: data.edge_ids.len() as u32,
+            uvs: data.uvs.len() as u32,
+            colors: data.colors.len() as u32,
+        };
+        let token = mesh3d_begin(1, 1, schema).expect("test mesh claim");
+        while !mesh3d_allocate_step(token).expect("test mesh page allocation") {}
+        for value in data.positions {
+            mesh3d_write_vec3(token, Mesh3dField::Positions, value).unwrap();
+        }
+        for value in data.normals {
+            mesh3d_write_vec3(token, Mesh3dField::Normals, value).unwrap();
+        }
+        for value in data.indices {
+            mesh3d_write_u32(token, Mesh3dField::Indices, value).unwrap();
+        }
+        for value in data.face_ids {
+            mesh3d_write_u32(token, Mesh3dField::FaceIds, value).unwrap();
+        }
+        for value in data.vertex_ids {
+            mesh3d_write_u32(token, Mesh3dField::VertexIds, value).unwrap();
+        }
+        for value in data.edges {
+            mesh3d_write_edge(token, value).unwrap();
+        }
+        for value in data.edge_ids {
+            mesh3d_write_u32(token, Mesh3dField::EdgeIds, value).unwrap();
+        }
+        for value in data.uvs {
+            mesh3d_write_vec2(token, Mesh3dField::Uvs, value).unwrap();
+        }
+        for value in data.colors {
+            mesh3d_write_vec4(token, Mesh3dField::Colors, value).unwrap();
+        }
+        mesh3d_seal(token).expect("test mesh publication")
+    }
+
     #[test]
     fn paged_mesh_authority_preserves_order_aba_and_interrupted_close() {
         let mut authority = Mesh3dAuthority::new();
@@ -1922,8 +1934,8 @@ mod tests {
         assert_eq!(authority.reserved_pages, 0);
     }
 
-    fn test_box_mesh() -> Mesh3d {
-        Mesh3d::from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])
+    fn test_box_mesh() -> Mesh3dLease {
+        paged_mesh_fixture(LegacyMeshOracleData::triangle())
     }
 
     #[test]
@@ -1989,7 +2001,7 @@ mod tests {
     fn ray_hits_box() {
         let mesh = test_box_mesh();
         let instance = Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
-        let hit = ray_pick_instance(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), &mesh, &instance);
+        let hit = ray_pick_instance(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance);
         assert!(hit.is_some());
     }
 
@@ -1997,7 +2009,7 @@ mod tests {
     fn ray_aabb_misses_offset_box() {
         let mesh = test_box_mesh();
         let instance = Instance3d { id: "box".into(), model: mat4_translation_m(vec3_new_m(100.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
-        let hit = ray_pick_instance(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), &mesh, &instance);
+        let hit = ray_pick_instance(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance);
         assert!(hit.is_none());
     }
 
@@ -2162,11 +2174,13 @@ mod tests {
     }
 
     #[test]
-    fn mesh_has_vertex_colors_requires_matching_length() {
-        let mut mesh = test_box_mesh();
-        assert!(!mesh.has_vertex_colors());
-        mesh.colors = vec![1.0; mesh.positions.len()];
-        assert!(mesh.has_vertex_colors());
+    fn mesh_schema_has_vertex_colors_only_for_a_complete_vertex_field() {
+        let without = test_box_mesh().schema().unwrap();
+        assert_eq!(without.colors, 0);
+        let mut data = LegacyMeshOracleData::triangle();
+        data.colors = vec![[1.0; 4]; data.positions.len()];
+        let with = paged_mesh_fixture(data).schema().unwrap();
+        assert_eq!(with.colors, with.vertices);
     }
 
     #[test]
@@ -2210,7 +2224,7 @@ mod tests {
     fn ray_pick_mesh_detail_returns_triangle_index_and_barycentrics() {
         let mesh = test_box_mesh();
         let instance = Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
-        let hit = ray_pick_mesh_detail(vec3_new_m(0.0, -0.5, -5.0), vec3_new_m(0.0, 0.0, 1.0), &mesh, &instance).expect("hit");
+        let hit = ray_pick_mesh_detail(vec3_new_m(0.0, -0.5, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance).expect("hit");
         assert_eq!(hit.triangle_index, 0);
         assert!(hit.bary_u >= 0.0 && hit.bary_v >= 0.0 && hit.bary_u + hit.bary_v <= 1.0);
     }
@@ -2219,30 +2233,32 @@ mod tests {
     fn ray_pick_mesh_detail_misses_when_aabb_not_hit() {
         let mesh = test_box_mesh();
         let instance = Instance3d { id: "box".into(), model: mat4_translation_m(vec3_new_m(50.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
-        assert!(ray_pick_mesh_detail(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), &mesh, &instance).is_none());
+        assert!(ray_pick_mesh_detail(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance).is_none());
     }
 
     #[test]
     fn interpolate_mesh_uv_none_when_uvs_missing() {
         let mesh = test_box_mesh();
-        assert!(interpolate_mesh_uv(&mesh, 0, 0.25, 0.25).is_none());
+        assert!(interpolate_mesh_uv(mesh, 0, 0.25, 0.25).is_none());
     }
 
     #[test]
     fn interpolate_mesh_uv_blends_triangle_corners() {
-        let mut mesh = test_box_mesh();
-        mesh.uvs = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
-        let (u, v) = interpolate_mesh_uv(&mesh, 0, 0.0, 0.0).expect("uv");
+        let mut data = LegacyMeshOracleData::triangle();
+        data.uvs = vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
+        let mesh = paged_mesh_fixture(data);
+        let (u, v) = interpolate_mesh_uv(mesh, 0, 0.0, 0.0).expect("uv");
         assert!((u - 0.0).abs() < 1e-6 && (v - 0.0).abs() < 1e-6);
-        let (u, v) = interpolate_mesh_uv(&mesh, 0, 1.0, 0.0).expect("uv");
+        let (u, v) = interpolate_mesh_uv(mesh, 0, 1.0, 0.0).expect("uv");
         assert!((u - 1.0).abs() < 1e-6 && (v - 0.0).abs() < 1e-6);
     }
 
     #[test]
     fn interpolate_mesh_uv_none_when_triangle_out_of_range() {
-        let mut mesh = test_box_mesh();
-        mesh.uvs = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
-        assert!(interpolate_mesh_uv(&mesh, 5, 0.0, 0.0).is_none());
+        let mut data = LegacyMeshOracleData::triangle();
+        data.uvs = vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
+        let mesh = paged_mesh_fixture(data);
+        assert!(interpolate_mesh_uv(mesh, 5, 0.0, 0.0).is_none());
     }
 
     #[test]
@@ -2348,8 +2364,9 @@ mod tests {
 
     #[test]
     fn screen_select_components_face_granularity_selects_visible_triangle() {
-        let mut mesh = test_box_mesh();
-        mesh.face_ids = vec![42];
+        let mut data = LegacyMeshOracleData::triangle();
+        data.face_ids = vec![42];
+        let mesh = paged_mesh_fixture(data);
         let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
         let mut lookup = std::collections::HashMap::new();
         lookup.insert("box".into(), mesh);
@@ -2362,8 +2379,9 @@ mod tests {
 
     #[test]
     fn screen_select_components_vertex_granularity_selects_ids() {
-        let mut mesh = test_box_mesh();
-        mesh.vertex_ids = vec![10, 11, 12];
+        let mut data = LegacyMeshOracleData::triangle();
+        data.vertex_ids = vec![10, 11, 12];
+        let mesh = paged_mesh_fixture(data);
         let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
         let mut lookup = std::collections::HashMap::new();
         lookup.insert("box".into(), mesh);
@@ -2377,9 +2395,10 @@ mod tests {
 
     #[test]
     fn screen_select_components_edge_granularity_selects_ids() {
-        let mut mesh = test_box_mesh();
-        mesh.edge_positions = vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0];
-        mesh.edge_ids = vec![99];
+        let mut data = LegacyMeshOracleData::triangle();
+        data.edges = vec![[[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0]]];
+        data.edge_ids = vec![99];
+        let mesh = paged_mesh_fixture(data);
         let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
         let mut lookup = std::collections::HashMap::new();
         lookup.insert("box".into(), mesh);

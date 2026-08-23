@@ -307,6 +307,100 @@
         "forwardAllArgs": true
       }
     },
+    "test-discover": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test discover",
+        "forwardAllArgs": true
+      }
+    },
+    "test-doctor": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test doctor",
+        "forwardAllArgs": true
+      }
+    },
+    "test-contract": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test contract",
+        "forwardAllArgs": true
+      }
+    },
+    "test-oracle": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "test-subject": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test subject",
+        "forwardAllArgs": true
+      }
+    },
+    "test-parity": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test parity",
+        "forwardAllArgs": true
+      }
+    },
+    "test-metrics": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test metrics",
+        "forwardAllArgs": true
+      }
+    },
+    "test-metrics-enforce": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test metrics --enforce"
+      }
+    },
+    "test-report": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test report",
+        "forwardAllArgs": true
+      }
+    },
+    "clean-test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts clean test",
+        "forwardAllArgs": true
+      }
+    },
+    "clean-coverage": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts clean coverage",
+        "forwardAllArgs": true
+      }
+    },
     "test-storybook": {
       "executor": "nx:run-commands",
       "dependsOn": [],

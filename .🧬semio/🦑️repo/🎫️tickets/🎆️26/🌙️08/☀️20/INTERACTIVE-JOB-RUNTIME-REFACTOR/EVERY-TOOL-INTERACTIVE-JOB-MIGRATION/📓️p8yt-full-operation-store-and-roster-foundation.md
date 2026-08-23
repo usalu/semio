@@ -1148,3 +1148,321 @@ P1 coordination in the same shared store boundary is also complete:
 Verdict: **PASS only for the retained token-to-Edit/token-to-WriterMutation ownership foundation.
 REJECT for Writer live Wasm submit/pump/consume, populated mutation metadata, retained store
 initialization/replacement, legacy .spr/.ops parsers, every activation, and Phase 8.**
+
+---
+
+## 2026-08-23 — Writer Live Retained Load Cohort
+
+Writer is the first caller cohort whose old whole-string Wasm constructor has been removed. The new
+greenfield surface owns one operation/generation handle and never exposes a direct `ArtifactStore`
+constructor:
+
+1. `beginEnvelopeLoad(maximumPages, maximumBytes)` pre-admits one fixed registry slot and exact page
+   and byte credits before any envelope byte owner is copied.
+2. `admitEnvelopePage(handle, Uint8Array)` rejects a hostile browser array before the bounded
+   4,096-byte copy. The page moves into the exact app-owned ingress authority or returns untouched.
+3. `sealEnvelopeLoad(handle)` transfers the sealed page authority to the existing schema decoder.
+   Decoder saturation restores the exact sealed ingress owner to its original operation slot.
+4. `pollEnvelopeLoad(handle)` advances only one app maintenance turn. Decode completion moves the
+   exact envelope into Writer's domain initializer; it does not run either worker to completion in
+   the callback.
+5. Writer validates identity, duplicate edits, history membership, scalar snapshot fields, mutation
+   application, and history hashes one retained phase at a time. Candidate generation uses checked
+   `base + 1` before any owner detaches.
+6. Candidate construction consumes the domain owner catalog atomically through
+   `ArtifactStore::from_initialized_runtime_with_owners`; there is no separately fallible install
+   statement that could drop or strand envelope/runtime/catalog ownership.
+7. Publication revalidates the exact base generation, swaps once, and retains the displaced store
+   behind its domain disposer until terminal empty. Only then does the poll surface `Ready`, and the
+   operation remains retained until `acknowledge_artifact_store_replacement` succeeds exactly once.
+
+The shared recovery path was tightened at the same boundary. Missing-candidate and false-terminal
+worker outcomes rewrap the exact `ArtifactStoreInitializationJob`, signal its owner-local
+cancellation authority, and keep any already-extracted candidate in the replacement registry for
+bounded rejection. Closed worker response channels take the same retained cleanup path. No recovery
+branch synthesizes a replacement envelope/runtime/catalog or stack-drops a retryable initializer.
+
+### Destruction and adversarial ownership evidence
+
+The app close hierarchy now drains Writer-related owners in this order: ingress pages, decoder and
+returned field owners, completed records, initializer/candidate, and displaced store. Each ingress
+close releases one real page only when the item and byte grant covers it. The Wasm surface exposes
+`closeStep`; it does not synchronously drain in Rust `Drop`.
+
+Permanent source fixtures cover:
+
+- fixed ingress capacity and `+1` modulo collision with exact rejected-owner return;
+- zero-item and insufficient-byte interrupted close, followed by one-page terminal close;
+- initializer cancellation and stale-generation cleanup to terminal empty;
+- checked next-generation candidate construction and cursorized candidate disposal;
+- live submit → decode maintenance → initializer → swap → displaced-store retirement → exact ACK;
+- partial-ingress cancellation without publication; and
+- verifier mutations for a post-lift dynamic byte slice, missing ACK, and false-terminal job drop.
+
+These Rust fixtures were authored but not executed because Cargo/native/Wasm remains explicitly
+serialized by the coordinator. Their runtime verdict is therefore **unproven**, not PASS.
+
+### Files changed in this cohort
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs`
+- `✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs`
+- `📜️script.ts`
+- this report and `p8yt-tool-jobs.json`
+
+### Gates and exact census
+
+| Gate | Result |
+| --- | --- |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test` | PASS: **146** self-tests |
+| Writer retained-route verifier assertion | PASS in the full verifier; no Writer-specific failure |
+| full deterministic tool-jobs JSON | Expected RED: **18** failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique, 0 admitted, 884 residual, 8 reserved, 35 importers, 34 globals |
+| broad interactivity DENY | Concurrent RED: one P1-owned testkit constructs an extra WorkerPool; no new Writer finding |
+| scoped Rust formatting and diff check | PASS |
+| Cargo/Nx/native/Wasm/runtime timing | Not run by coordinator instruction |
+
+The structural direct-caller placeholder count is now **16** (Writer was 1 of 17 at the preceding
+checkpoint). This decrement means only that the source route is live and ownership-retained; it is
+not runtime or Phase-8 activation credit.
+
+Verdict: **PASS for independent Terra source audit of the Writer retained-load cohort. REJECT for
+runtime/Cargo/Wasm proof, ordinary whole-app terminal destruction beyond the newly cursor-owned
+lanes, the remaining 16 envelope callers, the global ArtifactEnvelope/store structural failures,
+the typed full operation, all 884 activations, and Phase 8.**
+
+---
+
+## 2026-08-23 — Trinity Jack Shared `.spr`/`.ops` Retained-Load Cohort
+
+Trinity Jack is the next live caller on the Writer-proven app-owned ingress, maintenance,
+initializer, replacement, and acknowledgement lifecycle. This cohort also closes the first shared
+domain-neutral `.spr`/`.ops` edit decoder seam instead of giving Jack a private whole-entry parser.
+
+### Shared schema-first edit authority
+
+`artifact_owned_spr_edit_history_decoder` now consumes the repository-owned token cursor directly.
+It has an exact ten-field Edit catalog and retains string, mutation-array, mutation-target,
+reservation, published value, and rejection retirement owners. Its mutation array:
+
+- fallibly reserves the fixed 64-item capacity before constructing or copying a mutation owner;
+- delegates every scalar/object entry to the domain's exact `begin_mutation` catalog;
+- advances at most one schema token or one publication/retirement owner per grant;
+- validates operation, generation, and cancellation before mutation admission/publication;
+- restores a rejected owner to the exact target on capacity/publication failure; and
+- uses terminal Drop assertions over `ManuallyDrop` authorities, while empty fixed-capacity vectors
+  release only their shallow allocation after every mutation has been cursor-retired.
+
+The outer ingress remains the established fixed 4,096-byte page protocol with exact page and total
+byte credits. Jack's snapshot and mutation scalar packs are each limited to one 4,096-byte field
+owner. `ArtifactPack::decode_pack` and `OpBinary::decode_op` therefore process one source-bounded
+semantic field, but their under-8ms runtime timing remains unmeasured and is not claimed here.
+
+### Jack domain ownership and initialization
+
+`JackEnvelopeOwnedFieldCatalog` supplies concrete snapshot, mutation, VCS, conflict, Edit, snapshot
+retirement, and mutation retirement owners. It calls the shared retained Edit decoder; the old
+bounded repository serde fallback is absent from the Jack catalog.
+
+Jack retirement disassembles nested graph ownership one exact item/string at a time. In particular,
+the composed graph child keeps its exact ownership through decode, retry, candidate creation, and
+close: `child_id`, `artifact_id`, dialect `artifact_kind`, `standard`, and `subset` are distinct
+grant-accounted retirement phases. Node/edge/port kind definitions, property definitions,
+`ValueType::List` boxes and schema strings, property maps/arrays, ports, nodes, edges, entity ids,
+and mutation payloads have the same retained terminal witness.
+
+`JackStoreInitializationAuthority` validates the envelope and edit pairs, clones the initial graph
+into pre-admitted target storage one field/manifest item per turn, seeds the four fixed VCS history
+ledgers, applies forward mutations, hashes inverse mutations incrementally, builds the exact
+checked `generation + 1` candidate, and hands all domain owner factories into
+`ArtifactStore::from_initialized_runtime_with_owners`. Cancel, stale generation, decode fault,
+candidate rejection, and close all drive the same retained owner graph to terminal empty. Store
+publication remains the shared atomic generation-validated swap, followed by cursor retirement of
+the displaced store before acknowledgement.
+
+### Live ABI and zero-reachability census
+
+The Jack Wasm bridge no longer accepts an envelope string or calls `ArtifactStore::new`. Its live
+surface is `beginEnvelopeLoad` → `admitEnvelopePage(Uint8Array)` → `sealEnvelopeLoad` → one
+`maintenance_step` plus `pollEnvelopeLoad` turn → exact replacement ACK, with explicit cancel and
+`closeStep`. A hostile page length is rejected before copying into the fixed Rust page. No loop or
+run-to-completion callback exists in this bridge.
+
+The census has **16 textual occurrences** of
+`reject_whole_buffer_artifact_envelope_ingress`: exactly **one** is the shared fail-closed definition
+and **15** are still-live structural caller placeholders. Jack has zero production occurrences; its
+only direct `ArtifactStore::new` occurrence is a pre-existing Rust test fixture. The 15 live
+residual callers are Raster, Cad, GisMap, Shooting, Procedural2d, Procedural3d, Dag, Flow, Trinity
+Rewrite, Draw, Fem2d, Fem3d, Puzzle3d, Puzzle5d, and Process3d. Structural placeholder count is
+therefore **15**, while command activation remains separately **0/884**.
+
+### Permanent evidence
+
+Five Jack Rust fixtures were authored:
+
+- checked next-generation initializer publication and incremental candidate close;
+- initializer cancel and stale-generation exact terminal ownership;
+- nested mutation plus exact graph-child retirement within one item/4,096-byte grant;
+- live submit → decode → initialize → swap → displaced-store retirement → exact-once ACK; and
+- partial-page cancel without publication.
+
+They reuse the two existing shared ingress fixtures for fixed capacity/+1 collision, exact rejected
+owner FIFO close, zero-item interruption, and one-real-page-per-grant cancellation. Six new verifier
+mutations reject a private/fallback edit decoder, post-lift dynamic page, missing ACK,
+false-terminal initializer drop, whole-buffer string mutation decode, and a missing retained Jack
+route. Malformed/truncated/unknown/duplicate/oversized field behavior is additionally held by the
+shared owned-schema decoder and exact catalog diagnostics. Rust fixtures were not executed because
+Cargo/native/Wasm was explicitly prohibited; only the six verifier mutations executed in this
+packet.
+
+### Exact files and gates
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs`
+- `🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🦀️component.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs`
+- `📜️script.ts`
+- this report, `p8yt-jack-tool-jobs.json`, and `p8yt-jack-tool-jobs-repeat.json`
+
+| Gate | Result |
+| --- | --- |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test --format json` | PASS: **152** self-tests clean |
+| Jack retained-route verifier assertion | PASS; the Jack-specific failure is absent |
+| full deterministic tool-jobs JSON | Expected RED: **18** failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique, 0 admitted, 884 residual, 8 reserved, 35 importers, 34 globals; two independently generated ledgers are byte-identical under `cmp` |
+| `bun ./📜️script.ts verify interactivity --format json` | PASS: DENY clean in its declared four UI roots; recorded test-only blocking bridge only |
+| scoped Rust formatting | PASS for the shared store and three Jack Rust owners; the graph manifest's new retirement region is formatted, while its unrelated pre-existing whole-file rustfmt drift was deliberately not rewritten |
+| scoped and whole `git diff --check` | PASS |
+| Cargo/Nx/native/Wasm/browser/runtime timing | Not run by coordinator instruction |
+
+Verdict: **PASS for independent Terra source audit of the Jack shared-decoder retained-load cohort.
+REJECT for runtime/native/Wasm proof, the source-bounded field timing claim, the remaining 15 live
+whole-buffer callers, global ArtifactEnvelope/store structural failures, full typed operation,
+all 884 command activations, and Phase 8.**
+
+### 2026-08-23 — Terra Jack Formatting Re-audit Repair
+
+Terra's focused audit rejected only canonical formatting in three cohort-owned files. No behavior,
+authority, fixture, verifier rule, count, or ABI changed in this repair. Canonical
+`rustfmt --edition 2021 --config skip_children=true` was applied to exactly:
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs`;
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs`; and
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs`.
+
+Inspection found formatter-only import ordering and layout changes. The exact five-file Terra check,
+including the unchanged graph manifest and Jack Wasm bridge, now exits 0. Post-repair gates are:
+
+| Gate | Repair result |
+| --- | --- |
+| canonical five-file `rustfmt --edition 2021 --check --config skip_children=true` | PASS |
+| tool-job verifier self-tests | PASS: **152** clean, unchanged |
+| Jack retained-route assertion | PASS; no Jack-specific failure |
+| deterministic ledgers | PASS: byte-identical, both SHA-256 `7812b2190f74f54d814f1b62124b73deb9a594cd1a747203d86fe6986038c63c` |
+| full tool-job census | Expected RED and unchanged: 18 classes, 0/884, 8 reserved, 35 importers, 34 globals |
+| structural whole-buffer census | Unchanged: 16 symbols = one shared fail-closed definition + 15 live callers; Jack production zero |
+| broad interactivity DENY | PASS in its declared scope; recorded test-only blocking bridge only |
+| scoped and whole working/staged/HEAD diff checks | PASS |
+
+Focused verdict: **the Terra formatting rejection is repaired and the Jack cohort is ready for
+re-audit. Phase 8 remains RED with the exact previously reported runtime and roster residuals.**
+
+---
+
+## 2026-08-23 — GIS Map Shared `.spr`/`.ops` Retained-Load Cohort
+
+GIS Map is the next live caller on the shared fixed-page envelope ingress, owner-supplied retained
+`.spr`/`.ops` Edit decoder, app maintenance pump, store initializer, generation-validated replacement,
+displaced-store retirement, and exact acknowledgement path. No tiled-map, World3D, renderer, P1
+database, or engine file was touched.
+
+### Domain catalog and exact owners
+
+`GisMapEnvelopeOwnedFieldCatalog` supplies exact snapshot, mutation, VCS, rejected-conflict, snapshot
+retirement, and mutation retirement authorities. Its Edit field uses
+`artifact_owned_spr_edit_history_decoder`; there is no private Vec/HashMap edit parser or whole-envelope
+decoder in the live GIS Map route. Snapshot and mutation packed fields retain
+`OwnedSchemaHexAuthority<GIS_MAP_OWNED_FIELD_BYTES>` and are admitted before their domain owner is
+published.
+
+`GisMapOwnedRetirement` disassembles the ordered positions, routes, and regions one feature at a time.
+Each feature retires its id and recursively retires `DslValue::{String,Array,Object}` ownership. The
+exact drawing, optional image, and value child handles each retain and retire `child_id`,
+`artifact_id`, dialect `artifact_kind`, `standard`, and `subset` separately. All twelve mutation
+variants have explicit retirement taxonomy: create/delete/reorder/replace for position, route, and
+region. A zero-item grant returns `Pending { 0, 0 }` without detaching or advancing an owner; empty
+phase transitions do not claim a released item.
+
+`GisMapSnapshotCloneAuthority` preserves positions/routes/regions order by indexed source traversal
+and ordered target insertion. Child fields are copied separately after exact string admission.
+`GisMapStoreInitializationAuthority` validates the envelope and duplicate edits, clones the initial
+snapshot, seeds ordered history, applies forward mutations, hashes inverse/redo mutations, and builds
+the exact checked `generation + 1` candidate with GIS Map's required owner bundle. Every cancel,
+stale-generation, fault, rejected candidate, and displaced snapshot follows retained cursor close;
+ordinary incomplete authority Drop asserts terminal-empty.
+
+The individual snapshot/feature pack decode and clone steps are source-bounded by the established
+4,096-byte domain field/page limit. Native runtime timing under hostile valid payloads was not measured,
+so no `<8ms` runtime claim is made.
+
+### Live ABI and zero reachability
+
+The GIS Map Wasm bridge now owns `VcsArtifactApp<EditorApp<Gis2dPlayApp>>` and exposes only:
+
+1. `beginEnvelopeLoad(maximumPages, maximumBytes)` for fixed slot/item/byte admission;
+2. `admitEnvelopePage(handle, Uint8Array)`, rejecting length before the fixed Rust page copy;
+3. `sealEnvelopeLoad(handle)`;
+4. `pollEnvelopeLoad(handle)`, which advances one app maintenance step and one operation poll;
+5. exact replacement acknowledgement after `Ready`, with duplicate ACK returning false;
+6. `cancelEnvelopeLoad(handle)`; and
+7. one bounded `closeStep`.
+
+The old whole-string constructor/direct `ArtifactStore` route is absent. The exact source census is
+**15** `reject_whole_buffer_artifact_envelope_ingress` occurrences: **one** shared fail-closed
+definition plus **14** still-live structural callers. GIS Map has zero production occurrences.
+Structural placeholder count is therefore **14**. This count is independent of command activation;
+the full command roster remains **0/884**.
+
+### Permanent source evidence
+
+Authored Rust fixtures cover checked next-generation candidate publication and incremental candidate
+close, cancellation and stale generation to terminal-empty, recursive nested value disposal, exact
+drawing/image/value child disposal, all twelve mutation variants under one-item grants, zero-item
+ownership preservation, live submit through maintenance/swap/displaced retirement, exact-once plus
+duplicate ACK, and partial-ingress cancellation without publication. These Rust fixtures were not
+executed because Cargo/native/Wasm remained prohibited.
+
+The verifier now has eleven GIS Map route assertions/mutations. They reject loss of the shared Edit
+decoder, a post-lift dynamic byte slice, completion without exact ACK, false-terminal initializer
+drop, unchecked generation, drawing-child deep drop, nested-value deep drop, a missing mutation
+variant, missing zero-grant/catalog evidence, a whole-buffer ingress bypass, and absence of the full
+retained GIS route. Shared owned-schema and ingress fixtures continue to cover capacity/+1 collision,
+malformed/truncated/unknown/duplicate/oversized fields, exact rejected owner return, interrupted close,
+false terminal, saturation, cancellation, and one-real-page-per-grant cleanup.
+
+### Exact files and gates
+
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs`
+- `📜️script.ts`
+- this report, `p8yt-gis-map-tool-jobs.json`, `p8yt-gis-map-tool-jobs-repeat.json`, and their
+  expected-RED `.stderr` captures
+
+| Gate | Result |
+| --- | --- |
+| canonical scoped Rust format/check | PASS on the three GIS Map Rust files |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test --format json` | PASS: **163** self-tests clean |
+| GIS Map retained-route assertion | PASS; no GIS Map-specific failure in the full verifier |
+| deterministic full tool-job ledgers | PASS: byte-identical, SHA-256 `05dbfee879ca84ef57eb15c932eca39c2f782dcc7261b042ba1f2a7b23a9c04b` |
+| full tool-job census | Expected RED: **18** failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique, **0/884**, 8 reserved, 35 importers, 34 globals |
+| broad interactivity DENY | PASS: declared scope clean; recorded test-only blocking bridge only |
+| scoped and whole working/staged/HEAD diff checks | PASS |
+| Cargo/Nx/native/Wasm/browser/runtime timing | Not run; no compile or runtime PASS claimed |
+
+Verdict: **PASS for independent Terra source audit of the GIS Map retained-load cohort. REJECT for
+native/Wasm/runtime proof, source-bounded decode timing, the remaining 14 live whole-buffer callers,
+global ArtifactEnvelope/store structural failures, the full typed operation, all 884 activations,
+and Phase 8.**

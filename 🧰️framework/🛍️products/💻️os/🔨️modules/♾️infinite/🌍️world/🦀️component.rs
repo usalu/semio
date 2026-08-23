@@ -3,11 +3,12 @@
 use crate::framework_surface_terrain::TerrainSessionCore;
 use base64::Engine;
 use ui_wgpu::wgpu::{
+    ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRenderEviction,
+    PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode, Vec3, WidgetContext, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
     aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
-    marquee_is_crossing_from_path, mesh3d_begin_close, mesh3d_close_step, mesh_content_version, paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point,
-    ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, widgets::gizmo, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d,
-    LineVertex3d, LocalizedLabel, Mat4, Mesh3d, Mesh3dField, Mesh3dLease, Mesh3dSchema, OrbitController, PointerModifiers, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d,
-    UiComponentSceneNode, Vec3, WidgetContext, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
+    marquee_is_crossing_from_path, mesh_content_version, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3,
+    paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances, transform_aabb,
+    vec3_from_f64, widgets::gizmo, world3d_snapshot_with_page,
 };
 
 //#region 📦️PreparedWorldResources
@@ -19,6 +20,33 @@ pub struct World3dBuildContext {
     evictions: Vec<PreparedRenderEviction>,
     mesh_requests: HashSet<(String, u64)>,
     raster_requests: HashSet<String>,
+    cursor_wake: WorldCursorWake,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct WorldCursorWakeToken(u64);
+
+#[derive(Default)]
+struct WorldCursorWake {
+    generation: u64,
+    armed: bool,
+}
+
+impl WorldCursorWake {
+    fn request(&mut self) -> WorldCursorWakeToken {
+        if !self.armed {
+            self.generation = self.generation.wrapping_add(1).max(1);
+            self.armed = true;
+        }
+        WorldCursorWakeToken(self.generation)
+    }
+
+    fn take(&mut self) -> Option<WorldCursorWakeToken> {
+        self.armed.then(|| {
+            self.armed = false;
+            WorldCursorWakeToken(self.generation)
+        })
+    }
 }
 
 impl World3dBuildContext {
@@ -38,6 +66,14 @@ impl World3dBuildContext {
         self.evictions.push(PreparedRenderEviction::Mesh { key: key.to_string() });
     }
 
+    fn request_cursor_wake(&mut self) {
+        self.cursor_wake.request();
+    }
+
+    pub fn take_cursor_wake(&mut self) -> bool {
+        self.cursor_wake.take().is_some()
+    }
+
     pub fn append_to(&mut self, input: &mut ui_wgpu::wgpu::PreparedRenderInput) {
         input.uploads.append(&mut self.uploads);
         input.evictions.append(&mut self.evictions);
@@ -47,9 +83,9 @@ impl World3dBuildContext {
 }
 //#endregion 📦️PreparedWorldResources
 
-use semio_framework::{optional_json_to_dsl, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
-use serde::de::Error as DeError;
+use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, optional_json_to_dsl};
 use serde::Deserialize;
+use serde::de::Error as DeError;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use std::mem::MaybeUninit;
@@ -1051,6 +1087,16 @@ pub struct World3dState {
     dynamic_blocked_owner: Option<WorldOpaqueOwner>,
     dynamic_mesh_close: Option<WorldDynamicEntry<Mesh3dLease>>,
     dynamic_blocked_mesh: Option<WorldDynamicEntry<Mesh3dLease>>,
+    placeholder_generation: u64,
+    placeholder_build: Option<WorldPlaceholderMeshCursor>,
+    terrain_build: Option<WorldTerrainMeshCursor>,
+    terrain_revision: u64,
+    face_overlay_build: Option<WorldFaceOverlayMeshCursor>,
+    face_overlay_generation: Option<u64>,
+    face_overlay_retired_generation: Option<u64>,
+    face_overlay_colors: [Option<[f32; 4]>; 3],
+    face_overlay_applied_revision: u64,
+    face_overlay_applied_draw_generation: u64,
     draw_generation: u64,
     draw_rebuild: Option<WorldDrawRebuildCursor>,
     retired_draws: Option<WorldDrawRegistry>,
@@ -1156,6 +1202,16 @@ impl World3dState {
             dynamic_blocked_owner: None,
             dynamic_mesh_close: None,
             dynamic_blocked_mesh: None,
+            placeholder_generation: 0,
+            placeholder_build: None,
+            terrain_build: None,
+            terrain_revision: 0,
+            face_overlay_build: None,
+            face_overlay_generation: None,
+            face_overlay_retired_generation: None,
+            face_overlay_colors: [None; 3],
+            face_overlay_applied_revision: u64::MAX,
+            face_overlay_applied_draw_generation: u64::MAX,
             draw_generation: 0,
             draw_rebuild: None,
             retired_draws: None,
@@ -1299,6 +1355,46 @@ pub fn step_world3d_dynamic_retirement(state: &mut World3dState, context: &mut s
     if context.should_yield() {
         return false;
     }
+    if let Some(cursor) = state.placeholder_build.as_mut() {
+        if !cursor.close_step() || !cursor.terminal_is_empty() {
+            context.consume_fuel(1);
+            return false;
+        }
+        state.placeholder_build = None;
+        context.consume_fuel(1);
+        return false;
+    }
+    if let Some(cursor) = state.terrain_build.as_mut() {
+        if !cursor.close_step() || !cursor.terminal_is_empty() {
+            context.consume_fuel(1);
+            return false;
+        }
+        state.terrain_build = None;
+        context.consume_fuel(1);
+        return false;
+    }
+    if let Some(cursor) = state.face_overlay_build.as_mut() {
+        if !cursor.close_step() || !cursor.terminal_is_empty() {
+            context.consume_fuel(1);
+            return false;
+        }
+        state.face_overlay_build = None;
+        context.consume_fuel(1);
+        return false;
+    }
+    if let Some(index) = state.face_overlay_colors.iter().position(Option::is_some) {
+        state.face_overlay_colors[index] = None;
+        context.consume_fuel(1);
+        return false;
+    }
+    if state.face_overlay_generation.take().is_some() {
+        context.consume_fuel(1);
+        return false;
+    }
+    if state.face_overlay_retired_generation.take().is_some() {
+        context.consume_fuel(1);
+        return false;
+    }
     if !state.asset_io.terminal_is_empty() {
         let _ = state.asset_io.close_step();
         context.consume_fuel(1);
@@ -1324,6 +1420,12 @@ pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> boo
         && state.dynamic_blocked_owner.is_none()
         && state.dynamic_mesh_close.is_none()
         && state.dynamic_blocked_mesh.is_none()
+        && state.placeholder_build.is_none()
+        && state.terrain_build.is_none()
+        && state.face_overlay_build.is_none()
+        && state.face_overlay_generation.is_none()
+        && state.face_overlay_retired_generation.is_none()
+        && state.face_overlay_colors.iter().all(Option::is_none)
         && world3d_draw_rebuild_terminal_is_empty(state)
         && state.meshes.is_empty()
         && state.mesh_versions.is_empty()
@@ -1331,6 +1433,10 @@ pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> boo
         && state.reference_pixels.is_empty()
         && state.mesh_paint_textures.is_empty()
         && state.asset_io.terminal_is_empty()
+}
+
+pub fn world3d_cursor_work_pending(state: &World3dState) -> bool {
+    state.placeholder_build.is_some() || state.terrain_build.is_some() || state.face_overlay_build.is_some()
 }
 
 //#endregion 🧹️World3dDynamicRetirement
@@ -6015,11 +6121,7 @@ fn scene_lod(state: &World3dState) -> f64 {
     let camera = state.orbit.to_camera();
     let distance = camera.position.sub(camera.target).length() as f64;
     let auto_lod = lod_from_camera_distance(distance, state.lod.distance_reference);
-    if state.lod.automatic || state.lod.depth_variable {
-        auto_lod
-    } else {
-        state.lod.manual
-    }
+    if state.lod.automatic || state.lod.depth_variable { auto_lod } else { state.lod.manual }
 }
 
 fn resolve_physical_mesh_id(state: &World3dState, logical_id: &str, desired_lod: f64) -> String {
@@ -6085,69 +6187,6 @@ fn queue_lod_mesh_fetch(state: &mut World3dState, logical_id: &str, scene_lod: f
     }
 }
 
-#[cfg(test)]
-fn rebuild_instance_draws_legacy(state: &mut World3dState, scene_lod: f64) {
-    state.instance_positions.clear();
-    let instances = state.parsed_instances.clone();
-    let mut grouped: HashMap<String, Vec<Instance3d>> = HashMap::new();
-    for (index, instance) in instances.iter().enumerate() {
-        let logical_mesh_id = instance.mesh_id.clone().unwrap_or_else(|| "box".into());
-        let physical_mesh_id = resolve_physical_mesh_id(state, &logical_mesh_id, scene_lod);
-        if !state.meshes.contains_key(&physical_mesh_id) {
-            if state.mesh_url_fallback.contains_key(&logical_mesh_id) || state.mesh_lod_catalog.contains_key(&logical_mesh_id) {
-                queue_lod_mesh_fetch(state, &logical_mesh_id, scene_lod);
-            } else {
-                let primitive = placeholder_mesh(&logical_mesh_id);
-                store_mesh(state, physical_mesh_id.clone(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
-            }
-        }
-        let position = instance.position.unwrap_or([instance.x.unwrap_or(index as f64), instance.y.unwrap_or(0.0), instance.z.unwrap_or(0.0)]);
-        state.instance_positions.insert(instance.id.clone(), position);
-        let scale = instance.scale.map(|value| [value[0] as f32, value[1] as f32, value[2] as f32]).unwrap_or([1.0, 1.0, 1.0]);
-        let rotation = instance.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-        let neutral_default_color = state.environment.material.as_ref().and_then(|material| material.color.as_deref()).unwrap_or("#94a3b8");
-        let mut color = parse_color(instance.color.as_deref().unwrap_or(neutral_default_color));
-        if let Some(mesh) = state.meshes.get(&physical_mesh_id) {
-            if mesh.has_vertex_colors() {
-                let mut avg = [0.0f32; 3];
-                let count = mesh.colors.len() / 4;
-                for chunk in mesh.colors.as_chunks::<4>().0 {
-                    avg[0] += chunk[0];
-                    avg[1] += chunk[1];
-                    avg[2] += chunk[2];
-                }
-                if count > 0 {
-                    let count = count as f32;
-                    color = [avg[0] / count, avg[1] / count, avg[2] / count, 1.0];
-                }
-            }
-        }
-        let selected = instance.selected.unwrap_or(false);
-        let hovered = if component_mode_active(state) { false } else { instance.hovered.unwrap_or(false) || state.local_hover_id.as_deref() == Some(instance.id.as_str()) };
-        grouped.entry(physical_mesh_id).or_default().push(Instance3d {
-            id: instance.id.clone(),
-            model: Instance3d::model_from_trs([position[0] as f32, position[1] as f32, position[2] as f32], [rotation[0] as f32, rotation[1] as f32, rotation[2] as f32, rotation[3] as f32], scale),
-            color,
-            selected,
-            hovered,
-        });
-    }
-    if state.draws.clear_into_quarantine().is_err() {
-        mark_world_dynamic_fault(state, WorldDynamicFault::QuarantineCapacity);
-        return;
-    }
-    for (mesh_key, instances) in grouped {
-        let draw = SceneDraw3d { mesh_key: mesh_key.clone(), mesh_version: *state.mesh_versions.get(&mesh_key).unwrap_or(&0), instances };
-        if let Err(rejected) = state.draws.push(draw) {
-            let owner = WorldOpaqueOwner::Draw(WorldDynamicEntry { id: rejected.id, epoch: 0, value: rejected.value });
-            if let Err(owner) = quarantine_world_owner(owner) {
-                retain_world_blocked_owner(state, owner);
-            }
-            mark_world_dynamic_fault(state, rejected.fault);
-            return;
-        }
-    }
-}
 //#endregion LodGrid
 
 //#region Environment
@@ -6165,11 +6204,7 @@ fn environment_light_dir(environment: &WorldEnvironmentRecord) -> [f32; 3] {
     let azimuth = sun.azimuth.unwrap_or(45.0).to_radians();
     let elevation = sun.elevation.unwrap_or(35.0).to_radians();
     let direction = Vec3::new((elevation.cos() * azimuth.cos()) as f32, (elevation.cos() * azimuth.sin()) as f32, elevation.sin() as f32);
-    if direction.length() < 1e-6 {
-        DEFAULT_LIGHT_DIR
-    } else {
-        direction.normalize().to_array()
-    }
+    if direction.length() < 1e-6 { DEFAULT_LIGHT_DIR } else { direction.normalize().to_array() }
 }
 
 /// 🖼️ Resolves the canvas clear color from `environment.background`, falling back to the ambient
@@ -6235,35 +6270,340 @@ fn hypsometric_color(t: f32) -> [f32; 4] {
     [1.0, 1.0, 1.0, 1.0]
 }
 
-/// 🪣️ Buckets one elevation band's triangles out of a decoded terrain-tile mesh payload into a
-/// standalone (re-indexed) `Mesh3d`, or `None` if the band is empty for this tile.
-fn build_terrain_band_mesh(mesh: &TerrainTileMeshPayload, band: usize, band_count: usize) -> Option<Mesh3d> {
-    let band_count_f = band_count as f32;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WorldTerrainMeshPhase {
+    Count,
+    Begin,
+    Allocate,
+    Positions,
+    Normals,
+    Indices,
+    Seal,
+    Publish,
+    NextBand,
+    RetireSource,
+}
+
+struct WorldTerrainMeshCursor {
+    surface_id: String,
+    z: u32,
+    x: u32,
+    y: u32,
+    payload: TerrainTileMeshPayload,
+    generation: u64,
+    source_revision: u64,
+    terrain_revision: u64,
+    band: u8,
+    phase: WorldTerrainMeshPhase,
+    triangle: u32,
+    vertex: u8,
+    matched: u32,
+    item: u32,
+    owner: WorldPlaceholderOwner,
+    close_started: bool,
+    retire_source: u8,
+    faulted: bool,
+}
+
+enum WorldTerrainMeshStep {
+    Pending,
+    Ready(String, Mesh3dLease),
+    Complete((u32, u32, u32)),
+    Fault,
+}
+
+impl WorldTerrainMeshCursor {
+    fn new(surface_id: &str, z: u32, x: u32, y: u32, payload: TerrainTileMeshPayload, generation: u64, source_revision: u64, terrain_revision: u64) -> Result<Self, WorldDynamicFault> {
+        if surface_id.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY || !payload.positions.len().is_multiple_of(3) || !payload.normals.len().is_multiple_of(3) || !payload.indices.len().is_multiple_of(3) || !payload.uvs.len().is_multiple_of(2) {
+            return Err(if surface_id.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY { WorldDynamicFault::IdCapacity } else { WorldDynamicFault::ByteCapacity });
+        }
+        u32::try_from(payload.indices.len() / 3).map_err(|_| WorldDynamicFault::InstanceCapacity)?;
+        Ok(Self {
+            surface_id: surface_id.to_owned(),
+            z,
+            x,
+            y,
+            payload,
+            generation,
+            source_revision,
+            terrain_revision,
+            band: 0,
+            phase: WorldTerrainMeshPhase::Count,
+            triangle: 0,
+            vertex: 0,
+            matched: 0,
+            item: 0,
+            owner: WorldPlaceholderOwner::Empty,
+            close_started: false,
+            retire_source: 0,
+            faulted: false,
+        })
+    }
+
+    fn triangle_count(&self) -> u32 {
+        (self.payload.indices.len() / 3) as u32
+    }
+
+    fn triangle_indices(&self, triangle: u32) -> Result<[u32; 3], WorldDynamicFault> {
+        let start = usize::try_from(triangle).ok().and_then(|triangle| triangle.checked_mul(3)).ok_or(WorldDynamicFault::InstanceCapacity)?;
+        let values = self.payload.indices.get(start..start + 3).ok_or(WorldDynamicFault::StaleToken)?;
+        let result = [values[0], values[1], values[2]];
+        if result.iter().any(|index| usize::try_from(*index).ok().and_then(|index| index.checked_mul(3)).is_none_or(|offset| self.payload.positions.get(offset..offset + 3).is_none())) {
+            return Err(WorldDynamicFault::StaleToken);
+        }
+        Ok(result)
+    }
+
+    fn triangle_band(&self, triangle: u32) -> Result<u8, WorldDynamicFault> {
+        let indices = self.triangle_indices(triangle)?;
+        let elevation = indices.map(|index| self.payload.uvs.get(index as usize * 2 + 1).copied().unwrap_or(0.0));
+        if elevation.iter().any(|value| !value.is_finite()) {
+            return Err(WorldDynamicFault::ByteCapacity);
+        }
+        Ok((((elevation[0] + elevation[1] + elevation[2]) / 3.0 * TERRAIN_COLOR_BANDS as f32) as usize).min(TERRAIN_COLOR_BANDS - 1) as u8)
+    }
+
+    fn value(&self, triangle: u32, vertex: u8, normal: bool) -> Result<[f32; 3], WorldDynamicFault> {
+        let index = self.triangle_indices(triangle)?[usize::from(vertex)] as usize;
+        let source = if normal { &self.payload.normals } else { &self.payload.positions };
+        let offset = index.checked_mul(3).ok_or(WorldDynamicFault::ByteCapacity)?;
+        let value = match source.get(offset..offset + 3) {
+            Some(value) => [value[0], value[1], value[2]],
+            None if normal => [0.0, 0.0, 1.0],
+            None => return Err(WorldDynamicFault::StaleToken),
+        };
+        if value.iter().all(|value| value.is_finite()) { Ok(value) } else { Err(WorldDynamicFault::ByteCapacity) }
+    }
+
+    fn token(&self) -> Result<Mesh3dWriteToken, WorldDynamicFault> {
+        match self.owner {
+            WorldPlaceholderOwner::Writing(token) => Ok(token),
+            _ => Err(WorldDynamicFault::StaleToken),
+        }
+    }
+
+    fn step(&mut self, source_revision: u64, terrain_revision: u64) -> WorldTerrainMeshStep {
+        if source_revision != self.source_revision || terrain_revision != self.terrain_revision {
+            self.faulted = true;
+        }
+        if self.faulted {
+            return if self.close_step() && self.terminal_is_empty() { WorldTerrainMeshStep::Fault } else { WorldTerrainMeshStep::Pending };
+        }
+        match self.step_live() {
+            Ok(step) => step,
+            Err(_) => {
+                self.faulted = true;
+                let _ = self.close_step();
+                WorldTerrainMeshStep::Pending
+            }
+        }
+    }
+
+    fn step_live(&mut self) -> Result<WorldTerrainMeshStep, WorldDynamicFault> {
+        match self.phase {
+            WorldTerrainMeshPhase::Count => {
+                if self.triangle == self.triangle_count() {
+                    self.triangle = 0;
+                    self.phase = if self.matched == 0 { WorldTerrainMeshPhase::NextBand } else { WorldTerrainMeshPhase::Begin };
+                    return Ok(WorldTerrainMeshStep::Pending);
+                }
+                if self.triangle_band(self.triangle)? == self.band {
+                    self.matched = self.matched.checked_add(1).ok_or(WorldDynamicFault::InstanceCapacity)?;
+                }
+                self.triangle += 1;
+            }
+            WorldTerrainMeshPhase::Begin => {
+                let items = self.matched.checked_mul(3).ok_or(WorldDynamicFault::InstanceCapacity)?;
+                let generation = self.generation.checked_add(u64::from(self.band)).ok_or(WorldDynamicFault::StaleToken)?;
+                self.owner = WorldPlaceholderOwner::Writing(mesh3d_begin(generation, self.source_revision, Mesh3dSchema::triangle_mesh(items, items)).map_err(|_| WorldDynamicFault::ByteCapacity)?);
+                self.phase = WorldTerrainMeshPhase::Allocate;
+            }
+            WorldTerrainMeshPhase::Allocate => {
+                if mesh3d_allocate_step(self.token()?).map_err(|_| WorldDynamicFault::Closing)? {
+                    self.phase = WorldTerrainMeshPhase::Positions;
+                }
+            }
+            WorldTerrainMeshPhase::Positions | WorldTerrainMeshPhase::Normals => {
+                if self.triangle == self.triangle_count() {
+                    self.triangle = 0;
+                    self.vertex = 0;
+                    self.phase = if self.phase == WorldTerrainMeshPhase::Positions { WorldTerrainMeshPhase::Normals } else { WorldTerrainMeshPhase::Indices };
+                    return Ok(WorldTerrainMeshStep::Pending);
+                }
+                if self.triangle_band(self.triangle)? != self.band {
+                    self.triangle += 1;
+                    return Ok(WorldTerrainMeshStep::Pending);
+                }
+                let normal = self.phase == WorldTerrainMeshPhase::Normals;
+                mesh3d_write_vec3(self.token()?, if normal { Mesh3dField::Normals } else { Mesh3dField::Positions }, self.value(self.triangle, self.vertex, normal)?).map_err(|_| WorldDynamicFault::Closing)?;
+                self.vertex += 1;
+                if self.vertex == 3 {
+                    self.vertex = 0;
+                    self.triangle += 1;
+                }
+            }
+            WorldTerrainMeshPhase::Indices => {
+                let items = self.matched * 3;
+                mesh3d_write_u32(self.token()?, Mesh3dField::Indices, self.item).map_err(|_| WorldDynamicFault::Closing)?;
+                self.item += 1;
+                if self.item == items {
+                    self.item = 0;
+                    self.phase = WorldTerrainMeshPhase::Seal;
+                }
+            }
+            WorldTerrainMeshPhase::Seal => {
+                let lease = mesh3d_seal(self.token()?).map_err(|_| WorldDynamicFault::Closing)?;
+                self.owner = WorldPlaceholderOwner::Ready(lease);
+                self.phase = WorldTerrainMeshPhase::Publish;
+            }
+            WorldTerrainMeshPhase::Publish => {
+                let WorldPlaceholderOwner::Ready(lease) = self.owner else { return Err(WorldDynamicFault::StaleToken) };
+                self.owner = WorldPlaceholderOwner::Empty;
+                self.phase = WorldTerrainMeshPhase::NextBand;
+                return Ok(WorldTerrainMeshStep::Ready(terrain_band_mesh_key(&self.surface_id, self.z, self.x, self.y, usize::from(self.band)), lease));
+            }
+            WorldTerrainMeshPhase::NextBand => {
+                self.band += 1;
+                self.matched = 0;
+                self.triangle = 0;
+                self.vertex = 0;
+                self.item = 0;
+                self.phase = if usize::from(self.band) == TERRAIN_COLOR_BANDS { WorldTerrainMeshPhase::RetireSource } else { WorldTerrainMeshPhase::Count };
+            }
+            WorldTerrainMeshPhase::RetireSource => {
+                if self.close_step() && self.terminal_is_empty() {
+                    return Ok(WorldTerrainMeshStep::Complete((self.z, self.x, self.y)));
+                }
+            }
+        }
+        Ok(WorldTerrainMeshStep::Pending)
+    }
+
+    fn close_step(&mut self) -> bool {
+        match self.owner {
+            WorldPlaceholderOwner::Writing(token) => {
+                if !self.close_started {
+                    match mesh3d_abort(token) {
+                        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => self.close_started = true,
+                        Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                        Err(_) => return false,
+                    }
+                    return false;
+                }
+                match mesh3d_abort_step(token) {
+                    Ok(true) | Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => {
+                        self.owner = WorldPlaceholderOwner::Empty;
+                        self.close_started = false;
+                    }
+                    Ok(false) | Err(_) => return false,
+                }
+                return false;
+            }
+            WorldPlaceholderOwner::Ready(lease) => {
+                if !self.close_started {
+                    match mesh3d_begin_close(lease) {
+                        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => self.close_started = true,
+                        Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                        Err(_) => return false,
+                    }
+                    return false;
+                }
+                match mesh3d_close_step(lease) {
+                    Ok(true) | Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => {
+                        self.owner = WorldPlaceholderOwner::Empty;
+                        self.close_started = false;
+                    }
+                    Ok(false) | Err(_) => return false,
+                }
+                return false;
+            }
+            WorldPlaceholderOwner::Empty => {}
+        }
+        match self.retire_source {
+            0 => self.payload.positions = Vec::new(),
+            1 => self.payload.normals = Vec::new(),
+            2 => self.payload.indices = Vec::new(),
+            3 => self.payload.uvs = Vec::new(),
+            _ => {
+                if self.surface_id.pop().is_some() {
+                    return false;
+                }
+                return true;
+            }
+        }
+        self.retire_source += 1;
+        false
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        matches!(self.owner, WorldPlaceholderOwner::Empty) && self.payload.positions.capacity() == 0 && self.payload.normals.capacity() == 0 && self.payload.indices.capacity() == 0 && self.payload.uvs.capacity() == 0 && self.surface_id.is_empty()
+    }
+}
+
+#[cfg(not(test))]
+impl Drop for WorldTerrainMeshCursor {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "terrain mesh cursor reached Drop before its exact page/source witness");
+    }
+}
+
+fn step_world_terrain_mesh(state: &mut World3dState) {
+    let Some(mut cursor) = state.terrain_build.take() else { return };
+    if !state.terrain_visible_tiles.contains(&(cursor.z, cursor.x, cursor.y)) || state.dynamic_blocked_mesh.is_some() || state.dynamic_mesh_close.is_some() {
+        cursor.faulted = true;
+    }
+    match cursor.step(state.terrain_revision, state.terrain_revision) {
+        WorldTerrainMeshStep::Pending => state.terrain_build = Some(cursor),
+        WorldTerrainMeshStep::Ready(key, lease) => match publish_world3d_mesh_lease(state, key, lease) {
+            Ok(()) => state.terrain_build = Some(cursor),
+            Err(rejected) => {
+                retain_rejected_world_mesh(state, rejected);
+                cursor.faulted = true;
+                state.terrain_build = Some(cursor);
+            }
+        },
+        WorldTerrainMeshStep::Complete(tile) => {
+            state.terrain_built_tiles.insert(tile);
+        }
+        WorldTerrainMeshStep::Fault => mark_world_dynamic_fault(state, WorldDynamicFault::Closing),
+    }
+}
+
+#[cfg(test)]
+struct LegacyMeshOracleData {
+    positions: Vec<f32>,
+    normals: Vec<f32>,
+    indices: Vec<u32>,
+    face_ids: Vec<u32>,
+    vertex_ids: Vec<u32>,
+    edge_positions: Vec<f32>,
+    edge_ids: Vec<u32>,
+    uvs: Vec<f32>,
+    colors: Vec<f32>,
+}
+
+#[cfg(test)]
+fn build_terrain_band_mesh(mesh: &TerrainTileMeshPayload, band: usize, band_count: usize) -> Option<LegacyMeshOracleData> {
     let mut positions = Vec::new();
     let mut normals = Vec::new();
     let mut indices = Vec::new();
-    for tri in mesh.indices.as_chunks::<3>().0 {
-        let elevations: [f32; 3] = tri.map(|index| mesh.uvs.get(index as usize * 2 + 1).copied().unwrap_or(0.0));
-        let average = (elevations[0] + elevations[1] + elevations[2]) / 3.0;
-        let tri_band = ((average * band_count_f) as usize).min(band_count - 1);
-        if tri_band != band {
+    for triangle in mesh.indices.as_chunks::<3>().0 {
+        let elevations = triangle.map(|index| mesh.uvs.get(index as usize * 2 + 1).copied().unwrap_or(0.0));
+        let selected = (((elevations[0] + elevations[1] + elevations[2]) / 3.0 * band_count as f32) as usize).min(band_count - 1);
+        if selected != band {
             continue;
         }
         let base = (positions.len() / 3) as u32;
-        for &vertex_index in tri {
-            let i = vertex_index as usize * 3;
-            let Some(position) = mesh.positions.get(i..i + 3) else { continue };
-            let normal = mesh.normals.get(i..i + 3).unwrap_or(&[0.0, 0.0, 1.0]);
+        for index in triangle {
+            let offset = *index as usize * 3;
+            let position = mesh.positions.get(offset..offset + 3)?;
+            let normal = mesh.normals.get(offset..offset + 3).unwrap_or(&[0.0, 0.0, 1.0]);
             positions.extend_from_slice(position);
             normals.extend_from_slice(normal);
         }
         indices.extend_from_slice(&[base, base + 1, base + 2]);
     }
-    if positions.is_empty() {
-        None
-    } else {
-        Some(Mesh3d::from_buffers(positions, normals, indices))
-    }
+    (!positions.is_empty()).then_some(LegacyMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() })
 }
 
 /// 🔄️ GPU-free half of `apply_terrain_style_if_changed`: applies `state.terrain_style` to the tile
@@ -6275,11 +6615,15 @@ fn apply_terrain_style_if_changed_state(state: &mut World3dState) -> Vec<String>
     if signature == state.terrain_applied_signature {
         return Vec::new();
     }
+    state.terrain_revision = state.terrain_revision.wrapping_add(1).max(1);
+    if let Some(cursor) = state.terrain_build.as_mut() {
+        cursor.faulted = true;
+    }
     let prefix = format!("terrain:{}:", state.surface_id);
     let stale_keys: Vec<String> = state.meshes.keys().filter(|key| key.starts_with(&prefix)).cloned().collect();
     for key in &stale_keys {
         if !retire_world_mesh(state, key) {
-            return;
+            return Vec::new();
         }
     }
     let visible = std::mem::take(&mut state.terrain_visible_tiles);
@@ -6310,6 +6654,10 @@ struct TerrainBandDraw {
     color: [f32; 4],
 }
 
+fn terrain_family_visible(state: &World3dState, tile: (u32, u32, u32)) -> bool {
+    state.terrain_built_tiles.contains(&tile)
+}
+
 /// 🏔️ GPU-free half of `sync_terrain`: asks `TerrainSessionCore` which DEM tiles are visible for
 /// the current camera, evicts (CPU-side) tiles that scrolled out of view, queues byte-fetches for
 /// tiles not yet uploaded (see `fetch_pending_terrain_tiles`), and builds/caches banded meshes for
@@ -6336,28 +6684,39 @@ fn sync_terrain_state(state: &mut World3dState, camera: &Camera3d) -> (Vec<Terra
         for band in 0..TERRAIN_COLOR_BANDS {
             let mesh_key = terrain_band_mesh_key(&state.surface_id, z, x, y, band);
             if !retire_world_mesh(state, &mesh_key) {
-                return;
+                return (Vec::new(), evicted_mesh_keys);
             }
             evicted_mesh_keys.push(mesh_key);
         }
     }
     state.pending_terrain_tile_urls.retain(|_, tile| visible_set.contains(tile));
     state.terrain_visible_tiles = visible_set.clone();
+    step_world_terrain_mesh(state);
 
     let mut band_draws = Vec::new();
     for (z, x, y) in visible_set {
-        if !state.terrain_built_tiles.contains(&(z, x, y)) {
+        if !terrain_family_visible(state, (z, x, y)) {
             let mesh_json = state.terrain_session.terrain_tile_mesh_json(z, x, y);
             if mesh_json == "null" {
                 state.pending_terrain_tile_urls.insert(terrain_tile_url(&style.tile_url_template, z, x, y), (z, x, y));
-            } else if let Ok(mesh_payload) = serde_json::from_str::<TerrainTileMeshPayload>(&mesh_json) {
-                for band in 0..TERRAIN_COLOR_BANDS {
-                    if let Some(band_mesh) = build_terrain_band_mesh(&mesh_payload, band, TERRAIN_COLOR_BANDS) {
-                        store_mesh(state, terrain_band_mesh_key(&state.surface_id, z, x, y, band), band_mesh);
+            } else if state.terrain_build.is_none() && state.dynamic_mesh_close.is_none() && state.dynamic_blocked_mesh.is_none() && state.snapshot_fault.is_none() {
+                if let Ok(mesh_payload) = serde_json::from_str::<TerrainTileMeshPayload>(&mesh_json) {
+                    let next = state.placeholder_generation.checked_add(TERRAIN_COLOR_BANDS as u64);
+                    if let Some(next) = next {
+                        let generation = state.placeholder_generation + 1;
+                        match WorldTerrainMeshCursor::new(&state.surface_id, z, x, y, mesh_payload, generation, state.terrain_revision, state.terrain_revision) {
+                            Ok(cursor) => {
+                                state.placeholder_generation = next;
+                                state.terrain_build = Some(cursor);
+                            }
+                            Err(fault) => mark_world_dynamic_fault(state, fault),
+                        }
+                    } else {
+                        mark_world_dynamic_fault(state, WorldDynamicFault::StaleToken);
                     }
                 }
-                state.terrain_built_tiles.insert((z, x, y));
             }
+            continue;
         }
         for band in 0..TERRAIN_COLOR_BANDS {
             let mesh_key = terrain_band_mesh_key(&state.surface_id, z, x, y, band);
@@ -6444,6 +6803,300 @@ impl GumballHandle {
 }
 
 //#region MeshHelpers
+//#region PlaceholderMeshAuthority
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WorldPlaceholderKind {
+    Box,
+    Plane,
+    Cylinder,
+    Cone,
+    Icosphere,
+}
+
+impl WorldPlaceholderKind {
+    fn resolve(value: &str) -> Self {
+        match value {
+            "vortex-marker" => Self::Icosphere,
+            "plane" => Self::Plane,
+            "cylinder" => Self::Cylinder,
+            "cone" => Self::Cone,
+            _ => Self::Box,
+        }
+    }
+
+    fn triangles(self) -> u32 {
+        match self {
+            Self::Box => 12,
+            Self::Plane => 2,
+            Self::Cylinder => 64,
+            Self::Cone => 32,
+            Self::Icosphere => 80,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WorldPlaceholderMeshPhase {
+    Allocate,
+    Positions,
+    Normals,
+    Indices,
+    Seal,
+    Publish,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WorldPlaceholderOwner {
+    Writing(Mesh3dWriteToken),
+    Ready(Mesh3dLease),
+    Empty,
+}
+
+struct WorldPlaceholderMeshCursor {
+    key: String,
+    kind: WorldPlaceholderKind,
+    phase: WorldPlaceholderMeshPhase,
+    item: u32,
+    owner: WorldPlaceholderOwner,
+    close_started: bool,
+    faulted: bool,
+}
+
+enum WorldPlaceholderMeshStep {
+    Pending,
+    Ready(String, Mesh3dLease),
+    Fault,
+}
+
+impl WorldPlaceholderMeshCursor {
+    fn new(key: &str, kind: WorldPlaceholderKind, generation: u64, revision: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
+        if key.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity);
+        }
+        let items = kind.triangles().checked_mul(3).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+        let owner = WorldPlaceholderOwner::Writing(mesh3d_begin(generation, revision, Mesh3dSchema::triangle_mesh(items, items))?);
+        Ok(Self { key: key.to_owned(), kind, phase: WorldPlaceholderMeshPhase::Allocate, item: 0, owner, close_started: false, faulted: false })
+    }
+
+    fn token(&self) -> Result<Mesh3dWriteToken, ui_wgpu::wgpu::Mesh3dFault> {
+        match self.owner {
+            WorldPlaceholderOwner::Writing(token) => Ok(token),
+            _ => Err(ui_wgpu::wgpu::Mesh3dFault::Stale),
+        }
+    }
+
+    fn step(&mut self) -> WorldPlaceholderMeshStep {
+        if self.faulted {
+            return if self.close_step() && self.terminal_is_empty() { WorldPlaceholderMeshStep::Fault } else { WorldPlaceholderMeshStep::Pending };
+        }
+        let result = self.step_live();
+        if result.is_err() {
+            self.faulted = true;
+            let _ = self.close_step();
+            return WorldPlaceholderMeshStep::Pending;
+        }
+        result.expect("placeholder result checked above")
+    }
+
+    fn step_live(&mut self) -> Result<WorldPlaceholderMeshStep, ui_wgpu::wgpu::Mesh3dFault> {
+        let items = self.kind.triangles() * 3;
+        match self.phase {
+            WorldPlaceholderMeshPhase::Allocate => {
+                if mesh3d_allocate_step(self.token()?)? {
+                    self.phase = WorldPlaceholderMeshPhase::Positions;
+                }
+            }
+            WorldPlaceholderMeshPhase::Positions => {
+                let triangle = placeholder_triangle(self.kind, self.item / 3);
+                mesh3d_write_vec3(self.token()?, Mesh3dField::Positions, triangle[(self.item % 3) as usize])?;
+                self.item += 1;
+                if self.item == items {
+                    self.item = 0;
+                    self.phase = WorldPlaceholderMeshPhase::Normals;
+                }
+            }
+            WorldPlaceholderMeshPhase::Normals => {
+                let triangle = placeholder_triangle(self.kind, self.item / 3);
+                mesh3d_write_vec3(self.token()?, Mesh3dField::Normals, placeholder_triangle_normal(triangle))?;
+                self.item += 1;
+                if self.item == items {
+                    self.item = 0;
+                    self.phase = WorldPlaceholderMeshPhase::Indices;
+                }
+            }
+            WorldPlaceholderMeshPhase::Indices => {
+                mesh3d_write_u32(self.token()?, Mesh3dField::Indices, self.item)?;
+                self.item += 1;
+                if self.item == items {
+                    self.item = 0;
+                    self.phase = WorldPlaceholderMeshPhase::Seal;
+                }
+            }
+            WorldPlaceholderMeshPhase::Seal => {
+                let lease = mesh3d_seal(self.token()?)?;
+                self.owner = WorldPlaceholderOwner::Ready(lease);
+                self.phase = WorldPlaceholderMeshPhase::Publish;
+            }
+            WorldPlaceholderMeshPhase::Publish => {
+                let WorldPlaceholderOwner::Ready(lease) = self.owner else { return Err(ui_wgpu::wgpu::Mesh3dFault::Stale) };
+                self.owner = WorldPlaceholderOwner::Empty;
+                return Ok(WorldPlaceholderMeshStep::Ready(std::mem::take(&mut self.key), lease));
+            }
+        }
+        Ok(WorldPlaceholderMeshStep::Pending)
+    }
+
+    fn close_step(&mut self) -> bool {
+        match self.owner {
+            WorldPlaceholderOwner::Writing(token) => {
+                if !self.close_started {
+                    match mesh3d_abort(token) {
+                        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => self.close_started = true,
+                        Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                        Err(_) => return false,
+                    }
+                    return false;
+                }
+                match mesh3d_abort_step(token) {
+                    Ok(true) | Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                    Ok(false) | Err(_) => return false,
+                }
+                false
+            }
+            WorldPlaceholderOwner::Ready(lease) => {
+                if !self.close_started {
+                    match mesh3d_begin_close(lease) {
+                        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => self.close_started = true,
+                        Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                        Err(_) => return false,
+                    }
+                    return false;
+                }
+                match mesh3d_close_step(lease) {
+                    Ok(true) | Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                    Ok(false) | Err(_) => return false,
+                }
+                false
+            }
+            WorldPlaceholderOwner::Empty => {
+                if self.key.pop().is_some() {
+                    return false;
+                }
+                true
+            }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        match self.owner {
+            WorldPlaceholderOwner::Writing(_) => false,
+            WorldPlaceholderOwner::Ready(lease) => mesh3d_terminal_is_empty(lease),
+            WorldPlaceholderOwner::Empty => self.key.is_empty(),
+        }
+    }
+}
+
+#[cfg(not(test))]
+impl Drop for WorldPlaceholderMeshCursor {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "placeholder mesh cursor reached Drop before its exact authority witness");
+    }
+}
+
+fn placeholder_triangle_normal(triangle: [[f32; 3]; 3]) -> [f32; 3] {
+    let ab = [triangle[1][0] - triangle[0][0], triangle[1][1] - triangle[0][1], triangle[1][2] - triangle[0][2]];
+    let ac = [triangle[2][0] - triangle[0][0], triangle[2][1] - triangle[0][1], triangle[2][2] - triangle[0][2]];
+    placeholder_normalize3([ab[1] * ac[2] - ab[2] * ac[1], ab[2] * ac[0] - ab[0] * ac[2], ab[0] * ac[1] - ab[1] * ac[0]])
+}
+
+fn placeholder_triangle(kind: WorldPlaceholderKind, triangle: u32) -> [[f32; 3]; 3] {
+    match kind {
+        WorldPlaceholderKind::Box => {
+            let faces = [
+                ([-0.5, -0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, 0.5], [-0.5, 0.5, 0.5]),
+                ([0.5, -0.5, -0.5], [-0.5, -0.5, -0.5], [-0.5, 0.5, -0.5], [0.5, 0.5, -0.5]),
+                ([-0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, -0.5], [-0.5, 0.5, -0.5]),
+                ([-0.5, -0.5, -0.5], [0.5, -0.5, -0.5], [0.5, -0.5, 0.5], [-0.5, -0.5, 0.5]),
+                ([0.5, -0.5, 0.5], [0.5, -0.5, -0.5], [0.5, 0.5, -0.5], [0.5, 0.5, 0.5]),
+                ([-0.5, -0.5, -0.5], [-0.5, -0.5, 0.5], [-0.5, 0.5, 0.5], [-0.5, 0.5, -0.5]),
+            ];
+            let (a, b, c, d) = faces[(triangle / 2) as usize];
+            if triangle.is_multiple_of(2) { [a, b, c] } else { [a, c, d] }
+        }
+        WorldPlaceholderKind::Plane => {
+            if triangle == 0 {
+                [[-0.5, 0.0, -0.5], [0.5, 0.0, -0.5], [0.5, 0.0, 0.5]]
+            } else {
+                [[-0.5, 0.0, -0.5], [0.5, 0.0, 0.5], [-0.5, 0.0, 0.5]]
+            }
+        }
+        WorldPlaceholderKind::Cylinder => {
+            let segment = triangle / 4;
+            let a0 = segment as f32 / 16.0 * std::f32::consts::TAU;
+            let a1 = (segment + 1) as f32 / 16.0 * std::f32::consts::TAU;
+            let p00 = [0.5 * a0.cos(), -0.5, 0.5 * a0.sin()];
+            let p01 = [0.5 * a1.cos(), -0.5, 0.5 * a1.sin()];
+            let p10 = [0.5 * a0.cos(), 0.5, 0.5 * a0.sin()];
+            let p11 = [0.5 * a1.cos(), 0.5, 0.5 * a1.sin()];
+            match triangle % 4 {
+                0 => [p00, p01, p11],
+                1 => [p00, p11, p10],
+                2 => [[0.0, -0.5, 0.0], p01, p00],
+                _ => [[0.0, 0.5, 0.0], p10, p11],
+            }
+        }
+        WorldPlaceholderKind::Cone => {
+            let segment = triangle / 2;
+            let a0 = segment as f32 / 16.0 * std::f32::consts::TAU;
+            let a1 = (segment + 1) as f32 / 16.0 * std::f32::consts::TAU;
+            let p0 = [0.5 * a0.cos(), 0.0, 0.5 * a0.sin()];
+            let p1 = [0.5 * a1.cos(), 0.0, 0.5 * a1.sin()];
+            if triangle.is_multiple_of(2) { [[0.0, 1.0, 0.0], p1, p0] } else { [[0.0, 0.0, 0.0], p0, p1] }
+        }
+        WorldPlaceholderKind::Icosphere => {
+            let t = (1.0 + 5.0_f32.sqrt()) * 0.5;
+            let vertices = [[-1.0, t, 0.0], [1.0, t, 0.0], [-1.0, -t, 0.0], [1.0, -t, 0.0], [0.0, -1.0, t], [0.0, 1.0, t], [0.0, -1.0, -t], [0.0, 1.0, -t], [t, 0.0, -1.0], [t, 0.0, 1.0], [-t, 0.0, -1.0], [-t, 0.0, 1.0]];
+            let faces =
+                [[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]];
+            let face = faces[(triangle / 4) as usize];
+            let a = placeholder_normalize3(vertices[face[0]]);
+            let b = placeholder_normalize3(vertices[face[1]]);
+            let c = placeholder_normalize3(vertices[face[2]]);
+            let ab = placeholder_normalize3([(a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5, (a[2] + b[2]) * 0.5]);
+            let bc = placeholder_normalize3([(b[0] + c[0]) * 0.5, (b[1] + c[1]) * 0.5, (b[2] + c[2]) * 0.5]);
+            let ca = placeholder_normalize3([(c[0] + a[0]) * 0.5, (c[1] + a[1]) * 0.5, (c[2] + a[2]) * 0.5]);
+            let triangle = match triangle % 4 {
+                0 => [a, ab, ca],
+                1 => [b, bc, ab],
+                2 => [c, ca, bc],
+                _ => [ab, bc, ca],
+            };
+            triangle.map(|vertex| placeholder_scale3(vertex, 0.12))
+        }
+    }
+}
+
+fn begin_world_placeholder_mesh(state: &mut World3dState, key: &str, kind: WorldPlaceholderKind) {
+    if state.meshes.contains_key(key) || state.placeholder_build.is_some() || state.dynamic_retirement.is_some() {
+        return;
+    }
+    state.placeholder_generation = state.placeholder_generation.wrapping_add(1).max(1);
+    match WorldPlaceholderMeshCursor::new(key, kind, state.placeholder_generation, state.interaction_revision) {
+        Ok(cursor) => state.placeholder_build = Some(cursor),
+        Err(_) => mark_world_dynamic_fault(state, WorldDynamicFault::ByteCapacity),
+    }
+}
+
+fn step_world_placeholder_mesh(state: &mut World3dState) {
+    let Some(mut cursor) = state.placeholder_build.take() else { return };
+    match cursor.step() {
+        WorldPlaceholderMeshStep::Pending => state.placeholder_build = Some(cursor),
+        WorldPlaceholderMeshStep::Ready(key, lease) => store_mesh(state, key, lease),
+        WorldPlaceholderMeshStep::Fault => mark_world_dynamic_fault(state, WorldDynamicFault::Closing),
+    }
+}
+//#endregion PlaceholderMeshAuthority
+
 //#region WorldMeshBuffers
 /// 🧱️ Infinite-owned flat render-buffer twin of the renderer's `WorldMeshData` (see
 /// `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx`
@@ -6521,6 +7174,7 @@ impl WorldMeshBuffers {
 /// only the primitive kinds actually reachable from this file's `mesh_from_kind` call sites
 /// (census in 📓️wave-g1b-infinite-report.md); the dissolved mesh-engine's other primitives
 /// (uv-sphere, ico-sphere at other radii, torus, …) are not reachable here and were not ported.
+#[cfg(test)]
 fn placeholder_mesh(kind: &str) -> WorldMeshBuffers {
     match kind {
         "vortex-marker" => placeholder_ico_sphere(0.12, 1),
@@ -6531,12 +7185,14 @@ fn placeholder_mesh(kind: &str) -> WorldMeshBuffers {
     }
 }
 
+#[cfg(test)]
 fn placeholder_push_triangle(mesh: &mut WorldMeshBuffers, a: [f32; 3], b: [f32; 3], c: [f32; 3]) {
     let base = mesh.vertex_count() as u32;
     mesh.positions.extend_from_slice(&[a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]]);
     mesh.indices.extend_from_slice(&[base, base + 1, base + 2]);
 }
 
+#[cfg(test)]
 fn placeholder_box(width: f32, height: f32, depth: f32) -> WorldMeshBuffers {
     let hw = width * 0.5;
     let hh = height * 0.5;
@@ -6558,6 +7214,7 @@ fn placeholder_box(width: f32, height: f32, depth: f32) -> WorldMeshBuffers {
     mesh
 }
 
+#[cfg(test)]
 fn placeholder_plane(width: f32, depth: f32) -> WorldMeshBuffers {
     let hw = width * 0.5;
     let hd = depth * 0.5;
@@ -6568,6 +7225,7 @@ fn placeholder_plane(width: f32, depth: f32) -> WorldMeshBuffers {
     mesh
 }
 
+#[cfg(test)]
 fn placeholder_cylinder(radius: f32, height: f32, segments: u32) -> WorldMeshBuffers {
     let mut mesh = WorldMeshBuffers::default();
     let half = height * 0.5;
@@ -6589,6 +7247,7 @@ fn placeholder_cylinder(radius: f32, height: f32, segments: u32) -> WorldMeshBuf
     mesh
 }
 
+#[cfg(test)]
 fn placeholder_cone(radius: f32, height: f32, segments: u32) -> WorldMeshBuffers {
     let mut mesh = WorldMeshBuffers::default();
     let apex = [0.0, height, 0.0];
@@ -6615,6 +7274,7 @@ fn placeholder_scale3(v: [f32; 3], s: f32) -> [f32; 3] {
     [v[0] * s, v[1] * s, v[2] * s]
 }
 
+#[cfg(test)]
 fn placeholder_midpoint(verts: &mut Vec<[f32; 3]>, cache: &mut HashMap<(u32, u32), u32>, a: u32, b: u32) -> u32 {
     let key = if a < b { (a, b) } else { (b, a) };
     if let Some(index) = cache.get(&key) {
@@ -6627,6 +7287,7 @@ fn placeholder_midpoint(verts: &mut Vec<[f32; 3]>, cache: &mut HashMap<(u32, u32
     index
 }
 
+#[cfg(test)]
 fn placeholder_ico_sphere(radius: f32, subdivisions: u32) -> WorldMeshBuffers {
     let t = (1.0 + 5.0_f32.sqrt()) * 0.5;
     let mut verts = vec![
@@ -6685,11 +7346,7 @@ const PICK_EDGE_SCREEN_PX: f32 = 18.0;
 const FACE_OVERLAY_OFFSET: f32 = 0.003;
 
 fn world_pick_rect(state: &World3dState) -> Rect {
-    if state.pick_bounds.w > 0.0 && state.pick_bounds.h > 0.0 {
-        state.pick_bounds
-    } else {
-        state.bounds
-    }
+    if state.pick_bounds.w > 0.0 && state.pick_bounds.h > 0.0 { state.pick_bounds } else { state.bounds }
 }
 
 fn render_pick_viewport(state: &World3dState) -> Rect {
@@ -6905,70 +7562,477 @@ fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>
     }
 }
 
-/// 🪣️ Per-color accumulation bucket for translucent face overlays: fill color, interleaved positions, normals, and triangle indices.
-type FaceOverlayBucket = ([f32; 4], Vec<f32>, Vec<f32>, Vec<u32>);
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WorldFaceOverlayPhase {
+    Count,
+    Prepare,
+    Allocate,
+    Geometry,
+    Indices,
+    Seal,
+    Publish,
+    NextBucket,
+    Complete,
+}
 
-fn append_component_face_translucent_overlays(state: &mut World3dState, gpu: &mut World3dBuildContext, translucent: &mut Vec<SceneDraw3d>) {
-    if !face_component_mode_active(state) {
-        return;
+#[derive(Clone, Copy)]
+struct WorldFaceOverlayMatch {
+    draw: u16,
+    instance: u16,
+    triangle: u32,
+    category: u8,
+    hovered: bool,
+}
+
+#[derive(Clone, Copy, Default)]
+struct WorldFaceOverlayScan {
+    draw: u16,
+    instance: u16,
+    triangle: u32,
+    candidate: Option<u32>,
+    hovered: bool,
+    preview: usize,
+    selected: usize,
+}
+
+enum WorldFaceOverlayScanStep {
+    Pending,
+    Match(WorldFaceOverlayMatch),
+    Complete,
+}
+
+impl WorldFaceOverlayScan {
+    fn reset(&mut self) {
+        *self = Self::default();
     }
-    let selected: HashSet<String> = state.component_ids.iter().cloned().collect();
-    let preview: HashSet<String> = state.marquee_preview_ids.iter().cloned().collect();
-    let mut buckets: Vec<FaceOverlayBucket> = Vec::new();
-    for draw in &state.draws {
-        let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
-            continue;
+
+    fn finish_candidate(&mut self, category: Option<u8>) -> WorldFaceOverlayScanStep {
+        let matched = category.map(|category| WorldFaceOverlayMatch { draw: self.draw, instance: self.instance, triangle: self.triangle, category, hovered: self.hovered });
+        self.triangle = self.triangle.saturating_add(1);
+        self.candidate = None;
+        self.hovered = false;
+        self.preview = 0;
+        self.selected = 0;
+        matched.map_or(WorldFaceOverlayScanStep::Pending, WorldFaceOverlayScanStep::Match)
+    }
+
+    fn step(&mut self, state: &World3dState) -> WorldFaceOverlayScanStep {
+        if let Some(face_id) = self.candidate {
+            if self.preview < state.marquee_preview_ids.len() {
+                let matches = decimal_component_id_matches(&state.marquee_preview_ids[self.preview], face_id);
+                self.preview += 1;
+                return if matches { self.finish_candidate(Some(0)) } else { WorldFaceOverlayScanStep::Pending };
+            }
+            if self.hovered {
+                return self.finish_candidate(Some(1));
+            }
+            if self.selected < state.component_ids.len() {
+                let matches = decimal_component_id_matches(&state.component_ids[self.selected], face_id);
+                self.selected += 1;
+                return if matches { self.finish_candidate(Some(2)) } else { WorldFaceOverlayScanStep::Pending };
+            }
+            return self.finish_candidate(None);
+        }
+        if usize::from(self.draw) >= usize::from(state.draws.len) {
+            return WorldFaceOverlayScanStep::Complete;
+        }
+        let Some(draw) = state.draws.get(usize::from(self.draw)) else {
+            self.draw += 1;
+            self.instance = 0;
+            self.triangle = 0;
+            return WorldFaceOverlayScanStep::Pending;
         };
-        let Ok(schema) = mesh.schema() else { continue };
-        for instance in &draw.instances {
-            let hovered = instance_hovered_component_id(state, &instance.id);
-            for tri_index in 0..schema.indices / 3 {
-                let Some(tri) = world_mesh_triangle(mesh, tri_index) else { continue };
-                let id = mesh_face_id(mesh, tri_index);
-                // 🎚️ Opacity ordering (selected > hovered > marquee-preview) mirrors the React
-                // reference's face-overlay stack (0.62 / 0.48 / 0.36); preview previously matched
-                // hovered's 0.48 exactly, collapsing the intended ranking.
-                let color = if preview.contains(&id) {
-                    [1.0, 0.85, 0.35, 0.36]
-                } else if hovered.as_deref() == Some(id.as_str()) {
-                    [0.35, 0.75, 1.0, 0.48]
-                } else if selected.contains(&id) {
-                    [0.35, 0.75, 1.0, 0.62]
-                } else {
-                    continue;
-                };
-                let (Some(a), Some(b), Some(c)) = (mesh_vertex(mesh, tri[0]), mesh_vertex(mesh, tri[1]), mesh_vertex(mesh, tri[2])) else { continue };
-                let verts = [instance.model.transform_point(a), instance.model.transform_point(b), instance.model.transform_point(c)];
-                let normal = verts[1].sub(verts[0]).cross(verts[2].sub(verts[0])).normalize();
-                let offset = if hovered.as_deref() == Some(id.as_str()) { FACE_OVERLAY_OFFSET } else { FACE_OVERLAY_OFFSET * 0.5 };
-                let verts = verts.map(|vert| vert.add(normal.scale(offset)));
-                let bucket = buckets.iter_mut().find(|(bucket_color, _, _, _)| *bucket_color == color);
-                let bucket = if let Some(bucket) = bucket {
-                    bucket
-                } else {
-                    buckets.push((color, Vec::new(), Vec::new(), Vec::new()));
-                    buckets.last_mut().expect("just pushed a bucket above, so buckets is non-empty")
-                };
-                let base = bucket.1.len() as u32 / 3;
-                for vert in verts {
-                    bucket.1.extend_from_slice(&vert.to_array());
-                    bucket.2.extend_from_slice(&normal.to_array());
-                }
-                bucket.3.extend_from_slice(&[base, base + 1, base + 2]);
-                bucket.3.extend_from_slice(&[base, base + 2, base + 1]);
+        if usize::from(self.instance) >= draw.instances.len() {
+            self.draw += 1;
+            self.instance = 0;
+            self.triangle = 0;
+            return WorldFaceOverlayScanStep::Pending;
+        }
+        let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
+            self.draw += 1;
+            self.instance = 0;
+            self.triangle = 0;
+            return WorldFaceOverlayScanStep::Pending;
+        };
+        let Ok(schema) = mesh.schema() else {
+            self.draw += 1;
+            self.instance = 0;
+            self.triangle = 0;
+            return WorldFaceOverlayScanStep::Pending;
+        };
+        if self.triangle >= schema.indices / 3 {
+            self.instance += 1;
+            self.triangle = 0;
+            return WorldFaceOverlayScanStep::Pending;
+        }
+        let face_id = world_mesh_component_id(mesh, Mesh3dField::FaceIds, self.triangle);
+        self.candidate = Some(face_id);
+        self.hovered = instance_hovered_component_matches(state, &draw.instances[usize::from(self.instance)].id, face_id);
+        WorldFaceOverlayScanStep::Pending
+    }
+}
+
+#[derive(Clone, Copy)]
+struct WorldFaceOverlayGeometry {
+    vertices: [Vec3; 3],
+    normal: Vec3,
+}
+
+enum WorldFaceOverlayMeshStep {
+    Pending,
+    Ready { index: usize, color: [f32; 4], key: String, lease: Mesh3dLease },
+    Complete { generation: u64, revision: u64, draw_generation: u64, colors: [Option<[f32; 4]>; 3] },
+    Stale,
+    Fault,
+}
+
+struct WorldFaceOverlayMeshCursor {
+    surface_id: String,
+    generation: u64,
+    revision: u64,
+    draw_generation: u64,
+    phase: WorldFaceOverlayPhase,
+    scan: WorldFaceOverlayScan,
+    counts: [u32; 3],
+    order: [u8; 3],
+    order_len: u8,
+    published_colors: [Option<[f32; 4]>; 3],
+    bucket: u8,
+    geometry: Option<WorldFaceOverlayGeometry>,
+    geometry_item: u8,
+    index_item: u32,
+    owner: WorldPlaceholderOwner,
+    retry_key: String,
+    close_started: bool,
+    faulted: bool,
+    stale: bool,
+}
+
+impl WorldFaceOverlayMeshCursor {
+    fn new(surface_id: &str, generation: u64, revision: u64, draw_generation: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
+        if surface_id.len().checked_add("component-face-overlay::2".len()).is_none_or(|bytes| bytes > WORLD_DYNAMIC_ID_BYTE_CAPACITY) {
+            return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity);
+        }
+        Ok(Self {
+            surface_id: surface_id.to_owned(),
+            generation,
+            revision,
+            draw_generation,
+            phase: WorldFaceOverlayPhase::Count,
+            scan: WorldFaceOverlayScan::default(),
+            counts: [0; 3],
+            order: [0; 3],
+            order_len: 0,
+            published_colors: [None; 3],
+            bucket: 0,
+            geometry: None,
+            geometry_item: 0,
+            index_item: 0,
+            owner: WorldPlaceholderOwner::Empty,
+            retry_key: String::new(),
+            close_started: false,
+            faulted: false,
+            stale: false,
+        })
+    }
+
+    fn key(&self, index: usize) -> String {
+        format!("component-face-overlay:{}:{}:{index}", self.surface_id, self.generation)
+    }
+
+    fn token(&self) -> Result<Mesh3dWriteToken, ui_wgpu::wgpu::Mesh3dFault> {
+        match self.owner {
+            WorldPlaceholderOwner::Writing(token) => Ok(token),
+            _ => Err(ui_wgpu::wgpu::Mesh3dFault::Stale),
+        }
+    }
+
+    fn step(&mut self, state: &World3dState) -> WorldFaceOverlayMeshStep {
+        if state.interaction_revision != self.revision || state.draw_generation != self.draw_generation {
+            self.faulted = true;
+            self.stale = true;
+        }
+        if self.faulted {
+            return if self.close_step() && self.terminal_is_empty() { if self.stale { WorldFaceOverlayMeshStep::Stale } else { WorldFaceOverlayMeshStep::Fault } } else { WorldFaceOverlayMeshStep::Pending };
+        }
+        match self.step_live(state) {
+            Ok(step) => step,
+            Err(_) => {
+                self.faulted = true;
+                let _ = self.close_step();
+                WorldFaceOverlayMeshStep::Pending
             }
         }
     }
-    for (index, (color, positions, normals, indices)) in buckets.into_iter().enumerate() {
-        if positions.is_empty() {
-            continue;
+
+    fn step_live(&mut self, state: &World3dState) -> Result<WorldFaceOverlayMeshStep, ui_wgpu::wgpu::Mesh3dFault> {
+        match self.phase {
+            WorldFaceOverlayPhase::Count => match self.scan.step(state) {
+                WorldFaceOverlayScanStep::Pending => {}
+                WorldFaceOverlayScanStep::Match(found) => {
+                    let category = usize::from(found.category);
+                    if self.counts[category] == 0 {
+                        self.order[usize::from(self.order_len)] = found.category;
+                        self.order_len += 1;
+                    }
+                    self.counts[category] = self.counts[category].checked_add(1).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+                }
+                WorldFaceOverlayScanStep::Complete => {
+                    self.scan.reset();
+                    self.phase = WorldFaceOverlayPhase::Prepare;
+                }
+            },
+            WorldFaceOverlayPhase::Prepare => {
+                if self.bucket == self.order_len {
+                    self.phase = WorldFaceOverlayPhase::Complete;
+                } else {
+                    let count = self.counts[usize::from(self.order[usize::from(self.bucket)])];
+                    let vertices = count.checked_mul(3).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+                    let indices = count.checked_mul(6).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+                    self.owner = WorldPlaceholderOwner::Writing(mesh3d_begin(self.generation + u64::from(self.bucket), self.revision, Mesh3dSchema::triangle_mesh(vertices, indices))?);
+                    self.phase = WorldFaceOverlayPhase::Allocate;
+                }
+            }
+            WorldFaceOverlayPhase::Allocate => {
+                if mesh3d_allocate_step(self.token()?)? {
+                    self.scan.reset();
+                    self.phase = WorldFaceOverlayPhase::Geometry;
+                }
+            }
+            WorldFaceOverlayPhase::Geometry => {
+                if let Some(geometry) = self.geometry {
+                    let vertex = usize::from(self.geometry_item / 2);
+                    let field = self.geometry_item % 2;
+                    if field == 0 {
+                        mesh3d_write_vec3(self.token()?, Mesh3dField::Positions, geometry.vertices[vertex].to_array())?;
+                    } else {
+                        mesh3d_write_vec3(self.token()?, Mesh3dField::Normals, geometry.normal.to_array())?;
+                    }
+                    self.geometry_item += 1;
+                    if self.geometry_item == 6 {
+                        self.geometry_item = 0;
+                        self.geometry = None;
+                    }
+                } else {
+                    match self.scan.step(state) {
+                        WorldFaceOverlayScanStep::Pending => {}
+                        WorldFaceOverlayScanStep::Match(found) if found.category == self.order[usize::from(self.bucket)] => {
+                            self.geometry = Some(face_overlay_geometry(state, found).ok_or(ui_wgpu::wgpu::Mesh3dFault::Stale)?);
+                        }
+                        WorldFaceOverlayScanStep::Match(_) => {}
+                        WorldFaceOverlayScanStep::Complete => {
+                            self.index_item = 0;
+                            self.phase = WorldFaceOverlayPhase::Indices;
+                        }
+                    }
+                }
+            }
+            WorldFaceOverlayPhase::Indices => {
+                let category = usize::from(self.order[usize::from(self.bucket)]);
+                let total = self.counts[category] * 6;
+                let pattern = [0, 1, 2, 0, 2, 1];
+                let value = (self.index_item / 6) * 3 + pattern[(self.index_item % 6) as usize];
+                mesh3d_write_u32(self.token()?, Mesh3dField::Indices, value)?;
+                self.index_item += 1;
+                if self.index_item == total {
+                    self.phase = WorldFaceOverlayPhase::Seal;
+                }
+            }
+            WorldFaceOverlayPhase::Seal => {
+                self.owner = WorldPlaceholderOwner::Ready(mesh3d_seal(self.token()?)?);
+                self.phase = WorldFaceOverlayPhase::Publish;
+            }
+            WorldFaceOverlayPhase::Publish => {
+                let WorldPlaceholderOwner::Ready(lease) = self.owner else { return Err(ui_wgpu::wgpu::Mesh3dFault::Stale) };
+                self.owner = WorldPlaceholderOwner::Empty;
+                self.phase = WorldFaceOverlayPhase::NextBucket;
+                let index = usize::from(self.bucket);
+                let key = if self.retry_key.is_empty() { self.key(index) } else { std::mem::take(&mut self.retry_key) };
+                return Ok(WorldFaceOverlayMeshStep::Ready { index, color: face_overlay_color(self.order[index]), key, lease });
+            }
+            WorldFaceOverlayPhase::NextBucket => {
+                self.bucket += 1;
+                self.scan.reset();
+                self.phase = WorldFaceOverlayPhase::Prepare;
+            }
+            WorldFaceOverlayPhase::Complete => {
+                self.surface_id.clear();
+                return Ok(WorldFaceOverlayMeshStep::Complete { generation: self.generation, revision: self.revision, draw_generation: self.draw_generation, colors: self.published_colors });
+            }
         }
-        let mesh_key = format!("component-face-overlay:{}:{index}", state.surface_id);
-        store_mesh(state, mesh_key.clone(), Mesh3d::from_buffers(positions, normals, indices));
+        Ok(WorldFaceOverlayMeshStep::Pending)
+    }
+
+    fn close_step(&mut self) -> bool {
+        self.geometry = None;
+        match self.owner {
+            WorldPlaceholderOwner::Writing(token) => {
+                if !self.close_started {
+                    match mesh3d_abort(token) {
+                        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => self.close_started = true,
+                        Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                        Err(_) => return false,
+                    }
+                    return false;
+                }
+                match mesh3d_abort_step(token) {
+                    Ok(true) | Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                    Ok(false) | Err(_) => return false,
+                }
+                false
+            }
+            WorldPlaceholderOwner::Ready(lease) => {
+                if !self.close_started {
+                    match mesh3d_begin_close(lease) {
+                        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => self.close_started = true,
+                        Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                        Err(_) => return false,
+                    }
+                    return false;
+                }
+                match mesh3d_close_step(lease) {
+                    Ok(true) | Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                    Ok(false) | Err(_) => return false,
+                }
+                false
+            }
+            WorldPlaceholderOwner::Empty => {
+                if self.retry_key.pop().is_some() {
+                    return false;
+                }
+                if self.surface_id.pop().is_some() {
+                    return false;
+                }
+                true
+            }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        matches!(self.owner, WorldPlaceholderOwner::Empty) && self.surface_id.is_empty() && self.retry_key.is_empty() && self.geometry.is_none()
+    }
+}
+
+#[cfg(not(test))]
+impl Drop for WorldFaceOverlayMeshCursor {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "face overlay mesh cursor reached Drop before its exact authority witness");
+    }
+}
+
+fn decimal_component_id_matches(value: &str, mut expected: u32) -> bool {
+    if expected == 0 {
+        return value == "0";
+    }
+    let digits = (expected.ilog10() + 1) as usize;
+    if value.len() != digits || !value.is_ascii() {
+        return false;
+    }
+    for digit in value.as_bytes().iter().rev() {
+        if *digit != b'0' + (expected % 10) as u8 {
+            return false;
+        }
+        expected /= 10;
+    }
+    true
+}
+
+fn instance_hovered_component_matches(state: &World3dState, instance_id: &str, face_id: u32) -> bool {
+    pick_targets_instance(state, instance_id)
+        && state.hovered_component_mode.as_deref() == Some(state.granularity.as_str())
+        && state.hovered_component_object_id.as_deref().is_none_or(|object_id| object_id == instance_id)
+        && state.hovered_component_id.as_deref().is_some_and(|id| decimal_component_id_matches(id, face_id))
+}
+
+fn face_overlay_color(category: u8) -> [f32; 4] {
+    match category {
+        0 => [1.0, 0.85, 0.35, 0.36],
+        1 => [0.35, 0.75, 1.0, 0.48],
+        _ => [0.35, 0.75, 1.0, 0.62],
+    }
+}
+
+fn face_overlay_geometry(state: &World3dState, found: WorldFaceOverlayMatch) -> Option<WorldFaceOverlayGeometry> {
+    let draw = state.draws.get(usize::from(found.draw))?;
+    let instance = draw.instances.get(usize::from(found.instance))?;
+    let mesh = *state.meshes.get(&draw.mesh_key)?;
+    let triangle = world_mesh_triangle(mesh, found.triangle)?;
+    let vertices = [instance.model.transform_point(mesh_vertex(mesh, triangle[0])?), instance.model.transform_point(mesh_vertex(mesh, triangle[1])?), instance.model.transform_point(mesh_vertex(mesh, triangle[2])?)];
+    let normal = vertices[1].sub(vertices[0]).cross(vertices[2].sub(vertices[0])).normalize();
+    let offset = if found.hovered { FACE_OVERLAY_OFFSET } else { FACE_OVERLAY_OFFSET * 0.5 };
+    Some(WorldFaceOverlayGeometry { vertices: vertices.map(|vertex| vertex.add(normal.scale(offset))), normal })
+}
+
+fn step_component_face_overlay_build(state: &mut World3dState) {
+    let Some(mut cursor) = state.face_overlay_build.take() else { return };
+    match cursor.step(state) {
+        WorldFaceOverlayMeshStep::Pending => state.face_overlay_build = Some(cursor),
+        WorldFaceOverlayMeshStep::Ready { index, color, key, lease } => match publish_world3d_mesh_lease(state, key, lease) {
+            Ok(()) => {
+                cursor.published_colors[index] = Some(color);
+                state.face_overlay_build = Some(cursor);
+            }
+            Err(rejected) => {
+                cursor.owner = WorldPlaceholderOwner::Ready(rejected.value);
+                cursor.retry_key = rejected.id;
+                cursor.phase = WorldFaceOverlayPhase::Publish;
+                cursor.close_started = false;
+                state.face_overlay_build = Some(cursor);
+            }
+        },
+        WorldFaceOverlayMeshStep::Complete { generation, revision, draw_generation, colors } => {
+            state.face_overlay_retired_generation = state.face_overlay_generation.replace(generation);
+            state.face_overlay_colors = colors;
+            state.face_overlay_applied_revision = revision;
+            state.face_overlay_applied_draw_generation = draw_generation;
+        }
+        WorldFaceOverlayMeshStep::Stale => {}
+        WorldFaceOverlayMeshStep::Fault => mark_world_dynamic_fault(state, WorldDynamicFault::Closing),
+    }
+}
+
+fn append_component_face_translucent_overlays(state: &mut World3dState, gpu: &mut World3dBuildContext, translucent: &mut Vec<SceneDraw3d>) {
+    if !face_component_mode_active(state) {
+        state.face_overlay_applied_revision = u64::MAX;
+        state.face_overlay_applied_draw_generation = u64::MAX;
+        if let Some(cursor) = state.face_overlay_build.as_mut() {
+            cursor.faulted = true;
+            cursor.stale = true;
+            step_component_face_overlay_build(state);
+            return;
+        }
+        if state.face_overlay_generation.is_some() {
+            state.face_overlay_retired_generation = state.face_overlay_generation.take();
+            state.face_overlay_colors = [None; 3];
+        }
+        return;
+    }
+    let had_build = state.face_overlay_build.is_some();
+    step_component_face_overlay_build(state);
+    if !had_build
+        && state.face_overlay_build.is_none()
+        && state.face_overlay_retired_generation.is_none()
+        && (state.face_overlay_applied_revision != state.interaction_revision || state.face_overlay_applied_draw_generation != state.draw_generation)
+        && state.dynamic_mesh_close.is_none()
+        && state.dynamic_blocked_mesh.is_none()
+        && state.snapshot_fault.is_none()
+    {
+        let generation = state.placeholder_generation.checked_add(3);
+        match generation.and_then(|next| WorldFaceOverlayMeshCursor::new(&state.surface_id, state.placeholder_generation + 1, state.interaction_revision, state.draw_generation).ok().map(|cursor| (next, cursor))) {
+            Some((next, cursor)) => {
+                state.placeholder_generation = next;
+                state.face_overlay_build = Some(cursor);
+            }
+            None => mark_world_dynamic_fault(state, WorldDynamicFault::ByteCapacity),
+        }
+    }
+    let Some(generation) = state.face_overlay_generation else { return };
+    for index in 0..3 {
+        let Some(color) = state.face_overlay_colors[index] else { continue };
+        let mesh_key = format!("component-face-overlay:{}:{generation}:{index}", state.surface_id);
+        let Some(mesh) = state.meshes.get(&mesh_key) else { continue };
         let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
-        if let Some(mesh) = state.meshes.get(&mesh_key) {
-            gpu.ensure_mesh(&mesh_key, mesh_version, *mesh);
-        }
+        gpu.ensure_mesh(&mesh_key, mesh_version, *mesh);
         translucent.push(SceneDraw3d { mesh_key, mesh_version, instances: vec![Instance3d { id: format!("face-overlay-{index}"), model: Mat4::identity(), color, selected: false, hovered: false }] });
     }
 }
@@ -6991,11 +8055,7 @@ fn selection_centroid(state: &World3dState) -> Option<Vec3> {
             }
         }
     }
-    if count == 0 {
-        None
-    } else {
-        Some(sum.scale(1.0 / count as f32))
-    }
+    if count == 0 { None } else { Some(sum.scale(1.0 / count as f32)) }
 }
 
 fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<GumballHandle> {
@@ -7332,12 +8392,16 @@ pub fn publish_world3d_mesh_lease(state: &mut World3dState, id: String, mesh: Me
 
 fn store_mesh(state: &mut World3dState, id: String, mesh: Mesh3dLease) {
     if let Err(rejected) = publish_world3d_mesh_lease(state, id, mesh) {
-        let fault = rejected.fault;
-        if state.dynamic_blocked_mesh.is_none() {
-            state.dynamic_blocked_mesh = Some(WorldDynamicEntry { id: rejected.id, epoch: 0, value: rejected.value });
-        }
-        mark_world_dynamic_fault(state, fault);
+        retain_rejected_world_mesh(state, rejected);
     }
+}
+
+fn retain_rejected_world_mesh(state: &mut World3dState, rejected: WorldDynamicRejected<Mesh3dLease>) {
+    let fault = rejected.fault;
+    if state.dynamic_blocked_mesh.is_none() {
+        state.dynamic_blocked_mesh = Some(WorldDynamicEntry { id: rejected.id, epoch: 0, value: rejected.value });
+    }
+    mark_world_dynamic_fault(state, fault);
 }
 
 fn retain_world_blocked_owner(state: &mut World3dState, owner: WorldOpaqueOwner) {
@@ -7800,14 +8864,13 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
 
 pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_, ActionDescriptor>, state: &mut World3dState, gpu: &mut World3dBuildContext) {
     let theme = ctx.theme;
+    step_world_placeholder_mesh(state);
     state.pick_bounds = ctx.pick_clip.unwrap_or(bounds);
     sync_world3d_state(state, scene, bounds);
     apply_terrain_style_if_changed(state, gpu);
     let current_lod = scene_lod(state);
     let lod_changed = state.resolved_lod_pick.is_none_or(|previous| (previous - current_lod).abs() > WORLD_LOD_EPSILON);
     if lod_changed {
-        #[cfg(test)]
-        rebuild_instance_draws_legacy(state, current_lod);
         state.resolved_lod_pick = Some(current_lod);
     }
     apply_runtime_draw_flags(state);
@@ -7897,8 +8960,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         if let Some(origin) = preview.origin {
             let mesh_id = brush_preview_mesh_id(preview.mesh_url.as_deref());
             if !state.meshes.contains_key(&mesh_id) {
-                let primitive = placeholder_mesh("box");
-                store_mesh(state, mesh_id.clone(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
+                begin_world_placeholder_mesh(state, &mesh_id, WorldPlaceholderKind::Box);
             }
             let rotation = preview.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
             let scale = preview_scale(preview.scale.as_ref());
@@ -7925,8 +8987,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
     }
     let mut textured_draws = Vec::new();
     if !state.meshes.contains_key("reference-plane") {
-        let primitive = placeholder_mesh("plane");
-        store_mesh(state, "reference-plane".into(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
+        begin_world_placeholder_mesh(state, "reference-plane", WorldPlaceholderKind::Plane);
     }
     let mut textured_instances = Vec::new();
     for reference in &state.references {
@@ -7949,8 +9010,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         textured_draws.push(TexturedDraw3d { instances: textured_instances });
     }
     if !state.meshes.contains_key("gumball-plane") {
-        let primitive = placeholder_mesh("plane");
-        store_mesh(state, "gumball-plane".into(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
+        begin_world_placeholder_mesh(state, "gumball-plane", WorldPlaceholderKind::Plane);
     }
     if !state.selected_ids.is_empty() && state.active_utility == "select" {
         append_gumball_geometry(&mut line_vertices, &mut translucent_draws, state, &camera, &state.meshes, &state.mesh_versions);
@@ -7974,6 +9034,9 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
     gizmo::paint_orbit_view_gizmo(ctx, &camera, inner, state.gizmo_hovered_tip);
     if scene.world_3d.is_none() {
         draw_text(ctx, "world-3d (empty)", inner.x + 12.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
+    }
+    if world3d_cursor_work_pending(state) {
+        gpu.request_cursor_wake();
     }
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(state.surface_id.clone()), kind: HitKind::World3d, drag_axis: None, drag_data: None });
 }
@@ -8408,21 +9471,13 @@ fn world_item_id_for_surface<'a>(state: &World3dState, target_id: &'a str) -> Op
 /// bound (`HierarchyProvider::Flat`-style, single-surface-scoped), else `world_item_target_id`'s
 /// `"surfaceId/id"` `PathDelimited` shape for the shared `world` domain.
 fn resolved_item_id(state: &World3dState, object_id: &str) -> String {
-    if state.bound_domain_id.is_some() {
-        object_id.to_string()
-    } else {
-        world_item_target_id(&state.surface_id, object_id)
-    }
+    if state.bound_domain_id.is_some() { object_id.to_string() } else { world_item_target_id(&state.surface_id, object_id) }
 }
 
 /// 🔤️ Inverse of [`resolved_item_id`], for parsing ids back out of an incoming action's targets during
 /// optimistic local preview.
 fn parse_resolved_item_id<'a>(state: &World3dState, target_id: &'a str) -> Option<&'a str> {
-    if state.bound_domain_id.is_some() {
-        Some(target_id)
-    } else {
-        world_item_id_for_surface(state, target_id)
-    }
+    if state.bound_domain_id.is_some() { Some(target_id) } else { world_item_id_for_surface(state, target_id) }
 }
 
 fn merge_mode_wire_str(merge: MergeMode) -> &'static str {
@@ -9048,11 +10103,7 @@ struct VortexArrowLayout {
 
 fn quat_normalize_f32(quat: [f32; 4]) -> [f32; 4] {
     let len = (quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3]).sqrt();
-    if len < 1e-9 {
-        [0.0, 0.0, 0.0, 1.0]
-    } else {
-        [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len]
-    }
+    if len < 1e-9 { [0.0, 0.0, 0.0, 1.0] } else { [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len] }
 }
 
 fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
@@ -9060,11 +10111,7 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
     let to = to.normalize();
     let r = from.dot(to) + 1.0;
     let quat = if r < 0.000_001 {
-        if from.x.abs() > from.z.abs() {
-            [-from.y, from.x, 0.0, r]
-        } else {
-            [0.0, -from.z, from.y, r]
-        }
+        if from.x.abs() > from.z.abs() { [-from.y, from.x, 0.0, r] } else { [0.0, -from.z, from.y, r] }
     } else {
         let cross = from.cross(to);
         [cross.x, cross.y, cross.z, r]
@@ -9074,11 +10121,7 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
 
 fn vortex_unit_direction(direction: Option<[f64; 3]>) -> Vec3 {
     let dir = direction.map(|value| Vec3::new(value[0] as f32, value[1] as f32, value[2] as f32)).unwrap_or(Vec3::new(0.0, 0.0, -1.0));
-    if dir.dot(dir) < 1e-12 {
-        Vec3::new(0.0, 0.0, -1.0)
-    } else {
-        dir.normalize()
-    }
+    if dir.dot(dir) < 1e-12 { Vec3::new(0.0, 0.0, -1.0) } else { dir.normalize() }
 }
 
 fn vortex_arrow_layout(position: [f64; 3], direction: Option<[f64; 3]>, radius: f32, display_direction: Option<&str>) -> VortexArrowLayout {
@@ -9099,8 +10142,7 @@ fn ensure_primitive_mesh(state: &mut World3dState, mesh_key: &str) {
     if state.meshes.contains_key(mesh_key) {
         return;
     }
-    let primitive = placeholder_mesh(mesh_key);
-    store_mesh(state, mesh_key.into(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
+    begin_world_placeholder_mesh(state, mesh_key, WorldPlaceholderKind::resolve(mesh_key));
 }
 
 fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut World3dBuildContext, extra_draws: &mut Vec<SceneDraw3d>) {
@@ -9817,6 +10859,64 @@ mod tests {
     use super::*;
     use ui_wgpu::wgpu::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene};
 
+    fn triangle_mesh_oracle() -> LegacyMeshOracleData {
+        mesh_oracle_from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])
+    }
+
+    fn mesh_oracle_from_buffers(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> LegacyMeshOracleData {
+        LegacyMeshOracleData { positions, normals, indices, face_ids: Vec::new(), vertex_ids: Vec::new(), edge_positions: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), colors: Vec::new() }
+    }
+
+    fn publish_oracle_mesh(data: LegacyMeshOracleData) -> Mesh3dLease {
+        assert!(data.positions.len().is_multiple_of(3));
+        assert_eq!(data.normals.len(), data.positions.len());
+        assert!(data.edge_positions.len().is_multiple_of(6));
+        assert!(data.uvs.len().is_multiple_of(2));
+        assert!(data.colors.len().is_multiple_of(4));
+        static GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(10_000);
+        let schema = Mesh3dSchema {
+            vertices: (data.positions.len() / 3) as u32,
+            indices: data.indices.len() as u32,
+            face_ids: data.face_ids.len() as u32,
+            vertex_ids: data.vertex_ids.len() as u32,
+            edges: (data.edge_positions.len() / 6) as u32,
+            edge_ids: data.edge_ids.len() as u32,
+            uvs: (data.uvs.len() / 2) as u32,
+            colors: (data.colors.len() / 4) as u32,
+        };
+        let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let token = mesh3d_begin(generation, 0, schema).expect("oracle mesh claim");
+        while !mesh3d_allocate_step(token).expect("oracle mesh page allocation") {}
+        for value in data.positions.as_chunks::<3>().0 {
+            mesh3d_write_vec3(token, Mesh3dField::Positions, *value).unwrap();
+        }
+        for value in data.normals.as_chunks::<3>().0 {
+            mesh3d_write_vec3(token, Mesh3dField::Normals, *value).unwrap();
+        }
+        for value in data.indices {
+            mesh3d_write_u32(token, Mesh3dField::Indices, value).unwrap();
+        }
+        for value in data.face_ids {
+            mesh3d_write_u32(token, Mesh3dField::FaceIds, value).unwrap();
+        }
+        for value in data.vertex_ids {
+            mesh3d_write_u32(token, Mesh3dField::VertexIds, value).unwrap();
+        }
+        for value in data.edge_positions.as_chunks::<6>().0 {
+            mesh3d_write_edge(token, [value[..3].try_into().unwrap(), value[3..].try_into().unwrap()]).unwrap();
+        }
+        for value in data.edge_ids {
+            mesh3d_write_u32(token, Mesh3dField::EdgeIds, value).unwrap();
+        }
+        for value in data.uvs.as_chunks::<2>().0 {
+            ui_wgpu::wgpu::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
+        }
+        for value in data.colors.as_chunks::<4>().0 {
+            ui_wgpu::wgpu::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
+        }
+        mesh3d_seal(token).expect("oracle mesh publication")
+    }
+
     fn assert_send<T: Send>() {}
 
     fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
@@ -9830,6 +10930,238 @@ mod tests {
             &mut sequence,
         );
         step(&mut context)
+    }
+
+    #[test]
+    fn cursor_wake_coalesces_duplicates_and_rearms_after_exact_take() {
+        let mut wake = WorldCursorWake::default();
+        let first = wake.request();
+        assert_eq!(wake.request(), first, "duplicate requests preserve the one outstanding wake");
+        assert_eq!(wake.take(), Some(first));
+        assert_eq!(wake.take(), None, "one wake has exactly one consumer handoff");
+        let second = wake.request();
+        assert_ne!(second, first, "work resumed after a handoff receives a fresh ABA witness");
+        assert_eq!(wake.take(), Some(second));
+
+        let mut build = World3dBuildContext::default();
+        build.request_cursor_wake();
+        build.request_cursor_wake();
+        assert!(build.take_cursor_wake());
+        assert!(!build.take_cursor_wake(), "prepared frame receives no duplicate wake directive");
+    }
+
+    #[test]
+    fn terrain_visibility_requires_the_complete_family_marker() {
+        let mut state = World3dState::new("surface".into(), "controller".into());
+        let tile = (3, 4, 5);
+        assert!(!terrain_family_visible(&state, tile));
+        state.terrain_built_tiles.insert(tile);
+        assert!(terrain_family_visible(&state, tile));
+    }
+
+    #[test]
+    fn placeholder_writer_matches_legacy_geometry_and_closes_interrupted_authority() {
+        for (name, kind) in [("box", WorldPlaceholderKind::Box), ("plane", WorldPlaceholderKind::Plane), ("cylinder", WorldPlaceholderKind::Cylinder), ("cone", WorldPlaceholderKind::Cone), ("vortex-marker", WorldPlaceholderKind::Icosphere)] {
+            let legacy = placeholder_mesh(name);
+            let mut positions = Vec::new();
+            let mut normals = Vec::new();
+            let mut indices = Vec::new();
+            for triangle in 0..kind.triangles() {
+                let vertices = placeholder_triangle(kind, triangle);
+                let normal = placeholder_triangle_normal(vertices);
+                for vertex in vertices {
+                    positions.extend_from_slice(&vertex);
+                    normals.extend_from_slice(&normal);
+                    indices.push(indices.len() as u32);
+                }
+            }
+            assert_eq!(positions, legacy.positions);
+            assert_eq!(indices, legacy.indices);
+            for (actual, expected) in normals.iter().zip(&legacy.normals) {
+                assert!((actual - expected).abs() <= 1e-6, "{name} normal mismatch: {actual} != {expected}");
+            }
+        }
+
+        let mut interrupted = WorldPlaceholderMeshCursor::new("interrupted", WorldPlaceholderKind::Icosphere, 41, 7).expect("placeholder authority");
+        assert!(matches!(interrupted.step(), WorldPlaceholderMeshStep::Pending));
+        assert!(matches!(interrupted.step(), WorldPlaceholderMeshStep::Pending));
+        let mut turns = 0;
+        while !interrupted.close_step() || !interrupted.terminal_is_empty() {
+            turns += 1;
+            assert!(turns < 64);
+        }
+        assert!(interrupted.terminal_is_empty());
+    }
+
+    #[test]
+    fn terrain_writer_matches_legacy_bands_and_closes_interrupted_authority() {
+        fn payload() -> TerrainTileMeshPayload {
+            TerrainTileMeshPayload {
+                positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 0.0, 2.0, 1.0, 0.0],
+                normals: [0.0, 0.0, 1.0].repeat(6),
+                indices: vec![0, 1, 2, 3, 4, 5],
+                uvs: vec![0.0, 0.05, 0.0, 0.05, 0.0, 0.05, 0.0, 0.95, 0.0, 0.95, 0.0, 0.95],
+            }
+        }
+
+        let mut cursor = WorldTerrainMeshCursor::new("surface", 3, 4, 5, payload(), 50, 9, 9).expect("terrain cursor");
+        let mut turns = 0;
+        loop {
+            turns += 1;
+            assert!(turns < 512);
+            match cursor.step(9, 9) {
+                WorldTerrainMeshStep::Pending => {}
+                WorldTerrainMeshStep::Ready(key, lease) => {
+                    let band = key.rsplit(':').next().and_then(|value| value.parse::<usize>().ok()).expect("band key");
+                    let legacy = build_terrain_band_mesh(&payload(), band, TERRAIN_COLOR_BANDS).expect("published band has legacy geometry");
+                    let schema = lease.schema().expect("terrain lease schema");
+                    assert_eq!(schema.vertices as usize * 3, legacy.positions.len());
+                    assert_eq!(schema.indices as usize, legacy.indices.len());
+                    for item in 0..schema.vertices {
+                        assert_eq!(lease.vec3(Mesh3dField::Positions, item).unwrap(), legacy.positions[item as usize * 3..item as usize * 3 + 3]);
+                        assert_eq!(lease.vec3(Mesh3dField::Normals, item).unwrap(), legacy.normals[item as usize * 3..item as usize * 3 + 3]);
+                    }
+                    for item in 0..schema.indices {
+                        assert_eq!(lease.u32(Mesh3dField::Indices, item).unwrap(), legacy.indices[item as usize]);
+                    }
+                    mesh3d_begin_close(lease).unwrap();
+                    while !mesh3d_close_step(lease).unwrap() {}
+                }
+                WorldTerrainMeshStep::Complete(tile) => {
+                    assert_eq!(tile, (3, 4, 5));
+                    break;
+                }
+                WorldTerrainMeshStep::Fault => panic!("valid terrain cursor faulted"),
+            }
+        }
+        assert!(cursor.terminal_is_empty());
+
+        let mut interrupted = WorldTerrainMeshCursor::new("surface", 3, 4, 5, payload(), 70, 11, 11).expect("terrain cursor");
+        assert!(matches!(interrupted.step(11, 11), WorldTerrainMeshStep::Pending));
+        let mut close_turns = 0;
+        while !interrupted.close_step() || !interrupted.terminal_is_empty() {
+            close_turns += 1;
+            assert!(close_turns < 64);
+        }
+        assert!(interrupted.terminal_is_empty());
+        assert!(WorldTerrainMeshCursor::new("surface", 0, 0, 0, TerrainTileMeshPayload { positions: vec![0.0, 1.0], normals: Vec::new(), indices: vec![0, 1, 2], uvs: Vec::new() }, 80, 1, 1).is_err());
+    }
+
+    fn face_overlay_test_mesh(generation: u64, revision: u64, face_id: u32) -> Mesh3dLease {
+        let schema = Mesh3dSchema { vertices: 3, indices: 3, face_ids: 1, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: 0, colors: 0 };
+        let token = mesh3d_begin(generation, revision, schema).expect("face overlay fixture claim");
+        while !mesh3d_allocate_step(token).expect("face overlay fixture page") {}
+        for position in [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] {
+            mesh3d_write_vec3(token, Mesh3dField::Positions, position).unwrap();
+        }
+        for _ in 0..3 {
+            mesh3d_write_vec3(token, Mesh3dField::Normals, [0.0, 0.0, 1.0]).unwrap();
+        }
+        for index in [0, 1, 2] {
+            mesh3d_write_u32(token, Mesh3dField::Indices, index).unwrap();
+        }
+        mesh3d_write_u32(token, Mesh3dField::FaceIds, face_id).unwrap();
+        mesh3d_seal(token).expect("face overlay fixture lease")
+    }
+
+    #[test]
+    fn face_overlay_writer_matches_legacy_winding_and_retires_stale_generation() {
+        let mut state = World3dState::new("surface".into(), "controller".into());
+        state.interaction_revision = 7;
+        state.draw_generation = 11;
+        state.granularity = "face".into();
+        state.component_ids.push("12".into());
+        let source = face_overlay_test_mesh(400, 7, 12);
+        publish_world3d_mesh_lease(&mut state, "source".into(), source).unwrap();
+        let version = state.mesh_versions["source"];
+        state.draws.push(SceneDraw3d { mesh_key: "source".into(), mesh_version: version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] }).unwrap();
+
+        let mut cursor = WorldFaceOverlayMeshCursor::new("surface", 500, 7, 11).unwrap();
+        let mut published = None;
+        for _ in 0..128 {
+            match cursor.step(&state) {
+                WorldFaceOverlayMeshStep::Pending => {}
+                WorldFaceOverlayMeshStep::Ready { index, color, key, lease } => {
+                    assert_eq!((index, color, key.as_str()), (0, [0.35, 0.75, 1.0, 0.62], "component-face-overlay:surface:500:0"));
+                    let schema = lease.schema().unwrap();
+                    assert_eq!((schema.vertices, schema.indices), (3, 6));
+                    assert_eq!(lease.vec3(Mesh3dField::Positions, 0).unwrap(), [0.0, 0.0, FACE_OVERLAY_OFFSET * 0.5]);
+                    assert_eq!(lease.vec3(Mesh3dField::Positions, 1).unwrap(), [1.0, 0.0, FACE_OVERLAY_OFFSET * 0.5]);
+                    assert_eq!(lease.vec3(Mesh3dField::Positions, 2).unwrap(), [0.0, 1.0, FACE_OVERLAY_OFFSET * 0.5]);
+                    assert_eq!((0..6).map(|item| lease.u32(Mesh3dField::Indices, item).unwrap()).collect::<Vec<_>>(), vec![0, 1, 2, 0, 2, 1]);
+                    published = Some(lease);
+                    cursor.published_colors[index] = Some(color);
+                }
+                WorldFaceOverlayMeshStep::Complete { generation, revision, draw_generation, colors } => {
+                    assert_eq!((generation, revision, draw_generation), (500, 7, 11));
+                    assert_eq!(colors, [Some([0.35, 0.75, 1.0, 0.62]), None, None]);
+                    break;
+                }
+                WorldFaceOverlayMeshStep::Stale | WorldFaceOverlayMeshStep::Fault => panic!("valid overlay fixture faulted"),
+            }
+        }
+        assert!(cursor.terminal_is_empty());
+        let published = published.expect("selected overlay published");
+        mesh3d_begin_close(published).unwrap();
+        while !mesh3d_close_step(published).unwrap() {}
+
+        let mut stale = WorldFaceOverlayMeshCursor::new("surface", 600, 7, 11).unwrap();
+        assert!(matches!(stale.step(&state), WorldFaceOverlayMeshStep::Pending));
+        state.interaction_revision = 8;
+        let mut terminal = false;
+        for _ in 0..32 {
+            if matches!(stale.step(&state), WorldFaceOverlayMeshStep::Stale) {
+                terminal = true;
+                break;
+            }
+        }
+        assert!(terminal && stale.terminal_is_empty());
+        assert!(WorldFaceOverlayMeshCursor::new(&"x".repeat(WORLD_DYNAMIC_ID_BYTE_CAPACITY), 700, 1, 1).is_err());
+    }
+
+    #[test]
+    fn face_overlay_family_becomes_visible_only_after_every_bucket_is_published() {
+        let mut state = World3dState::new("surface".into(), "controller".into());
+        state.interaction_revision = 7;
+        state.draw_generation = 11;
+        state.granularity = "face".into();
+        state.component_ids.push("12".into());
+        let source = face_overlay_test_mesh(750, 7, 12);
+        publish_world3d_mesh_lease(&mut state, "source".into(), source).unwrap();
+        let version = state.mesh_versions["source"];
+        state.draws.push(SceneDraw3d { mesh_key: "source".into(), mesh_version: version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] }).unwrap();
+        state.face_overlay_build = Some(WorldFaceOverlayMeshCursor::new("surface", 800, 7, 11).unwrap());
+
+        let mut staged_seen = false;
+        for _ in 0..128 {
+            step_component_face_overlay_build(&mut state);
+            if state.meshes.contains_key("component-face-overlay:surface:800:0") && state.face_overlay_generation.is_none() {
+                staged_seen = true;
+            }
+            if state.face_overlay_generation == Some(800) {
+                break;
+            }
+        }
+        assert!(staged_seen, "a completed bucket remains invisible while the family transaction is partial");
+        assert_eq!(state.face_overlay_generation, Some(800));
+        assert_eq!(state.face_overlay_colors, [Some([0.35, 0.75, 1.0, 0.62]), None, None]);
+
+        state.face_overlay_build = Some(WorldFaceOverlayMeshCursor::new("surface", 900, 7, 11).unwrap());
+        for _ in 0..128 {
+            step_component_face_overlay_build(&mut state);
+            if state.meshes.contains_key("component-face-overlay:surface:900:0") {
+                break;
+            }
+        }
+        assert_eq!(state.face_overlay_generation, Some(800), "superseding partial family never changes the visible generation");
+        state.interaction_revision = 8;
+        for _ in 0..64 {
+            step_component_face_overlay_build(&mut state);
+            if state.face_overlay_build.is_none() {
+                break;
+            }
+        }
+        assert_eq!(state.face_overlay_generation, Some(800), "stale family retirement preserves the last complete publication");
     }
 
     #[test]
@@ -9850,27 +11182,24 @@ mod tests {
 
     #[test]
     fn world_mesh_registry_enforces_fixed_capacity_id_topology_and_aba() {
-        let mesh = Mesh3d::from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]);
+        let mesh = publish_oracle_mesh(triangle_mesh_oracle());
         let mut registry = WorldInteractionMeshRegistry::default();
-        let first = registry.admit("mesh-0", 1, &mesh).expect("first mesh token");
-        assert_eq!(registry.admit("mesh-0", 1, &mesh), Some(first));
-        let replacement = registry.admit("mesh-0", 2, &mesh).expect("replacement token");
+        let first = registry.admit("mesh-0", 1, mesh).expect("first mesh token");
+        assert_eq!(registry.admit("mesh-0", 1, mesh), Some(first));
+        let replacement = registry.admit("mesh-0", 2, mesh).expect("replacement token");
         assert_ne!(replacement, first);
         assert!(registry.resolve(first).is_none());
         assert_eq!(registry.resolve(replacement).map(|slot| slot.version), Some(2));
         for index in 1..WORLD_INTERACTION_MESH_CAPACITY {
-            assert!(registry.admit(&format!("mesh-{index}"), 1, &mesh).is_some());
+            assert!(registry.admit(&format!("mesh-{index}"), 1, mesh).is_some());
         }
-        assert!(registry.admit("mesh-overflow", 1, &mesh).is_none());
+        assert!(registry.admit("mesh-overflow", 1, mesh).is_none());
         assert!(registry.faulted);
 
         let mut oversized = WorldInteractionMeshRegistry::default();
-        assert!(oversized.admit(&"x".repeat(WORLD_INTERACTION_ID_BYTE_CAPACITY + 1), 1, &mesh).is_none());
+        assert!(oversized.admit(&"x".repeat(WORLD_INTERACTION_ID_BYTE_CAPACITY + 1), 1, mesh).is_none());
         assert!(oversized.faulted);
-        let malformed = Mesh3d::from_buffers(vec![0.0, 0.0], Vec::new(), Vec::new());
-        let mut malformed_registry = WorldInteractionMeshRegistry::default();
-        assert!(malformed_registry.admit("malformed", 1, &malformed).is_none());
-        assert!(malformed_registry.faulted);
+        assert_eq!(mesh3d_begin(99, 0, Mesh3dSchema::triangle_mesh(0, 0)), Err(ui_wgpu::wgpu::Mesh3dFault::Schema));
     }
 
     #[test]
@@ -9899,7 +11228,7 @@ mod tests {
     fn world_object_registry_build_is_one_owner_per_turn_and_interruptible() {
         let mut state = World3dState::new("surface".into(), "controller".into());
         state.interaction_revision = 7;
-        let mesh = Mesh3d::from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]);
+        let mesh = publish_oracle_mesh(mesh_oracle_from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]));
         store_mesh(&mut state, "mesh".into(), mesh);
         let mesh_version = state.mesh_versions["mesh"];
         state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version, instances: vec![Instance3d { id: "instance".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] });
@@ -9977,7 +11306,7 @@ mod tests {
         state.interaction_revision = 5;
         state.interaction_objects.revision = 5;
         state.granularity = "face".into();
-        let mesh = Mesh3d::from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]);
+        let mesh = publish_oracle_mesh(triangle_mesh_oracle());
         store_mesh(&mut state, "mesh".into(), mesh);
         let mesh_token = state
             .interaction_meshes
@@ -10192,7 +11521,7 @@ mod tests {
         state.bounds = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
         state.pick_bounds = state.bounds;
         state.interaction_revision = 2;
-        let mesh = Mesh3d::from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]);
+        let mesh = publish_oracle_mesh(triangle_mesh_oracle());
         store_mesh(&mut state, "mesh".into(), mesh);
         let mesh_version = state.mesh_versions["mesh"];
         let instances = (0..instance_count).map(|index| Instance3d { id: format!("object-{index:03}"), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }).collect();
@@ -10691,9 +12020,9 @@ mod tests {
 
     fn world_pick_fixture() -> World3dState {
         let mut state = World3dState::new("surface".into(), "controller".into());
-        let mut mesh = Mesh3d::from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]);
-        mesh.uvs = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
-        store_mesh(&mut state, "mesh".into(), mesh);
+        let mut data = triangle_mesh_oracle();
+        data.uvs = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
+        store_mesh(&mut state, "mesh".into(), publish_oracle_mesh(data));
         let mesh_version = state.mesh_versions["mesh"];
         state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] });
         state
@@ -10890,13 +12219,13 @@ mod tests {
         assert!(tips.iter().all(|tip| tip.pick_radius >= 7.0));
     }
 
-    fn topology_mesh() -> Mesh3d {
-        let mut mesh = Mesh3d::from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2, 1, 3, 2]);
-        mesh.face_ids = vec![10, 11];
-        mesh.vertex_ids = vec![1, 2, 3, 4];
-        mesh.edge_positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0];
-        mesh.edge_ids = vec![5, 6];
-        mesh
+    fn topology_mesh() -> Mesh3dLease {
+        let mut data = mesh_oracle_from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2, 1, 3, 2]);
+        data.face_ids = vec![10, 11];
+        data.vertex_ids = vec![1, 2, 3, 4];
+        data.edge_positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0];
+        data.edge_ids = vec![5, 6];
+        publish_oracle_mesh(data)
     }
 
     fn scene_with_selection(selection_json: &str) -> UiComponentSceneNode {
@@ -11287,7 +12616,7 @@ mod tests {
     #[test]
     fn dynamic_world_owners_retire_one_nested_owner_per_grant_to_terminal_empty() {
         let mut state = World3dState::new("surface".into(), "controller".into());
-        let mesh = Mesh3d::from_buffers(vec![0.0; 3 * 128], vec![0.0; 3 * 128], vec![0; 3 * 64]);
+        let mesh = publish_oracle_mesh(mesh_oracle_from_buffers(vec![0.0; 3 * 128], vec![0.0; 3 * 128], vec![0; 3 * 64]));
         state.meshes.insert("mesh".into(), mesh);
         state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version: 1, instances: (0..32).map(|index| Instance3d { id: format!("instance-{index}"), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }).collect() });
         state.reference_pixels.insert("reference".into(), (64, 64, vec![0; 64 * 64 * 4]));
@@ -11452,7 +12781,7 @@ mod tests {
         let source = include_str!("component.rs");
         let production = source.split("#[cfg(test)]\nmod tests").next().expect("production source");
         for forbidden in [
-            "pub meshes: HashMap<String, Mesh3d>",
+            concat!("pub meshes: HashMap<String, Mesh", "3d>"),
             "pub draws: Vec<SceneDraw3d>",
             "reference_pixels: HashMap<String, (u32, u32, Vec<u8>)>",
             "mesh_paint_textures: HashMap<String, (u32, u32, Vec<u8>)>",
@@ -11463,8 +12792,19 @@ mod tests {
         ] {
             assert!(!production.contains(forbidden), "production dynamic owner bypass returned: {forbidden}");
         }
-        assert!(production.contains("state.meshes.insert(id.clone(), mesh)"), "mesh publication remains centralized at the checked replacement authority");
+        assert!(production.contains("state.meshes.plan_insert(&id)"), "mesh publication remains centralized at the observed-slot replacement authority");
         assert!(production.contains("step_world3d_dynamic_retirement"), "World3d exposes the one-grant retained close pump");
+        assert!(production.contains("struct WorldPlaceholderMeshCursor"));
+        assert!(production.contains("mesh3d_allocate_step(self.token()?)"));
+        assert!(production.contains("struct WorldFaceOverlayMeshCursor"));
+        assert!(production.contains("self.owner = WorldPlaceholderOwner::Writing(mesh3d_begin("));
+        let face_route = production.split("fn append_component_face_translucent_overlays").nth(1).and_then(|source| source.split("fn selection_centroid").next()).expect("face overlay production route");
+        for forbidden in [concat!("Mesh", "3d::from_buffers"), "FaceOverlayBucket", "HashSet<String>", "Vec<f32>"] {
+            assert!(!face_route.contains(forbidden), "face overlay recursive/contiguous constructor returned: {forbidden}");
+        }
+        let mounted_root = include_str!("../🦀️component.rs");
+        assert!(mounted_root.contains("pub use crate::world::*;"));
+        assert!(!mounted_root.contains(concat!("Mesh", "3d")));
     }
 
     #[test]
@@ -11822,7 +13162,7 @@ mod tests {
         state.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 0.0, project_origin_lat: 0.0, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
         assert!(apply_terrain_style_if_changed_state(&mut state).is_empty(), "first application has nothing to purge");
         let mesh_key = terrain_band_mesh_key(&state.surface_id, 10, 1, 2, 0);
-        store_mesh(&mut state, mesh_key, Mesh3d::from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]));
+        store_mesh(&mut state, mesh_key, publish_oracle_mesh(mesh_oracle_from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])));
         state.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 5.0, project_origin_lat: 5.0, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
         let purged = apply_terrain_style_if_changed_state(&mut state);
         assert_eq!(purged.len(), 1, "an origin change should purge the previously-cached terrain mesh");

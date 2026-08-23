@@ -1719,9 +1719,7 @@ where
         }
         if let Some(active) = self.active.as_mut() {
             return match active.close_step(maximum_items.min(1), maximum_bytes)? {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => {
-                    Ok(SnapshotRetirementStep::Pending { released_items, released_bytes })
-                }
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
                 SnapshotRetirementStep::Pending { .. } => Err("artifact store cursor child exceeded its exact close grant".into()),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
@@ -4968,6 +4966,560 @@ where
     T: DeserializeOwned + Send + Sync + 'static,
 {
     Arc::new(ArtifactRepositoryHistoryEntryDecoder::new())
+}
+const ARTIFACT_OWNED_SPR_EDIT_FIELDS: &[OwnedSchemaFieldSpec] = &[
+    OwnedSchemaFieldSpec { id: 1, key: "id", required: true },
+    OwnedSchemaFieldSpec { id: 2, key: "actor", required: false },
+    OwnedSchemaFieldSpec { id: 3, key: "forwards", required: true },
+    OwnedSchemaFieldSpec { id: 4, key: "inverse", required: true },
+    OwnedSchemaFieldSpec { id: 5, key: "mutationMeta", required: false },
+    OwnedSchemaFieldSpec { id: 6, key: "description", required: false },
+    OwnedSchemaFieldSpec { id: 7, key: "coalesceKey", required: false },
+    OwnedSchemaFieldSpec { id: 8, key: "sequenceNumber", required: true },
+    OwnedSchemaFieldSpec { id: 9, key: "startedAt", required: true },
+    OwnedSchemaFieldSpec { id: 10, key: "finishedAt", required: false },
+];
+
+struct ArtifactOwnedSprMutationTarget<Mutation> {
+    next_generation: u64,
+    reservation: Option<ArtifactEnvelopeFieldReservation>,
+    value: std::mem::ManuallyDrop<Option<Mutation>>,
+}
+
+impl<Mutation> ArtifactOwnedSprMutationTarget<Mutation> {
+    fn new() -> Self {
+        Self { next_generation: 0, reservation: None, value: std::mem::ManuallyDrop::new(None) }
+    }
+}
+
+impl<Mutation: Send> ArtifactEnvelopeMutationFieldTarget<Mutation> for ArtifactOwnedSprMutationTarget<Mutation> {
+    fn reserve_mutation(&mut self) -> Result<ArtifactEnvelopeFieldReservation, OwnedSchemaDecodeDiagnostic> {
+        if self.reservation.is_some() || self.value.is_some() {
+            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-occupied", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT });
+        }
+        self.next_generation = self.next_generation.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-generation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT })?;
+        let reservation = ArtifactEnvelopeFieldReservation::new(1, self.next_generation).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-reservation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT })?;
+        self.reservation = Some(reservation);
+        Ok(reservation)
+    }
+
+    fn publish_mutation_reserved(&mut self, reservation: ArtifactEnvelopeFieldReservation, value: Mutation) {
+        assert_eq!(self.reservation, Some(reservation), "SPR mutation publication requires its exact reservation");
+        assert!(self.value.is_none(), "SPR mutation publication cannot replace an owner");
+        self.reservation = None;
+        *self.value = Some(value);
+    }
+
+    fn cancel_mutation_reservation(&mut self, reservation: ArtifactEnvelopeFieldReservation) -> Result<(), OwnedSchemaDecodeDiagnostic> {
+        if self.reservation != Some(reservation) {
+            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-stale", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT });
+        }
+        self.reservation = None;
+        Ok(())
+    }
+}
+
+impl<Mutation> Drop for ArtifactOwnedSprMutationTarget<Mutation> {
+    fn drop(&mut self) {
+        assert!(self.reservation.is_none() && self.value.is_none(), "SPR mutation target reached Drop with a live reservation or value owner");
+    }
+}
+
+enum ArtifactOwnedSprMutationArrayState {
+    AwaitStart,
+    Entries,
+    Publishing,
+    Complete,
+    Closing,
+}
+
+struct ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
+    operation: semio_framework_job::OperationId,
+    generation: semio_framework_job::Generation,
+    path: OwnedSchemaPath,
+    catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+    mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+    target: ArtifactOwnedSprMutationTarget<Mutation>,
+    reservation: Option<ArtifactEnvelopeFieldReservation>,
+    active: std::mem::ManuallyDrop<Option<Box<dyn ArtifactEnvelopeMutationFieldAuthority<Mutation>>>>,
+    values: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
+    retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    depth: usize,
+    scalar_entry: bool,
+    expect_entry: bool,
+    state: ArtifactOwnedSprMutationArrayState,
+    taken: bool,
+}
+
+impl<P, Mutation> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
+    fn try_new(
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        path: OwnedSchemaPath,
+        catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+        mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+    ) -> Result<Self, OwnedSchemaDecodeDiagnostic> {
+        let mut values = Vec::new();
+        values.try_reserve_exact(ARTIFACT_ENVELOPE_HISTORY_ITEMS).map_err(|_| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-admission", offset: 0, line: 0, column: 0, path })?;
+        Ok(Self {
+            operation,
+            generation,
+            path,
+            catalog,
+            mutation_factory,
+            target: ArtifactOwnedSprMutationTarget::new(),
+            reservation: None,
+            active: std::mem::ManuallyDrop::new(None),
+            values: std::mem::ManuallyDrop::new(Some(values)),
+            retirement: std::mem::ManuallyDrop::new(None),
+            depth: 0,
+            scalar_entry: false,
+            expect_entry: true,
+            state: ArtifactOwnedSprMutationArrayState::AwaitStart,
+            taken: false,
+        })
+    }
+
+    fn diagnostic(&self, code: &'static str, offset: u64) -> OwnedSchemaDecodeDiagnostic {
+        OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+    }
+
+    fn accept(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
+        if cx.operation() != self.operation || cx.generation() != self.generation {
+            return Err(self.diagnostic("artifact-spr.mutation-array-stale", token.start));
+        }
+        if cx.is_cancelled() {
+            return Err(self.diagnostic("artifact-spr.mutation-array-cancelled", token.start));
+        }
+        if matches!(self.state, ArtifactOwnedSprMutationArrayState::Publishing) {
+            let reservation = self.reservation.ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-reservation-missing", token.start))?;
+            let active = self.active.as_mut().ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-owner-missing", token.start))?;
+            return match active.publish_reserved(&mut self.target, reservation, cx)? {
+                ArtifactEnvelopeFieldDecodeStep::Pending => Ok(ArtifactEnvelopeFieldDecodeStep::Pending),
+                ArtifactEnvelopeFieldDecodeStep::FieldComplete | ArtifactEnvelopeFieldDecodeStep::TokenComplete => {
+                    self.reservation = None;
+                    let value = self.target.value.take().ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-value-missing", token.start))?;
+                    let values = self.values.as_mut().ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-values-missing", token.start))?;
+                    if values.len() == values.capacity() {
+                        *self.target.value = Some(value);
+                        return Err(self.diagnostic("artifact-spr.mutation-array-capacity", token.start));
+                    }
+                    values.push(value);
+                    if !active.terminal_is_empty() {
+                        return Err(self.diagnostic("artifact-spr.mutation-array-live-after-publish", token.start));
+                    }
+                    drop(self.active.take());
+                    self.scalar_entry = false;
+                    self.expect_entry = false;
+                    self.state = ArtifactOwnedSprMutationArrayState::Entries;
+                    Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
+                }
+                ArtifactEnvelopeFieldDecodeStep::RecordComplete => Err(self.diagnostic("artifact-spr.mutation-array-record-terminal", token.start)),
+            };
+        }
+        if let Some(active) = self.active.as_mut() {
+            let entry_terminal = self.scalar_entry || (self.depth == 1 && matches!(token.kind, OwnedSchemaTokenKind::ObjectEnd | OwnedSchemaTokenKind::ArrayEnd));
+            return match active.accept_token(token, entry_terminal, source, cx)? {
+                ArtifactEnvelopeFieldDecodeStep::Pending => Ok(ArtifactEnvelopeFieldDecodeStep::Pending),
+                ArtifactEnvelopeFieldDecodeStep::FieldComplete if entry_terminal => {
+                    self.depth = 0;
+                    self.state = ArtifactOwnedSprMutationArrayState::Publishing;
+                    Ok(ArtifactEnvelopeFieldDecodeStep::Pending)
+                }
+                ArtifactEnvelopeFieldDecodeStep::TokenComplete if !entry_terminal => {
+                    match token.kind {
+                        OwnedSchemaTokenKind::ObjectStart | OwnedSchemaTokenKind::ArrayStart => self.depth += 1,
+                        OwnedSchemaTokenKind::ObjectEnd | OwnedSchemaTokenKind::ArrayEnd => self.depth -= 1,
+                        _ => {}
+                    }
+                    Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
+                }
+                _ => Err(self.diagnostic("artifact-spr.mutation-array-terminal-discipline", token.start)),
+            };
+        }
+        match self.state {
+            ArtifactOwnedSprMutationArrayState::AwaitStart if token.kind == OwnedSchemaTokenKind::ArrayStart && !terminal => {
+                self.expect_entry = true;
+                self.state = ArtifactOwnedSprMutationArrayState::Entries;
+                Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
+            }
+            ArtifactOwnedSprMutationArrayState::Entries if token.kind == OwnedSchemaTokenKind::ArrayEnd && terminal && self.values.as_ref().is_some_and(Vec::is_empty) => {
+                self.state = ArtifactOwnedSprMutationArrayState::Complete;
+                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+            }
+            ArtifactOwnedSprMutationArrayState::Entries if token.kind == OwnedSchemaTokenKind::ArrayEnd && terminal && !self.expect_entry => {
+                self.state = ArtifactOwnedSprMutationArrayState::Complete;
+                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+            }
+            ArtifactOwnedSprMutationArrayState::Entries if token.kind == OwnedSchemaTokenKind::Comma && !self.expect_entry => {
+                self.expect_entry = true;
+                Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
+            }
+            ArtifactOwnedSprMutationArrayState::Entries if self.expect_entry && matches!(token.kind, OwnedSchemaTokenKind::ObjectStart | OwnedSchemaTokenKind::ArrayStart | OwnedSchemaTokenKind::String) => {
+                let reservation = self.target.reserve_mutation()?;
+                self.reservation = Some(reservation);
+                self.scalar_entry = token.kind == OwnedSchemaTokenKind::String;
+                *self.active = Some(self.catalog.begin_mutation(self.operation, self.generation, self.path));
+                self.accept(token, self.scalar_entry, source, cx)
+            }
+            ArtifactOwnedSprMutationArrayState::AwaitStart => Err(self.diagnostic("artifact-spr.mutation-array-start", token.start)),
+            ArtifactOwnedSprMutationArrayState::Entries => Err(self.diagnostic("artifact-spr.mutation-array-entry", token.start)),
+            ArtifactOwnedSprMutationArrayState::Complete => Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete),
+            ArtifactOwnedSprMutationArrayState::Publishing => unreachable!("publishing handled before token admission"),
+            ArtifactOwnedSprMutationArrayState::Closing => Err(self.diagnostic("artifact-spr.mutation-array-closing", token.start)),
+        }
+    }
+
+    fn take_values(&mut self) -> Option<Vec<Mutation>> {
+        if !matches!(self.state, ArtifactOwnedSprMutationArrayState::Complete) || self.active.is_some() || self.reservation.is_some() || self.taken {
+            return None;
+        }
+        self.taken = true;
+        self.values.take()
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {
+        self.state = ArtifactOwnedSprMutationArrayState::Closing;
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(active) = self.active.as_mut() {
+            return match active.close_step(maximum_items, maximum_bytes)? {
+                SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
+                    drop(self.active.take());
+                    self.depth = 0;
+                    self.scalar_entry = false;
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                SnapshotRetirementStep::Complete => Err(self.diagnostic("artifact-spr.mutation-array-close-false-terminal", 0)),
+                step => Ok(step),
+            };
+        }
+        if let Some(reservation) = self.reservation.take() {
+            self.target.cancel_mutation_reservation(reservation)?;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(value) = self.target.value.take() {
+            *self.retirement = Some(self.mutation_factory.retire_owned(value));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(retirement) = self.retirement.as_mut() {
+            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| self.diagnostic("artifact-spr.mutation-array-retirement-fault", 0))? {
+                SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                    drop(self.retirement.take());
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                SnapshotRetirementStep::Complete => Err(self.diagnostic("artifact-spr.mutation-array-retirement-false-terminal", 0)),
+                step => Ok(step),
+            };
+        }
+        if let Some(values) = self.values.as_mut() {
+            if let Some(value) = values.pop() {
+                *self.retirement = Some(self.mutation_factory.retire_owned(value));
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            drop(self.values.take());
+        }
+        self.taken = true;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.taken && self.active.is_none() && self.reservation.is_none() && self.target.reservation.is_none() && self.target.value.is_none() && self.values.is_none() && self.retirement.is_none()
+    }
+}
+
+impl<P, Mutation> Drop for ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "SPR mutation array reached Drop before every exact mutation owner was published or cursor-retired");
+    }
+}
+
+const ARTIFACT_OWNED_SPR_EDIT_FIELDS: &[OwnedSchemaFieldSpec] = &[
+    OwnedSchemaFieldSpec { id: 1, key: "id", required: true },
+    OwnedSchemaFieldSpec { id: 2, key: "actor", required: false },
+    OwnedSchemaFieldSpec { id: 3, key: "forwards", required: true },
+    OwnedSchemaFieldSpec { id: 4, key: "inverse", required: true },
+    OwnedSchemaFieldSpec { id: 5, key: "mutationMeta", required: false },
+    OwnedSchemaFieldSpec { id: 6, key: "description", required: false },
+    OwnedSchemaFieldSpec { id: 7, key: "coalesceKey", required: false },
+    OwnedSchemaFieldSpec { id: 8, key: "sequenceNumber", required: true },
+    OwnedSchemaFieldSpec { id: 9, key: "startedAt", required: true },
+    OwnedSchemaFieldSpec { id: 10, key: "finishedAt", required: false },
+];
+
+enum ArtifactOwnedSprEditActive<P, Mutation> {
+    String { field_id: u16, authority: OwnedSchemaStringAuthority<ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES> },
+    Mutations { field_id: u16, authority: ArtifactOwnedSprMutationArrayAuthority<P, Mutation> },
+    EmptyMetadata(OwnedSchemaEmptyArrayAuthority),
+}
+
+struct ArtifactOwnedSprEditAuthority<P, Mutation> {
+    operation: semio_framework_job::OperationId,
+    generation: semio_framework_job::Generation,
+    path: OwnedSchemaPath,
+    catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+    mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+    retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+    cursor: OwnedSchemaNestedRecordCursor,
+    active: std::mem::ManuallyDrop<Option<ArtifactOwnedSprEditActive<P, Mutation>>>,
+    strings: [std::mem::ManuallyDrop<Option<String>>; 6],
+    forwards: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
+    inverse: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
+    sequence_number: Option<i32>,
+    value: std::mem::ManuallyDrop<Option<Edit<Mutation>>>,
+    retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    close_string: usize,
+    terminal: bool,
+}
+
+impl<P, Mutation> ArtifactOwnedSprEditAuthority<P, Mutation> {
+    fn new(
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        path: OwnedSchemaPath,
+        catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+        mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+        retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+    ) -> Self {
+        Self {
+            operation,
+            generation,
+            path,
+            catalog,
+            mutation_factory,
+            retirement_factory,
+            cursor: OwnedSchemaNestedRecordCursor::try_new(OwnedSchemaRecordSpec { fields: ARTIFACT_OWNED_SPR_EDIT_FIELDS }).expect("SPR edit schema is a validated static catalog"),
+            active: std::mem::ManuallyDrop::new(None),
+            strings: std::array::from_fn(|_| std::mem::ManuallyDrop::new(None)),
+            forwards: std::mem::ManuallyDrop::new(None),
+            inverse: std::mem::ManuallyDrop::new(None),
+            sequence_number: None,
+            value: std::mem::ManuallyDrop::new(None),
+            retirement: std::mem::ManuallyDrop::new(None),
+            close_string: 0,
+            terminal: false,
+        }
+    }
+
+    fn diagnostic(&self, code: &'static str, offset: u64) -> OwnedSchemaDecodeDiagnostic {
+        OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path }
+    }
+
+    fn string_index(field_id: u16) -> Option<usize> {
+        match field_id {
+            1 => Some(0),
+            2 => Some(1),
+            6 => Some(2),
+            7 => Some(3),
+            9 => Some(4),
+            10 => Some(5),
+            _ => None,
+        }
+    }
+
+    fn finish_record(&mut self) -> Result<(), OwnedSchemaDecodeDiagnostic> {
+        let id = self.strings[0].take().ok_or_else(|| self.diagnostic("artifact-spr.edit-id-missing", 0))?;
+        let forwards = self.forwards.take().ok_or_else(|| self.diagnostic("artifact-spr.edit-forwards-missing", 0))?;
+        let inverse = self.inverse.take().ok_or_else(|| self.diagnostic("artifact-spr.edit-inverse-missing", 0))?;
+        let started_at = self.strings[4].take().ok_or_else(|| self.diagnostic("artifact-spr.edit-started-at-missing", 0))?;
+        let sequence_number = self.sequence_number.ok_or_else(|| self.diagnostic("artifact-spr.edit-sequence-missing", 0))?;
+        *self.value =
+            Some(Edit { id, actor: self.strings[1].take(), forwards, inverse, mutation_meta: Vec::new(), description: self.strings[2].take(), coalesce_key: self.strings[3].take(), sequence_number, started_at, finished_at: self.strings[5].take() });
+        Ok(())
+    }
+}
+
+impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEntryAuthority<Edit<Mutation>> for ArtifactOwnedSprEditAuthority<P, Mutation> {
+    fn accept_token(&mut self, token: OwnedSchemaToken, _terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
+        if cx.operation() != self.operation || cx.generation() != self.generation {
+            return Err(self.diagnostic("artifact-spr.edit-stale", token.start));
+        }
+        if cx.is_cancelled() {
+            return Err(self.diagnostic("artifact-spr.edit-cancelled", token.start));
+        }
+        if let Some(active) = self.active.as_mut() {
+            let completed = match active {
+                ArtifactOwnedSprEditActive::String { field_id, authority } => match authority.step(source, cx) {
+                    OwnedSchemaStringStep::Pending => return Ok(ArtifactEnvelopeFieldDecodeStep::Pending),
+                    OwnedSchemaStringStep::Complete => {
+                        let Some(index) = Self::string_index(*field_id) else { return Err(self.diagnostic("artifact-spr.edit-string-field", token.start)) };
+                        *self.strings[index] = authority.take_string();
+                        true
+                    }
+                    OwnedSchemaStringStep::Cancelled => return Err(self.diagnostic("artifact-spr.edit-string-cancelled", token.start)),
+                    OwnedSchemaStringStep::Fault(diagnostic) => return Err(diagnostic),
+                },
+                ArtifactOwnedSprEditActive::Mutations { field_id, authority } => match authority.accept(token, _terminal, source, cx) {
+                    Err(diagnostic) => return Err(diagnostic),
+                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => {
+                        let Some(values) = authority.take_values() else { return Err(self.diagnostic("artifact-spr.edit-mutation-values", token.start)) };
+                        if *field_id == 3 {
+                            *self.forwards = Some(values);
+                        } else {
+                            *self.inverse = Some(values);
+                        }
+                        true
+                    }
+                    Ok(step) => return Ok(step),
+                },
+                ArtifactOwnedSprEditActive::EmptyMetadata(authority) => match authority.accept(token, _terminal) {
+                    Err(diagnostic) => return Err(diagnostic),
+                    Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => true,
+                    Ok(step) => return Ok(step),
+                },
+            };
+            if completed {
+                drop(self.active.take());
+                return Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete);
+            }
+            unreachable!("completed SPR field exits above");
+        }
+        match self.cursor.accept(token, source) {
+            OwnedSchemaNestedRecordStep::Pending => Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete),
+            OwnedSchemaNestedRecordStep::FieldToken { field_id, token, terminal } if Self::string_index(field_id).is_some() => {
+                if token.kind == OwnedSchemaTokenKind::Null && matches!(field_id, 2 | 6 | 7 | 10) {
+                    return Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete);
+                }
+                if !terminal {
+                    return Err(self.diagnostic("artifact-spr.edit-string-scalar", token.start));
+                }
+                let authority = OwnedSchemaStringAuthority::try_new(self.operation, self.generation, token, self.path).map_err(|token| self.diagnostic("artifact-spr.edit-string", token.start))?;
+                self.active = Some(ArtifactOwnedSprEditActive::String { field_id, authority });
+                self.accept_token(token, true, source, cx)
+            }
+            OwnedSchemaNestedRecordStep::FieldToken { field_id, token, terminal } if matches!(field_id, 3 | 4) => {
+                let authority = ArtifactOwnedSprMutationArrayAuthority::try_new(self.operation, self.generation, self.path, self.catalog.clone(), self.mutation_factory.clone())?;
+                self.active = Some(ArtifactOwnedSprEditActive::Mutations { field_id, authority });
+                self.accept_token(token, terminal, source, cx)
+            }
+            OwnedSchemaNestedRecordStep::FieldToken { field_id: 5, token, terminal } => {
+                self.active = Some(ArtifactOwnedSprEditActive::EmptyMetadata(OwnedSchemaEmptyArrayAuthority::new(self.path)));
+                self.accept_token(token, terminal, source, cx)
+            }
+            OwnedSchemaNestedRecordStep::FieldToken { field_id: 8, token, terminal: true } if token.kind == OwnedSchemaTokenKind::Number => {
+                let mut bytes = [0u8; 64];
+                let len = usize::try_from(token.end.saturating_sub(token.start)).unwrap_or(usize::MAX);
+                if len == 0 || len > bytes.len() || source.copy_token_bytes(token, 0, &mut bytes[..len]) != len {
+                    return Err(self.diagnostic("artifact-spr.edit-sequence-token", token.start));
+                }
+                self.sequence_number = std::str::from_utf8(&bytes[..len]).ok().and_then(|value| value.parse().ok());
+                if self.sequence_number.is_none() {
+                    return Err(self.diagnostic("artifact-spr.edit-sequence-value", token.start));
+                }
+                Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete)
+            }
+            OwnedSchemaNestedRecordStep::FieldToken { token, .. } => Err(self.diagnostic("artifact-spr.edit-field", token.start)),
+            OwnedSchemaNestedRecordStep::Complete => {
+                self.finish_record()?;
+                Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+            }
+            OwnedSchemaNestedRecordStep::Fault(diagnostic) => Err(diagnostic),
+        }
+    }
+
+    fn take_value(&mut self) -> Option<Edit<Mutation>> {
+        let value = self.value.take()?;
+        self.terminal = true;
+        Some(value)
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, OwnedSchemaDecodeDiagnostic> {
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(active) = self.active.as_mut() {
+            let step = match active {
+                ArtifactOwnedSprEditActive::String { authority, .. } => {
+                    authority.cancel();
+                    SnapshotRetirementStep::Complete
+                }
+                ArtifactOwnedSprEditActive::Mutations { authority, .. } => authority.close_step(maximum_items, maximum_bytes)?,
+                ArtifactOwnedSprEditActive::EmptyMetadata(_) => SnapshotRetirementStep::Complete,
+            };
+            if matches!(step, SnapshotRetirementStep::Complete) {
+                drop(self.active.take());
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            return Ok(step);
+        }
+        if let Some(retirement) = self.retirement.as_mut() {
+            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| self.diagnostic("artifact-spr.edit-retirement-fault", 0))? {
+                SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                    drop(self.retirement.take());
+                    self.terminal = true;
+                    Ok(SnapshotRetirementStep::Complete)
+                }
+                SnapshotRetirementStep::Complete => Err(self.diagnostic("artifact-spr.edit-retirement-false-terminal", 0)),
+                step => Ok(step),
+            };
+        }
+        if let Some(value) = self.value.take() {
+            *self.retirement = Some(self.retirement_factory.retire_owned(value));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        for values in [&mut self.inverse, &mut self.forwards] {
+            if let Some(value) = values.as_mut().and_then(Vec::pop) {
+                *self.retirement = Some(self.mutation_factory.retire_owned(value));
+                return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if values.as_ref().is_some_and(Vec::is_empty) {
+                drop(values.take());
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+        }
+        while self.close_string < self.strings.len() {
+            let index = self.close_string;
+            self.close_string += 1;
+            if let Some(value) = self.strings[index].as_ref() {
+                if value.len() > maximum_bytes {
+                    self.close_string -= 1;
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let released_bytes = value.len();
+                drop(self.strings[index].take());
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+            }
+        }
+        self.terminal = true;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.terminal && self.active.is_none() && self.forwards.is_none() && self.inverse.is_none() && self.value.is_none() && self.retirement.is_none() && self.strings.iter().all(|value| value.is_none())
+    }
+}
+
+impl<P, Mutation> Drop for ArtifactOwnedSprEditAuthority<P, Mutation> {
+    fn drop(&mut self) {
+        assert!(ArtifactOwnedHistoryEntryAuthority::terminal_is_empty(self), "SPR edit decode reached Drop before exact publication or bounded retirement");
+    }
+}
+
+struct ArtifactOwnedSprEditDecoder<P, Mutation> {
+    catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+    mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+}
+
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>> for ArtifactOwnedSprEditDecoder<P, Mutation> {
+    fn begin_entry(
+        &self,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        path: OwnedSchemaPath,
+        retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+    ) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<Edit<Mutation>>> {
+        Box::new(ArtifactOwnedSprEditAuthority::new(operation, generation, path, self.catalog.clone(), self.mutation_factory.clone(), retirement_factory))
+    }
+}
+
+/// @emoji 📡️ Builds the repository-owned retained `.spr`/`.ops` edit decoder around an
+/// exact domain catalog. Domain snapshots and mutations never cross this seam as serde owners.
+pub fn artifact_owned_spr_edit_history_decoder<P: Send + Sync + 'static, Mutation: Send + Sync + 'static>(
+    catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+    mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+) -> Arc<dyn ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>>> {
+    Arc::new(ArtifactOwnedSprEditDecoder { catalog, mutation_factory })
 }
 
 impl<T: DeserializeOwned + Send + Sync + 'static> ArtifactOwnedHistoryEntryDecoder<T> for ArtifactRepositoryHistoryEntryDecoder<T> {
@@ -10447,12 +10999,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     /// @emoji 🧹️ Retires one exact rejected initialization owner. The current snapshot is
     /// always handed to the domain catalog; history identities and the causal graph then advance
     /// one retained child at a time before the shell can become terminal.
-    pub fn close_step(
-        &mut self,
-        current_factory: &dyn ArtifactOwnedValueRetirementFactory<P>,
-        maximum_items: usize,
-        maximum_bytes: usize,
-    ) -> Result<SnapshotRetirementStep, String> {
+    pub fn close_step(&mut self, current_factory: &dyn ArtifactOwnedValueRetirementFactory<P>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if self.taken {
             return Ok(SnapshotRetirementStep::Complete);
         }
@@ -10461,9 +11008,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         }
         if let Some(active) = self.close_active.as_mut() {
             return match active.close_step(maximum_items.min(1), maximum_bytes)? {
-                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => {
-                    Ok(SnapshotRetirementStep::Pending { released_items, released_bytes })
-                }
+                SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
                 SnapshotRetirementStep::Pending { .. } => Err("artifact store initialization child exceeded its exact close grant".into()),
                 SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
                 SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
@@ -10551,20 +11096,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         self.taken && self.current.is_none() && self.dag.is_none() && self.close_active.is_none()
     }
 
-    fn into_parts(
-        mut self,
-    ) -> (
-        P,
-        Vec<String>,
-        Vec<String>,
-        Option<String>,
-        Option<String>,
-        crate::os_spr::MutationDag,
-        i32,
-        HybridLogicalTimestamp,
-        [u8; 32],
-        CursorRevisionAccumulator,
-    ) {
+    fn into_parts(mut self) -> (P, Vec<String>, Vec<String>, Option<String>, Option<String>, crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator) {
         assert!(self.close_phase == 0 && self.close_active.is_none(), "a closing initialization runtime cannot be adopted");
         let current = self.current.take().expect("validated initialization owns its current snapshot");
         let applied = unsafe { std::mem::ManuallyDrop::take(&mut self.applied_edit_ids) };
@@ -11450,7 +11982,7 @@ where
     /// @emoji 🏗️ Atomically adopts a domain-validated initialization runtime. Every
     /// history/reference/snapshot owner was prepared under the caller's StepContext before this
     /// non-suspending move; no validation or collection traversal occurs at publication.
-    pub fn from_initialized_runtime(envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64) -> Self {
+    pub fn from_initialized_runtime_with_owners(envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: MemberStoreOwners<P, Mutation>) -> Self {
         let (current, applied_edit_ids, redo_edit_ids, current_checkpoint_id, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator) = runtime.into_parts();
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
         Self {
@@ -11473,12 +12005,12 @@ where
             current: std::mem::ManuallyDrop::new(Arc::new(current)),
             current_detached: false,
             tail_undo_cache: std::mem::ManuallyDrop::new(None),
-            snapshot_retirement_factory: std::mem::ManuallyDrop::new(None),
-            initial_snapshot_retirement_factory: std::mem::ManuallyDrop::new(None),
-            mutation_retirement_factory: std::mem::ManuallyDrop::new(None),
+            snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.snapshot_retirement)),
+            initial_snapshot_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.initial_snapshot_retirement)),
+            mutation_retirement_factory: std::mem::ManuallyDrop::new(Some(owners.mutation_retirement)),
             snapshot_read_leases: std::mem::ManuallyDrop::new(Arc::new(SnapshotReadLeaseRegistry::new())),
             displaced_retirements: std::mem::ManuallyDrop::new(ArtifactStoreDisplacedRetirements::new()),
-            owned_disposer: std::mem::ManuallyDrop::new(None),
+            owned_disposer: std::mem::ManuallyDrop::new(Some(owners.store_disposer)),
             owned_disposer_terminal: false,
             pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
         }

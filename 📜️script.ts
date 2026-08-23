@@ -1493,6 +1493,187 @@ function toolJobPresentEnvelopeCallerRetainedExact(present: string, wasm: string
   );
 }
 
+function toolJobWriterEnvelopeCallerRetainedExact(writer: string, editor: string, wasm: string, plugin: string): boolean {
+  return (
+    writer.includes("struct WriterStoreInitializationAuthority") &&
+    writer.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot, WriterMutation> for WriterStoreInitializationAuthority") &&
+    writer.includes("WriterStoreInitializationPhase::ValidateEditPair") &&
+    writer.includes("WriterStoreInitializationPhase::SeedHistory") &&
+    writer.includes("WriterStoreInitializationPhase::BuildCandidate") &&
+    writer.includes("ArtifactStoreInitializationRuntime::new") &&
+    writer.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
+    writer.includes("self.generation.0.checked_add(1)") &&
+    writer.includes("Writer store initialization authority reached Drop before exact candidate handoff or retained rejection close") &&
+    writer.includes("writer_store_initializer_publishes_exact_next_generation_and_candidate_closes_incrementally") &&
+    writer.includes("writer_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty") &&
+    editor.includes("fn build_document_store_initialization_job(") &&
+    editor.includes("writer_document_store_initialization_job(envelope, operation, generation)") &&
+    wasm.includes("pub struct WriterEnvelopeLoadHandle") &&
+    wasm.includes("pub fn begin_envelope_load(") &&
+    wasm.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
+    wasm.includes("source: &js_sys::Uint8Array") &&
+    wasm.includes("pub fn admit_envelope_page(") &&
+    wasm.includes("admit_artifact_envelope_ingress_page(handle.runtime_handle(), page)") &&
+    wasm.includes("pub fn seal_envelope_load(") &&
+    wasm.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
+    wasm.includes("pub fn poll_envelope_load(") &&
+    wasm.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    wasm.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
+    wasm.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
+    wasm.includes("pub fn cancel_envelope_load(") &&
+    wasm.includes("pub fn close_step(&self)") &&
+    editor.includes("writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed") &&
+    editor.includes("writer_live_envelope_cancel_closes_retained_pages_without_publication") &&
+    plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
+    plugin.includes("pub fn begin_artifact_envelope_ingress(") &&
+    plugin.includes("pub fn seal_artifact_envelope_ingress(") &&
+    plugin.includes("pub fn advance_artifact_envelope_load(") &&
+    plugin.includes("fn drive_envelope_ingress(") &&
+    plugin.includes("saturated decoder keeps the sealed ingress owner in its original fixed slot for retry") &&
+    plugin.includes("self.retain_initializer_for_close(job)") &&
+    plugin.includes("artifact envelope ingress reached Drop before every admitted page was transferred or bounded-closed") &&
+    plugin.includes("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots") &&
+    plugin.includes("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant") &&
+    !wasm.includes("envelope_json: &str") &&
+    !wasm.includes("reject_whole_buffer_artifact_envelope_ingress") &&
+    !wasm.includes("ArtifactStore::new") &&
+    !wasm.includes("while let") &&
+    !wasm.includes("loop {")
+  );
+}
+
+function toolJobJackEnvelopeCallerRetainedExact(store: string, jack: string, editor: string, wasm: string, plugin: string): boolean {
+  return (
+    store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
+    store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
+    store.includes("self.scalar_entry") &&
+    store.includes("artifact-spr.mutation-array-cancelled") &&
+    store.includes("SPR edit decode reached Drop before exact publication or bounded retirement") &&
+    jack.includes("pub struct JackEnvelopeOwnedFieldCatalog") &&
+    jack.includes("artifact_owned_spr_edit_history_decoder") &&
+    jack.includes("struct JackMutationDecodeAuthority") &&
+    jack.includes("OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>") &&
+    jack.includes("struct JackSnapshotCloneAuthority") &&
+    jack.includes("struct JackStoreInitializationAuthority") &&
+    jack.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority") &&
+    jack.includes("JackStoreInitializationPhase::ValidateEditPair") &&
+    jack.includes("JackStoreInitializationPhase::SeedHistory") &&
+    jack.includes("JackStoreInitializationPhase::BuildCandidate") &&
+    jack.includes("ArtifactStoreInitializationRuntime::new") &&
+    jack.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
+    jack.includes("self.generation.0.checked_add(1)") &&
+    jack.includes("Jack store initialization authority reached Drop before exact candidate handoff or retained rejection close") &&
+    jack.includes("jack_store_initializer_publishes_exact_next_generation_and_candidate_closes_incrementally") &&
+    jack.includes("jack_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty") &&
+    jack.includes("jack_nested_mutation_and_child_snapshot_retire_one_exact_owner_per_grant") &&
+    !jack.includes("artifact_bounded_history_entry_decoder") &&
+    editor.includes("fn build_document_store_initialization_job(") &&
+    editor.includes("jack_document_store_initialization_job(envelope, operation, generation)") &&
+    editor.includes("jack_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed") &&
+    editor.includes("jack_live_envelope_cancel_closes_retained_pages_without_publication") &&
+    wasm.includes("pub struct JackEnvelopeLoadHandle") &&
+    wasm.includes("pub fn begin_envelope_load(") &&
+    wasm.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
+    wasm.includes("source: &js_sys::Uint8Array") &&
+    wasm.includes("pub fn admit_envelope_page(") &&
+    wasm.includes("admit_artifact_envelope_ingress_page(handle.runtime_handle(), page)") &&
+    wasm.includes("pub fn seal_envelope_load(") &&
+    wasm.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
+    wasm.includes("pub fn poll_envelope_load(") &&
+    wasm.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    wasm.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
+    wasm.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
+    wasm.includes("pub fn cancel_envelope_load(") &&
+    wasm.includes("pub fn close_step(&self)") &&
+    plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
+    plugin.includes("self.retain_initializer_for_close(job)") &&
+    !wasm.includes("envelope_json: &str") &&
+    !wasm.includes("reject_whole_buffer_artifact_envelope_ingress") &&
+    !wasm.includes("ArtifactStore::new") &&
+    !wasm.includes("while let") &&
+    !wasm.includes("loop {")
+  );
+}
+
+function toolJobGisMapEnvelopeCallerRetainedExact(store: string, gisMap: string, editor: string, wasm: string, plugin: string): boolean {
+  const variants = [
+    "CreatePosition(payload)",
+    "DeletePosition(payload)",
+    "ReorderPositions(payload)",
+    "ReplacePositionData(payload)",
+    "CreateRoute(payload)",
+    "DeleteRoute(payload)",
+    "ReorderRoutes(payload)",
+    "ReplaceRouteData(payload)",
+    "CreateRegion(payload)",
+    "DeleteRegion(payload)",
+    "ReorderRegions(payload)",
+    "ReplaceRegionData(payload)",
+  ];
+  return (
+    store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
+    store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
+    store.includes("self.scalar_entry") &&
+    store.includes("artifact-spr.mutation-array-cancelled") &&
+    store.includes("SPR edit decode reached Drop before exact publication or bounded retirement") &&
+    gisMap.includes("pub struct GisMapEnvelopeOwnedFieldCatalog") &&
+    gisMap.includes("artifact_owned_spr_edit_history_decoder") &&
+    gisMap.includes("GisMapSnapshotDecodeAuthority") &&
+    gisMap.includes("GisMapMutationDecodeAuthority") &&
+    gisMap.includes("OwnedSchemaHexAuthority<GIS_MAP_OWNED_FIELD_BYTES>") &&
+    gisMap.includes("struct GisMapSnapshotCloneAuthority") &&
+    gisMap.includes("struct GisMapStoreInitializationAuthority") &&
+    gisMap.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot, GisMapMutation> for GisMapStoreInitializationAuthority") &&
+    gisMap.includes("GisMapStoreInitializationPhase::ValidateEditPair") &&
+    gisMap.includes("GisMapStoreInitializationPhase::SeedHistory") &&
+    gisMap.includes("GisMapStoreInitializationPhase::BuildCandidate") &&
+    gisMap.includes("ArtifactStoreInitializationRuntime::new") &&
+    gisMap.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
+    gisMap.includes("self.generation.0.checked_add(1)") &&
+    gisMap.includes("value.positions.pop()") &&
+    gisMap.includes("value.routes.pop()") &&
+    gisMap.includes("value.regions.pop()") &&
+    gisMap.includes("Self::child_step(&mut value.drawing") &&
+    gisMap.includes("Self::child_step(image") &&
+    gisMap.includes("Self::child_step(&mut value.value") &&
+    gisMap.includes("dsl::DslValue::Array(values)") &&
+    gisMap.includes("dsl::DslValue::Object(values)") &&
+    variants.every((variant) => gisMap.includes(variant)) &&
+    gisMap.includes("GIS store initialization authority reached Drop before exact candidate handoff or retained rejection close") &&
+    gisMap.includes("gis_map_store_initializer_publishes_next_generation_and_candidate_closes_incrementally") &&
+    gisMap.includes("gis_map_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty") &&
+    gisMap.includes("gis_map_nested_value_mutation_and_all_child_handles_retire_one_owner_per_grant") &&
+    gisMap.includes("gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ownership") &&
+    !gisMap.includes("artifact_bounded_history_entry_decoder") &&
+    editor.includes("fn build_document_store_initialization_job(") &&
+    editor.includes("gis_map_document_store_initialization_job(envelope, operation, generation)") &&
+    editor.includes("gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed") &&
+    editor.includes("gis_map_live_envelope_cancel_closes_retained_pages_without_publication") &&
+    editor.includes("duplicate GIS load acknowledgement is a no-op") &&
+    wasm.includes("pub struct GisMapEnvelopeLoadHandle") &&
+    wasm.includes("pub fn begin_envelope_load(") &&
+    wasm.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
+    wasm.includes("source: &js_sys::Uint8Array") &&
+    wasm.includes("pub fn admit_envelope_page(") &&
+    wasm.includes("admit_artifact_envelope_ingress_page(handle.runtime_handle(), page)") &&
+    wasm.includes("pub fn seal_envelope_load(") &&
+    wasm.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
+    wasm.includes("pub fn poll_envelope_load(") &&
+    wasm.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    wasm.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
+    wasm.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
+    wasm.includes("pub fn cancel_envelope_load(") &&
+    wasm.includes("pub fn close_step(&self)") &&
+    plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
+    plugin.includes("self.retain_initializer_for_close(job)") &&
+    !wasm.includes("envelope_json: &str") &&
+    !wasm.includes("reject_whole_buffer_artifact_envelope_ingress") &&
+    !wasm.includes("ArtifactStore::new") &&
+    !wasm.includes("while let") &&
+    !wasm.includes("loop {")
+  );
+}
+
 function toolJobHistoryLedgerAdmissionExact(store: string, vcs: string): boolean {
   const checkpointPending = store.indexOf("let pending = uncommitted_edit_ids");
   const checkpointStart = checkpointPending < 0 ? -1 : store.lastIndexOf("ArtifactCommand::CommitCheckpoint { message, authors } => {", checkpointPending);
@@ -2625,6 +2806,140 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobArtifactEnvelopeOwnedCodecExact(implicitFieldOwner, new Map())) throw new Error("[verify interactivity tool-jobs] self-test owned-envelope-codec-without-required-terminal-field-owner was falsely accepted.");
   const rawPresentEnvelopeCaller = "pub struct PresentEnvelopeOwnedFieldCatalog; impl store::ArtifactEnvelopeOwnedFieldCatalog<PresentSnapshot, PresentMutation> for PresentEnvelopeOwnedFieldCatalog {} pub fn begin_materialize_present_projection() -> (PresentEnvelopeMaterializeJob, PresentProjectionCompletion); materialize_present_projection_json";
   if (toolJobPresentEnvelopeCallerRetainedExact(rawPresentEnvelopeCaller, "materializePresentProjectionJson", "")) throw new Error("[verify interactivity tool-jobs] self-test Present-envelope-caller-with-raw-job-and-whole-string-Wasm-export was falsely accepted.");
+  const retainedWriterInitializer = [
+    "struct WriterStoreInitializationAuthority",
+    "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot, WriterMutation> for WriterStoreInitializationAuthority",
+    "WriterStoreInitializationPhase::ValidateEditPair",
+    "WriterStoreInitializationPhase::SeedHistory",
+    "WriterStoreInitializationPhase::BuildCandidate",
+    "ArtifactStoreInitializationRuntime::new",
+    "ArtifactStore::from_initialized_runtime_with_owners",
+    "self.generation.0.checked_add(1)",
+    "Writer store initialization authority reached Drop before exact candidate handoff or retained rejection close",
+    "writer_store_initializer_publishes_exact_next_generation_and_candidate_closes_incrementally",
+    "writer_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty",
+  ].join("\n");
+  const retainedWriterEditor = "fn build_document_store_initialization_job( writer_document_store_initialization_job(envelope, operation, generation) writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed writer_live_envelope_cancel_closes_retained_pages_without_publication";
+  const retainedWriterWasm = [
+    "pub struct WriterEnvelopeLoadHandle",
+    "pub fn begin_envelope_load(",
+    "begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)",
+    "source: &js_sys::Uint8Array",
+    "pub fn admit_envelope_page(",
+    "admit_artifact_envelope_ingress_page(handle.runtime_handle(), page)",
+    "pub fn seal_envelope_load(",
+    "seal_artifact_envelope_ingress(handle.runtime_handle())",
+    "pub fn poll_envelope_load(",
+    "app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)",
+    "advance_artifact_envelope_load(handle.runtime_handle())",
+    "acknowledge_artifact_store_replacement(handle.runtime_handle())",
+    "pub fn cancel_envelope_load(",
+    "pub fn close_step(&self)",
+  ].join("\n");
+  const retainedWriterPlugin = [
+    "envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>",
+    "pub fn begin_artifact_envelope_ingress(",
+    "pub fn seal_artifact_envelope_ingress(",
+    "pub fn advance_artifact_envelope_load(",
+    "fn drive_envelope_ingress(",
+    "saturated decoder keeps the sealed ingress owner in its original fixed slot for retry",
+    "self.retain_initializer_for_close(job)",
+    "artifact envelope ingress reached Drop before every admitted page was transferred or bounded-closed",
+    "artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots",
+    "artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant",
+  ].join("\n");
+  if (!toolJobWriterEnvelopeCallerRetainedExact(retainedWriterInitializer, retainedWriterEditor, retainedWriterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Writer-envelope-route was falsely rejected.");
+  if (toolJobWriterEnvelopeCallerRetainedExact(retainedWriterInitializer, retainedWriterEditor, retainedWriterWasm.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Writer-post-lift-dynamic-page was falsely accepted.");
+  if (toolJobWriterEnvelopeCallerRetainedExact(retainedWriterInitializer, retainedWriterEditor, retainedWriterWasm.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Writer-completion-without-exact-ack was falsely accepted.");
+  if (toolJobWriterEnvelopeCallerRetainedExact(retainedWriterInitializer, retainedWriterEditor, retainedWriterWasm, retainedWriterPlugin.replace("self.retain_initializer_for_close(job)", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Writer-false-terminal-initializer-drop was falsely accepted.");
+  const retainedJackStore = [
+    "pub fn artifact_owned_spr_edit_history_decoder",
+    "struct ArtifactOwnedSprMutationArrayAuthority",
+    "self.scalar_entry",
+    "artifact-spr.mutation-array-cancelled",
+    "SPR edit decode reached Drop before exact publication or bounded retirement",
+  ].join("\n");
+  const retainedJackCodec = [
+    "pub struct JackEnvelopeOwnedFieldCatalog",
+    "artifact_owned_spr_edit_history_decoder",
+    "struct JackMutationDecodeAuthority",
+    "OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>",
+    "struct JackSnapshotCloneAuthority",
+    "struct JackStoreInitializationAuthority",
+    "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority",
+    "JackStoreInitializationPhase::ValidateEditPair",
+    "JackStoreInitializationPhase::SeedHistory",
+    "JackStoreInitializationPhase::BuildCandidate",
+    "ArtifactStoreInitializationRuntime::new",
+    "ArtifactStore::from_initialized_runtime_with_owners",
+    "self.generation.0.checked_add(1)",
+    "Jack store initialization authority reached Drop before exact candidate handoff or retained rejection close",
+    "jack_store_initializer_publishes_exact_next_generation_and_candidate_closes_incrementally",
+    "jack_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty",
+    "jack_nested_mutation_and_child_snapshot_retire_one_exact_owner_per_grant",
+  ].join("\n");
+  const retainedJackEditor = "fn build_document_store_initialization_job( jack_document_store_initialization_job(envelope, operation, generation) jack_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed jack_live_envelope_cancel_closes_retained_pages_without_publication";
+  const retainedJackWasm = retainedWriterWasm.replace("WriterEnvelopeLoadHandle", "JackEnvelopeLoadHandle");
+  if (!toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Jack-envelope-route was falsely rejected.");
+  if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec.replace("artifact_owned_spr_edit_history_decoder", "artifact_bounded_history_entry_decoder"), retainedJackEditor, retainedJackWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-domain-only-whole-edit-decoder was falsely accepted.");
+  if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-post-lift-dynamic-page was falsely accepted.");
+  if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-completion-without-exact-ack was falsely accepted.");
+  if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm, retainedWriterPlugin.replace("self.retain_initializer_for_close(job)", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Jack-false-terminal-initializer-drop was falsely accepted.");
+  if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore.replace("self.scalar_entry", "let raw = serde_json::from_slice(bytes)"), retainedJackCodec, retainedJackEditor, retainedJackWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-string-mutation-whole-buffer-bypass was falsely accepted.");
+  const retainedGisMapCodec = [
+    "pub struct GisMapEnvelopeOwnedFieldCatalog",
+    "artifact_owned_spr_edit_history_decoder",
+    "GisMapSnapshotDecodeAuthority",
+    "GisMapMutationDecodeAuthority",
+    "OwnedSchemaHexAuthority<GIS_MAP_OWNED_FIELD_BYTES>",
+    "struct GisMapSnapshotCloneAuthority",
+    "struct GisMapStoreInitializationAuthority",
+    "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot, GisMapMutation> for GisMapStoreInitializationAuthority",
+    "GisMapStoreInitializationPhase::ValidateEditPair",
+    "GisMapStoreInitializationPhase::SeedHistory",
+    "GisMapStoreInitializationPhase::BuildCandidate",
+    "ArtifactStoreInitializationRuntime::new",
+    "ArtifactStore::from_initialized_runtime_with_owners",
+    "self.generation.0.checked_add(1)",
+    "value.positions.pop()",
+    "value.routes.pop()",
+    "value.regions.pop()",
+    "Self::child_step(&mut value.drawing",
+    "Self::child_step(image",
+    "Self::child_step(&mut value.value",
+    "dsl::DslValue::Array(values)",
+    "dsl::DslValue::Object(values)",
+    "CreatePosition(payload)",
+    "DeletePosition(payload)",
+    "ReorderPositions(payload)",
+    "ReplacePositionData(payload)",
+    "CreateRoute(payload)",
+    "DeleteRoute(payload)",
+    "ReorderRoutes(payload)",
+    "ReplaceRouteData(payload)",
+    "CreateRegion(payload)",
+    "DeleteRegion(payload)",
+    "ReorderRegions(payload)",
+    "ReplaceRegionData(payload)",
+    "GIS store initialization authority reached Drop before exact candidate handoff or retained rejection close",
+    "gis_map_store_initializer_publishes_next_generation_and_candidate_closes_incrementally",
+    "gis_map_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty",
+    "gis_map_nested_value_mutation_and_all_child_handles_retire_one_owner_per_grant",
+    "gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ownership",
+  ].join("\n");
+  const retainedGisMapEditor = "fn build_document_store_initialization_job( gis_map_document_store_initialization_job(envelope, operation, generation) gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed gis_map_live_envelope_cancel_closes_retained_pages_without_publication duplicate GIS load acknowledgement is a no-op";
+  const retainedGisMapWasm = retainedWriterWasm.replace("WriterEnvelopeLoadHandle", "GisMapEnvelopeLoadHandle");
+  if (!toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-GIS-Map-envelope-route was falsely rejected.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("artifact_owned_spr_edit_history_decoder", "artifact_bounded_history_entry_decoder"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-domain-only-whole-edit-decoder was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, retainedGisMapWasm.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-post-lift-dynamic-page was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, retainedGisMapWasm.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-completion-without-exact-ack was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin.replace("self.retain_initializer_for_close(job)", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-false-terminal-initializer-drop was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("self.generation.0.checked_add(1)", "self.generation.0 + 1"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-unchecked-generation-publication was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("Self::child_step(&mut value.drawing", "drop(value.drawing)"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-drawing-child-deep-drop was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("dsl::DslValue::Object(values)", "drop(value)"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-nested-value-deep-drop was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("ReplaceRegionData(payload)", "drop(payload)"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-mutation-catalog-hole was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ownership", "gis_map_partial_mutation_catalog"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-zero-grant-catalog-fixture-missing was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, `${retainedGisMapWasm}\nenvelope_json: &str`, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-whole-buffer-ingress-bypass was falsely accepted.");
   const synchronousPeerRoster = "struct PeerPresenceRoot; struct VcsArtifactApp { peer_presence: Arc<PeerPresenceRoot> } impl PluginApp for VcsArtifactApp { async fn adopt_presence(&mut self, peers: &[PresencePeer]) { self.peer_presence = Arc::new(PeerPresenceRoot::from_peers(peers)); } } async fn dispatch_typed_command_inner() { let presence_peers = self.presence_store.peers().await.into_iter().map(|(actor, presence)| (actor.to_string(), presence.clone())).collect(); } let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len());";
   if (toolJobPeerInteractionRootsExact(synchronousPeerRoster, synchronousPeerRoster, synchronousPeerRoster)) throw new Error("[verify interactivity tool-jobs] self-test synchronous-whole-peer-roster-publication was falsely accepted.");
   const preadmissionRosterDecode = "pub struct PresenceRosterWire; async fn plugin_exchange(commands: &[Vec<u8>]) { let command = decode_app_command(bytes).await; reserve_presence_ingress(seq); }";
@@ -2685,7 +3000,7 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobPagedIngressExact(unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-close-registry-without-pollable-exact-owner-handle was falsely accepted.");
   const shutdownDropsClose = "pub(crate) struct KernelCloseHandle; pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle; KernelRequest::DestroyApp { owner: self.clone() }; owner.finish(KernelCloseStatus::Complete); fn shutdown_step() { drop(owner); }";
   if (toolJobPagedIngressExact(shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-queue-shutdown-dropped-close-completion-owner was falsely accepted.");
-  return fixtures.length + 137;
+  return fixtures.length + 158;
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -2753,6 +3068,15 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️component.rs");
   const presentEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs");
   const presentWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const writerEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs");
+  const writerEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const writerWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const jackEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
+  const jackEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const jackWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
+  const gisMapEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const allRustFiles = new Map(policyAllRustFiles(root).map((file) => [file, policyReadFileSafe(root, file)]));
   const proofs = toolJobProofs(productionFiles);
   const proofIdentities = new Set(proofs.map(toolJobProofIdentity));
@@ -2804,6 +3128,9 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobArtifactStoreStructuralOwnersExact(store, semio, causal, vcs)) failures.push("artifact store structural owners still use resizable string-key indexes, deep direct replacement, or lack bounded conflict/backbone/DAG/history disassembly and terminal Drop authority");
   if (!toolJobArtifactEnvelopeOwnedCodecExact(store, allRustFiles)) failures.push("ArtifactEnvelope ingress retains public serde Deserialize or lacks fixed-page owned preflight/decode/error-close authority across every production caller");
   if (!toolJobPresentEnvelopeCallerRetainedExact(presentEnvelopeCodec, presentWasm, plugin)) failures.push("Present envelope representative caller exposes a raw job/whole-string Wasm route or lacks fixed app-retained worker/result/close ownership");
+  if (!toolJobWriterEnvelopeCallerRetainedExact(writerEnvelopeCodec, writerEditor, writerWasm, plugin)) failures.push("Writer envelope caller lacks retained fixed-page ingress, initializer recovery, maintenance publication, cancellation, or exact completion acknowledgement");
+  if (!toolJobJackEnvelopeCallerRetainedExact(store, jackEnvelopeCodec, jackEditor, jackWasm, plugin)) failures.push("Jack `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
+  if (!toolJobGisMapEnvelopeCallerRetainedExact(store, gisMapEnvelopeCodec, gisMapEditor, gisMapWasm, plugin)) failures.push("GIS Map `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact drawing/image/value child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobChildRetirementInventoryExact(root, allRustFiles)) failures.push("child snapshot retirement domain cohorts or callsites do not match the exact machine-readable owner inventory");
   if (!toolJobPeerInteractionRootsExact(plugin, store, channel)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
@@ -3123,8 +3450,8 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] chrome i18n literal scan…");
     runCmd("bun", ["nx", "run", "@semio-tech/ui-react:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] leveled test target coverage…");
-    this.checkLeveledTestTargets();
+    console.log("[verify] owner-root test taxonomy and feature contract…");
+    runCmd("bun", [join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test", "📜️script.ts"), "contract"], { cwd: join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"), ...orchestratorBudgetOpts() });
     console.log("[verify] storybook scope freshness…");
     this.checkStorybookFreshness();
     console.log("[verify] OS exclusive state authority policies…");
@@ -3253,36 +3580,6 @@ export class VerifyScript extends Script {
   /** 📊️Every `project.json` with a `test` target must also declare `test-quick`/`test-long`/`test-exhaustive` —
    * otherwise `nx run-many -t test-exhaustive` silently skips that project and the exhaustive-level coverage
    * gate under-counts it. Guards against the gap this ticket closed (26/07/26/NINETY-FIVE-PERCENT-EXHAUSTIVE-TEST-COVERAGE) reopening one project.json at a time. */
-  private checkLeveledTestTargets(): void {
-    const offenders: string[] = [];
-    const walk = (dir: string): void => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        if (entry.name === "node_modules" || entry.name === "target" || entry.name.startsWith(".")) continue;
-        const full = join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(full);
-          continue;
-        }
-        if (entry.name !== "📋️project.json") continue;
-        let targets: Record<string, unknown>;
-        try {
-          targets = (JSON.parse(readFileSync(full, "utf8")) as { targets?: Record<string, unknown> }).targets ?? {};
-        } catch {
-          continue;
-        }
-        if (!("test" in targets)) continue;
-        const missing = (["test-quick", "test-long", "test-exhaustive"] as const).filter((t) => !(t in targets));
-        if (missing.length) offenders.push(`${relative(this.root, full)} missing ${missing.join(", ")}`);
-      }
-    };
-    walk(this.root);
-    if (offenders.length) {
-      console.error(`[verify] ${offenders.length} project.json file(s) have a "test" target without leveled siblings:`);
-      for (const o of offenders) console.error(`  ${o}`);
-      process.exit(1);
-    }
-  }
-
   /** 📖️ Every `StoryScope.sourceRoots`/`storyGlobs` entry across `.storybook/scopes.ts`'s `STORY_SCOPES`
    * (both `HAND_CURATED_SCOPES` and the package-catalog-derived `GENERATED_SCOPES`) must resolve to a real
    * on-disk path — catches exactly the "stale de-emojified sourceRoot" class of bug the W0 finding in
@@ -3441,6 +3738,12 @@ const INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE = "🧰️framework/🛍️pro
 const INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🦀️component.rs";
 const INTERACTIVITY_AUDIT_MCP_ROOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🦀️component.rs";
 const INTERACTIVITY_AUDIT_STORE_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_STORAGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_SQLITE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_ENGINE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/🦀️component.rs";
+const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/📦️packages/🦀️rust/📦️bin.rs";
 
 /**
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
@@ -3684,6 +3987,16 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   interactivityStoreSyncSelfTests();
   const storeSync = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_STORE_SYNC_FILE);
   for (const failure of interactivityStoreSyncFailures(storeSync)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_STORE_SYNC_FILE, line: 0, text: failure });
+  interactivityDbIoSelfTests();
+  const dbStorage = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_STORAGE_FILE);
+  const dbSqlite = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_SQLITE_FILE);
+  const dbEngine = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
+  const dbArtifact = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE);
+  const dbTestkit = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_TESTKIT_FILE);
+  const hubBin = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
+  for (const failure of interactivityDbIoFailures(dbStorage, dbSqlite, dbEngine, dbTestkit, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
+  interactivityArtifactSubmitSelfTests();
+  for (const failure of interactivityArtifactSubmitFailures(dbEngine, dbArtifact)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
 
@@ -3833,6 +4146,120 @@ function interactivityStoreSyncSelfTests(): void {
   if (interactivityStoreSyncFailures(good).length !== 0) throw new Error("[verify interactivity] store-sync self-test retained bounded actor turn was falsely rejected.");
 }
 
+function interactivityDbIoFailures(storageSource: string, sqliteSource: string, engineSource: string, testkitSource: string, hubSource: string): string[] {
+  const storage = interactivityProductionSource(storageSource);
+  const sqlite = interactivityProductionSource(sqliteSource);
+  const engine = interactivityProductionSource(engineSource);
+  const testkit = interactivityProductionSource(testkitSource);
+  const hub = interactivityProductionSource(hubSource);
+  const failures: string[] = [];
+  for (const forbidden of ["Option<Arc<WorkerPool>>", "None => work()", "None => job()", "open_inline", "runtime.block_on", "semio_framework_async::block_on", "tokio::spawn", "thread::spawn"])
+    if (storage.includes(forbidden) || sqlite.includes(forbidden)) failures.push(`live DB I/O bridge retains ${forbidden}`);
+  if (/async fn (?:append|write_generation|put|cas_root|write_run)\([^)]*(?:&\[u8\]|Vec<u8>)/.test(storage) || /async fn (?:append|write_generation|put|cas_root|write_run)\([^)]*(?:&\[u8\]|Vec<u8>)/.test(sqlite)) failures.push("DB write facade accepts caller-thread byte copies instead of an exact page owner");
+  if (!storage.includes("pub struct DbIoPages") || !storage.includes("pub fn try_new(owner: Vec<u8>) -> Result<Self, DbIoPagesRejected>") || !storage.includes("pub fn try_range(owner: Vec<u8>, start: usize) -> Result<Self, DbIoPagesRejected>") || !storage.includes("pub fn into_owner(self) -> Vec<u8>")) failures.push("DB input ownership lacks fixed-page construction and exact rejected-owner handback");
+  if (!storage.includes("const DB_IO_PAGE_BYTES: u64 = 16 * 1024") || !storage.includes("const DB_IO_OPERATION_PAGES: u64 = 64") || !storage.includes("const DB_IO_TOTAL_PAGES: u64 = 1024") || !storage.includes("const DB_IO_OPERATION_ITEMS: usize = 64") || !storage.includes("request.admitted_bytes().and_then(DbIoAdmission::try_claim)")) failures.push("DB I/O admission lacks the 16 KiB page, per-operation, process-byte, or item limits");
+  if (!storage.includes("self.pool.try_submit(Lane::Io, job)") || !storage.includes("error.into_job()") || !storage.includes("self.pool.callback_at") || !storage.includes("retry_generation") || !storage.includes("DB_IO_RETRY_LIMIT")) failures.push("DB I/O saturation lacks exact job handback and coalesced timer-wheel retry");
+  const drive = storage.slice(storage.indexOf("fn drive_one(self: Arc<Self>, generation: u64)"), storage.indexOf("fn cancel_before_execution", storage.indexOf("fn drive_one(self: Arc<Self>, generation: u64)")));
+  if (!drive.includes("if generation != self.generation") || drive.indexOf("if generation != self.generation") > drive.indexOf("self.scheduled.store") || !drive.includes("let result = work()")) failures.push("DB I/O generation freshness is not checked before the one indivisible backend opportunity");
+  if (!storage.includes("pub(crate) fn take_terminal_job") || !storage.includes("pub(crate) fn take_terminal_result") || !storage.includes("pub(crate) fn take_terminal_work") || !storage.includes("pub(crate) fn close_step") || !storage.includes("pub(crate) fn terminal_is_empty")) failures.push("DB I/O terminal work/result/job ownership is not observable and one-step closable");
+  if (engine.includes("pool: Option<Arc<WorkerPool>>") || engine.includes("None => job()") || engine.includes(".with_pool(")) failures.push("DB engine retains an optional/default pool path");
+  if (testkit.includes("WorkerPool::new(")) failures.push("DB testkit creates a subsystem WorkerPool instead of accepting the harness entrypoint authority");
+  const connectDb = hub.slice(hub.indexOf("async fn connect_db"), hub.indexOf("async fn connect_directory"));
+  const mainSetup = hub.slice(hub.indexOf("async fn main"), hub.indexOf("let db = connect_db"));
+  if (!connectDb.includes("Database::open_at(pool, &root, profile).await") || !connectDb.includes("SqliteStorage::open(pool.clone()") || /std::fs::|rusqlite::|create_dir_all/.test(connectDb) || /std::fs::|rusqlite::|create_dir_all/.test(mainSetup)) failures.push("Hub DB setup performs synchronous filesystem/SQLite work before the retained pooled constructor authority");
+  for (const fixture of [
+    "db_io_missing_pool_is_unrepresentable_and_has_no_inline_fallback",
+    "db_io_item_cap_plus_one_and_process_byte_cap_return_without_mutation",
+    "db_io_operation_bytes_plus_one_and_nested_page_owner_hand_back_are_exact",
+    "db_io_cancel_before_execution_retains_exact_work_owner",
+    "db_io_cancel_during_execution_retains_result_and_cancel_after_completion_is_stable",
+    "db_io_stale_generation_cannot_consume_current_work",
+    "db_io_shutdown_terminal_job_take_resume_and_interrupted_close_are_one_owner_per_grant",
+  ]) if (!storageSource.includes(fixture)) failures.push(`DB retained-I/O fixture missing: ${fixture}`);
+  return failures;
+}
+
+function interactivityDbIoSelfTests(): void {
+  const goodStorage = `pub struct DbIoPages pub fn try_new(owner: Vec<u8>) -> Result<Self, DbIoPagesRejected> pub fn try_range(owner: Vec<u8>, start: usize) -> Result<Self, DbIoPagesRejected> pub fn into_owner(self) -> Vec<u8> const DB_IO_PAGE_BYTES: u64 = 16 * 1024 const DB_IO_OPERATION_PAGES: u64 = 64 const DB_IO_TOTAL_PAGES: u64 = 1024 const DB_IO_OPERATION_ITEMS: usize = 64 request.admitted_bytes().and_then(DbIoAdmission::try_claim) self.pool.try_submit(Lane::Io, job) error.into_job() self.pool.callback_at retry_generation DB_IO_RETRY_LIMIT async fn append(bytes: DbIoPages) fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } self.scheduled.store let result = work() } fn cancel_before_execution pub(crate) fn take_terminal_job pub(crate) fn take_terminal_result pub(crate) fn take_terminal_work pub(crate) fn close_step pub(crate) fn terminal_is_empty db_io_missing_pool_is_unrepresentable_and_has_no_inline_fallback db_io_item_cap_plus_one_and_process_byte_cap_return_without_mutation db_io_operation_bytes_plus_one_and_nested_page_owner_hand_back_are_exact db_io_cancel_before_execution_retains_exact_work_owner db_io_cancel_during_execution_retains_result_and_cancel_after_completion_is_stable db_io_stale_generation_cannot_consume_current_work db_io_shutdown_terminal_job_take_resume_and_interrupted_close_are_one_owner_per_grant`;
+  const goodEngine = `pool: Arc<WorkerPool>`;
+  const goodHub = `async fn connect_db { "fs" | "" => { Database::open_at(pool, &root, profile).await } "sqlite" => { let path = root.join("db.sqlite3"); SqliteStorage::open(pool.clone(), &path).await } } async fn connect_directory async fn main { let data_dir = root; let db = connect_db(&data_dir).await;`;
+  const hubSqliteParentPreOpen = goodHub.replace("SqliteStorage::open(pool.clone()", "if let Some(parent) = path.parent() { std::fs::create_dir_all(parent)?; } SqliteStorage::open(pool.clone()");
+  const mutations = [
+    ["missing-pool", `${goodStorage} Option<Arc<WorkerPool>>`, goodEngine, "", goodHub],
+    ["inline-work", `${goodStorage} None => work()`, goodEngine, "", goodHub],
+    ["slice-write-api", goodStorage.replace("async fn append(bytes: DbIoPages)", "async fn append(bytes: &[u8])"), goodEngine, "", goodHub],
+    ["gib-slot", goodStorage.replace("const DB_IO_OPERATION_PAGES: u64 = 64", "const DB_IO_OPERATION_PAGES: u64 = 65536"), goodEngine, "", goodHub],
+    ["missing-owner-handback", goodStorage.replace("pub fn into_owner(self) -> Vec<u8>", "pub fn discard(self)"), goodEngine, "", goodHub],
+    ["stale-after-mutation", goodStorage.replace("if generation != self.generation { return; } self.scheduled.store", "self.scheduled.store; if generation != self.generation { return; }"), goodEngine, "", goodHub],
+    ["quiet-saturation-strand", goodStorage.replace("self.pool.callback_at", "drop"), goodEngine, "", goodHub],
+    ["terminal-result-sink", goodStorage.replace("pub(crate) fn take_terminal_result", "fn inspect_terminal_result"), goodEngine, "", goodHub],
+    ["optional-engine-pool", goodStorage, `${goodEngine} pool: Option<Arc<WorkerPool>>`, "", goodHub],
+    ["testkit-subsystem-pool", goodStorage, goodEngine, "fn helper() { WorkerPool::new(); }", goodHub],
+    ["hub-fs-pre-open", goodStorage, goodEngine, "", goodHub.replace('Database::open_at(pool, &root, profile).await', 'std::fs::create_dir_all(&root); Database::open_at(pool, &root, profile).await')],
+    ["hub-sqlite-pre-open", goodStorage, goodEngine, "", hubSqliteParentPreOpen],
+    ["hub-sqlite-direct-open", goodStorage, goodEngine, "", goodHub.replace("SqliteStorage::open(pool.clone()", "rusqlite::Connection::open(&path); SqliteStorage::open(pool.clone()")],
+    ["hub-main-pre-create", goodStorage, goodEngine, "", goodHub.replace("let db = connect_db", "std::fs::create_dir_all(&data_dir); let db = connect_db")],
+  ] as const;
+  for (const [name, storage, engine, testkit, hub] of mutations) if (interactivityDbIoFailures(storage, "", engine, testkit, hub).length === 0) throw new Error(`[verify interactivity] DB I/O self-test ${name} was falsely accepted.`);
+  if (!interactivityDbIoFailures(goodStorage, "", goodEngine, "", hubSqliteParentPreOpen).includes("Hub DB setup performs synchronous filesystem/SQLite work before the retained pooled constructor authority")) throw new Error("[verify interactivity] DB I/O self-test SQLite parent pre-open was rejected for the wrong rule.");
+  if (interactivityDbIoFailures(goodStorage, "", goodEngine, "", goodHub).length !== 0) throw new Error("[verify interactivity] DB I/O self-test retained authority was falsely rejected.");
+}
+
+function interactivityArtifactSubmitFailures(engineSource: string, artifactSource: string): string[] {
+  const engine = interactivityProductionSource(engineSource);
+  const artifact = interactivityProductionSource(artifactSource);
+  const handle = engine.slice(engine.indexOf("//#region 🔖️ArtifactHandle"), engine.indexOf("//#endregion 🔖️ArtifactHandle"));
+  const drive = handle.slice(handle.indexOf("fn drive_one(self: Arc<Self>, generation: u64)"), handle.indexOf("fn close_one", handle.indexOf("fn drive_one(self: Arc<Self>, generation: u64)")));
+  const runner = artifact.slice(artifact.indexOf("type ArtifactBuildFuture"), artifact.indexOf("//#region 🧪️Tests", artifact.indexOf("type ArtifactBuildFuture")));
+  const runnerCloseStep = runner.slice(runner.indexOf("pub fn close_step"), runner.indexOf("pub fn terminal_is_empty", runner.indexOf("pub fn close_step")));
+  const runnerTerminalClose = runner.slice(runner.indexOf("pub fn close(mut self)"), runner.indexOf("impl Drop for ArtifactRunnerTerminalJob", runner.indexOf("pub fn close(mut self)")));
+  const failures: string[] = [];
+  for (const forbidden of ["block_on(", "ask_blocking", "submit_blocking", "thread::spawn", "WorkerPool::new("]) if (handle.includes(forbidden) || runner.includes(forbidden)) failures.push(`live ArtifactHandle submit route retains ${forbidden}`);
+  if (!handle.includes("const ARTIFACT_SUBMIT_PAGE_BYTES: u64 = 16 * 1024") || !handle.includes("const ARTIFACT_SUBMIT_OPERATION_PAGES: u64 = 64") || !handle.includes("const ARTIFACT_SUBMIT_TOTAL_PAGES: u64 = 1024") || !handle.includes("const ARTIFACT_SUBMIT_OPERATION_ITEMS: usize = 64") || !handle.includes("ArtifactSubmitAdmission::try_claim(items, bytes)")) failures.push("ArtifactHandle submit lacks fixed item and byte admission before request transfer");
+  if (!handle.includes("batch.envelopes.capacity()") || !handle.includes("envelope.dependencies.capacity()") || !handle.includes("envelope.diff.payload.capacity()") || !handle.includes("envelope.inverse.payload.capacity()") || !handle.includes("dependency.0.capacity()")) failures.push("ArtifactHandle submit does not preflight every nested owner byte");
+  if (!drive.includes("if generation != self.generation") || !drive.includes("if self.authority.generation() != self.authority_generation") || drive.indexOf("if generation != self.generation") > drive.indexOf("self.scheduled.store")) failures.push("ArtifactHandle submit generation freshness follows mutable scheduling state");
+  if (!drive.includes("ArtifactSubmitWorkOwner::Request") || !drive.includes("self.authority.submit_retained") || !drive.includes("std::pin::Pin::new(future).poll(&mut context)") || drive.includes("loop {") || drive.includes("while ")) failures.push("ArtifactHandle submit grant is not one retained request handoff or one future poll");
+  if (!handle.includes("impl std::task::Wake for ArtifactSubmitWake") || !handle.includes("self.generation == state.generation") || !handle.includes("self.scheduled.compare_exchange(false, true") || !handle.includes("SubmitProgress::Waiting")) failures.push("ArtifactHandle late readiness or wake storm is not generation-keyed and one-shot");
+  if (!handle.includes("self.pool.try_submit(Lane::Io, job)") || !handle.includes("error.into_job()") || !handle.includes("self.pool.callback_at") || !handle.includes("retry_generation") || !handle.includes("ARTIFACT_SUBMIT_RETRY_LIMIT")) failures.push("ArtifactHandle quiet saturation lacks exact closure handback and coalesced timer-wheel retry");
+  for (const terminal of ["pub fn take_terminal_job", "pub fn take_terminal_work", "pub fn take_terminal_result", "pub fn take_actor_terminal_job", "pub fn close_step", "pub fn terminal_is_empty", "pub fn resume(mut self)"]) if (!handle.includes(terminal)) failures.push(`ArtifactHandle terminal authority missing ${terminal}`);
+  if (!runner.includes("ArtifactBuildFuture") || !runner.includes("ArtifactTurnFuture") || !runner.includes("future.as_mut().poll(&mut context)") || !runner.includes("Self::start_turn(engine, envelope.payload)") || !runner.includes("self.pool.try_submit(semio_framework_async::Lane::UserVisible, job)") || !runner.includes("self.pool.callback_at")) failures.push("ArtifactRunner does not retain one build/turn poll with exact pool retry");
+  if (!runnerCloseStep.includes("close();") || !runnerCloseStep.includes("drop(job);") || runnerCloseStep.indexOf("close();") > runnerCloseStep.indexOf("drop(job);") || !runnerTerminalClose.includes("close();") || !runnerTerminalClose.includes("drop(job);") || runnerTerminalClose.indexOf("close();") > runnerTerminalClose.indexOf("drop(job);")) failures.push("ArtifactRunner terminal close can drop the last runner owner before its retained cursor is released");
+  if (!engine.includes("ArtifactEngine::create_retained") || !engine.includes("ArtifactEngine::open_retained") || engine.includes("move || db_artifact::ArtifactEngine::create(")) failures.push("live database authority construction reaches a synchronous ArtifactEngine wrapper");
+  if (!artifact.includes("pub fn submit_retained") || !artifact.includes("self.address.ask(Priority::Command") || !artifact.includes("pub async fn query") || !artifact.includes("pub async fn frontier")) failures.push("ArtifactAuthority retains a blocking mailbox compatibility path on the live submit route");
+  for (const fixture of [
+    "artifact_submit_late_readiness_parks_then_one_shot_wake_reschedules",
+    "artifact_submit_pool_saturation_without_later_ingress_retains_exact_job",
+    "artifact_submit_cancel_before_during_after_preserves_exact_owner",
+    "artifact_submit_stale_generation_and_slot_aba_cannot_consume_current_work",
+    "artifact_submit_missing_handle_terminalizes_without_mailbox_mutation",
+    "artifact_submit_terminal_job_work_result_take_resume_and_close_one_owner",
+    "artifact_submit_item_cap_plus_one_and_nested_bytes_plus_one_return_owner",
+    "artifact_runner_one_grant_polls_one_turn_and_never_blocks_on",
+  ]) if (!engineSource.includes(fixture) && !artifactSource.includes(fixture)) failures.push(`ArtifactHandle retained-submit fixture missing: ${fixture}`);
+  return failures;
+}
+
+function interactivityArtifactSubmitSelfTests(): void {
+  const fixtures = `artifact_submit_late_readiness_parks_then_one_shot_wake_reschedules artifact_submit_pool_saturation_without_later_ingress_retains_exact_job artifact_submit_cancel_before_during_after_preserves_exact_owner artifact_submit_stale_generation_and_slot_aba_cannot_consume_current_work artifact_submit_missing_handle_terminalizes_without_mailbox_mutation artifact_submit_terminal_job_work_result_take_resume_and_close_one_owner artifact_submit_item_cap_plus_one_and_nested_bytes_plus_one_return_owner artifact_runner_one_grant_polls_one_turn_and_never_blocks_on`;
+  const goodEngine = `//#region 🔖️ArtifactHandle const ARTIFACT_SUBMIT_PAGE_BYTES: u64 = 16 * 1024 const ARTIFACT_SUBMIT_OPERATION_PAGES: u64 = 64 const ARTIFACT_SUBMIT_TOTAL_PAGES: u64 = 1024 const ARTIFACT_SUBMIT_OPERATION_ITEMS: usize = 64 ArtifactSubmitAdmission::try_claim(items, bytes) batch.envelopes.capacity() envelope.dependencies.capacity() envelope.diff.payload.capacity() envelope.inverse.payload.capacity() dependency.0.capacity() impl std::task::Wake for ArtifactSubmitWake self.generation == state.generation self.scheduled.compare_exchange(false, true SubmitProgress::Waiting self.pool.try_submit(Lane::Io, job) error.into_job() self.pool.callback_at retry_generation ARTIFACT_SUBMIT_RETRY_LIMIT pub fn take_terminal_job pub fn take_terminal_work pub fn take_terminal_result pub fn take_actor_terminal_job pub fn close_step pub fn terminal_is_empty pub fn resume(mut self) fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } if self.authority.generation() != self.authority_generation {} self.scheduled.store matches!(work.as_ref(), Some(ArtifactSubmitWorkOwner::Request { .. })) self.authority.submit_retained std::pin::Pin::new(future).poll(&mut context) } fn close_one ArtifactEngine::create_retained ArtifactEngine::open_retained ${fixtures} //#endregion 🔖️ArtifactHandle`;
+  const goodArtifact = `type ArtifactBuildFuture type ArtifactTurnFuture impl Wake ArtifactRunner fn submit_exact { self.pool.try_submit(semio_framework_async::Lane::UserVisible, job) self.pool.callback_at } fn run_turn { future.as_mut().poll(&mut context) Self::start_turn(engine, envelope.payload) } pub fn close_step { close(); drop(job); } pub fn terminal_is_empty impl ArtifactRunnerTerminalJob { pub fn close(mut self) { close(); drop(job); } } impl Drop for ArtifactRunnerTerminalJob pub fn submit_retained { self.address.ask(Priority::Command } pub async fn query pub async fn frontier //#region 🧪️Tests`;
+  const mutations = [
+    ["outer-block-on", goodEngine.replace("//#endregion 🔖️ArtifactHandle", "block_on(future) //#endregion 🔖️ArtifactHandle"), goodArtifact],
+    ["inner-runner-block-on", goodEngine, goodArtifact.replace("future.as_mut().poll(&mut context)", "block_on(engine.submit())")],
+    ["missing-byte-ledger", goodEngine.replace("envelope.inverse.payload.capacity()", "0"), goodArtifact],
+    ["stale-after-mutation", goodEngine.replace("if generation != self.generation { return; } if self.authority.generation() != self.authority_generation {} self.scheduled.store", "self.scheduled.store; if generation != self.generation { return; }"), goodArtifact],
+    ["poll-loop", goodEngine.replace("std::pin::Pin::new(future).poll(&mut context)", "loop { std::pin::Pin::new(future).poll(&mut context) }"), goodArtifact],
+    ["wake-storm", goodEngine.replace("self.scheduled.compare_exchange(false, true", "self.scheduled.store(true"), goodArtifact],
+    ["quiet-saturation-strand", goodEngine.replace("self.pool.callback_at", "drop"), goodArtifact],
+    ["missing-terminal-work", goodEngine.replace("pub fn take_terminal_work", "fn inspect_terminal_work"), goodArtifact],
+    ["blocking-mailbox", goodEngine, goodArtifact.replace("self.address.ask(Priority::Command", "self.address.ask_blocking(Priority::Command")],
+    ["sync-live-constructor", goodEngine.replace("ArtifactEngine::create_retained", "move || db_artifact::ArtifactEngine::create("), goodArtifact],
+    ["drop-runner-before-close", goodEngine, goodArtifact.replaceAll("close(); drop(job);", "drop(job); close();")],
+  ] as const;
+  for (const [name, engine, artifact] of mutations) if (interactivityArtifactSubmitFailures(engine, artifact).length === 0) throw new Error(`[verify interactivity] ArtifactHandle submit self-test ${name} was falsely accepted.`);
+  if (interactivityArtifactSubmitFailures(goodEngine, goodArtifact).length !== 0) throw new Error("[verify interactivity] ArtifactHandle submit self-test retained authority was falsely rejected.");
+}
+
 function interactivityMcpHttpTransportFailures(transportSource: string, bridgeSource: string, rootSource: string): string[] {
   const transport = interactivityProductionSource(transportSource);
   const bridge = interactivityProductionSource(bridgeSource);
@@ -3948,16 +4375,35 @@ function interactivityMcpHttpTransportSelfTests(): void {
 //#endregion 🔖️InteractivityAudit
 
 //#region 🔖️DependencyFreeze
-/** 🔒️Ecosystems the dependency freeze tracks. */
-type DependencyEcosystem = "rust" | "js";
-/** 🔒️Which build/run phase a dependency is pulled in for — a dependency can serve more than one, so this is a set per baseline entry. */
-type DependencyKind = "runtime" | "build" | "test" | "tooling";
+/** 🔒️Ecosystems the dependency freeze tracks — all five the repository actually ships. */
+type DependencyEcosystem = "rust" | "js" | "go" | "python" | "dotnet";
+/**
+ * 🔒️Which phase a dependency is pulled in for. A dependency can serve more than one, so this is a
+ * set per baseline entry. The two `production-*` classes are the only ones the purity gate cares
+ * about; the target final state is zero of them. `test-oracle` is reserved for packages an approved
+ * entry in the oracle registry claims — nothing else may enter under that class.
+ */
+type DependencyKind = "production-runtime" | "production-build" | "repository-tooling" | "test-runner" | "test-oracle";
+
+/** 🔒️Maps a manifest section's intent onto the phase vocabulary above. */
+function dependencyKindOf(intent: "runtime" | "build" | "test" | "tooling"): DependencyKind {
+  switch (intent) {
+    case "runtime":
+      return "production-runtime";
+    case "build":
+      return "production-build";
+    case "test":
+      return "test-runner";
+    default:
+      return "repository-tooling";
+  }
+}
 
 /** 🔒️One third-party dependency's baseline record — the unit the freeze ratchet compares by `${ecosystem}:${name}` identity (version excluded from identity so routine patch bumps don't trip the gate; recorded for information only). */
-type DependencyBaselineEntry = { ecosystem: DependencyEcosystem; name: string; version: string; kinds: DependencyKind[]; users: string[] };
+type DependencyBaselineEntry = { ecosystem: DependencyEcosystem; name: string; version: string; kinds: DependencyKind[]; users: string[]; productionReachable: boolean; oracleIds?: string[] };
 
 /** 🔒️The committed freeze baseline file's shape — `🔒️dependencies.json` at the repo root. */
-type DependencyBaseline = { generatedAt: string; commit: string; entries: DependencyBaselineEntry[] };
+type DependencyBaseline = { schemaVersion: number; generatedAt: string; commit: string; entries: DependencyBaselineEntry[] };
 
 /** 🔒️Repo-relative path of the committed dependency-freeze baseline. Root-level, alongside `📋️project.json`/`📜️script.ts`/`🧪️vitest.config.ts` — no existing convention for a repo-wide *hand-ratcheted* generated inventory exists yet (the `🤖️generated/` folders next to owning modules are build-regenerated and gitignored — see `.gitignore` — the opposite of what a freeze baseline needs). */
 const DEPENDENCY_BASELINE_REL_PATH = "🔒️dependencies.json";
@@ -4019,7 +4465,7 @@ function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDe
   const results: DependencyRustEntry[] = [];
   type CargoDepSection = "dependencies" | "dev-dependencies" | "build-dependencies";
   let currentSection: CargoDepSection | null = null;
-  const kindFor = (section: string): DependencyKind => (section === "dev-dependencies" ? "test" : section === "build-dependencies" ? "build" : "runtime");
+  const kindFor = (section: string): DependencyKind => dependencyKindOf(section === "dev-dependencies" ? "test" : section === "build-dependencies" ? "build" : "runtime");
 
   for (let i = 0; i < lines.length; i += 1) {
     const trimmed = lines[i]!.trim();
@@ -4479,10 +4925,10 @@ function dependencyParsePackageJson(repoRoot: string, relPath: string, internalN
   }
   const results: DependencyJsEntry[] = [];
   const sections: { key: string; kind: DependencyKind }[] = [
-    { key: "dependencies", kind: "runtime" },
-    { key: "peerDependencies", kind: "runtime" },
-    { key: "optionalDependencies", kind: "runtime" },
-    { key: "devDependencies", kind: "tooling" },
+    { key: "dependencies", kind: dependencyKindOf("runtime") },
+    { key: "peerDependencies", kind: dependencyKindOf("runtime") },
+    { key: "optionalDependencies", kind: dependencyKindOf("runtime") },
+    { key: "devDependencies", kind: dependencyKindOf("tooling") },
   ];
   for (const { key, kind } of sections) {
     const table = pkg[key];
@@ -4532,7 +4978,7 @@ function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaseline
       if (!existing.users.includes(user)) existing.users.push(user);
       return;
     }
-    byKey.set(key, { ecosystem, name, version, kinds: [kind], users: [user] });
+    byKey.set(key, { ecosystem, name, version, kinds: [kind], users: [user], productionReachable: false });
   };
 
   const cargoManifests = policyDiscoverCargoTomlFiles(repoRoot).filter((p) => !p.startsWith("compose/"));
@@ -4553,11 +4999,159 @@ function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaseline
     }
   }
 
+  dependencyCollectGo(repoRoot, record);
+  dependencyCollectPython(repoRoot, record);
+  dependencyCollectDotnet(repoRoot, record);
+
+  // 📇️A package an approved oracle registry entry claims is a test oracle, whatever manifest it
+  // appears in. Reclassifying here — rather than trusting placement — is what makes the purity gate
+  // able to say "this library is only ever reachable from a test host".
+  const oracles = dependencyOracleRegistryPackages(repoRoot);
   for (const entry of byKey.values()) {
+    if (oracles.has(entry.name)) {
+      entry.kinds = ["test-oracle"];
+      entry.oracleIds = [...oracles.get(entry.name)!];
+    }
     entry.kinds.sort();
     entry.users.sort();
+    entry.productionReachable = entry.kinds.some((kind) => kind === "production-runtime" || kind === "production-build");
   }
   return [...byKey.values()].sort((a, b) => (a.ecosystem === b.ecosystem ? a.name.localeCompare(b.name) : a.ecosystem.localeCompare(b.ecosystem)));
+}
+
+/** 📇️Package name → approved oracle ids, from the registry that claims them as test-only references. */
+function dependencyOracleRegistryPackages(repoRoot: string): Map<string, string[]> {
+  const content = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔣️component.json");
+  const map = new Map<string, string[]>();
+  if (!content) return map;
+  try {
+    for (const entry of (JSON.parse(content) as { oracles?: { id: string; package: string }[] }).oracles ?? []) {
+      map.set(entry.package, [...(map.get(entry.package) ?? []), entry.id]);
+    }
+  } catch {
+    /* an unreadable registry means no package is excused as an oracle */
+  }
+  return map;
+}
+
+/** 🐹️Module directories `go.work` declares, minus any `compose/` path — the hard forbidden area. */
+function dependencyGoModuleDirs(repoRoot: string): string[] {
+  const content = policyReadFileSafe(repoRoot, "go.work");
+  if (!content) return [];
+  const dirs: string[] = [];
+  const single = content.match(/^\s*use\s+(\S+)\s*$/gm) ?? [];
+  for (const line of single) dirs.push(line.replace(/^\s*use\s+/, "").trim());
+  const block = content.match(/use\s*\(([\s\S]*?)\)/);
+  if (block) for (const line of block[1]!.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith("//")) dirs.push(trimmed);
+  }
+  return dirs.map((dir) => dir.replace(/^\.\//, "")).filter((dir) => dir !== "" && !dir.startsWith("compose/") && dir !== "compose");
+}
+
+/** 🐹️Third-party requirements of every non-compose Go module. `// indirect` requirements are transitive
+ * evidence rather than a declared use, so they are classed as build-phase rather than runtime. */
+function dependencyCollectGo(repoRoot: string, record: (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string) => void): void {
+  for (const dir of dependencyGoModuleDirs(repoRoot)) {
+    const relPath = `${dir}/go.mod`.replace(/^\/+/, "");
+    const content = policyReadFileSafe(repoRoot, relPath);
+    if (!content) continue;
+    const lines = content.split(/\r?\n/);
+    let inBlock = false;
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (line.startsWith("require (")) {
+        inBlock = true;
+        continue;
+      }
+      if (inBlock && line === ")") {
+        inBlock = false;
+        continue;
+      }
+      const body = inBlock ? line : line.startsWith("require ") ? line.slice("require ".length) : "";
+      if (body === "" || body.startsWith("//")) continue;
+      const match = body.match(/^([^\s]+)\s+([^\s]+)(\s*\/\/\s*indirect)?/);
+      if (!match) continue;
+      const name = match[1]!;
+      if (!name.includes(".") || name.startsWith("semio.tech/")) continue;
+      record("go", name, match[2]!, dependencyKindOf(match[3] ? "build" : "runtime"), relPath);
+    }
+  }
+}
+
+/** 🐍️Declared Python requirements of every non-compose `pyproject.toml`. */
+function dependencyCollectPython(repoRoot: string, record: (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string) => void): void {
+  const manifests: string[] = [];
+  const walk = (relDir: string): void => {
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(join(repoRoot, relDir || "."), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (ent.name === "node_modules" || ent.name === ".git" || ent.name === ".venv" || ent.name === ".nx" || ent.name === "target" || ent.name === "dist" || ent.name === "compose" || childRel.startsWith(".🧬semio")) continue;
+        walk(childRel);
+        continue;
+      }
+      if (ent.name === "pyproject.toml") manifests.push(childRel);
+    }
+  };
+  walk("");
+  const requirement = /^\s*"([A-Za-z0-9._-]+)\s*([^"]*)"\s*,?\s*$/;
+  for (const manifest of manifests) {
+    const content = policyReadFileSafe(repoRoot, manifest);
+    if (!content) continue;
+    let section: DependencyKind | null = null;
+    for (const raw of content.split(/\r?\n/)) {
+      const line = raw.trim();
+      if (line.startsWith("[")) {
+        section = null;
+        continue;
+      }
+      if (/^dependencies\s*=\s*\[/.test(line)) section = dependencyKindOf("runtime");
+      else if (/^(dev|test|lint|docs)\s*=\s*\[/.test(line)) section = dependencyKindOf("test");
+      else if (/^\]/.test(line)) section = null;
+      if (section === null) continue;
+      const match = line.match(requirement);
+      if (!match) continue;
+      const name = match[1]!;
+      if (name.startsWith("semio")) continue;
+      record("python", name, match[2]!.trim() || "*", section, manifest);
+    }
+  }
+}
+
+/** 🔷️`PackageReference`s of every non-compose .NET project; test projects contribute test-runner deps only. */
+function dependencyCollectDotnet(repoRoot: string, record: (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string) => void): void {
+  const projects: string[] = [];
+  const walk = (relDir: string): void => {
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(join(repoRoot, relDir || "."), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (ent.name === "node_modules" || ent.name === ".git" || ent.name === ".nx" || ent.name === "bin" || ent.name === "obj" || ent.name === "target" || ent.name === "compose" || childRel.startsWith(".🧬semio")) continue;
+        walk(childRel);
+        continue;
+      }
+      if (ent.name.endsWith(".csproj")) projects.push(childRel);
+    }
+  };
+  walk("");
+  for (const project of projects) {
+    const content = policyReadFileSafe(repoRoot, project);
+    if (!content) continue;
+    const references = [...content.matchAll(/<PackageReference\s+Include="([^"]+)"(?:[^>]*Version="([^"]*)")?/g)];
+    const isTestProject = /<IsTestProject>\s*true\s*<\/IsTestProject>/i.test(content) || references.some(([, name]) => name!.startsWith("xunit") || name!.startsWith("Microsoft.NET.Test") || name!.startsWith("NUnit"));
+    for (const [, name, version] of references) record("dotnet", name!, version ?? "*", dependencyKindOf(isTestProject ? "test" : "runtime"), project);
+  }
 }
 
 /** 🔒️Reads the committed baseline, or `null` if it doesn't exist yet (first run — `verify dependencies write-baseline` creates it). */
@@ -4575,7 +5169,7 @@ function dependencyFreezeLoadBaseline(repoRoot: string): DependencyBaseline | nu
 function dependencyFreezeWriteBaseline(repoRoot: string): DependencyBaseline {
   const probe = runProbe("git", ["rev-parse", "HEAD"], { cwd: repoRoot });
   const commit = probe.status === 0 ? probe.stdout.trim() : "unknown";
-  const baseline: DependencyBaseline = { generatedAt: new Date().toISOString(), commit, entries: dependencyFreezeCurrentThirdParty(repoRoot) };
+  const baseline: DependencyBaseline = { schemaVersion: 2, generatedAt: new Date().toISOString(), commit, entries: dependencyFreezeCurrentThirdParty(repoRoot) };
   writeFileSync(join(repoRoot, DEPENDENCY_BASELINE_REL_PATH), `${JSON.stringify(baseline, null, 2)}\n`, "utf8");
   return baseline;
 }
@@ -4586,7 +5180,7 @@ type DependencyFreezeCheckResult = { baseline: DependencyBaseline; current: Depe
 function dependencyFreezeCheck(repoRoot: string): DependencyFreezeCheckResult {
   const baseline = dependencyFreezeLoadBaseline(repoRoot);
   const current = dependencyFreezeCurrentThirdParty(repoRoot);
-  if (!baseline) return { baseline: { generatedAt: "", commit: "", entries: [] }, current, newDeps: current, removedDeps: [] };
+  if (!baseline) return { baseline: { schemaVersion: 2, generatedAt: "", commit: "", entries: [] }, current, newDeps: current, removedDeps: [] };
   const baselineKeys = new Set(baseline.entries.map((e) => `${e.ecosystem}:${e.name}`));
   const currentKeys = new Set(current.map((e) => `${e.ecosystem}:${e.name}`));
   const newDeps = current.filter((e) => !baselineKeys.has(`${e.ecosystem}:${e.name}`));
@@ -4609,6 +5203,33 @@ function testTargetForLevel(level: TestLevel): string {
   return level === "fundamental" ? "test" : `test-${level}`;
 }
 
+/** 🧪️Repo-relative root of the testing domain every test phase is routed through. */
+const TEST_DOMAIN_DIR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test";
+
+/**
+ * 🚫️Nx project names that belong to `compose/**`. `compose` is a hard forbidden path for the
+ * repository-wide test path: it is never built, tested, cleaned, covered or reported on here. The
+ * exclusion lives in this discovery step — not in a CI path filter — so it holds for every caller.
+ */
+function composeProjectNames(root: string): string[] {
+  const probe = runProbe("bun", ["nx", "show", "projects", "--json"], { cwd: root, ...orchestratorBudgetOpts() });
+  if ((probe.status ?? 1) !== 0) return [];
+  try {
+    return (JSON.parse(probe.stdout) as string[]).filter((name) => name.toLowerCase().includes("compose"));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 🧪️Root test router — a thin delegate.
+ *
+ * It resolves the level, resolves the scope, invokes Nx and enforces the gates. Everything that
+ * knows what a test *is* (discovery, the feature contract, oracles, hosts, comparison, reports)
+ * lives in the testing domain at {@link TEST_DOMAIN_DIR}; everything that knows how to *run a
+ * process* stays in the repo library. No test phase is special-cased here any more, no `compose`
+ * project is prebuilt, and no repository-wide Vitest aggregation is constructed.
+ */
 export class TestScript extends Script {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
@@ -4630,30 +5251,18 @@ export class TestScript extends Script {
       await this.runRepoGoTest(`./${REPO_CLIENT_GO}`, level, ["-run", "Mcp|MCP|mcp", ...rest.slice(1)]);
       return;
     }
-    if (rest[0] === "dsl") {
-      // 🗣️ DSL engine crates + the repo-wide fixture-law sweep (parse→print→reparse fixpoint,
-      // canonicalize idempotence — dsl-fixture-sweep-rs) over every real shipped 📚️examples fixture.
-      runCmd(
-        "bun",
-        [
-          "nx",
-          "run-many",
-          "-t",
-          testTargetForLevel(level),
-          "-p",
-          "@semio-tech/dsl-rs",
-          "@semio-tech/dsl-schema-rs",
-          "@semio-tech/dsl-derive-rs",
-          "@semio-tech/dsl-rs",
-          "@semio-tech/dsl-fixture-sweep-rs",
-        ],
-        {
-          cwd: this.root,
-          ...orchestratorBudgetOpts(),
-        },
-      );
+    // 🧪️ Owner-root test phases, routed through the testing domain's own router.
+    // 🎚️Both `test quick parity` and `test parity quick` must mean the same run. The first form is
+    // already resolved above (and exported through SEMIO_TEST_LEVEL); the second is resolved here,
+    // over the segments that FOLLOW the phase word, so the level is never read as a phase argument.
+    const LEVELLESS_PHASES = ["discover", "doctor", "report", "metrics"];
+    const phase = rest[0] ?? "";
+    if (["contract", "oracle", "subject", "parity", "run", ...LEVELLESS_PHASES].includes(phase)) {
+      const { level: phaseLevel, rest: phaseArgs } = resolveTestLevel(rest.slice(1));
+      runCmd("bun", [join(this.root, TEST_DOMAIN_DIR, "📜️script.ts"), phase, ...(LEVELLESS_PHASES.includes(phase) ? [] : [phaseLevel]), ...phaseArgs], { cwd: join(this.root, TEST_DOMAIN_DIR), ...orchestratorBudgetOpts() });
       return;
     }
+
     const collectingCoverage = level === "exhaustive" && coverageEnabled();
     if (collectingCoverage) {
       // Stale reports from a previous run must never leak into this one's percentage — test-exhaustive is
@@ -4661,10 +5270,13 @@ export class TestScript extends Script {
       for (const kind of ["js", "rust", "go", "py", "dotnet"] as const) rmSync(coverageDir(this.root, kind), { recursive: true, force: true });
     }
 
-    // nx orchestrators: exempt — leaves individually budgeted.
-    runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    // 🧾️ Contract first: a case whose plan is not well formed can never be reported as passing.
+    runCmd("bun", [join(this.root, TEST_DOMAIN_DIR, "📜️script.ts"), "contract"], { cwd: join(this.root, TEST_DOMAIN_DIR), ...orchestratorBudgetOpts() });
+
+    // nx orchestrators: exempt — leaves individually budgeted. Generated per-test-case projects are
+    // included by their own `test-<level>` targets, so no manual leveled-target scanner is needed.
+    const exclude = ["workspace", ...composeProjectNames(this.root)];
+    runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "--all", "--exclude", exclude.join(",")], { cwd: this.root, ...orchestratorBudgetOpts() });
     if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) {
       await this.runStorybookPlaywright();
     }
@@ -5656,10 +6268,37 @@ type CleanRemoval = {
   bytes: number;
 };
 
-/** 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never map/hub/space/cache. */
+/**
+ * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never
+ * map/hub/space, and never the cache except through its own child-level policies.
+ *
+ * Two different mechanisms used to share the word "clean". This is the WORKSPACE one. Generated
+ * test state is removed by `clean test`, which is owned by the testing domain and refuses to touch
+ * anything that is not a marked test output; the architecture rule that used to be called
+ * `clean-mechanism` is now the `taxonomy/owner-shape` policy and removes nothing at all.
+ */
 export class CleanScript extends Script {
   run(segments: string[]): void {
     const dry = segments.includes("--dry") || segments.includes("dry");
+    if (segments[0] === "test") {
+      // 🧪️ Marker-guarded removal of generated test state, delegated to its owner. Never descends
+      // into `compose/`, never follows a symlink, never deletes an unmarked directory.
+      runCmd("bun", [join(this.root, TEST_DOMAIN_DIR, "📜️script.ts"), "clean", ...segments.slice(1)], { cwd: join(this.root, TEST_DOMAIN_DIR), ...orchestratorBudgetOpts() });
+      return;
+    }
+    if (segments[0] === "coverage") {
+      // 📊️ Generated coverage reports only — no source, no fixture, no other cache entry.
+      const removed: string[] = [];
+      for (const kind of ["js", "rust", "go", "py", "dotnet"] as const) {
+        const dir = coverageDir(this.root, kind);
+        if (!existsSync(dir)) continue;
+        removed.push(relative(this.root, dir));
+        if (!dry) rmSync(dir, { recursive: true, force: true });
+      }
+      console.log(`[clean coverage] ${dry ? "dry-run" : "applied"} removals=${removed.length}`);
+      for (const path of removed) console.log(`[clean coverage] ${dry ? "would-remove" : "removed"} ${path}`);
+      return;
+    }
     const report = runWorkspaceClean(this.root, dry);
     const totalBytes = report.removals.reduce((n, r) => n + r.bytes, 0);
     const lines = [
@@ -18586,7 +19225,11 @@ function policyFindDirsNamed(repoRoot: string, roots: readonly string[], dirName
 }
 
 const POLICY_CLEAN_MECHANISM_SCAN_ROOTS = ["✏️s/🔌️plugins", "✏️s/🔨️modules", "🧰️framework"];
-const POLICY_CLEAN_MECHANISM_KIND = "clean-mechanism";
+/** 🏛️ Architecture rule over owner-root mounts, subset isolation and module-consumer relationships.
+ * Named for what it constrains — the shape of an owner's tree — NOT for removing generated files;
+ * that unrelated mechanism is `clean test` in the testing domain. Renamed from the ambiguous
+ * "clean-mechanism" in ticket 26/08/23/END-TO-END-TESTING-REFACTOR. */
+const POLICY_CLEAN_MECHANISM_KIND = "taxonomy/owner-shape";
 //#endregion 🔖️OwnerDiscovery
 
 //#region 🔖️Policy1-OwnerMountsChildren

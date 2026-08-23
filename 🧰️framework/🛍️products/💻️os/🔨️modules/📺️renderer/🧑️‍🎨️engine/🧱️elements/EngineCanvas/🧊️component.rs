@@ -8,18 +8,18 @@
 //! 🎨️ Embeds GraphHost, FlowHost, and EditorHost via vello offscreen compositing.
 
 use crate::interpreter::FrameworkWidgetContext;
-use flow::{dag::dag_screen_to_world, FlowFixture, FlowHost};
+use flow::{FlowFixture, FlowHost, dag::dag_screen_to_world};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
-use framework_surface_tiled_map::tiled_map::{tiles::VisibleTileCursor, MapHost, MapInteractionIntent};
+use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent, tiles::VisibleTileCursor};
 use infinite_canvas as canvas;
-use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind, WORLD_ASSET_URL_BYTE_CAPACITY};
-use serde_json::{json, Value};
+use infinite_world::world::{WORLD_ASSET_URL_BYTE_CAPACITY, WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
+use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 use std::mem::ManuallyDrop;
 use std::sync::{Mutex, MutexGuard, OnceLock};
-use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
 use ui_wgpu::wgpu::{ActionDescriptor, UiComponentSceneNode};
+use ui_wgpu::wgpu::{FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme, draw_text_overlay};
 use vello::peniko::Color;
 use vello::wgpu;
 use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
@@ -421,14 +421,7 @@ pub(crate) struct EngineCanvasPresenter {
 }
 
 impl EngineCanvasPresenter {
-    pub(crate) fn realize(&mut self, gpu: &mut GpuContext, packets: &[EngineCanvasPacket]) -> Result<(), String> {
-        for packet in packets {
-            self.realize_one(gpu, packet)?;
-        }
-        Ok(())
-    }
-
-    fn realize_one(&mut self, gpu: &mut GpuContext, packet: &EngineCanvasPacket) -> Result<(), String> {
+    pub(crate) fn realize_one(&mut self, gpu: &mut GpuContext, packet: &EngineCanvasPacket) -> Result<(), String> {
         let width = packet.width.max(1);
         let height = packet.height.max(1);
         let needs_create = !self.surfaces.contains_key(&packet.surface_id);
@@ -588,11 +581,7 @@ pub(crate) fn theme_is_dark(theme: &Theme) -> bool {
 }
 
 fn linear_to_rgba8_channel(linear: f32) -> u8 {
-    if linear <= 0.0031308 {
-        (linear * 12.92 * 255.0).round() as u8
-    } else {
-        (1.055 * linear.powf(1.0 / 2.4) - 0.055).mul_add(255.0, 0.0).round() as u8
-    }
+    if linear <= 0.0031308 { (linear * 12.92 * 255.0).round() as u8 } else { (1.055 * linear.powf(1.0 / 2.4) - 0.055).mul_add(255.0, 0.0).round() as u8 }
 }
 
 fn sync_canvas_theme_dark(_cache: &mut NodeGraphSyncCache, dark: bool, flow: &mut FlowHost) {
@@ -1980,11 +1969,7 @@ pub fn map_marquee_mode(shift: bool, ctrl_or_meta: bool) -> &'static str {
 }
 
 pub fn map_marquee_crossing(method: &str, start_x: f32, end_x: f32) -> bool {
-    if method == "lasso" {
-        end_x < start_x
-    } else {
-        end_x < start_x
-    }
+    if method == "lasso" { end_x < start_x } else { end_x < start_x }
 }
 
 pub fn map_merge_selection(mode: &str, current_positions: &[String], current_routes: &[String], next_positions: &[String], next_routes: &[String]) -> (Vec<String>, Vec<String>) {
@@ -3279,11 +3264,7 @@ fn write_text_editor_action_pair(batch: &mut ui_wgpu::wgpu::BoundedActionBatchRe
 }
 
 fn decimal_digits(value: usize) -> usize {
-    if value == 0 {
-        1
-    } else {
-        value.ilog10() as usize + 1
-    }
+    if value == 0 { 1 } else { value.ilog10() as usize + 1 }
 }
 
 fn text_editor_pair_bytes(scene: &UiComponentSceneNode, document_bytes: usize, selection_bytes: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {

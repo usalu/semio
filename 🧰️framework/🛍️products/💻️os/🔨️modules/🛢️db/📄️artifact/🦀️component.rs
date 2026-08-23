@@ -13,12 +13,12 @@
 //! emit, ..ArtifactEngineConfig::default()}` (a real `db_security::SecurityGate` baked directly
 //! in, `version_graph: Arc<dyn VersionGraph>` non-optional, defaulted `..` spread for the rest),
 //! `CommandReceipt.conflicts: Vec<db_conflict::ConflictRecord>` (the real type), and
-//! `ArtifactAuthority::run_query_blocking(query, consistency)` (two arguments, `db_query::
+//! `ArtifactAuthority::run_query(query, consistency)` (two arguments, `db_query::
 //! Consistency`-aware). This revision matches that shape exactly: `security`/`emit` are real
 //! `ArtifactEngineConfig` fields, `version_graph` is required (`NullVersionGraph` is the
 //! "no vcs" default rather than `Option::None`), `submit`'s conflict step is a genuine
 //! `db_conflict::ConflictDetector` fed by retained recent-commit `TouchedSet` history (not a local
-//! last-writer stand-in), and `query`/`RunQuery`/`run_query_blocking` take a `db_query::
+//! last-writer stand-in), and `query`/`RunQuery`/`run_query` take a `db_query::
 //! Consistency` and resolve it via `db_query::resolve_consistency` + `db_index::
 //! IndexConsistencyResolver`. `AuthzHook`/`AllowAll` are kept defined (unused in the hot `submit`
 //! path now that `security` supersedes them) purely because they are still a public, documented
@@ -42,6 +42,8 @@
 //! dependency rule).
 
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::db_durability::Frontier;
@@ -515,42 +517,40 @@ pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + '
 const MAX_RECENT_TOUCHES: usize = 256;
 
 impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
-    /// @emoji 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
-    /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
-    // 🚫️async: E5 executor bridge — an authority pool turn is a synchronous job, so the
-    // engine drives its async storage calls to completion inside that finite turn.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, DbError> {
-        let core_id = db_actor::block_on(to_core_document_id(&document));
-        let wal = db_actor::block_on(async { db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
-        Ok(db_actor::block_on(ArtifactEngine::assemble(document, core_id, storage, wal, None, config)))
+    /// @emoji 🌱️ Retained constructor used by the document authority. Every storage wait remains
+    /// represented by this future so a pool worker only polls it once before yielding.
+    pub async fn create_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, DbError> {
+        let core_id = to_core_document_id(&document).await;
+        let wal = db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await?;
+        Ok(ArtifactEngine::assemble(document, core_id, storage, wal, None, config).await)
     }
 
-    /// @emoji 🚑️ Materializes a document as initial ⊕ latest `db_snapshot` generation ⊕ WAL suffix
-    /// (this revision adds the snapshot half — the prior revision was WAL-suffix-only): loads the
-    /// latest snapshot's `DocumentState` (if any) as the starting point, opens/recovers the WAL
-    /// (per `db_wal::ArtifactWal::open`), then replays only the `WAL_COMMAND` records committed
-    /// AFTER the snapshot's own `head_seq` (a full-from-genesis replay when there is no snapshot
-    /// yet).
-    // 🚫️async: E5 executor bridge — see `create`'s doc; same finite-turn bridge.
+    /// @emoji 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
+    /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
+    /// Process/test entry-point convenience; live document authorities use `create_retained`.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), DbError> {
-        let core_id = db_actor::block_on(to_core_document_id(&document));
+    pub(crate) fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, DbError> {
+        db_actor::block_on(Self::create_retained(document, storage, config, now_ms))
+    }
+
+    /// @emoji 🚑️ Retained materialization as initial ⊕ snapshot ⊕ WAL suffix.
+    pub async fn open_retained(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), DbError> {
+        let core_id = to_core_document_id(&document).await;
         let mut report = MaterializeReport::default();
 
         let mut state = DocumentState::new();
         let mut applied_head_seq = 0u64;
         let mut vcs_head = None;
-        let snapshot_facet = db_actor::block_on(storage.snapshot());
-        let snapshot_manager = db_actor::block_on(db_snapshot::SnapshotManager::new(&snapshot_facet));
-        if let Some((generation, descriptor)) = db_actor::block_on(snapshot_manager.load_latest(&core_id))? {
+        let snapshot_facet = storage.snapshot().await;
+        let snapshot_manager = db_snapshot::SnapshotManager::new(&snapshot_facet).await;
+        if let Some((generation, descriptor)) = snapshot_manager.load_latest(&core_id).await? {
             report.from_snapshot = true;
             report.snapshot_generation = Some(generation);
-            let combined = db_actor::block_on(snapshot_manager.materialize_chain(&core_id, generation))?;
-            let handle = db_actor::block_on(db_snapshot::open_latest(&combined))?;
+            let combined = snapshot_manager.materialize_chain(&core_id, generation).await?;
+            let handle = db_snapshot::open_latest(&combined).await?;
             for hash in &descriptor.roots {
-                let page_bytes = db_actor::block_on(db_snapshot::read_page(&combined, &handle, *hash))?;
-                for (path, value) in db_actor::block_on(decode_state_page(&page_bytes))? {
+                let page_bytes = db_snapshot::read_page(&combined, &handle, *hash).await?;
+                for (path, value) in decode_state_page(&page_bytes).await? {
                     state.values = match value {
                         Some(bytes) => state.values.insert(path, bytes),
                         None => state.values.remove(&path),
@@ -563,13 +563,13 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         drop(snapshot_manager);
         drop(snapshot_facet);
 
-        let (wal, wal_recovery) = db_actor::block_on(async { db_wal::ArtifactWal::open(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
+        let (wal, wal_recovery) = db_wal::ArtifactWal::open(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await?;
         report.torn_tail_bytes = wal_recovery.torn_tail_bytes;
-        let mut engine = db_actor::block_on(ArtifactEngine::assemble(document, core_id.clone(), storage.clone(), wal, vcs_head, config));
+        let mut engine = ArtifactEngine::assemble(document, core_id.clone(), storage.clone(), wal, vcs_head, config).await;
         engine.state = state;
         engine.frontier.head_seq = applied_head_seq;
 
-        let records = db_actor::block_on(async { db_wal::replay_document(&storage.wal().await, &core_id).await })?;
+        let records = db_wal::replay_document(&storage.wal().await, &core_id).await?;
         let mut batch_ids: HashSet<String> = HashSet::new();
         let mut seen: u64 = 0;
         for record in records {
@@ -581,12 +581,10 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                     seen += 1;
                     batch_ids.insert(envelope.mutation_id.0.clone());
                     if seen <= applied_head_seq {
-                        // Already folded into the loaded snapshot — replay the causal bookkeeping
-                        // (`applied`) but not the state mutation itself.
                         engine.applied.insert(envelope.mutation_id.0.clone(), envelope);
                         continue;
                     }
-                    let (touched, _conflicts, _) = db_actor::block_on(engine.apply_one(&envelope, &batch_ids))?;
+                    let (touched, _conflicts, _) = engine.apply_one(&envelope, &batch_ids).await?;
                     let touch = command_touch(&envelope, &touched);
                     if engine.recent_touches.len() >= MAX_RECENT_TOUCHES {
                         engine.recent_touches.pop_front();
@@ -594,15 +592,17 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                     engine.recent_touches.push_back(touch);
                     report.commands_replayed += 1;
                 }
-                // 🩹️ The authoritative post-commit frontier was written verbatim at commit time
-                // (see `submit`'s final record) — replaying it directly avoids recomputing
-                // `head_seq`/`commit_seq` from scratch and guarantees the reopened engine agrees
-                // exactly with what was durable, even if this crate's own bookkeeping ever changes.
                 db_wal::WalRecord::Frontier(frontier) => engine.frontier = frontier,
                 _ => {}
             }
         }
         Ok((engine, report))
+    }
+
+    /// @emoji 🚑️ Process/test entry-point convenience; live authorities use `open_retained`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), DbError> {
+        db_actor::block_on(Self::open_retained(document, storage.clone(), config, now_ms))
     }
 
     async fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig<A, V>) -> ArtifactEngine<A, V> {
@@ -1153,7 +1153,32 @@ pub enum ArtifactMessage {
 pub struct ArtifactAuthority {
     address: db_actor::Address<ArtifactMessage>,
     cancel: Arc<dyn Fn() + Send + Sync>,
+    handoff: Arc<ArtifactRunnerHandoff>,
     done: std::sync::Mutex<Option<db_actor::ReplyReceiver<()>>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+type ArtifactBuildFuture<A, V> = Pin<Box<dyn Future<Output = Result<ArtifactEngine<A, V>, DbError>> + Send + 'static>>;
+
+#[cfg(not(target_arch = "wasm32"))]
+type ArtifactTurnFuture<A, V> = Pin<Box<dyn Future<Output = ArtifactEngine<A, V>> + Send + 'static>>;
+
+#[cfg(not(target_arch = "wasm32"))]
+const ARTIFACT_RUNNER_RETRY_MS: u64 = 1;
+#[cfg(not(target_arch = "wasm32"))]
+const ARTIFACT_RUNNER_RETRY_LIMIT: u8 = 8;
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ArtifactRunnerHandoff {
+    pool: Arc<semio_framework_async::WorkerPool>,
+    terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
+    close_runner: std::sync::Mutex<Option<Arc<dyn Fn() + Send + Sync>>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub struct ArtifactRunnerTerminalJob {
+    handoff: Arc<ArtifactRunnerHandoff>,
+    owner: Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1161,13 +1186,40 @@ struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     pool: Arc<semio_framework_async::WorkerPool>,
     address: db_actor::Address<ArtifactMessage>,
     receiver: db_actor::Receiver<ArtifactMessage>,
-    builder: std::sync::Mutex<Option<Box<dyn FnOnce() -> Result<ArtifactEngine<A, V>, DbError> + Send>>>,
+    generation: u64,
+    builder: std::sync::Mutex<Option<ArtifactBuildFuture<A, V>>>,
     engine: std::sync::Mutex<Option<ArtifactEngine<A, V>>>,
+    turn: std::sync::Mutex<Option<ArtifactTurnFuture<A, V>>>,
     ready: std::sync::Mutex<Option<db_actor::ReplySender<Result<(), DbError>>>>,
     done: std::sync::Mutex<Option<db_actor::ReplySender<()>>>,
+    handoff: Arc<ArtifactRunnerHandoff>,
+    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
+    retry_armed: std::sync::atomic::AtomicBool,
+    retry_generation: std::sync::atomic::AtomicU64,
     scheduled: std::sync::atomic::AtomicBool,
     cancelled: std::sync::atomic::AtomicBool,
     terminal: std::sync::atomic::AtomicBool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ArtifactRunnerWake<A: AuthzHook + 'static, V: VersionGraph + 'static> {
+    runner: std::sync::Weak<ArtifactRunner<A, V>>,
+    generation: u64,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<A: AuthzHook + 'static, V: VersionGraph + 'static> std::task::Wake for ArtifactRunnerWake<A, V> {
+    fn wake(self: Arc<Self>) {
+        self.wake_by_ref();
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        if let Some(runner) = self.runner.upgrade() {
+            if self.generation == runner.generation {
+                runner.schedule();
+            }
+        }
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1178,7 +1230,55 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
             return;
         }
         let runner = self.clone();
-        self.pool.submit(semio_framework_async::Lane::UserVisible, Box::new(move || runner.run_turn()));
+        let generation = self.generation;
+        self.submit_exact(Box::new(move || runner.run_turn(generation)), 0);
+    }
+
+    fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
+        match self.pool.try_submit(semio_framework_async::Lane::UserVisible, job) {
+            Ok(()) => {}
+            Err(error) => match error.kind() {
+                semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < ARTIFACT_RUNNER_RETRY_LIMIT => {
+                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
+                    self.arm_retry();
+                }
+                kind => {
+                    let job = error.into_job();
+                    if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                        drop(job);
+                        ready.send(Err(DbError::Unavailable(format!("artifact authority WorkerPool submission failed: {kind:?}"))));
+                        self.finish();
+                    } else {
+                        *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
+                    }
+                }
+            },
+        }
+    }
+
+    fn arm_retry(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let generation = self.retry_generation.fetch_add(1, Ordering::AcqRel).checked_add(1).expect("artifact runner retry generation exhausted");
+        let runner = self.clone();
+        self.pool.callback_at(self.pool.now_ms().saturating_add(ARTIFACT_RUNNER_RETRY_MS), move || {
+            if generation != runner.retry_generation.load(Ordering::Acquire) {
+                return;
+            }
+            runner.retry_armed.store(false, Ordering::Release);
+            let retry = runner.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            if let Some((job, attempt)) = retry {
+                if runner.cancelled.load(Ordering::Acquire) {
+                    drop(job);
+                    runner.scheduled.store(false, Ordering::Release);
+                    runner.finish();
+                } else {
+                    runner.submit_exact(job, attempt);
+                }
+            }
+        });
     }
 
     fn cancel(self: &Arc<Self>) {
@@ -1188,34 +1288,79 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
 
     fn finish(&self) {
         if !self.terminal.swap(true, std::sync::atomic::Ordering::AcqRel) {
-            self.engine.lock().unwrap().take();
+            let builder = self.builder.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            if builder.is_none() {
+                let turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                if turn.is_none() {
+                    self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                }
+            }
             if let Some(done) = self.done.lock().unwrap().take() {
                 done.send(());
             }
         }
     }
 
-    fn run_turn(self: Arc<Self>) {
+    fn start_turn(engine: ArtifactEngine<A, V>, message: ArtifactMessage) -> ArtifactTurnFuture<A, V> {
+        Box::pin(async move {
+            let mut engine = engine;
+            match message {
+                ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(engine.submit(batch, options, now_ms).await),
+                ArtifactMessage::Query { path, reply } => reply.send(engine.get(&path).await),
+                ArtifactMessage::Frontier { reply } => reply.send(engine.frontier().await),
+                ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(engine.query(query, consistency).await),
+                ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(engine.snapshot_now(now_ms).await),
+                ArtifactMessage::DrainOutbox { reply } => reply.send(engine.drain_outbox().await),
+            }
+            engine
+        })
+    }
+
+    fn run_turn(self: Arc<Self>, generation: u64) {
         use std::panic::AssertUnwindSafe;
         use std::sync::atomic::Ordering;
 
-        if let Some(build) = self.builder.lock().unwrap().take() {
-            match std::panic::catch_unwind(AssertUnwindSafe(build)) {
-                Ok(Ok(engine)) => {
-                    *self.engine.lock().unwrap() = Some(engine);
-                    if let Some(ready) = self.ready.lock().unwrap().take() {
+        if generation != self.generation || self.terminal.load(Ordering::Acquire) {
+            return;
+        }
+        self.scheduled.store(false, Ordering::Release);
+        if self.cancelled.load(Ordering::Acquire) {
+            self.finish();
+            return;
+        }
+
+        let waker = std::task::Waker::from(Arc::new(ArtifactRunnerWake { runner: Arc::downgrade(&self), generation }));
+        let mut context = std::task::Context::from_waker(&waker);
+
+        let mut builder = self.builder.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(future) = builder.as_mut() {
+            match std::panic::catch_unwind(AssertUnwindSafe(|| future.as_mut().poll(&mut context))) {
+                Ok(std::task::Poll::Pending) => return,
+                Ok(std::task::Poll::Ready(Ok(engine))) => {
+                    builder.take();
+                    drop(builder);
+                    *self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(engine);
+                    if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                         ready.send(Ok(()));
                     }
+                    if self.address.has_messages() {
+                        self.schedule();
+                    }
+                    return;
                 }
-                Ok(Err(error)) => {
-                    if let Some(ready) = self.ready.lock().unwrap().take() {
+                Ok(std::task::Poll::Ready(Err(error))) => {
+                    builder.take();
+                    drop(builder);
+                    if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                         ready.send(Err(error));
                     }
                     self.finish();
                     return;
                 }
                 Err(_) => {
-                    if let Some(ready) = self.ready.lock().unwrap().take() {
+                    builder.take();
+                    drop(builder);
+                    if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                         ready.send(Err(DbError::Internal("document authority construction panicked".to_string())));
                     }
                     self.finish();
@@ -1223,37 +1368,47 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                 }
             }
         }
-        if self.cancelled.load(Ordering::Acquire) {
-            self.finish();
-            return;
+        drop(builder);
+
+        let mut turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(future) = turn.as_mut() {
+            match std::panic::catch_unwind(AssertUnwindSafe(|| future.as_mut().poll(&mut context))) {
+                Ok(std::task::Poll::Pending) => return,
+                Ok(std::task::Poll::Ready(engine)) => {
+                    turn.take();
+                    drop(turn);
+                    *self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(engine);
+                    if self.cancelled.load(Ordering::Acquire) || self.address.is_idle_and_closed() {
+                        self.finish();
+                    } else if self.address.has_messages() {
+                        self.schedule();
+                    }
+                    return;
+                }
+                Err(_) => {
+                    turn.take();
+                    drop(turn);
+                    self.address.close();
+                    self.finish();
+                    return;
+                }
+            }
         }
-        let envelope = self.receiver.try_recv();
-        if let Some(envelope) = envelope {
-            let handled = {
-                let mut engine = self.engine.lock().unwrap();
-                let engine = engine.as_mut().expect("ArtifactRunner is scheduled only after construction");
-                std::panic::catch_unwind(AssertUnwindSafe(|| match envelope.payload {
-                    ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(db_actor::block_on(engine.submit(batch, options, now_ms))),
-                    ArtifactMessage::Query { path, reply } => reply.send(db_actor::block_on(engine.get(&path))),
-                    ArtifactMessage::Frontier { reply } => reply.send(db_actor::block_on(engine.frontier())),
-                    ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(db_actor::block_on(engine.query(query, consistency))),
-                    ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(db_actor::block_on(engine.snapshot_now(now_ms))),
-                    ArtifactMessage::DrainOutbox { reply } => reply.send(db_actor::block_on(engine.drain_outbox())),
-                }))
-            };
-            if handled.is_err() {
+        drop(turn);
+
+        if let Some(envelope) = self.receiver.try_recv() {
+            let engine = self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            if let Some(engine) = engine {
+                *self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Self::start_turn(engine, envelope.payload));
+                self.schedule();
+            } else {
                 self.address.close();
                 self.finish();
-                return;
             }
+            return;
         }
         if self.cancelled.load(Ordering::Acquire) || self.address.is_idle_and_closed() {
             self.finish();
-            return;
-        }
-        self.scheduled.store(false, Ordering::Release);
-        if self.address.has_messages() {
-            self.schedule();
         }
     }
 }
@@ -1262,22 +1417,29 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
 impl ArtifactAuthority {
     /// @emoji 🚀️ Builds the engine on the injected pool and resolves only after construction, so
     /// a caller never receives an authority whose engine failed to open.
-    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static>(
+    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<ArtifactEngine<A, V>, DbError>> + Send + 'static>(
         pool: Arc<semio_framework_async::WorkerPool>,
-        build: impl FnOnce() -> Result<ArtifactEngine<A, V>, DbError> + Send + 'static,
+        build: impl FnOnce() -> F + Send + 'static,
         capacities: MailboxCapacities,
     ) -> Result<ArtifactAuthority, DbError> {
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), DbError>>();
         let (done_tx, done_rx) = db_actor::oneshot();
+        let handoff = Arc::new(ArtifactRunnerHandoff { pool: pool.clone(), terminal_job: std::sync::Mutex::new(None), close_runner: std::sync::Mutex::new(None) });
         let runner = Arc::new(ArtifactRunner {
             pool,
             address: address.clone(),
             receiver,
-            builder: std::sync::Mutex::new(Some(Box::new(build))),
+            generation: address.generation().0,
+            builder: std::sync::Mutex::new(Some(Box::pin(build()))),
             engine: std::sync::Mutex::new(None),
+            turn: std::sync::Mutex::new(None),
             ready: std::sync::Mutex::new(Some(ready_tx)),
             done: std::sync::Mutex::new(Some(done_tx)),
+            handoff: handoff.clone(),
+            retry_job: std::sync::Mutex::new(None),
+            retry_armed: std::sync::atomic::AtomicBool::new(false),
+            retry_generation: std::sync::atomic::AtomicU64::new(1),
             scheduled: std::sync::atomic::AtomicBool::new(false),
             cancelled: std::sync::atomic::AtomicBool::new(false),
             terminal: std::sync::atomic::AtomicBool::new(false),
@@ -1288,40 +1450,77 @@ impl ArtifactAuthority {
                 runner.schedule();
             }
         }));
+        let weak = Arc::downgrade(&runner);
+        *handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move || {
+            if let Some(runner) = weak.upgrade() {
+                runner.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                runner.cancelled.store(true, std::sync::atomic::Ordering::Release);
+                runner.finish();
+            }
+        }));
         let runner_for_cancel = runner.clone();
         let cancel: Arc<dyn Fn() + Send + Sync> = Arc::new(move || runner_for_cancel.cancel());
         runner.schedule();
 
         match ready_rx.await {
-            Ok(Ok(())) => Ok(ArtifactAuthority { address, cancel, done: std::sync::Mutex::new(Some(done_rx)) }),
+            Ok(Ok(())) => Ok(ArtifactAuthority { address, cancel, handoff, done: std::sync::Mutex::new(Some(done_rx)) }),
             Ok(Err(err)) => Err(err),
             Err(_) => Err(DbError::Closed),
         }
     }
 
-    pub async fn submit_blocking(&self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
-        self.address.ask_blocking(Priority::Command, |reply| ArtifactMessage::Submit { batch, options, now_ms, reply })?
+    /// @emoji 📨️ Nonblocking retained submit cursor used by `db_engine::SubmitFuture`.
+    pub fn submit_retained(&self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> db_actor::AskFuture<ArtifactMessage, Result<CommandReceipt, DbError>> {
+        self.address.ask(Priority::Command, |reply| ArtifactMessage::Submit { batch, options, now_ms, reply })
     }
 
-    pub async fn query_blocking(&self, path: &str) -> Result<Option<Vec<u8>>, DbError> {
+    pub fn generation(&self) -> GenerationId {
+        self.address.generation()
+    }
+
+    pub fn take_terminal_job(&self) -> Option<ArtifactRunnerTerminalJob> {
+        self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|owner| ArtifactRunnerTerminalJob { handoff: self.handoff.clone(), owner: Some(owner) })
+    }
+
+    pub fn close_step(&self) -> bool {
+        if let Some((_, job)) = self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            if let Some(close) = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref() {
+                close();
+            }
+            drop(job);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+    }
+
+    pub async fn submit(&self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
+        self.address.ask(Priority::Command, |reply| ArtifactMessage::Submit { batch, options, now_ms, reply }).await?
+    }
+
+    pub async fn query(&self, path: &str) -> Result<Option<Vec<u8>>, DbError> {
         let path = path.to_string();
-        self.address.ask_blocking(Priority::Query, |reply| ArtifactMessage::Query { path, reply })
+        self.address.ask(Priority::Query, |reply| ArtifactMessage::Query { path, reply }).await
     }
 
-    pub async fn frontier_blocking(&self) -> Result<Frontier, DbError> {
-        self.address.ask_blocking(Priority::Query, |reply| ArtifactMessage::Frontier { reply })
+    pub async fn frontier(&self) -> Result<Frontier, DbError> {
+        self.address.ask(Priority::Query, |reply| ArtifactMessage::Frontier { reply }).await
     }
 
-    pub async fn run_query_blocking(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
-        self.address.ask_blocking(Priority::Query, |reply| ArtifactMessage::RunQuery { query, consistency, reply })?
+    pub async fn run_query(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
+        self.address.ask(Priority::Query, |reply| ArtifactMessage::RunQuery { query, consistency, reply }).await?
     }
 
-    pub async fn snapshot_now_blocking(&self, now_ms: u64) -> Result<u64, DbError> {
-        self.address.ask_blocking(Priority::Command, |reply| ArtifactMessage::SnapshotNow { now_ms, reply })?
+    pub async fn snapshot_now(&self, now_ms: u64) -> Result<u64, DbError> {
+        self.address.ask(Priority::Command, |reply| ArtifactMessage::SnapshotNow { now_ms, reply }).await?
     }
 
-    pub async fn drain_outbox_blocking(&self) -> Result<Vec<OutboxEntry>, DbError> {
-        self.address.ask_blocking(Priority::Query, |reply| ArtifactMessage::DrainOutbox { reply })
+    pub async fn drain_outbox(&self) -> Result<Vec<OutboxEntry>, DbError> {
+        self.address.ask(Priority::Query, |reply| ArtifactMessage::DrainOutbox { reply }).await
     }
 
     /// @emoji 🚪️ Closes the mailbox, cancels any future turn, and awaits the finite in-flight turn.
@@ -1331,6 +1530,40 @@ impl ArtifactAuthority {
         let done = self.done.lock().unwrap().take();
         if let Some(done) = done {
             let _ = done.await;
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl ArtifactRunnerTerminalJob {
+    pub fn reason(&self) -> semio_framework_async::WorkerSubmitErrorKind {
+        self.owner.as_ref().expect("terminal artifact runner job already resolved").0
+    }
+
+    pub fn resume(mut self) {
+        let owner = self.owner.take().expect("terminal artifact runner job already resolved");
+        match self.handoff.pool.try_submit(semio_framework_async::Lane::UserVisible, owner.1) {
+            Ok(()) => {}
+            Err(error) => {
+                *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.kind(), error.into_job()));
+            }
+        }
+    }
+
+    pub fn close(mut self) {
+        let (_, job) = self.owner.take().expect("terminal artifact runner job already resolved");
+        if let Some(close) = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref() {
+            close();
+        }
+        drop(job);
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for ArtifactRunnerTerminalJob {
+    fn drop(&mut self) {
+        if let Some(owner) = self.owner.take() {
+            *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
         }
     }
 }
@@ -1701,19 +1934,19 @@ mod tests {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
         let storage = storage().await;
         let document = document_id().await;
-        let authority = ArtifactAuthority::spawn(pool.clone(), move || ArtifactEngine::create(document, storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(16)).await.unwrap();
+        let authority = ArtifactAuthority::spawn(pool.clone(), move || ArtifactEngine::create_retained(document, storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(16)).await.unwrap();
 
         let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hi"))]).await]).await.unwrap();
-        let receipt = authority.submit_blocking(batch, SubmitOptions::default(), 0).await.unwrap();
+        let receipt = authority.submit(batch, SubmitOptions::default(), 0).await.unwrap();
         assert_eq!(receipt.frontier.head_seq, 1);
 
-        let queried: serde_json::Value = stored_json(&authority.query_blocking("name").await.unwrap().unwrap()).await;
+        let queried: serde_json::Value = stored_json(&authority.query("name").await.unwrap().unwrap()).await;
         assert_eq!(queried, serde_json::json!("hi"));
 
-        let frontier = authority.frontier_blocking().await.unwrap();
+        let frontier = authority.frontier().await.unwrap();
         assert_eq!(frontier.head_seq, 1);
 
-        let generation = authority.snapshot_now_blocking(1).await.unwrap();
+        let generation = authority.snapshot_now(1).await.unwrap();
         assert_eq!(generation, 0);
 
         authority.shutdown().await;
@@ -1723,7 +1956,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
         let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
-        let result = ArtifactAuthority::spawn(pool.clone(), || -> Result<ArtifactEngine<AllowAll, NullVersionGraph>, DbError> { Err(DbError::InvalidArgument("boom".to_string())) }, MailboxCapacities::uniform(4));
+        let result = ArtifactAuthority::spawn(pool.clone(), || async { Err::<ArtifactEngine<AllowAll, NullVersionGraph>, DbError>(DbError::InvalidArgument("boom".to_string())) }, MailboxCapacities::uniform(4));
         assert!(matches!(result.await, Err(DbError::InvalidArgument(_))));
         pool.shutdown();
     }

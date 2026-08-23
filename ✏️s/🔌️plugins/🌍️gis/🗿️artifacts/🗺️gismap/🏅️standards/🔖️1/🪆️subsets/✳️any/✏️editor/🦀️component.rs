@@ -223,6 +223,26 @@ impl ArtifactEditor for Gis2dPlayApp {
     const DIALECT: Dialect = crate::artifacts::gismap::GISMAP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
 
+    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::gismap::spr::gis_map_envelope_decode_owner_bundle())
+    }
+
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::gismap::spr::gis_map_document_store_owners())
+    }
+
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(crate::artifacts::gismap::spr::gis_map_document_store_initialization_job(envelope, operation, generation))
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::gis2d::config::schema::app_schema_descriptor())
     }
@@ -528,7 +548,100 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::editor::gis2d::testkit::{app, app_with_registry, gis2d_app_manifest_for_testkit, render};
-    use semio_framework_plugin::{ContextMenuRequest, EditorApp, PluginApp};
+    use semio_framework_plugin::{ContextMenuRequest, EditorApp, PluginApp, VcsArtifactApp};
+
+    fn gis_map_envelope_wire() -> Vec<u8> {
+        use store::ArtifactPack;
+
+        let snapshot = crate::artifacts::gismap::schema::empty_gis_map_snapshot();
+        let snapshot_pack = snapshot.encode_pack();
+        let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+        let wire = serde_json::to_vec(&serde_json::json!({
+            "schema": GIS_MAP_SCHEMA,
+            "id": "gis-map-live-load",
+            "vcs": {
+                "initialSnapshot": snapshot_hex,
+                "edits": [],
+                "changes": [],
+                "checkpoints": [],
+                "alternatives": []
+            },
+            "editMessages": [],
+            "conflicts": []
+        }))
+        .expect("schema-first GIS fixture envelope");
+        let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None);
+        let mut retirement = crate::artifacts::gismap::spr::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
+        for _ in 0..100_000 {
+            match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS fixture envelope retirement") {
+                store::SnapshotRetirementStep::Complete => {
+                    assert!(retirement.terminal_is_empty());
+                    drop(retirement);
+                    return wire;
+                }
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1);
+                    assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                }
+                store::SnapshotRetirementStep::Blocked => panic!("unshared GIS fixture envelope retirement blocked"),
+            }
+        }
+        panic!("GIS fixture envelope retirement did not reach terminal")
+    }
+
+    fn admit_gis_map_envelope(app: &mut VcsArtifactApp<EditorApp<Gis2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+        let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+        let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("GIS live envelope ingress credits");
+        for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+            let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+            bytes[..chunk.len()].copy_from_slice(chunk);
+            let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded GIS live envelope page");
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("GIS live envelope page admission failed: {fault}"));
+        }
+        assert!(app.seal_artifact_envelope_ingress(handle).expect("GIS live envelope seal/submit"));
+        handle
+    }
+
+    fn drive_gis_map_live_load(app: &mut VcsArtifactApp<EditorApp<Gis2dPlayApp>>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+        for _ in 0..100_000 {
+            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one GIS live maintenance turn");
+            let poll = app.advance_artifact_envelope_load(handle).expect("GIS live load advancement");
+            if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+                return poll;
+            }
+            std::thread::yield_now();
+        }
+        panic!("GIS live envelope load did not reach terminal")
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
+        let mut app = app();
+        let base_generation = app.artifact_generation_now();
+        let handle = admit_gis_map_envelope(&mut app, &gis_map_envelope_wire());
+        assert_eq!(handle.generation, base_generation);
+        assert_eq!(drive_gis_map_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+        assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
+        assert!(app.acknowledge_artifact_store_replacement(handle).expect("first exact GIS load acknowledgement"));
+        assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate GIS load acknowledgement is a no-op"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn gis_map_live_envelope_cancel_closes_retained_pages_without_publication() {
+        let mut app = app();
+        let base_generation = app.artifact_generation_now();
+        let wire = gis_map_envelope_wire();
+        let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+        let handle = app.begin_artifact_envelope_ingress(pages, wire.len()).expect("cancelled GIS ingress credits");
+        let first = &wire[..wire.len().min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
+        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+        bytes[..first.len()].copy_from_slice(first);
+        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled GIS first page");
+        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled GIS page admission failed: {fault}"));
+        app.cancel_artifact_envelope_load(handle).expect("cancel exact GIS ingress");
+        assert_eq!(drive_gis_map_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+        assert_eq!(app.artifact_generation_now(), base_generation);
+    }
 
     //#region 🔖️CommandSurface
     /// 🎯️ One value per `app_commands!` row, in row order — the wire-law loop below and the id

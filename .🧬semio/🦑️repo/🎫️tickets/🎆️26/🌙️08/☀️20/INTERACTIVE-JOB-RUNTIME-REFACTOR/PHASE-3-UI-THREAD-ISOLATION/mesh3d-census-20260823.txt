@@ -21,16 +21,18 @@ Exact remaining `Mesh3d` symbol census
 - ui-scene/math.rs: 5 references.
   - 3 are the obsolete Vec-backed public type/impl/conversion at lines 954/968/986.
   - 2 are the legacy test fixture at lines 1925/1926.
-- infinite/world/component.rs: 21 references.
-  - production Vec-backed producers: terrain-band builder and placeholder/overlay constructors.
+- infinite/world/component.rs: 17 references.
+  - the only production Vec-backed Mesh3d producer is the face-overlay constructor.
+  - terrain output now counts one source triangle per turn, allocates one authority page per turn, writes one position/normal/index per turn, and publishes one sealed band lease at a time. Its current JSON-to-flat terrain input decode remains a separate RED source boundary.
+  - placeholder geometry is no longer a Vec-backed producer: an analytic fixed-schema cursor allocates one authority page or writes one typed position/normal/index per invocation, then atomically publishes the sealed lease.
   - The WorldMeshBuffers->Mesh3d paint-bake path and old apply_glb_bytes/ingest route were deleted; URL GLB input now has only the retained renderer decoder/publication route.
   - remaining references after the production constructors are legacy test fixtures/source scans.
-- infinite/component.rs: 21 references.
-  - this mounted/reexported module still owns HashMap<String, Mesh3d>, Vec producers, direct hit/render/upload consumers, and legacy tests.
+- infinite/component.rs: 0 references.
+  - the mounted crate root now reexports the canonical `world` module instead of compiling a second 4,700-line World implementation. No bespoke root producer, store, hit-test, upload, or legacy Mesh3d path remains mounted.
 
 Field-pattern census (conservative; includes non-Mesh payload structs and test oracles)
 - infinite/world/component.rs: 76 `Mesh3d::`/return/HashMap/direct-field patterns.
-- infinite/component.rs: 80 such patterns.
+- infinite/component.rs: 0 such patterns.
 - These counts are intentionally not called zero and are the deletion gate for the Vec-backed type.
 
 Current atomic publication boundary
@@ -42,9 +44,10 @@ Current atomic publication boundary
 - Renderer saturation restores the exact lease into the retained GLB probe for FIFO retry; stale publication transitions the probe into cursorized lease/response close and records a deterministic frame fault.
 
 Explicit RED residuals
-- Internal placeholder/terrain/legacy scene producers do not yet use a fixed producer job and the current single blocked internal lease slot is not a complete saturation authority.
-- The second mounted/reexported infinite/component.rs has not been migrated.
-- GPU ensure_mesh traverses the complete lease synchronously; retained page/item upload and GPU-close witnesses are absent.
+- Face-overlay and legacy test producers do not yet use a fixed producer job and the current single blocked internal lease slot is not a complete saturation authority.
+- Placeholder production now uses the paged lease authority, but its one-item cursor is only advanced from `render_world_3d`; an explicit scheduler-ready signal still has to guarantee progress when no other invalidation exists.
+- GPU mesh upload now retains one exact generation/lease cursor and transfers one vertex or index item per presentation turn. Whole-lease vertex/index loops and the all-upload loop were removed.
+- The active GPU upload cursor has an exact close witness and is drained before World mesh authority close. GPU cache eviction/replacement still uses dynamic HashMap traversal, non-mesh atlas/raster uploads remain contiguous, final render/submit remains one opaque step, and the full pending-packet/GPU-table close witness is absent.
 - Legacy Mesh3d and its tests cannot be deleted until both component censuses reach zero.
 - PNG/JPEG/MVT/SVG semantic outputs, cache retirement, presenter/GPU close, and realm terminal close remain incomplete.
 - World3d snapshot producer remains explicitly unclaimed; no JSON fallback is being introduced.
@@ -54,3 +57,61 @@ Source-only checks run at this checkpoint
 - rustfmt --edition 2024 --config skip_children=true: renderer glue — passed.
 - scoped git diff --check for those two files — passed.
 - Cargo, Nx, Wasm, browser, network, and root lint — not run by instruction.
+
+Mounted-root and placeholder checkpoint — 2026-08-23
+- `infinite/component.rs` compiled Mesh3d/direct-field/direct-GPU census: 0.
+- canonical analytic placeholder cursor kinds: box, plane, 16-segment cylinder, 16-segment cone, subdivision-1 icosphere.
+- ownership: exact generation/revision Mesh3dWriteToken; one page allocation or one typed item per step; write fault and realm close both enter page-stepped abort; production Drop asserts terminal empty.
+- publication: only a sealed Mesh3dLease enters the observed-slot World transaction; saturation retains the rejected lease in the existing exact blocked owner.
+- authored differential fixture compares every generated position/index and normal tolerance with the prior geometry oracle, plus interrupted cursor terminal close. Fixture is unrun because Cargo remains prohibited.
+- scoped rustfmt and git diff --check passed for the mounted root and canonical World files.
+
+Terrain output checkpoint — 2026-08-23
+- one retained tile cursor owns the decoded flat source, tile identity, terrain revision, ten reserved mesh generations, current band, triangle/item cursors, and exact write-token/lease state.
+- count, page allocation, source scan, typed write, seal, publish, band advance, and source retirement are persistent phases; no production terrain-band Mesh3d or output Vec exists.
+- stale terrain revision, invalid source indices/floats, publication saturation, interruption, and realm close all enter the same exact authority abort plus four-allocation/source-id retirement path.
+- authored fixtures cover two-band differential geometry, one-page lease close, malformed source rejection, and interrupted terminal close; unrun because Cargo remains prohibited.
+- remaining canonical production Mesh3d constructor: face overlay only. Root census remains zero.
+
+Face-overlay output checkpoint — 2026-08-23
+- non-test production `Mesh3d::from_buffers` constructors: 0.
+- face overlay uses a generation/revision/draw-generation witnessed paged cursor; fixed category
+  metadata replaces dynamic buckets and one typed item/page/boundary advances per call.
+- exact face-route negative scan: no `Mesh3d::from_buffers`, `FaceOverlayBucket`, selection
+  `HashSet<String>`, or `Vec<f32>` bucket.
+- mounted root Mesh3d census remains 0.
+- obsolete public Vec-backed Mesh3d type, cfg(test) terrain/legacy draw oracles, and cfg(test) World
+  fixtures remain explicit non-production references. They have not been compile validated and are
+  the next deletion/type-gate packet.
+
+Atomic-family and wake checkpoint — 2026-08-23 (supersedes every earlier count above)
+- exact production-and-test spelling census for the deleted legacy type/constructor:
+  `rg -n '\bMesh3d\b|Mesh3d::from_buffers|-> Mesh3d\b' 🧰️framework --glob '*.rs'` — 0 matches.
+- the ui-scene and canonical World differential inputs are explicitly named
+  `LegacyMeshOracleData`, exist only under `cfg(test)`, and publish through the paged writer before
+  reaching production consumers. No old public Vec mesh type, constructor, reexport, field
+  consumer, or compatibility adapter remains.
+- face-overlay categories publish beneath generation-qualified staging keys. The visible generation
+  and its three fixed colors change only after every nonempty category is sealed and published.
+  A partial or stale superseding family leaves the last complete generation visible. Dynamic realm
+  retirement clears one color/scalar owner per grant and includes the visible/retired generation
+  witnesses in terminal-empty.
+- terrain band draws are visible only after the complete tile-family marker is published. A partial
+  ten-band family therefore has no visible draw. Normal style replacement still lacks last-valid,
+  presenter-witnessed generation retirement and remains RED.
+- `WorldCursorWake` is a fixed coalescing generation/armed authority. One handoff is carried through
+  AppFrameAfterChrome -> AppFrameBuild -> AppFramePreparation -> AppFramePresentation ->
+  AppPresentStep. Native scheduling invalidates RESOURCE_READY, while the browser Worker consumes
+  the exact host bit with `mem::take` and emits `request_frame`; duplicate requests coalesce and a
+  resumed cursor obtains a fresh generation.
+- source fixtures authored for atomic partial/stale face publication, complete-marker terrain
+  visibility, duplicate/lost-wake prevention, and exact face nonopaque close. They remain unrun
+  because the serialized Rust gate is outside this packet.
+- source gates passed: exact legacy/obsolete-state negative scans, required-fixture/wake-path
+  positive scans, rustfmt check for math/canonical World/winit/frame-job/os-host/browser-worker,
+  renderer-glue parse via rustfmt stdout, and scoped git diff check.
+- Cargo, Nx, Wasm, browser, network, and root lint were not run by instruction.
+- remaining RED: presenter-witnessed normal face/terrain replacement; retained retirement of old
+  generation-qualified registry leases outside realm close; typed terrain input; dynamic
+  HashSet/HashMap/frame-vector retirement; PNG/JPEG/MVT/SVG semantics; pending packet/GPU table,
+  atlas/raster/cache and opaque render/submit close; realm terminal-empty; real Wasm/browser timing.

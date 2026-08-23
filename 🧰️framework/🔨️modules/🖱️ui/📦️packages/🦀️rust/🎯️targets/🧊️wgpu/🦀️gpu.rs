@@ -140,51 +140,63 @@ impl GpuContext {
         &mut self.mesh_store
     }
 
-    pub fn ensure_mesh(&mut self, key: &str, version: u64, lease: crate::wgpu::kernel_3d_scene::Mesh3dLease) {
-        self.mesh_store.ensure_mesh(&self.device, key, version, lease);
+    pub fn ensure_mesh_step(&mut self, key: &str, version: u64, lease: crate::wgpu::kernel_3d_scene::Mesh3dLease) -> Result<bool, &'static str> {
+        self.mesh_store.ensure_mesh_step(&self.device, &self.queue, key, version, lease)
+    }
+
+    pub fn close_mesh_upload_step(&mut self) -> bool {
+        self.mesh_store.close_upload_step()
+    }
+
+    pub fn mesh_upload_terminal_is_empty(&self) -> bool {
+        self.mesh_store.upload_terminal_is_empty()
     }
 
     pub fn evict_mesh(&mut self, key: &str) {
         self.mesh_store.evict_mesh(key);
     }
 
-    /// 🖥️ Applies one validated worker-owned packet and presents it under a non-Send UI token.
-    pub fn submit_prepared(&mut self, _token: &UiPresentToken, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>, live_revision: u64, live_generation: u64) -> Result<(), String> {
-        self.submit_prepared_authorized(gate, packet, live_revision, live_generation)
+    pub fn begin_prepared(&self, _token: &UiPresentToken, gate: &PreparedRenderGate, packet: &PreparedRenderPacket, live_revision: u64, live_generation: u64) -> Result<(), String> {
+        gate.validate(packet, live_revision, live_generation).map_err(|error| error.to_string())
     }
 
-    /// 🧵️ Applies one packet under dedicated-Worker OffscreenCanvas authority.
     #[cfg(target_arch = "wasm32")]
-    pub fn submit_prepared_offscreen(&mut self, _token: &OffscreenPresentToken, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>, live_revision: u64, live_generation: u64) -> Result<(), String> {
-        self.submit_prepared_authorized(gate, packet, live_revision, live_generation)
+    pub fn begin_prepared_offscreen(&self, _token: &OffscreenPresentToken, gate: &PreparedRenderGate, packet: &PreparedRenderPacket, live_revision: u64, live_generation: u64) -> Result<(), String> {
+        gate.validate(packet, live_revision, live_generation).map_err(|error| error.to_string())
     }
 
-    fn submit_prepared_authorized(&mut self, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>, live_revision: u64, live_generation: u64) -> Result<(), String> {
-        gate.validate(&packet, live_revision, live_generation).map_err(|error| error.to_string())?;
-        self.apply_prepared_evictions(&packet.evictions);
-        self.apply_prepared_uploads(&packet.uploads);
+    pub fn apply_prepared_eviction_step(&mut self, packet: &PreparedRenderPacket, index: usize) -> Result<bool, String> {
+        let Some(eviction) = packet.evictions().get(index) else { return Ok(true) };
+        match eviction {
+            PreparedRenderEviction::Mesh { key } => self.evict_mesh(key),
+        }
+        Ok(index + 1 == packet.evictions().len())
+    }
+
+    pub fn apply_prepared_upload_step(&mut self, packet: &PreparedRenderPacket, index: usize) -> Result<bool, String> {
+        let Some(upload) = packet.uploads().get(index) else { return Ok(true) };
+        let complete = match upload {
+            PreparedRenderUpload::GlyphAtlas { pixels, width, height } => {
+                self.pipelines.upload_glyph_atlas(&self.queue, pixels, *width, *height);
+                true
+            }
+            PreparedRenderUpload::IconAtlas { pixels, width, height } => {
+                self.pipelines.upload_icon_atlas(&self.queue, pixels, *width, *height);
+                true
+            }
+            PreparedRenderUpload::Raster { key, pixels, width, height } => {
+                self.ensure_raster_texture(key, pixels, *width, *height);
+                true
+            }
+            PreparedRenderUpload::Mesh { key, version, lease } => self.ensure_mesh_step(key, *version, *lease).map_err(str::to_owned)?,
+        };
+        Ok(complete)
+    }
+
+    pub fn finish_prepared(&mut self, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>) -> Result<(), String> {
         self.render_prepared(&packet)?;
         gate.commit_presented(packet);
         Ok(())
-    }
-
-    fn apply_prepared_evictions(&mut self, evictions: &[PreparedRenderEviction]) {
-        for eviction in evictions {
-            match eviction {
-                PreparedRenderEviction::Mesh { key } => self.evict_mesh(key),
-            }
-        }
-    }
-
-    fn apply_prepared_uploads(&mut self, uploads: &[PreparedRenderUpload]) {
-        for upload in uploads {
-            match upload {
-                PreparedRenderUpload::GlyphAtlas { pixels, width, height } => self.pipelines.upload_glyph_atlas(&self.queue, pixels, *width, *height),
-                PreparedRenderUpload::IconAtlas { pixels, width, height } => self.pipelines.upload_icon_atlas(&self.queue, pixels, *width, *height),
-                PreparedRenderUpload::Raster { key, pixels, width, height } => self.ensure_raster_texture(key, pixels, *width, *height),
-                PreparedRenderUpload::Mesh { key, version, lease } => self.ensure_mesh(key, *version, *lease),
-            }
-        }
     }
 
     fn render_prepared(&mut self, packet: &PreparedRenderPacket) -> Result<(), String> {

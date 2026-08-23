@@ -125,6 +125,10 @@
     {
       "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️nx-emoji-project-plugin.mjs",
       "options": {}
+    },
+    {
+      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔌️nx-plugin.mjs",
+      "options": {}
     }
   ]
 }

@@ -41,7 +41,7 @@
 
 use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
-use crate::db_storage::{CatalogStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use crate::db_storage::{CatalogStorage, DbIoPages, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use neo4rs::{query, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
@@ -401,7 +401,7 @@ impl WalStorage for Neo4jStorage {
         Ok(())
     }
 
-    async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+    async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "wal_storage::append")?;
         let idx = u64_to_i64(index, "wal segment index")?;
         let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
@@ -414,7 +414,7 @@ impl WalStorage for Neo4jStorage {
         check_len(current_len, MAX_READ_BYTES, "wal_storage::append current length")?;
         let current = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
         let sealed: bool = row.get("sealed").map_err(map_de_error)?;
-        let updated = apply_append(&current, sealed, bytes)?;
+        let updated = apply_append(&current, sealed, bytes.as_slice())?;
         let new_len = updated.len() as u64;
         txn.run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", encode_bytes(&updated)).param("len", u64_to_i64(new_len, "wal segment length")?)).await.map_err(map_neo4rs_error)?;
         txn.commit().await.map_err(map_neo4rs_error)?;
@@ -490,10 +490,11 @@ impl WalStorage for Neo4jStorage {
 
 //#region 🔖️SnapshotStorage
 impl SnapshotStorage for Neo4jStorage {
-    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
-        self.run(query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?)).await
+        self.run(query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(bytes.as_slice())).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?))
+            .await
     }
 
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
@@ -531,10 +532,10 @@ impl SnapshotStorage for Neo4jStorage {
 
 //#region 🔖️PayloadStorage
 impl PayloadStorage for Neo4jStorage {
-    async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
+    async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
-        let hash = ContentHash(*blake3::hash(bytes).as_bytes());
-        self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await?;
+        let hash = ContentHash(*blake3::hash(bytes.as_slice()).as_bytes());
+        self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", encode_bytes(bytes.as_slice())).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await?;
         Ok(hash)
     }
 
@@ -578,7 +579,7 @@ impl CatalogStorage for Neo4jStorage {
         Ok(Some((bytes, EpochFence { epoch })))
     }
 
-    async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
+    async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
         check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
         let new_fence = expected.next();
         let row = self
@@ -586,7 +587,7 @@ impl CatalogStorage for Neo4jStorage {
                 query(CYPHER_CATALOG_CAS)
                     .param("expected", u64_to_i64(expected.epoch, "catalog epoch")?)
                     .param("newEpoch", u64_to_i64(new_fence.epoch, "catalog epoch")?)
-                    .param("bytes", encode_bytes(new_bytes))
+                    .param("bytes", encode_bytes(new_bytes.as_slice()))
                     .param("len", u64_to_i64(new_bytes.len() as u64, "catalog root length")?),
             )
             .await?;
@@ -604,10 +605,10 @@ impl CatalogStorage for Neo4jStorage {
 
 //#region 🔖️IndexStorage
 impl IndexStorage for Neo4jStorage {
-    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "index_storage::write_run")?;
         let run_id_param = u64_to_i64(run_id, "index run id")?;
-        self.run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "index run length")?)).await
+        self.run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", encode_bytes(bytes.as_slice())).param("len", u64_to_i64(bytes.len() as u64, "index run length")?)).await
     }
 
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {

@@ -18,7 +18,7 @@
 //! waiting on the Element migration to land first.
 
 use crate::deadlines::{CaretBlink, HotSwapPoll};
-use crate::kernel_seam::{default_intent_exchange, AppKernelSeam};
+use crate::kernel_seam::{AppKernelSeam, default_intent_exchange};
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
 use crate::{AppPresenter, RuntimeMailbox};
 use ui_render::{CursorRequest, FrameScheduler};
@@ -112,6 +112,7 @@ pub struct OsHost {
     /// distinguishable events in `Watchdog::violations()`, not one indistinguishable repeat.
     pub frame_generation: u64,
     pub frame_ready: bool,
+    pub(crate) cursor_wake_requested: bool,
     pub(crate) platform_fullscreen: Option<bool>,
     pub(crate) present_fault: Option<String>,
     /// 📬️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the fixed-capacity enqueue-only
@@ -160,6 +161,7 @@ impl OsHost {
             hot_swap: HotSwapPoll::new(),
             frame_generation: 0,
             frame_ready: false,
+            cursor_wake_requested: false,
             platform_fullscreen: None,
             present_fault: None,
             events: ui_host::EventQueue::new(),
@@ -176,7 +178,7 @@ impl OsHost {
     }
 
     pub(crate) fn into_retirement(self) -> OsHostRetirement {
-        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, frame_generation: _, frame_ready: _, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build } = self;
+        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, frame_generation: _, frame_ready: _, cursor_wake_requested: _, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build } = self;
         OsHostRetirement {
             runtime: Some(runtime),
             presenter: Some(presenter),
@@ -211,6 +213,14 @@ impl OsHostRetirement {
             }
             self.events = None;
             return false;
+        }
+        if let Some(presenter) = self.presenter.as_mut() {
+            if !presenter.close_active_upload_step() {
+                return false;
+            }
+            if !presenter.active_upload_terminal_is_empty() {
+                return false;
+            }
         }
         if let Some(runtime) = self.runtime.as_ref() {
             if !runtime.close_world3d_dynamic_step() {

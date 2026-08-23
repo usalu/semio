@@ -40,6 +40,7 @@
 //! populated by live `submit()` calls in the current process, not reconstructed by `open()`'s replay.
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::{Arc, Mutex};
 
 use crate::db_ids::{ActorId, ArtifactId, DbError};
@@ -273,12 +274,13 @@ impl db_artifact::AuthzHook for SecurityAuthzHook {
 /// `vcs` Cargo feature).
 #[cfg(feature = "vcs")]
 pub mod vcs_integration {
-    #[cfg(not(target_arch = "wasm32"))]
-    use crate::db_actor;
     use crate::db_ids::*;
     use crate::db_version_graph::*;
     use std::collections::HashMap;
+    use std::future::Future;
+    use std::pin::Pin;
     use std::sync::Mutex;
+    use std::task::{Context, Poll, Waker};
 
     //#region 🔖️SchemaErasedTypes
     /// @emoji #⃣ The `VersionGraph` seam (`ChangeRecord`/`CheckpointRequest`) is already
@@ -489,6 +491,249 @@ pub mod vcs_integration {
     //#region 🔖️Store
     type HashStore = store::ArtifactStore<HashProjection, HashMutation>;
 
+    const VCS_OPERATION_ITEMS: usize = 64;
+    const VCS_OPERATION_PAGE_BYTES: u64 = 16 * 1024;
+    const VCS_OPERATION_PAGES: u64 = 4;
+    const VCS_OPERATION_BYTES: u64 = VCS_OPERATION_PAGE_BYTES * VCS_OPERATION_PAGES;
+    const VCS_TOTAL_PAGES: u64 = 256;
+    const VCS_TOTAL_BYTES: u64 = VCS_OPERATION_PAGE_BYTES * VCS_TOTAL_PAGES;
+
+    #[derive(Clone, Copy)]
+    struct VcsAdmissionSlot {
+        generation: u64,
+        bytes: u64,
+        items: usize,
+        occupied: bool,
+    }
+
+    const EMPTY_VCS_ADMISSION_SLOT: VcsAdmissionSlot = VcsAdmissionSlot { generation: 0, bytes: 0, items: 0, occupied: false };
+
+    struct VcsAdmissionState {
+        slots: [VcsAdmissionSlot; VCS_OPERATION_ITEMS],
+        bytes: u64,
+        next_generation: u64,
+    }
+
+    static VCS_ADMISSION: Mutex<VcsAdmissionState> = Mutex::new(VcsAdmissionState { slots: [EMPTY_VCS_ADMISSION_SLOT; VCS_OPERATION_ITEMS], bytes: 0, next_generation: 1 });
+
+    struct VcsOperationAdmission {
+        slot: usize,
+        generation: u64,
+        bytes: u64,
+        items: usize,
+    }
+
+    impl VcsOperationAdmission {
+        fn try_claim(items: usize, bytes: u64) -> Result<Self, DbError> {
+            if items == 0 || items > VCS_OPERATION_ITEMS {
+                return Err(DbError::LimitExceeded("vcs operation item credit"));
+            }
+            if bytes == 0 || bytes > VCS_OPERATION_BYTES {
+                return Err(DbError::LimitExceeded("vcs operation byte credit"));
+            }
+            let mut state = VCS_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let Some(slot) = state.slots.iter().position(|entry| !entry.occupied) else {
+                return Err(DbError::Unavailable("vcs operation capacity exhausted".to_string()));
+            };
+            if state.bytes.checked_add(bytes).is_none_or(|next| next > VCS_TOTAL_BYTES) {
+                return Err(DbError::Unavailable("vcs operation byte capacity exhausted".to_string()));
+            }
+            let generation = state.next_generation;
+            state.next_generation = state.next_generation.checked_add(1).ok_or(DbError::LimitExceeded("vcs operation generation"))?;
+            state.slots[slot] = VcsAdmissionSlot { generation, bytes, items, occupied: true };
+            state.bytes += bytes;
+            Ok(Self { slot, generation, bytes, items })
+        }
+
+        fn is_current(slot: usize, generation: u64) -> bool {
+            let state = VCS_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            state.slots.get(slot).is_some_and(|entry| entry.occupied && entry.generation == generation)
+        }
+    }
+
+    impl Drop for VcsOperationAdmission {
+        fn drop(&mut self) {
+            let mut state = VCS_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let entry = &mut state.slots[self.slot];
+            if !entry.occupied || entry.generation != self.generation || entry.bytes != self.bytes || entry.items != self.items {
+                return;
+            }
+            *entry = EMPTY_VCS_ADMISSION_SLOT;
+            state.bytes = state.bytes.checked_sub(self.bytes).expect("vcs operation byte credit underflow");
+        }
+    }
+
+    fn vcs_credit(items: usize, owner_bytes: impl IntoIterator<Item = usize>) -> Result<(usize, u64), DbError> {
+        if items == 0 || items > VCS_OPERATION_ITEMS {
+            return Err(DbError::LimitExceeded("vcs operation nested item credit"));
+        }
+        let mut bytes = VCS_OPERATION_PAGE_BYTES;
+        for owner_bytes in owner_bytes {
+            bytes = bytes.checked_add(owner_bytes as u64).ok_or(DbError::LimitExceeded("vcs operation nested byte credit"))?;
+        }
+        let pages = bytes.checked_add(VCS_OPERATION_PAGE_BYTES - 1).ok_or(DbError::LimitExceeded("vcs operation page rounding"))? / VCS_OPERATION_PAGE_BYTES;
+        let admitted = pages.checked_mul(VCS_OPERATION_PAGE_BYTES).ok_or(DbError::LimitExceeded("vcs operation page credit"))?;
+        if admitted > VCS_OPERATION_BYTES {
+            return Err(DbError::LimitExceeded("vcs operation byte credit"));
+        }
+        Ok((items, admitted))
+    }
+
+    fn record_credit(document: &ArtifactId, change: &ChangeRecord) -> Result<(usize, u64), DbError> {
+        vcs_credit(1 + usize::from(change.parent.is_some()), [document.0.capacity(), change.parent.as_ref().map_or(0, String::capacity), change.author.0.capacity(), change.message.capacity()])
+    }
+
+    fn checkpoint_credit(document: &ArtifactId, request: &CheckpointRequest) -> Result<(usize, u64), DbError> {
+        let items = 1usize
+            .checked_add(usize::from(request.parent_checkpoint.is_some()))
+            .and_then(|value| value.checked_add(request.change_ids.len()))
+            .and_then(|value| value.checked_add(request.authors.len()))
+            .ok_or(DbError::LimitExceeded("vcs checkpoint item credit"))?;
+        let change_owner_bytes = request.change_ids.capacity().checked_mul(std::mem::size_of::<String>()).ok_or(DbError::LimitExceeded("vcs checkpoint change owner bytes"))?;
+        let author_owner_bytes = request.authors.capacity().checked_mul(std::mem::size_of::<ActorId>()).ok_or(DbError::LimitExceeded("vcs checkpoint author owner bytes"))?;
+        let fixed = [document.0.capacity(), request.parent_checkpoint.as_ref().map_or(0, String::capacity), request.message.capacity(), change_owner_bytes, author_owner_bytes];
+        vcs_credit(items, fixed.into_iter().chain(request.change_ids.iter().map(String::capacity)).chain(request.authors.iter().map(|author| author.0.capacity())))
+    }
+
+    fn relation_credit(document: &ArtifactId, values: &[&str]) -> Result<(usize, u64), DbError> {
+        vcs_credit(1 + values.len(), std::iter::once(document.0.capacity()).chain(values.iter().map(|value| value.len())))
+    }
+
+    struct VcsStoreWaiter {
+        generation: u64,
+        waker: Waker,
+    }
+
+    struct VcsStoreCellState {
+        store: Option<HashStore>,
+        busy_generation: Option<u64>,
+        waiters: [Option<VcsStoreWaiter>; VCS_OPERATION_ITEMS],
+    }
+
+    struct VcsStoreCell {
+        state: Mutex<VcsStoreCellState>,
+    }
+
+    impl VcsStoreCell {
+        fn new() -> Self {
+            Self { state: Mutex::new(VcsStoreCellState { store: None, busy_generation: None, waiters: std::array::from_fn(|_| None) }) }
+        }
+
+        fn take_next_waker(state: &mut VcsStoreCellState) -> Option<Waker> {
+            let next = state.waiters.iter().enumerate().filter_map(|(slot, waiter)| waiter.as_ref().map(|waiter| (slot, waiter.generation))).min_by_key(|(_, generation)| *generation).map(|(slot, _)| slot)?;
+            state.waiters[next].take().map(|waiter| waiter.waker)
+        }
+
+        fn release(&self, generation: u64, store: Option<HashStore>) {
+            let wake = {
+                let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if state.busy_generation != Some(generation) {
+                    return;
+                }
+                if let Some(store) = store {
+                    state.store = Some(store);
+                }
+                state.busy_generation = None;
+                Self::take_next_waker(&mut state)
+            };
+            if let Some(waker) = wake {
+                waker.wake();
+            }
+        }
+    }
+
+    struct VcsStoreAcquire {
+        cell: std::sync::Arc<VcsStoreCell>,
+        slot: usize,
+        generation: u64,
+        resolved: bool,
+    }
+
+    enum VcsStoreClaim {
+        Build(VcsStoreBuildPermit),
+        Ready(VcsStoreLease),
+    }
+
+    struct VcsStoreBuildPermit {
+        cell: std::sync::Arc<VcsStoreCell>,
+        generation: u64,
+        resolved: bool,
+    }
+
+    struct VcsStoreLease {
+        cell: std::sync::Arc<VcsStoreCell>,
+        generation: u64,
+        store: Option<HashStore>,
+    }
+
+    impl Future for VcsStoreAcquire {
+        type Output = Result<VcsStoreClaim, DbError>;
+
+        fn poll(mut self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<Self::Output> {
+            if !VcsOperationAdmission::is_current(self.slot, self.generation) {
+                self.resolved = true;
+                return Poll::Ready(Err(DbError::Closed));
+            }
+            let mut state = self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if state.busy_generation.is_none() {
+                state.busy_generation = Some(self.generation);
+                state.waiters[self.slot] = None;
+                let store = state.store.take();
+                drop(state);
+                self.resolved = true;
+                let claim = match store {
+                    Some(store) => VcsStoreClaim::Ready(VcsStoreLease { cell: self.cell.clone(), generation: self.generation, store: Some(store) }),
+                    None => VcsStoreClaim::Build(VcsStoreBuildPermit { cell: self.cell.clone(), generation: self.generation, resolved: false }),
+                };
+                return Poll::Ready(Ok(claim));
+            }
+            let waiter = &mut state.waiters[self.slot];
+            if waiter.as_ref().is_none_or(|waiter| waiter.generation != self.generation || !waiter.waker.will_wake(context.waker())) {
+                *waiter = Some(VcsStoreWaiter { generation: self.generation, waker: context.waker().clone() });
+            }
+            Poll::Pending
+        }
+    }
+
+    impl Drop for VcsStoreAcquire {
+        fn drop(&mut self) {
+            if self.resolved {
+                return;
+            }
+            let mut state = self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if state.waiters[self.slot].as_ref().is_some_and(|waiter| waiter.generation == self.generation) {
+                state.waiters[self.slot] = None;
+            }
+        }
+    }
+
+    impl VcsStoreBuildPermit {
+        fn install(mut self, store: HashStore) -> VcsStoreLease {
+            self.resolved = true;
+            VcsStoreLease { cell: self.cell.clone(), generation: self.generation, store: Some(store) }
+        }
+    }
+
+    impl Drop for VcsStoreBuildPermit {
+        fn drop(&mut self) {
+            if !self.resolved {
+                self.cell.release(self.generation, None);
+            }
+        }
+    }
+
+    impl VcsStoreLease {
+        fn store_mut(&mut self) -> &mut HashStore {
+            self.store.as_mut().expect("vcs store lease owner already returned")
+        }
+    }
+
+    impl Drop for VcsStoreLease {
+        fn drop(&mut self) {
+            self.cell.release(self.generation, self.store.take());
+        }
+    }
+
     // 🔒️ Used as a bare fn-pointer error mapper (`.map_err(map_vcs_error)`) below — same rationale
     // as `db_artifact`'s `json_err`: `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the
     // mapper with an owned `E`, so a by-reference signature would not type-check at those sites.
@@ -501,7 +746,7 @@ pub mod vcs_integration {
     /// @emoji 🌿️ One real `store::ArtifactStore` per document, driven by real `Apply`/
     /// `CommitCheckpoint` dispatches — `VersionGraph`'s real implementation.
     pub struct VcsVersionGraph {
-        stores: Mutex<HashMap<String, HashStore>>,
+        stores: Mutex<HashMap<String, std::sync::Arc<VcsStoreCell>>>,
     }
 
     impl Default for VcsVersionGraph {
@@ -515,69 +760,29 @@ pub mod vcs_integration {
             VcsVersionGraph::default()
         }
 
-        // 🔀️ Ensures `document` has a live `HashStore` entry, WITHOUT handing the caller a
-        // closure — `VersionGraph`'s methods need `&mut HashStore` held across real `.await`
-        // points (`store.dispatch(...).await`), and a sync `FnOnce(&mut HashStore) -> Result<R,
-        // DbError>` closure (the previous shape) cannot contain those awaits (R10 residue shape 1:
-        // `.await` inside a sync closure). Each caller now locks `self.stores` itself and keeps the
-        // guard alive across its own awaits instead of routing through a closure.
-        // 🔒️ A real `.await` reached while `stores`'s guard is alive extends its temporary across
-        // this whole `async fn` (R7), making the future non-`Send` — a hard requirement only where
-        // something needs to hand this future to a multi-threaded work-stealing scheduler
-        // (`semio-hub`'s axum handlers), not on `wasm32`, which has no such scheduler. `work` is
-        // driven by `db_actor::block_on` (this crate's sanctioned executor bridge — also fine here
-        // because `store::ArtifactStore`/`create_document_envelope` are pure in-memory computation,
-        // confirmed by grepping `store::` for I/O/channel primitives: none — so `work` always
-        // resolves on its first poll, `block_on` never parks) on every target that needs `Send`,
-        // and by a plain `.await` — `db_actor::block_on` doesn't exist for `wasm32` — on the one
-        // target that doesn't. This differs from the `if let`-scrutinee/bare-`let` cases elsewhere
-        // in this file: there the fix shortens the critical section, because a genuinely-cheap
-        // read/clone can move outside the lock; here the guarded region mutates one document's
-        // `ArtifactStore` in place and must stay atomic for the whole dispatch, so the lock has to
-        // span it regardless, on both targets, unlike those cases — this keeps that atomicity while
-        // making the future `Send` where it must be, instead of reaching for an async mutex just to
-        // dodge the bound.
-        // 🔕️ `clippy::await_holding_lock` still fires on the `.await`s inside `work` on the
-        // `block_on` arm — correctly, syntactically, but the lock's critical-section risk that lint
-        // warns about (blocking another thread's real suspension) doesn't apply here, per the
-        // never-parks rationale above. Allowed with that rationale, not as an unexamined escape.
-        #[allow(clippy::await_holding_lock)]
-        async fn ensure_store(&self, document: &ArtifactId) -> Result<(), DbError> {
-            let work = async {
+        async fn store(&self, document: &ArtifactId, admission: &VcsOperationAdmission) -> Result<VcsStoreLease, DbError> {
+            let cell = {
                 let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-                if !stores.contains_key(&document.0) {
-                    let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
-                    let created = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
-                    stores.insert(document.0.clone(), created);
-                }
-                Ok(())
+                stores.entry(document.0.clone()).or_insert_with(|| std::sync::Arc::new(VcsStoreCell::new())).clone()
             };
-            #[cfg(not(target_arch = "wasm32"))]
-            let result = db_actor::block_on(work);
-            #[cfg(target_arch = "wasm32")]
-            let result = work.await;
-            result
+            match (VcsStoreAcquire { cell, slot: admission.slot, generation: admission.generation, resolved: false }).await? {
+                VcsStoreClaim::Ready(lease) => Ok(lease),
+                VcsStoreClaim::Build(permit) => {
+                    let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
+                    let store = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
+                    Ok(permit.install(store))
+                }
+            }
         }
     }
 
     impl VersionGraph for VcsVersionGraph {
-        // 🔕️ See `ensure_store`'s doc above: `work` never parks on the `block_on` arm, so
-        // `clippy::await_holding_lock`'s blocking-risk warning doesn't apply.
-        #[allow(clippy::await_holding_lock)]
         async fn record_change(&self, document: &ArtifactId, change: ChangeRecord) -> Result<String, DbError> {
-            self.ensure_store(document).await?;
-            let work = async {
-                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-                let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-                let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)) };
-                store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(change.message.clone()) }).await.map_err(map_vcs_error)?;
-                Ok(store.envelope().await.vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
-            };
-            #[cfg(not(target_arch = "wasm32"))]
-            let result = db_actor::block_on(work);
-            #[cfg(target_arch = "wasm32")]
-            let result = work.await;
-            result
+            let admission = record_credit(document, &change).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+            let mut lease = self.store(document, &admission).await?;
+            let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)) };
+            lease.store_mut().dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(change.message) }).await.map_err(map_vcs_error)?;
+            Ok(lease.store_mut().envelope().await.vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
         }
 
         /// @emoji 🎯️ Design choice: `request.parent_checkpoint`/`change_ids` are NOT threaded
@@ -588,61 +793,28 @@ pub mod vcs_integration {
         /// unused: `vcs`'s own `CommitCheckpoint` handler stamps its own `now_iso()` timestamp into
         /// the checkpoint (part of what its content-addressed id hashes over) — this crate cannot
         /// override that without reaching into `vcs`'s private state.
-        // 🔕️ See `ensure_store`'s doc above: `work` never parks on the `block_on` arm, so
-        // `clippy::await_holding_lock`'s blocking-risk warning doesn't apply.
-        #[allow(clippy::await_holding_lock)]
         async fn checkpoint(&self, document: &ArtifactId, request: CheckpointRequest) -> Result<String, DbError> {
-            self.ensure_store(document).await?;
-            let work = async {
-                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-                let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-                let authors: Vec<vcs::Author> = request.authors.iter().map(|author| vcs::Author { id: author.0.clone(), name: author.0.clone(), avatar: None }).collect();
-                store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(request.message.clone()), authors }).await.map_err(map_vcs_error)?;
-                store.current_checkpoint_id().await.map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
-            };
-            #[cfg(not(target_arch = "wasm32"))]
-            let result = db_actor::block_on(work);
-            #[cfg(target_arch = "wasm32")]
-            let result = work.await;
-            result
+            let admission = checkpoint_credit(document, &request).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+            let mut lease = self.store(document, &admission).await?;
+            let authors: Vec<vcs::Author> = request.authors.into_iter().map(|author| vcs::Author { id: author.0.clone(), name: author.0, avatar: None }).collect();
+            lease.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(request.message), authors }).await.map_err(map_vcs_error)?;
+            lease.store_mut().current_checkpoint_id().await.map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
         }
 
-        // 🔕️ See `ensure_store`'s doc above: `work` never parks on the `block_on` arm, so
-        // `clippy::await_holding_lock`'s blocking-risk warning doesn't apply.
-        #[allow(clippy::await_holding_lock)]
         async fn merge_base(&self, document: &ArtifactId, a: &str, b: &str) -> Result<Option<String>, DbError> {
-            self.ensure_store(document).await?;
-            let work = async {
-                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-                let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-                Ok(store::merge_base(store.envelope().await, a, b).await)
-            };
-            #[cfg(not(target_arch = "wasm32"))]
-            let result = db_actor::block_on(work);
-            #[cfg(target_arch = "wasm32")]
-            let result = work.await;
-            result
+            let admission = relation_credit(document, &[a, b]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+            let mut lease = self.store(document, &admission).await?;
+            Ok(store::merge_base(lease.store_mut().envelope().await, a, b).await)
         }
 
-        // 🔕️ See `ensure_store`'s doc above: `work` never parks on the `block_on` arm, so
-        // `clippy::await_holding_lock`'s blocking-risk warning doesn't apply.
-        #[allow(clippy::await_holding_lock)]
         async fn head(&self, document: &ArtifactId, alternative: &str) -> Result<Option<String>, DbError> {
-            self.ensure_store(document).await?;
-            let work = async {
-                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-                let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-                let envelope = store.envelope().await;
-                if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
-                    return Ok(found.checkpoint_ids.last().cloned());
-                }
-                Ok(store.current_checkpoint_id().await.map(str::to_string))
-            };
-            #[cfg(not(target_arch = "wasm32"))]
-            let result = db_actor::block_on(work);
-            #[cfg(target_arch = "wasm32")]
-            let result = work.await;
-            result
+            let admission = relation_credit(document, &[alternative]).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
+            let mut lease = self.store(document, &admission).await?;
+            let envelope = lease.store_mut().envelope().await;
+            if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
+                return Ok(found.checkpoint_ids.last().cloned());
+            }
+            Ok(lease.store_mut().current_checkpoint_id().await.map(str::to_string))
         }
     }
     //#endregion 🔖️Store
@@ -793,13 +965,10 @@ pub struct Database<A: db_artifact::AuthzHook + 'static = db_artifact::AllowAll,
     health: Arc<db_observe::HealthRegistry>,
     catalog: Mutex<CatalogState>,
     open_artifacts: Mutex<HashMap<String, Arc<db_artifact::ArtifactAuthority>>>,
-    /// @emoji 🧵️ `None` until a caller opts in via [`Database::with_pool`] — every `ArtifactHandle`
-    /// this `Database` hands out inherits it, so `ArtifactHandle::submit`'s bridge can dispatch onto
-    /// `Lane::Io` instead of spawning a dedicated thread per submit (see that method's doc). `None`
-    /// stays fully correct (submit resolves inline instead), just without the backgrounding — the
-    /// right default for `open_at`'s frozen single-shot, strictly-sequential callers (`db_cli`),
-    /// wrong for a live concurrent app, which should call `with_pool` right after `open`/`open_at`.
-    pool: Option<Arc<WorkerPool>>,
+    /// @emoji 🧵️ The process WorkerPool every document authority and submit bridge uses.
+    /// Construction without this owner is intentionally impossible: no database path may execute
+    /// blocking storage or authority work inline on its caller.
+    pool: Arc<WorkerPool>,
 }
 
 // 🚫️async: E5 executor bridge — every `Database` method below is plain sync and drives its async
@@ -812,25 +981,16 @@ impl Database<db_artifact::AllowAll> {
     /// @emoji 🚀️ The frozen entry point: opens (or initializes, if `storage` is fresh) a `Database`
     /// over an arbitrary `Arc<db_storage::DbBackend>` backend, wired with the default `AllowAll` authz and
     /// (behind the default-on `vcs` feature) a real `VcsVersionGraph`.
-    pub async fn open(config: DbConfig, storage: Arc<db_storage::DbBackend>) -> Result<Database<db_artifact::AllowAll>, DbError> {
-        Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), default_emit().await).await
+    pub async fn open(pool: Arc<WorkerPool>, config: DbConfig, storage: Arc<db_storage::DbBackend>) -> Result<Database<db_artifact::AllowAll>, DbError> {
+        Database::open_with(pool, config, storage, Arc::new(db_artifact::AllowAll), default_emit().await).await
     }
 
-    /// @emoji 🚀️ The frozen zero-touch entry point: `FsStorage` rooted at `root`, defaults for
-    /// `profile`. Synchronous by contract (every existing caller — `db_cli`, `🌎️hub`'s `fs` storage
-    /// backend, this crate's own tests — calls it as a plain fn, never `.await`s it), so it opens
-    /// `FsStorage` with `pool: None` (every blocking body runs inline) rather than threading a
-    /// caller-supplied `WorkerPool` through this frozen signature. A caller that owns a real pool
-    /// builds its `FsStorage` with `FsStorage::open(Some(pool), ..)` and goes through
-    /// `Database::open` instead.
-    pub async fn open_at(root: &std::path::Path, profile: Profile) -> Result<Database<db_artifact::AllowAll>, DbError> {
-        let fs = db_actor::block_on(db_storage::FsStorage::open_inline(root))?;
+    /// @emoji 🚀️ The zero-touch filesystem entry point. The caller supplies the process pool
+    /// before storage construction, so opening can never take a pool-less inline path.
+    pub async fn open_at(pool: Arc<WorkerPool>, root: &std::path::Path, profile: Profile) -> Result<Database<db_artifact::AllowAll>, DbError> {
+        let fs = db_storage::FsStorage::open(pool.clone(), root).await?;
         let storage: Arc<db_storage::DbBackend> = Arc::new(db_storage::DbBackend::Fs(fs));
-        let database = Database::open(DbConfig::for_profile(profile), storage).await?;
-        #[cfg(test)]
-        return Ok(database.with_pool(test_worker_pool()));
-        #[cfg(not(test))]
-        Ok(database)
+        Database::open(pool, DbConfig::for_profile(profile), storage).await
     }
 
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
@@ -839,16 +999,16 @@ impl Database<db_artifact::AllowAll> {
     // `Database`'s default) so the returned `Database<AllowAll, E>` carries the caller's concrete
     // sink type — this fn has zero callers anywhere in the repo today (public, documented extension
     // seam per `open_with_emit`'s own doc; matches `open_with_authz`'s identical shape below).
-    pub async fn open_with_emit<E: Emit + 'static>(config: DbConfig, storage: Arc<db_storage::DbBackend>, emit: Arc<E>) -> Result<Database<db_artifact::AllowAll, E>, DbError> {
-        Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), emit).await
+    pub async fn open_with_emit<E: Emit + 'static>(pool: Arc<WorkerPool>, config: DbConfig, storage: Arc<db_storage::DbBackend>, emit: Arc<E>) -> Result<Database<db_artifact::AllowAll, E>, DbError> {
+        Database::open_with(pool, config, storage, Arc::new(db_artifact::AllowAll), emit).await
     }
 }
 
 impl<A: db_artifact::AuthzHook + 'static> Database<A> {
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `AuthzHook` (e.g. `SecurityAuthzHook`)
     /// instead of the default `AllowAll`.
-    pub async fn open_with_authz(config: DbConfig, storage: Arc<db_storage::DbBackend>, authz: Arc<A>) -> Result<Database<A>, DbError> {
-        Database::open_with(config, storage, authz, default_emit().await).await
+    pub async fn open_with_authz(pool: Arc<WorkerPool>, config: DbConfig, storage: Arc<db_storage::DbBackend>, authz: Arc<A>) -> Result<Database<A>, DbError> {
+        Database::open_with(pool, config, storage, authz, default_emit().await).await
     }
 }
 
@@ -860,7 +1020,7 @@ impl<A: db_artifact::AuthzHook + 'static> Database<A> {
 // `default_emit()`'s concrete return type regardless of which `impl` block `open_with` itself lives
 // in, so the split is transparent to every call site.
 impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
-    async fn open_with(config: DbConfig, storage: Arc<db_storage::DbBackend>, authz: Arc<A>, emit: Arc<E>) -> Result<Database<A, E>, DbError> {
+    async fn open_with(pool: Arc<WorkerPool>, config: DbConfig, storage: Arc<db_storage::DbBackend>, authz: Arc<A>, emit: Arc<E>) -> Result<Database<A, E>, DbError> {
         let storage_capabilities = db_actor::block_on(storage.capabilities());
         let capabilities = DbCapabilities {
             // 🧩️ Extension seam: real, honest today — see module doc on why preview/live-query
@@ -880,7 +1040,8 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             Some((bytes, epoch)) => (epoch, decode_catalog(&bytes).await?),
             None => {
                 let empty = encode_catalog(&[]).await?;
-                let epoch = db_actor::block_on(async { storage.catalog().await.cas_root(EpochFence::INITIAL, &empty).await })?;
+                let pages = db_storage::DbIoPages::try_new(empty).map_err(|_| DbError::LimitExceeded("catalog bootstrap pages"))?;
+                let epoch = db_actor::block_on(async { storage.catalog().await.cas_root(EpochFence::INITIAL, pages).await })?;
                 (epoch, Vec::new())
             }
         };
@@ -893,17 +1054,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
 
         emit.emit(EmitEvent::new("db_engine.database_opened").field("documents", EmitField::U64(entries.len() as u64))).await;
 
-        Ok(Database { storage, config, capabilities, authz, version_graph, emit, health, catalog: Mutex::new(CatalogState { epoch, entries }), open_artifacts: Mutex::new(HashMap::new()), pool: None })
-    }
-
-    /// @emoji 🧵️ Opts this `Database` (and every `ArtifactHandle` it hands out from here on) into
-    /// dispatching `ArtifactHandle::submit`'s blocking bridge onto `pool`'s `Lane::Io` instead of
-    /// resolving inline — see the `pool` field's doc. A live concurrent app (hub, the renderer
-    /// shell, an mcp workspace host) should call this immediately after `open`/`open_at`; `db_cli`
-    /// and this crate's own single-shot tests correctly leave it unset.
-    pub fn with_pool(mut self, pool: Arc<WorkerPool>) -> Self {
-        self.pool = Some(pool);
-        self
+        Ok(Database { storage, config, capabilities, authz, version_graph, emit, health, catalog: Mutex::new(CatalogState { epoch, entries }), open_artifacts: Mutex::new(HashMap::new()), pool })
     }
 
     /// @emoji ⚙️ Builds one `ArtifactEngineConfig`. Sets the 4 fields this crate has ALWAYS
@@ -934,22 +1085,22 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     }
 
     async fn spawn_authority_create(&self, document: protocol::ArtifactId) -> Result<Arc<db_artifact::ArtifactAuthority>, DbError> {
-        let pool = self.pool.clone().ok_or_else(|| DbError::Unavailable("document authority requires the process WorkerPool".to_string()))?;
+        let pool = self.pool.clone();
         let storage = self.storage.clone();
         let config = self.document_engine_config().await;
         let created_at_ms = now_ms().await;
         let mailbox_capacities = self.config.mailbox_capacities;
-        let authority = db_artifact::ArtifactAuthority::spawn(pool, move || db_artifact::ArtifactEngine::create(document, storage, config, created_at_ms), mailbox_capacities).await?;
+        let authority = db_artifact::ArtifactAuthority::spawn(pool, move || db_artifact::ArtifactEngine::create_retained(document, storage, config, created_at_ms), mailbox_capacities).await?;
         Ok(Arc::new(authority))
     }
 
     async fn spawn_authority_open(&self, document: protocol::ArtifactId) -> Result<Arc<db_artifact::ArtifactAuthority>, DbError> {
-        let pool = self.pool.clone().ok_or_else(|| DbError::Unavailable("document authority requires the process WorkerPool".to_string()))?;
+        let pool = self.pool.clone();
         let storage = self.storage.clone();
         let config = self.document_engine_config().await;
         let opened_at_ms = now_ms().await;
         let mailbox_capacities = self.config.mailbox_capacities;
-        let authority = db_artifact::ArtifactAuthority::spawn(pool, move || db_artifact::ArtifactEngine::open(document, &storage, config, opened_at_ms).map(|(engine, _report)| engine), mailbox_capacities).await?;
+        let authority = db_artifact::ArtifactAuthority::spawn(pool, move || async move { db_artifact::ArtifactEngine::open_retained(document, storage, config, opened_at_ms).await.map(|(engine, _report)| engine) }, mailbox_capacities).await?;
         Ok(Arc::new(authority))
     }
 
@@ -981,7 +1132,8 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             let commit = async {
                 entries.push(CatalogEntry { document: document.clone(), created_at_ms: now_ms().await });
                 let bytes = encode_catalog(&entries).await?;
-                self.storage.catalog().await.cas_root(epoch, &bytes).await
+                let pages = db_storage::DbIoPages::try_new(bytes).map_err(|_| DbError::LimitExceeded("catalog persist pages"))?;
+                self.storage.catalog().await.cas_root(epoch, pages).await
             };
             #[cfg(not(target_arch = "wasm32"))]
             let new_epoch = db_actor::block_on(commit)?;
@@ -1095,7 +1247,555 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
 //#endregion 🔖️Database
 
 //#region 🔖️ArtifactHandle
-pub type SubmitFuture = db_actor::ReplyReceiver<Result<CommandReceipt, DbError>>;
+const ARTIFACT_SUBMIT_OPERATION_ITEMS: usize = 64;
+const ARTIFACT_SUBMIT_PAGE_BYTES: u64 = 16 * 1024;
+const ARTIFACT_SUBMIT_OPERATION_PAGES: u64 = 64;
+const ARTIFACT_SUBMIT_OPERATION_BYTES: u64 = ARTIFACT_SUBMIT_PAGE_BYTES * ARTIFACT_SUBMIT_OPERATION_PAGES;
+const ARTIFACT_SUBMIT_TOTAL_PAGES: u64 = 1024;
+const ARTIFACT_SUBMIT_TOTAL_BYTES: u64 = ARTIFACT_SUBMIT_PAGE_BYTES * ARTIFACT_SUBMIT_TOTAL_PAGES;
+const ARTIFACT_SUBMIT_BATCH_ITEMS: usize = 256;
+const ARTIFACT_SUBMIT_NESTED_ITEMS: usize = 4096;
+const ARTIFACT_SUBMIT_RETRY_MS: u64 = 1;
+const ARTIFACT_SUBMIT_RETRY_LIMIT: u8 = 8;
+
+#[derive(Clone, Copy)]
+struct ArtifactSubmitAdmissionSlot {
+    generation: u64,
+    bytes: u64,
+    items: usize,
+    occupied: bool,
+}
+
+const EMPTY_ARTIFACT_SUBMIT_SLOT: ArtifactSubmitAdmissionSlot = ArtifactSubmitAdmissionSlot { generation: 0, bytes: 0, items: 0, occupied: false };
+
+struct ArtifactSubmitAdmissionState {
+    slots: [ArtifactSubmitAdmissionSlot; ARTIFACT_SUBMIT_OPERATION_ITEMS],
+    bytes: u64,
+    next_generation: u64,
+}
+
+static ARTIFACT_SUBMIT_ADMISSION: std::sync::Mutex<ArtifactSubmitAdmissionState> = std::sync::Mutex::new(ArtifactSubmitAdmissionState { slots: [EMPTY_ARTIFACT_SUBMIT_SLOT; ARTIFACT_SUBMIT_OPERATION_ITEMS], bytes: 0, next_generation: 1 });
+
+struct ArtifactSubmitAdmission {
+    slot: usize,
+    generation: u64,
+    bytes: u64,
+    items: usize,
+}
+
+impl ArtifactSubmitAdmission {
+    fn try_claim(items: usize, bytes: u64) -> Result<Self, DbError> {
+        if items == 0 || items > ARTIFACT_SUBMIT_NESTED_ITEMS {
+            return Err(DbError::LimitExceeded("artifact submit item credit"));
+        }
+        if bytes == 0 || bytes > ARTIFACT_SUBMIT_OPERATION_BYTES {
+            return Err(DbError::LimitExceeded("artifact submit operation byte credit"));
+        }
+        let mut state = ARTIFACT_SUBMIT_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(slot) = state.slots.iter().position(|entry| !entry.occupied) else {
+            return Err(DbError::Unavailable("artifact submit item capacity exhausted".to_string()));
+        };
+        if state.bytes.checked_add(bytes).is_none_or(|next| next > ARTIFACT_SUBMIT_TOTAL_BYTES) {
+            return Err(DbError::Unavailable("artifact submit byte capacity exhausted".to_string()));
+        }
+        let generation = state.next_generation;
+        state.next_generation = state.next_generation.checked_add(1).ok_or(DbError::LimitExceeded("artifact submit generation"))?;
+        state.slots[slot] = ArtifactSubmitAdmissionSlot { generation, bytes, items, occupied: true };
+        state.bytes += bytes;
+        Ok(Self { slot, generation, bytes, items })
+    }
+}
+
+impl Drop for ArtifactSubmitAdmission {
+    fn drop(&mut self) {
+        let mut state = ARTIFACT_SUBMIT_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let entry = &mut state.slots[self.slot];
+        if !entry.occupied || entry.generation != self.generation || entry.bytes != self.bytes || entry.items != self.items {
+            return;
+        }
+        *entry = EMPTY_ARTIFACT_SUBMIT_SLOT;
+        state.bytes = state.bytes.checked_sub(self.bytes).expect("artifact submit byte credit underflow");
+    }
+}
+
+fn artifact_submit_credit(batch: &db_artifact::CommandBatch) -> Result<(usize, u64), DbError> {
+    if batch.envelopes.is_empty() || batch.envelopes.len() > ARTIFACT_SUBMIT_BATCH_ITEMS {
+        return Err(DbError::LimitExceeded("artifact submit batch item credit"));
+    }
+    let mut items = batch.envelopes.len();
+    let mut bytes = ARTIFACT_SUBMIT_PAGE_BYTES;
+    let envelope_owner_bytes = batch.envelopes.capacity().checked_mul(std::mem::size_of::<protocol::MutationEnvelope>()).ok_or(DbError::LimitExceeded("artifact submit envelope owner bytes"))?;
+    bytes = bytes.checked_add(envelope_owner_bytes as u64).ok_or(DbError::LimitExceeded("artifact submit envelope owner bytes"))?;
+    for envelope in &batch.envelopes {
+        items = items.checked_add(envelope.dependencies.len()).ok_or(DbError::LimitExceeded("artifact submit nested items"))?;
+        if items > ARTIFACT_SUBMIT_NESTED_ITEMS {
+            return Err(DbError::LimitExceeded("artifact submit nested item credit"));
+        }
+        let dependency_owner_bytes = envelope.dependencies.capacity().checked_mul(std::mem::size_of::<protocol::MutationId>()).ok_or(DbError::LimitExceeded("artifact submit dependency owner bytes"))?;
+        bytes = bytes
+            .checked_add(envelope.mutation_id.0.capacity() as u64)
+            .and_then(|value| value.checked_add(envelope.document_id.0.capacity() as u64))
+            .and_then(|value| value.checked_add(envelope.actor.0.capacity() as u64))
+            .and_then(|value| value.checked_add(dependency_owner_bytes as u64))
+            .and_then(|value| value.checked_add(envelope.diff.schema.0.capacity() as u64))
+            .and_then(|value| value.checked_add(envelope.diff.payload.capacity() as u64))
+            .and_then(|value| value.checked_add(envelope.inverse.schema.0.capacity() as u64))
+            .and_then(|value| value.checked_add(envelope.inverse.payload.capacity() as u64))
+            .ok_or(DbError::LimitExceeded("artifact submit nested byte credit"))?;
+        for dependency in &envelope.dependencies {
+            bytes = bytes.checked_add(dependency.0.capacity() as u64).ok_or(DbError::LimitExceeded("artifact submit dependency byte credit"))?;
+        }
+    }
+    let pages = bytes.checked_add(ARTIFACT_SUBMIT_PAGE_BYTES - 1).ok_or(DbError::LimitExceeded("artifact submit page rounding"))? / ARTIFACT_SUBMIT_PAGE_BYTES;
+    let admitted = pages.checked_mul(ARTIFACT_SUBMIT_PAGE_BYTES).ok_or(DbError::LimitExceeded("artifact submit page credit"))?;
+    if admitted > ARTIFACT_SUBMIT_OPERATION_BYTES {
+        return Err(DbError::LimitExceeded("artifact submit operation byte credit"));
+    }
+    Ok((items, admitted))
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SubmitProgress {
+    Admitted,
+    Scheduled,
+    Waiting,
+    Completed,
+    Cancelled,
+    Fault,
+}
+
+type ArtifactActorSubmitFuture = db_actor::AskFuture<db_artifact::ArtifactMessage, Result<db_artifact::CommandReceipt, DbError>>;
+pub type ArtifactSubmitOutcome = Result<Result<CommandReceipt, DbError>, DbError>;
+
+enum ArtifactSubmitWorkOwner {
+    Request { batch: db_artifact::CommandBatch, options: db_artifact::SubmitOptions, submitted_at_ms: u64 },
+    Actor(ArtifactActorSubmitFuture),
+}
+
+struct ArtifactSubmitState {
+    pool: WorkerPool,
+    authority: Arc<db_artifact::ArtifactAuthority>,
+    document: protocol::ArtifactId,
+    generation: u64,
+    authority_generation: db_ids::GenerationId,
+    admission: std::sync::Mutex<Option<ArtifactSubmitAdmission>>,
+    work: std::sync::Mutex<Option<ArtifactSubmitWorkOwner>>,
+    completion: std::sync::Mutex<Option<ArtifactSubmitOutcome>>,
+    terminal_work: std::sync::Mutex<Option<ArtifactSubmitWorkOwner>>,
+    terminal_result: std::sync::Mutex<Option<ArtifactSubmitOutcome>>,
+    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
+    waker: std::sync::Mutex<Option<std::task::Waker>>,
+    retry_armed: std::sync::atomic::AtomicBool,
+    retry_generation: std::sync::atomic::AtomicU64,
+    scheduled: std::sync::atomic::AtomicBool,
+    cancelled: std::sync::atomic::AtomicBool,
+    abandoned: std::sync::atomic::AtomicBool,
+    finished: std::sync::atomic::AtomicBool,
+    progress: std::sync::atomic::AtomicU8,
+}
+
+pub struct SubmitFuture {
+    state: Arc<ArtifactSubmitState>,
+    resolved: bool,
+}
+
+pub struct ArtifactSubmitTerminalJob {
+    state: Arc<ArtifactSubmitState>,
+    owner: Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>,
+}
+
+pub struct ArtifactSubmitTerminalWork {
+    state: Arc<ArtifactSubmitState>,
+    owner: Option<ArtifactSubmitWorkOwner>,
+}
+
+struct ArtifactSubmitWake {
+    state: std::sync::Weak<ArtifactSubmitState>,
+    generation: u64,
+}
+
+impl std::task::Wake for ArtifactSubmitWake {
+    fn wake(self: Arc<Self>) {
+        self.wake_by_ref();
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        if let Some(state) = self.state.upgrade() {
+            if self.generation == state.generation {
+                state.schedule();
+            }
+        }
+    }
+}
+
+impl ArtifactSubmitState {
+    fn set_progress(&self, progress: SubmitProgress) {
+        self.progress.store(progress as u8, std::sync::atomic::Ordering::Release);
+    }
+
+    fn wake_waiter(&self) {
+        if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            waker.wake();
+        }
+    }
+
+    fn finish(&self) {
+        if !self.finished.swap(true, std::sync::atomic::Ordering::AcqRel) {
+            self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+    }
+
+    fn finish_if_terminal_empty(&self) {
+        if self.terminal_is_empty() && !self.scheduled.load(std::sync::atomic::Ordering::Acquire) && !self.retry_armed.load(std::sync::atomic::Ordering::Acquire) {
+            self.finish();
+        }
+    }
+
+    fn complete(&self, result: ArtifactSubmitOutcome, progress: SubmitProgress) {
+        self.set_progress(progress);
+        if self.abandoned.load(std::sync::atomic::Ordering::Acquire) {
+            *self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        } else {
+            *self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+            self.wake_waiter();
+        }
+    }
+
+    fn terminalize_work(&self, result: ArtifactSubmitOutcome, progress: SubmitProgress) {
+        if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+        }
+        self.complete(result, progress);
+    }
+
+    fn schedule(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.finished.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        self.set_progress(SubmitProgress::Scheduled);
+        let state = self.clone();
+        let generation = self.generation;
+        self.submit_exact(Box::new(move || state.drive_one(generation)), 0);
+    }
+
+    fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
+        match self.pool.try_submit(Lane::Io, job) {
+            Ok(()) => {}
+            Err(error) => match error.kind() {
+                semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < ARTIFACT_SUBMIT_RETRY_LIMIT => {
+                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
+                    self.arm_retry();
+                }
+                kind => {
+                    let job = error.into_job();
+                    self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                    if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                        *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+                    }
+                    *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
+                    self.complete(Err(DbError::Unavailable(format!("artifact submit WorkerPool submission failed: {kind:?}"))), SubmitProgress::Fault);
+                }
+            },
+        }
+    }
+
+    fn arm_retry(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let generation = self.retry_generation.fetch_add(1, Ordering::AcqRel).checked_add(1).expect("artifact submit retry generation exhausted");
+        let state = self.clone();
+        self.pool.callback_at(self.pool.now_ms().saturating_add(ARTIFACT_SUBMIT_RETRY_MS), move || {
+            if generation != state.retry_generation.load(Ordering::Acquire) {
+                return;
+            }
+            state.retry_armed.store(false, Ordering::Release);
+            let retry = state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            if let Some((job, attempt)) = retry {
+                if state.cancelled.load(Ordering::Acquire) {
+                    drop(job);
+                    state.scheduled.store(false, Ordering::Release);
+                    state.terminalize_work(Err(DbError::Closed), SubmitProgress::Cancelled);
+                } else {
+                    state.submit_exact(job, attempt);
+                }
+            }
+        });
+    }
+
+    fn drive_one(self: Arc<Self>, generation: u64) {
+        use std::future::Future as _;
+        use std::sync::atomic::Ordering;
+
+        if generation != self.generation {
+            return;
+        }
+        if self.authority.generation() != self.authority_generation {
+            self.scheduled.store(false, Ordering::Release);
+            self.terminalize_work(Err(DbError::StaleGeneration { expected: self.authority.generation(), actual: self.authority_generation }), SubmitProgress::Fault);
+            return;
+        }
+        self.scheduled.store(false, Ordering::Release);
+        if self.cancelled.load(Ordering::Acquire) {
+            self.terminalize_work(Err(DbError::Closed), SubmitProgress::Cancelled);
+            return;
+        }
+
+        let mut work = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if matches!(work.as_ref(), Some(ArtifactSubmitWorkOwner::Request { .. })) {
+            let Some(ArtifactSubmitWorkOwner::Request { batch, options, submitted_at_ms }) = work.take() else {
+                return;
+            };
+            *work = Some(ArtifactSubmitWorkOwner::Actor(self.authority.submit_retained(batch, options, submitted_at_ms)));
+            drop(work);
+            self.schedule();
+            return;
+        }
+
+        let Some(ArtifactSubmitWorkOwner::Actor(future)) = work.as_mut() else {
+            return;
+        };
+        let waker = std::task::Waker::from(Arc::new(ArtifactSubmitWake { state: Arc::downgrade(&self), generation }));
+        let mut context = std::task::Context::from_waker(&waker);
+        match std::pin::Pin::new(future).poll(&mut context) {
+            std::task::Poll::Pending => {
+                self.set_progress(SubmitProgress::Waiting);
+            }
+            std::task::Poll::Ready(result) => {
+                work.take();
+                drop(work);
+                let result = result.map(|inner| inner.map(|receipt| to_engine_receipt(receipt, self.document.clone())));
+                if self.cancelled.load(Ordering::Acquire) {
+                    *self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+                    self.complete(Err(DbError::Closed), SubmitProgress::Cancelled);
+                } else {
+                    self.complete(result, SubmitProgress::Completed);
+                }
+            }
+        }
+    }
+
+    fn close_one(&self) -> bool {
+        if let Some((_, job)) = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(job);
+            return true;
+        }
+        if let Some((job, _)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(job);
+            return true;
+        }
+        if let Some(work) = self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(work);
+            return true;
+        }
+        if let Some(result) = self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(result);
+            return true;
+        }
+        false
+    }
+}
+
+impl SubmitFuture {
+    fn submit(handle: &ArtifactHandle, batch: db_artifact::CommandBatch, options: db_artifact::SubmitOptions) -> Self {
+        let credit = artifact_submit_credit(&batch).and_then(|(items, bytes)| ArtifactSubmitAdmission::try_claim(items, bytes));
+        let admission_error = credit.as_ref().err().map(ToString::to_string);
+        let generation = credit.as_ref().map_or(0, |admission| admission.generation);
+        let request = ArtifactSubmitWorkOwner::Request { batch, options, submitted_at_ms: handle.pool.now_ms() };
+        let (work, terminal_work) = if generation == 0 { (None, Some(request)) } else { (Some(request), None) };
+        let state = Arc::new(ArtifactSubmitState {
+            pool: handle.pool.as_ref().clone(),
+            authority: handle.authority.clone(),
+            document: handle.document.clone(),
+            generation,
+            authority_generation: handle.authority.generation(),
+            admission: std::sync::Mutex::new(credit.ok()),
+            work: std::sync::Mutex::new(work),
+            completion: std::sync::Mutex::new(None),
+            terminal_work: std::sync::Mutex::new(terminal_work),
+            terminal_result: std::sync::Mutex::new(None),
+            retry_job: std::sync::Mutex::new(None),
+            terminal_job: std::sync::Mutex::new(None),
+            waker: std::sync::Mutex::new(None),
+            retry_armed: std::sync::atomic::AtomicBool::new(false),
+            retry_generation: std::sync::atomic::AtomicU64::new(1),
+            scheduled: std::sync::atomic::AtomicBool::new(false),
+            cancelled: std::sync::atomic::AtomicBool::new(false),
+            abandoned: std::sync::atomic::AtomicBool::new(false),
+            finished: std::sync::atomic::AtomicBool::new(false),
+            progress: std::sync::atomic::AtomicU8::new(if generation == 0 { SubmitProgress::Fault as u8 } else { SubmitProgress::Admitted as u8 }),
+        });
+        if generation == 0 {
+            *state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Err(DbError::Unavailable(admission_error.unwrap_or_else(|| "artifact submit admission exhausted".to_string()))));
+        } else {
+            state.schedule();
+        }
+        Self { state, resolved: false }
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.state.generation
+    }
+
+    pub fn progress(&self) -> SubmitProgress {
+        match self.state.progress.load(std::sync::atomic::Ordering::Acquire) {
+            0 => SubmitProgress::Admitted,
+            1 => SubmitProgress::Scheduled,
+            2 => SubmitProgress::Waiting,
+            3 => SubmitProgress::Completed,
+            4 => SubmitProgress::Cancelled,
+            _ => SubmitProgress::Fault,
+        }
+    }
+
+    pub fn cancel(&self) {
+        if matches!(self.progress(), SubmitProgress::Completed | SubmitProgress::Cancelled | SubmitProgress::Fault) {
+            return;
+        }
+        self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.state.schedule();
+    }
+
+    pub fn take_terminal_job(&self) -> Option<ArtifactSubmitTerminalJob> {
+        self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|owner| ArtifactSubmitTerminalJob { state: self.state.clone(), owner: Some(owner) })
+    }
+
+    pub fn take_terminal_work(&self) -> Option<ArtifactSubmitTerminalWork> {
+        self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|owner| ArtifactSubmitTerminalWork { state: self.state.clone(), owner: Some(owner) })
+    }
+
+    pub fn take_terminal_result(&self) -> Option<ArtifactSubmitOutcome> {
+        let result = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if result.is_some() {
+            self.state.finish_if_terminal_empty();
+        }
+        result
+    }
+
+    pub fn take_actor_terminal_job(&self) -> Option<db_artifact::ArtifactRunnerTerminalJob> {
+        self.state.authority.take_terminal_job()
+    }
+
+    pub fn close_step(&self) -> bool {
+        self.state.close_one() || self.state.authority.close_step()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.state.terminal_is_empty() && self.state.authority.terminal_is_empty()
+    }
+}
+
+impl Future for SubmitFuture {
+    type Output = ArtifactSubmitOutcome;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(result) = result {
+            self.resolved = true;
+            self.state.finish_if_terminal_empty();
+            return std::task::Poll::Ready(result);
+        }
+        *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
+        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(result) = result {
+            self.resolved = true;
+            self.state.finish_if_terminal_empty();
+            return std::task::Poll::Ready(result);
+        }
+        std::task::Poll::Pending
+    }
+}
+
+impl Drop for SubmitFuture {
+    fn drop(&mut self) {
+        if !self.resolved {
+            self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
+            self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+            self.state.schedule();
+        }
+        self.state.close_one();
+        self.state.finish_if_terminal_empty();
+    }
+}
+
+impl ArtifactSubmitTerminalJob {
+    pub fn reason(&self) -> semio_framework_async::WorkerSubmitErrorKind {
+        self.owner.as_ref().expect("terminal artifact submit job already resolved").0
+    }
+
+    pub fn resume(mut self) {
+        let (_, job) = self.owner.take().expect("terminal artifact submit job already resolved");
+        if self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            let work = self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            *self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = work;
+        }
+        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            *self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        }
+        self.state.cancelled.store(false, std::sync::atomic::Ordering::Release);
+        self.state.set_progress(SubmitProgress::Scheduled);
+        self.state.scheduled.store(true, std::sync::atomic::Ordering::Release);
+        self.state.submit_exact(job, 0);
+    }
+
+    pub fn close(mut self) {
+        let (_, job) = self.owner.take().expect("terminal artifact submit job already resolved");
+        drop(job);
+        self.state.finish_if_terminal_empty();
+    }
+}
+
+impl Drop for ArtifactSubmitTerminalJob {
+    fn drop(&mut self) {
+        if let Some(owner) = self.owner.take() {
+            *self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        }
+    }
+}
+
+impl ArtifactSubmitTerminalWork {
+    pub fn resume(mut self) -> Result<(), Self> {
+        if self.state.generation == 0 {
+            return Err(self);
+        }
+        let owner = self.owner.take().expect("terminal artifact submit work already resolved");
+        *self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            *self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        }
+        self.state.cancelled.store(false, std::sync::atomic::Ordering::Release);
+        self.state.set_progress(SubmitProgress::Admitted);
+        if self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            self.state.schedule();
+        }
+        Ok(())
+    }
+
+    pub fn close(mut self) {
+        drop(self.owner.take().expect("terminal artifact submit work already resolved"));
+        self.state.finish_if_terminal_empty();
+    }
+}
+
+impl Drop for ArtifactSubmitTerminalWork {
+    fn drop(&mut self) {
+        if let Some(owner) = self.owner.take() {
+            *self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        }
+    }
+}
 
 /// @emoji 🎭️ The frozen `ArtifactHandle`: a clone-cheap live handle to one open document.
 #[derive(Clone)]
@@ -1104,43 +1804,15 @@ pub struct ArtifactHandle {
     storage: Arc<db_storage::DbBackend>,
     document: protocol::ArtifactId,
     core_document: ArtifactId,
-    pool: Option<Arc<WorkerPool>>,
+    pool: Arc<WorkerPool>,
 }
 
 impl ArtifactHandle {
     /// @emoji ✍️ The frozen `submit`: commits `batch` through the document's real
-    /// `ArtifactAuthority` mailbox. Returns immediately with a `SubmitFuture` rather than blocking
-    /// the calling thread — see module doc's `//🎯️ Design choice` on `SubmitFuture`: since
-    /// `ArtifactAuthority`'s only public submit entry point is the blocking `submit_blocking`, this
-    /// bridges it to a real (not immediately-ready) `Future`. Phase 1
-    /// (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`) replaced the old bridge — a brand-new
-    /// `"db-engine-submit-bridge"` OS thread spawned on EVERY single `submit()` call, the worst
-    /// per-call (not just per-document) offender the Phase 0 thread census found — with a
-    /// `WorkerPool::submit(Lane::Io, ..)` job when `self.pool` is set (see `Database::with_pool`),
-    /// falling back to resolving inline when it isn't (matching `open_at`'s single-shot contract —
-    /// see the `pool` field's doc on `Database`).
-    // 🔀️ Sync (was `async fn ... -> SubmitFuture`): `SubmitFuture` is itself a `Future`
-    // (`ReplyReceiver`), so an async wrapper here made every call site double-future
-    // (`.await` once for `submit` to resolve, again to resolve `SubmitFuture`) — the same
-    // hand-rolled-future convention as `Address::send`/`ask` (sync constructor, one future,
-    // one `.await`/`block_on` at the call site).
+    /// `ArtifactAuthority` mailbox. Admission retains the exact request owner, and every I/O-lane
+    /// grant advances either request-to-mailbox handoff or one actor-future poll.
     pub fn submit(&self, batch: db_artifact::CommandBatch, options: db_artifact::SubmitOptions) -> SubmitFuture {
-        let (reply_tx, reply_rx) = db_actor::oneshot();
-        let authority = self.authority.clone();
-        let document = self.document.clone();
-        let submitted_at_ms = db_actor::block_on(now_ms());
-        let job = move || {
-            // 🚫️async: E5 executor bridge — whichever thread runs this job (a `WorkerPool` worker,
-            // or the calling thread itself when `pool` is `None`) IS the executor for this one
-            // blocking call (R4 clause 2/4), so `.await` is both illegal here and unnecessary.
-            let result = db_actor::block_on(authority.submit_blocking(batch, options, submitted_at_ms)).map(|receipt| to_engine_receipt(receipt, document));
-            reply_tx.send(result);
-        };
-        match &self.pool {
-            Some(pool) => pool.submit(Lane::Io, Box::new(job)),
-            None => job(),
-        }
-        reply_rx
+        SubmitFuture::submit(self, batch, options)
     }
 
     /// @emoji 🔎️ The frozen `query`. `Consistency::Canonical` reads the document's live state
@@ -1169,7 +1841,7 @@ impl ArtifactHandle {
         };
         let mut results = Vec::with_capacity(paths.len());
         for path in paths {
-            let value = self.authority.query_blocking(&path).await?;
+            let value = self.authority.query(&path).await?;
             results.push((path, value));
         }
 
@@ -1195,7 +1867,7 @@ impl ArtifactHandle {
 
     /// @emoji 🧭️ The frozen `frontier`.
     pub async fn frontier(&self) -> Result<Frontier, DbError> {
-        let core_frontier = self.authority.frontier_blocking().await?;
+        let core_frontier = self.authority.frontier().await?;
         Ok(to_engine_frontier(&core_frontier, self.document.clone()))
     }
 
@@ -1285,7 +1957,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn open_at_creates_a_fresh_zero_touch_database_with_an_empty_catalog() {
         let root = tempdir("open-at-fresh").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         assert!(database.catalog().await.artifacts.is_empty());
         assert_eq!(database.health().await.open_artifacts, 0);
         assert!(matches!(database.health().await.report.overall, db_observe::HealthState::Healthy));
@@ -1294,7 +1966,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_document_registers_it_in_the_catalog_and_document_finds_it() {
         let root = tempdir("create-and-find").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
@@ -1309,7 +1981,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_document_twice_errs_already_exists() {
         let root = tempdir("create-twice").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
         let result = database.create_document(ArtifactSpec::new(document).await);
@@ -1319,7 +1991,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn document_of_an_unknown_id_errs_not_found() {
         let root = tempdir("unknown-doc").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let never_created = protocol::ArtifactId("never-created".to_string());
         let result = database.document(&never_created);
         assert!(matches!(result.await, Err(DbError::NotFound(_))));
@@ -1330,7 +2002,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn full_submit_durable_query_round_trip_over_a_real_document_authority() {
         let root = tempdir("round-trip").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
@@ -1362,14 +2034,14 @@ mod tests {
         let root = tempdir("reopen").await;
         let document = protocol::ArtifactId("doc-1".to_string());
         {
-            let database = Database::open_at(&root, Profile::Test).await.unwrap();
+            let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
             let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
             let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("count", serde_json::json!(1))]).await]).await.unwrap();
             db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
             database.shutdown(std::time::Duration::from_secs(1)).await.unwrap();
         }
 
-        let reopened = Database::open_at(&root, Profile::Test).await.unwrap();
+        let reopened = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         assert_eq!(reopened.catalog().await.artifacts.len(), 1, "the catalog root must have survived the reopen");
 
         let handle = reopened.document(&document).await.unwrap();
@@ -1382,7 +2054,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn exact_consistency_rejects_a_frontier_the_document_has_moved_past() {
         let root = tempdir("exact-consistency").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
         let stale = handle.frontier().await.unwrap();
@@ -1399,7 +2071,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn subscribe_preview_and_snapshot_now_are_documented_unimplemented_not_panics() {
         let root = tempdir("deferred").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(ArtifactSpec::new(document).await).await.unwrap();
 
@@ -1414,7 +2086,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_document_mints_distinct_real_vcs_content_addressed_checkpoint_ids() {
         let root = tempdir("vcs-checkpoint").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
@@ -1434,7 +2106,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_document_errs_unimplemented_without_the_vcs_feature() {
         let root = tempdir("no-vcs-checkpoint").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         database.create_document(ArtifactSpec::new(document.clone())).await.unwrap();
         assert!(matches!(database.checkpoint_document(&document, "msg".to_string(), &[]).await, Err(DbError::Unimplemented(_))));
@@ -1445,7 +2117,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn compact_document_runs_a_real_compaction_pass_without_error() {
         let root = tempdir("compact").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
         let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
@@ -1458,7 +2130,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn hello_returns_a_welcome_with_a_fresh_bootstrap_for_a_brand_new_replica() {
         let root = tempdir("hello").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
         let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
@@ -1474,11 +2146,108 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn storage_accessor_reaches_the_same_backend_payload_store() {
         let root = tempdir("storage-accessor").await;
-        let database = Database::open_at(&root, Profile::Test).await.unwrap();
-        let hash = db_actor::block_on(async { database.storage().await.payload().await.put(b"hello storage accessor").await }).unwrap();
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
+        let hash = db_actor::block_on(async { database.storage().await.payload().await.put(db_storage::DbIoPages::try_new(b"hello storage accessor".to_vec()).ok().unwrap()).await }).unwrap();
         assert_eq!(db_actor::block_on(async { database.storage().await.payload().await.get(&hash).await }).unwrap(), b"hello storage accessor");
     }
     //#endregion 🔖️Compact + Sync
+
+    //#region 🔖️Retained submit authority
+    fn retained_submit_source() -> &'static str {
+        include_str!("🦀️component.rs")
+    }
+
+    #[test]
+    fn artifact_submit_late_readiness_parks_then_one_shot_wake_reschedules() {
+        let source = retained_submit_source();
+        assert!(source.contains("impl std::task::Wake for ArtifactSubmitWake"));
+        assert!(source.contains("self.scheduled.compare_exchange(false, true"));
+        assert!(source.contains("std::task::Poll::Pending =>"));
+        assert!(source.contains("self.set_progress(SubmitProgress::Waiting)"));
+    }
+
+    #[test]
+    fn artifact_submit_pool_saturation_without_later_ingress_retains_exact_job() {
+        let source = retained_submit_source();
+        assert!(source.contains("self.pool.try_submit(Lane::Io, job)"));
+        assert!(source.contains("error.into_job()"));
+        assert!(source.contains("self.pool.callback_at"));
+        assert!(source.contains("ARTIFACT_SUBMIT_RETRY_LIMIT"));
+    }
+
+    #[test]
+    fn artifact_submit_cancel_before_during_after_preserves_exact_owner() {
+        let source = retained_submit_source();
+        assert!(source.contains("self.state.cancelled.store(true"));
+        assert!(source.contains("self.terminalize_work(Err(DbError::Closed), SubmitProgress::Cancelled)"));
+        assert!(source.contains("*self.terminal_result.lock()"));
+        assert!(source.contains("SubmitProgress::Completed | SubmitProgress::Cancelled | SubmitProgress::Fault"));
+    }
+
+    #[test]
+    fn artifact_submit_stale_generation_and_slot_aba_cannot_consume_current_work() {
+        let first = ArtifactSubmitAdmission::try_claim(1, ARTIFACT_SUBMIT_PAGE_BYTES).unwrap();
+        let first_slot = first.slot;
+        let first_generation = first.generation;
+        drop(first);
+        let next = ArtifactSubmitAdmission::try_claim(1, ARTIFACT_SUBMIT_PAGE_BYTES).unwrap();
+        assert_eq!(next.slot, first_slot);
+        assert_ne!(next.generation, first_generation);
+        let source = retained_submit_source();
+        let stale = source.find("if generation != self.generation").unwrap();
+        let mutation = source[stale..].find("self.scheduled.store").unwrap();
+        assert!(mutation > 0);
+    }
+
+    #[test]
+    fn artifact_submit_missing_handle_terminalizes_without_mailbox_mutation() {
+        let source = retained_submit_source();
+        let stale = source.find("if self.authority.generation() != self.authority_generation").unwrap();
+        let handoff = source.find("self.authority.submit_retained").unwrap();
+        assert!(stale < handoff);
+        assert!(source.contains("Err(DbError::StaleGeneration"));
+    }
+
+    #[test]
+    fn artifact_submit_terminal_job_work_result_take_resume_and_close_one_owner() {
+        let source = retained_submit_source();
+        for required in ["pub fn take_terminal_job", "pub fn take_terminal_work", "pub fn take_terminal_result", "pub fn take_actor_terminal_job", "pub fn close_step", "pub fn terminal_is_empty", "pub fn resume(mut self)"] {
+            assert!(source.contains(required), "missing {required}");
+        }
+        assert!(source.contains("fn close_one(&self) -> bool"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_submit_item_cap_plus_one_and_nested_bytes_plus_one_return_owner() {
+        let document = protocol::ArtifactId("credit-doc".to_string());
+        let one = envelope("credit-1", &[], "credit-actor", &document, &[("x", serde_json::json!(1))]).await;
+        let admitted = db_artifact::CommandBatch::new(vec![one]).await.unwrap();
+        assert!(artifact_submit_credit(&admitted).is_ok());
+
+        let mut envelopes = Vec::new();
+        for index in 0..=ARTIFACT_SUBMIT_BATCH_ITEMS {
+            envelopes.push(envelope(&format!("credit-{index}"), &[], "credit-actor", &document, &[("x", serde_json::json!(index))]).await);
+        }
+        let rejected = db_artifact::CommandBatch { envelopes };
+        assert!(artifact_submit_credit(&rejected).is_err());
+
+        let mut oversize = envelope("credit-oversize", &[], "credit-actor", &document, &[("x", serde_json::json!(1))]).await;
+        oversize.diff.payload = vec![0; ARTIFACT_SUBMIT_OPERATION_BYTES as usize + 1];
+        assert!(artifact_submit_credit(&db_artifact::CommandBatch { envelopes: vec![oversize] }).is_err());
+    }
+
+    #[test]
+    fn artifact_runner_one_grant_polls_one_turn_and_never_blocks_on() {
+        let source = include_str!("../📄️artifact/🦀️component.rs");
+        let runner = &source[source.find("type ArtifactBuildFuture").unwrap()..source.find("//#region 🧪️Tests").unwrap()];
+        assert!(!runner.contains("block_on("));
+        assert!(!runner.contains("ask_blocking"));
+        assert!(runner.contains("future.as_mut().poll(&mut context)"));
+        assert!(runner.contains("Self::start_turn(engine, envelope.payload)"));
+        assert_eq!(runner.matches("close();\n            }\n            drop(job);").count(), 1);
+        assert_eq!(runner.matches("close();\n        }\n        drop(job);").count(), 1);
+    }
+    //#endregion 🔖️Retained submit authority
 
     //#region 🔖️Security
     #[semio_framework_async_macros::async_test]

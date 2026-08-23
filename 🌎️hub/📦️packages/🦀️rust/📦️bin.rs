@@ -1600,9 +1600,9 @@ fn router(state: HubState) -> Router {
 /// (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`) replaces `HubDbRuntime` (a `HostAsyncRuntime` bridge
 /// whose entire reason to exist was `run_blocking`, now deleted from that trait — see
 /// `db_storage`'s module doc) with this: `db::storage_sqlite::SqliteStorage::open`'s blocking body
-/// now dispatches onto `Lane::Io` here directly, and every `db::Database` this binary opens is
-/// wired to it via `.with_pool(..)` so `ArtifactHandle::submit`'s bridge does too (see that
-/// method's doc) — no more per-submit `"db-engine-submit-bridge"` OS thread, no more sqlite-storage
+/// now dispatches onto `Lane::Io` here directly, and every `db::Database` receives the same pool
+/// during construction so `ArtifactHandle::submit` shares it — no more per-submit
+/// `"db-engine-submit-bridge"` OS thread, no more sqlite-storage
 /// calls stalling their caller's own tokio worker thread. Hub is a headless server
 /// (`ProcessKind::HeadlessBatch`: no UI thread to reserve a core for), sized to the process's visible
 /// core count.
@@ -1619,23 +1619,19 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
     match backend.as_str() {
         "fs" | "" => {
             let root = data_dir.join("db");
-            std::fs::create_dir_all(&root)?;
-            Ok(db::Database::open_at(&root, profile).await?.with_pool(pool))
+            Ok(db::Database::open_at(pool, &root, profile).await?)
         }
         #[cfg(feature = "sqlite")]
         "sqlite" => {
             let path = std::env::var("OS_HUB_DB_SQLITE").unwrap_or_else(|_| data_dir.join("db.sqlite3").to_string_lossy().into_owned());
-            if let Some(parent) = std::path::Path::new(&path).parent() {
-                std::fs::create_dir_all(parent)?;
-            }
-            let storage = db::storage_sqlite::SqliteStorage::open(Some(pool.clone()), std::path::Path::new(&path)).await?;
-            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Sqlite(storage))).await?.with_pool(pool))
+            let storage = db::storage_sqlite::SqliteStorage::open(pool.clone(), std::path::Path::new(&path)).await?;
+            Ok(db::Database::open(pool, db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Sqlite(storage))).await?)
         }
         #[cfg(feature = "postgres")]
         "postgres" => {
             let database_url = std::env::var("OS_HUB_DATABASE_URL").map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
             let storage = db::storage_postgres::PostgresStorage::connect(&database_url).await?;
-            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Postgres(storage))).await?.with_pool(pool))
+            Ok(db::Database::open(pool, db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Postgres(storage))).await?)
         }
         #[cfg(feature = "neo4j")]
         "neo4j" => {
@@ -1643,7 +1639,7 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
             let user = std::env::var("OS_HUB_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
             let password = std::env::var("OS_HUB_NEO4J_PASSWORD").unwrap_or_default();
             let storage = db::storage_neo4j::Neo4jStorage::connect(&uri, &user, &password).await?;
-            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Neo4j(storage))).await?.with_pool(pool))
+            Ok(db::Database::open(pool, db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Neo4j(storage))).await?)
         }
         other => Err(HubError::UnknownStorageBackend(other.to_string())),
     }
@@ -1696,7 +1692,6 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
 async fn main() -> Result<(), HubError> {
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(8787);
     let data_dir = std::env::var("OS_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.🧬semio/🌐hub/"), std::path::PathBuf::from);
-    std::fs::create_dir_all(&data_dir)?;
     let db = connect_db(&data_dir).await?;
     let directory = connect_directory(&data_dir).await?;
     // 🧹️ Contract §C0: clear crash residue before any real connection lands — a session that never
@@ -1764,7 +1759,7 @@ mod tests {
 
     async fn test_state() -> HubState {
         let dir = tempdir("db");
-        let database = db::Database::open_at(&dir, db::Profile::Test).await.expect("open db").with_pool(hub_worker_pool());
+        let database = db::Database::open_at(hub_worker_pool(), &dir, db::Profile::Test).await.expect("open db");
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
         directory.seed().await.expect("seed");
         let directory: Arc<HubDirectories> = Arc::new(directory.into());

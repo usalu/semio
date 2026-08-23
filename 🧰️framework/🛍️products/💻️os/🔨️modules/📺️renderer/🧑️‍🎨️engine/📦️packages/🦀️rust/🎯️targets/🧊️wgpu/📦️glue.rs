@@ -5677,6 +5677,9 @@ mod async_boundary_tests {
     const BINARY_SOURCE: &str = include_str!("📦️bin.rs");
     const MANIFEST_SOURCE: &str = include_str!("Cargo.toml");
     const WINT_APP_SOURCE: &str = include_str!("🦀️winit_app.rs");
+    const OS_HOST_SOURCE: &str = include_str!("🦀️os_host.rs");
+    const GPU_SOURCE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs");
+    const DRAW_SOURCE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs");
 
     #[test]
     fn product_library_has_no_executor_bridge() {
@@ -5697,6 +5700,17 @@ mod async_boundary_tests {
         assert!(!LIBRARY_SOURCE.contains("response.array_buffer()"));
         assert!(!LIBRARY_SOURCE.contains("collect_pending_ui_image_fetches"));
         assert!(!LIBRARY_SOURCE.contains("collect_pending_map_tile_fetches"));
+        assert!(LIBRARY_SOURCE.contains("struct AppPresentCursor"));
+        assert!(!LIBRARY_SOURCE.contains(".submit_prepared("));
+        assert!(!GPU_SOURCE.contains("fn apply_prepared_uploads"));
+        assert!(!DRAW_SOURCE.contains("for index in 0..schema.vertices"));
+        assert!(!DRAW_SOURCE.contains("for index in 0..schema.indices"));
+        assert!(DRAW_SOURCE.contains("pub fn ensure_mesh_step"));
+        assert!(DRAW_SOURCE.contains("pub fn close_upload_step"));
+        assert!(GPU_SOURCE.contains("pub fn close_mesh_upload_step"));
+        let upload_close = OS_HOST_SOURCE.find("presenter.close_active_upload_step()").expect("active upload close phase");
+        let world_close = OS_HOST_SOURCE.find("runtime.close_world3d_dynamic_step()").expect("world mesh close phase");
+        assert!(upload_close < world_close);
     }
 
     #[test]
@@ -6888,6 +6902,7 @@ pub(crate) struct AppFrameBuild {
     pub(crate) cursor: SemioCursor,
     theme_dark: bool,
     fullscreen: Option<bool>,
+    request_frame: bool,
 }
 
 struct AppFrameAfterChrome {
@@ -6895,6 +6910,7 @@ struct AppFrameAfterChrome {
     engine_packets: Option<Vec<engine_canvas::EngineCanvasPacket>>,
     deferred_actions: Vec<ActionDescriptor>,
     fullscreen: Option<bool>,
+    request_frame: bool,
     retirement: Option<AppFramePreparation>,
 }
 
@@ -6913,7 +6929,7 @@ impl AppFrameAfterChrome {
         }
         if self.retirement.is_none() {
             let Some(input) = self.resource_input.take() else { return true };
-            let build = AppFrameBuild { input, engine_packets: self.engine_packets.take().unwrap_or_default(), cursor: SemioCursor::Default, theme_dark: false, fullscreen: self.fullscreen.take() };
+            let build = AppFrameBuild { input, engine_packets: self.engine_packets.take().unwrap_or_default(), cursor: SemioCursor::Default, theme_dark: false, fullscreen: self.fullscreen.take(), request_frame: self.request_frame };
             self.retirement = Some(build.into_preparation());
             return false;
         }
@@ -7467,11 +7483,12 @@ pub(crate) struct AppFramePresentation {
     pub(crate) cursor: SemioCursor,
     theme_dark: bool,
     fullscreen: Option<bool>,
+    request_frame: bool,
 }
 
 impl AppFrameBuild {
     pub(crate) fn into_preparation(self) -> AppFramePreparation {
-        AppFramePreparation { job: ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 64), engine_packets: Some(self.engine_packets), cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, terminal: false }
+        AppFramePreparation { job: ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 64), engine_packets: Some(self.engine_packets), cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, request_frame: self.request_frame, terminal: false }
     }
 }
 
@@ -7481,6 +7498,7 @@ pub(crate) struct AppFramePreparation {
     cursor: SemioCursor,
     theme_dark: bool,
     fullscreen: Option<bool>,
+    request_frame: bool,
     terminal: bool,
 }
 
@@ -7507,7 +7525,7 @@ impl AppFramePreparation {
             return None;
         }
         let packet = self.job.take_packet()?;
-        Some(AppFramePresentation { packet, engine_packets: self.engine_packets.take()?, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen })
+        Some(AppFramePresentation { packet, engine_packets: self.engine_packets.take()?, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, request_frame: self.request_frame })
     }
 
     pub(crate) fn close_step(&mut self) -> bool {
@@ -7540,6 +7558,32 @@ pub(crate) struct AppPresenter {
     #[cfg(target_arch = "wasm32")]
     offscreen_token: Option<ui_wgpu::wgpu::OffscreenPresentToken>,
     last_cursor: Option<(SemioCursor, bool)>,
+    pending: Option<AppPresentCursor>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AppPresentPhase {
+    Fullscreen,
+    Engine,
+    BeginGpu,
+    Evictions,
+    Uploads,
+    Render,
+    Directives,
+}
+
+struct AppPresentCursor {
+    frame: AppFramePresentation,
+    phase: AppPresentPhase,
+    engine: usize,
+    eviction: usize,
+    upload: usize,
+}
+
+pub(crate) enum AppPresentStep {
+    Idle,
+    Pending,
+    Complete { fullscreen: Option<bool>, request_frame: bool },
 }
 
 impl AppPresenter {
@@ -7551,46 +7595,114 @@ impl AppPresenter {
         self.gpu.resize(css_width, css_height, dpr);
     }
 
-    pub(crate) fn present(&mut self, frame: AppFramePresentation) -> Result<Option<bool>, String> {
-        if let Some(active) = frame.fullscreen {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                if let Some(window) = self.window.as_ref() {
-                    window.set_fullscreen(if active { Some(Fullscreen::Borderless(None)) } else { None });
-                }
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                use winit::platform::web::WindowExtWebSys;
-                if let Some(canvas) = self.window.as_ref().and_then(|window| window.canvas()) {
-                    let document = canvas.owner_document();
-                    if active {
-                        if let Err(error) = canvas.request_fullscreen() {
-                            web_sys::console::error_2(&"Fullscreen request was rejected".into(), &error);
+    pub(crate) fn has_pending_presentation(&self) -> bool {
+        self.pending.is_some()
+    }
+
+    pub(crate) fn close_active_upload_step(&mut self) -> bool {
+        self.gpu.close_mesh_upload_step()
+    }
+
+    pub(crate) fn active_upload_terminal_is_empty(&self) -> bool {
+        self.gpu.mesh_upload_terminal_is_empty()
+    }
+
+    pub(crate) fn begin_present(&mut self, frame: AppFramePresentation) -> Result<(), AppFramePresentation> {
+        if self.pending.is_some() {
+            return Err(frame);
+        }
+        self.pending = Some(AppPresentCursor { frame, phase: AppPresentPhase::BeginGpu, engine: 0, eviction: 0, upload: 0 });
+        Ok(())
+    }
+
+    pub(crate) fn present_step(&mut self) -> Result<AppPresentStep, String> {
+        let Some(cursor) = self.pending.as_mut() else { return Ok(AppPresentStep::Idle) };
+        match cursor.phase {
+            AppPresentPhase::Fullscreen => {
+                if let Some(active) = cursor.frame.fullscreen {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        if let Some(window) = self.window.as_ref() {
+                            window.set_fullscreen(if active { Some(Fullscreen::Borderless(None)) } else { None });
                         }
-                    } else if let Some(document) = document {
-                        document.exit_fullscreen();
+                    }
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        use winit::platform::web::WindowExtWebSys;
+                        if let Some(canvas) = self.window.as_ref().and_then(|window| window.canvas()) {
+                            let document = canvas.owner_document();
+                            if active {
+                                if let Err(error) = canvas.request_fullscreen() {
+                                    web_sys::console::error_2(&"Fullscreen request was rejected".into(), &error);
+                                }
+                            } else if let Some(document) = document {
+                                document.exit_fullscreen();
+                            }
+                        }
                     }
                 }
+                cursor.phase = AppPresentPhase::Directives;
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::Engine => {
+                if let Some(packet) = cursor.frame.engine_packets.get(cursor.engine) {
+                    self.engine.realize_one(&mut self.gpu, packet).map_err(|error| format!("engine canvas present: {error}"))?;
+                    cursor.engine += 1;
+                    return Ok(AppPresentStep::Pending);
+                }
+                cursor.phase = AppPresentPhase::Evictions;
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::BeginGpu => {
+                let revision = cursor.frame.packet.scene_revision();
+                let generation = cursor.frame.packet.preview_generation();
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    let token = ui_wgpu::wgpu::UiPresentToken::mint_for_current_thread();
+                    self.gpu.begin_prepared(&token, &self.gate, &cursor.frame.packet, revision, generation).map_err(|error| format!("prepared frame admission: {error}"))?;
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    let token = self.offscreen_token.as_ref().ok_or_else(|| "browser presentation requires dedicated Worker authority".to_string())?;
+                    self.gpu.begin_prepared_offscreen(token, &self.gate, &cursor.frame.packet, revision, generation).map_err(|error| format!("offscreen prepared frame admission: {error}"))?;
+                }
+                cursor.phase = AppPresentPhase::Engine;
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::Evictions => {
+                if cursor.eviction >= cursor.frame.packet.evictions().len() {
+                    cursor.phase = AppPresentPhase::Uploads;
+                    return Ok(AppPresentStep::Pending);
+                }
+                self.gpu.apply_prepared_eviction_step(&cursor.frame.packet, cursor.eviction)?;
+                cursor.eviction += 1;
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::Uploads => {
+                if cursor.upload >= cursor.frame.packet.uploads().len() {
+                    cursor.phase = AppPresentPhase::Render;
+                    return Ok(AppPresentStep::Pending);
+                }
+                if self.gpu.apply_prepared_upload_step(&cursor.frame.packet, cursor.upload)? {
+                    cursor.upload += 1;
+                }
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::Render => {
+                self.gpu.finish_prepared(&mut self.gate, cursor.frame.packet.clone()).map_err(|error| format!("prepared frame submit: {error}"))?;
+                cursor.phase = AppPresentPhase::Fullscreen;
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::Directives => {
+                if let Some(window) = self.window.as_ref() {
+                    apply_window_cursor(window, cursor.frame.cursor, cursor.frame.theme_dark, &mut self.last_cursor);
+                }
+                let fullscreen = self.window.is_none().then_some(cursor.frame.fullscreen).flatten();
+                let request_frame = cursor.frame.request_frame;
+                self.pending = None;
+                Ok(AppPresentStep::Complete { fullscreen, request_frame })
             }
         }
-        self.engine.realize(&mut self.gpu, &frame.engine_packets).map_err(|error| format!("engine canvas present: {error}"))?;
-        let revision = frame.packet.scene_revision();
-        let generation = frame.packet.preview_generation();
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let token = ui_wgpu::wgpu::UiPresentToken::mint_for_current_thread();
-            self.gpu.submit_prepared(&token, &mut self.gate, frame.packet, revision, generation).map_err(|error| format!("prepared frame submit: {error}"))?;
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            let token = self.offscreen_token.as_ref().ok_or_else(|| "browser presentation requires dedicated Worker authority".to_string())?;
-            self.gpu.submit_prepared_offscreen(token, &mut self.gate, frame.packet, revision, generation).map_err(|error| format!("offscreen prepared frame submit: {error}"))?;
-        }
-        if let Some(window) = self.window.as_ref() {
-            apply_window_cursor(window, frame.cursor, frame.theme_dark, &mut self.last_cursor);
-        }
-        Ok(self.window.is_none().then_some(frame.fullscreen).flatten())
     }
 }
 
@@ -7821,12 +7933,13 @@ impl AppRuntime {
             interaction.shell.render_chrome(draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, &mut engine_resources, &mut world_resources);
         }
         let engine_packets = engine_resources.take_packets();
+        let request_frame = world_resources.take_cursor_wake();
         let mut resource_input = ui_wgpu::wgpu::PreparedRenderInput::new(generation.0, generation.0, ui_wgpu::wgpu::DrawList::default(), None, 0.0);
         world_resources.append_to(&mut resource_input);
         if let Some(upload) = icon_upload {
             resource_input.uploads.push(upload);
         }
-        AppFrameAfterChrome { resource_input: Some(resource_input), engine_packets: Some(engine_packets), deferred_actions, fullscreen, retirement: None }
+        AppFrameAfterChrome { resource_input: Some(resource_input), engine_packets: Some(engine_packets), deferred_actions, fullscreen, request_frame, retirement: None }
     }
 
     fn frame_after_input(&mut self, handle: &AppHandle, mut partial: AppFrameAfterChrome) -> AppFrameBuild {
@@ -7834,6 +7947,7 @@ impl AppRuntime {
         let mut resource_input = partial.resource_input.take().expect("chrome resource input");
         let engine_packets = partial.engine_packets.take().expect("chrome engine packets");
         let fullscreen = partial.fullscreen.take();
+        let request_frame = partial.request_frame;
         let flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
         if self.atlas.take_dirty() {
             resource_input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlas { pixels: self.atlas.pixels.clone(), width: self.atlas.width, height: self.atlas.height });
@@ -7859,7 +7973,7 @@ impl AppRuntime {
         resource_input.draw = std::mem::take(&mut self.draw);
         resource_input.overlay = Some(std::mem::take(&mut self.overlay));
         resource_input.time_seconds = time_seconds;
-        let frame = AppFrameBuild { input: resource_input, engine_packets, cursor, theme_dark: self.theme_dark, fullscreen };
+        let frame = AppFrameBuild { input: resource_input, engine_packets, cursor, theme_dark: self.theme_dark, fullscreen, request_frame };
         #[cfg(target_arch = "wasm32")]
         let pump_sync = false;
         if pump_sync || !deferred_actions.is_empty() || flush_tutorial {
@@ -8220,6 +8334,7 @@ async fn boot_runtime(
         #[cfg(target_arch = "wasm32")]
         offscreen_token: None,
         last_cursor: None,
+        pending: None,
     };
     let runtime = RuntimeMailbox::new(AppRuntime {
         atlas,

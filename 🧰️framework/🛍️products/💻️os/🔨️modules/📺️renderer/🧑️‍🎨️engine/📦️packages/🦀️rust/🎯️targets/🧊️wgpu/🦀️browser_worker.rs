@@ -1,10 +1,10 @@
 //! 🧵️ Dedicated browser Worker owner for the complete frame transaction and OffscreenCanvas surface.
 
 use crate::kernel_seam::{HostWaker, KernelSeam};
-use crate::program_bridge::{filter_plugins, parse_plugin_entries, ProgramBridgeEntry};
+use crate::program_bridge::{ProgramBridgeEntry, filter_plugins, parse_plugin_entries};
 use crate::shell::ShellState;
 use crate::{AppInteractionState, AppPresenter, AppRuntime, RendererAssetFetchOwner, RuntimeMailbox};
-use infinite_world::world::{WorldAssetResponsePage, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES};
+use infinite_world::world::{WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WorldAssetResponsePage};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -301,7 +301,7 @@ impl BrowserRendererWorker {
         encode_tick(BrowserTickOutput {
             cursor: cursor_name(outcome.cursor),
             fullscreen: host.platform_fullscreen.take(),
-            request_frame: host.scheduler.next_deadline().is_some() || host.runtime.has_pending_text_work(),
+            request_frame: std::mem::take(&mut host.cursor_wake_requested) || host.scheduler.next_deadline().is_some() || host.runtime.has_pending_text_work() || host.presenter.has_pending_presentation(),
             progress: 1.0,
             quarantined: present_fault.is_some(),
             fault_code: present_fault.as_ref().map(|_| fault_code),
@@ -673,6 +673,7 @@ impl BrowserRendererBootstrap {
             window: None,
             offscreen_token: Some(token),
             last_cursor: None,
+            pending: None,
         };
         let mut host = crate::os_host::OsHost::new(runtime, presenter);
         let runtime_wake = self.wake.clone();

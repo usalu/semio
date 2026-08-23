@@ -556,6 +556,81 @@ mod tests {
         serde_json::to_value(app.context_menu(&request)).unwrap_or(Value::Null)
     }
 
+    fn writer_envelope_wire() -> Vec<u8> {
+        let envelope = store::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", crate::artifacts::writer::schema::empty_writer_snapshot(), None);
+        let wire = serde_json::to_vec(&envelope).expect("outgoing Writer fixture envelope");
+        let mut retirement = crate::artifacts::writer::spr::writer_envelope_decode_owner_bundle().retire_envelope(envelope);
+        for _ in 0..10_000 {
+            match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer fixture envelope retirement") {
+                store::SnapshotRetirementStep::Complete => {
+                    assert!(retirement.terminal_is_empty());
+                    drop(retirement);
+                    return wire;
+                }
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1);
+                    assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                }
+                store::SnapshotRetirementStep::Blocked => panic!("unshared Writer fixture envelope retirement blocked"),
+            }
+        }
+        panic!("Writer fixture envelope retirement did not reach terminal")
+    }
+
+    fn admit_writer_envelope(app: &mut WriterApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+        let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+        let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Writer live envelope ingress credits");
+        for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+            let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+            bytes[..chunk.len()].copy_from_slice(chunk);
+            let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Writer live envelope page");
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Writer live envelope page admission failed: {fault}"));
+        }
+        assert!(app.seal_artifact_envelope_ingress(handle).expect("Writer live envelope seal/submit"));
+        handle
+    }
+
+    fn drive_writer_live_load(app: &mut WriterApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+        for _ in 0..100_000 {
+            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Writer live maintenance turn");
+            let poll = app.advance_artifact_envelope_load(handle).expect("Writer live load advancement");
+            if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+                return poll;
+            }
+            std::thread::yield_now();
+        }
+        panic!("Writer live envelope load did not reach terminal")
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
+        let mut app = crate::editor::writer::testkit::new_app().await;
+        let base_generation = app.artifact_generation_now();
+        let handle = admit_writer_envelope(&mut app, &writer_envelope_wire());
+        assert_eq!(handle.generation, base_generation);
+        assert_eq!(drive_writer_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+        assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
+        assert!(app.acknowledge_artifact_store_replacement(handle).expect("first exact Writer load acknowledgement"));
+        assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate Writer load acknowledgement is a no-op"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn writer_live_envelope_cancel_closes_retained_pages_without_publication() {
+        let mut app = crate::editor::writer::testkit::new_app().await;
+        let base_generation = app.artifact_generation_now();
+        let wire = writer_envelope_wire();
+        let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+        let handle = app.begin_artifact_envelope_ingress(pages, wire.len()).expect("cancelled Writer ingress credits");
+        let first = &wire[..wire.len().min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
+        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+        bytes[..first.len()].copy_from_slice(first);
+        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Writer first page");
+        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Writer page admission failed: {fault}"));
+        app.cancel_artifact_envelope_load(handle).expect("cancel exact Writer ingress");
+        assert_eq!(drive_writer_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+        assert_eq!(app.artifact_generation_now(), base_generation);
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn jack_completions_use_example_fixture() {
         let json = crate::artifacts::writer::standards::v1::subsets::any::schema::jack_completions_json("RETURN a.", 9).unwrap_or_default();

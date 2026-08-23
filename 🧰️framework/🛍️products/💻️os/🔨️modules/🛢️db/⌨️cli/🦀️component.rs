@@ -139,15 +139,13 @@ async fn usage(message: &str) -> i32 {
 //#endregion 🔖️Format
 
 //#region 🔖️AsyncBridge
-/// @emoji 🚀️ `db::storage::FsStorage::open_inline` under this binary's own service name — every
-/// `FsStorage` call site in this file goes through here. Opened with `pool: None` (every blocking
-/// body runs inline): this binary is single-shot and strictly sequential (one subcommand, one
-/// process, exits), so there is no second task to protect from blocking.
+/// @emoji 🚀️ Opens `FsStorage` on this binary's process pool, then synchronously waits only
+/// at the process entry boundary.
 // 🚫️async: E5 executor bridge — `db_cli` is a single-shot, strictly-sequential process (R4
 // clause 1: a binary entry point IS its own executor), so every `FsStorage` call in this file
 // stays plain sync and crosses the boundary here, once, via `db_actor::block_on`.
 fn open_fs_storage(root: &Path) -> Result<db::storage::FsStorage, db::db_ids::DbError> {
-    db::actor::block_on(db::storage::FsStorage::open_inline(root))
+    db::actor::block_on(db::storage::FsStorage::open(cli_worker_pool(), root))
 }
 
 /// 🧵️ The CLI process's one headless worker pool, shared by every database authority the
@@ -160,7 +158,7 @@ fn cli_worker_pool() -> std::sync::Arc<db::semio_framework_async::WorkerPool> {
 
 /// 🗄️ Opens a database and injects the CLI process worker pool before any authority can spawn.
 async fn open_database(root: &Path, profile: db::Profile) -> Result<db::Database, db::db_ids::DbError> {
-    Ok(db::Database::open_at(root, profile).await?.with_pool(cli_worker_pool()))
+    db::Database::open_at(cli_worker_pool(), root, profile).await
 }
 //#endregion 🔖️AsyncBridge
 

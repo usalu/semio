@@ -821,9 +821,26 @@ pub struct GpuMeshBuffers {
     pub index_count: u32,
 }
 
-#[derive(Default)]
 pub struct MeshGpuTable {
     meshes: std::collections::HashMap<String, GpuMeshBuffers>,
+    upload: Option<MeshGpuUploadCursor>,
+}
+
+struct MeshGpuUploadCursor {
+    key: String,
+    version: u64,
+    lease: crate::wgpu::kernel_3d_scene::Mesh3dLease,
+    schema: crate::wgpu::kernel_3d_scene::Mesh3dSchema,
+    vertex_buffer: Option<wgpu::Buffer>,
+    index_buffer: Option<wgpu::Buffer>,
+    vertex: u32,
+    index: u32,
+}
+
+impl Default for MeshGpuTable {
+    fn default() -> Self {
+        Self { meshes: std::collections::HashMap::new(), upload: None }
+    }
 }
 
 pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32]) -> u64 {
@@ -852,42 +869,65 @@ impl MeshGpuTable {
         self.get(&Self::lookup_key(mesh_key, version))
     }
 
-    pub fn ensure_mesh(&mut self, device: &wgpu::Device, key: &str, version: u64, lease: crate::wgpu::kernel_3d_scene::Mesh3dLease) {
+    pub fn ensure_mesh_step(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, key: &str, version: u64, lease: crate::wgpu::kernel_3d_scene::Mesh3dLease) -> Result<bool, &'static str> {
         let store_key = format!("{key}:{version}");
         if self.meshes.contains_key(&store_key) {
-            return;
+            return Ok(true);
         }
-        let prefix = format!("{key}:");
-        self.meshes.retain(|existing, _| !existing.starts_with(&prefix) || existing == &store_key);
-        let Ok(schema) = lease.schema() else { return };
-        let vertex_bytes = u64::from(schema.vertices).saturating_mul(std::mem::size_of::<World3dVertex>() as u64);
-        let index_bytes = u64::from(schema.indices).saturating_mul(std::mem::size_of::<u32>() as u64);
-        if vertex_bytes == 0 || index_bytes == 0 {
-            return;
-        }
-        let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_vertices"), size: vertex_bytes, usage: wgpu::BufferUsages::VERTEX, mapped_at_creation: true });
-        {
-            let mut mapped = vertex_buffer.slice(..).get_mapped_range_mut();
-            for index in 0..schema.vertices {
-                let Ok(position) = lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Positions, index) else { return };
-                let normal = lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Normals, index).unwrap_or([0.0, 1.0, 0.0]);
-                let vertex = World3dVertex { position, normal };
-                let start = index as usize * std::mem::size_of::<World3dVertex>();
-                mapped[start..start + std::mem::size_of::<World3dVertex>()].copy_from_slice(bytemuck::bytes_of(&vertex));
+        if self.upload.is_none() {
+            let schema = lease.schema().map_err(|_| "mesh upload lease was stale")?;
+            let vertex_bytes = u64::from(schema.vertices).checked_mul(std::mem::size_of::<World3dVertex>() as u64).ok_or("mesh upload vertex byte credits overflowed")?;
+            let index_bytes = u64::from(schema.indices).checked_mul(std::mem::size_of::<u32>() as u64).ok_or("mesh upload index byte credits overflowed")?;
+            if vertex_bytes == 0 || index_bytes == 0 {
+                return Err("mesh upload schema was empty");
             }
+            let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_vertices"), size: vertex_bytes, usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, mapped_at_creation: false });
+            let index_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_indices"), size: index_bytes, usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST, mapped_at_creation: false });
+            self.upload = Some(MeshGpuUploadCursor { key: key.to_owned(), version, lease, schema, vertex_buffer: Some(vertex_buffer), index_buffer: Some(index_buffer), vertex: 0, index: 0 });
         }
-        vertex_buffer.unmap();
-        let index_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_indices"), size: index_bytes, usage: wgpu::BufferUsages::INDEX, mapped_at_creation: true });
-        {
-            let mut mapped = index_buffer.slice(..).get_mapped_range_mut();
-            for index in 0..schema.indices {
-                let Ok(value) = lease.u32(crate::wgpu::kernel_3d_scene::Mesh3dField::Indices, index) else { return };
-                let start = index as usize * std::mem::size_of::<u32>();
-                mapped[start..start + std::mem::size_of::<u32>()].copy_from_slice(&value.to_le_bytes());
-            }
+        let cursor = self.upload.as_mut().expect("mesh upload cursor initialized above");
+        if cursor.key != key || cursor.version != version || cursor.lease != lease {
+            return Err("mesh upload authority is occupied by another generation");
         }
-        index_buffer.unmap();
-        self.meshes.insert(store_key, GpuMeshBuffers { vertex_buffer, index_buffer, index_count: schema.indices });
+        if cursor.vertex < cursor.schema.vertices {
+            let position = cursor.lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Positions, cursor.vertex).map_err(|_| "mesh upload position lease was stale")?;
+            let normal = cursor.lease.vec3(crate::wgpu::kernel_3d_scene::Mesh3dField::Normals, cursor.vertex).unwrap_or([0.0, 1.0, 0.0]);
+            let vertex = World3dVertex { position, normal };
+            queue.write_buffer(cursor.vertex_buffer.as_ref().ok_or("mesh upload vertex buffer was retired")?, u64::from(cursor.vertex) * std::mem::size_of::<World3dVertex>() as u64, bytemuck::bytes_of(&vertex));
+            cursor.vertex += 1;
+            return Ok(false);
+        }
+        if cursor.index < cursor.schema.indices {
+            let value = cursor.lease.u32(crate::wgpu::kernel_3d_scene::Mesh3dField::Indices, cursor.index).map_err(|_| "mesh upload index lease was stale")?;
+            queue.write_buffer(cursor.index_buffer.as_ref().ok_or("mesh upload index buffer was retired")?, u64::from(cursor.index) * std::mem::size_of::<u32>() as u64, &value.to_le_bytes());
+            cursor.index += 1;
+            return Ok(false);
+        }
+        let mut cursor = self.upload.take().expect("completed mesh upload cursor");
+        self.meshes
+            .insert(store_key, GpuMeshBuffers { vertex_buffer: cursor.vertex_buffer.take().expect("completed mesh vertex buffer"), index_buffer: cursor.index_buffer.take().expect("completed mesh index buffer"), index_count: cursor.schema.indices });
+        Ok(true)
+    }
+
+    pub fn close_upload_step(&mut self) -> bool {
+        let Some(cursor) = self.upload.as_mut() else { return true };
+        if cursor.key.pop().is_some() {
+            return false;
+        }
+        if let Some(buffer) = cursor.vertex_buffer.take() {
+            buffer.destroy();
+            return false;
+        }
+        if let Some(buffer) = cursor.index_buffer.take() {
+            buffer.destroy();
+            return false;
+        }
+        self.upload = None;
+        false
+    }
+
+    pub fn upload_terminal_is_empty(&self) -> bool {
+        self.upload.is_none()
     }
 
     pub fn evict_mesh(&mut self, key: &str) {

@@ -105,7 +105,7 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_optional_json_payload(&format!("{scene_label} world3d.lod"), &world.lod_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} world3d.chunking"), &world.chunking_json, limits)?;
         // ☁️ `points_json` payload-size validation only — the point-sprite GPU pipeline itself lives in
-        // `infinite_world::World3dState` (see `render_world_3d`, imported below), a separate crate this
+        // `infinite_world::world::World3dState` (see `render_world_3d`, imported below), a separate crate this
         // file delegates all actual mesh/instance drawing to and does not construct wgpu render
         // pipelines/shaders directly for (confirmed: no `create_render_pipeline`/`RenderPipelineDescriptor`
         // call anywhere in this file). Threading the base64 point buffers through `infinite_world`'s own
@@ -942,7 +942,7 @@ fn shift_scissor(scissor: ui_wgpu::wgpu::draw::ScissorRect, dx: f32, dy: f32) ->
  * needs rebasing by however many glass regions `target` already had; `ScenePass3d::layer_index` does
  * index into `layers` and is rebased accordingly — real content `FrameworkSceneHost::paint_slot`
  * paints directly into this same `retained` `DrawList` (e.g. `render_component_scene`'s `World3d`
- * arm, which calls into `infinite_world::render_world_3d`'s own `ctx.draw.push_scene_pass`) rides
+ * arm, which calls into `infinite_world::world::render_world_3d`'s own `ctx.draw.push_scene_pass`) rides
  * along through this exact rebasing, no special-casing needed here now that a real `SceneHost` is
  * registered. */
 fn composite_retained_draw_list(target: &mut ui_wgpu::wgpu::DrawList, retained: &ui_wgpu::wgpu::DrawList, offset_x: f32, offset_y: f32) {

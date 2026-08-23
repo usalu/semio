@@ -1,0 +1,13 @@
+[workspace]
+
+[package]
+name = "fixture-gen"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "fixture-gen"
+path = "src/main.rs"
+
+[dependencies]
+semio-repo-test-host = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", features = ["oracles"] }

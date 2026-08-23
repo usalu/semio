@@ -33,7 +33,7 @@ use std::sync::{Arc, Mutex};
 use crate::db_durability::Frontier;
 use crate::db_ids::DbError;
 use crate::*;
-use db_storage::{CatalogStorage, DbBackend, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use db_storage::{CatalogStorage, DbBackend, DbIoPages, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 
 //#region 🔖️Prng
 /// @emoji 🎲️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
@@ -333,7 +333,7 @@ impl WalStorage for FaultStorage {
         self.inner.wal().await.create_segment(document, index).await
     }
 
-    async fn append(&self, document: &ArtifactId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
+    async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
         let call = self.append_calls.fetch_add(1, Ordering::SeqCst) + 1;
         let script = self.script().await;
         {
@@ -343,7 +343,13 @@ impl WalStorage for FaultStorage {
             if let Some((torn_call, keep_bytes)) = script.torn_write_at {
                 if torn_call == call {
                     let keep = (keep_bytes as usize).min(bytes.len());
-                    return self.inner.wal().await.append(document, index, &bytes[..keep]).await;
+                    let mut owner = bytes.into_vec();
+                    owner.truncate(keep);
+                    let pages = match DbIoPages::try_new(owner) {
+                        Ok(pages) => pages,
+                        Err(_) => return Err(DbError::Internal("fault_storage torn prefix exceeded the admitted DB page owner".to_string())),
+                    };
+                    return self.inner.wal().await.append(document, index, pages).await;
                 }
             }
             self.inner.wal().await.append(document, index, bytes).await
@@ -384,7 +390,7 @@ impl WalStorage for FaultStorage {
 }
 
 impl SnapshotStorage for FaultStorage {
-    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
+    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         self.inner.snapshot().await.write_generation(document, generation, bytes).await
     }
 
@@ -406,7 +412,7 @@ impl SnapshotStorage for FaultStorage {
 }
 
 impl PayloadStorage for FaultStorage {
-    async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
+    async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
         self.inner.payload().await.put(bytes).await
     }
 
@@ -432,7 +438,7 @@ impl CatalogStorage for FaultStorage {
         self.inner.catalog().await.read_root().await
     }
 
-    async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
+    async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
         let call = self.cas_calls.fetch_add(1, Ordering::SeqCst) + 1;
         let conflict = self.script().await.cas_conflict_nth == Some(call);
         {
@@ -446,7 +452,7 @@ impl CatalogStorage for FaultStorage {
 }
 
 impl IndexStorage for FaultStorage {
-    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
+    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
         self.inner.index().await.write_run(document, run_id, bytes).await
     }
 
@@ -637,13 +643,13 @@ async fn single_envelope_batch(envelope: protocol::MutationEnvelope) -> db_artif
 /// whole submit→WAL→materialize pipeline, are both deterministic — not just idempotent once).
 /// Drives real `db_engine::Database::open_at` over `FsStorage` (see module doc).
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn assert_replay_deterministic(seed: u64, op_count: usize) {
+pub async fn assert_replay_deterministic(pool: Arc<semio_framework_async::WorkerPool>, seed: u64, op_count: usize) {
     let document = protocol::ArtifactId(format!("testkit-replay-{seed:x}"));
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(1)).await;
 
     let root = temp_dir("replay").await;
     let frontier_first_run = {
-        let database = Database::open_at(&root, Profile::Test).await.expect("testkit: open_at for replay law");
+        let database = Database::open_at(pool.clone(), &root, Profile::Test).await.expect("testkit: open_at for replay law");
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.expect("testkit: create_document for replay law");
         for envelope in &ops {
             db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
@@ -655,7 +661,7 @@ pub async fn assert_replay_deterministic(seed: u64, op_count: usize) {
     };
 
     let frontier_after_reopen = {
-        let database = Database::open_at(&root, Profile::Test).await.expect("testkit: reopen for replay law");
+        let database = Database::open_at(pool.clone(), &root, Profile::Test).await.expect("testkit: reopen for replay law");
         let handle = database.document(&document).await.expect("testkit: document must survive reopen");
         handle.frontier().await.expect("frontier after reopen")
     };
@@ -666,7 +672,7 @@ pub async fn assert_replay_deterministic(seed: u64, op_count: usize) {
 
     let root_independent = temp_dir("replay-independent").await;
     let frontier_independent = {
-        let database = Database::open_at(&root_independent, Profile::Test).await.expect("testkit: open independent replica");
+        let database = Database::open_at(pool, &root_independent, Profile::Test).await.expect("testkit: open independent replica");
         let handle = database.create_document(ArtifactSpec::new(document).await).await.expect("testkit: create independent replica document");
         for envelope in &ops_regenerated {
             db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
@@ -869,10 +875,10 @@ pub async fn assert_sync_convergence(seed: u64, op_count: usize) {
 /// `MemoryStorage` and `FsStorage` in this crate's own tests).
 pub async fn assert_fencing_excludes_stale_writer(storage: &impl CatalogStorage) {
     let stale_epoch = storage.read_root().await.expect("read_root").map_or(EpochFence::INITIAL, |(_, fence)| fence);
-    let winner_epoch = storage.cas_root(stale_epoch, b"writer-a").await.expect("the first writer presenting the current epoch must win");
+    let winner_epoch = storage.cas_root(stale_epoch, DbIoPages::try_new(b"writer-a".to_vec()).expect("law root bytes fit the fixed page owner")).await.expect("the first writer presenting the current epoch must win");
     assert_ne!(winner_epoch, stale_epoch, "a successful cas_root must advance the epoch");
 
-    let stale_attempt = storage.cas_root(stale_epoch, b"writer-b-should-be-rejected").await;
+    let stale_attempt = storage.cas_root(stale_epoch, DbIoPages::try_new(b"writer-b-should-be-rejected".to_vec()).expect("law root bytes fit the fixed page owner")).await;
     assert!(matches!(stale_attempt, Err(DbError::Fenced { .. })), "a writer presenting a superseded epoch must be fenced, not silently accepted");
 
     let (root_bytes, root_epoch) = storage.read_root().await.expect("read_root").expect("root must exist after the winning write");
@@ -955,6 +961,14 @@ mod tests {
     use super::*;
     use std::cell::RefCell;
     use std::rc::Rc;
+
+    fn entrypoint_pool() -> Arc<semio_framework_async::WorkerPool> {
+        Arc::new(semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)))
+    }
+
+    fn pages(bytes: &[u8]) -> DbIoPages {
+        DbIoPages::try_new(bytes.to_vec()).expect("testkit bytes must fit the fixed page owner")
+    }
 
     //#region 🔖️Prng + Generators
     #[semio_framework_async_macros::async_test]
@@ -1065,7 +1079,7 @@ mod tests {
         let faulted = FaultStorage::new(inner).await;
         let document = ArtifactId("doc-1".to_string());
         db_actor::block_on(faulted.create_segment(&document, 0)).unwrap();
-        assert_eq!(db_actor::block_on(faulted.append(&document, 0, b"hello")).unwrap(), 5);
+        assert_eq!(db_actor::block_on(faulted.append(&document, 0, pages(b"hello"))).unwrap(), 5);
         assert_eq!(db_actor::block_on(faulted.read(&document, 0, pack::ByteRange { offset: 0, len: 5 })).unwrap(), b"hello");
         assert_eq!(faulted.append_calls().await, 1);
     }
@@ -1076,9 +1090,9 @@ mod tests {
         faulted.set_script(FaultScript { fail_nth_write: Some(2), ..FaultScript::default() }).await;
         let document = ArtifactId("doc-1".to_string());
         db_actor::block_on(faulted.create_segment(&document, 0)).unwrap();
-        assert!(db_actor::block_on(faulted.append(&document, 0, b"first")).is_ok(), "call #1 must succeed");
-        assert!(db_actor::block_on(faulted.append(&document, 0, b"second")).is_err(), "call #2 must be the injected failure");
-        assert!(db_actor::block_on(faulted.append(&document, 0, b"third")).is_ok(), "call #3 must succeed again — the script fires exactly once");
+        assert!(db_actor::block_on(faulted.append(&document, 0, pages(b"first"))).is_ok(), "call #1 must succeed");
+        assert!(db_actor::block_on(faulted.append(&document, 0, pages(b"second"))).is_err(), "call #2 must be the injected failure");
+        assert!(db_actor::block_on(faulted.append(&document, 0, pages(b"third"))).is_ok(), "call #3 must succeed again — the script fires exactly once");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1087,7 +1101,7 @@ mod tests {
         faulted.set_script(FaultScript { torn_write_at: Some((1, 3)), ..FaultScript::default() }).await;
         let document = ArtifactId("doc-1".to_string());
         db_actor::block_on(faulted.create_segment(&document, 0)).unwrap();
-        let new_len = db_actor::block_on(faulted.append(&document, 0, b"hello world")).unwrap();
+        let new_len = db_actor::block_on(faulted.append(&document, 0, pages(b"hello world"))).unwrap();
         assert_eq!(new_len, 3, "a torn write must report only the bytes that actually landed");
         assert_eq!(db_actor::block_on(faulted.read(&document, 0, pack::ByteRange { offset: 0, len: 3 })).unwrap(), b"hel");
     }
@@ -1109,7 +1123,7 @@ mod tests {
     async fn fault_storage_cas_conflict_injection_rejects_without_touching_the_inner_root() {
         let faulted = FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new().await))).await;
         faulted.set_script(FaultScript { cas_conflict_nth: Some(1), ..FaultScript::default() }).await;
-        let result = db_actor::block_on(faulted.cas_root(EpochFence::INITIAL, b"attempt"));
+        let result = db_actor::block_on(faulted.cas_root(EpochFence::INITIAL, pages(b"attempt")));
         assert!(matches!(result, Err(DbError::Fenced { .. })), "the scripted call must be rejected as fenced");
         assert!(db_actor::block_on(faulted.read_root()).unwrap().is_none(), "the injected conflict must never have reached the inner backend's root");
     }
@@ -1144,7 +1158,7 @@ mod tests {
     //#region 🔖️Laws
     #[semio_framework_async_macros::async_test]
     async fn law_replay_deterministic() {
-        assert_replay_deterministic(11, 5).await;
+        assert_replay_deterministic(entrypoint_pool(), 11, 5).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1176,7 +1190,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn law_fencing_excludes_stale_writer_fs() {
         let root = temp_dir("fencing-fs").await;
-        let storage = db_actor::block_on(db_storage::FsStorage::open_inline(&root)).expect("open fs storage");
+        let storage = db_actor::block_on(db_storage::FsStorage::open(entrypoint_pool(), &root)).expect("open fs storage");
         assert_fencing_excludes_stale_writer(&storage).await;
     }
 
@@ -1207,7 +1221,7 @@ mod tests {
             let storage = db_actor::block_on(db_storage::MemoryStorage::new());
             let document = ArtifactId("fuzz-doc".to_string());
             db_actor::block_on(storage.create_segment(&document, 0)).map_err(|err| err.to_string())?;
-            db_actor::block_on(storage.append(&document, 0, bytes)).map_err(|err| err.to_string())?;
+            db_actor::block_on(storage.append(&document, 0, pages(bytes))).map_err(|err| err.to_string())?;
             let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(storage));
             db_artifact::ArtifactEngine::open(protocol::ArtifactId(document.0), &storage, db_artifact::ArtifactEngineConfig::default(), 0).map(|_| ()).map_err(|err| err.to_string())
         }

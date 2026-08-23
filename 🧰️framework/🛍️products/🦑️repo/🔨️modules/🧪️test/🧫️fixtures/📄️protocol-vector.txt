@@ -1,0 +1,2 @@
+semio repository test protocol conformance vector
+0123456789 ÄÖÜ äöü ß — 🧪️
