@@ -68,7 +68,7 @@ async fn frames_layers_json(scene: &RemodelSnapshot, cursor: &RemodelFrameCursor
 }
 
 pub async fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let scene_2d = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &config.frame_cursor) };
+    let scene_2d = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &config.frame_cursor), snapshot: None };
     build_canvas_2d_scene(REMODEL_PLAY_SURFACE_FRAMES, crate::editor::remodel::REMODEL_PLAY_APP_ID, scene_2d)
 }
 //#endregion 🔖️Scene

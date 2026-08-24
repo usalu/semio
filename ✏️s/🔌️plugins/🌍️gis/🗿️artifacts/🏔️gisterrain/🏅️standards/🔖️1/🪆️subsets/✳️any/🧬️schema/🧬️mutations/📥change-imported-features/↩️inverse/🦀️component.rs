@@ -6,7 +6,7 @@ use crate::artifacts::gisterrain::GisTerrainSnapshot;
 //#region 🔹Inverse
 /// ↩️ Undo restores `base.imported_features_json` — captured from pre-state, never from the
 /// applied diff.
-pub async fn inverse(_payload: &ChangeImportedFeatures, base: &GisTerrainSnapshot) -> Vec<GisTerrainMutation> {
+pub fn inverse(_payload: &ChangeImportedFeatures, base: &GisTerrainSnapshot) -> Vec<GisTerrainMutation> {
     vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: base.imported_features_json.clone() })]
 }
 //#endregion 🔹Inverse

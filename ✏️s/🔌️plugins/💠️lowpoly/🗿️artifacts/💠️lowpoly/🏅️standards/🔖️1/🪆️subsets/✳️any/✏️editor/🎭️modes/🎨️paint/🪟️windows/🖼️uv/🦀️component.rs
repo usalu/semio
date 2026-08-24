@@ -100,7 +100,7 @@ async fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, tex
 
 pub async fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_cache: &HashMap<String, String>) -> UiNode {
     match loaded {
-        Some(loaded) => build_canvas_2d_scene(LOWPOLY_PLAY_SURFACE_UV, crate::editor::lowpoly::LOWPOLY_PLAY_APP_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache) }),
+        Some(loaded) => build_canvas_2d_scene(LOWPOLY_PLAY_SURFACE_UV, crate::editor::lowpoly::LOWPOLY_PLAY_APP_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: uv_canvas_layers_json(loaded, view, texture_cache), snapshot: None }),
         None => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data("Failed to load UV canvas")),
     }
 }

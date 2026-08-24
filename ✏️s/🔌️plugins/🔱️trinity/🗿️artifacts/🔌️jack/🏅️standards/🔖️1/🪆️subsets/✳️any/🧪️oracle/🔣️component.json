@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `trinity.graph` is a semio-NATIVE assembly scene whose pieces and connections live in a composed `s.stdio.semio.graph` child, so no oracle is registered and the evidence rests on the eight committed per-kind vectors plus the inverse law over the real committed Nakagin tower (see noOracleDecisions).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "jack-1-assembly-scene-mutation-semantics",
+      "capabilities": ["jack-1-mutate"],
+      "rationale": "No third party reads or writes `.jack.dsl.semio`, and no graph library could adjudicate this vocabulary either. `JackSnapshot` persists a `manifest`, a camera, a root node id and ONE composed `s.stdio.semio.graph` child handle whose `childId` is a content digest of the child — pieces and connections are never persisted inline — so what an applied mutation produces is a NEW handle and what a refused one produces is the same handle, an addressing scheme private to this repository. And the vocabulary is an ASSEMBLY vocabulary rather than a graph one: an edge endpoint is a `node@port` pair split by this plugin's own `port_node_id`, an edge that names an absent endpoint is the Fatal `mutation.invariant` rather than a missing target, and `change-data-property`/`remove-data-property` address an `EntityRef` because nodes and edges share one property-bag shape. Confidence comes instead from the eight committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the production crate, and from the inverse law as a metamorphic property. Those eight split evenly and deliberately: four are refusals at two severities, four are no-ops — renaming a piece to the name it already carries, moving it to the point it already occupies, setting a property to the value it already holds, removing a property an edge never had. All eight leave the document byte-identical, so the `(code, severity)` pair is the only thing that tells a refusal from a degenerate application; `mutate-jack-1` therefore requires that pair per vector and separately applies a real-effect payload of its own to the committed Nakagin tower, where the content-addressed handle supplies the observability the vectors cannot.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "jack-1-any",
+      "capability": "jack-1-mutate",
+      "kinds": ["create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property"]
+    }
+  ]
+}

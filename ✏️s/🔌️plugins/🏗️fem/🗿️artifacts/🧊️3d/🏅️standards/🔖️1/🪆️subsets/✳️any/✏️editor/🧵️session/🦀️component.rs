@@ -1,8 +1,12 @@
 //! 🧵️ Mounted FEM3D visual publication on the shared bounded-job reactor.
 
-use crate::artifacts::fem3d::{element_id, load_id, Fem3dSnapshot, FemElement};
+use crate::analyses::{AnalysisModel, AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction};
+use crate::artifacts::fem3d::{element_id, load_id, Fem3dSnapshot, FemElement, FemLoad};
+use crate::model::{Bar3, Dof, Elements, Frame3, Node, Support};
+use crate::VecD;
+use crate::sparse::{LdltJob, ModalInputConstruction, PcgJob, PcgJobConstruction, SubspaceIterationJob};
 use semio_framework::kernel::{Effect, JobPlacement};
-use semio_framework_job::{Generation, OperationId, RevisionId, StepBudget, StepContext};
+use semio_framework_job::{Generation, InteractiveJob, OperationId, RevisionId, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
 use semio_framework_ui_scene::{
@@ -12,6 +16,7 @@ use semio_framework_ui_scene::{
 };
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::Arc;
 
 //#region 🔖️Contract
 pub const FEM3D_MOUNTED_VISUAL_JOB_KIND: &str = "semio.fem3d.mounted-live-visual";
@@ -126,6 +131,7 @@ pub struct Fem3dSolverView {
     total: usize,
     scalars: Option<Box<[std::mem::MaybeUninit<Fem3dSolverScalar>; MAXIMUM_FIELDS]>>,
     initialized: Option<Box<[bool; MAXIMUM_FIELDS]>>,
+    initialized_count: usize,
     len: usize,
     close_lane: u8,
 }
@@ -141,6 +147,7 @@ impl Fem3dSolverView {
             total: len,
             scalars: Some(Box::new([std::mem::MaybeUninit::uninit(); MAXIMUM_FIELDS])),
             initialized: Some(Box::new([false; MAXIMUM_FIELDS])),
+            initialized_count: 0,
             len,
             close_lane: 0,
         }
@@ -160,7 +167,13 @@ impl Fem3dSolverView {
         let (Some(scalars), Some(initialized)) = (self.scalars.as_mut(), self.initialized.as_mut()) else {
             return Err(scalar);
         };
+        if !scalar.displacement.iter().chain(&scalar.residual).chain(&scalar.reaction).chain(&scalar.mode_shape).all(|value| value.is_finite()) || !scalar.contour.is_finite() || !scalar.eigen_estimate.is_finite() {
+            return Err(scalar);
+        }
         scalars[index].write(scalar);
+        if !initialized[index] {
+            self.initialized_count += 1;
+        }
         initialized[index] = true;
         self.completed = self.completed.max(index + 1);
         self.state = Fem3dVisualState::SolvingUnconverged;
@@ -168,7 +181,12 @@ impl Fem3dSolverView {
     }
 
     pub fn publish_progress(&mut self, freshness: Fem3dVisualFreshness, state: Fem3dVisualState, residual_norm: f64, tolerance: f64, completed: usize, total: usize) -> bool {
-        if freshness != self.freshness || completed > total || total > MAXIMUM_FIELDS {
+        if freshness != self.freshness
+            || completed > total
+            || total > MAXIMUM_FIELDS
+            || matches!(state, Fem3dVisualState::SolvingConverged | Fem3dVisualState::ValidatedFinal)
+                && (self.initialized_count != self.len || total != self.len)
+        {
             return false;
         }
         self.state = state;
@@ -177,6 +195,10 @@ impl Fem3dSolverView {
         self.completed = completed;
         self.total = total;
         true
+    }
+
+    fn ready(&self) -> bool {
+        self.state == Fem3dVisualState::ValidatedFinal && self.initialized_count == self.len && self.total == self.len
     }
 
     fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
@@ -196,6 +218,465 @@ impl Fem3dSolverView {
         }
         self.close_lane += 1;
         (self.close_lane >= 2, 1, bytes)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum Fem3dNumericalStage {
+    ReserveNodes,
+    ReserveElements,
+    ReserveSupports,
+    Nodes,
+    ElementMaterial,
+    ElementSection,
+    ElementStart,
+    ElementEnd,
+    ElementCommit,
+    SupportDofReserve,
+    SupportDof,
+    SupportCommit,
+    PrepareAssembly,
+    Assembly,
+    MapEquation,
+    ReserveRhs,
+    InitializeRhs,
+    ApplyLoad,
+    BuildCsr,
+    PreparePcg,
+    Pcg,
+    ReadNodeScalar,
+    PublishNodeScalar,
+    PrepareModal,
+    Ldlt,
+    Subspace,
+    ReadModeScalar,
+    PublishModeScalar,
+    PublishProgress,
+    Complete,
+}
+
+struct Fem3dNumericalChild {
+    stage: Fem3dNumericalStage,
+    nodes: Vec<Node>,
+    elements: Vec<Elements>,
+    supports: Vec<Support>,
+    node_cursor: usize,
+    element_cursor: usize,
+    support_cursor: usize,
+    dof_cursor: usize,
+    lookup_cursor: usize,
+    material_cursor: usize,
+    section_cursor: usize,
+    resolved_material: usize,
+    resolved_section: usize,
+    pending_fixed: Vec<Dof>,
+    assembly_build: Option<AssemblyJobConstruction>,
+    assembly: Option<AssemblyJob<'static>>,
+    csr_build: Option<AssemblyCsrBuild>,
+    pcg_build: Option<PcgJobConstruction>,
+    pcg: Option<PcgJob>,
+    modal_build: Option<ModalInputConstruction>,
+    ldlt: Option<LdltJob>,
+    subspace: Option<SubspaceIterationJob>,
+    modal_mass: Option<crate::sparse::Csr>,
+    scalar_axis: usize,
+    scalar: Fem3dSolverScalar,
+    equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
+    free_order: usize,
+    rhs: VecD,
+    load_cursor: usize,
+    load_node_cursor: usize,
+}
+
+impl Fem3dNumericalChild {
+    fn new() -> Self {
+        Self {
+            stage: Fem3dNumericalStage::ReserveNodes,
+            nodes: Vec::new(),
+            elements: Vec::new(),
+            supports: Vec::new(),
+            node_cursor: 0,
+            element_cursor: 0,
+            support_cursor: 0,
+            dof_cursor: 0,
+            lookup_cursor: 0,
+            material_cursor: 0,
+            section_cursor: 0,
+            resolved_material: 0,
+            resolved_section: 0,
+            pending_fixed: Vec::new(),
+            assembly_build: None,
+            assembly: None,
+            csr_build: None,
+            pcg_build: None,
+            pcg: None,
+            modal_build: None,
+            ldlt: None,
+            subspace: None,
+            modal_mass: None,
+            scalar_axis: 0,
+            scalar: Fem3dSolverScalar::default(),
+            equations: [[None; 6]; MAXIMUM_FIELDS],
+            free_order: 0,
+            rhs: VecD::from_vec(Vec::new()),
+            load_cursor: 0,
+            load_node_cursor: 0,
+        }
+    }
+
+    fn reserve_owner<T>(owner: &mut Vec<T>, count: usize) -> Result<(), Vec<u8>> {
+        owner.try_reserve_exact(count).map_err(|_| b"fem3d.numerical-owner-admission".to_vec())?;
+        if owner.capacity().checked_mul(std::mem::size_of::<T>()).is_none_or(|bytes| bytes > WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY) {
+            return Err(b"fem3d.numerical-owner-page".to_vec());
+        }
+        Ok(())
+    }
+
+    fn step_model(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
+        match self.stage {
+            Fem3dNumericalStage::ReserveNodes => {
+                if !doc.solids.is_empty() {
+                    return Err(b"fem3d.numerical-solid-mesh-child-required".to_vec());
+                }
+                Self::reserve_owner(&mut self.nodes, doc.nodes.len())?;
+                self.stage = Fem3dNumericalStage::ReserveElements;
+            }
+            Fem3dNumericalStage::ReserveElements => {
+                Self::reserve_owner(&mut self.elements, doc.elements.len())?;
+                self.stage = Fem3dNumericalStage::ReserveSupports;
+            }
+            Fem3dNumericalStage::ReserveSupports => {
+                Self::reserve_owner(&mut self.supports, doc.supports.len())?;
+                self.stage = Fem3dNumericalStage::Nodes;
+            }
+            Fem3dNumericalStage::Nodes => {
+                if let Some(node) = doc.nodes.get(self.node_cursor) {
+                    self.nodes.push(Node { id: node.id.clone(), pos: [node.x, node.y, node.z] });
+                    self.node_cursor += 1;
+                } else {
+                    self.stage = Fem3dNumericalStage::ElementMaterial;
+                }
+            }
+            Fem3dNumericalStage::ElementMaterial => {
+                let Some(element) = doc.elements.get(self.element_cursor) else {
+                    self.stage = Fem3dNumericalStage::SupportDofReserve;
+                    return Ok(false);
+                };
+                let material_id = match element {
+                    FemElement::Bar { material_id, .. } | FemElement::Frame { material_id, .. } => material_id,
+                };
+                let Some(material) = doc.materials.get(self.material_cursor) else { return Err(b"fem3d.numerical-material".to_vec()) };
+                if &material.id == material_id {
+                    self.resolved_material = self.material_cursor;
+                    self.material_cursor = 0;
+                    self.stage = Fem3dNumericalStage::ElementSection;
+                } else {
+                    self.material_cursor += 1;
+                }
+            }
+            Fem3dNumericalStage::ElementSection => {
+                let Some(element) = doc.elements.get(self.element_cursor) else { return Err(b"fem3d.numerical-element".to_vec()) };
+                let section_id = match element {
+                    FemElement::Bar { section_id, .. } | FemElement::Frame { section_id, .. } => section_id,
+                };
+                let Some(section) = doc.sections.get(self.section_cursor) else { return Err(b"fem3d.numerical-section".to_vec()) };
+                if &section.id == section_id {
+                    self.resolved_section = self.section_cursor;
+                    self.section_cursor = 0;
+                    self.stage = Fem3dNumericalStage::ElementStart;
+                } else {
+                    self.section_cursor += 1;
+                }
+            }
+            Fem3dNumericalStage::ElementStart | Fem3dNumericalStage::ElementEnd => {
+                let Some(element) = doc.elements.get(self.element_cursor) else { return Err(b"fem3d.numerical-element".to_vec()) };
+                let (start, end) = match element {
+                    FemElement::Bar { start, end, .. } | FemElement::Frame { start, end, .. } => (start, end),
+                };
+                let target = if self.stage == Fem3dNumericalStage::ElementStart { start } else { end };
+                let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem3d.numerical-element-node".to_vec()) };
+                if &node.id == target {
+                    self.lookup_cursor = 0;
+                    self.stage = if self.stage == Fem3dNumericalStage::ElementStart { Fem3dNumericalStage::ElementEnd } else { Fem3dNumericalStage::ElementCommit };
+                } else {
+                    self.lookup_cursor += 1;
+                }
+            }
+            Fem3dNumericalStage::ElementCommit => {
+                let element = doc.elements.get(self.element_cursor).ok_or_else(|| b"fem3d.numerical-element".to_vec())?;
+                let material = doc.materials.get(self.resolved_material).ok_or_else(|| b"fem3d.numerical-material".to_vec())?;
+                let section = doc.sections.get(self.resolved_section).ok_or_else(|| b"fem3d.numerical-section".to_vec())?;
+                let built: Elements = match element {
+                    FemElement::Bar { id, start, end, .. } => Bar3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, a: section.area, density: material.rho }.into(),
+                    FemElement::Frame { id, start, end, roll, .. } => Frame3 {
+                        id: id.clone(),
+                        node_a: start.clone(),
+                        node_b: end.clone(),
+                        e: material.e,
+                        g: material.g,
+                        a: section.area,
+                        iy: section.iy,
+                        iz: section.iz,
+                        j: section.j,
+                        roll: *roll,
+                        density: material.rho,
+                    }
+                    .into(),
+                };
+                self.elements.push(built);
+                self.element_cursor += 1;
+                self.stage = Fem3dNumericalStage::ElementMaterial;
+            }
+            Fem3dNumericalStage::SupportDofReserve => {
+                let Some(support) = doc.supports.get(self.support_cursor) else {
+                    self.stage = Fem3dNumericalStage::PrepareAssembly;
+                    return Ok(true);
+                };
+                self.pending_fixed = Vec::new();
+                Self::reserve_owner(&mut self.pending_fixed, support.fixed.len())?;
+                self.stage = Fem3dNumericalStage::SupportDof;
+            }
+            Fem3dNumericalStage::SupportDof => {
+                let support = doc.supports.get(self.support_cursor).ok_or_else(|| b"fem3d.numerical-support".to_vec())?;
+                if let Some(dof) = support.fixed.get(self.dof_cursor) {
+                    self.pending_fixed.push(Dof::from(*dof));
+                    self.dof_cursor += 1;
+                } else {
+                    self.stage = Fem3dNumericalStage::SupportCommit;
+                }
+            }
+            Fem3dNumericalStage::SupportCommit => {
+                let support = doc.supports.get(self.support_cursor).ok_or_else(|| b"fem3d.numerical-support".to_vec())?;
+                self.supports.push(Support { node_id: support.node_id.clone(), fixed: std::mem::take(&mut self.pending_fixed) });
+                self.support_cursor += 1;
+                self.dof_cursor = 0;
+                self.stage = Fem3dNumericalStage::SupportDofReserve;
+            }
+            _ => return Ok(true),
+        }
+        Ok(false)
+    }
+
+    fn step(&mut self, doc: &Fem3dSnapshot, solver: &mut Fem3dSolverView, freshness: Fem3dVisualFreshness, operation: semio_framework_job::Operation, context: &mut StepContext<'_>) -> Result<bool, Vec<u8>> {
+        if self.stage <= Fem3dNumericalStage::SupportCommit {
+            let complete = self.step_model(doc)?;
+            context.consume_fuel(1);
+            if complete {
+                let model = Arc::new(AnalysisModel { nodes: std::mem::take(&mut self.nodes), elements: std::mem::take(&mut self.elements), supports: std::mem::take(&mut self.supports) });
+                self.assembly_build = Some(AssemblyJobConstruction::new_owned(model, operation, 1));
+                self.stage = Fem3dNumericalStage::PrepareAssembly;
+            }
+            return Ok(false);
+        }
+        match self.stage {
+            Fem3dNumericalStage::PrepareAssembly => match self.assembly_build.as_mut().ok_or_else(|| b"fem3d.numerical-assembly-build".to_vec())?.step_one() {
+                Ok(false) => {}
+                Ok(true) => {
+                    self.assembly = self.assembly_build.as_mut().and_then(AssemblyJobConstruction::take_complete);
+                    if self.assembly.is_none() {
+                        return Err(b"fem3d.numerical-assembly-false-terminal".to_vec());
+                    }
+                    self.stage = Fem3dNumericalStage::Assembly;
+                }
+                Err(error) => return Err(error.to_string().into_bytes()),
+            },
+            Fem3dNumericalStage::Assembly => match self.assembly.as_mut().ok_or_else(|| b"fem3d.numerical-assembly".to_vec())?.step(context) {
+                StepOutcome::Complete(_) => {
+                    self.node_cursor = 0;
+                    self.dof_cursor = 0;
+                    self.free_order = self.assembly.as_ref().map_or(0, AssemblyJob::visual_free_order);
+                    self.stage = Fem3dNumericalStage::MapEquation;
+                }
+                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => return Ok(false),
+                StepOutcome::Cancelled => return Err(b"fem3d.numerical-cancelled".to_vec()),
+                StepOutcome::Fault(fault) => return Err(fault.detail),
+            },
+            Fem3dNumericalStage::MapEquation => {
+                if self.node_cursor == doc.nodes.len() {
+                    self.stage = Fem3dNumericalStage::ReserveRhs;
+                } else if self.dof_cursor == 6 {
+                    self.node_cursor += 1;
+                    self.dof_cursor = 0;
+                } else {
+                    let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_cursor];
+                    self.equations[self.node_cursor][self.dof_cursor] = self
+                        .assembly
+                        .as_ref()
+                        .and_then(|assembly| assembly.visual_equation_indices(&doc.nodes[self.node_cursor].id, dof))
+                        .and_then(|(_, compact)| compact);
+                    self.dof_cursor += 1;
+                }
+            }
+            Fem3dNumericalStage::ReserveRhs => {
+                self.rhs.0.try_reserve_exact(self.free_order).map_err(|_| b"fem3d.numerical-rhs-admission".to_vec())?;
+                if self.rhs.0.capacity().saturating_mul(std::mem::size_of::<f64>()) > WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY {
+                    return Err(b"fem3d.numerical-rhs-page".to_vec());
+                }
+                self.stage = Fem3dNumericalStage::InitializeRhs;
+            }
+            Fem3dNumericalStage::InitializeRhs => {
+                if self.rhs.len() < self.free_order {
+                    self.rhs.0.push(0.0);
+                } else {
+                    self.node_cursor = 0;
+                    self.stage = Fem3dNumericalStage::ApplyLoad;
+                }
+            }
+            Fem3dNumericalStage::ApplyLoad => {
+                let Some(case) = doc.load_cases.first() else { return Err(b"fem3d.numerical-load-case".to_vec()) };
+                let Some(load) = case.loads.get(self.load_cursor) else {
+                    if case.self_weight {
+                        return Err(b"fem3d.numerical-self-weight-child-required".to_vec());
+                    }
+                    let assembly = self.assembly.take().ok_or_else(|| b"fem3d.numerical-assembly-owner".to_vec())?;
+                    self.csr_build = Some(AssemblyCsrBuild::new_free(assembly).map_err(|_| b"fem3d.numerical-assembly-terminal".to_vec())?);
+                    self.stage = Fem3dNumericalStage::BuildCsr;
+                    return Ok(false);
+                };
+                let FemLoad::Nodal { node_id, dof, value, .. } = load else { return Err(b"fem3d.numerical-distributed-load-child-required".to_vec()) };
+                let Some(node) = doc.nodes.get(self.load_node_cursor) else { return Err(b"fem3d.numerical-load-node".to_vec()) };
+                if &node.id == node_id {
+                    let axis = Dof::from(*dof).index();
+                    if let Some(equation) = self.equations[self.load_node_cursor][axis] {
+                        self.rhs.add_at(equation, *value);
+                    }
+                    self.load_cursor += 1;
+                    self.load_node_cursor = 0;
+                } else {
+                    self.load_node_cursor += 1;
+                }
+            }
+            Fem3dNumericalStage::BuildCsr => match self.csr_build.as_mut().ok_or_else(|| b"fem3d.numerical-csr".to_vec())?.step_one() {
+                Ok(false) => {}
+                Ok(true) => {
+                    let matrix = self.csr_build.as_mut().and_then(AssemblyCsrBuild::take_complete).ok_or_else(|| b"fem3d.numerical-csr-terminal".to_vec())?;
+                    self.pcg_build = Some(PcgJobConstruction::new_with_rhs(operation, matrix, std::mem::replace(&mut self.rhs, VecD::from_vec(Vec::new()))).map_err(|_| b"fem3d.numerical-pcg-rhs".to_vec())?);
+                    self.stage = Fem3dNumericalStage::PreparePcg;
+                }
+                Err(detail) => return Err(detail.to_vec()),
+            },
+            Fem3dNumericalStage::PreparePcg => match self.pcg_build.as_mut().ok_or_else(|| b"fem3d.numerical-pcg-build".to_vec())?.step_one() {
+                Ok(false) => {}
+                Ok(true) => {
+                    self.pcg = self.pcg_build.as_mut().and_then(PcgJobConstruction::take_complete);
+                    if self.pcg.is_none() {
+                        return Err(b"fem3d.numerical-pcg-false-terminal".to_vec());
+                    }
+                    self.stage = Fem3dNumericalStage::Pcg;
+                }
+                Err(detail) => return Err(detail.to_vec()),
+            },
+            Fem3dNumericalStage::Pcg => match self.pcg.as_mut().ok_or_else(|| b"fem3d.numerical-pcg".to_vec())?.step(context) {
+                StepOutcome::Complete(_) => {
+                    self.stage = Fem3dNumericalStage::ReadNodeScalar;
+                    self.node_cursor = 0;
+                    self.scalar_axis = 0;
+                }
+                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => return Ok(false),
+                StepOutcome::Cancelled => return Err(b"fem3d.numerical-cancelled".to_vec()),
+                StepOutcome::Fault(fault) => return Err(fault.detail),
+            },
+            Fem3dNumericalStage::ReadNodeScalar => {
+                if self.node_cursor == doc.nodes.len() {
+                    let matrix = self.pcg.as_mut().and_then(PcgJob::take_completed_matrix).ok_or_else(|| b"fem3d.numerical-modal-matrix".to_vec())?;
+                    self.modal_build = Some(ModalInputConstruction::new(matrix));
+                    self.stage = Fem3dNumericalStage::PrepareModal;
+                } else {
+                    if let Some(equation) = self.equations[self.node_cursor][self.scalar_axis] {
+                        let value = self.pcg.as_ref().and_then(|pcg| pcg.visual_scalar(equation)).ok_or_else(|| b"fem3d.numerical-node-scalar".to_vec())?;
+                        self.scalar.displacement[self.scalar_axis] = value.displacement;
+                        self.scalar.residual[self.scalar_axis] = value.residual;
+                        self.scalar.contour = self.scalar.contour.max(value.contour);
+                    }
+                    self.scalar_axis += 1;
+                    if self.scalar_axis == 3 {
+                        self.stage = Fem3dNumericalStage::PublishNodeScalar;
+                    }
+                }
+            }
+            Fem3dNumericalStage::PublishNodeScalar => {
+                solver.publish_scalar(freshness, self.node_cursor, self.scalar).map_err(|_| b"fem3d.numerical-solver-publication".to_vec())?;
+                self.node_cursor += 1;
+                self.scalar_axis = 0;
+                self.scalar = Fem3dSolverScalar::default();
+                self.stage = Fem3dNumericalStage::ReadNodeScalar;
+            }
+            Fem3dNumericalStage::PrepareModal => match self.modal_build.as_mut().ok_or_else(|| b"fem3d.numerical-modal-build".to_vec())?.step_one() {
+                Ok(false) => {}
+                Ok(true) => {
+                    let (stiffness, mass) = self.modal_build.as_mut().and_then(ModalInputConstruction::take_complete).ok_or_else(|| b"fem3d.numerical-modal-terminal".to_vec())?;
+                    if stiffness.n == 0 || stiffness.n > 40 {
+                        return Err(b"fem3d.numerical-modal-order".to_vec());
+                    }
+                    self.modal_mass = Some(mass);
+                    self.ldlt = Some(LdltJob::new(operation, stiffness, 1));
+                    self.stage = Fem3dNumericalStage::Ldlt;
+                }
+                Err(detail) => return Err(detail.to_vec()),
+            },
+            Fem3dNumericalStage::Ldlt => match self.ldlt.as_mut().ok_or_else(|| b"fem3d.numerical-ldlt".to_vec())?.step(context) {
+                StepOutcome::Complete(_) => {
+                    let factor = self.ldlt.as_mut().and_then(LdltJob::take_factor).ok_or_else(|| b"fem3d.numerical-ldlt-factor".to_vec())?;
+                    let mass = self.modal_mass.take().ok_or_else(|| b"fem3d.numerical-modal-mass".to_vec())?;
+                    let order = mass.n;
+                    self.subspace = Some(SubspaceIterationJob::new(operation, factor, mass, order, 1, 30));
+                    self.stage = Fem3dNumericalStage::Subspace;
+                }
+                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => return Ok(false),
+                StepOutcome::Cancelled => return Err(b"fem3d.numerical-cancelled".to_vec()),
+                StepOutcome::Fault(fault) => return Err(fault.detail.to_vec()),
+            },
+            Fem3dNumericalStage::Subspace => match self.subspace.as_mut().ok_or_else(|| b"fem3d.numerical-subspace".to_vec())?.step(context) {
+                StepOutcome::Complete(_) => {
+                    self.node_cursor = 0;
+                    self.scalar_axis = 0;
+                    self.stage = Fem3dNumericalStage::ReadModeScalar;
+                }
+                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => return Ok(false),
+                StepOutcome::Cancelled => return Err(b"fem3d.numerical-cancelled".to_vec()),
+                StepOutcome::Fault(fault) => return Err(fault.detail.to_vec()),
+            },
+            Fem3dNumericalStage::ReadModeScalar => {
+                if self.node_cursor == doc.nodes.len() {
+                    self.stage = Fem3dNumericalStage::PublishProgress;
+                } else {
+                    if let Some(equation) = self.equations[self.node_cursor][self.scalar_axis] {
+                        let (component, eigenvalue) = self.subspace.as_ref().and_then(|subspace| subspace.visual_mode_scalar(0, equation)).ok_or_else(|| b"fem3d.numerical-mode-scalar".to_vec())?;
+                        self.scalar.mode_shape[self.scalar_axis] = component;
+                        self.scalar.eigen_estimate = eigenvalue;
+                    }
+                    self.scalar_axis += 1;
+                    if self.scalar_axis == 3 {
+                        self.stage = Fem3dNumericalStage::PublishModeScalar;
+                    }
+                }
+            }
+            Fem3dNumericalStage::PublishModeScalar => {
+                let mut scalar = solver.scalar(self.node_cursor).ok_or_else(|| b"fem3d.numerical-static-scalar".to_vec())?;
+                scalar.mode_shape = self.scalar.mode_shape;
+                scalar.eigen_estimate = self.scalar.eigen_estimate;
+                solver.publish_scalar(freshness, self.node_cursor, scalar).map_err(|_| b"fem3d.numerical-mode-publication".to_vec())?;
+                self.node_cursor += 1;
+                self.scalar_axis = 0;
+                self.scalar = Fem3dSolverScalar::default();
+                self.stage = Fem3dNumericalStage::ReadModeScalar;
+            }
+            Fem3dNumericalStage::PublishProgress => {
+                let (_, _, residual, tolerance, converged) = self.pcg.as_ref().ok_or_else(|| b"fem3d.numerical-pcg".to_vec())?.visual_progress();
+                let (_, _, mode_residual, modes_converged) = self.subspace.as_ref().ok_or_else(|| b"fem3d.numerical-subspace".to_vec())?.visual_progress();
+                let state = if converged && modes_converged { Fem3dVisualState::ValidatedFinal } else { Fem3dVisualState::SolvingUnconverged };
+                if !solver.publish_progress(freshness, state, residual.max(mode_residual), tolerance, doc.nodes.len(), doc.nodes.len()) {
+                    return Err(b"fem3d.numerical-progress-publication".to_vec());
+                }
+                self.stage = Fem3dNumericalStage::Complete;
+            }
+            Fem3dNumericalStage::Complete => return Ok(true),
+            _ => {}
+        }
+        if !matches!(self.stage, Fem3dNumericalStage::Assembly | Fem3dNumericalStage::Pcg) {
+            context.consume_fuel(1);
+        }
+        Ok(self.stage == Fem3dNumericalStage::Complete)
     }
 }
 
@@ -450,7 +931,7 @@ impl Fem3dPageVisualJob {
         numbers
     }
 
-    fn field_numbers(field: Fem3dSolverScalar, vector: [f64; 3], scalar: f64) -> [f64; 16] {
+    fn field_numbers(field: Fem3dSolverScalar, position: [f64; 3], vector: [f64; 3], scalar: f64) -> [f64; 16] {
         let mut numbers = [0.0; 16];
         numbers[..3].copy_from_slice(&vector);
         numbers[3] = scalar;
@@ -461,6 +942,7 @@ impl Fem3dPageVisualJob {
         numbers[8] = field.reaction[1];
         numbers[9] = field.reaction[2];
         numbers[10] = field.eigen_estimate;
+        numbers[11..14].copy_from_slice(&position);
         numbers
     }
 
@@ -668,7 +1150,15 @@ impl Fem3dPageVisualJob {
                     Fem3dVisualJobStage::BuildContourEntry => ([0.0; 3], field.contour, 13),
                     _ => (field.mode_shape, field.eigen_estimate, 14),
                 };
-                self.push_item(Self::field_page(self.stage, self.cursor), [Some(&node.id), None, None, None], Self::field_numbers(field, vector, scalar), 11, [0; 8], 0, flag)?;
+                self.push_item(
+                    Self::field_page(self.stage, self.cursor),
+                    [Some(&node.id), None, None, None],
+                    Self::field_numbers(field, [node.x, node.y, node.z], vector, scalar),
+                    14,
+                    [0; 8],
+                    0,
+                    flag,
+                )?;
                 self.cursor += 1;
             }
             Fem3dVisualJobStage::BuildLabelEntry => {
@@ -816,6 +1306,7 @@ struct MountedState {
     preview_sequence: u64,
     credit: Fem3dPageCredit,
     solver: Option<Fem3dSolverView>,
+    numerical: Option<Fem3dNumericalChild>,
     candidate: Option<Fem3dPageVisualJob>,
     current: Option<Fem3dPageVisualLease>,
     displaced: Option<Fem3dPageVisualLease>,
@@ -835,6 +1326,7 @@ impl MountedState {
             preview_sequence: 0,
             credit,
             solver: Some(solver),
+            numerical: Some(Fem3dNumericalChild::new()),
             candidate: None,
             current,
             displaced: None,
@@ -873,16 +1365,32 @@ impl MountedState {
         if self.done {
             return JobStep::Done(self.identity.generation.0.to_le_bytes().to_vec());
         }
+        if self.numerical.is_some() {
+            let freshness = self.identity.freshness(0);
+            let operation = self.identity.operation();
+            let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem3d.numerical-snapshot-owner".to_vec()) };
+            let Some(solver) = self.solver.as_mut() else { return self.fail(b"fem3d.numerical-solver-owner".to_vec()) };
+            let step = self.numerical.as_mut().map(|numerical| numerical.step(snapshot, solver, freshness, operation, &mut cx));
+            return match step {
+                Some(Ok(true)) => {
+                    self.numerical = None;
+                    JobStep::Running(None)
+                }
+                Some(Ok(false)) => JobStep::Running(None),
+                Some(Err(detail)) => self.fail(detail),
+                None => self.fail(b"fem3d.numerical-owner".to_vec()),
+            };
+        }
         if self.candidate.is_none() {
             cx.consume_fuel(1);
-            let fields_ready = self.solver.as_ref().is_some_and(|solver| solver.completed == self.snapshot.as_ref().map_or(0, |snapshot| snapshot.nodes.len()) && solver.total == solver.completed);
+            let fields_ready = self.solver.as_ref().is_some_and(Fem3dSolverView::ready);
             if !fields_ready {
                 return JobStep::Running(None);
             }
-            self.candidate = Some(Fem3dPageVisualJob::new(self.identity.freshness(self.preview_sequence), self.credit));
+            self.candidate = Some(Fem3dPageVisualJob::new(self.identity.freshness(0), self.credit));
             return JobStep::Running(None);
         }
-        let freshness = self.identity.freshness(self.preview_sequence);
+        let freshness = self.identity.freshness(0);
         let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem3d.visual-snapshot-owner".to_vec()) };
         let Some(solver) = self.solver.as_ref() else { return self.fail(b"fem3d.visual-solver-owner".to_vec()) };
         cx.consume_fuel(1);
@@ -1093,11 +1601,11 @@ impl SnapshotPreflight {
                 };
                 let page = 2 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY;
                 self.charge(page, 1, node.id.len(), 1, node.id.len())?;
-                self.charge(10 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 0, 0)?;
-                self.charge(12 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 0, 0)?;
-                self.charge(14 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 0, 0)?;
-                self.charge(16 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 0, 0)?;
-                self.charge(18 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 0, 0)?;
+                self.charge(10 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
+                self.charge(12 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
+                self.charge(14 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
+                self.charge(16 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
+                self.charge(18 + self.outer / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, 1, node.id.len(), 1, node.id.len())?;
                 self.outer += 1;
             }
             SnapshotPreflightStage::Elements => {

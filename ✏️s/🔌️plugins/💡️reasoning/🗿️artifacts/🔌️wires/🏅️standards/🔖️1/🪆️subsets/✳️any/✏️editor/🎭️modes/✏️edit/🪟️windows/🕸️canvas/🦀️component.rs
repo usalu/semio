@@ -68,7 +68,7 @@ pub async fn render(board: &DslValue, wires: &DslValue) -> UiNode {
     let mut layers: Vec<Value> = fixture_nodes(board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(board).iter().map(dsl_to_json));
     layers.extend(relationship_edge_layers(wires, board));
-    build_canvas_2d_scene(WIRES_PLAY_SURFACE_ID, WIRES_PLAY_APP_ID, Canvas2dScene { camera_x, camera_y, zoom, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()) })
+    build_canvas_2d_scene(WIRES_PLAY_SURFACE_ID, WIRES_PLAY_APP_ID, Canvas2dScene { camera_x, camera_y, zoom, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()), snapshot: None })
 }
 //#endregion 🔖️Render
 

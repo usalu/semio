@@ -23,6 +23,6 @@ impl Deserializer<PresentSnapshot> for PptxIntoPresent {
         let wire = <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("PptxIntoPresent: {error}"), diagnostics: Vec::new() })?;
         let value = serde_json::to_value(&wire).map_err(|error| IoError { message: format!("PptxIntoPresent: {error}"), diagnostics: Vec::new() })?;
         let snapshot: PresentSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("PptxIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(snapshot).await)
+        Ok(IoOutcome::clean(snapshot))
     }
 }

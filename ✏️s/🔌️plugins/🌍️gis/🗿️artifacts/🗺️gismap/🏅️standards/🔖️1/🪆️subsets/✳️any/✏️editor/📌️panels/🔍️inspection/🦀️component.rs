@@ -16,7 +16,7 @@ pub const GIS2D_PLAY_BODY_INSPECTION: &str = "gis2d.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -133,7 +133,7 @@ async fn map_view_field_group(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Ui
 /// tell which layer is currently selected and always shows the map-wide summary now — the
 /// per-selected-layer detail branch (id/label/visible-toggle) that used to read `cfg.selected_ids`
 /// is gone with it (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub async fn render(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
+pub fn render(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
     let map_view_group = map_view_field_group(cfg, labels);
     let visible_count = GIS_MAP_LAYER_IDS.iter().filter(|(id, _, _)| layer_visible(cfg, id)).count();
     ui_inspector_groups_to_tree(&[

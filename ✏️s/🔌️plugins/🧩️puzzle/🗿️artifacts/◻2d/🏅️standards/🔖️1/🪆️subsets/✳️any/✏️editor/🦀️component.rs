@@ -1331,7 +1331,7 @@ pub(crate) mod testkit {
     /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
     /// `Self::Command` channel). Reconstructs the `Puzzle2dCommand` from the same
     /// `(action, args, window_id)` triple every pre-B1 test already passed.
-    pub async fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    pub fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
         // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
         // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
         // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
@@ -1363,7 +1363,7 @@ pub(crate) mod testkit {
     }
 
     /// 🧵️ Drives the same host-owned `DispatchAction` continuation used in production until the example is complete.
-    pub async fn finish_example_load(app: &mut Puzzle2dApp, mut result: InvocationResult) -> usize {
+    pub fn finish_example_load(app: &mut Puzzle2dApp, mut result: InvocationResult) -> usize {
         for step in 0..4_096 {
             let next = result.requested_effects.into_iter().find_map(|effect| match effect {
                 Effect::DispatchAction { action, args, .. } if action == set_active_example::STEP_ACTION_ID => Some(args.map(|value| semio_framework::from_dsl_value::<Value>(value).expect("example step args decode"))),
@@ -1376,7 +1376,7 @@ pub(crate) mod testkit {
         panic!("example load did not finish within its deterministic step bound");
     }
 
-    pub async fn load_example(app: &mut Puzzle2dApp, example_id: &str) -> usize {
+    pub fn load_example(app: &mut Puzzle2dApp, example_id: &str) -> usize {
         let result = dispatch(app, "setActiveExample", Some(&json!({ "exampleId": example_id })), None).await.expect("begin example load");
         finish_example_load(app, result).await
     }
@@ -1384,12 +1384,12 @@ pub(crate) mod testkit {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
     /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
     /// deleted `setSelection` action.
-    pub async fn select_id(app: &mut Puzzle2dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
+    pub fn select_id(app: &mut Puzzle2dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
         dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).await
     }
 
-    pub async fn concrete_forest_app() -> Puzzle2dApp {
+    pub fn concrete_forest_app() -> Puzzle2dApp {
         let mut app = app();
         load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID).await;
         app

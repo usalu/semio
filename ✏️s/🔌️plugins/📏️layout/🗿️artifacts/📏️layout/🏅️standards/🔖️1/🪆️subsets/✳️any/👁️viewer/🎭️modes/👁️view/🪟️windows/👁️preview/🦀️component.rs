@@ -94,7 +94,7 @@ async fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
 /// 👁️ Fixed default camera every render — a viewer has no persisted per-session camera (`Config =
 /// NoConfig`), matching cad's viewer's documented "default camera/sun" simplification.
 pub async fn render(doc: &LayoutSnapshot) -> UiNode {
-    build_canvas_2d_scene(SURFACE_ID, LAYOUT_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc) })
+    build_canvas_2d_scene(SURFACE_ID, LAYOUT_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc), snapshot: None })
 }
 //#endregion 🔖️Render
 

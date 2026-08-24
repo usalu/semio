@@ -1,0 +1,43 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `process.process3d` declares 16 mutation kinds over an ordered step timeline, an unordered machine set, a three-way-split stock facet and one document scalar. Semio-NATIVE, no oracle; the decision below also records that the seven step-scoped verbs are implemented today as documented no-ops, so their vectors carry no forward evidence.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "process3d-mutation-semantics",
+      "capabilities": [
+        "process3d-1-mutate"
+      ],
+      "rationale": "`process.process3d` is a semio-NATIVE artifact — a fabrication document holding a workshop of machines, a stock body and an ordered timeline of process steps, all in `.dsl.semio` — and nothing outside this repository reads it. Two candidate families were surveyed and DECLINED. G-code parsers (`gcode`, `nom-gcode`) model a flat instruction stream with no machine catalogue, no capability recipes and no undoable edit vocabulary, so they could adjudicate none of these sixteen kinds; and STEP/BREP kernels (`ruststep`, already registered under `✏️s/🔌️plugins/🗄️stdio`'s `📐️step` subsets) model solid geometry, which is only the payload of `replace-stock-solid` and says nothing about the timeline, the workshop or the replay cursor. Evidence is the sixteen committed specification vectors plus the inverse law. That evidence is UNEVEN and the feature says so kind by kind: nine vectors are forward and observable, but the seven step-scoped verbs are implemented today as documented no-ops — their `diff` builders take `_payload`/`_base` by underscore and return `MutationOutcome::empty().warn(\"mutation.no-op\", …)` because the timeline is a composed `s.stdio.semio.flow` child and no link resolver exists yet — so their vectors record `before == after` and their `mutate-`/`inverse-` scenarios can assert only the declared no-op, never the forward semantics.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "process3d-1-any",
+      "capability": "process3d-1-mutate",
+      "kinds": [
+        "create-step",
+        "delete-step",
+        "rename-step",
+        "change-step-enabled",
+        "change-step-origin",
+        "replace-step-measure",
+        "reorder-steps",
+        "create-machine",
+        "delete-machine",
+        "rename-machine",
+        "change-machine-icon",
+        "replace-machine-capabilities",
+        "move-stock",
+        "change-stock-label",
+        "replace-stock-solid",
+        "change-cursor"
+      ]
+    }
+  ]
+}

@@ -194,3 +194,33 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🌉️IdentityBridge
+/// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
+/// language-neutral test adapter. Same reachability wall as `s_space_mutation_report_json`:
+/// `store::ArtifactDsl`/`store::ArtifactPack` and their error types are unnameable outside this
+/// crate, so the identity law's evidence has to be produced here and handed over as text.
+///
+/// `canonicalText` is `print_dsl` of the parsed document and `canonicalTextAgain` is `print_dsl` of
+/// re-parsing that — [`store::ArtifactDsl`]'s own documented LAW is that canonical output is a
+/// `parse_dsl` fixpoint (hand-written text may normalize on the way in), so the two must be
+/// byte-identical while neither is required to equal the committed file. `packDecoded` comes back
+/// through a SEPARATE binary codec, so agreeing on one snapshot cannot be achieved by carrying text
+/// bytes across.
+pub fn s_space_identity_report_json(dsl_text: &str) -> Result<String, String> {
+    let parsed = <SSpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
+    let canonical = <SSpaceSnapshot as store::ArtifactDsl>::print_dsl(&parsed);
+    let reparsed = <SSpaceSnapshot as store::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
+    let canonical_again = <SSpaceSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
+    let packed = <SSpaceSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
+    let unpacked = <SSpaceSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
+    let report = serde_json::json!({
+        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
+        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
+        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
+        "canonicalText": canonical,
+        "canonicalTextAgain": canonical_again,
+    });
+    Ok(report.to_string())
+}
+//#endregion 🌉️IdentityBridge

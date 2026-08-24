@@ -9,7 +9,7 @@ use serde_json::json;
 //#region 🔖️Option
 pub const GIS2D_LAYERS_MEASURE_ID: &str = "gis2d-play-window.layers";
 
-pub async fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
+pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
     let children: Vec<WindowMeasure> = GIS_MAP_LAYER_IDS
         .iter()
         .map(|(id, _, icon)| WindowMeasure::Toggle {

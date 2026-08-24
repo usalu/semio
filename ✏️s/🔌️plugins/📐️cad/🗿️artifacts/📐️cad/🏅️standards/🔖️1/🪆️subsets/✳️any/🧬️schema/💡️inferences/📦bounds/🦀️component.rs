@@ -25,18 +25,18 @@ pub struct CadBounds {
 /// 📦 3d bounding box across every pane's object origins and brep vertex positions. `None`
 /// unconditionally now — real bounds require resolving the composed model children's content,
 /// which is out of this pure inference's reach (see module doc comment).
-pub(crate) async fn scene_bounds(_snapshot: &CadSnapshot) -> Option<CadBounds> {
+pub(crate) fn scene_bounds(_snapshot: &CadSnapshot) -> Option<CadBounds> {
     None
 }
 
 /// 📦 Number of the four fixed model-child SLOTS that are occupied (0..=4) — a real, cheap signal
 /// over what `CadSnapshot` itself can see; NOT a count of elements inside those children.
-pub(crate) async fn object_count(snapshot: &CadSnapshot) -> usize {
+pub(crate) fn object_count(snapshot: &CadSnapshot) -> usize {
     [&snapshot.shape_model, &snapshot.building_model, &snapshot.energy_model, &snapshot.structure_classic_model].into_iter().filter(|slot| slot.is_some()).count()
 }
 
 /// 📦 Vertex counting requires resolved child content (see module doc comment) — `0` unconditionally.
-pub(crate) async fn vertex_count(_snapshot: &CadSnapshot) -> usize {
+pub(crate) fn vertex_count(_snapshot: &CadSnapshot) -> usize {
     0
 }
 //#endregion 📦Bounds

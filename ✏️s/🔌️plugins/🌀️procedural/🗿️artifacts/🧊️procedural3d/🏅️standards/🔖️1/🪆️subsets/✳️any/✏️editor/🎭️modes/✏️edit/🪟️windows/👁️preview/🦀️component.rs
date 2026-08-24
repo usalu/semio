@@ -54,7 +54,7 @@ pub fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str, Optio
 /// windows (edit mode's 3D preview and generate mode's generation preview).
 pub fn preview_window_measures(config: &Procedural3dConfig, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
-    vec![show_mode_measure(&config.show_mode, procedural_action), semio_framework::io::resolve_ready(world3d_sun_measures("procedural3d", &sun, procedural_action))]
+    vec![show_mode_measure(&config.show_mode, procedural_action), world3d_sun_measures("procedural3d", &sun, procedural_action)]
 }
 //#endregion 🔖️Definition
 

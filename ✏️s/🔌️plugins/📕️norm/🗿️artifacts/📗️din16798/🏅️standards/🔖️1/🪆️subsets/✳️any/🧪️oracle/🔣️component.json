@@ -1,0 +1,89 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here rather than in a shared manifest. `din16798-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../🧬️schema/🧬️mutations/🦀️component.rs` fails the moment this list and the enum part company.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "din16798-1-mutation-semantics",
+      "capabilities": [
+        "din16798-1-mutate"
+      ],
+      "rationale": "`s.norm.din16798` is a semio-NATIVE artifact: the document is this repository's own `.dsl.semio`/`.pack.semio` envelope over a DIN EN 16798-1 — indoor environmental input parameters for energy performance model, and no third-party library — in any ecosystem — reads or writes it, let alone one that could be authoritative over this subset's `Din16798Mutation` vocabulary. That vocabulary IS this subset's own specification (derived from `Din16798Snapshot`'s shape by `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️derivation-rules.md`), not a fact an external implementation could confirm or refute; a crate that parsed DIN EN 16798-1 data from some other interchange format would be judging a different document. Registering a weak or tangential crate here would be worse than registering none. Confidence comes instead from the 62 committed, independently handcrafted per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff, outcome)` quintet per kind, already unit-tested inside the production crate itself — re-exercised end to end here through `apply_din16798_mutation`, plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation document.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "din16798-1-any",
+      "capability": "din16798-1-mutate",
+      "kinds": [
+        "change-annex",
+        "change-occupancy",
+        "change-comfort-category",
+        "change-t-op-c",
+        "change-rh-percent",
+        "change-air-speed-ms",
+        "change-theta-rm-c",
+        "change-co2-ppm",
+        "change-df-percent",
+        "change-l-aeq-db",
+        "change-persons",
+        "change-ida-class",
+        "change-ventilation-m3-h",
+        "change-floor-area-m2",
+        "change-bedrooms",
+        "change-dwelling-ventilation-m3-h",
+        "change-occupants",
+        "change-residential-ventilation-m3-h",
+        "change-sfp-wm3-s",
+        "change-sfp-required-class",
+        "change-heat-recovery-eta",
+        "change-heat-recovery-eta-min",
+        "change-system-type",
+        "change-years-since-inspection",
+        "change-humidification-required-kg-h",
+        "change-humidification-provided-kg-h",
+        "change-fan-qvm3-s",
+        "change-fan-t-run-h",
+        "change-fan-energy-reference-kwh",
+        "change-night-setback-k",
+        "change-hr-m-dot-kg-s",
+        "change-hr-cp-j-kgk",
+        "change-hr-delta-tc",
+        "change-hr-th",
+        "change-hr-savings-reference-kwh",
+        "change-n50-h-inv",
+        "change-volume-m3",
+        "change-infiltration-allowance-m3-h",
+        "change-cellar-area-m2",
+        "change-cellar-ventilation-m3-h",
+        "change-h-tr-wk",
+        "change-h-ve-wk",
+        "change-theta-ec",
+        "change-theta-set-c",
+        "change-cooling-delta-th",
+        "change-cooling-gains-kwh",
+        "change-cooling-utilization-factor",
+        "change-cooling-reference-kwh",
+        "change-chiller-type",
+        "change-eer-actual",
+        "change-qc-kwh",
+        "change-generation-reference-kwh",
+        "change-data-center-supply-c",
+        "change-h-st-wk",
+        "change-theta-st-c",
+        "change-theta-amb-c",
+        "change-storage-th",
+        "change-storage-allowance-kwh",
+        "change-dhw-delivery-c",
+        "change-duct-class",
+        "change-duct-test-pressure-pa",
+        "change-duct-leakage-m3-sm2"
+      ]
+    }
+  ]
+}

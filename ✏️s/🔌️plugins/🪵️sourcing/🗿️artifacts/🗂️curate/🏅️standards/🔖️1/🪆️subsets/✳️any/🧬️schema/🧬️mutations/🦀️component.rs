@@ -50,6 +50,43 @@ pub use super::change_curated_item_count::mutation::{change_curated_item_count, 
 pub use super::create_curated_item::mutation::{create_curated_item, CreateCuratedItem};
 pub use super::delete_curated_item::mutation::{delete_curated_item, DeleteCuratedItem};
 
+/// 🏷️ Kebab-case spelling of every [`SourcingMutation`] variant, in declaration order — the
+/// vocabulary the `curate-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-curate-1`'s exhaustive case measures itself against. Three kinds and no more: `stock` is
+/// a bulk-populated reference catalogue that reaches the document through
+/// `ArtifactStore::reset`, `CuratedItem` carries no name and no nested collection, and
+/// whole-document replace was removed with no replacement — so `create`/`delete`/`change` over the
+/// one id-keyed collection is the entire closed vocabulary this schema supports.
+/// [`kinds_match_the_enum_and_the_catalog`] keeps this list honest against the enum, since the
+/// framework never parses Rust.
+pub const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "change-curated-item-count"];
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "createCuratedItem", …}`, camelCase
+/// payload fields) JSON projection — exactly the shape the committed
+/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification vectors carry — into a real
+/// [`SourcingMutation`]. The test adapter cannot reach `serde_json` (the generated host links only
+/// `semio-repo-test-host` and this crate) and cannot name this crate's private `protocol`/`store`
+/// extern-crate aliases either, so the bridge belongs here rather than there.
+pub fn decode_sourcing_mutation_json(text: &str) -> Result<SourcingMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
+/// pairs, so the committed `🎯️outcome/🔣️component.json`'s claim is checkable from outside this
+/// crate rather than only inside its own leaf tests.
+pub fn apply_sourcing_mutation_reporting(snapshot: &mut CurateSnapshot, mutation: &SourcingMutation) -> Vec<(String, String)> {
+    let outcome = <SourcingMutation as protocol::Mutation<CurateSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ The mutation's OWN computed undo steps, which is what an `inverse-<kind>` scenario has to
+/// apply for the metamorphic law to mean anything.
+pub fn inverse_sourcing_mutation_steps(mutation: &SourcingMutation, base: &CurateSnapshot) -> Vec<SourcingMutation> {
+    <SourcingMutation as protocol::Mutation<CurateSnapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -57,6 +94,25 @@ mod tests {
 
     use crate::artifacts::curate::CuratedItem;
     use protocol::Mutation;
+
+    /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
+    /// — must agree, in spelling AND in order. The framework never parses Rust, so without this test
+    /// `KINDS` could drift from the enum and the catalog could keep measuring `mutate-curate-1`
+    /// against a vocabulary the artifact no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        use protocol::SemanticMutation;
+        let descriptors = SourcingMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(!manifest.contains("\"set-snapshot\"") && !manifest.contains("\"create-stock-item\""), "stock population and whole-document replace are not mutations here — the catalog must not smuggle either back in");
+    }
 
     /// 🧪️ A base with one pre-existing curated entry (`beam-glulam-gl24h`) so `delete`/`change`
     /// mutations have a real target, and `beam-kvh-c24` left uncurated so `create` has a real

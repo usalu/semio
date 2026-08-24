@@ -17,7 +17,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis3dConfigMutation::SetLocale { value: payload.value.clone() }]))
     }
 }

@@ -177,16 +177,16 @@ async fn catalog() -> &'static [InteractionCatalogEntry] {
 //#endregion 🔖️Registry
 
 //#region 🔖️Catalog
-pub async fn list_interactions_for_model_definition(model_definition_id: &str) -> Vec<&'static InteractionCatalogEntry> {
+pub fn list_interactions_for_model_definition(model_definition_id: &str) -> Vec<&'static InteractionCatalogEntry> {
     catalog().iter().filter(|entry| entry.model_definition_id == model_definition_id).collect()
 }
 
-pub async fn resolve_interaction_key(input: &str, model_definition_id: &str) -> Option<&'static InteractionCatalogEntry> {
+pub fn resolve_interaction_key(input: &str, model_definition_id: &str) -> Option<&'static InteractionCatalogEntry> {
     let trimmed = input.trim().to_lowercase();
     catalog().iter().find(|entry| entry.model_definition_id == model_definition_id && (entry.key == trimmed || entry.id.eq_ignore_ascii_case(&trimmed) || entry.id.to_lowercase().ends_with(&format!(".{trimmed}"))))
 }
 
-pub async fn interaction_by_id(id: &str) -> Option<&'static InteractionCatalogEntry> {
+pub fn interaction_by_id(id: &str) -> Option<&'static InteractionCatalogEntry> {
     catalog().iter().find(|entry| entry.id == id)
 }
 //#endregion 🔖️Catalog
@@ -208,7 +208,7 @@ async fn context_point(session: &CadEngagementScratch, field: &str) -> Option<[f
     session.context.0.get(field).and_then(parse_vec3)
 }
 
-pub async fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagementScratch> {
+pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagementScratch> {
     if is_legacy_building_id(interaction_id) {
         return Some(CadEngagementScratch { interaction_id: interaction_id.to_string(), state: "idle".to_string(), context: CadEngagementContext(HashMap::new()), pane, last_response: None });
     }
@@ -216,7 +216,7 @@ pub async fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadE
     Some(CadEngagementScratch { interaction_id: spec.id.clone(), state: spec.machine.initial.clone(), context: CadEngagementContext(HashMap::new()), pane, last_response: None })
 }
 
-pub async fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
+pub fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_keyed_transitions(session);
     }
@@ -237,7 +237,7 @@ pub async fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTrans
     out
 }
 
-pub async fn can_commit(session: &CadEngagementScratch) -> bool {
+pub fn can_commit(session: &CadEngagementScratch) -> bool {
     if is_legacy_building_id(&session.interaction_id) {
         return session.state == "ready";
     }
@@ -470,7 +470,7 @@ async fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str
     changed
 }
 
-pub async fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
+pub fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&Value>) -> bool {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_apply_event(session, event_kind, payload);
     }
@@ -493,7 +493,7 @@ async fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a
 /// `current_state` is the active engagement session's state (if any) — required to disambiguate a
 /// bare numeric line (e.g. `"3.5"`) as a height commit only while a numeric-entry state is active,
 /// mirroring premigration's `trySubmitLine` numeric-entry step.
-pub async fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(String, Option<Value>)> {
+pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(String, Option<Value>)> {
     let trimmed = line.trim();
     if trimmed.is_empty() {
         return None;
@@ -708,7 +708,7 @@ async fn legacy_commit_object(kernel: &mut Brep, session: &CadEngagementScratch,
     })
 }
 
-pub(crate) async fn commit_object(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+pub(crate) fn commit_object(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_commit_object(kernel, session, label_count, next_id);
     }
@@ -818,7 +818,7 @@ async fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &
     }
 }
 
-pub async fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
+pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<Value> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_preview_display_items(session);
     }

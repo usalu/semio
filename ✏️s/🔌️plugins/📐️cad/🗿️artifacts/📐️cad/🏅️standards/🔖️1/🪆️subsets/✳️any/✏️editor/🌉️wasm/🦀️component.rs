@@ -18,7 +18,7 @@ mod bridge {
     #[wasm_bindgen]
     impl CadArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub async fn new(envelope_json: Option<String>) -> Result<CadArtifactVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<CadArtifactVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: CadEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -30,17 +30,17 @@ mod bridge {
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
-        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
-        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
             self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
-        pub async fn snapshot_json(&self) -> Result<String, JsValue> {
+        pub fn snapshot_json(&self) -> Result<String, JsValue> {
             self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }

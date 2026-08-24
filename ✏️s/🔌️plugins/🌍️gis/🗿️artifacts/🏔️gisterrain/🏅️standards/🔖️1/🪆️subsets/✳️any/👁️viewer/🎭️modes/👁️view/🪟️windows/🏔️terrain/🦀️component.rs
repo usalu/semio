@@ -26,7 +26,7 @@ const GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"position":[800.0,-800.0,
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::gisterrain::create_gisterrain_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Terrain", "Gelände"),
@@ -74,7 +74,7 @@ async fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
 /// trailing `Option<String>` extension fields — the last two (`domain_id`/`domain_granularity_id`)
 /// bind this window to the "features"/"pin" interaction domain (read-only for a viewer, but still the
 /// correct domain so a future hover affordance is a pure addition here), every other extension `None`.
-pub async fn render(document: &GisTerrainSnapshot) -> UiNode {
+pub fn render(document: &GisTerrainSnapshot) -> UiNode {
     let descriptor = parse_descriptor(document);
     let mut scene = world3d_scene_extended(
         GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON.into(),

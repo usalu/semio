@@ -11,7 +11,7 @@ use protocol::{MutationDiff, Patchable};
 
 //#region 🔹Apply
 /// Applies an identified-collection delta to a feature list.
-pub async fn apply_features_delta(items: &[MapFeature], delta: &GisMapFeaturesDelta) -> protocol::MutationApplyResult<Vec<MapFeature>> {
+pub fn apply_features_delta(items: &[MapFeature], delta: &GisMapFeaturesDelta) -> protocol::MutationApplyResult<Vec<MapFeature>> {
     for (index, id) in delta.removed.iter().enumerate() {
         if !items.iter().any(|item| &item.id == id) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed feature does not exist").at(["removed".to_string(), index.to_string()]));
@@ -101,7 +101,7 @@ async fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incomin
 
 impl GisMapDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &GisMapArtifact) -> protocol::MutationApplyResult<GisMapArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &GisMapArtifact) -> protocol::MutationApplyResult<GisMapArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -143,7 +143,7 @@ impl GisMapDiff {
 }
 
 impl MutationDiff<GisMapSnapshot> for GisMapDiff {
-    async fn apply(&self, snapshot: &GisMapSnapshot) -> protocol::MutationApplyResult<GisMapSnapshot> {
+    fn apply(&self, snapshot: &GisMapSnapshot) -> protocol::MutationApplyResult<GisMapSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -164,7 +164,7 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -199,7 +199,7 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
 //#endregion 🔹Apply
 
 //#region 🔹Helpers
-pub async fn diff_set_snapshot(snapshot: &GisMapSnapshot) -> GisMapDiff {
+pub fn diff_set_snapshot(snapshot: &GisMapSnapshot) -> GisMapDiff {
     GisMapDiff { artifact: Some(Box::new(GisMapArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔹Helpers

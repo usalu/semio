@@ -28,6 +28,6 @@ impl Deserializer<PresentSnapshot> for JsonIntoPresent {
         if out.schema.is_empty() {
             out.schema = PRESENT_DOCUMENT_SCHEMA.into();
         }
-        Ok(IoOutcome::clean(out).await)
+        Ok(IoOutcome::clean(out))
     }
 }

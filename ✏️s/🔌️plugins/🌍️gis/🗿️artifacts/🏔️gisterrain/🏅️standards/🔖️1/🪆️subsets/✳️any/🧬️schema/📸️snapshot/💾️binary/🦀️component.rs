@@ -10,12 +10,12 @@ use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `GisTerrainSnapshot` to its binary pack form.
-pub async fn encode(document: &GisTerrainSnapshot) -> Vec<u8> {
+pub fn encode(document: &GisTerrainSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `GisTerrainSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<GisTerrainSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<GisTerrainSnapshot, PackError> {
     <GisTerrainSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 

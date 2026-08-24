@@ -6,7 +6,7 @@ use crate::artifacts::cad::mutations::{create_shape_model, CadMutation};
 use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &DeleteShapeModel, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(_payload: &DeleteShapeModel, base: &CadSnapshot) -> Vec<CadMutation> {
     match &base.shape_model {
         Some(existing) => vec![CadMutation::CreateShapeModel(create_shape_model::mutation::CreateShapeModel { child_id: existing.child_id.clone(), target: existing.target.to_uri() })],
         None => Vec::new(),

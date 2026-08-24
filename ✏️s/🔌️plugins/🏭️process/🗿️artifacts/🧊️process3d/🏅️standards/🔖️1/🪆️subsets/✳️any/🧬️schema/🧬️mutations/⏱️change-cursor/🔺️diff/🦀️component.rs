@@ -7,7 +7,7 @@ use crate::artifacts::process3d::mutations::change_cursor::mutation::ChangeCurso
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeCursor, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+pub fn diff(payload: &ChangeCursor, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     if base.resolved_up_to == payload.new_resolved_up_to {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Cursor is already at that position.".to_string());
     }

@@ -559,7 +559,7 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
 /// this app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `create_procedural3d_app` declares via `.artifact_kind(...)`; `params:in`/`geometry:out` are the
 /// workflow-specific ports beyond the implicit document in/out ports.
-pub async fn procedural3d_io() -> semio_framework_plugin::AppIo {
+pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         "procedural.3d",
         MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },

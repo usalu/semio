@@ -42,7 +42,7 @@ fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, categor
 /// `.artifact_kind(...)` document schema/media type verbatim, plus two workflow ports: `params:in`
 /// (generic Data×Value parametric input) and `drawing:out` (TwoD×Vector, tagged with draw's already-
 /// registered `2d.drawing` kind id).
-pub async fn procedural2d_io() -> semio_framework_plugin::AppIo {
+pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         "procedural.2d",
         MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },

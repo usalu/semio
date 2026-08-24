@@ -22,7 +22,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.locale = payload.value.clone();
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]))
@@ -40,7 +40,7 @@ pub mod set_terminology {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetTerminology, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &SetTerminology, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         runtime.terminology = payload.value.clone();
         Ok(Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]))

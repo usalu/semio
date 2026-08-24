@@ -45,13 +45,13 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn process3d_labels(cfg: &crate::editor::process3d::config::Process3dConfig) -> &'static Process3dLabels {
+pub fn process3d_labels(cfg: &crate::editor::process3d::config::Process3dConfig) -> &'static Process3dLabels {
     semio_framework_plugin::resolve_labels_for_locale::<Process3dLabels>(&cfg.locale)
 }
 
 /// 🎨️ The icon a process measure renders with, shared by the document panel's step tree and the
 /// catalogue's capability listing.
-pub async fn process3d_measure_icon(measure: &crate::artifacts::process3d::ProcessMeasure) -> &'static str {
+pub fn process3d_measure_icon(measure: &crate::artifacts::process3d::ProcessMeasure) -> &'static str {
     match measure {
         crate::artifacts::process3d::ProcessMeasure::Cut { .. } => "scissors",
         crate::artifacts::process3d::ProcessMeasure::Drill { .. } => "circle-dot",
@@ -60,7 +60,7 @@ pub async fn process3d_measure_icon(measure: &crate::artifacts::process3d::Proce
 }
 
 /// 🗣️ The localized label a process measure's kind renders with, used by the inspector's step group title.
-pub async fn process3d_measure_label(measure: &crate::artifacts::process3d::ProcessMeasure, labels: &Process3dLabels) -> semio_framework_plugin::LabelText {
+pub fn process3d_measure_label(measure: &crate::artifacts::process3d::ProcessMeasure, labels: &Process3dLabels) -> semio_framework_plugin::LabelText {
     match measure {
         crate::artifacts::process3d::ProcessMeasure::Cut { .. } => labels.cut,
         crate::artifacts::process3d::ProcessMeasure::Drill { .. } => labels.drill,

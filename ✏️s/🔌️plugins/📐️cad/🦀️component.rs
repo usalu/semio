@@ -22,7 +22,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `Isolated` (no publisher trust assumed beyond the sandbox default — nothing in this crate's own
 /// effects, all UI-chrome/RPC `Effect` variants with no documented `CapabilityId`, justifies
 /// otherwise), and it asks the broker for document write access to persist edits.
-pub async fn plugin() -> Result<Plugin<CadApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<CadApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<CadApps>::builder("cad")
         .label("CAD")
         .version("0.1.0")

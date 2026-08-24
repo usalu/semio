@@ -19,7 +19,7 @@ pub mod open_source {
         pub feature_id: String,
     }
 
-    pub async fn handle(payload: &OpenSource, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &OpenSource, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let host = map_host_from(doc.snapshot, cfg.snapshot);
         match host.features.positions.get(&payload.feature_id).and_then(|row| row.source_url.clone()) {
             Some(url) => Ok(Emit::effect(Effect::OpenExternalUrl { url })),

@@ -38,6 +38,6 @@ impl Deserializer<PresentSnapshot> for MdIntoPresent {
         };
         let md = <MdSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("MdIntoPresent: {error}"), diagnostics: Vec::new() })?;
         let snapshot = <PresentSnapshot as store::ArtifactDsl>::parse_dsl(&extract_placeholder_text(&md)).map_err(|error| IoError { message: format!("MdIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(snapshot).await)
+        Ok(IoOutcome::clean(snapshot))
     }
 }

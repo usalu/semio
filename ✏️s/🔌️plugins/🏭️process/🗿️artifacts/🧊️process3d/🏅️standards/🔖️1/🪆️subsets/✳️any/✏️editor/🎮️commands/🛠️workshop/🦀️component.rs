@@ -12,7 +12,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Helpers
-async fn add_workshop_machine_operation(fixture: &Process3dSnapshot, machine: WorkshopMachine) -> Option<Process3dMutation> {
+fn add_workshop_machine_operation(fixture: &Process3dSnapshot, machine: WorkshopMachine) -> Option<Process3dMutation> {
     if fixture.workshop.machines.iter().any(|existing| existing.id == machine.id) {
         return None;
     }
@@ -20,7 +20,7 @@ async fn add_workshop_machine_operation(fixture: &Process3dSnapshot, machine: Wo
     Some(Process3dMutation::CreateMachine(CreateMachine { index: at, machine }))
 }
 
-async fn remove_workshop_machine_operation(fixture: &Process3dSnapshot, id: &str) -> Option<Process3dMutation> {
+fn remove_workshop_machine_operation(fixture: &Process3dSnapshot, id: &str) -> Option<Process3dMutation> {
     fixture.workshop.machines.iter().any(|machine| machine.id == id).then(|| Process3dMutation::DeleteMachine(DeleteMachine { id: id.to_string() }))
 }
 //#endregion 🔖️Helpers
@@ -36,7 +36,7 @@ pub mod add_workshop_machine {
         pub machine_id: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &AddWorkshopMachine,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
@@ -64,7 +64,7 @@ pub mod remove_workshop_machine {
         pub id: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &RemoveWorkshopMachine,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -94,7 +94,7 @@ pub mod update_workshop_machine {
     /// each carry their own semantic mutation now (`RenameMachine`/`ChangeMachineIcon`/
     /// `ReplaceMachineCapabilities`), so this diffs `payload.machine` against the current entity and
     /// emits one targeted mutation per field that actually changed.
-    pub async fn handle(
+    pub fn handle(
         payload: &UpdateWorkshopMachine,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

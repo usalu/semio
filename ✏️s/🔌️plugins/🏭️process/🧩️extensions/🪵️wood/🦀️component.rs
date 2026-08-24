@@ -169,7 +169,7 @@ const EXTENSION_ID: &str = "process-extension-wood";
 const HOST_APP_ID: &str = "process3d-play";
 
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
-// plain sync fn). `.mode`/`.contributes_topic` are still `async fn` in
+// plain sync fn). `.mode`/`.contributes_topic` are still `fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's path_scope);
 // bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request asking the SDK
 // owner to revert those two (plus `TopicContribution::new`) to sync directly, matching the sibling

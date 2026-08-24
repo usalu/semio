@@ -268,7 +268,7 @@ pub struct IoOutcome<T> {
 
 impl<T> IoOutcome<T> {
     /// 🌱️ Wraps a bare value with no diagnostics — the common case for a clean hop.
-    pub async fn clean(value: T) -> Self {
+    pub fn clean(value: T) -> Self {
         Self { value, diagnostics: Vec::new() }
     }
 }

@@ -22,7 +22,7 @@ pub struct GisMapBounds {
 }
 
 /// 🗺️ Recursively collects every `{lon, lat}` object and `[number, number]` pair inside `value`.
-pub(crate) async fn scan_lon_lat_pairs(value: &dsl::DslValue, out: &mut Vec<(f64, f64)>) {
+pub(crate) fn scan_lon_lat_pairs(value: &dsl::DslValue, out: &mut Vec<(f64, f64)>) {
     match value {
         dsl::DslValue::Object(entries) => {
             let lon = entries.iter().find(|(key, _)| key == "lon").and_then(|(_, value)| value.as_f64());
@@ -50,7 +50,7 @@ pub(crate) async fn scan_lon_lat_pairs(value: &dsl::DslValue, out: &mut Vec<(f64
 }
 
 /// 📦 Bounding box across every scanned `(lon, lat)` pair, or `None` when nothing scanned.
-pub(crate) async fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
+pub(crate) fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds> {
     pairs.iter().fold(None, |acc, &(lon, lat)| {
         Some(match acc {
             Some(bounds) => GisMapBounds { lon_min: bounds.lon_min.min(lon), lon_max: bounds.lon_max.max(lon), lat_min: bounds.lat_min.min(lat), lat_max: bounds.lat_max.max(lat) },
@@ -60,7 +60,7 @@ pub(crate) async fn lon_lat_bounds(pairs: &[(f64, f64)]) -> Option<GisMapBounds>
 }
 
 /// 🗺️ Scans every feature across `positions`/`routes`/`regions` for coordinate pairs.
-pub(crate) async fn all_lon_lat_pairs(snapshot: &GisMapSnapshot) -> Vec<(f64, f64)> {
+pub(crate) fn all_lon_lat_pairs(snapshot: &GisMapSnapshot) -> Vec<(f64, f64)> {
     let mut pairs = Vec::new();
     for feature in snapshot.positions.iter().chain(snapshot.routes.iter()).chain(snapshot.regions.iter()) {
         scan_lon_lat_pairs(&feature.data, &mut pairs);

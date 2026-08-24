@@ -23,7 +23,7 @@ pub const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -41,7 +41,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// unresolved at this render boundary (see `🔖️Composition` in `🏪️store/🦀️component.rs`).
 /// Documented reduced-fidelity gap: those two branches fall through to the reference/node/summary
 /// panel until a resolved-child-content render path exists.
-pub async fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> UiNode {
+pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> UiNode {
     if let (Some(model_definition_id), Some(reference_id)) = (envelope.runtime.selected_reference_model_definition_id.as_deref(), envelope.runtime.selected_reference_id.as_deref()) {
         if let Some(reference) = envelope.document.references_by_model_definition_id.get(model_definition_id).and_then(|rows| rows.iter().find(|row| row.id == reference_id)) {
             return ui_inspector_groups_to_tree(&[reference_inspector_group(model_definition_id, reference, labels)]);
@@ -69,7 +69,7 @@ pub async fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, 
 /// fields have no shared helper (quaternions aren't `ui_inspector_vec3_group`'s 3-wide shape), so
 /// this mirrors that helper's structure one component wider. The patch handler renormalizes after
 /// any component edit so the result stays a valid unit quaternion.
-pub async fn inspector_quat_group(id: &str, label: impl Into<Label>, values: &[[f64; 4]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
+pub fn inspector_quat_group(id: &str, label: impl Into<Label>, values: &[[f64; 4]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
     // 🔤️ Axis symbols (X/Y/Z/W) are mathematical notation, not translatable UI chrome.
     let component = |index: usize, name: &str, label: &'static str| {
         let values: Vec<f64> = values.iter().map(|q| q[index]).collect();
@@ -86,7 +86,7 @@ pub async fn inspector_quat_group(id: &str, label: impl Into<Label>, values: &[[
 }
 
 #[cfg(test)]
-pub(crate) async fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> UiInspectorFieldGroup {
+pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> UiInspectorFieldGroup {
     let object_ids: Vec<String> = objects.iter().map(|object| object.id.clone()).collect();
     let labels: Vec<String> = objects.iter().map(|object| object.label.clone()).collect();
     let typologies: Vec<String> = objects.iter().map(|object| object.typology.clone()).collect();
@@ -194,7 +194,7 @@ pub(crate) async fn object_inspector_group(objects: &[&CadObject], term_labels: 
 }
 
 #[cfg(test)]
-pub(crate) async fn primitive_inspector_group(object: &CadObject, labels: &CadLabels, primitive_id: &str, kind: &str) -> UiInspectorFieldGroup {
+pub(crate) fn primitive_inspector_group(object: &CadObject, labels: &CadLabels, primitive_id: &str, kind: &str) -> UiInspectorFieldGroup {
     let slot = object.primitives.iter().find(|primitive| primitive.primitive_id == primitive_id).map_or("primitive", |primitive| primitive.slot.as_str());
     UiInspectorFieldGroup {
         id: "cad-play-inspector.primitive".into(),
@@ -210,7 +210,7 @@ pub(crate) async fn primitive_inspector_group(object: &CadObject, labels: &CadLa
     }
 }
 
-pub async fn reference_inspector_group(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiInspectorFieldGroup {
+pub fn reference_inspector_group(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiInspectorFieldGroup {
     UiInspectorFieldGroup {
         id: "cad-play-inspector.reference".into(),
         label: labels.reference.into(),
@@ -231,7 +231,7 @@ pub async fn reference_inspector_group(model_definition_id: &str, reference: &Ca
     }
 }
 
-pub async fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFieldGroup {
+pub fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFieldGroup {
     UiInspectorFieldGroup {
         id: "cad-play-inspector.node".into(),
         label: labels.node.into(),

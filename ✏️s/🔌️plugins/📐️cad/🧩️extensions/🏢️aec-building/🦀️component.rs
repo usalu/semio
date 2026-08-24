@@ -166,11 +166,11 @@ impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildin
         planner.call(CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() }))
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create building storey \"{}\"", self.storey_label())
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.storey_id.clone()]
     }
 }

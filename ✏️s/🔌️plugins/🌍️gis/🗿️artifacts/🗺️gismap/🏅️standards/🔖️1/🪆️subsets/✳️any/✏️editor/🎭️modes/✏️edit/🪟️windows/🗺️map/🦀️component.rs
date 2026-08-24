@@ -16,7 +16,7 @@ const GIS2D_PLAY_SURFACE: &str = "gis2d.play.composite";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: GIS2D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Map", "Karte"),
@@ -38,7 +38,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// 🎚️ Collects this window's chrome from its own `🎚️options/*` nodes rather than re-listing them —
 /// measures are config-derived per frame by `ArtifactEditor::window_measures`, never frozen into the
 /// manifest.
-pub async fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
     use crate::editor::gis2d::modes::edit::windows::map::options;
     vec![options::render_mode::measure(cfg, labels), options::vector_style::measure(cfg, labels), options::lod_mode::measure(cfg, labels), options::layers::measure(cfg, labels), options::layer_weights::measure(cfg, labels)]
 }
@@ -76,7 +76,7 @@ async fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
     scene.vector_tile_url_template = format!("{base}/vt/{{z}}/{{x}}/{{y}}.pbf");
 }
 
-pub async fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiNode {
+pub fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiNode {
     let mut scene = TiledMapScene::base(gis_map_descriptor_json(document), cfg.camera_json.clone());
     scene.render_mode = cfg.render_mode.clone();
     scene.vector_style = cfg.vector_style.clone();

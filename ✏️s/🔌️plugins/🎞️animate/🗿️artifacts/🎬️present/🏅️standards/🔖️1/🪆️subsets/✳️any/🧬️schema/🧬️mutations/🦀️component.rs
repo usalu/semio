@@ -45,6 +45,14 @@ pub enum PresentMutation {
     ReorderTiles(reorder_tiles::mutation::ReorderTiles),
     ReplaceTiles(replace_tiles::mutation::ReplaceTiles),
 }
+
+/// 🏷️ The kebab spelling of every [`PresentMutation`] variant, in DECLARATION ORDER — the one list
+/// the language-neutral test platform is measured against. It is duplicated in exactly two other
+/// places on purpose: this subset's own oracle manifest catalog `present-1-any`
+/// (`../../🧪️oracle/🔣️component.json`), which the completeness gate counts, and the
+/// `mutate-present-1` case adapter, which must not link this crate in the oracle role.
+/// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
+pub const KINDS: &[&str] = &["resize-source-frame", "replace-source", "create-tile", "delete-tile", "delete-tiles", "rename-tile", "resize-tile-crop", "reorder-tiles", "replace-tiles"];
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests
@@ -216,6 +224,23 @@ mod tests {
         assert_missing_target_is_error(&base, &PresentMutation::ReorderTiles(reorder_tiles::mutation::ReorderTiles { id: "missing".into(), to_index: 0 })).await;
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🔖️KindsCatalog
+    /// 🏷️ [`KINDS`] is the bridge between this enum and the language-neutral test platform, which
+    /// never parses Rust. This proves it names every variant, in declaration order, with the same
+    /// kebab spelling `#[derive(dsl::Mutations)]` derives — and that this subset's own committed
+    /// catalog declares exactly the same set, so the completeness gate cannot be measuring a
+    /// vocabulary that has drifted away from the code.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let declared: Vec<&str> = <PresentMutation as SemanticMutation<PresentSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
+        assert_eq!(KINDS, declared.as_slice(), "KINDS must name every PresentMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog present-1-any");
+        }
+    }
+    //#endregion 🔖️KindsCatalog
 }
 //#endregion 🧪️Tests
 
@@ -228,5 +253,14 @@ pub fn apply_present_mutation(snapshot: &PresentSnapshot, mutation: &PresentMuta
 /// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).
 pub fn inverse_present_mutation(snapshot: &PresentSnapshot, mutation: &PresentMutation) -> Vec<PresentMutation> {
     mutation.inverse(snapshot)
+}
+
+/// 📥️ Decodes this facet's own externally-tagged (`{"CreateTile": { … }}`) JSON projection — the
+/// shape the `mutate-present-1` case's `Examples` rows carry — into a real [`PresentMutation`]. A
+/// thin `serde_json` wrapper (already a direct dependency of this crate, used behind this interface
+/// per CLAUDE.md's "external libraries behind an interface" rule, never a new one), so the test
+/// adapter reads the committed feature row instead of re-declaring it as a Rust literal beside it.
+pub fn decode_present_mutation_json(text: &str) -> Result<PresentMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply

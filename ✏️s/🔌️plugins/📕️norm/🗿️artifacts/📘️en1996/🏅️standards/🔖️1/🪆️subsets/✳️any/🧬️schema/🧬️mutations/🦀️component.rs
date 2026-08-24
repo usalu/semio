@@ -75,6 +75,36 @@ pub enum En1996Mutation {
     ChangeHEfMm(change_h_ef_mm::mutation::ChangeHEfMm),
     ChangeTEfMm(change_t_ef_mm::mutation::ChangeTEfMm),
 }
+
+/// 🏷️ Every declared kind of [`En1996Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
+/// order and spelling — the list `../../🧪️oracle/🔣️component.json` publishes as the `en1996-1-any`
+/// mutation catalog and `../../../../../🧪️tests/mutate-en1996-1` registers its scenarios from. The
+/// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
+/// is what keeps the enum, this const and the committed manifest from drifting apart.
+pub const KINDS: &[&str] = &[
+    "change-m-ed-knm",
+    "change-n-ed-kn",
+    "change-v-ed-kn",
+    "change-h-ed-kn",
+    "change-z-mm3",
+    "change-area-mm2",
+    "change-shear-area-mm2",
+    "change-fk-mpa",
+    "change-f-vk-mpa",
+    "change-annex",
+    "change-masonry-class",
+    "change-design-situation",
+    "change-mu",
+    "change-wall-thickness-mm",
+    "change-fire-resistance-min",
+    "change-unit",
+    "change-exposure",
+    "change-mortar",
+    "change-bed-joint-thickness-mm",
+    "change-storeys",
+    "change-h-ef-mm",
+    "change-t-ef-mm",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️FromSnapshot
@@ -297,3 +327,61 @@ mod fixture_tests {
     mod tests_change_z_mm3_raises_the_section_modulus_to_9500000_mm3;
 }
 //#endregion 🧪️FixtureTests
+
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
+/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json`
+/// specification vectors carry — into a real [`En1996Mutation`]. The generated test host of
+/// `../../../../../🧪️tests/mutate-en1996-1` links only this crate, so `serde_json` is unreachable
+/// from that adapter and the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_en1996_mutation_json(text: &str) -> Result<En1996Mutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies one mutation to `base`, returning the resulting document together with every
+/// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type
+/// crosses this boundary. Built on the SYNC `Mutation::diff`/`MutationDiff::apply` pair this
+/// facet's own committed fixture tests already call, not on the async `vcs::apply_mutation` wrapper.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_en1996_mutation(base: &En1996Snapshot, mutation: &En1996Mutation) -> Result<(En1996Snapshot, Vec<String>), String> {
+    let raised = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = <En1996Diff as protocol::MutationDiff<En1996Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
+/// `mutate-en1996-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
+/// reach without naming `protocol::Mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_en1996_mutation(mutation: &En1996Mutation, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+    <En1996Mutation as protocol::Mutation<En1996Snapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🧪️KindsCatalog
+#[cfg(test)]
+mod kinds_catalog {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
+    /// committed `en1996-1-any` catalog. The framework never parses Rust, so this is the only thing
+    /// standing between a renamed variant and a completeness gate that silently measures the wrong
+    /// set.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <En1996Mutation as protocol::SemanticMutation<En1996Snapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared En1996Mutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsCatalog

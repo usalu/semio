@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `sourcing.curate` is a semio-NATIVE curation document composed over an `s.stdio.semio.kit` catalogue child, so no oracle is registered and the evidence rests on the three committed per-kind specification vectors plus the inverse law (see noOracleDecisions).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "curate-1-curation-selection-mutation-semantics",
+      "capabilities": ["curate-1-mutate"],
+      "rationale": "No third party reads or writes `.curate.dsl.semio`, whose body is a composed `s.stdio.semio.kit` catalogue handle followed by two handcrafted tables. A bill-of-materials or inventory library could not adjudicate this vocabulary either, because the question it answers is a taxonomy question rather than an arithmetic one: `curated` is the ONE user-editable id-keyed collection, while `stock` beside it is a bulk-populated reference catalogue seeded from hot-installed `sourcing.module` contributions and reaches the document through `ArtifactStore::reset`, never through a mutation. That is why the closed vocabulary is exactly three kinds and not five — `CuratedItem` carries no name beyond its `objectId` so there is no rename, and no nested collection so there is no add/remove-member pair. Confidence comes instead from the three committed, independently handcrafted `(before, mutation, after, diff, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the production crate, re-exercised end to end here through `apply_sourcing_mutation_reporting`; and from the inverse law as a metamorphic property. All three vectors are real-effect `applied` vectors against the same two-entry curation, which lets each kind be held to a POSITIONAL claim as well as a membership one: a create appends after the members already present, a delete leaves the survivor where it was, and a count change moves neither.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "curate-1-any",
+      "capability": "curate-1-mutate",
+      "kinds": ["create-curated-item", "delete-curated-item", "change-curated-item-count"]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+# P1x Independent Source/Static Acceptance Audit
+
+Date: 2026-08-24  
+Auditor: Codex independent read-only audit  
+Verdict: **RED — do not accept P1x.**
+
+## Scope And Method
+
+Read completely:
+
+- repository `AGENTS.md`;
+- `📓️p1x-db-engine-create-document-catalog-cas-caller-census-2026-08-23.md`;
+- `📓️sol-high-p1x-db-engine-create-document-catalog-cas-implementation-2026-08-24.md`;
+- the latest preserved P1w acceptance (`📓️codex-p1w-post-remediation-source-static-audit-2026-08-24.md`) and P1q acceptance (`📓️coordinator-sixth-p1q-b1-b6-r4-source-acceptance-2026-08-24.md`) reports;
+- the live P1x `CreateDocumentCatalogCas` source, public `Database::create_document` caller, hostile Rust-law bodies, and the full root P1x verifier/self-mutation region;
+- equivalent `cas_root` and page-retirement ownership routes needed to determine whether the P1x retained future has an alternative bounded close path.
+
+No production source or root verifier was edited. Cargo, Nx, Wasm, browser, native/release, and broad builds were not run.
+
+## Blocking Finding: Saturation Retry Is Infinite And Bypasses Deadline/Cancellation
+
+`DATABASE_CREATE_CATALOG_RETRY_LIMIT` is declared as eight at [component.rs:5010](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5010), but it is only a saturating counter. `submit_exact` computes `min(attempt + 1, 8)`, retains the returned I/O job, and unconditionally arms another callback ([component.rs:5692](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5692)-[component.rs:5701](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5701)). `retry` moves `Retry → Queued` and calls `submit_exact` again without an exhaustion, cancellation, or deadline branch ([component.rs:5706](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5706)-[component.rs:5713](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5713)).
+
+The deadline/cancellation checks occur only in `drive_claimed` ([component.rs:5757](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5757)-[component.rs:5767](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5767)), which is not reached while every `Lane::Io` submission is refused. `cancel` only stores cancellation/wake and invokes the same authority-aware scheduler ([component.rs:6548](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6548)-[component.rs:6552](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6552)); with authority already `Retry`, `schedule` merely records another wake ([component.rs:5682](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5682)-[component.rs:5684](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5684)). It cannot retire the admitted state until an I/O submission is accepted.
+
+### Hostile Execution Trace
+
+1. `try_submit` admits the fixed slot, document, storage and immutable base, publishes it in the registry, and invokes `schedule` ([component.rs:6438](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6438)-[component.rs:6528](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6528)).
+2. A saturated shared `Lane::Io` rejects each submitted driver. The first rejection stores the exact job and enters `Retry`; each timer callback resubmits it.
+3. At the eighth rejection, `next_attempt` remains eight. Every later rejection also stores eight and re-arms the next callback. There is no terminal state transition and no bounded retry outcome.
+4. After 30 seconds, the deadline is exceeded but cannot be observed because no callback ever reaches `drive_claimed`. If the public future is cancelled or dropped during this interval, it similarly cannot enter `Retire`; the fixed admission slot and all retained root owners remain held and the timer cycle remains unbounded.
+
+This contradicts the P1x contract's deadline, saturation/retry, cancellation/Drop retirement and explicit no-unbounded-loop obligations. It is not an abstract timer concern: the existing saturation law proves the exact initial rejected-job state, but deliberately releases the blocking worker before a retry limit or deadline can be observed ([component.rs:10281](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:10281)-[component.rs:10319](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:10319)).
+
+The equivalent rejection-close authority has the same unbounded `Retry → Queued → Retry` shape and no terminal saturation/deadline policy ([component.rs:5240](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5240)-[component.rs:5261](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5261)). Thus even a pre-admission/saturation rejection cannot guarantee its retained storage/document close progression while the lane remains saturated.
+
+## Verifier False-Green
+
+The root P1x verifier only asks whether the rejected job is retained before `Queued → Retry`, whether `Retry → Queued` exists, and whether a timer callback exists ([📜️script.ts:10315](/Users/ueli/Documents/semio/📜️script.ts:10315)-[📜️script.ts:10322](/Users/ueli/Documents/semio/📜️script.ts:10322)). It does not require an `attempt == DATABASE_CREATE_CATALOG_RETRY_LIMIT` terminal policy, timeout/cancellation processing in the retry callback, cancellation handoff to a close authority, or an exhaustive-saturation law.
+
+Its only saturation hostile mutation deletes the saved job (`saturation-drops-job`) ([📜️script.ts:10429](/Users/ueli/Documents/semio/📜️script.ts:10429)-[📜️script.ts:10431](/Users/ueli/Documents/semio/📜️script.ts:10431)); that accepts the live infinite-retry regression unchanged. The live saturation law asserts a recovery after capacity is deliberately restored, not bounded behavior under exhaustion ([component.rs:10308](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:10308)-[component.rs:10318](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:10318)). The P1x gate is therefore false-green on a required semantic property.
+
+## Additional Blocking Finding: Dynamic Backing Credits Are Not Exact
+
+The fixed admission counters debit `DATABASE_CREATE_CATALOG_BYTES` before work begins, but the actual dynamic allocations are neither recorded nor checked against those credits. The only source capacity tests cover the incoming document and a scanned base entry ([component.rs:5030](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5030)-[component.rs:5059](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5059), [component.rs:5830](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5830)-[component.rs:5838](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5830)).
+
+By contrast, the candidate backing is allocated with `Vec::try_reserve_exact(base_len + 1)` and stored without observing `candidate.capacity()` ([component.rs:5880](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5880)-[component.rs:5901](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5901)). Every cloned ID similarly reserves by source *length*, not allocated capacity, and does not inspect the resulting `String::capacity()` before retaining it in the candidate ([component.rs:5939](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5939)-[component.rs:5967](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5967)). `try_reserve_exact` does not make the allocator's returned capacity a contract invariant; an allocator may provide more than requested. No state field, admission update, or refusal path observes that physical backing.
+
+Consequently the claimed byte ledger can say exactly one fixed maximum while the retained `Vec<CatalogEntry>` or any nested cloned `String` owns a different allocated capacity. This is a direct failure of the P1x requirement for allocated-capacity/backing ownership accounting for every nested dynamic value, not just semantic element length. The verifier only token-checks `document.0.capacity()` and the existence of `try_reserve_exact` ([📜️script.ts:10303](/Users/ueli/Documents/semio/📜️script.ts:10303)-[📜️script.ts:10312](/Users/ueli/Documents/semio/📜️script.ts:10312)); its hostile `len-ledger` mutation cannot detect the live post-allocation accounting omission ([📜️script.ts:10417](/Users/ueli/Documents/semio/📜️script.ts:10417)-[📜️script.ts:10425](/Users/ueli/Documents/semio/📜️script.ts:10425)).
+
+## Additional Blocking Finding: A Worker Opportunity Can Block Behind A Full Catalog Clone
+
+The P1x worker takes the synchronous catalog mutex in both its claim and durable revalidation opportunities ([component.rs:6043](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6043)-[component.rs:6065](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6043), [component.rs:6154](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6154)-[component.rs:6198](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6154)). A concurrent facade call to `Database::catalog` holds that same mutex while cloning the entire dynamic catalog ([component.rs:6946](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6946)-[component.rs:6950](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:6950)). At the admitted maximum that clone visits 4,096 entries and duplicates each document `String` backing under the lock.
+
+Permitted trace: a facade starts `catalog()` on a maximum catalog; before its clone completes, an I/O worker reaches `claim_one` or `revalidate_one`; `Mutex::lock` blocks the worker for the arbitrary duration of the facade's full clone. The worker opportunity is therefore not a bounded hard step or an eight-millisecond opportunity. There is no `try_lock`/requeue path, contention law, or verifier mutation for either claim or revalidation. The existing timing law only invokes an uncontended `drive_one` ([component.rs:10343](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:10343)-[component.rs:10357](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:10343)), while the verifier only requires timing-law tokens ([📜️script.ts:10351](/Users/ueli/Documents/semio/📜️script.ts:10351)-[📜️script.ts:10357](/Users/ueli/Documents/semio/📜️script.ts:10351)).
+
+## Opaque CAS Future/Page Ownership Determination
+
+This sub-check did **not** find a separate P1x page-loss counterexample in the known storage backends. `DatabaseCreateCatalogWork::poll` does move the exact storage/pages into its opaque boxed `cas_root` future ([component.rs:5374](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5374)-[component.rs:5391](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5374)), and `close_one` can drop that future in one outer grant ([component.rs:5394](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5394)-[component.rs:5405](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs:5394)). However, for the live backend routes this Drop does not recursively free page backing: `DbIoPages::Drop` moves a nonterminal page owner into the retained lost-owner registry ([storage component.rs:1617](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs:1617)-[storage component.rs:1639](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs:1639)), whose close step retires only one owner opportunity at a time ([storage component.rs:3619](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs:3619)-[storage component.rs:3683](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs:3619)). In the Memory route, the pending task operation marks cancellation and enqueues its typed close authority on Drop ([storage component.rs:4098](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs:4098)-[storage component.rs:4118](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs:4098)); that close path calls `DbIoTask::close_step`, which calls exactly one `DbIoPages::close_step` ([storage component.rs:4177](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs:4177)-[storage component.rs:4185](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs:4177)).
+
+That is a cross-P1x/P1q ownership dependency rather than self-contained P1x retirement, but the accepted P1q authority supplies the incremental handback for the enumerated live `DbBackend` implementations. It does not cure the three independent P1x failures above.
+
+## Bounded Remediation
+
+1. Make retry exhaustion explicit for the main state and rejection-close authority. After the final retained submission refusal, atomically stop retrying, publish a deterministic `LimitExceeded`/saturation terminal outcome, and transfer the exact job/owners to the existing incremental close path before releasing `Retry` authority.
+2. In every retry callback, check generation/currentness, cancellation and deadline before resubmission. A cancelled or expired operation must stage its terminal outcome and schedule retained one-owner retirement without requiring a successful I/O submit.
+3. Replace blocking worker-side catalog acquisition with a nonblocking claim/requeue discipline, and make every public catalog snapshot clone an immutable `Arc` outside the catalog-state mutex. Add a deterministic contention law that holds a maximum-catalog snapshot clone while claim and revalidate are due, proving the worker opportunity returns/requeues rather than blocks.
+4. Account from observed `Vec::capacity()` and `String::capacity()` after every allocation, refusing/retiring through a retained one-owner path if the actual backing exceeds its credited budget. The ledger must include the candidate backing, every nested cloned ID, snapshot/Arc-control backing and all fixed page owners; a length-only or requested-capacity calculation is insufficient.
+5. Extend the P1x verifier and hostile Rust laws with a held-saturation test that forces more than eight refusals, advances the deadline and cancellation separately, then proves: no ninth timer resubmission; exactly one terminal outcome; exact stored job/storage/document/page identity reaches the close authority; admission/registry release once; and no backend poll begins. Add mutations that remove the exhaustion branch, retry-side deadline/cancel handoff, post-allocation capacity observation and nonblocking catalog claim/revalidation.
+
+## Non-Blocking Acceptance Evidence
+
+The source does otherwise show the requested shared `Lane::Io` atomic driver claim, retained base `Arc`/revision/epoch identity, incrementally cursor-driven scan/copy/encode/seal, claim/revalidate fencing, pending/Ready/panic owner publication before polling release, durable-success protection through `CloseWork`/`Revalidate`, result check-register-recheck, and caller ordering after `actual?`. The preserved P1w post-remediation and P1q coordinator source/static acceptances remain consistent with those areas. Those shapes do not repair the saturation/deadline counterexample above.
+
+## Isolated Checks Run
+
+| Check | Result |
+| --- | --- |
+| `bun ./📜️script.ts verify interactivity p1x` | PASS — false-green for the finding above. |
+| `bun ./📜️script.ts verify interactivity p1w` | PASS. |
+| `bun ./📜️script.ts verify interactivity p1q-b1-b6` | PASS. |
+| `rustfmt --edition 2021 --check --config skip_children=true` on DB engine | PASS. |
+| Scoped unstaged and cached `git diff --check` on DB engine/root verifier | PASS. |
+
+No Cargo, Nx, Wasm, browser, or broad build/test was run.

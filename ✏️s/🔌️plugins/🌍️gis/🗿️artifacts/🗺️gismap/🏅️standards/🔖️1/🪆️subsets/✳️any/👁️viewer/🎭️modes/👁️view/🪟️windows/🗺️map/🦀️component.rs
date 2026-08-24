@@ -23,7 +23,7 @@ const GIS_MAP_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"x":0,"y":0,"zoom":1}"#;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::gismap::create_gismap_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Map", "Karte"),
@@ -47,7 +47,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `GisMapSnapshot -> UiNode` read: default camera/render mode (`TiledMapScene::base`'s own
 /// defaults already match `Gis2dConfig::default()`'s render/vector/LOD mode — "combined"/"colored"/
 /// "automatic"), every layer visible, nothing selected/hovered.
-pub async fn render(document: &GisMapSnapshot) -> UiNode {
+pub fn render(document: &GisMapSnapshot) -> UiNode {
     let scene = TiledMapScene::base(gis_map_descriptor_json(document), GIS_MAP_VIEW_DEFAULT_CAMERA_JSON.into());
     build_tiled_map_scene(SURFACE_ID, GIS_MAP_VIEW_CONTROLLER_ID, scene)
 }

@@ -23,11 +23,14 @@ pub mod math;
 pub mod pack;
 #[path = "🦀️scenes.rs"]
 mod scenes;
+#[path = "🦀️canvas2d_snapshot.rs"]
+mod canvas2d_snapshot;
 #[path = "🦀️surface.rs"]
 mod surface;
 #[path = "🦀️world3d_snapshot.rs"]
 mod world3d_snapshot;
 
 pub use scenes::*;
+pub use canvas2d_snapshot::*;
 pub use surface::*;
 pub use world3d_snapshot::*;

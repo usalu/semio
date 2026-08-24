@@ -60,6 +60,27 @@ pub enum Din18599Mutation {
     ChangeReferenceQPKwh(change_reference_q_p_kwh::mutation::ChangeReferenceQPKwh),
     UpdateClimate(update_climate::mutation::UpdateClimate),
 }
+
+/// 🏷️ Every declared kind of [`Din18599Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
+/// order and spelling — the list `../../🧪️oracle/🔣️component.json` publishes as the `din18599-1-any`
+/// mutation catalog and `../../../../../🧪️tests/mutate-din18599-1` registers its scenarios from. The
+/// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
+/// is what keeps the enum, this const and the committed manifest from drifting apart.
+pub const KINDS: &[&str] = &[
+    "change-use-class",
+    "change-heated-area-m2",
+    "change-occupants",
+    "change-ht",
+    "change-hv",
+    "change-internal-gains-wm2",
+    "change-solar-gains-kwh",
+    "change-system-losses-kwh",
+    "change-renewable-kwh",
+    "change-annual-limit-kwh",
+    "change-energy-carrier",
+    "change-reference-qp-kwh",
+    "update-climate",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️FromSnapshot
@@ -230,3 +251,61 @@ mod fixture_tests {
     mod tests_update_climate_refuses_a_negative_january_irradiance;
 }
 //#endregion 🧪️FixtureTests
+
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
+/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json`
+/// specification vectors carry — into a real [`Din18599Mutation`]. The generated test host of
+/// `../../../../../🧪️tests/mutate-din18599-1` links only this crate, so `serde_json` is unreachable
+/// from that adapter and the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_din18599_mutation_json(text: &str) -> Result<Din18599Mutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies one mutation to `base`, returning the resulting document together with every
+/// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type
+/// crosses this boundary. Built on the SYNC `Mutation::diff`/`MutationDiff::apply` pair this
+/// facet's own committed fixture tests already call, not on the async `vcs::apply_mutation` wrapper.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_din18599_mutation(base: &Din18599Snapshot, mutation: &Din18599Mutation) -> Result<(Din18599Snapshot, Vec<String>), String> {
+    let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
+/// `mutate-din18599-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
+/// reach without naming `protocol::Mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_din18599_mutation(mutation: &Din18599Mutation, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+    <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🧪️KindsCatalog
+#[cfg(test)]
+mod kinds_catalog {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
+    /// committed `din18599-1-any` catalog. The framework never parses Rust, so this is the only thing
+    /// standing between a renamed variant and a completeness gate that silently measures the wrong
+    /// set.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Din18599Mutation as protocol::SemanticMutation<Din18599Snapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Din18599Mutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsCatalog

@@ -10,7 +10,7 @@ pub const GIS2D_PLAY_BODY_DOCUMENT: &str = "gis2d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -27,7 +27,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// `.interaction_domain("features")?` below has the framework's renderer translate clicks into
 /// injected `interactionSelect` and stamp presence from `InteractionState`, replacing the deleted
 /// `.selected()?`/`.selection_change()` calls.
-pub async fn render(_cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(_cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let builder = PanelTreeBuilder::new("gis2d-play-document")?;
     let layer_items = ui_node_list(GIS_MAP_LAYER_IDS.iter().map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id)?, Label::data(gis2d_layer_label(id, labels)), Some((*id).into()), icon, None)))?;
     builder.section("gis2d-play-document.layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, layer_items)?.interaction_domain("features")?.build()

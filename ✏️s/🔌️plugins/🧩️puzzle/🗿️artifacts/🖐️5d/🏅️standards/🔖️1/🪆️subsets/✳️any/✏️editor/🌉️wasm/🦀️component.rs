@@ -21,7 +21,7 @@ pub struct Puzzle5dArtifactVcs {
 #[wasm_bindgen]
 impl Puzzle5dArtifactVcs {
     #[wasm_bindgen(constructor)]
-    pub async fn new(envelope_json: Option<String>) -> Result<Puzzle5dArtifactVcs, JsValue> {
+    pub fn new(envelope_json: Option<String>) -> Result<Puzzle5dArtifactVcs, JsValue> {
         let store = match envelope_json {
             Some(json) => {
                 let envelope: Puzzle5dEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -34,27 +34,27 @@ impl Puzzle5dArtifactVcs {
     }
 
     #[wasm_bindgen(js_name = dispatchText)]
-    pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
         self.store.borrow_mut().dispatch_text(command_text).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = dispatchBinary)]
-    pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+    pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
         self.store.borrow_mut().dispatch_binary(command_bytes).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = projectionJson)]
-    pub async fn projection_json(&self) -> Result<String, JsValue> {
+    pub fn projection_json(&self) -> Result<String, JsValue> {
         self.store.borrow().snapshot_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = envelopeJson)]
-    pub async fn envelope_json(&self) -> Result<String, JsValue> {
+    pub fn envelope_json(&self) -> Result<String, JsValue> {
         self.store.borrow().envelope_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = generation)]
-    pub async fn generation(&self) -> u32 {
+    pub fn generation(&self) -> u32 {
         self.store.borrow().generation().await as u32
     }
 }
@@ -65,7 +65,7 @@ impl Puzzle5dArtifactVcs {
 /// non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the
 /// DSL grammar.
 #[wasm_bindgen::prelude::wasm_bindgen(js_name = puzzle5dParseDslJson)]
-pub async fn puzzle5d_parse_dsl_json(dsl_text: &str) -> Result<String, wasm_bindgen::JsValue> {
+pub fn puzzle5d_parse_dsl_json(dsl_text: &str) -> Result<String, wasm_bindgen::JsValue> {
     use store::ArtifactDsl;
     let projection = crate::artifacts::puzzle5d::Puzzle5dSnapshot::parse_dsl(dsl_text).map_err(|error| wasm_bindgen::JsValue::from_str(&error.to_string()))?;
     serde_json::to_string(&projection).map_err(|error| wasm_bindgen::JsValue::from_str(&error.to_string()))

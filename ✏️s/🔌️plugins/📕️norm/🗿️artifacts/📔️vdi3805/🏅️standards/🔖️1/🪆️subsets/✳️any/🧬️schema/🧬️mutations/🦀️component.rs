@@ -88,6 +88,33 @@ pub enum Vdi3805Mutation {
     DeleteCurve(delete_curve::mutation::DeleteCurve),
     ReplaceCurvePoints(replace_curve_points::mutation::ReplaceCurvePoints),
 }
+
+/// 🏷️ Every declared kind of [`Vdi3805Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
+/// order and spelling — the list `../../🧪️oracle/🔣️component.json` publishes as the `vdi3805-1-any`
+/// mutation catalog and `../../../../../🧪️tests/mutate-vdi3805-1` registers its scenarios from. The
+/// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
+/// is what keeps the enum, this const and the committed manifest from drifting apart.
+pub const KINDS: &[&str] = &[
+    "update-manufacturer-file",
+    "change-correction-as-of",
+    "change-strict-mode",
+    "update-limits",
+    "change-edition-profile",
+    "remove-edition-profile",
+    "create-product",
+    "delete-product",
+    "rename-product",
+    "replace-product-configuration",
+    "create-geometry",
+    "delete-geometry",
+    "resize-geometry",
+    "add-geometry-connection",
+    "remove-geometry-connection",
+    "replace-geometry-parameters",
+    "create-curve",
+    "delete-curve",
+    "replace-curve-points",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️FromSnapshot
@@ -382,3 +409,61 @@ mod fixture_tests {
     mod tests_update_manufacturer_file_renames_the_header_manufacturer_to_acme;
 }
 //#endregion 🧪️FixtureTests
+
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
+/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json`
+/// specification vectors carry — into a real [`Vdi3805Mutation`]. The generated test host of
+/// `../../../../../🧪️tests/mutate-vdi3805-1` links only this crate, so `serde_json` is unreachable
+/// from that adapter and the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_vdi3805_mutation_json(text: &str) -> Result<Vdi3805Mutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies one mutation to `base`, returning the resulting document together with every
+/// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type
+/// crosses this boundary. Built on the SYNC `Mutation::diff`/`MutationDiff::apply` pair this
+/// facet's own committed fixture tests already call, not on the async `vcs::apply_mutation` wrapper.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_vdi3805_mutation(base: &Vdi3805Snapshot, mutation: &Vdi3805Mutation) -> Result<(Vdi3805Snapshot, Vec<String>), String> {
+    let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
+/// `mutate-vdi3805-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
+/// reach without naming `protocol::Mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_vdi3805_mutation(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+    <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🧪️KindsCatalog
+#[cfg(test)]
+mod kinds_catalog {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
+    /// committed `vdi3805-1-any` catalog. The framework never parses Rust, so this is the only thing
+    /// standing between a renamed variant and a completeness gate that silently measures the wrong
+    /// set.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Vdi3805Mutation as protocol::SemanticMutation<Vdi3805Snapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Vdi3805Mutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsCatalog

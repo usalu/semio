@@ -18,7 +18,7 @@ pub mod export_model {
         pub format: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &ExportModel,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -52,7 +52,7 @@ pub mod load_model_request {
     #[dsl(keyword = "load-model-request")]
     pub struct LoadModelRequest {}
 
-    pub async fn handle(
+    pub fn handle(
         _payload: &LoadModelRequest,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -77,7 +77,7 @@ pub mod import_model_file {
     /// 📤️ Importing a model file replaces the whole document (stock geometry + a cleared timeline),
     /// which has no in-history mutation (see `📓️taxonomy.md`'s forbidden vocabulary), so this routes
     /// through `editor::process3d::reset_process3d_document_effect` (a `Effect::LoadDocument`).
-    pub async fn handle(
+    pub fn handle(
         payload: &ImportModelFile,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

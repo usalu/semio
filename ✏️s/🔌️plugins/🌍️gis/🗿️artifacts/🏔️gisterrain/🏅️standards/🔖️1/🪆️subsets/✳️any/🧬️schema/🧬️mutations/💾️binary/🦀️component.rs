@@ -15,12 +15,12 @@ use protocol::OpBinary;
 
 //#region 🔖️Codec
 /// 📦️ Encodes a `GisTerrainMutation` to its binary command form.
-pub async fn encode_op(operation: &GisTerrainMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &GisTerrainMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `GisTerrainMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<GisTerrainMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<GisTerrainMutation, protocol::ProtocolError> {
     GisTerrainMutation::decode_op(bytes)
 }
 //#endregion 🔖️Codec

@@ -20,6 +20,6 @@ impl Serializer<PresentSnapshot> for PresentIntoJson {
     async fn serialize(from: &PresentSnapshot) -> IoResult<IoPayload> {
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("PresentIntoJson: {error}"), diagnostics: Vec::new() })?;
         let json = JsonSnapshot::from_value(value);
-        Ok(IoOutcome::clean(IoPayload::Binary(write_json_pretty(&json.value).into_bytes())).await)
+        Ok(IoOutcome::clean(IoPayload::Binary(write_json_pretty(&json.value).into_bytes())))
     }
 }

@@ -10,12 +10,12 @@ use crate::artifacts::gismap::GisMapSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `GisMapSnapshot` to its binary pack form.
-pub async fn encode(document: &GisMapSnapshot) -> Vec<u8> {
+pub fn encode(document: &GisMapSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `GisMapSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<GisMapSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<GisMapSnapshot, PackError> {
     <GisMapSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 

@@ -79,3 +79,45 @@ impl store::ArtifactPack for CurateSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot
+
+//#region 🌉️ExternalCodecBridge
+/// 📤️ Renders a [`CurateSnapshot`] as this facet's own camelCase JSON projection — the comparison
+/// surface `mutate-curate-1`'s scenarios are measured through, and the shape the committed
+/// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors are written in. `curated` travels as an ORDERED list, which is what makes
+/// the append-at-the-end and restore-in-place claims below checkable at all.
+///
+/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
+/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+pub fn encode_curate_snapshot_json(snapshot: &CurateSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("CurateSnapshot serialization is infallible")
+}
+
+/// 📥️ The inverse of [`encode_curate_snapshot_json`] — decodes those committed specification
+/// vectors into real [`CurateSnapshot`] values, so `mutate-curate-1`'s adapter reads the committed
+/// fixture rather than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
+/// adapter is impossible: the generated test host links only this crate and `semio-repo-test-host`.
+pub fn decode_curate_snapshot_json(text: &str) -> Result<CurateSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Parses `.curate.dsl.semio` text into a [`CurateSnapshot`] — a named, non-async pass-through of
+/// this type's own `store::ArtifactDsl` impl above, whose trait and error type are both unnameable
+/// outside this crate, so `mutate-curate-1`'s `identity-round-trip` scenario reaches the real
+/// committed artifact (`../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`) through this instead.
+pub fn parse_curate_dsl(text: &str) -> Result<CurateSnapshot, String> {
+    <CurateSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+}
+
+/// 📝️ Renders a [`CurateSnapshot`] back as `.curate.dsl.semio` text — the inverse of
+/// [`parse_curate_dsl`], preamble, catalog handle, stock table and curated table included.
+pub fn print_curate_dsl(snapshot: &CurateSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 🔎️ The curation as `objectId x count` pairs in list order — the readable half of a divergence
+/// message, so a failing scenario names WHICH entry moved rather than only that two documents differ.
+pub fn curate_selection_summary(snapshot: &CurateSnapshot) -> String {
+    snapshot.curated.iter().map(|item| format!("{}x{}", item.object_id, item.count)).collect::<Vec<_>>().join(" ")
+}
+//#endregion 🌉️ExternalCodecBridge

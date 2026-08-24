@@ -27,7 +27,7 @@ const CAD_VIEW_FALLBACK_MESH_KIND: &str = "box";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::cad::create_cad_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Shape", "Form"),
@@ -53,7 +53,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// straight off the document. Objects render the same fallback-box placeholder the editor's own
 /// `world_meshes_json` falls back to while composed-child object resolution is unimplemented (ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3 gap, pre-existing, not introduced here).
-pub async fn render(document: &CadSnapshot) -> UiNode {
+pub fn render(document: &CadSnapshot) -> UiNode {
     let camera = CadCamera::default();
     let sun = WorldSunConfig::default();
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(&camera));

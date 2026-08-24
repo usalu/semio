@@ -301,3 +301,21 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️ExternalBridges
+/// 📖️ Parses `.forms` DSL text with a plain-`String` error, reachable from OUTSIDE this crate —
+/// `store` is a private `extern crate` alias (`📦️glue.rs`), so `store::TextError` cannot be named
+/// by the exhaustive mutation case's test adapter that has to read the committed
+/// `🗣️example.dsl.semio` artifact.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn parse_forms_dsl(text: &str) -> Result<FormsSnapshot, String> {
+    <FormsSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 🖨️ Prints a [`FormsSnapshot`] back to `.forms` DSL text under a name an external caller can reach, paired
+/// with [`parse_forms_dsl`].
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn print_forms_dsl(snapshot: &FormsSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+//#endregion 🔖️ExternalBridges

@@ -46,3 +46,54 @@ impl Default for Vdi3805Snapshot {
     }
 }
 //#endregion 🔖️Snapshot
+
+
+//#region 🌉️ExternalCodecBridge
+/// 📤️ The canonical JSON projection of a [`Vdi3805Snapshot`] — the surface
+/// `../../../../../🧪️tests/mutate-vdi3805-1` is compared through under `ordered-json-v1`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_vdi3805_snapshot_json(snapshot: &Vdi3805Snapshot) -> String {
+    serde_json::to_string(snapshot).expect("Vdi3805Snapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_vdi3805_snapshot_json`] — decodes the committed
+/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors into real [`Vdi3805Snapshot`] values, so the case adapter reads the committed
+/// fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
+/// adapter is impossible — the generated test host links only this crate — which is why the bridge
+/// belongs here.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_vdi3805_snapshot_json(text: &str) -> Result<Vdi3805Snapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📖️ Parses the committed `.dsl.semio` artifact into a [`Vdi3805Snapshot`]. Calls the `ArtifactDsl`
+/// trait method directly rather than the `📝️text` facet's async wrapper, because a test host has no
+/// async runtime to drive one.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_vdi3805_dsl(text: &str) -> Result<Vdi3805Snapshot, String> {
+    <Vdi3805Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+}
+
+/// 🖨️ Prints a [`Vdi3805Snapshot`] back to its canonical `.dsl.semio` body. Canonical is the operative
+/// word: the committed example assets ARE this function's own output, which is why the identity
+/// scenario asserts byte-exactness rather than the no-byte-pass-through inequality.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_vdi3805_dsl(snapshot: &Vdi3805Snapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 📦️ Decodes a [`Vdi3805Snapshot`] from the binary `.pack.semio` envelope — an independently written
+/// codec from the DSL grammar above, which is what makes their agreement evidence that the document
+/// was parsed rather than copied.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_vdi3805_pack(bytes: &[u8]) -> Result<Vdi3805Snapshot, String> {
+    <Vdi3805Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
+}
+
+/// 📦️ Encodes a [`Vdi3805Snapshot`] to its binary `.pack.semio` envelope.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_vdi3805_pack(snapshot: &Vdi3805Snapshot) -> Vec<u8> {
+    store::ArtifactPack::encode_pack(snapshot)
+}
+//#endregion 🌉️ExternalCodecBridge

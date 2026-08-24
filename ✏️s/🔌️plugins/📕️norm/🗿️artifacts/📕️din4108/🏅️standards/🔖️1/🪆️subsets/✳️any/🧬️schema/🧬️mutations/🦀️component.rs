@@ -82,6 +82,36 @@ pub enum Din4108Mutation {
     ChangeLayerThickness(change_layer_thickness::mutation::ChangeLayerThickness),
     ChangeLayerLambda(change_layer_lambda::mutation::ChangeLayerLambda),
 }
+
+/// 🏷️ Every declared kind of [`Din4108Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
+/// order and spelling — the list `../../🧪️oracle/🔣️component.json` publishes as the `din4108-1-any`
+/// mutation catalog and `../../../../../🧪️tests/mutate-din4108-1` registers its scenarios from. The
+/// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
+/// is what keeps the enum, this const and the committed manifest from drifting apart.
+pub const KINDS: &[&str] = &[
+    "change-category",
+    "change-climate",
+    "change-airtightness-n50",
+    "change-psi-times-l-sum",
+    "change-rh-int",
+    "change-catalog-id",
+    "change-material-id",
+    "change-airtightness-class",
+    "change-t-int-c",
+    "change-solar-absorptance",
+    "change-irradiance-wm2",
+    "change-moisture-mu-exterior",
+    "change-moisture-mu-interior",
+    "change-envelope-area-m2",
+    "change-bb2-details-conform",
+    "change-application-type",
+    "change-declared-application-class",
+    "insert-layer",
+    "remove-layer",
+    "reorder-layers",
+    "change-layer-thickness",
+    "change-layer-lambda",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️FromSnapshot
@@ -322,3 +352,61 @@ mod fixture_tests {
     mod tests_reorder_layers_moves_the_insulation_in_front_of_the_masonry;
 }
 //#endregion 🧪️FixtureTests
+
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
+/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json`
+/// specification vectors carry — into a real [`Din4108Mutation`]. The generated test host of
+/// `../../../../../🧪️tests/mutate-din4108-1` links only this crate, so `serde_json` is unreachable
+/// from that adapter and the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_din4108_mutation_json(text: &str) -> Result<Din4108Mutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies one mutation to `base`, returning the resulting document together with every
+/// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type
+/// crosses this boundary. Built on the SYNC `Mutation::diff`/`MutationDiff::apply` pair this
+/// facet's own committed fixture tests already call, not on the async `vcs::apply_mutation` wrapper.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_din4108_mutation(base: &Din4108Snapshot, mutation: &Din4108Mutation) -> Result<(Din4108Snapshot, Vec<String>), String> {
+    let raised = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
+/// `mutate-din4108-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
+/// reach without naming `protocol::Mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_din4108_mutation(mutation: &Din4108Mutation, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🧪️KindsCatalog
+#[cfg(test)]
+mod kinds_catalog {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
+    /// committed `din4108-1-any` catalog. The framework never parses Rust, so this is the only thing
+    /// standing between a renamed variant and a completeness gate that silently measures the wrong
+    /// set.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Din4108Mutation as protocol::SemanticMutation<Din4108Snapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Din4108Mutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsCatalog

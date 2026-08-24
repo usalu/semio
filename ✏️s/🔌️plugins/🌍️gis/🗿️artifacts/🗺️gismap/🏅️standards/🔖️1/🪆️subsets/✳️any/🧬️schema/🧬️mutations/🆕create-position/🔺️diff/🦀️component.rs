@@ -7,7 +7,7 @@ use crate::artifacts::gismap::GisMapSnapshot;
 /// 🔺️ Builds the sparse `positions` delta directly from the payload — a single `added` entry —
 /// real handcrafted construction, never apply-then-capture, never a snapshot clone. Fatal
 /// `duplicate-id` when `item.id` already names a position.
-pub async fn diff(payload: &CreatePosition, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+pub fn diff(payload: &CreatePosition, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
     if base.positions.iter().any(|feature| feature.id == payload.item.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A position with id \"{}\" already exists.", payload.item.id), [payload.item.id.clone()]);
     }

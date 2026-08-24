@@ -21,7 +21,7 @@ pub struct Puzzle3dArtifactVcs {
 #[wasm_bindgen]
 impl Puzzle3dArtifactVcs {
     #[wasm_bindgen(constructor)]
-    pub async fn new(envelope_json: Option<String>) -> Result<Puzzle3dArtifactVcs, JsValue> {
+    pub fn new(envelope_json: Option<String>) -> Result<Puzzle3dArtifactVcs, JsValue> {
         let store = match envelope_json {
             Some(json) => {
                 let envelope: Puzzle3dEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -34,27 +34,27 @@ impl Puzzle3dArtifactVcs {
     }
 
     #[wasm_bindgen(js_name = dispatchText)]
-    pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+    pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
         self.store.borrow_mut().dispatch_text(command_text).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = dispatchBinary)]
-    pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+    pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
         self.store.borrow_mut().dispatch_binary(command_bytes).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = projectionJson)]
-    pub async fn projection_json(&self) -> Result<String, JsValue> {
+    pub fn projection_json(&self) -> Result<String, JsValue> {
         self.store.borrow().snapshot_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = envelopeJson)]
-    pub async fn envelope_json(&self) -> Result<String, JsValue> {
+    pub fn envelope_json(&self) -> Result<String, JsValue> {
         self.store.borrow().envelope_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = generation)]
-    pub async fn generation(&self) -> u32 {
+    pub fn generation(&self) -> u32 {
         self.store.borrow().generation().await as u32
     }
 }
@@ -63,7 +63,7 @@ impl Puzzle3dArtifactVcs {
 /// camelCase JSON shape callers previously got from a hand-authored `*.3d.json` fixture — lets
 /// non-Rust consumers load the real example fixtures without duplicating the DSL grammar.
 #[wasm_bindgen(js_name = puzzle3dParseDslJson)]
-pub async fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
+pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
     use store::ArtifactDsl;
     let projection = Puzzle3dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))

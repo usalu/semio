@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here. `s.forms.form` is a semio-NATIVE artifact persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs; no third party reads or writes either, so no oracle is registered — see noOracleDecisions below.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "forms-document-mutation-semantics",
+      "capabilities": [
+        "forms-1-mutate"
+      ],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none could be authoritative over `FormMutation`: the 10 kinds are the survey-authoring verbs of this subset alone — five over the ordered `steps` list, four over the questions inside a step, and the document title. What stands in its place is the committed, independently handcrafted specification vector under each of the 10 `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves, plus the inverse law as a metamorphic property. ⚠️ Recorded honestly, because it bounds what those vectors prove: nine of the ten pin a REJECTION or NO-OP branch rather than an effect, and the leaves say why — `FormsSnapshot` keeps its steps tree in composed `s.stdio.semio.value`/`table` CHILD handles whose `child_id` is a `DefaultHasher` digest of the child content, so a successful mutation re-mints a handle whose value cannot be hand-authored without forging a value out of std's deliberately unspecified default hasher (`🌱create-step/🧪️tests/rejects-a-duplicate-step-id/🦀️component.rs`). The guard branches are therefore what this subset can commit as data today, and the case asserts them as such — each vector's declared status, diagnostic code and target — rather than pretending they are effect vectors.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "forms-1-any",
+      "capability": "forms-1-mutate",
+      "kinds": [
+        "create-step",
+        "delete-step",
+        "reorder-step",
+        "rename-step",
+        "change-step-description",
+        "create-block",
+        "delete-block",
+        "move-block-to-step",
+        "replace-block",
+        "change-form-title"
+      ]
+    }
+  ]
+}

@@ -59,7 +59,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
         <Self::Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string())
     }
 
-    async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
+    fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
         use protocol::Inference;
         Self::Inference::infer(snapshot)
     }

@@ -193,7 +193,7 @@ impl Default for CadPlayRuntime {
 
 impl CadPlayRuntime {
     /// 🪟️ Reads the Dislocate handle configuration for one window instance without sharing it with siblings.
-    pub async fn dislocate_options(&self, window_id: &str) -> CadDislocateOptions {
+    pub fn dislocate_options(&self, window_id: &str) -> CadDislocateOptions {
         self.dislocate_options_by_window_id.get(window_id).copied().unwrap_or_default()
     }
 }
@@ -204,7 +204,7 @@ impl CadPlayRuntime {
 /// operation. `dislocate_options_by_window_id` is seeded from the 4 fixed pane fields keyed by the 4
 /// constant window-kind ids (`CAD_PLAY_WINDOW_*`) — see `CadDislocateOptions`'s doc comment in
 /// `cad_document_engine` for why per-window-INSTANCE keying no longer applies.
-pub async fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
+pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
     CadPlayRuntime {
         selected_node_ids: cfg.selected_node_ids.clone()?,
         hovered_reference_id: cfg.hovered_reference_id.clone(),
@@ -270,7 +270,7 @@ async fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> 
 
 /// 🎥️ Reads the runtime-owned camera for `pane` — the session-only replacement for the old
 /// document-backed `cad_pane_camera`.
-pub async fn cad_pane_camera_runtime(runtime: &CadPlayRuntime, pane: CadPaneId) -> &CadCamera {
+pub fn cad_pane_camera_runtime(runtime: &CadPlayRuntime, pane: CadPaneId) -> &CadCamera {
     match pane {
         CadPaneId::Shape => &runtime.camera,
         CadPaneId::Building => &runtime.camera_building,
@@ -280,7 +280,7 @@ pub async fn cad_pane_camera_runtime(runtime: &CadPlayRuntime, pane: CadPaneId) 
 }
 
 /// 🎥️ Mutable counterpart of `cad_pane_camera_runtime`.
-pub async fn cad_pane_camera_runtime_mut(runtime: &mut CadPlayRuntime, pane: CadPaneId) -> &mut CadCamera {
+pub fn cad_pane_camera_runtime_mut(runtime: &mut CadPlayRuntime, pane: CadPaneId) -> &mut CadCamera {
     match pane {
         CadPaneId::Shape => &mut runtime.camera,
         CadPaneId::Building => &mut runtime.camera_building,
@@ -343,11 +343,11 @@ pub fn ui_node_list(
     Ok(nodes)
 }
 
-pub async fn camera_json(camera: &CadCamera) -> String {
+pub fn camera_json(camera: &CadCamera) -> String {
     world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(camera))
 }
 
-pub async fn cad_pane_id_from_suffix(id_suffix: &str) -> CadPaneId {
+pub fn cad_pane_id_from_suffix(id_suffix: &str) -> CadPaneId {
     match id_suffix {
         "building" => CadPaneId::Building,
         "energy" => CadPaneId::Energy,
@@ -356,12 +356,12 @@ pub async fn cad_pane_id_from_suffix(id_suffix: &str) -> CadPaneId {
     }
 }
 
-pub async fn cad_pane_id_from_surface_id(surface_id: &str) -> CadPaneId {
+pub fn cad_pane_id_from_surface_id(surface_id: &str) -> CadPaneId {
     let suffix = surface_id.split('/').next_back().unwrap_or(surface_id);
     cad_pane_id_from_suffix(suffix)
 }
 
-pub async fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
+pub fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
     match pane {
         CadPaneId::Shape => "shape",
         CadPaneId::Building => "building",
@@ -373,7 +373,7 @@ pub async fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
 /// 🌳️ Cad's tree items carry an icon rather than the SDK `tree_item_with_action`'s description slot, so
 /// this stays a thin app-specific wrapper — built on the SDK's bare `tree_item` rather than hand-rolling
 /// the full `UiTreeItemNode` struct literal.
-pub async fn cad_tree_item(
+pub fn cad_tree_item(
     id: impl Into<String>,
     label: impl TryInto<Label>,
     icon_id: Option<&str>,
@@ -391,7 +391,7 @@ pub async fn cad_tree_item(
 
 /// 🪟️ Maps a pane to the window-KIND id whose Dislocate options it owns — the typed-command
 /// counterpart of the pre-B1 `view_state.window_id` resolution.
-pub async fn cad_window_id_for_pane(pane: CadPaneId) -> &'static str {
+pub fn cad_window_id_for_pane(pane: CadPaneId) -> &'static str {
     match pane {
         CadPaneId::Shape => shape::WINDOW_KIND_ID,
         CadPaneId::Building => building::WINDOW_KIND_ID,
@@ -401,13 +401,13 @@ pub async fn cad_window_id_for_pane(pane: CadPaneId) -> &'static str {
 }
 
 /// 🔀️ The `CadConfig -> CadPlayRuntime` boundary every command handler opens with.
-pub async fn runtime_of(cfg: &ConfigView<'_, CadConfig>) -> CadPlayRuntime {
+pub fn runtime_of(cfg: &ConfigView<'_, CadConfig>) -> CadPlayRuntime {
     cad_runtime_from_config(cfg.snapshot)
 }
 
 /// 🔀️ Emits a non-session config snapshot and fails closed if a caller attempts to bypass the
 /// operation-aware engagement transition authority.
-pub async fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> Result<CadConfigMutation, Fault> {
+pub fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> Result<CadConfigMutation, Fault> {
     let config = cad_config_from_runtime(runtime, base);
     if config.engagement_session_json != base.engagement_session_json {
         return Err(Fault::from("cad.preview.invalid: engagement checkpoint transition requires operation-aware persistence"));
@@ -417,7 +417,7 @@ pub async fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> Result<C
 
 /// 🪪️ The sole engagement-checkpoint persistence authority: it stamps one exact public-operation
 /// identity and advances the bounded generation exactly once iff the checkpoint changed.
-pub async fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig, ctx: &CadDispatchCtx) -> Result<CadConfigMutation, Fault> {
+pub fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig, ctx: &CadDispatchCtx) -> Result<CadConfigMutation, Fault> {
     let mut config = cad_config_from_runtime(runtime, base);
     if config.engagement_session_json != base.engagement_session_json {
         let operation = ctx.preview_operation.as_ref().ok_or_else(|| Fault::from("cad.preview.invalid: engagement transition is missing public operation identity"))?;
@@ -441,22 +441,22 @@ pub async fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &Cad
 /// on `CadDispatchCtx`/`Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️component.rs`
 /// framework-kernel surface, W1-owned, out of a plugin fan-out agent's write scope). Documented
 /// no-op until that seam exists, not silently dropped.
-pub async fn apply_transformation_mutations(_document: &CadSnapshot, _qid: &str) -> Vec<CadMutation> {
+pub fn apply_transformation_mutations(_document: &CadSnapshot, _qid: &str) -> Vec<CadMutation> {
     Vec::new()
 }
 
 /// ⚠️ Same documented gap as `apply_transformation_mutations` — there is no live per-pane object
 /// list on `CadSnapshot` to collect solids from anymore (only composed model-child HANDLES,
 /// unresolved at this boundary).
-pub async fn collect_pane_solids(_kernel: &mut Brep, _envelope: &CadPlayView, _pane: CadPaneId) -> Vec<GeometryHandle> {
+pub fn collect_pane_solids(_kernel: &mut Brep, _envelope: &CadPlayView, _pane: CadPaneId) -> Vec<GeometryHandle> {
     Vec::new()
 }
 
-pub async fn collect_modelspace_solids(kernel: &mut Brep, envelope: &CadPlayView) -> Vec<GeometryHandle> {
+pub fn collect_modelspace_solids(kernel: &mut Brep, envelope: &CadPlayView) -> Vec<GeometryHandle> {
     CadPaneId::all().into_iter().flat_map(|pane| collect_pane_solids(kernel, envelope, pane)).collect()
 }
 
-pub async fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: &str) -> Option<CadSolidExport> {
+pub fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, format: &str) -> Option<CadSolidExport> {
     let mut kernel = cad_brep_kernel();
     let solids = collect_pane_solids(&mut kernel, envelope, pane);
     if solids.is_empty() {
@@ -466,7 +466,7 @@ pub async fn export_solid_for_pane(envelope: &CadPlayView, pane: CadPaneId, form
     export_solids_as(&mut kernel, &solids, format, &stem)
 }
 
-pub async fn export_solid_modelspace(envelope: &CadPlayView, format: &str) -> Option<CadSolidExport> {
+pub fn export_solid_modelspace(envelope: &CadPlayView, format: &str) -> Option<CadSolidExport> {
     let mut kernel = cad_brep_kernel();
     let solids = collect_modelspace_solids(&mut kernel, envelope);
     if solids.is_empty() {
@@ -477,7 +477,7 @@ pub async fn export_solid_modelspace(envelope: &CadPlayView, format: &str) -> Op
 
 /// @emoji ⬇️ Converts a staged native-geometry export into a download host effect emitted directly
 /// to the shell (no document mutation, no pending-export runtime slot).
-pub async fn cad_solid_export_effect(export: CadSolidExport) -> Effect {
+pub fn cad_solid_export_effect(export: CadSolidExport) -> Effect {
     let data = match export.data {
         Value::String(text) => text,
         other => serde_json::to_string(&other).unwrap_or_default(),
@@ -486,7 +486,7 @@ pub async fn cad_solid_export_effect(export: CadSolidExport) -> Effect {
 }
 
 /// @emoji ⬇️ Wraps a spatial-JSON export document into a download host effect.
-pub async fn cad_spatial_export_effect(value: &Value, filename: &str) -> Effect {
+pub fn cad_spatial_export_effect(value: &Value, filename: &str) -> Effect {
     Effect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: serde_json::to_string(value).unwrap_or_default(), encoding: None }
 }
 
@@ -495,7 +495,7 @@ pub async fn cad_spatial_export_effect(value: &Value, filename: &str) -> Effect 
 /// inside composed `s.stdio.semio.model` CHILD documents (unresolved at this boundary — see
 /// `🔖️Composition` in `🏪️store/🦀️component.rs`). Returns an empty `objects` array per pane;
 /// documented reduced-fidelity gap, not silently wrong.
-pub async fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
+pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
     let models: Vec<Value> = CadPaneId::all()
         .into_iter()
         .map(|pane| {
@@ -555,7 +555,7 @@ pub async fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
 /// banned outright); every former "replace the whole document" gesture builds this effect instead
 /// of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log for `scene`'s own
 /// `schema`/`id` — a genesis envelope with no history to encode.
-pub async fn reset_document_effect(scene: &CadSnapshot) -> Effect {
+pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
     let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<CadSnapshot, CadMutation>(&scene.schema, &scene.id, scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("cad document spr encode is infallible for a fresh, edit-free envelope");
@@ -570,18 +570,18 @@ pub async fn reset_document_effect(scene: &CadSnapshot) -> Effect {
 /// fields live inside composed `s.stdio.semio.model` CHILD documents now, whose own mutations are
 /// dispatched against that child directly (no seam for that from here yet; see
 /// `patch_objects_mutations`'s doc comment). Documented no-op.
-pub async fn object_field_mutation(_pane: CadPaneId, _object_id: &str, _field: &str, _value: Option<&Value>) -> Option<CadMutation> {
+pub fn object_field_mutation(_pane: CadPaneId, _object_id: &str, _field: &str, _value: Option<&Value>) -> Option<CadMutation> {
     None
 }
 
-pub async fn resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
+pub fn resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
     if let Some(absolute) = value.and_then(Value::as_f64) {
         return Some(absolute);
     }
     delta.and_then(Value::as_f64).map(|delta| current + delta)
 }
 
-pub async fn axis3_index(field: &str, base: &str) -> Option<usize> {
+pub fn axis3_index(field: &str, base: &str) -> Option<usize> {
     match field.strip_prefix(base)?.strip_prefix('.')? {
         "x" => Some(0),
         "y" => Some(1),
@@ -590,7 +590,7 @@ pub async fn axis3_index(field: &str, base: &str) -> Option<usize> {
     }
 }
 
-pub async fn axis4_index(field: &str, base: &str) -> Option<usize> {
+pub fn axis4_index(field: &str, base: &str) -> Option<usize> {
     match field.strip_prefix(base)?.strip_prefix('.')? {
         "x" => Some(0),
         "y" => Some(1),
@@ -600,7 +600,7 @@ pub async fn axis4_index(field: &str, base: &str) -> Option<usize> {
     }
 }
 
-pub async fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
+pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
     let len = (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]).sqrt();
     if len < 1e-9 {
         return [0.0, 0.0, 0.0, 1.0];
@@ -622,11 +622,11 @@ pub async fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
 /// `Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️component.rs` framework-kernel
 /// surface, W1-owned, out of a plugin fan-out agent's write scope). Documented no-op until that
 /// seam exists, not silently dropped.
-pub async fn patch_objects_mutations(_document: &CadSnapshot, _object_ids: &[String], _field: &str, _value: Option<&Value>, _delta: Option<&Value>) -> Vec<CadMutation> {
+pub fn patch_objects_mutations(_document: &CadSnapshot, _object_ids: &[String], _field: &str, _value: Option<&Value>, _delta: Option<&Value>) -> Vec<CadMutation> {
     Vec::new()
 }
 
-pub(crate) async fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject {
+pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
     let label = TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == typology).map_or("Object", |entry| entry.label);
     let extent = match typology {
@@ -660,7 +660,7 @@ pub(crate) async fn make_object_for_typology(typology: &str, label_count: usize,
 /// direct-event and keyed-transition REPL paths in `engagement_submit_mutations` (a state reached via
 /// either path can be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed
 /// transition).
-pub async fn try_commit_session_mutations(_document: &CadSnapshot, runtime: &mut CadPlayRuntime, _pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadMutation> {
+pub fn try_commit_session_mutations(_document: &CadSnapshot, runtime: &mut CadPlayRuntime, _pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadMutation> {
     if !can_commit(session) {
         return Vec::new();
     }
@@ -689,7 +689,7 @@ pub async fn try_commit_session_mutations(_document: &CadSnapshot, runtime: &mut
 
 /// @emoji ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
 /// session state and returning any commit operations produced.
-pub async fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadMutation> {
+pub fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadMutation> {
     let input = runtime.engagement_input.trim().to_string();
     if input.is_empty() {
         runtime.engagement_step = "Idle".into();
@@ -732,7 +732,7 @@ pub async fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut C
 
 /// Starts a fresh engagement session for `interaction_id` in `pane` (used by
 /// `engagementPossibleSelect`'s start-by-id path and `engagementRepeatLast`).
-pub async fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, interaction_id: &str) -> bool {
+pub fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, interaction_id: &str) -> bool {
     let Some(entry) = interaction::interaction_by_id(interaction_id) else {
         return false;
     };
@@ -747,7 +747,7 @@ pub async fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPa
 /// @emoji 🔀️ WORKFLOWS-END-TO-END-TYPED-PORTS: the typed-command counterpart of the pre-B1
 /// `mesh_selection_ids` (JSON-args) helper — falls back to the current selection when the command
 /// carries no explicit ids.
-pub async fn ids_or_selection(ids: &[String], fallback: &[String]) -> Vec<String> {
+pub fn ids_or_selection(ids: &[String], fallback: &[String]) -> Vec<String> {
     if ids.is_empty() {
         fallback.to_vec()
     } else {
@@ -761,7 +761,7 @@ pub async fn ids_or_selection(ids: &[String], fallback: &[String]) -> Vec<String
 /// `serde_json::Value` shape `object_patch_from_field`/`resolve_number_edit` already expect, dispatching
 /// on the same field-name vocabulary those helpers use (bool fields by name, everything else tried as a
 /// number first, falling back to a string).
-pub async fn command_value_json(field: &str, value: &str) -> Value {
+pub fn command_value_json(field: &str, value: &str) -> Value {
     match field {
         "hidden" | "locked" => value.parse::<bool>().map_or(Value::Null, Value::Bool),
         _ => value.parse::<f64>().map_or_else(|_| Value::String(value.into()), |number| json!(number)),
@@ -775,7 +775,7 @@ pub async fn command_value_json(field: &str, value: &str) -> Value {
 /// from any upstream 3D producer — `MediaForm::Any` only ever legal on the accepting side) and
 /// `brep:out` (this app's own `3d.cad` kind, `Many` multiplicity so several downstream consumers can
 /// each pull an independent export).
-pub async fn cad_io() -> semio_framework_plugin::AppIo {
+pub fn cad_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: "cad.scene".into(),
         document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
@@ -1033,7 +1033,7 @@ pub struct CadPlayApp;
 
 impl CadPlayApp {
     /// 🔬️ CW7 preview-law seam: reads the operation-stamped engagement checkpoint from config only.
-    pub async fn gesture_preview(&self, config: &CadConfig) -> Option<CadGesturePreview> {
+    pub fn gesture_preview(&self, config: &CadConfig) -> Option<CadGesturePreview> {
         let session_json = config.engagement_session_json.as_ref()?;
         if session_json.is_empty() || session_json == "null" {
             return None;
@@ -1227,12 +1227,12 @@ impl ArtifactEditor for CadPlayApp {
 
 //#region 🔖️Manifest
 /// @emoji 🧰️ The window-scoped CAD Dislocate utility, whose Move and Rotate handles are utility options.
-pub async fn cad_dislocate_utility() -> UtilityDefinition {
+pub fn cad_dislocate_utility() -> UtilityDefinition {
     UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new(CAD_DISLOCATE_UTILITY_ID, LocalizedLabel::native("Dislocate", "Versetzen"), "move-3d") }
 }
 
 /// @emoji 🧰️ The single Dislocate utility ref exposed independently by each world-3d window.
-pub async fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
+pub fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
     vec![CAD_DISLOCATE_UTILITY_ID.into()]
 }
 
@@ -1243,7 +1243,7 @@ pub async fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::Utility
 /// `crate::artifacts::cad::standards::v1::subsets::any::io::InteractionSpec` (a CAD-artifact DSL
 /// type for engagement statecharts, `🗿️artifacts/📐️cad/…/🎬️interaction-spec/🦀️component.rs`) —
 /// unrelated, pre-existing, untouched by this migration.
-pub async fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefinition {
+pub fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefinition {
     use semio_framework_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
     InteractionDefinition {
         id: CAD_INTERACTION_DOMAIN.into(),
@@ -1266,7 +1266,7 @@ pub async fn cad_interaction_definition() -> semio_framework_plugin::Interaction
     }
 }
 
-pub async fn create_cad_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::cad::CAD_DIALECT).document(["semio", "cad"])
             .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .artifact_kind(artifact_kind())
@@ -1375,7 +1375,7 @@ pub async fn create_cad_app() -> semio_framework_plugin::AppDefinition {
 /// This is the app-layer `CadWorkingScene` counterpart to `forest_play_scene()`: use `forest_play_scene()`
 /// for `drive`/render dispatch (a `CadSnapshot`, composed-child HANDLES only) and this for reading
 /// actual object data in tests/render-path exemplars.
-pub async fn forest_working_scene() -> CadWorkingScene {
+pub fn forest_working_scene() -> CadWorkingScene {
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::forest_pane_bundle;
     let (objects, geometry) = forest_pane_bundle(CadPaneId::Shape);
     let (building_objects, building_geometry) = forest_pane_bundle(CadPaneId::Building);
@@ -1396,7 +1396,7 @@ pub async fn forest_working_scene() -> CadWorkingScene {
 /// 🟦️ The single-box placeholder scene `default_document()`'s `CadSnapshot` used to inline directly
 /// (pre-wave-3) — realized now as the app-layer `CadWorkingScene` counterpart: use `default_document()`
 /// for `drive`/render dispatch, this for reading its (one, real) object.
-pub async fn default_working_scene() -> CadWorkingScene {
+pub fn default_working_scene() -> CadWorkingScene {
     CadWorkingScene { objects: vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape)], ..CadWorkingScene::default() }
 }
 //#endregion 🔖️WorkingSceneFixtures
@@ -1411,36 +1411,36 @@ pub(crate) mod testkit {
     use semio_framework_plugin::app::EditorApp;
     use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsArtifactApp};
 
-    pub async fn meta(actor: &str) -> ActionMeta {
+    pub fn meta(actor: &str) -> ActionMeta {
         semio_framework_plugin::testkit::meta(actor)
     }
 
     /// ✏️ `CadPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime `ArtifactApp`
     /// — `EditorApp<CadPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
     /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<CadPlayApp>` builds it.
-    pub async fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>> {
+    pub fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>> {
         semio_framework_plugin::testkit::new_app::<EditorApp<CadPlayApp>>()
     }
 
     /// ✏️ Adapts `create_cad_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still expects —
     /// framework testkit gap, not modifiable here (`🧰️framework/**` is outside this packet's lease).
-    pub async fn cad_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub fn cad_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_cad_app(), examples: Vec::new() }
     }
 
-    pub async fn empty_history() -> HistoryView {
+    pub fn empty_history() -> HistoryView {
         HistoryView::empty()
     }
 
     /// 🔀️ Keeps the legacy test-harness call shape while exercising the production action bridge.
-    pub async fn command_from_action(action: &str, args: Option<&Value>) -> CadCommand {
+    pub fn command_from_action(action: &str, args: Option<&Value>) -> CadCommand {
         cad_command_from_action(action, args).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
     }
 
     /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped, config defaulted) so tests can
     /// inspect the emitted document/config operations directly.
-    pub async fn drive(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>) -> Emit<CadMutation, CadConfigMutation> {
+    pub fn drive(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>) -> Emit<CadMutation, CadConfigMutation> {
         drive_with_config(app, scene, action, args, &CadConfig::default())
     }
 
@@ -1454,7 +1454,7 @@ pub(crate) mod testkit {
     /// the app-owned `CadDispatchCtx` (whose `interaction: CadInteractionSnapshot` field IS plain
     /// and cad-owned), so tests build that by hand and skip the adaptation `handle` exists for.
     #[allow(clippy::needless_pass_by_value)]
-    pub async fn drive_with_config(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadMutation, CadConfigMutation> {
+    pub fn drive_with_config(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadMutation, CadConfigMutation> {
         let operation = CadPreviewOperationIdentity { app_instance_id: 1, parent_document_id: "cad-test-document".into(), operation_id: 1, operation_generation: 1, canonical_base_revision: "00".repeat(32) };
         drive_with_operation(app, scene, action, args, config, Some(operation)).expect("cad command handled")
     }
@@ -1462,7 +1462,7 @@ pub(crate) mod testkit {
     /// 🪪️ Production-dispatch harness with an explicit public operation identity, including the
     /// missing-context case used by fail-closed transition fixtures.
     #[allow(clippy::needless_pass_by_value)]
-    pub async fn drive_with_operation(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig, preview_operation: Option<CadPreviewOperationIdentity>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn drive_with_operation(app: &CadPlayApp, scene: &CadSnapshot, action: &str, args: Option<Value>, config: &CadConfig, preview_operation: Option<CadPreviewOperationIdentity>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let _ = app;
         let history = empty_history();
         let doc = ArtifactView::new(scene, &history);
@@ -1472,17 +1472,17 @@ pub(crate) mod testkit {
         command.dispatch(&doc, &cfg, &mut ctx)
     }
 
-    pub async fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
         let cfg = ConfigView { snapshot: config };
         CadPlayApp::render(body_key, doc, &cfg)
     }
 
-    pub async fn window_measures_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> HashMap<String, Vec<WindowMeasure>> {
+    pub fn window_measures_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> HashMap<String, Vec<WindowMeasure>> {
         let cfg = ConfigView { snapshot: config };
         CadPlayApp::window_measures(doc, &cfg)
     }
 
-    pub async fn context_menu_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    pub fn context_menu_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let cfg = ConfigView { snapshot: config };
         let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
         CadPlayApp::context_menu(&request, doc, &cfg, registry)
@@ -1490,7 +1490,7 @@ pub(crate) mod testkit {
 
     /// 🧮️ Folds a list of `CadMutation`s onto a scene via the core `Mutation`/`MutationDiff` impls —
     /// mirrors what the wrapping `VcsArtifactApp` store does when it dispatches the emitted operations.
-    pub async fn apply_mutations(scene: &CadSnapshot, operations: &[CadMutation]) -> CadSnapshot {
+    pub fn apply_mutations(scene: &CadSnapshot, operations: &[CadMutation]) -> CadSnapshot {
         let mut next = scene.clone();
         for operation in operations {
             next = operation.diff(&next).diff().apply(&next).expect("valid mutation diff");
@@ -1500,7 +1500,7 @@ pub(crate) mod testkit {
 
     /// 🧮️ `apply_mutations`'s config-targeted twin — folds an `Emit`'s `config_mutations` onto a base
     /// `CadConfig` (mirrors what `VcsArtifactApp`'s config store does when it dispatches them).
-    pub async fn config_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadConfig {
+    pub fn config_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadConfig {
         let mut next = base.clone();
         for operation in &emit.config_mutations {
             next = operation.diff(&next).diff().clone();
@@ -1510,11 +1510,11 @@ pub(crate) mod testkit {
 
     /// 🧮️ `config_after` plus the `CadConfig -> CadPlayRuntime` boundary conversion — the direct
     /// replacement for the pre-B1 `app.runtime.borrow()` most tests below inspected after `drive(..)`.
-    pub async fn runtime_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadPlayRuntime {
+    pub fn runtime_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadPlayRuntime {
         cad_runtime_from_config(&config_after(emit, base))
     }
 
-    pub async fn view(scene: CadSnapshot, runtime: CadPlayRuntime) -> CadPlayView {
+    pub fn view(scene: CadSnapshot, runtime: CadPlayRuntime) -> CadPlayView {
         CadPlayView { document: scene, runtime }
     }
 }
@@ -1537,7 +1537,7 @@ mod tests {
     /// `Option` fields) — the closed set the wire laws below iterate. Captured from the
     /// pre-consolidation `CadCommand` enum, ticket
     /// `26/08/05/CAD-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`.
-    pub(crate) async fn every_command() -> Vec<CadCommand> {
+    pub(crate) fn every_command() -> Vec<CadCommand> {
         vec![
             CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }),
             CadCommand::AddObject(add_object::AddObject { typology: None }),

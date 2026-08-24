@@ -59,6 +59,73 @@ pub use super::replace_node_kind::mutation::{replace_node_kind, ReplaceNodeKind}
 pub use super::replace_node_properties::mutation::{replace_node_properties, ReplaceNodeProperties};
 pub use super::resize_node::mutation::{resize_node, ResizeNode};
 
+/// 🏷️ Kebab-case spelling of every [`DagMutation`] variant, in declaration order — the vocabulary
+/// the `dag-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and `mutate-dag-1`'s
+/// exhaustive case measures itself against. There is deliberately no `no-mutation` and no
+/// `set-snapshot`: whole-collection and whole-document replacement are banned vocabulary here (see
+/// the enum's own docstring) and reach the store through `ArtifactStore::reset` instead.
+/// [`kinds_match_the_enum_and_the_catalog`] keeps this list honest against the enum, since the
+/// framework never parses Rust.
+pub const KINDS: &[&str] = &[
+    "create-node",
+    "delete-node",
+    "rename-node",
+    "change-node-name",
+    "move-node",
+    "resize-node",
+    "change-node-icon",
+    "change-node-abbreviation",
+    "change-node-operator-kind",
+    "replace-node-kind",
+    "replace-node-properties",
+    "reorder-nodes",
+    "connect-nodes",
+    "disconnect-nodes",
+];
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "moveNode", …}`, camelCase payload
+/// fields) JSON projection — exactly the shape the committed
+/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification vectors and
+/// `mutate-dag-1`'s own `Examples` payloads carry — into a real [`DagMutation`]. The test adapter
+/// cannot reach `serde_json` (the generated host links only `semio-repo-test-host` and this crate)
+/// and cannot name this crate's private `protocol`/`store` extern-crate aliases either, so the
+/// bridge belongs here rather than there.
+pub fn decode_dag_mutation_json(text: &str) -> Result<DagMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ [`apply_dag_mutation`]'s reporting, non-async twin: applies `mutation` in place and returns
+/// every diagnostic it raised as `(code, severity, target)` triples. [`apply_dag_mutation`] discards
+/// them and is `async`, and this vocabulary's whole committed specification-vector suite is a
+/// REJECTION suite — `mutation.target-missing`, `mutation.duplicate-id`, `mutation.invariant` —
+/// so the diagnostics are the evidence, not a side channel.
+pub fn apply_dag_mutation_reporting(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> Vec<(String, String, Vec<String>)> {
+    let outcome = <DagMutation as protocol::Mutation<DagSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level), message.target.clone())).collect()
+}
+
+/// ↩️ [`inverse_dag_mutation`]'s non-async twin — the mutation's OWN computed undo steps, which is
+/// what an `inverse-<kind>` scenario has to apply for the metamorphic law to mean anything.
+pub fn inverse_dag_mutation_steps(mutation: &DagMutation, base: &DagSnapshot) -> Vec<DagMutation> {
+    <DagMutation as protocol::Mutation<DagSnapshot>>::inverse(mutation, base)
+}
+/// 🌱 Resolves `snapshot`'s composed `s.stdio.semio.graph` child to a working scene holding exactly
+/// the node a `create-node` payload carries, and reports whether it did. `create-node` is the one
+/// verb in this vocabulary with NO rejection branch on an empty scene, so its committed
+/// `mutation.duplicate-id` vector is only reachable once the id it collides with is actually
+/// present — which is precisely what
+/// `🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🦀️component.rs::before` does with
+/// `cache_dag_content`. Exposed here because that seeding function is `async` and the scene type is
+/// unnameable from a test adapter, and because seeding FROM the committed payload is what keeps the
+/// vector free of any transcription: the seeded node IS the mutation JSON's own `node`.
+pub fn seed_dag_working_scene_with(snapshot: &DagSnapshot, mutation: &DagMutation) -> bool {
+    let DagMutation::CreateNode(payload) = mutation else { return false };
+    crate::artifacts::dag::cache_dag_content(&snapshot.content.child_id, vec![payload.node.clone()], Vec::new());
+    true
+}
+//#endregion 🌉️ExternalCodecBridge
+
 /// ▶️ Applies `mutation` via its diff.
 pub async fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> protocol::MutationApplyResult<()> {
     use store::MutationDiff;
@@ -145,6 +212,24 @@ mod tests {
     use protocol::Mutation;
     use protocol::SemanticMutation;
     use vcs::apply_mutation;
+
+    /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
+    /// — must agree, in spelling AND in order. The framework never parses Rust, so without this
+    /// test `KINDS` could drift from the enum and the catalog could keep measuring `mutate-dag-1`
+    /// against a vocabulary the artifact no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = DagMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(!manifest.contains("\"set-snapshot\"") && !manifest.contains("\"no-mutation\""), "whole-document replace is banned vocabulary here — the catalog must not smuggle it back in");
+    }
 
     async fn round_trip(snapshot: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
         let (forward, _messages) = apply_mutation(snapshot, mutation).expect("valid mutation");

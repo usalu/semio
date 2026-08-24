@@ -7,7 +7,7 @@
 use crate::artifacts::curate::{CurateSnapshot, SOURCING_CURATE_SCHEMA, SOURCING_DIALECT};
 use crate::viewer::sourcing::modes::view;
 use crate::viewer::sourcing::modes::view::windows::pool;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 // 🚧️ SDK GAP: same note as the editor's own import block — `InteractionView` is only reachable
 // through `app`, not yet in the crate-root re-export list (w0-f Gap 1 only closed the surface
 // traits/builders/adapters, not this pre-existing type).
@@ -71,10 +71,14 @@ impl ArtifactViewer for SourcingViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            pool::BODY_KEY => pool::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
+            pool::BODY_KEY => pool::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

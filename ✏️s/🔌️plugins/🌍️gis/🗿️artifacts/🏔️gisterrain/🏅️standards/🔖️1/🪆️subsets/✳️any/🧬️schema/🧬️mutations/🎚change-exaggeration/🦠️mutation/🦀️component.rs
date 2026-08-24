@@ -18,15 +18,15 @@ pub struct ChangeExaggeration {
 impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeExaggeration {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "exaggeration", kind: "change-exaggeration", record: "ChangedExaggeration" };
 
-    async fn diff(&self, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
+    fn diff(&self, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
         super::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &GisTerrainSnapshot) -> Vec<GisTerrainMutation> {
+    fn inverse(&self, base: &GisTerrainSnapshot) -> Vec<GisTerrainMutation> {
         super::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change terrain exaggeration to {}", self.new_exaggeration)
     }
 }

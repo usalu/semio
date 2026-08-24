@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `s.cad.cad@1/*` is a semio-NATIVE composition document — it is carried as `.dsl.semio`/`.pack.semio`/`.op.semio`/`.spr.semio` and its `CadMutation` vocabulary is this subset's own specification — so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "cad-mutation-semantics",
+      "capabilities": ["cad-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `CadMutation` — a vocabulary of CHILD-SLOT LIFECYCLE (the four fixed `shapeModel`/`buildingModel`/`energyModel`/`structureClassicModel` slots plus the `drawings` collection), a node tree, and per-model-definition reference lists. That vocabulary IS this subset's specification, not a fact an external library could confirm or refute; registering a general-purpose CAD or JSON-patch crate to judge it would put a library that has never seen this document model in the position of the reference, which is worse than recording no oracle at all. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability (a kind must move the compared projection) and footprint completeness (`before` and `after` may differ on exactly the fields the committed diff declares, which is the precondition that makes the mutation undoable at all).",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "cad-1-any",
+      "capability": "cad-1-mutate",
+      "kinds": ["create-shape-model", "delete-shape-model", "create-building-model", "delete-building-model", "create-energy-model", "delete-energy-model", "create-structure-classic-model", "delete-structure-classic-model", "create-drawing", "delete-drawing", "create-node", "delete-node", "rename-node", "change-reference-hidden", "change-reference-locked", "change-reference-width", "move-reference", "replace-reference-media", "replace-references", "change-active-model-definition"]
+    }
+  ]
+}

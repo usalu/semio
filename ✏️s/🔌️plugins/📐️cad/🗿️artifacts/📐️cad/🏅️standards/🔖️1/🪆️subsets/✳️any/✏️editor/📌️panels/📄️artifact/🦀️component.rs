@@ -14,7 +14,7 @@ pub const CAD_PLAY_BODY_DOCUMENT: &str = "cad.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -26,7 +26,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub(crate) async fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let primitive_items = ui_node_list(object.primitives.iter().map(|primitive| {
             // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `UiTreeItemNode` no longer
             // carries `hoverAction`/`unhoverAction` — mesh hover is the framework-owned `"cad"`
@@ -75,7 +75,7 @@ pub(crate) async fn object_tree_item(id_suffix: &str, object: &CadObject, labels
     Ok(item)
 }
 
-pub async fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let select_args = ui_value_map([
         ("modelDefinitionId", ui_value_text(model_definition_id)?),
         ("referenceId", ui_value_text(&reference.id)?),
@@ -119,7 +119,7 @@ pub async fn reference_tree_item(model_definition_id: &str, reference: &CadRefer
 }
 
 /// 🗂️ The `document.references_by_model_definition_id` lookup repeated once per pane in `build_document_tree`.
-pub async fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: &str) -> &'a [CadReference] {
+pub fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: &str) -> &'a [CadReference] {
     document.references_by_model_definition_id.get(model_definition_id).map_or(&[][..], |rows| rows.as_slice())
 }
 
@@ -129,7 +129,7 @@ pub async fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: 
 /// `edit::instance_is_component_hovered`'s doc comment). This tree stays un-bound to
 /// `interaction_domain` for that reason (its item ids, `"cad-object:…"`/`"cad-reference:…"`/
 /// `"cad-node:…"`, are UI-namespaced composites, not the domain's raw ids anyway).
-pub async fn document_tree_selected_ids(_document: &CadSnapshot, runtime: &CadPlayRuntime) -> semio_framework_plugin::UiAssemblyResult<Option<UiFixedList<String>>> {
+pub fn document_tree_selected_ids(_document: &CadSnapshot, runtime: &CadPlayRuntime) -> semio_framework_plugin::UiAssemblyResult<Option<UiFixedList<String>>> {
     if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
         let mut ids = UiFixedList::default();
         ids.try_push(format!("cad-reference:{model_definition_id}:{reference_id}"))
@@ -139,7 +139,7 @@ pub async fn document_tree_selected_ids(_document: &CadSnapshot, runtime: &CadPl
     Ok(None)
 }
 
-pub async fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRuntime) -> semio_framework_plugin::UiAssemblyResult<Option<UiFixedList<String>>> {
+pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRuntime) -> semio_framework_plugin::UiAssemblyResult<Option<UiFixedList<String>>> {
     let Some(hovered) = runtime.hovered_reference_id.as_deref() else {
         return Ok(None);
     };
@@ -156,7 +156,7 @@ pub async fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &Cad
 }
 
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded.
-pub(crate) async fn document_pane_section(
+pub(crate) fn document_pane_section(
     label: impl Into<Label>,
     id_suffix: &str,
     objects: &[CadObject],
@@ -166,7 +166,7 @@ pub(crate) async fn document_pane_section(
 }
 
 /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
-pub async fn artifact_references_section(
+pub fn artifact_references_section(
     document: &CadSnapshot,
     model_definition_id: &str,
     labels: &CadLabels,
@@ -179,7 +179,7 @@ pub async fn artifact_references_section(
     ))
 }
 
-pub async fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let node_items = ui_node_list(envelope.document.nodes.iter().map(|node| {
         let node_ids = ui_value_list([ui_value_text(&node.id)?])?;
         let args = ui_value_map([("nodeIds", node_ids)])?;

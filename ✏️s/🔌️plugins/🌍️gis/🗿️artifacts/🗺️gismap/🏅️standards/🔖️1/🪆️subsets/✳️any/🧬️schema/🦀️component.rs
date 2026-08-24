@@ -77,17 +77,17 @@ impl GisMapArtifact {
     /// `self`) via `gis_map_snapshot_with_derived_children` so they can never drift from what
     /// `positions`/`routes`/`regions` actually contain; `image` carries straight through (real, but
     /// not derivable from anything this plugin owns — see the field's own doc comment).
-    pub async fn to_snapshot(&self) -> GisMapSnapshot {
+    pub fn to_snapshot(&self) -> GisMapSnapshot {
         gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: self.positions.clone(), routes: self.routes.clone(), regions: self.regions.clone(), image: self.image.clone(), ..Default::default() })
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: GisMapSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: GisMapSnapshot) -> Self {
         Self { positions: snapshot.positions, routes: snapshot.routes, regions: snapshot.regions, image: snapshot.image, ..Self::default() }
     }
 
     /// Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: GisMapSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: GisMapSnapshot) {
         self.positions = snapshot.positions;
         self.routes = snapshot.routes;
         self.regions = snapshot.regions;
@@ -98,7 +98,7 @@ impl GisMapArtifact {
 
 //#region 🔹Descriptor
 /// 🧬️ Descriptor for `s.gis.gismap` — twenty handcrafted schema leaves.
-pub async fn gismap_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn gismap_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.gis.gismap",
         artifact: schema::FacetLeaves {
@@ -167,7 +167,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <GisMapDiff as protocol::MutationDiff<GisMapSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
@@ -258,13 +258,13 @@ async fn dsl_to_value(value: &dsl::DslValue) -> Value {
     dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null)
 }
 
-pub async fn empty_gis_map_snapshot() -> GisMapSnapshot {
+pub fn empty_gis_map_snapshot() -> GisMapSnapshot {
     GisMapSnapshot::default()
 }
 
 /// 📥️ Parses a `{ positions, routes, regions }` map-descriptor JSON into a `GisMapSnapshot` — each
 /// array entry becomes a `MapFeature` keyed by its `id`, keeping the full object as the payload.
-pub async fn gis_map_document_from_descriptor_json(json: &str) -> GisMapSnapshot {
+pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapSnapshot {
     let value: Value = serde_json::from_str(json).unwrap_or_else(|_| serde_json::json!({}));
     let features = |key: &str| -> Vec<MapFeature> {
         value
@@ -286,7 +286,7 @@ pub async fn gis_map_document_from_descriptor_json(json: &str) -> GisMapSnapshot
 
 /// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
 /// emitting each feature's opaque payload.
-pub async fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
+pub fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
     let payloads = |features: &[MapFeature]| -> Vec<Value> { features.iter().map(|feature| dsl_to_value(&feature.data)).collect() };
     serde_json::json!({
         "positions": payloads(&document.positions),
@@ -298,7 +298,7 @@ pub async fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
 
 /// 🗺️ The default map document, seeded from the bundled reuse example (see
 /// `crate::artifacts::gismap::GisMapSnapshot`'s derive-generated `.gismap` DSL).
-pub async fn default_document() -> GisMapSnapshot {
+pub fn default_document() -> GisMapSnapshot {
     <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
@@ -333,7 +333,7 @@ async fn feature_collection_operations(
     operations
 }
 
-pub async fn positions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
+pub fn positions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
     feature_collection_operations(
         before,
         after,
@@ -343,7 +343,7 @@ pub async fn positions_operations(before: &[MapFeature], after: &[MapFeature]) -
     )
 }
 
-pub async fn routes_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
+pub fn routes_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
     feature_collection_operations(
         before,
         after,
@@ -353,7 +353,7 @@ pub async fn routes_operations(before: &[MapFeature], after: &[MapFeature]) -> V
     )
 }
 
-pub async fn regions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
+pub fn regions_operations(before: &[MapFeature], after: &[MapFeature]) -> Vec<GisMapMutation> {
     feature_collection_operations(
         before,
         after,
@@ -442,7 +442,7 @@ async fn point_marker_draw_node(center: &SemioPoint2, radius: f64, shift: impl F
 /// feature bounding box (32px pad, 256px floor) — this is the ONLY place gis turns map features
 /// into drawing geometry; both `gis2d_document_json_to_svg` (export, via `io_dispatch`) and any
 /// future gis drawing preview reuse it.
-pub async fn gis_map_snapshot_to_drawing(document: &GisMapSnapshot) -> SemioDrawingSnapshot {
+pub fn gis_map_snapshot_to_drawing(document: &GisMapSnapshot) -> SemioDrawingSnapshot {
     let position_points: Vec<SemioPoint2> = document.positions.iter().filter_map(|feature| feature_lon_lat(&feature.data)).map(|(lon, lat)| SemioPoint2 { x: lon, y: lat }).collect();
     let route_lines: Vec<Vec<SemioPoint2>> = document.routes.iter().filter_map(|feature| feature_line(&feature.data)).collect();
     let region_polys: Vec<Vec<SemioPoint2>> = document.regions.iter().filter_map(|feature| feature_line(&feature.data)).collect();
@@ -588,7 +588,7 @@ async fn collect_draw_node_points(node: &DrawNode, out: &mut Vec<SemioPoint2>) {
 /// 🗺️ Imports a DWG drawing into a bare gis map document: DWG entities lower to `DrawNode::Path`
 /// geometry (`dwg_drawing_to_semio_drawing`), whose vertices become position features. Falls back
 /// to the default reuse-map document when the DWG carries no point-like geometry.
-pub async fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
+pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let scene = dwg_drawing_to_semio_drawing(drawing);
     let mut points = Vec::new();
     for layer in &scene.layers {

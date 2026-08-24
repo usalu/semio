@@ -52,7 +52,7 @@ pub struct Process3dInference {
 }
 
 impl Inference<Process3dSnapshot> for Process3dInference {
-    async fn infer(snapshot: &Process3dSnapshot) -> Self {
+    fn infer(snapshot: &Process3dSnapshot) -> Self {
         Self { stock_bounds: BoundingBox { min: snapshot.stock_pose.position, max: snapshot.stock_pose.position }, step_count: 0 }
     }
 }
@@ -67,13 +67,13 @@ impl Default for Process3dInference {
 }
 
 impl protocol::InferenceSpec<Process3dSnapshot> for Process3dInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.process.process3d.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stockBounds", reads: &["stockPose"] }, protocol::InferenceFieldSpec { id: "s.process.process3d.inference.bounds.stepCount", reads: &["steps"] }]
     }
 }
@@ -95,7 +95,7 @@ impl ArtifactInferrer for crate::artifacts::process3d::standards::v1::subsets::a
 //#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️KernelReplay
-async fn hash_value<T: Serialize>(value: &T) -> u64 {
+fn hash_value<T: Serialize>(value: &T) -> u64 {
     let mut hasher = DefaultHasher::new();
     if let Ok(json) = serde_json::to_string(value) {
         json.hash(&mut hasher);
@@ -129,22 +129,22 @@ struct ProcessKernelMemo {
 }
 
 impl ProcessKernelReplay {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self { kernel: Brep::new(), tables: ProcessKernelMemo { memo: HashMap::new() }, stock_signature: 0 }
     }
 
     /// 🔩 Immutable kernel access — `tessellate`/`volume`/`kind` take `&self`.
-    pub async fn kernel(&self) -> &Brep {
+    pub fn kernel(&self) -> &Brep {
         &self.kernel
     }
 
     /// 🔩 Mutable kernel access — every CSG-producing `BrepKernel` method takes `&mut self`.
-    pub async fn kernel_mut(&mut self) -> &mut Brep {
+    pub fn kernel_mut(&mut self) -> &mut Brep {
         &mut self.kernel
     }
 }
 
-async fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
+fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
     let mut hasher = DefaultHasher::new();
     stock_signature.hash(&mut hasher);
     if let Ok(json) = serde_json::to_string(steps) {
@@ -159,7 +159,7 @@ async fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
 /// "exactly one impl ⇒ delete the trait object, use the concrete type" — and `BrepKernel` is declared
 /// in `🗄️stdio`, a crate outside this packet's path scope, so it could not be `#[dyn_enum]`-closed here
 /// even if a second implementor existed.
-async fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
+fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
     let base = match spec {
         WorkingSolid::Box { width, depth, height } => kernel.box_prim(*width, *depth, *height).ok()?,
         WorkingSolid::Cylinder { radius, height } => kernel.cylinder_prim(*radius, *height).ok()?,
@@ -181,7 +181,7 @@ async fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> 
     }
 }
 
-async fn tool_solid_for_measure(kernel: &mut Brep, measure: &ProcessMeasure) -> Option<GeometryHandle> {
+fn tool_solid_for_measure(kernel: &mut Brep, measure: &ProcessMeasure) -> Option<GeometryHandle> {
     match measure {
         ProcessMeasure::Cut { tool, pose } => solid_for_spec(kernel, tool, pose),
         ProcessMeasure::Drill { radius, depth, pose } => solid_for_spec(kernel, &WorkingSolid::Cylinder { radius: *radius, height: *depth }, pose),
@@ -191,7 +191,7 @@ async fn tool_solid_for_measure(kernel: &mut Brep, measure: &ProcessMeasure) -> 
 
 /// 🧠️ Replays enabled steps up to the cursor, reusing the longest memoized prefix. Reads a real,
 /// literal `ProcessWorkingScene` (never a bare `Process3dSnapshot` — see file doc comment).
-pub async fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<GeometryHandle> {
+pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<GeometryHandle> {
     let stock_signature = hash_value(&scene.stock);
     if stock_signature != session.stock_signature {
         session.tables.memo.clear();
@@ -236,7 +236,7 @@ pub async fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWo
     Some(handle)
 }
 
-pub async fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_framework_plugin::MeshData> {
+pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_framework_plugin::MeshData> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, scene, resolved_up_to)?;
     let mesh = session.kernel().tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
@@ -244,7 +244,7 @@ pub async fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<
     Some(semio_framework_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
 
-pub async fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<f64> {
+pub fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<f64> {
     let mut session = ProcessKernelReplay::new();
     let handle = replay_process(&mut session, scene, resolved_up_to)?;
     session.kernel().volume(&handle).ok()
@@ -252,11 +252,11 @@ pub async fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Optio
 //#endregion 🔖️KernelReplay
 
 //#region 🔖️CapabilityValidation
-async fn parameter_value(capability: &Capability, parameter_id: &str) -> Option<f64> {
+fn parameter_value(capability: &Capability, parameter_id: &str) -> Option<f64> {
     capability.parameters.iter().find(|parameter| parameter.id == parameter_id).map(|parameter| parameter.value)
 }
 
-async fn quantity_value(ctx: &ValidationContext, quantity: StockQuantity) -> f64 {
+fn quantity_value(ctx: &ValidationContext, quantity: StockQuantity) -> f64 {
     match quantity {
         StockQuantity::Width => ctx.stock_width,
         StockQuantity::Depth => ctx.stock_depth,
@@ -266,7 +266,7 @@ async fn quantity_value(ctx: &ValidationContext, quantity: StockQuantity) -> f64
     }
 }
 
-async fn quantity_label(quantity: StockQuantity) -> &'static str {
+fn quantity_label(quantity: StockQuantity) -> &'static str {
     match quantity {
         StockQuantity::Width => "width",
         StockQuantity::Depth => "depth",
@@ -279,7 +279,7 @@ async fn quantity_label(quantity: StockQuantity) -> &'static str {
 /// 🔎️ First workshop capability producing `kind` — the routing target for the utility bar,
 /// click/drag placement, and machine-less `addStep` callers. Falls back to a fresh generic machine if
 /// the workshop's generics were removed, so click-to-place utilities never dead-end.
-pub async fn capability_for_measure_kind(workshop: &Workshop, kind: MeasureKind) -> (WorkshopMachine, Capability) {
+pub fn capability_for_measure_kind(workshop: &Workshop, kind: MeasureKind) -> (WorkshopMachine, Capability) {
     for machine in &workshop.machines {
         for capability in &machine.capabilities {
             if capability.recipe.measure_kind() == kind {
@@ -299,7 +299,7 @@ pub async fn capability_for_measure_kind(workshop: &Workshop, kind: MeasureKind)
 
 /// 🔎️ One workshop machine's capability, by id — the resolution target for `AddStep`'s
 /// `(machine_id, capability_id)` and for re-validating a step's `StepOrigin` provenance.
-pub async fn find_capability<'a>(workshop: &'a Workshop, machine_id: &str, capability_id: &str) -> Option<(&'a WorkshopMachine, &'a Capability)> {
+pub fn find_capability<'a>(workshop: &'a Workshop, machine_id: &str, capability_id: &str) -> Option<(&'a WorkshopMachine, &'a Capability)> {
     let machine = workshop.machines.iter().find(|machine| machine.id == machine_id)?;
     let capability = machine.capabilities.iter().find(|capability| capability.id == capability_id)?;
     Some((machine, capability))
@@ -324,7 +324,7 @@ pub struct ValidationFailure {
 
 /// ✅️ Checks a capability's rules against the current stock — a rule whose parameter is missing from
 /// the capability is skipped (lenient, matches the pre-workshop behavior), never a hard error.
-pub async fn validate_capability(capability: &Capability, ctx: &ValidationContext) -> Vec<ValidationFailure> {
+pub fn validate_capability(capability: &Capability, ctx: &ValidationContext) -> Vec<ValidationFailure> {
     capability
         .rules
         .iter()
@@ -346,7 +346,7 @@ pub async fn validate_capability(capability: &Capability, ctx: &ValidationContex
         .collect()
 }
 
-pub async fn validation_reason(failures: &[ValidationFailure]) -> String {
+pub fn validation_reason(failures: &[ValidationFailure]) -> String {
     failures
         .iter()
         .map(|failure| {
@@ -359,7 +359,7 @@ pub async fn validation_reason(failures: &[ValidationFailure]) -> String {
 
 /// 📐️ Imported specs carry no persisted bounding box, so validation falls back to a 1m³ approximation
 /// until the kernel is consulted (matches `cad`'s extent-less fallback for handle-only objects).
-pub async fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
+pub fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
     match solid {
         WorkingSolid::Box { width, depth, height } => [*width, *depth, *height],
         WorkingSolid::Cylinder { radius, height } => [*radius * 2.0, *radius * 2.0, *height],
@@ -368,14 +368,14 @@ pub async fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
     }
 }
 
-pub async fn validation_context_for_stock(stock: &Stock) -> ValidationContext {
+pub fn validation_context_for_stock(stock: &Stock) -> ValidationContext {
     let [width, depth, height] = stock_extent(&stock.solid);
     ValidationContext { stock_width: width, stock_depth: depth, stock_height: height }
 }
 
 /// 🪚️ Builds the `ProcessMeasure` a capability's recipe produces, sized from the capability's own
 /// parameters (a missing parameter resolves to `0.0`, matching `validate_capability`'s lenient lookup).
-pub async fn measure_for_capability(capability: &Capability, position: Option<[f64; 3]>) -> ProcessMeasure {
+pub fn measure_for_capability(capability: &Capability, position: Option<[f64; 3]>) -> ProcessMeasure {
     let value = |id: &str| parameter_value(capability, id).unwrap_or(0.0);
     let mut measure = match &capability.recipe {
         MeasureRecipe::DiscCut { diameter, kerf } => ProcessMeasure::Cut { tool: WorkingSolid::Cylinder { radius: value(diameter) / 2.0, height: value(kerf) }, pose: Pose::default() },
@@ -401,7 +401,7 @@ pub async fn measure_for_capability(capability: &Capability, position: Option<[f
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.process.process3d.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `process3d_artifact_schema_descriptor`'s registration.
-pub async fn process3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn process3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.process.process3d.inference",
         inference: schema::FacetLeaves {
@@ -443,11 +443,11 @@ mod tests {
     //#endregion 🧪️InferenceLaws
 
     //#region 🧪️KernelReplay
-    async fn drill_step(id: &str, radius: f64, depth: f64, pose: Pose) -> ProcessStep {
+    fn drill_step(id: &str, radius: f64, depth: f64, pose: Pose) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { machine_id: "drill".into(), capability_id: "drill".into() }), measure: ProcessMeasure::Drill { radius, depth, pose } }
     }
 
-    async fn session_volume(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> f64 {
+    fn session_volume(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> f64 {
         let handle = replay_process(session, scene, resolved_up_to).expect("replayed handle");
         session.kernel().volume(&handle).expect("replayed volume")
     }

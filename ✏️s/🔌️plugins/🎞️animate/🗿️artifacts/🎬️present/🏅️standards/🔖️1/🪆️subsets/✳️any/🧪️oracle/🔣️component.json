@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.animate.present`'s catalog and its (non-)oracle registration live here rather than in a shared manifest. The catalog's `kinds` are the kebab spelling of `PresentMutation`'s variants in declaration order; `../🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "present-figure-deck-mutation-semantics",
+      "capabilities": [
+        "present-1-mutate"
+      ],
+      "rationale": "`s.animate.present` is a semio-NATIVE artifact. Its persisted document is the `animate.present.dsl` envelope (`semio animate.present.dsl v1` + hex/bracket field grammar) and its content lives in two composed `s.stdio.semio` children (`presentation`, `animation`) addressed by a content-derived handle. No package in any ecosystem — crates.io, PyPI, npm, Go modules, NuGet — reads or writes that envelope, because the envelope preamble, the hex field encoding and the child-handle addressing are defined by this repository alone. There is therefore no reference implementation to register, and no library is authoritative over `PresentMutation`: that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. The nearest candidates were surveyed and DECLINED rather than merely absent. (1) A generic JSON reader (json-rust is already linked into the stdio oracle crate, and this subset's mutations serialize as externally-tagged JSON) would supply a DOM and no knowledge of a source frame, a tile crop or a tile order, so all nine mutation semantics — which are the entire content of this catalog — would still be hand-written on top of it; calling that hand-written code a third-party reference would overstate the evidence rather than add any. (2) The presentation domain has real third-party writers (`rust_xlsxwriter`-class OOXML tooling, PDF writers), but none of them models a FIGURE SOURCE cropped into named tiles — this artifact is a figure-tiling deck, not a slide deck in any interchange format — so a differential against one would compare two different documents. Confidence comes instead from specification vectors — this subset's own committed per-kind leaf fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/`, each an independently authored `(before, mutation, after|absent, outcome)` quadruple — and from the metamorphic laws the case asserts in role: every kind must MOVE the semantic projection, every kind's own computed inverse must restore it exactly, and the committed real artifact must survive decode/encode byte-for-byte.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "present-1-any",
+      "capability": "present-1-mutate",
+      "kinds": [
+        "resize-source-frame",
+        "replace-source",
+        "create-tile",
+        "delete-tile",
+        "delete-tiles",
+        "rename-tile",
+        "resize-tile-crop",
+        "reorder-tiles",
+        "replace-tiles"
+      ]
+    }
+  ]
+}

@@ -6,7 +6,7 @@ use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &ChangeMachineIcon, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub fn inverse(payload: &ChangeMachineIcon, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
     base.workshop.machines.iter().find(|machine| machine.id == payload.id).map(|machine| vec![Process3dMutation::ChangeMachineIcon(ChangeMachineIcon { id: payload.id.clone(), new_icon_id: machine.icon_id.clone() })]).unwrap_or_default()
 }
 //#endregion 🔖️Inverse

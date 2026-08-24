@@ -26,7 +26,7 @@ pub mod add_step {
         pub position: Option<[f64; 3]>,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &AddStep,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -69,7 +69,7 @@ pub mod remove_step {
         pub id: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &RemoveStep,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -96,7 +96,7 @@ pub mod remove_selected_step {
     /// reads the framework-owned `"geometry"` domain selection (threaded through `ctx.interaction`
     /// by `Process3dPlayApp::handle`, since `dispatch`'s per-payload `handle` never sees
     /// `InteractionView` directly) instead of the deleted `Process3dConfig::selected_id`.
-    pub async fn handle(
+    pub fn handle(
         _payload: &RemoveSelectedStep,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -130,7 +130,7 @@ pub mod move_step {
     /// `payload.id` exists before emitting; `ReorderSteps` is itself a documented no-op regardless
     /// (see its `🔺️diff/🦀️component.rs`), so the existence check is dropped honestly rather than
     /// faked.
-    pub async fn handle(
+    pub fn handle(
         payload: &MoveStep,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -163,7 +163,7 @@ pub mod update_step {
     /// HANDLE now (see `ProcessWorkingScene`'s doc comment) — this can no longer read the existing
     /// step to diff against, so it always emits all four targeted mutations unconditionally
     /// (each is itself a documented no-op regardless — see their `🔺️diff/🦀️component.rs` files).
-    pub async fn handle(
+    pub fn handle(
         payload: &UpdateStep,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -195,7 +195,7 @@ pub mod set_step_enabled {
 
     /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: see `MoveStep::handle`'s doc
     /// comment — same composed-`steps`-handle gap, same documented-no-op mutation regardless.
-    pub async fn handle(
+    pub fn handle(
         payload: &SetStepEnabled,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

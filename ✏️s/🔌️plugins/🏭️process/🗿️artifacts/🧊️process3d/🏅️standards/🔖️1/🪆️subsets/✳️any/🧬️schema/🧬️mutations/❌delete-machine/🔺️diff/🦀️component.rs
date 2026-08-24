@@ -6,7 +6,7 @@ use crate::artifacts::process3d::mutations::delete_machine::mutation::DeleteMach
 use crate::artifacts::process3d::{Process3dSnapshot, Workshop};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &DeleteMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+pub fn diff(payload: &DeleteMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     if !base.workshop.machines.iter().any(|machine| machine.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Machine \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

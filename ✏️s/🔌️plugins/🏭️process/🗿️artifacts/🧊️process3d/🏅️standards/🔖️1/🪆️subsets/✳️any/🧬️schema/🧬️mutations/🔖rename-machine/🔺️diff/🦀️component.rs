@@ -8,7 +8,7 @@ use crate::artifacts::process3d::mutations::rename_machine::mutation::RenameMach
 use crate::artifacts::process3d::{Process3dSnapshot, Workshop};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &RenameMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+pub fn diff(payload: &RenameMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     let Some(existing) = base.workshop.machines.iter().find(|machine| machine.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Machine \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

@@ -91,3 +91,53 @@ impl DagSnapshot {
     }
 }
 //#endregion 🔖️FrameworkBridge
+
+//#region 🌉️ExternalCodecBridge
+/// 📤️ Renders a [`DagSnapshot`] as this facet's own camelCase JSON projection — the comparison
+/// surface `mutate-dag-1`'s scenarios are measured through, and the shape the committed
+/// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors are written in. It carries `content` as a HANDLE, never as a graph, which
+/// is exactly what makes it a usable observability surface here: the handle's `childId` is a digest
+/// of the child's content, so it moves if and only if the working scene moved.
+///
+/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
+/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+pub fn encode_dag_snapshot_json(snapshot: &DagSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("DagSnapshot serialization is infallible")
+}
+
+/// 📥️ The inverse of [`encode_dag_snapshot_json`] — decodes those committed specification vectors
+/// into real [`DagSnapshot`] values, so `mutate-dag-1`'s adapter reads the committed fixture rather
+/// than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that adapter is
+/// impossible: the generated test host links only this crate and `semio-repo-test-host`.
+pub fn decode_dag_snapshot_json(text: &str) -> Result<DagSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Parses `.dag.dsl.semio` text into a [`DagSnapshot`], SEEDING the working-scene cache for the
+/// handle it mints — a named, non-async pass-through of this type's own `store::ArtifactDsl` impl,
+/// whose trait and error type are both unnameable outside this crate. This is the only way an
+/// external caller can obtain a dag document whose composed `s.stdio.semio.graph` child actually
+/// resolves, which is what `mutate-dag-1` needs before any kind can have a visible effect.
+pub fn parse_dag_dsl(text: &str) -> Result<DagSnapshot, String> {
+    <DagSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+}
+
+/// 📝️ Renders a [`DagSnapshot`] back as `.dag.dsl.semio` text — the inverse of [`parse_dag_dsl`],
+/// preamble included, which is what makes a printed document comparable to the committed one byte
+/// for byte.
+pub fn print_dag_dsl(snapshot: &DagSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 🔎️ The node ids and `source -> target` endpoints the document's composed child currently
+/// resolves to, in scene order — the human-readable half of a divergence message, so a failing
+/// `mutate-<kind>` or `inverse-<kind>` names WHICH node moved rather than only that two content
+/// digests differ.
+pub fn dag_scene_summary(snapshot: &DagSnapshot) -> String {
+    let scene = crate::artifacts::dag::dag_working_scene(snapshot);
+    let nodes = scene.nodes.iter().map(|node| format!("{}({},{})", node.id, node.x, node.y)).collect::<Vec<_>>().join(" ");
+    let edges = scene.edges.iter().map(|edge| format!("{}:{}->{}", edge.id, edge.source, edge.target)).collect::<Vec<_>>().join(" ");
+    format!("nodes[{nodes}] edges[{edges}]")
+}
+//#endregion 🌉️ExternalCodecBridge

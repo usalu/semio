@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `s.layout.layout` is a semio-NATIVE artifact carried in `.dsl.semio`/`.pack.semio`, so no third party can serve as its reference — see the noOracleDecision below.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "layout-mutation-semantics",
+      "capabilities": ["layout-1-mutate"],
+      "rationale": "No third-party crate reads or writes semio's `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `LayoutMutation`. What distinguishes this subset from every sibling is that a layout document is FOUR pools at two nesting depths joined by reference: document-root scalars (`name`, `printTarget`, `dataFieldsJson`), the id-keyed root collections `pages`, `stories` and `links`, and — nested one level down, inside a page — that page's own `layers` and `frames`. A frame is therefore addressed by (page, frame) rather than by id alone, a text frame names its `stories` member by id and an image frame names its `links` member by id, so `delete-story` and `delete-link` reach ACROSS pools into frames that point at them, while `reorder-pages` moves a whole nested subtree. Confidence comes from the committed per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff, outcome)` quintet per kind, already unit-tested inside the production crate — plus the inverse law as a metamorphic property: applying a kind and then its own computed inverse must restore the exact pre-mutation document, including a deleted page's ORIGINAL index and its whole frame subtree, which a deletion undone by re-appending would not. The `mutate-layout-1` case re-exercises those SAME committed bytes end-to-end through `apply_layout_mutation`/`inverse_layout_mutation`.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "layout-1-any",
+      "capability": "layout-1-mutate",
+      "kinds": ["rename-layout", "change-print-target", "change-data-fields", "create-page", "delete-page", "rename-page", "change-page-width", "change-page-height", "update-page-margins", "update-page-columns", "reorder-pages", "create-story", "delete-story", "edit-story", "create-link", "delete-link", "change-link-path", "create-frame", "delete-frame", "move-frame", "resize-frame", "change-frame-fill", "change-frame-stroke", "change-frame-wrap-mode", "change-frame-columns"]
+    }
+  ]
+}

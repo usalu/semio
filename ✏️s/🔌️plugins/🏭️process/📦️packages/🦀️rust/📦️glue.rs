@@ -10,7 +10,7 @@
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 //!
 //! 🚫️ `#![allow(async_fn_in_trait)]`: `MachineCatalog` (below) carries `#[dyn_enum]` async methods, which
-//! trips rustc's "use of `async fn` in public traits is discouraged .. auto trait bounds cannot be
+//! trips rustc's "use of `fn` in public traits is discouraged .. auto trait bounds cannot be
 //! specified" lint. Per ruling **R7**: silenced here, never by adding `+ Send` to a signature (R3 — Send
 //! comes structurally from the concrete `MachineCatalogs` enum, never a bound) and never by making the
 //! method sync.

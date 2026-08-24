@@ -13,7 +13,7 @@ use serde_json::Value;
 //#region 🔖️MapHost
 /// 🗺️ Builds a `MapHost` from the document content (derived descriptor JSON) plus the config's
 /// camera/render/style/LOD/selection view state.
-pub async fn map_host_from(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> MapHost {
+pub fn map_host_from(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> MapHost {
     let mut host = MapHost::new();
     let descriptor = gis_map_descriptor_json(document);
     let _ = host.sync_map_json(&descriptor);

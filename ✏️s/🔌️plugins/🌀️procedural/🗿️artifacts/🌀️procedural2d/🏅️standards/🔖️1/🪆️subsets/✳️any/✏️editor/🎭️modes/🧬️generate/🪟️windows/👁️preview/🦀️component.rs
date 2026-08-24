@@ -48,7 +48,7 @@ pub fn render(config: &Procedural2dConfig, labels: &Procedural2dLabels) -> Built
     crate::scene_surface(
         PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: layers },
+        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: layers, snapshot: None },
     )
 }
 //#endregion 🔖️Render

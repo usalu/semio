@@ -103,15 +103,15 @@ mod tests {
     use replace_step_measure::mutation::ReplaceStepMeasure;
     use replace_stock_solid::mutation::ReplaceStockSolid;
 
-    async fn cut_step(id: &str) -> ProcessStep {
+    fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
-    async fn saw_machine(id: &str) -> WorkshopMachine {
+    fn saw_machine(id: &str) -> WorkshopMachine {
         WorkshopMachine { id: id.into(), label: "Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] }
     }
 
-    async fn round_trip(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Process3dSnapshot {
+    fn round_trip(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Process3dSnapshot {
         let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
@@ -123,7 +123,7 @@ mod tests {
     }
 
     /// ⚖️ One value per `Process3dMutation` variant — the closed set the semantics test iterates.
-    async fn every_mutation() -> Vec<Process3dMutation> {
+    fn every_mutation() -> Vec<Process3dMutation> {
         vec![
             Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") }),
             Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() }),
@@ -366,3 +366,92 @@ mod tests {
     //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️Kinds
+/// 🏷️ Kebab-case spelling of every `Process3dMutation` variant, in declaration order — the vocabulary the `process3d-1-any` mutation catalog
+/// (`../../🧪️oracle/🔣️component.json`) declares and the `mutate-process3d-1` exhaustive test case measures
+/// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
+/// what keeps this list honest in both directions.
+pub const KINDS: &[&str] = &[
+    "create-step",
+    "delete-step",
+    "rename-step",
+    "change-step-enabled",
+    "change-step-origin",
+    "replace-step-measure",
+    "reorder-steps",
+    "create-machine",
+    "delete-machine",
+    "rename-machine",
+    "change-machine-icon",
+    "replace-machine-capabilities",
+    "move-stock",
+    "change-stock-label",
+    "replace-stock-solid",
+    "change-cursor",
+];
+//#endregion 🔖️Kinds
+
+//#region 🌉️TestBridge
+/// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
+///
+/// A generated test host links only `semio-repo-test-host` and, behind its `sut` feature, this crate —
+/// there is no `serde`, no `serde_json` and no `protocol` reachable from an adapter, and this crate's
+/// `protocol`/`store` extern-crate aliases are private — so neither `Process3dMutation` nor `Process3dSnapshot`
+/// can be named there and hand-transcribing either into a Rust literal would be a second copy of the
+/// committed specification vector, free to drift away from it. This bridge is the whole surface an
+/// adapter needs, and every type in its signature is a `str`.
+///
+/// The report carries the forward half (`snapshot`, `diff`, `messages`) and the inverse half
+/// (`inverseSteps`, `inverseSnapshot`, `inverseMessages`), so the inverse law is checked against the
+/// mutation's OWN computed inverse rather than against a hand-written undo.
+///
+/// @see ../../🧪️oracle/🔣️component.json — the catalog and the recorded no-oracle decision.
+pub fn process3d_mutation_report_json(base_json: &str, mutation_json: &str) -> Result<String, String> {
+    let decode_snapshot = |text: &str| -> Result<Process3dSnapshot, String> { Ok(serde_json::from_str(text).map_err(|error| error.to_string())?) };
+    let base = decode_snapshot(base_json)?;
+    let mutation: Process3dMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
+    let mut applied = base.clone();
+    let forward = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, &base);
+    let mut undone = applied.clone();
+    let mut inverse_messages = Vec::new();
+    for step in &inverse {
+        let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+        inverse_messages.extend(outcome.messages().iter().cloned());
+    }
+    let report = serde_json::json!({
+        "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
+        "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
+        "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,
+        "inverseSteps": serde_json::to_value(&inverse).map_err(|error| error.to_string())?,
+        "inverseSnapshot": serde_json::to_value(&undone).map_err(|error| error.to_string())?,
+        "inverseMessages": serde_json::to_value(&inverse_messages).map_err(|error| error.to_string())?,
+    });
+    Ok(report.to_string())
+}
+//#endregion 🌉️TestBridge
+
+//#region 🧪️KindsConformance
+#[cfg(test)]
+mod kinds_conformance {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of them must appear in the committed oracle
+    /// manifest's catalog. The framework never parses Rust, so this is what keeps the declaration
+    /// honest in both directions at once.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Process3dMutation as protocol::SemanticMutation<Process3dSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsConformance

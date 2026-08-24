@@ -22,6 +22,6 @@ impl Deserializer<PresentSnapshot> for PngIntoPresent {
         let snapshot = <PresentSnapshot as store::ArtifactPack>::decode_pack(bytes)
             .or_else(|_| <PresentSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
             .map_err(|error| IoError { message: format!("PngIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(snapshot).await)
+        Ok(IoOutcome::clean(snapshot))
     }
 }

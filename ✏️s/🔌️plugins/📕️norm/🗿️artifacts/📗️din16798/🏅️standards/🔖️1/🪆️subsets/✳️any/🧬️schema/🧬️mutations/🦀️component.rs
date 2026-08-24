@@ -159,6 +159,76 @@ pub enum Din16798Mutation {
     ChangeDuctTestPressurePa(change_duct_test_pressure_pa::mutation::ChangeDuctTestPressurePa),
     ChangeDuctLeakageM3SM2(change_duct_leakage_m3_s_m2::mutation::ChangeDuctLeakageM3SM2),
 }
+
+/// 🏷️ Every declared kind of [`Din16798Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
+/// order and spelling — the list `../../🧪️oracle/🔣️component.json` publishes as the `din16798-1-any`
+/// mutation catalog and `../../../../../🧪️tests/mutate-din16798-1` registers its scenarios from. The
+/// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
+/// is what keeps the enum, this const and the committed manifest from drifting apart.
+pub const KINDS: &[&str] = &[
+    "change-annex",
+    "change-occupancy",
+    "change-comfort-category",
+    "change-t-op-c",
+    "change-rh-percent",
+    "change-air-speed-ms",
+    "change-theta-rm-c",
+    "change-co2-ppm",
+    "change-df-percent",
+    "change-l-aeq-db",
+    "change-persons",
+    "change-ida-class",
+    "change-ventilation-m3-h",
+    "change-floor-area-m2",
+    "change-bedrooms",
+    "change-dwelling-ventilation-m3-h",
+    "change-occupants",
+    "change-residential-ventilation-m3-h",
+    "change-sfp-wm3-s",
+    "change-sfp-required-class",
+    "change-heat-recovery-eta",
+    "change-heat-recovery-eta-min",
+    "change-system-type",
+    "change-years-since-inspection",
+    "change-humidification-required-kg-h",
+    "change-humidification-provided-kg-h",
+    "change-fan-qvm3-s",
+    "change-fan-t-run-h",
+    "change-fan-energy-reference-kwh",
+    "change-night-setback-k",
+    "change-hr-m-dot-kg-s",
+    "change-hr-cp-j-kgk",
+    "change-hr-delta-tc",
+    "change-hr-th",
+    "change-hr-savings-reference-kwh",
+    "change-n50-h-inv",
+    "change-volume-m3",
+    "change-infiltration-allowance-m3-h",
+    "change-cellar-area-m2",
+    "change-cellar-ventilation-m3-h",
+    "change-h-tr-wk",
+    "change-h-ve-wk",
+    "change-theta-ec",
+    "change-theta-set-c",
+    "change-cooling-delta-th",
+    "change-cooling-gains-kwh",
+    "change-cooling-utilization-factor",
+    "change-cooling-reference-kwh",
+    "change-chiller-type",
+    "change-eer-actual",
+    "change-qc-kwh",
+    "change-generation-reference-kwh",
+    "change-data-center-supply-c",
+    "change-h-st-wk",
+    "change-theta-st-c",
+    "change-theta-amb-c",
+    "change-storage-th",
+    "change-storage-allowance-kwh",
+    "change-dhw-delivery-c",
+    "change-duct-class",
+    "change-duct-test-pressure-pa",
+    "change-duct-leakage-m3-sm2",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️FromSnapshot
@@ -511,3 +581,61 @@ mod fixture_tests {
     mod tests_change_years_since_inspection_ages_the_last_inspection_to_six_years;
 }
 //#endregion 🧪️FixtureTests
+
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
+/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json`
+/// specification vectors carry — into a real [`Din16798Mutation`]. The generated test host of
+/// `../../../../../🧪️tests/mutate-din16798-1` links only this crate, so `serde_json` is unreachable
+/// from that adapter and the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_din16798_mutation_json(text: &str) -> Result<Din16798Mutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies one mutation to `base`, returning the resulting document together with every
+/// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type
+/// crosses this boundary. Built on the SYNC `Mutation::diff`/`MutationDiff::apply` pair this
+/// facet's own committed fixture tests already call, not on the async `vcs::apply_mutation` wrapper.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_din16798_mutation(base: &Din16798Snapshot, mutation: &Din16798Mutation) -> Result<(Din16798Snapshot, Vec<String>), String> {
+    let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = <Din16798Diff as protocol::MutationDiff<Din16798Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
+/// `mutate-din16798-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
+/// reach without naming `protocol::Mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_din16798_mutation(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🧪️KindsCatalog
+#[cfg(test)]
+mod kinds_catalog {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
+    /// committed `din16798-1-any` catalog. The framework never parses Rust, so this is the only thing
+    /// standing between a renamed variant and a completeness gate that silently measures the wrong
+    /// set.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Din16798Mutation as protocol::SemanticMutation<Din16798Snapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Din16798Mutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsCatalog

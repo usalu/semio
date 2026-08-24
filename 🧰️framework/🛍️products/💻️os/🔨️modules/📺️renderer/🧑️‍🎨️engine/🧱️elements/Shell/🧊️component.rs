@@ -1060,6 +1060,32 @@ struct ShellChromePresentState {
     last_persisted_panel_layout: Option<PanelLayoutPersisted>,
     preferences_loaded: bool,
     last_synced_preferences: Option<UiPrefsSnapshot>,
+    maintenance: ShellChromeMaintenance,
+}
+
+const SHELL_CHROME_IO_FIELD_BYTES: usize = 4 * 1024;
+
+#[derive(Default)]
+struct ShellChromeMaintenance {
+    load_requested: bool,
+    load_phase: u8,
+    introduction_read: Option<String>,
+    introduction_write: Option<String>,
+    layout_requested: bool,
+    presence_requested: bool,
+    persist_requested: bool,
+    persist_phase: u8,
+}
+
+impl ShellChromeMaintenance {
+    fn pending(&self) -> bool {
+        self.load_requested
+            || self.introduction_read.is_some()
+            || self.introduction_write.is_some()
+            || self.layout_requested
+            || self.presence_requested
+            || self.persist_requested
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -9551,22 +9577,19 @@ impl ShellState {
                 cursor.phase = ShellChromeFramePhase::LoadPreferences;
             }
             ShellChromeFramePhase::LoadPreferences => {
-                self.load_ui_prefs_once();
+                self.request_chrome_preferences_load();
                 cursor.phase = ShellChromeFramePhase::IntroductionRead;
             }
             ShellChromeFramePhase::IntroductionRead => {
-                if let Some(app_id) = self.session.as_ref().map(|session| session.app.id.clone()) {
-                    self.chrome_build.introduction_seen.entry(app_id.clone()).or_insert_with(|| read_stored_introduction_seen(&app_id));
-                }
+                self.request_introduction_read();
                 cursor.phase = ShellChromeFramePhase::Presence;
             }
             ShellChromeFramePhase::Presence => {
-                #[cfg(not(target_arch = "wasm32"))]
-                self.publish_presence_heartbeat();
+                self.request_presence_preview();
                 cursor.phase = ShellChromeFramePhase::PersistLayout;
             }
             ShellChromeFramePhase::PersistLayout => {
-                self.persist_panel_layout_if_changed();
+                self.request_panel_layout_persist();
                 cursor.phase = ShellChromeFramePhase::FrameSetup;
             }
             ShellChromeFramePhase::FrameSetup => {
@@ -9752,19 +9775,229 @@ impl ShellState {
                 cursor.advance(ShellChromeFramePhase::IntroductionWrite);
             }
             ShellChromeFramePhase::IntroductionWrite => {
-                if let Some(app_id) = self.chrome_build.introduction_seen_writes.pop() {
-                    write_stored_introduction_seen(&app_id);
+                if self.chrome_present.maintenance.introduction_write.is_some() {
+                    cursor.phase = ShellChromeFramePhase::PersistPreferences;
+                } else if let Some(app_id) = self.chrome_build.introduction_seen_writes.pop() {
+                    if app_id.capacity() > SHELL_CHROME_IO_FIELD_BYTES {
+                        cursor.phase = ShellChromeFramePhase::PersistPreferences;
+                    } else {
+                        self.chrome_present.maintenance.introduction_write = Some(app_id);
+                    }
                 } else {
                     cursor.phase = ShellChromeFramePhase::PersistPreferences;
                 }
             }
             ShellChromeFramePhase::PersistPreferences => {
-                self.persist_ui_prefs_if_changed();
+                self.request_chrome_preferences_persist();
                 cursor.phase = ShellChromeFramePhase::Complete;
             }
             ShellChromeFramePhase::Complete => return true,
         }
         cursor.terminal_is_complete()
+    }
+
+    /// 📨️ Coalesces the persisted chrome load without touching platform storage in the frame step.
+    fn request_chrome_preferences_load(&mut self) {
+        if !self.chrome_present.preferences_loaded {
+            self.chrome_present.maintenance.load_requested = true;
+        }
+    }
+
+    /// 🎓️ Coalesces one bounded introduction lookup for the shared I/O lane.
+    fn request_introduction_read(&mut self) {
+        if self.chrome_present.maintenance.introduction_read.is_some() {
+            return;
+        }
+        let Some(app_id) = self.session.as_ref().map(|session| session.app.id.as_str()) else { return };
+        if app_id.len() <= SHELL_CHROME_IO_FIELD_BYTES && !self.chrome_build.introduction_seen.contains_key(app_id) {
+            self.chrome_present.maintenance.introduction_read = Some(app_id.to_string());
+        }
+    }
+
+    /// 🗄️ Coalesces one bounded panel-layout page for the shared I/O lane.
+    fn request_panel_layout_persist(&mut self) {
+        self.chrome_present.maintenance.layout_requested = true;
+    }
+
+    /// 💓️ Coalesces one bounded presence preview page for the shared I/O lane.
+    fn request_presence_preview(&mut self) {
+        self.chrome_present.maintenance.presence_requested = true;
+    }
+
+    /// 💾️ Coalesces changed preference fields for the shared I/O lane.
+    fn request_chrome_preferences_persist(&mut self) {
+        self.chrome_present.maintenance.persist_requested = true;
+    }
+
+    /// 🧵️ Reports whether the frame has retained chrome I/O or preview work to resume.
+    pub(crate) fn chrome_maintenance_pending(&self) -> bool {
+        self.chrome_present.maintenance.pending()
+    }
+
+    /// 🎨️ Exposes the already-loaded theme id without synchronously opening preference storage.
+    pub(crate) fn active_theme_id_for_frame(&self) -> &str {
+        &self.chrome_build.preferences.theme_id
+    }
+
+    /// ⏭️ Advances one bounded field or preview page and retains every remaining owner.
+    pub(crate) fn advance_chrome_maintenance_step(&mut self) -> bool {
+        if self.chrome_present.maintenance.load_requested {
+            self.advance_chrome_preferences_load_step();
+        } else if let Some(app_id) = self.chrome_present.maintenance.introduction_read.take() {
+            let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}");
+            let seen = prefs_get_bounded(&key).as_deref() == Some("true");
+            self.chrome_build.introduction_seen.insert(app_id, seen);
+        } else if let Some(app_id) = self.chrome_present.maintenance.introduction_write.take() {
+            let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}");
+            prefs_set_bounded(&key, "true");
+        } else if self.chrome_present.maintenance.layout_requested {
+            self.advance_panel_layout_persist_step();
+        } else if self.chrome_present.maintenance.presence_requested {
+            self.advance_presence_preview_step();
+        } else if self.chrome_present.maintenance.persist_requested {
+            self.advance_chrome_preferences_persist_step();
+        }
+        self.chrome_present.maintenance.pending()
+    }
+
+    fn advance_chrome_preferences_load_step(&mut self) {
+        let phase = self.chrome_present.maintenance.load_phase;
+        match phase {
+            0 => {
+                self.appearance_id = env_lock("SEMIO_LOCKED_APPEARANCE")
+                    .or_else(|| prefs_get_bounded(UI_CHROME_APPEARANCE_STORAGE_KEY).filter(|value| value == "light" || value == "dark" || value == "system"))
+                    .unwrap_or_else(|| "system".to_string());
+            }
+            1 => {
+                self.locale_id = env_lock("SEMIO_LOCKED_LOCALE")
+                    .or_else(|| prefs_get_bounded(UI_CHROME_LOCALE_STORAGE_KEY).filter(|value| value == "en" || value == "de"))
+                    .unwrap_or_else(|| "en".to_string());
+            }
+            2 => {
+                self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY")
+                    .or_else(|| prefs_get_bounded(UI_CHROME_TERMINOLOGY_STORAGE_KEY))
+                    .unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
+            }
+            3 => self.driver_id = prefs_get_bounded(UI_CHROME_DRIVER_STORAGE_KEY).unwrap_or_else(|| "default".to_string()),
+            4 => {
+                self.chrome_build.preferences.ui_layout = if prefs_get_bounded(UI_CHROME_LAYOUT_STORAGE_KEY).as_deref() == Some("tablet") {
+                    "tablet".to_string()
+                } else {
+                    "desktop".to_string()
+                };
+            }
+            5 => {
+                self.chrome_build.preferences.theme_id = env_lock("SEMIO_LOCKED_THEME")
+                    .or_else(|| prefs_get_bounded(UI_CHROME_THEME_ID_STORAGE_KEY))
+                    .unwrap_or_else(|| "semio".to_string());
+            }
+            6 => {
+                self.chrome_build.preferences.worker_count = prefs_get_bounded(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY)
+                    .and_then(|raw| raw.parse::<u32>().ok())
+                    .filter(|count| *count >= 1)
+                    .unwrap_or_else(default_compute_worker_count);
+            }
+            _ => {
+                self.chrome_present.preferences_loaded = true;
+                self.chrome_present.maintenance.load_requested = false;
+                self.chrome_present.maintenance.load_phase = 0;
+                self.chrome_present.last_synced_preferences = Some(UiPrefsSnapshot::default());
+                return;
+            }
+        }
+        self.chrome_present.maintenance.load_phase = phase.saturating_add(1);
+    }
+
+    fn advance_panel_layout_persist_step(&mut self) {
+        let snapshot = self.panel_layout_snapshot();
+        if self.chrome_present.last_persisted_panel_layout.as_ref() != Some(&snapshot) {
+            if let Ok(raw) = serde_json::to_string(&snapshot) {
+                if raw.len() <= SHELL_CHROME_IO_FIELD_BYTES {
+                    prefs_set_bounded(PANEL_LAYOUT_STORAGE_KEY, &raw);
+                    self.chrome_present.last_persisted_panel_layout = Some(snapshot);
+                }
+            }
+        }
+        self.chrome_present.maintenance.layout_requested = false;
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn advance_presence_preview_step(&mut self) {
+        self.chrome_present.maintenance.presence_requested = false;
+        let Some(channel) = self.sync_channel.as_ref() else { return };
+        if channel.document_id.len() > SHELL_CHROME_IO_FIELD_BYTES || channel.plugin_id.len() > SHELL_CHROME_IO_FIELD_BYTES {
+            return;
+        }
+        let actor = self.current_shell_actor(channel.instance_id);
+        if actor.len() > SHELL_CHROME_IO_FIELD_BYTES {
+            return;
+        }
+        let document_id = channel.document_id.clone();
+        let connected_at_ms = channel.connected_at_ms;
+        let label = self.session.as_ref().map(|session| session.app.id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
+        let user_id = self.identity.as_ref().map(|identity| identity.user_id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
+        let peer = PresencePeer {
+            actor,
+            label,
+            presence_pack: None,
+            connected_at_ms,
+            user_id,
+            role: None,
+            drag_ghost_json: None,
+            interaction: None,
+            color: None,
+            surface: None,
+            views: Vec::new(),
+            ui: None,
+        };
+        self.document_host.presence_heartbeat(&document_id, chrome_now_ms() as u64, peer);
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn advance_presence_preview_step(&mut self) {
+        self.chrome_present.maintenance.presence_requested = false;
+    }
+
+    fn advance_chrome_preferences_persist_step(&mut self) {
+        let phase = self.chrome_present.maintenance.persist_phase;
+        let synced = self.chrome_present.last_synced_preferences.get_or_insert_with(UiPrefsSnapshot::default);
+        match phase {
+            0 if synced.appearance_id != self.appearance_id && env_lock("SEMIO_LOCKED_APPEARANCE").is_none() => {
+                prefs_set_bounded(UI_CHROME_APPEARANCE_STORAGE_KEY, &self.appearance_id);
+                synced.appearance_id.clone_from(&self.appearance_id);
+            }
+            1 if synced.driver_id != self.driver_id => {
+                prefs_set_bounded(UI_CHROME_DRIVER_STORAGE_KEY, &self.driver_id);
+                synced.driver_id.clone_from(&self.driver_id);
+            }
+            2 if synced.locale_id != self.locale_id && env_lock("SEMIO_LOCKED_LOCALE").is_none() => {
+                prefs_set_bounded(UI_CHROME_LOCALE_STORAGE_KEY, &self.locale_id);
+                synced.locale_id.clone_from(&self.locale_id);
+            }
+            3 if synced.terminology_id != self.terminology_id && env_lock("SEMIO_LOCKED_TERMINOLOGY").is_none() => {
+                prefs_set_bounded(UI_CHROME_TERMINOLOGY_STORAGE_KEY, &self.terminology_id);
+                synced.terminology_id.clone_from(&self.terminology_id);
+            }
+            4 if synced.theme_id != self.chrome_build.preferences.theme_id && env_lock("SEMIO_LOCKED_THEME").is_none() => {
+                prefs_set_bounded(UI_CHROME_THEME_ID_STORAGE_KEY, &self.chrome_build.preferences.theme_id);
+                synced.theme_id.clone_from(&self.chrome_build.preferences.theme_id);
+            }
+            5 if synced.ui_layout != self.chrome_build.preferences.ui_layout => {
+                prefs_set_bounded(UI_CHROME_LAYOUT_STORAGE_KEY, &self.chrome_build.preferences.ui_layout);
+                synced.ui_layout.clone_from(&self.chrome_build.preferences.ui_layout);
+            }
+            6 if synced.worker_count != self.chrome_build.preferences.worker_count => {
+                prefs_set_bounded(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, &self.chrome_build.preferences.worker_count.to_string());
+                synced.worker_count = self.chrome_build.preferences.worker_count;
+            }
+            0..=6 => {}
+            _ => {
+                self.chrome_present.maintenance.persist_requested = false;
+                self.chrome_present.maintenance.persist_phase = 0;
+                return;
+            }
+        }
+        self.chrome_present.maintenance.persist_phase = phase.saturating_add(1);
     }
 
     fn body_rect(&self, theme: &Theme) -> Rect {
@@ -12831,6 +13064,9 @@ struct FilePrefsFlushState {
     running: bool,
 }
 
+const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;
+const OS_SHELL_PREFS_FILE_MAX_BYTES: usize = OS_SHELL_CONFIG_MAX_BYTES + 4 * 1024;
+
 /// 📁️ Resolves the native prefs file path: `$SEMIO_PREFS_DIR/ui-prefs.json` when set, else a
 /// per-OS config-home fallback (XDG on linux/devcontainer, `%APPDATA%` on windows, `~/.config` on
 /// macOS) — no new dependency (no `dirs` crate), just `std::env`.
@@ -12856,7 +13092,17 @@ impl FilePrefsStore {
             Lane::Io,
             Box::new(move || {
                 use std::fs as system_fs;
-                let cache = system_fs::read_to_string(load_path).ok().and_then(|raw| serde_json::from_str::<HashMap<String, String>>(&raw).ok()).unwrap_or_default();
+                use std::io::Read;
+                let cache = system_fs::File::open(load_path)
+                    .ok()
+                    .filter(|file| file.metadata().ok().is_some_and(|metadata| metadata.len() <= OS_SHELL_PREFS_FILE_MAX_BYTES as u64))
+                    .and_then(|file| {
+                        let mut raw = String::new();
+                        file.take((OS_SHELL_PREFS_FILE_MAX_BYTES + 1) as u64).read_to_string(&mut raw).ok()?;
+                        (raw.len() <= OS_SHELL_PREFS_FILE_MAX_BYTES).then_some(raw)
+                    })
+                    .and_then(|raw| serde_json::from_str::<HashMap<String, String>>(&raw).ok())
+                    .unwrap_or_default();
                 let _ = sender.send(cache);
             }),
         );
@@ -12951,16 +13197,26 @@ fn empty_os_shell_config() -> Value {
 
 fn prefs_get_from(store: &impl PrefsStore, key: &str) -> Option<String> {
     let raw = store.get(OS_SHELL_CONFIG_STORAGE_KEY)?;
+    if raw.len() > OS_SHELL_CONFIG_MAX_BYTES {
+        return None;
+    }
     serde_json::from_str::<Value>(&raw).ok()?.get("preferences")?.get(key)?.as_str().map(ToOwned::to_owned)
 }
 
 fn prefs_set_in(store: &mut impl PrefsStore, key: &str, value: &str) {
-    let mut config = store.get(OS_SHELL_CONFIG_STORAGE_KEY).and_then(|raw| serde_json::from_str::<Value>(&raw).ok()).filter(|config| config.get("version").and_then(Value::as_u64) == Some(1)).unwrap_or_else(empty_os_shell_config);
+    let mut config = store
+        .get(OS_SHELL_CONFIG_STORAGE_KEY)
+        .filter(|raw| raw.len() <= OS_SHELL_CONFIG_MAX_BYTES)
+        .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
+        .filter(|config| config.get("version").and_then(Value::as_u64) == Some(1))
+        .unwrap_or_else(empty_os_shell_config);
     if !config.get("preferences").is_some_and(Value::is_object) {
         config["preferences"] = serde_json::json!({});
     }
     config["preferences"][key] = Value::String(value.to_string());
-    if let Ok(raw) = serde_json::to_string(&config) {
+    if let Ok(raw) = serde_json::to_string(&config)
+        && raw.len() <= OS_SHELL_CONFIG_MAX_BYTES
+    {
         store.set(OS_SHELL_CONFIG_STORAGE_KEY, &raw);
     }
 }
@@ -12985,6 +13241,19 @@ fn prefs_set(key: &str, value: &str) {
     {
         let store = PREFS_STORE.get_or_init(|| std::sync::Mutex::new(std::cell::RefCell::new(FilePrefsStore::new()))).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         prefs_set_in(&mut *store.borrow_mut(), key, value);
+    }
+}
+
+fn prefs_get_bounded(key: &str) -> Option<String> {
+    if key.len() > SHELL_CHROME_IO_FIELD_BYTES {
+        return None;
+    }
+    prefs_get(key).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES)
+}
+
+fn prefs_set_bounded(key: &str, value: &str) {
+    if key.len() <= SHELL_CHROME_IO_FIELD_BYTES && value.len() <= SHELL_CHROME_IO_FIELD_BYTES {
+        prefs_set(key, value);
     }
 }
 //#endregion 🗄️PrefsStore
@@ -13409,7 +13678,7 @@ pub(crate) fn write_stored_introduction_seen(app_id: &str) {
 //#endregion 🗣️ChromeI18n
 
 //#region 💾️PrefsSync
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Default, PartialEq)]
 struct UiPrefsSnapshot {
     appearance_id: String,
     locale_id: String,

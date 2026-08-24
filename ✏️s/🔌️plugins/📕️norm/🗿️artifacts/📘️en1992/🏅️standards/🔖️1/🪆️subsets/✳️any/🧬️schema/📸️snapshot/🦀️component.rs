@@ -162,3 +162,54 @@ impl Default for En1992Snapshot {
     }
 }
 //#endregion 🔖️Snapshot
+
+
+//#region 🌉️ExternalCodecBridge
+/// 📤️ The canonical JSON projection of a [`En1992Snapshot`] — the surface
+/// `../../../../../🧪️tests/mutate-en1992-1` is compared through under `ordered-json-v1`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_en1992_snapshot_json(snapshot: &En1992Snapshot) -> String {
+    serde_json::to_string(snapshot).expect("En1992Snapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_en1992_snapshot_json`] — decodes the committed
+/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors into real [`En1992Snapshot`] values, so the case adapter reads the committed
+/// fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
+/// adapter is impossible — the generated test host links only this crate — which is why the bridge
+/// belongs here.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_en1992_snapshot_json(text: &str) -> Result<En1992Snapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📖️ Parses the committed `.dsl.semio` artifact into a [`En1992Snapshot`]. Calls the `ArtifactDsl`
+/// trait method directly rather than the `📝️text` facet's async wrapper, because a test host has no
+/// async runtime to drive one.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_en1992_dsl(text: &str) -> Result<En1992Snapshot, String> {
+    <En1992Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+}
+
+/// 🖨️ Prints a [`En1992Snapshot`] back to its canonical `.dsl.semio` body. Canonical is the operative
+/// word: the committed example assets ARE this function's own output, which is why the identity
+/// scenario asserts byte-exactness rather than the no-byte-pass-through inequality.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_en1992_dsl(snapshot: &En1992Snapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 📦️ Decodes a [`En1992Snapshot`] from the binary `.pack.semio` envelope — an independently written
+/// codec from the DSL grammar above, which is what makes their agreement evidence that the document
+/// was parsed rather than copied.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_en1992_pack(bytes: &[u8]) -> Result<En1992Snapshot, String> {
+    <En1992Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
+}
+
+/// 📦️ Encodes a [`En1992Snapshot`] to its binary `.pack.semio` envelope.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_en1992_pack(snapshot: &En1992Snapshot) -> Vec<u8> {
+    store::ArtifactPack::encode_pack(snapshot)
+}
+//#endregion 🌉️ExternalCodecBridge

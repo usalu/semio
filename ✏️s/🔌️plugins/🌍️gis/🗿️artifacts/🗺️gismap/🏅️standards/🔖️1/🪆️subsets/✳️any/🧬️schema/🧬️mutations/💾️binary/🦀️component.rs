@@ -18,12 +18,12 @@ use protocol::{Mutation, MutationDiff, OpBinary};
 
 //#region 🔖️Codec
 /// 📦️ Encodes a `GisMapMutation` to its binary command form.
-pub async fn encode_op(operation: &GisMapMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &GisMapMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `GisMapMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<GisMapMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<GisMapMutation, protocol::ProtocolError> {
     GisMapMutation::decode_op(bytes)
 }
 //#endregion 🔖️Codec

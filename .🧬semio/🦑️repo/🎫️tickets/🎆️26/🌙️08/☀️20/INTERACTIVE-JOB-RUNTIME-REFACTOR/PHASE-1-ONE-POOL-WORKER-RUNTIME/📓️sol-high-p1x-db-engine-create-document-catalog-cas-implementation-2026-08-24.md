@@ -45,7 +45,7 @@ These Rust laws were added as source evidence but were not executed because this
 
 `bun ./📜️script.ts verify interactivity p1x` is dispatched at root script line 5949. The live semantic verifier begins at line 10255 and checks exact two-wait caller cutover, fixed admission, base identity, every retained phase, cursor granularity, typed I/O lane, atomic driver/retry ordering, Pending/Ready/panic owner publication, checked revalidation, single-owner retirement, result/refusal/Drop authority, facade ordering, forbidden constructs and every hostile law body.
 
-The self-test at line 10362 installs 41 hostile mutations. They include third wait, caller `block_on`, mutable base vector, missing revision/pending identity, len accounting, unchecked generation/revision, admission after clone, shallow scan/copy/encode/seal, missing snapshot identity, combined handoff/poll, wrong lane, dropped saturated job, removed/reordered driver claims, Ready/Pending/panic owner loss, durable-Ready cancellation regression, publication before revalidation, bulk retirement, lost completion recheck, result/rejection Drop loss, facade spawn-before-durability, and a shallow mutation for each Rust law body.
+The self-test at line 10396 installs 62 hostile mutations. They include third wait, caller `block_on`, mutable base vector, missing revision/pending identity, len accounting, unchecked generation/revision, admission after clone, shallow scan/copy/encode/seal, missing snapshot identity, combined handoff/poll, wrong lane, dropped saturated job, removed/reordered driver claims, Ready/Pending/panic owner loss, durable-Ready cancellation regression, publication before revalidation, bulk retirement, lost completion recheck, result/rejection Drop loss, facade spawn-before-durability, bounded-retry/cancel/deadline/currentness loss, exact retry-job loss, callback-close bypass, every observed-capacity omission/reordering, blocking Claim/Revalidate/Retire locks, deep clone under lock, and a shallow mutation for each Rust law body.
 
 ## Isolated Gates
 
@@ -59,3 +59,25 @@ Executed after the final source edits:
 - scoped source census — exactly two production `db_actor::block_on` sites; no `block_on`, target split, loop, direct thread/pool construction, `unwrap()` or `expect()` in the P1x production region.
 
 No Cargo, Nx, Wasm, browser or broad workspace build/test was run.
+
+## Independent RED Remediation
+
+The independent Terra audit `📓️codex-p1x-independent-source-static-acceptance-audit-2026-08-24.md` identified three exact counterexamples. This revision closes each source trace:
+
+| RED counterexample | Exact repair | Production/law evidence |
+|---|---|---|
+| A permanently saturated `Lane::Io` left both the main retry job and rejection-close job cycling forever at attempt eight; cancellation, deadline and stale generation could not reach retirement | Retry attempts are capped at eight. Main retry evaluates currentness, accepted cancellation and deadline before exhaustion, atomically claims `Retry → Driving`, publishes the refused job in `terminal_job`, stages the typed terminal result and advances one retained close opportunity from timer callback authority without another lane admission. Rejection-close performs the same exact-job terminal handoff on limit/deadline and closes one job/owner per callback opportunity. | engine lines 5315–5408 and 5861–5940; held-saturation law line 10745 proves cancel/deadline/exhaustion, no ninth refusal, zero backend polls, exact owner return, registry/admission release and rejection-close emptiness |
+| Admission bounded requested lengths but never observed allocator-returned `Vec`/`String`/page/`Arc` backing capacities | `DatabaseCreateCatalogBackingLedger` uses checked `u64::try_from` and checked item/byte addition. Preflight records input `String::capacity()` and immutable base `Vec::capacity()` before cloning. Scan records every base string allocation; Reserve and Clone store newly allocated owners before validating their observed capacities; Snapshot stores its `Arc`, writer and fixed page allocation before checked refusal. Every overage therefore remains reachable by incremental retirement. | engine lines 5016–5047, 5802–5809, 6127–6279; hostile controlled-overallocation law line 10506 proves candidate and cloned String overage faults retain then retire exact backing and release admission |
+| Claim/Revalidate could block a worker on the catalog mutex, and `Database::catalog` deep-cloned the maximum dynamic vector while holding it | Claim, Revalidate and the equivalent pending-token Retire cleanup use `try_lock`; `WouldBlock` preserves exact phase/ownership and arms one timer-wheel requeue. `Database::catalog` clones only the immutable `Arc` under the mutex, then deep-clones its view after the guard is gone. | engine lines 5811–5827, 6333–6371, 6454–6537 and 7295–7302; maximum-catalog contention law line 10871 holds the mutex across Claim, Revalidate and Retire and asserts each exact worker opportunity remains below 8 ms, retains pending ownership and rearms deterministically |
+
+The permanent P1x verifier now binds these repairs to exact function bodies. Its mutations independently delete retry exhaustion/currentness/cancel/deadline checks, drop the refused job, bypass callback close, replace observed capacities with lengths, reorder owner publication after refusal, remove Arc/page observations, restore blocking locks in each catalog-touching phase, move deep clone under the mutex, and shallow all three new hostile laws. Every mutation is rejected by the isolated P1x gate.
+
+The remediation Rust laws are source/static evidence only. They were not executed because the packet forbids Cargo/native/Wasm builds.
+
+### Remediation Gate Rerun
+
+- `bun ./📜️script.ts verify interactivity p1x` — live source and all 62 hostile mutations clean.
+- `bun ./📜️script.ts verify interactivity p1w` — preserved live source and hostile mutations clean.
+- `bun ./📜️script.ts verify interactivity p1q-b1-b6` — preserved live source and hostile mutations clean.
+- scoped `rustfmt --edition 2021 --check` — clean.
+- scoped `git diff --check` over engine, root script and this report — clean.

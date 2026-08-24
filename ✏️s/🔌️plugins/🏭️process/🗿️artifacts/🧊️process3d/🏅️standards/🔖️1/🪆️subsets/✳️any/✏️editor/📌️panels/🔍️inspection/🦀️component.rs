@@ -12,14 +12,14 @@
 use crate::artifacts::process3d::Process3dSnapshot;
 use crate::editor::process3d::config::Process3dConfig;
 use crate::editor::process3d::terminology::Process3dLabels;
-use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_INSPECTION: &str = "process.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -31,15 +31,11 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(_fixture: &Process3dSnapshot, _cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
-    ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
-        id: "process3d-play-inspector.empty".into(),
-        label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-        default_open: Some(true),
-        children: vec![ui_text(labels.no_selection)],
-        presence: UiPresence::default(),
-        menu: None,
-    }])
+pub fn render(_fixture: &Process3dSnapshot, _cfg: &Process3dConfig, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let items = crate::editor::process3d::ui_node_list([tree_item("process3d-play-inspector.empty", crate::editor::process3d::ui_label(labels.no_selection.as_str())?)])?;
+    PanelTreeBuilder::new("process3d-play-inspector")?
+        .section("process3d-play-inspector.section", Some(crate::editor::process3d::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, items)?
+        .build()
 }
 //#endregion 🔖️Render
 

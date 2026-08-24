@@ -40,6 +40,44 @@ pub use super::move_node::mutation::{move_node, MoveNode};
 pub use super::remove_data_property::mutation::{remove_data_property, RemoveDataProperty};
 pub use super::rename_node::mutation::{rename_node, RenameNode};
 
+/// 🏷️ Kebab-case spelling of every [`TrinityGraphMutation`] variant, in declaration order — the
+/// vocabulary the `jack-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-jack-1`'s exhaustive case measures itself against. Eight kinds: node and edge lifecycle,
+/// the two node scalars a canvas can edit (`rename`, `move`), and one `change`/`remove` pair over
+/// the property bag that BOTH nodes and edges carry — which is why those two verbs address an
+/// `EntityRef` rather than a node id. There is no `set-snapshot`: whole-document replace reaches the
+/// store through its non-history path instead. [`kinds_match_the_enum_and_the_catalog`] keeps this
+/// list honest against the enum, since the framework never parses Rust.
+pub const KINDS: &[&str] = &["create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property"];
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "moveNode", …}`) JSON projection —
+/// exactly the shape the committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json`
+/// specification vectors and `mutate-jack-1`'s own `Examples` payloads carry, snake_case payload
+/// fields (`new_name`, `new_value`) and the `{"entity": "node", "id": …}` `EntityRef` tag included —
+/// into a real [`TrinityGraphMutation`]. The test adapter cannot reach `serde_json` (the generated
+/// host links only `semio-repo-test-host` and this crate) and cannot name this crate's private
+/// `protocol`/`store` extern-crate aliases either, so the bridge belongs here rather than there.
+pub fn decode_trinity_graph_mutation_json(text: &str) -> Result<TrinityGraphMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
+/// pairs. Half of this vocabulary's committed vectors are NO-OP vectors — an `applied` outcome
+/// carrying a `Warning`-level `mutation.no-op` — and half are refusals at two different severities,
+/// so the pair is the evidence rather than a side channel.
+pub fn apply_trinity_graph_mutation_reporting(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<(String, String)> {
+    let outcome = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ The mutation's OWN computed undo steps, which is what an `inverse-<kind>` scenario has to
+/// apply for the metamorphic law to mean anything.
+pub fn inverse_trinity_graph_mutation_steps(mutation: &TrinityGraphMutation, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
+    <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
 //#region 🔖️Store
 pub type TrinityGraphEnvelope = ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>;
 pub type TrinityGraphStore = ArtifactStore<JackSnapshot, TrinityGraphMutation>;
@@ -275,6 +313,24 @@ mod tests {
     use crate::artifacts::jack::{Camera, Manifest, PortDirection};
     use protocol::MutationDiff;
     use protocol::SemanticMutation;
+
+    /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
+    /// — must agree, in spelling AND in order. The framework never parses Rust, so without this test
+    /// `KINDS` could drift from the enum and the catalog could keep measuring `mutate-jack-1`
+    /// against a vocabulary the artifact no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = TrinityGraphMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(!manifest.contains("\"set-snapshot\""), "whole-document replace is not a mutation here — the catalog must not smuggle it back in");
+    }
 
     async fn mini_fixture() -> JackSnapshot {
         JackSnapshot::with_content(

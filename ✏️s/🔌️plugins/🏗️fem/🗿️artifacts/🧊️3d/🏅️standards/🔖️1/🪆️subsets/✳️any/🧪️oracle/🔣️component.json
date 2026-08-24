@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `fem.fem3d` declares 25 mutation kinds over eight id-keyed collections plus one inseparable analysis-settings facet. Semio-NATIVE, no oracle. This catalog is NOT the same as `fem2d-1-any` and is deliberately recorded separately: the 3D artifact addresses SOLIDS, six-degree-of-freedom supports, a shear modulus, `iz`/`j` section constants and a frame roll angle that the 2D vocabulary has no counterpart for.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "fem3d-mutation-semantics",
+      "capabilities": [
+        "fem3d-1-mutate"
+      ],
+      "rationale": "`fem.fem3d` is a semio-NATIVE artifact; `.fem3d.dsl.semio` is read by nothing outside this repository. The same solver families were surveyed as for the 2D artifact and DECLINED for the same structural reason — `frame3dd`, `calculix` and `code_aster` compute results from a model and expose no editing vocabulary — but this subset's vocabulary is not the 2D one either, so the decision is recorded separately rather than shared: the 3D artifact addresses SOLIDS (extruded outlines with a base elevation, a height, a layer count and a mesh size) where the 2D artifact addresses REGIONS (planar slabs with a thickness), its nodes carry a third coordinate, its materials carry a shear modulus `g` the 2D materials do not have, its sections carry `iz` and a torsion constant `j`, its frames carry a `roll` angle about their own axis, its supports fix six degrees of freedom rather than three, and its combinations are written as a `terms:MAP` block rather than the 2D `terms:LIST`. Evidence is the 25 committed specification vectors over a real four-column, two-storey steel frame, plus the inverse law — sharpened here by `replace-element`, whose vector rolls a column about its own axis, a change that is invisible in every projection except the element record itself.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "fem3d-1-any",
+      "capability": "fem3d-1-mutate",
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "create-element",
+        "delete-element",
+        "replace-element",
+        "create-material",
+        "delete-material",
+        "replace-material",
+        "create-section",
+        "delete-section",
+        "replace-section",
+        "create-support",
+        "delete-support",
+        "replace-support",
+        "create-solid",
+        "delete-solid",
+        "replace-solid",
+        "create-load-case",
+        "delete-load-case",
+        "add-load",
+        "remove-load",
+        "change-load-case-self-weight",
+        "create-combination",
+        "delete-combination",
+        "update-analysis-settings"
+      ]
+    }
+  ]
+}

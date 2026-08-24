@@ -152,7 +152,7 @@ async fn default_true() -> bool {
 //#endregion 🔖️EphemeralImportTypes
 
 //#region 🔖️Parse
-pub(crate) async fn parse_geometry(value: Option<&Value>) -> CadGeometry {
+pub(crate) fn parse_geometry(value: Option<&Value>) -> CadGeometry {
     value.and_then(|entry| serde_json::from_value(entry.clone()).ok()).unwrap_or_default()
 }
 
@@ -253,7 +253,7 @@ async fn face_boundary_points(face: &CadFace, wires: &HashMap<String, &CadWire>,
     face.wire_ids.iter().find_map(|wire_id| wires.get(wire_id)).map(|wire| wire_points(wire, edges, vertices)).unwrap_or_default()
 }
 
-pub(crate) async fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeometry) -> HashMap<String, String> {
+pub(crate) fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeometry) -> HashMap<String, String> {
     let vertices = vertex_map(geometry);
     let edges = edge_map(geometry);
     let wires = wire_map(geometry);
@@ -323,7 +323,7 @@ pub(crate) async fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeo
     handles
 }
 
-pub(crate) async fn resolve_primitive_handle(primitives: &[CadPrimitiveSlot], handles: &HashMap<String, String>) -> Option<(String, String)> {
+pub(crate) fn resolve_primitive_handle(primitives: &[CadPrimitiveSlot], handles: &HashMap<String, String>) -> Option<(String, String)> {
     for primitive in primitives {
         if let Some(handle) = handles.get(&primitive.primitive_id) {
             return Some((handle.clone(), primitive.kind.clone()));
@@ -376,7 +376,7 @@ async fn extent_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
 
 /// Derives an object's world-space bounding extent from its authored geometry, trying each
 /// primitive slot in order (mirrors `resolve_primitive_handle`'s slot priority).
-pub(crate) async fn extent_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
+pub(crate) fn extent_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
     primitives.iter().find_map(|primitive| extent_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
 }
 
@@ -396,12 +396,12 @@ async fn centroid_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
 }
 
 /// 🎯️ World-space centroid of the first primitive slot that resolves against authored geometry.
-pub(crate) async fn centroid_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
+pub(crate) fn centroid_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
     primitives.iter().find_map(|primitive| centroid_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
 }
 
 /// 🧵️ Tessellates an object through a kernel handle when that handle is still resident.
-pub(crate) async fn tessellate_object_mesh(kernel: &mut Brep, object: &CadObject, kind: &str) -> Option<MeshData> {
+pub(crate) fn tessellate_object_mesh(kernel: &mut Brep, object: &CadObject, kind: &str) -> Option<MeshData> {
     let handle_id = object.solid_handle.as_deref()?;
     if kernel.kind(&GeometryHandle(handle_id.into())).is_err() {
         return None;
@@ -410,7 +410,7 @@ pub(crate) async fn tessellate_object_mesh(kernel: &mut Brep, object: &CadObject
 }
 
 /// 🧵️ Re-imports fixture geometry and tessellates the object's primitive slots.
-pub(crate) async fn tessellate_object_mesh_from_fixture(kernel: &mut Brep, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
+pub(crate) fn tessellate_object_mesh_from_fixture(kernel: &mut Brep, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
     if object.primitives.is_empty() {
         return None;
     }
@@ -447,7 +447,7 @@ async fn strip_degenerate_triangles(mesh: MeshData) -> MeshData {
     MeshData { indices, ..mesh }
 }
 
-pub async fn tessellate_geometry_handle(kernel: &mut Brep, handle_id: &str, kind: &str) -> Option<MeshData> {
+pub fn tessellate_geometry_handle(kernel: &mut Brep, handle_id: &str, kind: &str) -> Option<MeshData> {
     let handle = GeometryHandle(handle_id.into());
     if kind == "curve" {
         return curve_mesh_from_wire(kernel, &handle);
@@ -524,11 +524,11 @@ pub(crate) fn cad_object_from_mesh(kernel: &mut Brep, id: impl Into<String>, lab
 }
 //#endregion 🔖️MeshImport
 
-pub async fn object_label_from_id(object_id: &str) -> String {
+pub fn object_label_from_id(object_id: &str) -> String {
     object_id.split('-').next_back().map_or_else(|| object_id.to_string(), str::to_string)
 }
 
-pub(crate) async fn objects_from_fixture_model(kernel: &mut Brep, objects_value: &[Value], geometry: &CadGeometry) -> Vec<CadObject> {
+pub(crate) fn objects_from_fixture_model(kernel: &mut Brep, objects_value: &[Value], geometry: &CadGeometry) -> Vec<CadObject> {
     let handles = import_geometry_handles(kernel, geometry);
     objects_value
         .iter()
@@ -588,7 +588,7 @@ async fn primitives_from_json(entry: &Value) -> Vec<CadPrimitiveSlot> {
 /// this subset (a `model` element carries no UI-authoring state) and are intentionally dropped —
 /// `cad_object_from_model_element` restores real, computed values for them on the way back in,
 /// never a fabricated echo of the original.
-pub(crate) async fn model_element_from_cad_object(object: &CadObject) -> SemioModelElement {
+pub(crate) fn model_element_from_cad_object(object: &CadObject) -> SemioModelElement {
     let [ox, oy, oz] = object.origin;
     let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
     let scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
@@ -608,13 +608,13 @@ pub(crate) async fn model_element_from_cad_object(object: &CadObject) -> SemioMo
 
 /// 🌉️ WRITE direction: a pane's full object list → a `SemioModelSnapshot` ready to become a
 /// composed child's content (see `store::ArtifactChild`/`crate::artifacts::cad::cad_model_child_handle`).
-pub(crate) async fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioModelSnapshot {
+pub(crate) fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioModelSnapshot {
     SemioModelSnapshot { schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(), spatial: Vec::new(), elements: objects.iter().map(model_element_from_cad_object).collect(), relations: Vec::new() }
 }
 
 /// 🌉️ READ direction: the inverse of `model_element_from_cad_object` — a resolved child's
 /// `SemioModelElement` back into the app's ephemeral `CadObject` working shape.
-pub(crate) async fn cad_object_from_model_element(element: &SemioModelElement) -> CadObject {
+pub(crate) fn cad_object_from_model_element(element: &SemioModelElement) -> CadObject {
     let typology = match &element.class {
         ElementClass::Other { name } => name.clone(),
         ElementClass::Wall => "building.building.wall".into(),
@@ -652,7 +652,7 @@ pub(crate) async fn cad_object_from_model_element(element: &SemioModelElement) -
 
 /// 🌉️ READ direction: every element in a resolved `SemioModelSnapshot` child → this pane's
 /// `CadObject` list — what `crate::artifacts::cad::cad_working_scene_from_models` calls per pane.
-pub(crate) async fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<CadObject> {
+pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<CadObject> {
     model.elements.iter().map(cad_object_from_model_element).collect()
 }
 //#endregion 🔖️ModelBridge

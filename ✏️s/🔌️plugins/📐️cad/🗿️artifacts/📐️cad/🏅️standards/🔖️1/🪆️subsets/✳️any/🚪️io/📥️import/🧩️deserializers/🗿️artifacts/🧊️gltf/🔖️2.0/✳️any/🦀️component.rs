@@ -8,9 +8,9 @@
 use crate::artifacts::cad::CadSnapshot;
 
 //#region Deserialize
-pub async fn register() {}
+pub fn register() {}
 
-pub async fn deserialize_text(text: &str) -> Result<CadSnapshot, store::TextError> {
+pub fn deserialize_text(text: &str) -> Result<CadSnapshot, store::TextError> {
     <CadSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 //#endregion Deserialize

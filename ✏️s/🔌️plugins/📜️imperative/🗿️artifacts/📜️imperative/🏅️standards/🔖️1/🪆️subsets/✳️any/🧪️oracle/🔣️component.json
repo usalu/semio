@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `imperative.document` is a semio-NATIVE program document composed over an `s.stdio.semio.flow` child and an `s.stdio.semio.text` child, so no oracle is registered and the evidence rests on the four committed per-kind vectors plus the inverse law (see noOracleDecisions).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "imperative-1-nested-step-list-mutation-semantics",
+      "capabilities": ["imperative-1-mutate"],
+      "rationale": "No third party reads or writes `.imperative.dsl.semio`, and no AST or list library could adjudicate this vocabulary either, because the addressing scheme is the whole point. `ImperativeSnapshot` persists NO steps: it carries a schema string and two content-addressed child handles, one `s.stdio.semio.flow` and one `s.stdio.semio.text`, and the program itself lives in a thread-local working scene keyed by the flow handle. Every one of the four kinds therefore addresses a `PathRef` — `{}` for the root program, `{\"owner\": \"step-3\", \"slot\": \"then\"}` for a branch body inside it — and the SAME step id in two scopes is two different targets, which is exactly what the committed `delete-step` vector pins by refusing a root id addressed inside a branch. Confidence comes instead from the four committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the production crate, and from the inverse law as a metamorphic property. All four leave the document byte-identical, for two different reasons apiece: a duplicate id at the addressed path and an out-of-scope target are refusals, while a reorder index clamped past the end and a param edit that rewrites the value already present are `Warning`-level no-ops. That is why `mutate-imperative-1` requires the exact `(code, severity)` pair per vector, and separately applies a real-effect payload of its own to the same seeded program, where the content-addressed flow handle supplies the observability the vectors cannot.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "imperative-1-any",
+      "capability": "imperative-1-mutate",
+      "kinds": ["create-step", "delete-step", "reorder-steps", "edit-step-params"]
+    }
+  ]
+}

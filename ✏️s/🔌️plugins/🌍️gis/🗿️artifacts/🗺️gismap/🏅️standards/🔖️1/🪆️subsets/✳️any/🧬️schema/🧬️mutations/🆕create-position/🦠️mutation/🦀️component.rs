@@ -20,15 +20,15 @@ pub struct CreatePosition {
 impl MutationKind<GisMapSnapshot, GisMapMutation> for CreatePosition {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "position", kind: "create-position", record: "CreatedPosition" };
 
-    async fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+    fn diff(&self, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
         super::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
+    fn inverse(&self, base: &GisMapSnapshot) -> Vec<GisMapMutation> {
         super::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create position \"{}\"", self.item.id)
     }
 }

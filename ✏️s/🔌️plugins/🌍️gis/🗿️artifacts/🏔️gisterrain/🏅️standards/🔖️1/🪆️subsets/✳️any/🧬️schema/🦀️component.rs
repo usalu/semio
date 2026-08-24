@@ -46,17 +46,17 @@ impl Default for GisTerrainArtifact {
 impl GisTerrainArtifact {
     /// 📸️ Persisted subset. `mesh` is always re-derived here (never carried verbatim off `self`) so
     /// it can never drift from what `(exaggeration, imported_features_json)` actually determine.
-    pub async fn to_snapshot(&self) -> GisTerrainSnapshot {
+    pub fn to_snapshot(&self) -> GisTerrainSnapshot {
         GisTerrainSnapshot { exaggeration: self.exaggeration, imported_features_json: self.imported_features_json.clone(), mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(self.exaggeration, &self.imported_features_json))) }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
         Self { exaggeration: snapshot.exaggeration, imported_features_json: snapshot.imported_features_json, mesh: snapshot.mesh, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: GisTerrainSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: GisTerrainSnapshot) {
         self.exaggeration = snapshot.exaggeration;
         self.imported_features_json = snapshot.imported_features_json;
         self.mesh = snapshot.mesh;
@@ -66,7 +66,7 @@ impl GisTerrainArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.gis.gisterrain` — twenty handcrafted schema leaves.
-pub async fn gisterrain_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn gisterrain_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.gis.gisterrain",
         artifact: schema::FacetLeaves {
@@ -135,7 +135,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <GisTerrainDiff as protocol::MutationDiff<GisTerrainSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
@@ -218,7 +218,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
 /// `GisTerrainSnapshot`, no app-state dependency — an artifact must never depend on an app.
-pub async fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
+pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
     let exaggeration = 1.0;
     let imported_features_json = String::new();
     let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(exaggeration, &imported_features_json)));
@@ -228,7 +228,7 @@ pub async fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
 /// 🗺️ The default terrain document, seeded from the bundled reuse example's `gisterrain
 /// exaggeration=...` header (see `crate::artifacts::gisterrain::GisTerrainSnapshot`'s
 /// derive-generated `.gisterrain` DSL).
-pub async fn default_terrain_document() -> GisTerrainSnapshot {
+pub fn default_terrain_document() -> GisTerrainSnapshot {
     <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_terrain_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
@@ -297,7 +297,7 @@ struct TerrainSceneStyleJson<'a> {
 /// 🏔️ Builds the `World3dScene.terrain_json` payload for a descriptor — the one place gis needs to
 /// reach into `framework_surface::terrain` beyond the wasm session itself (for the generic engine's
 /// tile zoom bounds).
-pub async fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
+pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
     let style = TerrainSceneStyleJson {
         tile_url_template: GIS_3D_TERRAIN_TILE_URL_TEMPLATE,
         project_origin_lon: descriptor.project_origin.lon,

@@ -150,3 +150,21 @@ mod semio_grammar_conformance {
         let _ = COMPONENT_GRAMMAR_PATH;
     }
 }
+
+//#region 🔖️ExternalBridges
+/// 📖️ Parses `.note` DSL text with a plain-`String` error, reachable from OUTSIDE this crate —
+/// `store` is a private `extern crate` alias (`📦️glue.rs`), so `store::TextError` cannot be named
+/// by the exhaustive mutation case's test adapter that has to read the committed
+/// `🗣️example.dsl.semio` artifact.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn parse_note_dsl(text: &str) -> Result<NoteSnapshot, String> {
+    <NoteSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 🖨️ Prints a [`NoteSnapshot`] back to `.note` DSL text under a name an external caller can reach, paired
+/// with [`parse_note_dsl`].
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn print_note_dsl(snapshot: &NoteSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+//#endregion 🔖️ExternalBridges

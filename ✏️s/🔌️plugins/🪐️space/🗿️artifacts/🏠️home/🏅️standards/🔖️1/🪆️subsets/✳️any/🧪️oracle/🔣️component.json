@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.space.home`'s catalog and its no-oracle decision live here rather than in a shared manifest. The launcher artifact is semio-NATIVE and its entire mutable artifact-lane surface is one counter — see `noOracleDecisions` below for why no third party can be authoritative over it.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "s-home-mutation-semantics",
+      "capabilities": [
+        "s-home-1-mutate"
+      ],
+      "rationale": "`s.space.home` is a semio-NATIVE artifact: its `.shome.dsl.semio` text and `.pack.semio` binary envelopes are written and read by this repository alone, and its whole mutable artifact-lane surface is a single unsigned counter, `catalog_generation`, that no interchange format anywhere models. There is nothing for a third party to be authoritative ABOUT — the counter is a re-materialize trigger bumped after a create/import/delete on the launcher's catalog port, not authored content — so no crate was found, surveyed or declined: the category is empty. Confidence comes instead from the committed specification vector under `../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/bumps-the-catalog-generation-to-7/`, a handcrafted `(before, mutation, after, diff, outcome)` quintet that pins 3 → 7 so an implementation that INCREMENTED rather than SET lands on 4 and fails, and from the inverse law as a metamorphic property: the inverse of a setter can only be built by reading the old value out of BASE, so a leaf that inverted structurally instead cannot restore the document and is caught by `inverse-change-catalog-generation`.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "s-home-1-any",
+      "capability": "s-home-1-mutate",
+      "kinds": [
+        "change-catalog-generation"
+      ]
+    }
+  ]
+}

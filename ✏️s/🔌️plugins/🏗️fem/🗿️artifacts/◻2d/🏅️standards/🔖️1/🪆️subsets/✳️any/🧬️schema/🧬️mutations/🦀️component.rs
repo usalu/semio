@@ -449,3 +449,101 @@ mod semio_grammar_conformance {
         let _ = COMPONENT_GRAMMAR_PATH;
     }
 }
+
+//#region 🔖️Kinds
+/// 🏷️ Kebab-case spelling of every `Fem2dMutation` variant, in declaration order — the vocabulary the `fem2d-1-any` mutation catalog
+/// (`../../🧪️oracle/🔣️component.json`) declares and the `mutate-fem2d-1` exhaustive test case measures
+/// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
+/// what keeps this list honest in both directions.
+pub const KINDS: &[&str] = &[
+    "create-node",
+    "delete-node",
+    "create-element",
+    "delete-element",
+    "replace-element",
+    "create-material",
+    "delete-material",
+    "replace-material",
+    "create-section",
+    "delete-section",
+    "replace-section",
+    "create-support",
+    "delete-support",
+    "replace-support",
+    "create-region",
+    "delete-region",
+    "replace-region",
+    "create-load-case",
+    "delete-load-case",
+    "add-load",
+    "remove-load",
+    "change-load-case-self-weight",
+    "create-combination",
+    "delete-combination",
+    "update-analysis-settings",
+];
+//#endregion 🔖️Kinds
+
+//#region 🌉️TestBridge
+/// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
+///
+/// A generated test host links only `semio-repo-test-host` and, behind its `sut` feature, this crate —
+/// there is no `serde`, no `serde_json` and no `protocol` reachable from an adapter, and this crate's
+/// `protocol`/`store` extern-crate aliases are private — so neither `Fem2dMutation` nor `Fem2dSnapshot`
+/// can be named there and hand-transcribing either into a Rust literal would be a second copy of the
+/// committed specification vector, free to drift away from it. This bridge is the whole surface an
+/// adapter needs, and every type in its signature is a `str`.
+///
+/// The report carries the forward half (`snapshot`, `diff`, `messages`) and the inverse half
+/// (`inverseSteps`, `inverseSnapshot`, `inverseMessages`), so the inverse law is checked against the
+/// mutation's OWN computed inverse rather than against a hand-written undo.
+///
+/// @see ../../🧪️oracle/🔣️component.json — the catalog and the recorded no-oracle decision.
+pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str) -> Result<String, String> {
+    let decode_snapshot = |text: &str| -> Result<Fem2dSnapshot, String> { Ok(serde_json::from_str(text).map_err(|error| error.to_string())?) };
+    let base = decode_snapshot(base_json)?;
+    let mutation: Fem2dMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
+    let mut applied = base.clone();
+    let forward = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let inverse = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::inverse(&mutation, &base);
+    let mut undone = applied.clone();
+    let mut inverse_messages = Vec::new();
+    for step in &inverse {
+        let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+        inverse_messages.extend(outcome.messages().iter().cloned());
+    }
+    let report = serde_json::json!({
+        "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
+        "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
+        "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,
+        "inverseSteps": serde_json::to_value(&inverse).map_err(|error| error.to_string())?,
+        "inverseSnapshot": serde_json::to_value(&undone).map_err(|error| error.to_string())?,
+        "inverseMessages": serde_json::to_value(&inverse_messages).map_err(|error| error.to_string())?,
+    });
+    Ok(report.to_string())
+}
+//#endregion 🌉️TestBridge
+
+//#region 🧪️KindsConformance
+#[cfg(test)]
+mod kinds_conformance {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of them must appear in the committed oracle
+    /// manifest's catalog. The framework never parses Rust, so this is what keeps the declaration
+    /// honest in both directions at once.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsConformance

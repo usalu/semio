@@ -13,7 +13,7 @@ pub mod toggle_sun {
     #[dsl(keyword = "toggle-sun")]
     pub struct ToggleSun {}
 
-    pub async fn handle(
+    pub fn handle(
         _payload: &ToggleSun,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
@@ -35,7 +35,7 @@ pub mod set_sun_azimuth {
         pub value: f64,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetSunAzimuth,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
@@ -57,7 +57,7 @@ pub mod set_sun_elevation {
         pub value: f64,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetSunElevation,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
@@ -79,7 +79,7 @@ pub mod set_sun_intensity {
         pub value: f64,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetSunIntensity,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,

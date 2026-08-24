@@ -1,0 +1,38 @@
+{
+  "mutation": "commitReconstruction",
+  "job": {
+    "id": "job-a",
+    "stage": "texturing",
+    "progress01": 0.75,
+    "cancelRequested": false,
+    "stageCursor": 11,
+    "startedAtMs": 1000.0,
+    "error": null,
+    "cameraPosesPreview": [
+      {
+        "cameraId": "cam-a",
+        "rotationWxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "sparsePointCloudPreview": "AAAAPwAAgD4AAAA+AACAPwAAwD8AAABA"
+  },
+  "sparse": {
+    "points": "AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABA",
+    "colors": null
+  },
+  "trajectory": null,
+  "mesh": null,
+  "geo": null,
+  "qc": null,
+  "assets": []
+}

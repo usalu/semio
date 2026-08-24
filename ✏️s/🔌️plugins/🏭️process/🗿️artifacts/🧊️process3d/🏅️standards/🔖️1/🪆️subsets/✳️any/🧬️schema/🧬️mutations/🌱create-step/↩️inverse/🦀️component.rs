@@ -10,7 +10,7 @@ use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &CreateStep, _base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub fn inverse(_payload: &CreateStep, _base: &Process3dSnapshot) -> Vec<Process3dMutation> {
     Vec::new()
 }
 //#endregion 🔖️Inverse

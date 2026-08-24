@@ -2,14 +2,14 @@
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use semio_s_plugin_stdio::artifacts::dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
 
-pub async fn register() {}
+pub fn register() {}
 
-pub async fn deserialize(from: &DwgSnapshot) -> Result<GisTerrainSnapshot, store::TextError> {
+pub fn deserialize(from: &DwgSnapshot) -> Result<GisTerrainSnapshot, store::TextError> {
     let _ = (STDIO_DWG_DOCUMENT_SCHEMA, from);
     Ok(GisTerrainSnapshot::default())
 }
 
-pub async fn deserialize_bytes(bytes: &[u8]) -> Result<GisTerrainSnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<GisTerrainSnapshot, store::TextError> {
     let _ = bytes;
     Ok(GisTerrainSnapshot::default())
 }

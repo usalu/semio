@@ -23,7 +23,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub async fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() { GisMapSnapshot::default() } else { default_document() };
         // 🕹️ The pre-migration layer/feature selection clear that used to live here (`SetSelection {
         // ids: Vec::new() }`) is gone — selection is framework-owned config now, and `Emit` has no

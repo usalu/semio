@@ -19,7 +19,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub async fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         // 🧰️ Switching the active utility is config-only: it never mutates the document. Clear
         // any in-progress engagement session / rubber-band scratch so a stale preview cannot
         // leak across a utility switch.
@@ -45,7 +45,7 @@ pub mod set_dislocate_option {
         pub pressed: Option<bool>,
     }
 
-    pub async fn handle(payload: &SetDislocateOption, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &SetDislocateOption, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
         let window_id = cad_window_id_for_pane(pane);

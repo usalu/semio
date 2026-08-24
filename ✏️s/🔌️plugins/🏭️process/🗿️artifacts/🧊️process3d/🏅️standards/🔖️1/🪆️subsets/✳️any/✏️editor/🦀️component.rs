@@ -141,6 +141,11 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     Ok(nodes)
 }
 
+/// 🏷️ Admits resolved app text into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI label admission failed"))
+}
+
 
 /// 📇️ A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the
 /// command palette) with the given execution kind.
@@ -160,11 +165,11 @@ pub fn set_active_utility_effect(utility: &str) -> Effect {
 /// top via struct-update syntax — shared by the `🛍️catalogue` and `🛠️workshop` panels.
 pub fn iconed_tree_item_with_action(
     id: impl AsRef<str>,
-    label: impl TryInto<Label>,
+    label: impl AsRef<str>,
     icon_id: &str,
     action: semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut node = semio_framework_plugin::tree_item_with_action(id, label, None, action?)?;
+    let mut node = semio_framework_plugin::tree_item_with_action(id, ui_label(label)?, None, action?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
         props.icon = Some(
             semio_framework_plugin::UiText::try_from_str(icon_id)
@@ -182,7 +187,7 @@ pub fn iconed_tree_item_with_action(
 pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
     let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<Process3dSnapshot, Process3dMutation>(crate::artifacts::process3d::PROCESS_3D_SCHEMA, "process3d", document.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
     Effect::LoadDocument { pack, spr }
 }
 
@@ -279,15 +284,15 @@ impl ArtifactEditor for Process3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::process3d::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> Process3dSnapshot {
+    async fn initial_snapshot() -> Process3dSnapshot {
         crate::artifacts::process3d::schema::default_document()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    async fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(process3d_io())
     }
 
@@ -295,7 +300,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// 🎞️ `brep:out` (see the artifact engine's `export_process3d_model`, STEP text) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding `export_media`
     /// shadows the trait's provided body for every port on this app, not just the new one).
-    fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    async fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
             "brep:out" => match crate::artifacts::process3d::io::export_process3d_model(&crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step")
                 .map_err(|error| MediaError::Payload("brep:out".into(), error))?
@@ -310,7 +315,7 @@ impl ArtifactEditor for Process3dPlayApp {
                 None => Err(MediaError::Payload("brep:out".into(), "kernel replay failed".into())),
             },
             "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(semio_framework_plugin::Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -328,7 +333,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// `document:in` default (which would decode a base64 pack via `whole_document_operation`) is
     /// unreachable now that `whole_document_operation` is `None`, so `document:in` is simply
     /// unimplemented here — overriding `import_media` shadows the trait's provided body for every port.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
+    async fn import_media(port: &str, media: &semio_framework_plugin::Media, _doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "geometry:in" => {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
@@ -354,13 +359,13 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    fn command_id(command: &Process3dCommand) -> &'static str {
+    async fn command_id(command: &Process3dCommand) -> &'static str {
         command.command_id()
     }
 
     /// 🎯️ Exhaustive host-action bridge into the closed `Process3dCommand` enum. React and wgpu still
     /// emit manifest action ids plus JSON arguments; only this boundary interprets that transport shape.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
         let field = |key: &str| args.and_then(|value| value.get(key));
         let string_field = |key: &str| field(key).and_then(Value::as_str).map(str::to_string);
         let number_field = |key: &str| field(key).and_then(Value::as_f64);
@@ -456,7 +461,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// `"geometry"` domain selection once per dispatch and threads it through `Process3dDispatchCtx`
     /// — the one retained verb that operates ON the selection (`remove_selected_step`) reads it from
     /// there; every other command ignores it (mirrors `📐️cad`'s own `handle`).
-    fn handle(
+    async fn handle(
         command: &Process3dCommand,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
@@ -464,36 +469,36 @@ impl ArtifactEditor for Process3dPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
-        let selection = interaction.selection(PROCESS3D_INTERACTION_DOMAIN);
+        let selection = interaction.selection(PROCESS3D_INTERACTION_DOMAIN).await;
         let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.ids.clone() } };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
     /// 🧮️ process3d exposes no genuinely settings-like sticky defaults — every `Process3dConfig` field
     /// is session-only view state, so this stays at the trait default.
-    fn config_spec() -> semio_framework_plugin::ConfigSpec {
-        semio_framework_plugin::ConfigSpec::empty()
+    async fn config_spec() -> semio_framework_plugin::ConfigSpec {
+        semio_framework_plugin::ConfigSpec::empty().await
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let config = cfg.snapshot;
         let labels = process3d_labels(config);
         let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
         match base_body_key {
-            PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc.snapshot, config),
-            PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels),
-            PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc.snapshot, &config.contributions_json, labels),
-            PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc.snapshot, &config.contributions_json, labels),
-            PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc.snapshot, config, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc.snapshot, config).map(semio_framework_plugin::built_to_component_tree),
+            PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
+            PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc.snapshot, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
+            PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc.snapshot, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
+            PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc.snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    async fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.snapshot, cfg.snapshot, process3d_labels(cfg.snapshot)))])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    async fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot))])
     }
 
@@ -502,8 +507,8 @@ impl ArtifactEditor for Process3dPlayApp {
     /// longer tell whether anything is selected (mirrors `📐️cad`'s own precedent) — always shows
     /// `removeSelectedStep`; it is itself a no-op via `remove_selected_step::handle` when nothing in
     /// the `"geometry"` domain is selected.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        Menu::of(registry).action("addStep").destructive("removeSelectedStep").separator().action("undo").action("redo").build()
+    async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        Menu::of(registry).await.action("addStep").await.destructive("removeSelectedStep").await.separator().await.action("undo").await.action("redo").await.build().await
     }
 }
 //#endregion 🔖️Process3dPlayApp
@@ -626,7 +631,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .keybinding("escape", "engagementAbort")
             .keybinding("delete", "removeSelectedStep")
             .keybinding("backspace", "removeSelectedStep")
-            .config(Process3dPlayApp::config_spec())
+            .config(semio_framework_plugin::resolve_ready(Process3dPlayApp::config_spec()))
             .io(process3d_io())
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
             // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
@@ -827,7 +832,7 @@ fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMach
     }
     let mut catalogs = Vec::new();
     for entry in semio_framework::parse_contributions(contributions_json) {
-        let Some(payload) = entry.topic_contribution.as_ref().filter(|topic| topic.topic == "process.machines").and_then(|topic| semio_framework::io::resolve_ready(topic.decode::<ProcessMachinesTopicPayload>()).ok()) else {
+        let Some(payload) = entry.topic_contribution.as_ref().filter(|topic| topic.topic == "process.machines").and_then(|topic| topic.decode::<ProcessMachinesTopicPayload>().ok()) else {
             continue;
         };
         let (app_id, module_id, label, icon_id, machines_json) = (payload.app_id, payload.module_id, payload.label, payload.icon_id, payload.machines_json);

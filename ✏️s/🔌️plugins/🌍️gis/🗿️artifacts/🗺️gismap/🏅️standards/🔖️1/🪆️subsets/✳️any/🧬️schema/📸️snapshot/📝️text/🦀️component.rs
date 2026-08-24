@@ -12,12 +12,12 @@ use crate::artifacts::gismap::GisMapSnapshot;
 pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.gismap` DSL text into a `GisMapSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<GisMapSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<GisMapSnapshot, store::TextError> {
     <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `GisMapSnapshot` back to `.gismap` DSL text.
-pub async fn print_dsl(document: &GisMapSnapshot) -> String {
+pub fn print_dsl(document: &GisMapSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 

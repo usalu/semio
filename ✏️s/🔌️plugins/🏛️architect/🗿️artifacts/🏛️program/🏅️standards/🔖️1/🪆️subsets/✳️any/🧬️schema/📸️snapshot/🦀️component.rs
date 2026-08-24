@@ -273,3 +273,21 @@ impl store::ArtifactPack for ProgramSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot
+
+//#region 🔖️ExternalBridges
+/// 📖️ Parses `.architect` DSL text with a plain-`String` error, reachable from OUTSIDE this crate —
+/// `store` is a private `extern crate` alias (`📦️glue.rs`), so `store::TextError` cannot be named
+/// by the exhaustive mutation case's test adapter that has to read the committed
+/// `🗣️example.dsl.semio` artifact.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn parse_program_dsl(text: &str) -> Result<ProgramSnapshot, String> {
+    <ProgramSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 🖨️ Prints a [`ProgramSnapshot`] back to `.architect` DSL text under a name an external caller can reach, paired
+/// with [`parse_program_dsl`].
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn print_program_dsl(snapshot: &ProgramSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+//#endregion 🔖️ExternalBridges

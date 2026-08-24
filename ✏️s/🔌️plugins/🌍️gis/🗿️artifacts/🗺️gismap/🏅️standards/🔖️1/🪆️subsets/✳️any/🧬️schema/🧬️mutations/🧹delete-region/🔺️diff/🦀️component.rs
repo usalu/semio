@@ -7,7 +7,7 @@ use crate::artifacts::gismap::GisMapSnapshot;
 /// 🔺️ Builds the sparse `regions` delta directly from the payload — a single `removed` id — real
 /// handcrafted construction, never apply-then-capture, never a snapshot clone. Error
 /// `target-missing` when `id` doesn't name a region.
-pub async fn diff(payload: &DeleteRegion, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+pub fn diff(payload: &DeleteRegion, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
     if !base.regions.iter().any(|feature| feature.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Region \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

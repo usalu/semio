@@ -1288,6 +1288,7 @@ pub struct World3dState {
     snapshot_lease: Option<World3dSnapshotLease>,
     snapshot_apply: Option<World3dSnapshotApplyCursor>,
     snapshot_fault: Option<World3dSnapshotFault>,
+    prepared_status: [Option<World3dPreparedStatus>; 2],
     dynamic_blocked_owner: Option<WorldOpaqueOwner>,
     dynamic_mesh_close: Option<WorldDynamicEntry<Mesh3dLease>>,
     dynamic_blocked_mesh: Option<WorldDynamicEntry<Mesh3dLease>>,
@@ -1403,6 +1404,7 @@ impl World3dState {
             snapshot_lease: None,
             snapshot_apply: None,
             snapshot_fault: None,
+            prepared_status: [None; 2],
             dynamic_blocked_owner: None,
             dynamic_mesh_close: None,
             dynamic_blocked_mesh: None,
@@ -8738,6 +8740,32 @@ fn retire_world_pixels(state: &mut World3dState, id: &str, paint: bool) -> bool 
     }
 }
 
+const WORLD3D_PREPARED_STATUS_BYTES: usize = 192;
+
+#[derive(Clone, Copy)]
+struct World3dPreparedStatus {
+    bytes: [u8; WORLD3D_PREPARED_STATUS_BYTES],
+    len: u8,
+    progress: [f64; 3],
+    total: u32,
+    state: u32,
+}
+
+impl World3dPreparedStatus {
+    fn from_parts(text: &str, progress: [f64; 3], total: u32, state: u32) -> Option<Self> {
+        if text.len() > WORLD3D_PREPARED_STATUS_BYTES {
+            return None;
+        }
+        let mut bytes = [0; WORLD3D_PREPARED_STATUS_BYTES];
+        bytes[..text.len()].copy_from_slice(text.as_bytes());
+        Some(Self { bytes, len: text.len() as u8, progress, total, state })
+    }
+
+    fn text(&self) -> Option<&str> {
+        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).ok()
+    }
+}
+
 struct World3dSnapshotApplyCursor {
     lease: World3dSnapshotLease,
     page: u16,
@@ -8745,11 +8773,12 @@ struct World3dSnapshotApplyCursor {
     staged_orbit: Option<OrbitController>,
     draw_started: bool,
     faulted: bool,
+    status: [Option<World3dPreparedStatus>; 2],
 }
 
 impl World3dSnapshotApplyCursor {
     fn new(lease: World3dSnapshotLease) -> Self {
-        Self { lease, page: 0, item: 0, staged_orbit: None, draw_started: false, faulted: false }
+        Self { lease, page: 0, item: 0, staged_orbit: None, draw_started: false, faulted: false, status: [None; 2] }
     }
 
     fn close_step(&mut self) -> bool {
@@ -8794,6 +8823,7 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
         }
         state.interaction_revision = cursor.lease.revision;
         state.snapshot_lease = Some(cursor.lease);
+        state.prepared_status = cursor.status;
         state.snapshot_fault = None;
         context.consume_fuel(1);
         return World3dSnapshotApplyStep::Complete;
@@ -8802,9 +8832,13 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
         let item_count = page.item_count();
         let item = page.item(usize::from(cursor.item)).copied();
         let id = item.and_then(|item| item.strings[0]).and_then(|span| page.string(span)).map(str::to_owned);
-        (page.kind(), item_count, item, id)
+        let status = item.and_then(|item| {
+            let text = item.strings[1].and_then(|span| page.string(span))?;
+            World3dPreparedStatus::from_parts(text, [item.numbers[0], item.numbers[1], item.numbers[2]], item.indexes[0], item.indexes[1])
+        });
+        (page.kind(), item_count, item, id, status)
     });
-    let (kind, item_count, item, id) = match resolved {
+    let (kind, item_count, item, id, status) = match resolved {
         Ok(resolved) => resolved,
         Err(fault) => {
             state.snapshot_fault = Some(fault);
@@ -8887,6 +8921,40 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             cursor.faulted = true;
             state.snapshot_apply = Some(cursor);
             return World3dSnapshotApplyStep::Fault;
+        }
+        World3dSnapshotPageKind::Status if (10..=14).contains(&item.flags) && item.number_len >= 14 && cursor.draw_started => {
+            let Some(id) = id.as_deref() else {
+                state.snapshot_fault = Some(World3dSnapshotFault::PageState);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            };
+            let vector = [item.numbers[0], item.numbers[1], item.numbers[2]];
+            let magnitude = (vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]).sqrt().max(item.numbers[3].abs()).max(1.0e-6) as f32;
+            let position = [item.numbers[11] as f32, item.numbers[12] as f32, item.numbers[13] as f32];
+            let color = match item.flags {
+                10 => [0.957, 0.447, 0.714, 1.0],
+                11 => [0.918, 0.702, 0.031, 1.0],
+                12 => [0.984, 0.443, 0.522, 1.0],
+                13 => [0.133, 0.827, 0.933, 1.0],
+                _ => [0.655, 0.545, 0.98, 1.0],
+            };
+            let model = Instance3d::model_from_trs(position, [0.0, 0.0, 0.0, 1.0], [0.025, 0.025, magnitude.min(1.0)]);
+            if world3d_draw_rebuild_admit_instance(state, 0, id, model, color, false, false).is_err() {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            }
+        }
+        World3dSnapshotPageKind::Status if item.flags == 20 && item.number_len >= 3 && item.index_len >= 2 => {
+            let Some(status) = status else {
+                state.snapshot_fault = Some(World3dSnapshotFault::PageState);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            };
+            cursor.status[usize::from(id.as_deref() == Some("de"))] = Some(status);
         }
         _ => {}
     }
@@ -9327,6 +9395,18 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         paint_selection_marquee(ctx.draw, theme, crossing, state.selection_method == "lasso", &state.marquee_points, false);
     }
     gizmo::paint_orbit_view_gizmo(ctx, &camera, inner, state.gizmo_hovered_tip);
+    for (index, status) in state.prepared_status.iter().flatten().enumerate() {
+        if let Some(text) = status.text() {
+            let y = inner.y + 20.0 + index as f32 * (theme.font_size_small + 6.0);
+            draw_text(ctx, text, inner.x + 12.0, y, theme.font_size_small, theme.text);
+        }
+    }
+    if let Some(status) = state.prepared_status[0] {
+        let total = f64::from(status.total).max(1.0);
+        let ratio = (status.progress[2].min(total) / total) as f32;
+        let tone = if status.state == 6 { theme.text } else { theme.text_element };
+        ctx.draw.push_solid([inner.x + 12.0, inner.y + 54.0, 160.0 * ratio, 3.0], tone);
+    }
     if scene.world_3d.is_none() {
         draw_text(ctx, "world-3d (empty)", inner.x + 12.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
     }

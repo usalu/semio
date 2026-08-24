@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here. `s.note.note` is a semio-NATIVE artifact persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs; no third party reads or writes either, so no oracle is registered — see noOracleDecisions below.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "note-document-mutation-semantics",
+      "capabilities": [
+        "note-1-mutate"
+      ],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none could be authoritative over `NoteMutation` in any case: the 33 kinds ARE this subset's specification — 9 document-root scalars (the title plus the eight grid/snap/tool settings), 3 id-keyed image-asset kinds, and 21 kinds over an id-keyed, z-ordered, group-NESTABLE block tree whose leaves carry four different typed contents (text, math, ink strokes and tables). No external reader has a model of that tree to check ours against. What stands in its place is the committed, independently handcrafted `(before, mutation, after, diff, outcome)` specification vector under each of the 33 `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves — every one of which moves the document, which is not true of any other artifact covered in this wave — plus the inverse law as a metamorphic property: applying a kind and then its OWN computed inverse must restore the exact pre-mutation vector, POSITION in the block tree included and not merely membership.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "note-1-any",
+      "capability": "note-1-mutate",
+      "kinds": [
+        "rename-note",
+        "change-grid-visible",
+        "change-grid-spacing",
+        "change-grid-subdivisions",
+        "change-grid-opacity",
+        "change-snap-enabled",
+        "change-snap-grid-spacing",
+        "change-pencil-width",
+        "change-eraser-radius",
+        "create-asset",
+        "replace-asset-payload",
+        "delete-asset",
+        "create-block",
+        "delete-block",
+        "delete-blocks",
+        "duplicate-block",
+        "duplicate-blocks",
+        "move-block-to-container",
+        "drag-blocks",
+        "rename-block",
+        "change-block-visible",
+        "change-block-locked",
+        "move-block",
+        "resize-block",
+        "change-block-font-size",
+        "edit-block-text",
+        "edit-block-math",
+        "change-block-ink-width",
+        "edit-block-ink-stroke",
+        "insert-table-row",
+        "remove-table-row",
+        "insert-table-column",
+        "remove-table-column"
+      ]
+    }
+  ]
+}

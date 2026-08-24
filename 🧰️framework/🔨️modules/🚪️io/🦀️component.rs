@@ -2576,7 +2576,7 @@ pub mod io_mechanism {
         for entry in &best {
             hops.push(descriptor_of(entry));
         }
-        Ok(IoOutcome::clean(IoRoute { hops, fidelity }).await)
+        Ok(IoOutcome::clean(IoRoute { hops, fidelity }))
     }
 
     /// 🌉️ `resolve_route` against the process-wide registry.
@@ -2660,7 +2660,7 @@ pub mod io_mechanism {
     /// `fn` pointer parameter threaded through a closure, which `IoEntry.run`'s bare-`fn`-pointer
     /// field cannot capture anyway. This is the smallest constructor shape that keeps a plugin from
     /// ever hand-writing an `IoEntry` literal while never leaking pack/DSL encoding into its code.
-    pub async fn serializer_entry<S: store::ArtifactPack, T: Serializer<S>>(own: Dialect) -> IoEntry {
+    pub fn serializer_entry<S: store::ArtifactPack, T: Serializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — `IoEntry.run` is a bare, non-capturing `fn` pointer;
         // `Serializer::serialize` stays `async fn` (a real trait method) and this thunk drives it
         // to completion synchronously via `resolve_ready` (io-async-signatures already documents
@@ -2678,7 +2678,7 @@ pub mod io_mechanism {
     /// 🎹️ `serializer_entry`'s twin for a DSL-text-native `S` (`store::ArtifactDsl` instead of
     /// `store::ArtifactPack`) — together the smallest constructor pair covering both halves of the
     /// payload law's native encoding (pack XOR DSL).
-    pub async fn serializer_entry_text<S: store::ArtifactDsl, T: Serializer<S>>(own: Dialect) -> IoEntry {
+    pub fn serializer_entry_text<S: store::ArtifactDsl, T: Serializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — see `serializer_entry`'s twin above.
         fn run<S: store::ArtifactDsl, T: Serializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
             let IoPayload::Text(text) = payload else {
@@ -2701,7 +2701,7 @@ pub mod io_mechanism {
     /// `T::CONFORMANCE` (D5's `SubsetValidator` replacement) after a successful deserialize,
     /// folding its diagnostics into the returned `IoOutcome` — `conformance_runs_after_deserialize`
     /// below proves the diagnostics reach the caller.
-    pub async fn deserializer_entry<S: store::ArtifactPack, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+    pub fn deserializer_entry<S: store::ArtifactPack, T: Deserializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — see `serializer_entry`'s twin above; `T::CONFORMANCE` is
         // already a plain `fn(&S) -> Vec<Diagnostic>` (never async, see `Deserializer`'s own doc
         // comment) so it needs no `resolve_ready` wrapping, only `T::deserialize`.
@@ -2717,7 +2717,7 @@ pub mod io_mechanism {
     }
 
     /// 🎹️ `deserializer_entry`'s twin for a DSL-text-native `S`.
-    pub async fn deserializer_entry_text<S: store::ArtifactDsl, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+    pub fn deserializer_entry_text<S: store::ArtifactDsl, T: Deserializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — see `deserializer_entry` above.
         fn run<S: store::ArtifactDsl, T: Deserializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
             let outcome = super::resolve_ready(T::deserialize(payload))?;
@@ -2752,7 +2752,7 @@ pub mod io_mechanism {
         // never suspends, so it needs no `resolve_ready` wrapping either.
         #[allow(clippy::unnecessary_wraps, reason = "IoEntry test doubles must implement its fallible function-pointer contract")]
         fn passthrough(payload: &IoPayload) -> IoResult<IoPayload> {
-            Ok(super::super::resolve_ready(IoOutcome::clean(payload.clone())))
+            Ok(IoOutcome::clean(payload.clone()))
         }
 
         async fn key(from: Dialect, into: Dialect) -> EntryKey {
@@ -2880,7 +2880,7 @@ pub mod io_mechanism {
                     return Err(IoError { message: "expected text payload".to_string(), diagnostics: Vec::new() });
                 };
                 let value: serde_json::Value = serde_json::from_str(text).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?;
-                Ok(IoOutcome::clean(value).await)
+                Ok(IoOutcome::clean(value))
             }
         }
 
@@ -2897,7 +2897,7 @@ pub mod io_mechanism {
 
         #[semio_framework_async_macros::async_test]
         async fn conformance_runs_after_deserialize() {
-            let entry = deserializer_entry::<serde_json::Value, JsonDeserializer>(A).await;
+            let entry = deserializer_entry::<serde_json::Value, JsonDeserializer>(A);
 
             let conforming = (entry.run)(&IoPayload::Text("{}".to_string())).expect("an empty object deserializes cleanly");
             assert!(conforming.diagnostics.is_empty(), "an object payload has no conformance diagnostics");

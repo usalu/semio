@@ -81,7 +81,7 @@ pub type GisMapValueChild = store::ArtifactChild<SemioValueSnapshot>;
 /// 🕸️ Deterministic content-addressed CHILD handle for the map's composed drawing — same
 /// `(child_id, target)` for identical `content_key`, a different pair once the features actually
 /// change. Mirrors `🏔️gisterrain`'s `gis_terrain_mesh_child_handle`/`💠️lowpoly`'s `mesh_child_handle`.
-pub async fn gis_map_drawing_child_handle(content_key: &str) -> GisMapDrawingChild {
+pub fn gis_map_drawing_child_handle(content_key: &str) -> GisMapDrawingChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_key.hash(&mut hasher);
@@ -94,7 +94,7 @@ pub async fn gis_map_drawing_child_handle(content_key: &str) -> GisMapDrawingChi
 
 /// 🕸️ Deterministic content-addressed CHILD handle for the map's composed value graph — same
 /// hashing/dialect shape as `gis_map_drawing_child_handle`, targeting `s.stdio.semio.value` instead.
-pub async fn gis_map_value_child_handle(content_key: &str) -> GisMapValueChild {
+pub fn gis_map_value_child_handle(content_key: &str) -> GisMapValueChild {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_key.hash(&mut hasher);
@@ -110,7 +110,7 @@ pub async fn gis_map_value_child_handle(content_key: &str) -> GisMapValueChild {
 /// mirrors stdio's own `semio_value_from_json` for its `json` artifact, written locally here since
 /// that one converts stdio's OWN `JsonValue` AST, not `serde_json::Value`, and gis already speaks
 /// `serde_json::Value` everywhere else in this file).
-pub async fn semio_value_from_serde_json(value: &serde_json::Value) -> SemioValue {
+pub fn semio_value_from_serde_json(value: &serde_json::Value) -> SemioValue {
     match value {
         serde_json::Value::Null => SemioValue::Null,
         serde_json::Value::Bool(value) => SemioValue::Bool { value: *value },
@@ -132,7 +132,7 @@ pub async fn semio_value_from_serde_json(value: &serde_json::Value) -> SemioValu
 /// (this format's graph-reference variant) never appears in content this bridge itself produces —
 /// resolved defensively to `Null` rather than panicking, matching the honesty convention this
 /// ticket's other converters use for out-of-scope input shapes.
-pub async fn serde_json_from_semio_value(value: &SemioValue) -> serde_json::Value {
+pub fn serde_json_from_semio_value(value: &SemioValue) -> serde_json::Value {
     match value {
         SemioValue::Null => serde_json::Value::Null,
         SemioValue::Bool { value } => serde_json::Value::Bool(*value),
@@ -147,14 +147,14 @@ pub async fn serde_json_from_semio_value(value: &SemioValue) -> serde_json::Valu
 
 /// 🌉️ Builds the map's composed `value` child content — the lossless `{positions,routes,regions}`
 /// descriptor JSON (`gis_map_descriptor_json`) lifted into a real `SemioValueSnapshot` graph.
-pub async fn gis_map_value_from_descriptor_json(descriptor_json: &str) -> SemioValueSnapshot {
+pub fn gis_map_value_from_descriptor_json(descriptor_json: &str) -> SemioValueSnapshot {
     let value: serde_json::Value = serde_json::from_str(descriptor_json).unwrap_or(serde_json::Value::Null);
     SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_serde_json(&value), nodes: Vec::new() }
 }
 
 /// 🌉️ The exact inverse of `gis_map_value_from_descriptor_json` — recovers the descriptor JSON a
 /// `value` child's content actually carries.
-pub async fn gis_map_descriptor_json_from_value(value: &SemioValueSnapshot) -> String {
+pub fn gis_map_descriptor_json_from_value(value: &SemioValueSnapshot) -> String {
     serde_json_from_semio_value(&value.root).to_string()
 }
 
@@ -163,7 +163,7 @@ pub async fn gis_map_descriptor_json_from_value(value: &SemioValueSnapshot) -> S
 /// what they actually describe (`image` stays `None`, honestly — see this region's own doc comment).
 /// Uses the SAME `gis_map_content_key` hash basis `GisMapSnapshot::default()` uses (`📸️snapshot/🦀️component.rs`)
 /// so two paths building an identical empty/edited document always converge on the identical handles.
-pub async fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> GisMapSnapshot {
+pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> GisMapSnapshot {
     let content_key = crate::artifacts::gismap::schema::snapshot::gis_map_content_key(&document.positions, &document.routes, &document.regions);
     document.drawing = gis_map_drawing_child_handle(&content_key);
     document.value = gis_map_value_child_handle(&content_key);

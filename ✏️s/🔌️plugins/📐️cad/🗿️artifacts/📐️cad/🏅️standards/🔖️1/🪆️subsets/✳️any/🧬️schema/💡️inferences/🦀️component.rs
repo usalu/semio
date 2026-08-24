@@ -28,19 +28,19 @@ pub struct CadInference {
 }
 
 impl protocol::Inference<CadSnapshot> for CadInference {
-    async fn infer(snapshot: &CadSnapshot) -> Self {
+    fn infer(snapshot: &CadSnapshot) -> Self {
         Self { object_count: object_count(snapshot), vertex_count: vertex_count(snapshot), bounds: scene_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<CadSnapshot> for CadInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.cad.cad.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.cad.cad.inference.objectCount", reads: &["shapeModel", "buildingModel", "energyModel", "structureClassicModel"] },
             protocol::InferenceFieldSpec { id: "s.cad.cad.inference.vertexCount", reads: &["shapeModel", "buildingModel", "energyModel", "structureClassicModel"] },
@@ -60,7 +60,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::cad::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.cad.cad.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `cad_artifact_schema_descriptor`'s registration.
-pub async fn cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.cad.cad.inference",
         inference: schema::FacetLeaves {
@@ -187,17 +187,17 @@ mod derive_transformation {
     }
 
     /// @emoji 📍️ Face centroid via tessellated triangle area weighting (premigration `faceCentroid` equivalent).
-    pub async fn face_centroid_sync(kernel: &Brep, face: &GeometryHandle) -> Option<Vec3> {
+    pub fn face_centroid_sync(kernel: &Brep, face: &GeometryHandle) -> Option<Vec3> {
         face_mesh_analytics(kernel, face).map(|(centroid, _)| centroid)
     }
 
     /// @emoji 🧭️ Face outward normal from tessellated triangle winding.
-    pub async fn face_normal_sync(kernel: &Brep, face: &GeometryHandle) -> Option<Vec3> {
+    pub fn face_normal_sync(kernel: &Brep, face: &GeometryHandle) -> Option<Vec3> {
         face_mesh_analytics(kernel, face).map(|(_, normal)| normal)
     }
 
     /// @emoji 🗂️ Groups coplanar faces by dominant axis, sign, and quantized centroid (premigration `facePlaneGroupKey`).
-    pub async fn face_plane_group_key(normal: Vec3, centroid: Vec3) -> String {
+    pub fn face_plane_group_key(normal: Vec3, centroid: Vec3) -> String {
         let [nx, ny, nz] = normal;
         let abs = [nx.abs(), ny.abs(), nz.abs()];
         let (dominant, sign) = if abs[0] >= abs[1] && abs[0] >= abs[2] {
@@ -275,7 +275,7 @@ mod derive_transformation {
 
     //#region 🔖️SolidConstruction
     /// @emoji 📦️ Builds or reuses a kernel solid for a CAD object.
-    pub(crate) async fn solid_for_object(kernel: &mut Brep, object: &CadObject) -> Option<GeometryHandle> {
+    pub(crate) fn solid_for_object(kernel: &mut Brep, object: &CadObject) -> Option<GeometryHandle> {
         if let Some(handle) = object.solid_handle.as_ref() {
             if kernel.kind(&GeometryHandle(handle.clone())).is_ok() {
                 return Some(GeometryHandle(handle.clone()));
@@ -289,7 +289,7 @@ mod derive_transformation {
     }
 
     /// @emoji 📦️ Builds a kernel solid sized from extent without mutating the object.
-    pub async fn build_solid_for_typology(kernel: &mut Brep, typology: &str, extent: [f64; 3]) -> Option<GeometryHandle> {
+    pub fn build_solid_for_typology(kernel: &mut Brep, typology: &str, extent: [f64; 3]) -> Option<GeometryHandle> {
         let [ex, ey, ez] = extent;
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         if typology.contains("column") {
@@ -327,7 +327,7 @@ mod derive_transformation {
 
     /// @emoji 🔄️ Derives energy objects from shape-pane solids via fuse + face classification.
     #[cfg(test)]
-    pub(crate) async fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
+    pub(crate) fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
         let solids: Vec<GeometryHandle> = source_objects.iter().filter_map(|object| solid_for_object(kernel, object)).collect();
         if solids.is_empty() {
             return Vec::new();
@@ -446,7 +446,7 @@ mod derive_transformation {
 
     /// @emoji 🔄️ Maps building typologies to structure-classic equivalents (premigration `from_building` applier).
     #[cfg(test)]
-    pub(crate) async fn apply_from_building(source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
+    pub(crate) fn apply_from_building(source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
         let mut counts: HashMap<&str, usize> = HashMap::new();
         source_objects
             .iter()
@@ -475,7 +475,7 @@ mod derive_transformation {
 
     /// @emoji 🔄️ Filters source objects to whitelisted typologies (premigration `applyTransformationFallback`).
     #[cfg(test)]
-    pub(crate) async fn apply_typology_fallback(source_objects: &[CadObject], typologies: &[&str], id_seed: &str) -> Vec<CadObject> {
+    pub(crate) fn apply_typology_fallback(source_objects: &[CadObject], typologies: &[&str], id_seed: &str) -> Vec<CadObject> {
         source_objects
             .iter()
             .enumerate()
@@ -497,7 +497,7 @@ mod derive_transformation {
             .collect()
     }
 
-    pub async fn energy_typologies() -> &'static [&'static str] {
+    pub fn energy_typologies() -> &'static [&'static str] {
         ENERGY_TYPOLOGIES
     }
     //#endregion 🔖️DeriveEngine
@@ -571,7 +571,7 @@ mod construct_query {
 
     impl<'a> CadTopologyGraph<'a> {
         #[cfg(test)]
-        pub(crate) async fn new(geometry: &'a CadGeometry) -> Self {
+        pub(crate) fn new(geometry: &'a CadGeometry) -> Self {
             Self { geometry }
         }
     }
@@ -678,7 +678,7 @@ mod construct_query {
     /// non-manifold-edge checks, adjacency lookups), reusing `graph::dsl::run_query_json`
     /// unchanged.
     #[cfg(test)]
-    pub(crate) async fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, graph::dsl::GraphDslError> {
+    pub(crate) fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, graph::dsl::GraphDslError> {
         let graph = CadTopologyGraph::new(geometry);
         graph::dsl::run_query_json(&graph, source)
     }
@@ -820,7 +820,7 @@ mod scene_compute {
     /// exact ambient-reach anti-pattern the ticket exists to remove even though it was write-once).
     /// Every call site already builds, uses and drops its handles within the one call that owns
     /// this kernel, so no cross-call registry was ever load-bearing.
-    pub async fn cad_brep_kernel() -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep {
+    pub fn cad_brep_kernel() -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep {
         semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep::new()
     }
 
@@ -872,7 +872,7 @@ mod scene_compute {
     }
 
     /// @emoji 📐️ Shifts a tessellated mesh onto the authored fixture primitive centroid when kernel output drifts.
-    pub(crate) async fn align_mesh_to_fixture_centroid(mesh: &mut MeshData, geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) {
+    pub(crate) fn align_mesh_to_fixture_centroid(mesh: &mut MeshData, geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) {
         let Some(target) = centroid_from_fixture_primitives(geometry, primitives) else {
             return;
         };
@@ -908,7 +908,7 @@ mod scene_compute {
     }
 
     /// @emoji 🗃️ Reads one pane's objects and geometry from the shared quad fixture.
-    pub(crate) async fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
+    pub(crate) fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
         let Ok(root) = serde_json::from_str::<Value>(source_json) else {
             return (Vec::new(), CadGeometry::default());
         };
@@ -925,7 +925,7 @@ mod scene_compute {
     /// `CadPaneId` rather than a raw fixture index — the real, non-stub object+geometry source
     /// `crate::editor::cad::forest_working_scene` (the app layer's `CadWorkingScene` test/render
     /// fixture) builds each pane from.
-    pub(crate) async fn forest_pane_bundle(pane: CadPaneId) -> (Vec<CadObject>, CadGeometry) {
+    pub(crate) fn forest_pane_bundle(pane: CadPaneId) -> (Vec<CadObject>, CadGeometry) {
         let model_index = match pane {
             CadPaneId::Shape => CAD_MODEL_INDEX_SHAPE,
             CadPaneId::Building => CAD_MODEL_INDEX_BUILDING,
@@ -958,7 +958,7 @@ mod scene_compute {
             .collect()
     }
 
-    pub async fn typology_mesh_kind(typology: &str) -> &'static str {
+    pub fn typology_mesh_kind(typology: &str) -> &'static str {
         match typology {
             "building.building.column" | "structure.structure.reinforcedconcretecolumn" | "aec.building.column" => "cylinder",
             _ => "box",
@@ -972,7 +972,7 @@ mod scene_compute {
     /// wants the placeholder box back mints a `SemioModelSnapshot` child (via `model_element_from_solid_handle`-
     /// style construction) and dispatches `create-shape-model` against the result. Documented gap,
     /// not silently dropped.
-    pub async fn default_document() -> CadSnapshot {
+    pub fn default_document() -> CadSnapshot {
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
             id: "cad".into(),
@@ -1015,12 +1015,12 @@ mod scene_compute {
     /// @emoji 🌲️ The Concrete Forest Left example projection — a bare `CadSnapshot` (no runtime/history),
     /// wrapped into a `ArtifactStore` by `VcsArtifactApp` when spawned. Cached so manifest registration,
     /// `initial_snapshot`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
-    pub async fn forest_play_scene() -> CadSnapshot {
+    pub fn forest_play_scene() -> CadSnapshot {
         static FOREST_PLAY_SCENE: OnceLock<CadSnapshot> = OnceLock::new();
         FOREST_PLAY_SCENE.get_or_init(|| forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT)).clone()
     }
 
-    pub async fn next_cad_id(prefix: &str) -> String {
+    pub fn next_cad_id(prefix: &str) -> String {
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         let next = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         format!("{prefix}-{next}")
@@ -1029,13 +1029,13 @@ mod scene_compute {
     /// 🌲️ The initial per-pane camera for the Concrete Forest Left example — session-only runtime state
     /// now (camera moved off `CadSnapshot`), matching the pose the document used to carry before the
     /// camera-as-View-action refactor.
-    pub async fn forest_play_camera() -> CadCamera {
+    pub fn forest_play_camera() -> CadCamera {
         CadCamera { position: [12.0, -12.0, 8.0], target: [5.4, 2.34, 1.5], zoom: 1.0, fov: 50.0, projection: CadProjectionDsl::default() }
     }
 
     /// 📐️ Converts `camera.projection`'s local DSL twin into the shared taxonomy config — field-for-field,
     /// since `CadProjectionDsl` mirrors `WorldProjectionConfig` exactly (see its doc comment in `cad/rs`).
-    pub async fn cad_camera_projection_config(camera: &CadCamera) -> WorldProjectionConfig {
+    pub fn cad_camera_projection_config(camera: &CadCamera) -> WorldProjectionConfig {
         let p = &camera.projection;
         WorldProjectionConfig {
             kind: p.kind.clone(),
@@ -1057,7 +1057,7 @@ mod scene_compute {
     }
 
     /// 📐️ Writes a taxonomy config back into `camera.projection`'s local DSL twin slot.
-    pub async fn cad_camera_set_projection_config(camera: &mut CadCamera, config: &WorldProjectionConfig) {
+    pub fn cad_camera_set_projection_config(camera: &mut CadCamera, config: &WorldProjectionConfig) {
         camera.projection = CadProjectionDsl {
             kind: config.kind.clone(),
             orthographic_view: config.orthographic_view.clone(),
@@ -1078,7 +1078,7 @@ mod scene_compute {
     }
 
     /// 📐️ Distance from `camera.position` to `camera.target`, defaulting to the historic orbit radius when degenerate.
-    pub async fn cad_camera_distance(camera: &CadCamera) -> f64 {
+    pub fn cad_camera_distance(camera: &CadCamera) -> f64 {
         let [dx, dy, dz] = [camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]];
         let distance = (dx * dx + dy * dy + dz * dz).sqrt();
         if distance > 1e-3 {
@@ -1088,7 +1088,7 @@ mod scene_compute {
         }
     }
 
-    pub(crate) async fn ensure_object_solid_handle(kernel: &mut Brep, object: &mut CadObject) {
+    pub(crate) fn ensure_object_solid_handle(kernel: &mut Brep, object: &mut CadObject) {
         if object.solid_handle.is_some() {
             return;
         }
@@ -1101,15 +1101,15 @@ mod scene_compute {
         }
     }
 
-    pub(crate) async fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
+    pub(crate) fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
         object.mesh_url.as_ref().filter(|url| !url.is_empty()).cloned()
     }
 
-    pub(crate) async fn primary_primitive_kind(object: &CadObject) -> &str {
+    pub(crate) fn primary_primitive_kind(object: &CadObject) -> &str {
         object.primitives.first().map_or("solid", |primitive| primitive.kind.as_str())
     }
 
-    pub(crate) async fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
+    pub(crate) fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
         let kind = primary_primitive_kind(object);
         {
             let mut kernel = cad_brep_kernel();
@@ -1125,7 +1125,7 @@ mod scene_compute {
         typology_brep_mesh(&object.typology, object.extent, object.solid_handle.as_deref(), centroid)
     }
 
-    pub(crate) async fn collect_mesh_urls(objects: &[CadObject]) -> Vec<String> {
+    pub(crate) fn collect_mesh_urls(objects: &[CadObject]) -> Vec<String> {
         let mut urls = HashSet::new();
         for object in objects {
             if let Some(url) = resolve_object_mesh_url(object) {
@@ -1135,7 +1135,7 @@ mod scene_compute {
         urls.into_iter().collect()
     }
 
-    pub(crate) async fn object_scale_json(object: &CadObject) -> [f64; 3] {
+    pub(crate) fn object_scale_json(object: &CadObject) -> [f64; 3] {
         object.scale.unwrap_or([1.0, 1.0, 1.0])
     }
 
@@ -1148,7 +1148,7 @@ mod scene_compute {
     /// to the default box typology unconditionally. Documented reduced-fidelity gap, not silently
     /// wrong: `document`'s model-child handles are available via `crate::artifacts::cad::
     /// cad_pane_model` for a caller that has ALSO resolved the child content and wants to do better.
-    pub async fn export_mesh_from_scene(document: &CadSnapshot) -> MeshData {
+    pub fn export_mesh_from_scene(document: &CadSnapshot) -> MeshData {
         let _ = document;
         typology_brep_mesh("spatial.shape.primitive.box", None, None, None)
     }
@@ -1176,7 +1176,7 @@ mod scene_compute {
     }
 
     /// 🧩️ Validates host-pushed `CadComputer` contributions for `cad-play` (implementations register in cad-js).
-    pub async fn validate_cad_computer_contributions(contributions_json: &str) {
+    pub fn validate_cad_computer_contributions(contributions_json: &str) {
         for entry in parse_contributions(contributions_json) {
             let Some((app_id, module_id, computers_json)) = cad_computer_fields(&entry) else {
                 continue;

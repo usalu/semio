@@ -27,19 +27,19 @@ pub struct ReplaceStepMeasure {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceStepMeasure {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "step", kind: "replace-step-measure", record: "ReplacedStepMeasure" };
 
-    async fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::replace_step_measure::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
         crate::artifacts::process3d::mutations::replace_step_measure::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace measure of step \"{}\"", self.id)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -4,7 +4,7 @@ use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &ChangeReferenceHidden, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &ChangeReferenceHidden, base: &CadSnapshot) -> Vec<CadMutation> {
     base.references_by_model_definition_id
         .get(&payload.model_definition_id)
         .and_then(|references| references.iter().find(|reference| reference.id == payload.reference_id))

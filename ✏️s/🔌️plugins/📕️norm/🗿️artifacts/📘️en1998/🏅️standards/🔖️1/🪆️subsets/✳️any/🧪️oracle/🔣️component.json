@@ -1,0 +1,76 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here rather than in a shared manifest. `en1998-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../🧬️schema/🧬️mutations/🦀️component.rs` fails the moment this list and the enum part company.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "en1998-1-mutation-semantics",
+      "capabilities": [
+        "en1998-1-mutate"
+      ],
+      "rationale": "`s.norm.en1998` is a semio-NATIVE artifact: the document is this repository's own `.dsl.semio`/`.pack.semio` envelope over a EN 1998 — design of structures for earthquake resistance model, and no third-party library — in any ecosystem — reads or writes it, let alone one that could be authoritative over this subset's `En1998Mutation` vocabulary. That vocabulary IS this subset's own specification (derived from `En1998Snapshot`'s shape by `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️derivation-rules.md`), not a fact an external implementation could confirm or refute; a crate that parsed EN 1998 data from some other interchange format would be judging a different document. Registering a weak or tangential crate here would be worse than registering none. Confidence comes instead from the 49 committed, independently handcrafted per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff, outcome)` quintet per kind, already unit-tested inside the production crate itself — re-exercised end to end here through `apply_en1998_mutation`, plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation document.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "en1998-1-any",
+      "capability": "en1998-1-mutate",
+      "kinds": [
+        "change-seismic-zone",
+        "change-ground-type",
+        "change-importance-class",
+        "change-structural-system",
+        "change-t1-s",
+        "change-mass-t",
+        "change-v-rd-kn",
+        "change-drift-mm",
+        "change-height-m",
+        "change-multiple-resisting-systems",
+        "change-annex",
+        "change-en-a-gr",
+        "change-en-ground-type",
+        "change-en-spectrum-type",
+        "change-period-ratio",
+        "change-bridge-v-rd-kn",
+        "change-bearing-d-ed-mm",
+        "change-bearing-d-rd-mm",
+        "change-retrofit-knowledge-level",
+        "change-retrofit-limit-state",
+        "change-retrofit-ed-kn",
+        "change-retrofit-rk-kn",
+        "change-retrofit-gamma-el",
+        "change-silo-height-m",
+        "change-silo-radius-m",
+        "change-silo-n-rd-kn",
+        "change-silo-v-ed-kn",
+        "change-silo-v-rd-kn",
+        "change-silo-q-nominal",
+        "change-tank-height-m",
+        "change-tank-radius-m",
+        "change-tank-mass-t",
+        "change-tank-v-rd-kn",
+        "change-tower-m-ed-knm",
+        "change-tower-m-rd-knm",
+        "change-tower-is-chimney",
+        "change-tower-q-nominal",
+        "change-tower-mass-t",
+        "change-foundation-area-m2",
+        "change-foundation-p-rd-kpa",
+        "change-foundation-h-ed-kn",
+        "change-foundation-h-rd-kn",
+        "change-k-foundation",
+        "change-k-soil",
+        "change-wall-height-m",
+        "change-wall-phi-deg",
+        "change-wall-soil-gamma-kn-m3",
+        "change-wall-r",
+        "change-wall-h-rd-kn"
+      ]
+    }
+  ]
+}

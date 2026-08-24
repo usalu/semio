@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `s.gis.gismap` carries three parallel id-keyed, order-meaningful `MapFeature` collections whose payloads are opaque `dsl::DslValue`s, and two derived composed children content-addressed off all three. Semio-NATIVE, no oracle; GeoJSON and GDAL were surveyed and declined for the reasons recorded below.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "gismap-mutation-semantics",
+      "capabilities": [
+        "gismap-1-mutate"
+      ],
+      "rationale": "`s.gis.gismap` is a semio-NATIVE artifact and no third party reads `.dsl.semio`. The obvious candidates were surveyed and DECLINED rather than merely absent. `geojson` and `geo` model a FeatureCollection, which is the nearest foreign shape, but three properties this vocabulary rests on have no GeoJSON counterpart: a `MapFeature` is addressed by a stable `id` (GeoJSON's `id` is optional and carries no uniqueness rule), member ORDER is meaningful here and `reorder-positions`/`reorder-routes`/`reorder-regions` address it explicitly (a FeatureCollection's array order is not semantic), and a feature's payload is an opaque `dsl::DslValue` this artifact never interprets, so `replace-position-data` swaps a whole untyped value rather than a typed geometry. `gdal` was declined for the additional reason that it is a system library with a C dependency, which this repository does not take on for a test. Evidence is the twelve committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/` — one per kind, each chosen against a different hazard, with the three reorder vectors deliberately moving the LEADING position to the end, the LAST route to the front and one region BETWEEN two others — plus the inverse law, which is sharpened here by the two DERIVED composed children: `drawing` and `value` are content-addressed off all three collections together, so an undo that restored the features but not the handles is caught.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "gismap-1-any",
+      "capability": "gismap-1-mutate",
+      "kinds": [
+        "create-position",
+        "delete-position",
+        "replace-position-data",
+        "reorder-positions",
+        "create-route",
+        "delete-route",
+        "replace-route-data",
+        "reorder-routes",
+        "create-region",
+        "delete-region",
+        "replace-region-data",
+        "reorder-regions"
+      ]
+    }
+  ]
+}

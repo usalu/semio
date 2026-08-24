@@ -4,9 +4,9 @@ use crate::artifacts::cad::CadSnapshot;
 use semio_s_plugin_stdio::artifacts::dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
 
 //#region Serialize
-pub async fn register() {}
+pub fn register() {}
 
-pub async fn serialize(_from: &CadSnapshot) -> Result<DwgSnapshot, store::PackError> {
+pub fn serialize(_from: &CadSnapshot) -> Result<DwgSnapshot, store::PackError> {
     Ok(DwgSnapshot {
         schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
         version: "AC1027".into(),
@@ -26,7 +26,7 @@ pub async fn serialize(_from: &CadSnapshot) -> Result<DwgSnapshot, store::PackEr
     })
 }
 
-pub async fn serialize_text(from: &CadSnapshot) -> Result<String, store::PackError> {
+pub fn serialize_text(from: &CadSnapshot) -> Result<String, store::PackError> {
     Ok(<CadSnapshot as store::ArtifactDsl>::print_dsl(from))
 }
 //#endregion Serialize

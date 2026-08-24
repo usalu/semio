@@ -115,7 +115,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// panel (`action: None` — the tree is `interaction_domain`-bound now, so the framework's renderer
 /// translates clicks into injected `interactionSelect`) and the catalogue panel (`action: Some(..)` —
 /// a real, non-selection click that toggles layer visibility).
-pub async fn gis2d_layer_tree_item(
+pub fn gis2d_layer_tree_item(
     id: String,
     label: impl TryInto<Label>,
     description: Option<String>,
@@ -148,7 +148,7 @@ pub async fn gis2d_layer_tree_item(
 /// Wave 2 port recipe): `features:in` (any TwoD×Vector producer feeds new/patched
 /// positions/routes/regions) and `map:out` (this document's own feature layers, the `2d.map`
 /// interchange kind gis3d's `map:in` consumes).
-pub async fn gis2d_io() -> AppIo {
+pub fn gis2d_io() -> AppIo {
     AppIo {
         document_schema: GIS_MAP_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
@@ -166,7 +166,7 @@ pub async fn gis2d_io() -> AppIo {
 /// 🔌️ `features:in` — accepts any TwoD×Vector producer (draw's `vector:out`, another gis2d's
 /// `map:out`, …); no `kind_id` pin since it's a generic vector-features sink, not one specific kind.
 /// `Many`/optional: several producers may fan into one map, and a map with no upstream edge is valid.
-pub async fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
+pub fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "features:in".into(),
         label: "Features".into(),
@@ -181,7 +181,7 @@ pub async fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🔌️ `map:out` — this document's positions/routes/regions as the `2d.map` interchange kind (gis3d's
 /// `map:in` consumes it). `Many`/optional: several downstream consumers may fan out from one map, and a
 /// map with no downstream edge is valid.
-pub async fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
+pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "map:out".into(),
         label: "Map".into(),
@@ -196,7 +196,7 @@ pub async fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🎞️ `map:out`'s `Media` value — this document's positions/routes/regions as a `2d.map` structured
 /// payload; reuses the exact descriptor JSON shape the ◻2d window's renderer/`MapHost` already consume,
 /// so there is exactly one "gis map as JSON" shape in the whole app.
-pub async fn gis2d_map_media(document: &GisMapSnapshot) -> Media {
+pub fn gis2d_map_media(document: &GisMapSnapshot) -> Media {
     Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: crate::artifacts::gismap::schema::gis_map_descriptor_json(document) } }
 }
 //#endregion 🔖️Io
@@ -584,31 +584,31 @@ pub(crate) mod testkit {
 
     pub type Gis2dApp = VcsArtifactApp<EditorApp<Gis2dPlayApp>>;
 
-    pub async fn app() -> Gis2dApp {
+    pub fn app() -> Gis2dApp {
         new_app::<EditorApp<Gis2dPlayApp>>()
     }
 
     /// ✏️ Adapts `create_gis2d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still expects —
     /// framework testkit gap, not modifiable here.
-    pub async fn gis2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub fn gis2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_gis2d_app(), examples: Vec::new() }
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View/Shell-emits-operations rejection) runs.
-    pub async fn app_with_registry() -> Gis2dApp {
+    pub fn app_with_registry() -> Gis2dApp {
         new_app_with_registry::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut Gis2dApp, command: Gis2dCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut Gis2dApp, command: Gis2dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut Gis2dApp, body_key: &str) -> String {
+    pub fn render(app: &mut Gis2dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 
-    pub async fn main_window_measures(app: &mut Gis2dApp) -> Vec<WindowMeasure> {
+    pub fn main_window_measures(app: &mut Gis2dApp) -> Vec<WindowMeasure> {
         app.window_measures().get(map::GIS2D_PLAY_WINDOW_MAIN).cloned().unwrap_or_default()
     }
 }

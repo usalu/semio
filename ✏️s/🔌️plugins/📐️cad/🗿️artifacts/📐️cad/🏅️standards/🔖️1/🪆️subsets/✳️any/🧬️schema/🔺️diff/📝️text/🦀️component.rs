@@ -16,7 +16,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl CadDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &CadArtifact) -> protocol::MutationApplyResult<CadArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &CadArtifact) -> protocol::MutationApplyResult<CadArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -220,7 +220,7 @@ async fn apply_nodes_delta(nodes: &[CadNode], delta: &CadNodesDelta) -> protocol
     Ok(next)
 }
 
-pub async fn apply_reference_patch(reference: &mut CadReference, patch: &CadReferencePatch) {
+pub fn apply_reference_patch(reference: &mut CadReference, patch: &CadReferencePatch) {
     if let Some(source_url) = &patch.source_url {
         reference.source_url = source_url.clone();
     }
@@ -251,7 +251,7 @@ pub async fn apply_reference_patch(reference: &mut CadReference, patch: &CadRefe
 }
 
 impl MutationDiff<CadSnapshot> for CadDiff {
-    async fn apply(&self, snapshot: &CadSnapshot) -> protocol::MutationApplyResult<CadSnapshot> {
+    fn apply(&self, snapshot: &CadSnapshot) -> protocol::MutationApplyResult<CadSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -292,7 +292,7 @@ impl MutationDiff<CadSnapshot> for CadDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;

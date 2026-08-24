@@ -15,7 +15,7 @@ pub const GIS2D_LAYER_WEIGHTS_MEASURE_ID: &str = "gis2d-play-window.layer-weight
 
 /// 📏️ `(layer_id, label, weight)` for every layer the current LOD/render mode exposes a weight
 /// slider for; a layer with no explicit entry sits at `1.0`.
-pub async fn layer_weight_entries(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<(String, String, f64)> {
+pub fn layer_weight_entries(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<(String, String, f64)> {
     let ids: Vec<String> = serde_json::from_str(&gis_map_layer_weight_slider_ids_json(&cfg.lod_mode, &cfg.render_mode)).unwrap_or_default();
     ids.into_iter()
         .map(|layer_id| {
@@ -28,7 +28,7 @@ pub async fn layer_weight_entries(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Option
-pub async fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
+pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
     let children: Vec<WindowMeasure> = layer_weight_entries(cfg, labels)
         .into_iter()
         .map(|(layer_id, label, value)| WindowMeasure::Slider {

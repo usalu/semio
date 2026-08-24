@@ -30,19 +30,19 @@ pub struct GisMapInference {
 }
 
 impl protocol::Inference<GisMapSnapshot> for GisMapInference {
-    async fn infer(snapshot: &GisMapSnapshot) -> Self {
+    fn infer(snapshot: &GisMapSnapshot) -> Self {
         Self { position_count: snapshot.positions.len(), route_count: snapshot.routes.len(), region_count: snapshot.regions.len(), bounds: lon_lat_bounds(&all_lon_lat_pairs(snapshot)) }
     }
 }
 
 impl protocol::InferenceSpec<GisMapSnapshot> for GisMapInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.gis.gismap.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
             protocol::InferenceFieldSpec { id: "s.gis.gismap.inference.positionCount", reads: &["positions"] },
             protocol::InferenceFieldSpec { id: "s.gis.gismap.inference.routeCount", reads: &["routes"] },
@@ -63,7 +63,7 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gismap::stan
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.gis.gismap.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `gismap_artifact_schema_descriptor`'s registration.
-pub async fn gismap_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn gismap_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.gis.gismap.inference",
         inference: schema::FacetLeaves {

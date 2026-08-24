@@ -74,6 +74,45 @@ pub use super::resize_node::mutation::{resize_node, ResizeNode};
 pub use super::set_node_root::mutation::{set_node_root, SetNodeRoot};
 //#endregion 🔖️Builders
 
+/// 🏷️ Kebab-case spelling of every [`WiresMutation`] variant, in declaration order — the vocabulary
+/// the `wires-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-wires-1`'s exhaustive case measures itself against. There is deliberately no
+/// `no-mutation` and no `set-snapshot`: the six generic leaves this facet used to carry
+/// (`➕add-node`, `➖remove-node`, `✂️remove-edge`, `➕add-relationship`, `🖼️set-snapshot`,
+/// `🩹patch-node`) were deleted in the same trueing pass that produced these ten, and whole-document
+/// replace reaches the store through `ArtifactStore::reset` instead.
+/// [`kinds_match_the_enum_and_the_catalog`] keeps this list honest against the enum, since the
+/// framework never parses Rust.
+pub const KINDS: &[&str] = &["create-node", "delete-node", "move-node", "resize-node", "change-node-kind", "change-node-shape", "edit-node-text", "set-node-root", "connect-nodes", "disconnect-nodes"];
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "moveNode", …}`, camelCase payload
+/// fields) JSON projection — exactly the shape the committed
+/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification vectors and
+/// `mutate-wires-1`'s own `Examples` payloads carry — into a real [`WiresMutation`]. The test
+/// adapter cannot reach `serde_json` (the generated host links only `semio-repo-test-host` and this
+/// crate) and cannot name this crate's private `protocol`/`store` extern-crate aliases either, so
+/// the bridge belongs here rather than there.
+pub fn decode_wires_mutation_json(text: &str) -> Result<WiresMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
+/// pairs. Six of this vocabulary's ten committed specification vectors are NO-OP vectors — an
+/// `applied` outcome carrying a `Warning`-level `mutation.no-op` — so the severity is load-bearing
+/// here and not a side channel: a refusal and a degenerate application are different answers.
+pub fn apply_wires_mutation_reporting(snapshot: &mut WiresSnapshot, mutation: &WiresMutation) -> Vec<(String, String)> {
+    let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ The mutation's OWN computed undo steps, which is what an `inverse-<kind>` scenario has to
+/// apply for the metamorphic law to mean anything.
+pub fn inverse_wires_mutation_steps(mutation: &WiresMutation, base: &WiresSnapshot) -> Vec<WiresMutation> {
+    <WiresMutation as protocol::Mutation<WiresSnapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -83,6 +122,24 @@ mod tests {
     use protocol::{Mutation, SemanticMutation};
     use serde_json::json;
     use store::apply_mutation;
+
+    /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
+    /// — must agree, in spelling AND in order. The framework never parses Rust, so without this
+    /// test `KINDS` could drift from the enum and the catalog could keep measuring `mutate-wires-1`
+    /// against a vocabulary the artifact no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = WiresMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(!manifest.contains("\"set-snapshot\"") && !manifest.contains("\"patch-node\""), "the deleted generic leaves must not reappear in the catalog");
+    }
     use store::os_store::test_support::assert_op_line_round_trip;
 
     async fn node(id: &str, text: &str) -> DslValue {

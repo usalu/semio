@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `fem.fem2d` declares 25 mutation kinds over eight id-keyed collections plus one inseparable analysis-settings facet. Semio-NATIVE, no oracle; the structural solvers surveyed and declined are named below. This catalog is NOT the same as `fem3d-1-any`: the 2D artifact's planar noun is a REGION where the 3D artifact's is a SOLID.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "fem2d-mutation-semantics",
+      "capabilities": [
+        "fem2d-1-mutate"
+      ],
+      "rationale": "`fem.fem2d` is a semio-NATIVE artifact; `.fem2d.dsl.semio` is read by nothing outside this repository. The structural-analysis ecosystem was surveyed and DECLINED for a reason that applies to the whole family: `frame3dd`, `calculix` and `code_aster` are SOLVERS — they consume a model and produce displacements and stresses — and none of them has an editing vocabulary at all, let alone one that could adjudicate `create-support` or `change-load-case-self-weight`. There is also no neutral structural interchange these 25 kinds map onto: IFC's structural-analysis view (already covered by `✏️s/🔌️plugins/🗄️stdio`'s `🏗️ifc 2x3 ✳️sav` subset) models an analysis model as entity instances with no notion of this artifact's eight id-keyed collections, its loads-inside-a-load-case nesting, or its single inseparable analysis-settings facet. Evidence is the 25 committed specification vectors, one per kind, each a handcrafted `(before, mutation, after, diff, outcome)` quintet over a real timber-frame house model, plus the inverse law as a metamorphic property — which is the sharpest check available here because eleven of the 25 kinds are cascade-bearing: deleting a load case takes its loads with it, deleting a node must not silently take its support, and an inverse that rebuilt the collection by value rather than restoring the prior index space cannot land back on the before-snapshot.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "fem2d-1-any",
+      "capability": "fem2d-1-mutate",
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "create-element",
+        "delete-element",
+        "replace-element",
+        "create-material",
+        "delete-material",
+        "replace-material",
+        "create-section",
+        "delete-section",
+        "replace-section",
+        "create-support",
+        "delete-support",
+        "replace-support",
+        "create-region",
+        "delete-region",
+        "replace-region",
+        "create-load-case",
+        "delete-load-case",
+        "add-load",
+        "remove-load",
+        "change-load-case-self-weight",
+        "create-combination",
+        "delete-combination",
+        "update-analysis-settings"
+      ]
+    }
+  ]
+}

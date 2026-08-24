@@ -17,7 +17,7 @@ use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, CommandDefinition, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition,
     HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod,
-    SelectionMode, SelectionSpec, UiNode,
+    SelectionMode, SelectionSpec,
 };
 use store::ArtifactPack;
 use store::EngineHandles;
@@ -308,15 +308,15 @@ impl ArtifactEditor for SourcingCurateApp {
         let config = cfg.snapshot;
         let labels = sourcing_curate_labels(config);
         match body_key {
-            pool::SOURCING_CURATE_BODY_POOL => pool::render(snapshot, config, labels),
-            curated::SOURCING_CURATE_BODY_CURATED => curated::render(snapshot, labels),
+            pool::SOURCING_CURATE_BODY_POOL => pool::render(snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
+            curated::SOURCING_CURATE_BODY_CURATED => curated::render(snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
             // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
             // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
             // preview window degrades to its "no selection" default until a future wave threads
             // interaction into render. Flagged as a discovered framework gap, not worked around here.
-            preview::SOURCING_CURATE_BODY_PREVIEW => preview::render(snapshot, &[], labels),
-            grid::SOURCING_CURATE_BODY_GRID => grid::render(snapshot, config),
-            _ => semio_framework_plugin::ui_text(Label::data("")),
+            preview::SOURCING_CURATE_BODY_PREVIEW => preview::render(snapshot, &[], labels).map(semio_framework_plugin::built_to_component_tree),
+            grid::SOURCING_CURATE_BODY_GRID => grid::render(snapshot, config).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data("")),
         }
     }
 }

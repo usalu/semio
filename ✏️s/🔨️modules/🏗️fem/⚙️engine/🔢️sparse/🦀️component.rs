@@ -610,6 +610,11 @@ impl LdltJob {
         (self.state.column == self.state.a.n).then(|| LdltFactor { n: self.state.a.n, l_cols: self.state.l_cols.clone(), d: self.state.d.clone() })
     }
 
+    /// 🎼 Transfers the completed factor into the retained subspace child without cloning.
+    pub fn take_factor(&mut self) -> Option<LdltFactor> {
+        (self.state.column == self.state.a.n).then(|| LdltFactor { n: self.state.a.n, l_cols: std::mem::take(&mut self.state.l_cols), d: std::mem::take(&mut self.state.d) })
+    }
+
     fn workspace_add(&mut self, row: usize, value: f64) {
         if self.state.workspace.marks[row] != self.state.workspace.generation {
             self.state.workspace.marks[row] = self.state.workspace.generation;
@@ -1801,6 +1806,11 @@ impl PcgJob {
         (self.state.iteration, self.state.max_iter, self.state.residual_norm, self.state.tol_rel, self.state.converged)
     }
 
+    /// 🎼 Transfers the converged stiffness owner into the retained modal child without cloning.
+    pub fn take_completed_matrix(&mut self) -> Option<Csr> {
+        (self.state.stage == PcgStage::Complete).then(|| std::mem::replace(&mut self.state.a, Csr::from_owned_parts(0, Vec::new(), Vec::new(), Vec::new())))
+    }
+
     /// 🧹️ Retires one matrix/vector scalar owner per governed close opportunity.
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         loop {
@@ -1992,6 +2002,154 @@ impl PcgJob {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ModalInputStage {
+    CountUpper,
+    ReserveColptr,
+    ReserveRowind,
+    ReserveValues,
+    CopyUpper,
+    ReserveMassIndptr,
+    ReserveMassIndices,
+    ReserveMassValues,
+    BuildMass,
+    Complete,
+}
+
+/// 🎼 Cursorized converged-stiffness transfer into LDLT plus an identity generalized-mode metric.
+pub struct ModalInputConstruction {
+    matrix: Option<Csr>,
+    stage: ModalInputStage,
+    row: usize,
+    entry: usize,
+    upper_count: usize,
+    colptr: Vec<u32>,
+    rowind: Vec<u32>,
+    values: Vec<f64>,
+    mass_indptr: Vec<u32>,
+    mass_indices: Vec<u32>,
+    mass_values: Vec<f64>,
+    complete: Option<(CscSym, Csr)>,
+}
+
+impl ModalInputConstruction {
+    pub fn new(matrix: Csr) -> Self {
+        Self {
+            matrix: Some(matrix),
+            stage: ModalInputStage::CountUpper,
+            row: 0,
+            entry: 0,
+            upper_count: 0,
+            colptr: Vec::new(),
+            rowind: Vec::new(),
+            values: Vec::new(),
+            mass_indptr: Vec::new(),
+            mass_indices: Vec::new(),
+            mass_values: Vec::new(),
+            complete: None,
+        }
+    }
+
+    fn reserve<T>(owner: &mut Vec<T>, count: usize) -> Result<(), &'static [u8]> {
+        owner.try_reserve_exact(count).map_err(|_| b"modal-input-owner-allocation" as &'static [u8])?;
+        if owner.capacity().checked_mul(std::mem::size_of::<T>()).is_none_or(|bytes| bytes > NUMERICAL_OWNER_PAGE_BYTES) {
+            return Err(b"modal-input-owner-page");
+        }
+        Ok(())
+    }
+
+    pub fn step_one(&mut self) -> Result<bool, &'static [u8]> {
+        let matrix = self.matrix.as_ref().ok_or(b"modal-input-matrix-owner" as &'static [u8])?;
+        let n = matrix.n;
+        match self.stage {
+            ModalInputStage::CountUpper => {
+                if self.row == n {
+                    self.stage = ModalInputStage::ReserveColptr;
+                } else {
+                    let end = matrix.indptr[self.row + 1] as usize;
+                    if self.entry < end {
+                        if matrix.indices[self.entry] as usize >= self.row {
+                            self.upper_count = self.upper_count.checked_add(1).ok_or(b"modal-input-upper-overflow")?;
+                        }
+                        self.entry += 1;
+                    } else {
+                        self.row += 1;
+                        self.entry = matrix.indptr.get(self.row).copied().unwrap_or(0) as usize;
+                    }
+                }
+            }
+            ModalInputStage::ReserveColptr => {
+                Self::reserve(&mut self.colptr, n + 1)?;
+                self.colptr.push(0);
+                self.stage = ModalInputStage::ReserveRowind;
+            }
+            ModalInputStage::ReserveRowind => {
+                Self::reserve(&mut self.rowind, self.upper_count)?;
+                self.stage = ModalInputStage::ReserveValues;
+            }
+            ModalInputStage::ReserveValues => {
+                Self::reserve(&mut self.values, self.upper_count)?;
+                self.row = 0;
+                self.entry = 0;
+                self.stage = ModalInputStage::CopyUpper;
+            }
+            ModalInputStage::CopyUpper => {
+                if self.row == n {
+                    self.stage = ModalInputStage::ReserveMassIndptr;
+                } else {
+                    let end = matrix.indptr[self.row + 1] as usize;
+                    if self.entry < end {
+                        let column = matrix.indices[self.entry] as usize;
+                        if column >= self.row {
+                            self.rowind.push(column as u32);
+                            self.values.push(matrix.vals[self.entry]);
+                        }
+                        self.entry += 1;
+                    } else {
+                        self.colptr.push(self.rowind.len() as u32);
+                        self.row += 1;
+                        self.entry = matrix.indptr.get(self.row).copied().unwrap_or(0) as usize;
+                    }
+                }
+            }
+            ModalInputStage::ReserveMassIndptr => {
+                Self::reserve(&mut self.mass_indptr, n + 1)?;
+                self.mass_indptr.push(0);
+                self.stage = ModalInputStage::ReserveMassIndices;
+            }
+            ModalInputStage::ReserveMassIndices => {
+                Self::reserve(&mut self.mass_indices, n)?;
+                self.stage = ModalInputStage::ReserveMassValues;
+            }
+            ModalInputStage::ReserveMassValues => {
+                Self::reserve(&mut self.mass_values, n)?;
+                self.row = 0;
+                self.stage = ModalInputStage::BuildMass;
+            }
+            ModalInputStage::BuildMass => {
+                if self.row < n {
+                    self.mass_indices.push(self.row as u32);
+                    self.mass_values.push(1.0);
+                    self.mass_indptr.push((self.row + 1) as u32);
+                    self.row += 1;
+                } else {
+                    let stiffness = CscSym { n, colptr: std::mem::take(&mut self.colptr), rowind: std::mem::take(&mut self.rowind), vals: std::mem::take(&mut self.values) };
+                    let mass = Csr::from_owned_parts(n, std::mem::take(&mut self.mass_indptr), std::mem::take(&mut self.mass_indices), std::mem::take(&mut self.mass_values));
+                    self.complete = Some((stiffness, mass));
+                    self.matrix = None;
+                    self.stage = ModalInputStage::Complete;
+                }
+            }
+            ModalInputStage::Complete => return Ok(true),
+        }
+        Ok(self.stage == ModalInputStage::Complete)
+    }
+
+    pub fn take_complete(&mut self) -> Option<(CscSym, Csr)> {
+        (self.stage == ModalInputStage::Complete).then(|| self.complete.take()).flatten()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PcgConstructionStage {
     ReserveB,
     InitializeB,
@@ -2043,6 +2201,27 @@ impl PcgJobConstruction {
             ap: VecD::from_vec(Vec::new()),
             complete: None,
         }
+    }
+
+    /// 🌬️ Retains a generation-local assembled RHS instead of fabricating the compatibility unit vector.
+    pub fn new_with_rhs(operation: Operation, matrix: Csr, rhs: VecD) -> Result<Self, (Csr, VecD)> {
+        if matrix.n != rhs.len() || rhs.0.capacity().saturating_mul(std::mem::size_of::<f64>()) > NUMERICAL_OWNER_PAGE_BYTES {
+            return Err((matrix, rhs));
+        }
+        Ok(Self {
+            operation,
+            matrix: Some(matrix),
+            stage: PcgConstructionStage::ReserveX,
+            cursor: 0,
+            b: rhs,
+            x: VecD::from_vec(Vec::new()),
+            diag: VecD::from_vec(Vec::new()),
+            r: VecD::from_vec(Vec::new()),
+            z: VecD::from_vec(Vec::new()),
+            p: VecD::from_vec(Vec::new()),
+            ap: VecD::from_vec(Vec::new()),
+            complete: None,
+        })
     }
 
     pub fn step_one(&mut self) -> Result<bool, &'static [u8]> {
@@ -2566,6 +2745,18 @@ impl SubspaceIterationJob {
 
     pub fn solution(&self) -> EigenPairs {
         EigenPairs { values: self.state.final_theta.iter().take(self.state.p).copied().collect(), vectors: (0..self.state.p.min(self.state.x.cols)).map(|column| mat_col(&self.state.x, column)).collect() }
+    }
+
+    /// 🎼 Borrows one converged genuine subspace component and its eigenvalue without cloning a mode.
+    pub fn visual_mode_scalar(&self, mode: usize, index: usize) -> Option<(f64, f64)> {
+        let eigenvalue = *self.state.final_theta.get(mode)?;
+        (mode < self.state.x.cols && index < self.state.x.rows).then(|| (self.state.x.get(index, mode), eigenvalue))
+    }
+
+    /// 🎼 Exposes the retained subspace convergence authority without cloning eigen owners.
+    pub fn visual_progress(&self) -> (usize, usize, f64, bool) {
+        let residual = self.state.residuals.first().copied().unwrap_or(f64::INFINITY);
+        (self.state.iteration, self.state.max_iter, residual, self.state.converged)
     }
 
     fn reset_cursor(&mut self, stage: SubspaceStage) {

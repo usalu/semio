@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `s.energy.model` persists no content model of its own — its body is two composed child handles regenerated together from one `Model` — so its single mutation kind is a paired-child overwrite. Semio-NATIVE, no oracle; the decision below also records that this subset's ONE committed specification vector is a documented no-op, which is a real gap rather than a passing test.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "energy-model-mutation-semantics",
+      "capabilities": [
+        "energy-model-1-mutate"
+      ],
+      "rationale": "`s.energy.model` is a semio-NATIVE artifact whose `.dsl.semio` envelope no third party reads. The domain's real references — EnergyPlus and OpenStudio — were surveyed and DECLINED for a specific reason, not merely noted as absent: they are building-energy SOLVERS over their own IDF/OSM models, they cannot read this artifact, and above all they have no counterpart to what this vocabulary actually addresses. This snapshot persists no content model of its own at all: its entire substantive body is two composed CHILD HANDLES (`structure` → `s.stdio.semio.value`, `zones` → `s.stdio.semio.table`) that are always regenerated TOGETHER from one `crate::model::Model`, so `replace-model` is a paired-child overwrite keyed by a serialized model string — a composition operation, not an energy calculation, and nothing an EnergyPlus run could adjudicate. The `energyplus` weather reader already registered under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is a weather-file reader and is deliberately NOT reused here; doing so would fail the capability check and would claim evidence that does not exist. Evidence is therefore the committed specification vector plus the inverse law — and this subset's vector is WEAK, which is recorded in the feature rather than hidden: it carries `newModelJson: \"{}\"`, which the leaf documents as honest degradation to `Model::default()`, and the fixture's before-snapshot already holds the default model, so the vector is a no-op and the forward semantics of `replace-model` have no committed vector at all.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "energy-model-1-any",
+      "capability": "energy-model-1-mutate",
+      "kinds": [
+        "replace-model"
+      ]
+    }
+  ]
+}

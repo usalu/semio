@@ -22,7 +22,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// plugin's own actor runs `Isolated` (its 4 `🧩️extensions/` — metal, robotic, concrete, wood — run
 /// `Declarative` instead, see each extension's own `bundle()`), and it asks the broker for document
 /// write access to persist edits.
-pub async fn plugin() -> Result<Plugin<ProcessApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<ProcessApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<ProcessApps>::builder("process")
         .label("Process")
         .version("0.1.0")

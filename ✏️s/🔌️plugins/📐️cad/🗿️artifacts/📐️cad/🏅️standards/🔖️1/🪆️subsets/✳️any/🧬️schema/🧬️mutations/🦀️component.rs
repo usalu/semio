@@ -77,6 +77,33 @@ pub enum CadMutation {
     ReplaceReferences(replace_references::mutation::ReplaceReferences),
     ChangeActiveModelDefinition(change_active_model_definition::mutation::ChangeActiveModelDefinition),
 }
+
+/// 🏷️ The kebab-case spelling of every [`CadMutation`] variant, in declaration order — the exact
+/// vocabulary the `cad-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and the
+/// `mutate-cad-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
+pub const KINDS: &[&str] = &[
+    "create-shape-model",
+    "delete-shape-model",
+    "create-building-model",
+    "delete-building-model",
+    "create-energy-model",
+    "delete-energy-model",
+    "create-structure-classic-model",
+    "delete-structure-classic-model",
+    "create-drawing",
+    "delete-drawing",
+    "create-node",
+    "delete-node",
+    "rename-node",
+    "change-reference-hidden",
+    "change-reference-locked",
+    "change-reference-width",
+    "move-reference",
+    "replace-reference-media",
+    "replace-references",
+    "change-active-model-definition",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Leaves
@@ -117,7 +144,7 @@ pub mod tests {
     use protocol::Mutation;
 
     /// ⚖️ One value per `CadMutation` variant — the closed set every wire law below iterates.
-    pub async fn every_mutation() -> Vec<CadMutation> {
+    pub fn every_mutation() -> Vec<CadMutation> {
         let sample = sample_model_child("fresh-model-1");
         vec![
             CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() }),
@@ -256,5 +283,23 @@ pub mod tests {
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
     }
     //#endregion 🧪️OutcomeLaws
+    //#region 🧪️KindsCatalog
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed oracle
+    /// manifest's catalog — the framework never parses Rust, so this is the only thing that keeps
+    /// the declared vocabulary and the measured one from drifting apart.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <CadMutation as protocol::SemanticMutation<CadSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared CadMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 }
 //#endregion 🧪️Tests

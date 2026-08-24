@@ -167,7 +167,7 @@ impl Default for CadArtifact {
 
 impl CadArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> CadSnapshot {
+    pub fn to_snapshot(&self) -> CadSnapshot {
         CadSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
@@ -183,7 +183,7 @@ impl CadArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: CadSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: CadSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -235,7 +235,7 @@ impl CadArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: CadSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: CadSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.shape_model = snapshot.shape_model;
@@ -252,7 +252,7 @@ impl CadArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.cad.cad` — twenty handcrafted schema leaves.
-pub async fn cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.cad.cad",
         artifact: schema::FacetLeaves {
@@ -347,7 +347,7 @@ pub mod derived_construction {
             (self, outcome)
         }
 
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)

@@ -2912,7 +2912,7 @@ pub(crate) mod testkit {
     /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
     /// `Self::Command` channel). Reconstructs the `Puzzle3dCommand` from the same
     /// `(action, args, window_id)` triple every pre-B1 test already passed.
-    pub async fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+    pub fn dispatch(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
         // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
         // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
         // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
@@ -2948,7 +2948,7 @@ pub(crate) mod testkit {
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
     /// for one `(granularity, id)` pair in the `vortex` domain — the test-side replacement for the
     /// deleted `worldPick`/`worldSelect`/`worldVortexSelect`/`setSelection` actions.
-    pub async fn select_id(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
+    pub fn select_id(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
         dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).await
     }
@@ -2957,7 +2957,7 @@ pub(crate) mod testkit {
     /// for one `(granularity, id)` pair on the `pointer` channel in the `vortex` domain — the
     /// test-side replacement for the deleted `worldHover`/`setHover`/`worldVortexHover`/`setKindHover`
     /// actions. `id: None` clears the hover (mirrors the old "hover nothing" call shape).
-    pub async fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
+    pub fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
         let targets: Vec<InteractionTarget> = id.map(|id| InteractionTarget { granularity: granularity.into(), id: id.into() }).into_iter().collect();
         let targets_json = serde_json::to_string(&targets).unwrap_or_default();
         dispatch(app, "interactionHover", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets_json })), None).await
@@ -3121,7 +3121,7 @@ pub(crate) mod testkit {
     }
 
     /// 🪣️ Drives `fillBuildTick` until planning has reached `target` placements (or the budget runs out).
-    pub async fn drive_fill_until_ready(app: &mut Puzzle3dApp, target: f64) -> f64 {
+    pub fn drive_fill_until_ready(app: &mut Puzzle3dApp, target: f64) -> f64 {
         for _ in 0..256 {
             dispatch(app, "fillBuildTick", None, None).await.expect("fillBuildTick");
             if fill_ready(app) >= target {
@@ -3133,7 +3133,7 @@ pub(crate) mod testkit {
     }
 
     /// 🧵️ Drives the same generation-tagged fill continuation the host executes in production.
-    pub async fn finish_fill_count(app: &mut Puzzle3dApp, mut result: InvocationResult) -> (usize, std::time::Duration) {
+    pub fn finish_fill_count(app: &mut Puzzle3dApp, mut result: InvocationResult) -> (usize, std::time::Duration) {
         let mut max_step = std::time::Duration::ZERO;
         for step in 0..1_024 {
             let next = result.requested_effects.into_iter().find_map(|effect| match effect {
@@ -3152,7 +3152,7 @@ pub(crate) mod testkit {
         panic!("fill-count materialization did not finish within its deterministic step bound");
     }
 
-    pub async fn set_fill_count_and_finish(app: &mut Puzzle3dApp, value: u32, window_id: Option<&str>) -> (usize, std::time::Duration) {
+    pub fn set_fill_count_and_finish(app: &mut Puzzle3dApp, value: u32, window_id: Option<&str>) -> (usize, std::time::Duration) {
         let result = dispatch(app, "setFillCount", Some(&json!({ "value": value })), window_id).await.expect("begin setFillCount");
         finish_fill_count(app, result).await
     }

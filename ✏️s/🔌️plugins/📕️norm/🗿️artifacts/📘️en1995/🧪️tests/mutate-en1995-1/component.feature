@@ -1,0 +1,124 @@
+@capability-en1995-1-mutate
+@no-oracle-en1995-1-mutation-semantics
+@comparison-ordered-json-v1
+@mutations-en1995-1-any
+Feature: Apply every typed EN 1995 mutation to its committed specification fixtures
+  `s.norm.en1995` is a semio-NATIVE artifact — no third party reads or writes its
+  `.dsl.semio`/`.pack.semio` envelope — so there is no reference implementation to register as an
+  oracle. That is recorded as the `en1995-1-mutation-semantics` no-oracle decision in
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, and it means the runner
+  executes NO oracle role for this case: every assertion below lives inside the subject handler,
+  which compares the applied document against the committed after-snapshot and the undone document
+  against the committed before-snapshot, and fails with both documents printed. A handler that
+  merely ran the mutation and returned would report a pass having checked nothing.
+
+  Twenty document-root scalars, one `change-<field>` each: national annex, the design actions
+  M_Ed, N_Ed and V_Ed, the section properties W, A, b and h, the characteristic strengths f_m,k,
+  f_c,0,k and f_v,k, the two classification enums that drive k_mod and k_def — service class and
+  load-duration class — the lateral-torsional M_crit, the connection inputs F_Ed and A_ef, the
+  fire inputs (duration and section depth) and the footbridge vibration inputs (vertical
+  acceleration and bridge cycle count).
+
+  Timber is the Eurocode whose answer depends on two ENUMS more than on any number: k_mod and
+  k_def are looked up from the service class and the load-duration class together, so
+  `change-service-class` and `change-load-duration` move every derived resistance in the document
+  at once while touching a single field. Both are exercised here as whole-document comparisons,
+  which is the only way a lookup wired to the wrong axis of that table shows up. Its own module
+  header is explicit that this artifact follows the `📘️en1992`/`📘️en1994` flat-scalar precedent
+  and NOT `📘️en1993`'s per-part grouping, because `⚙️engine`'s EN 1995 checks read the snapshot as
+  one flat bag of fields rather than as named per-part sub-structs — so the twenty kinds here are
+  a derivation result, not a stylistic choice. The committed example is a glulam footbridge, which
+  is why the vibration pair is real data.
+
+  Each of the 20 kinds carries its own independently handcrafted `(before, mutation, after, diff,
+  outcome)` quintet under
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, and this
+  feature re-exercises those SAME committed bytes end to end through `apply_en1995_mutation`
+  rather than calling `Mutation::diff`/`inverse` directly the way the in-crate fixture tests do.
+  The committed `🎯️outcome` decides which contract a row is held to: `applied` demands the
+  observability law (the document must MOVE), `rejected` demands the opposite and stricter one —
+  the mutation must be refused and the document must come back bit-identical. All 20 committed
+  vectors declare `applied`, so every row below is held to the observability law: a kind that left
+  the document bit-for-bit unchanged would fail rather than pass silently.
+
+  The identity scenario reads the real committed EN 1995 document at
+  `📚️examples/📕️glulam-footbridge`, not a fixture authored for this case. Its DSL carrier is
+  deliberately byte-preserving — the committed file IS this codec's own canonical printer output,
+  so reproducing it exactly is the correct answer and anything else is the defect — which is why
+  that half of the identity law is asserted as `carrier_is_exact` rather than as the usual
+  no-byte-pass-through inequality. The evidence that the document was genuinely PARSED rather than
+  copied comes from the other half: the same snapshot is round-tripped through two further,
+  independently written codecs — the binary `.pack.semio` protocol and the JSON projection — and
+  all three must agree on one document. The committed binary twin `🎒️glulam-footbridge.pack.semio`
+  is decoded and cross-checked against the text artifact as well, so two separately committed
+  files written by two separate codecs have to describe the same EN 1995 document.
+
+  @id-mutate
+  @level-exhaustive
+  @mode-conformance
+  Scenario Outline: Apply <id> to its committed before-snapshot fixture
+    Given the committed before-snapshot, mutation and outcome fixture for the <id> kind
+    When <id> is applied through apply_en1995_mutation
+    Then the resulting document matches the committed after-snapshot fixture for <id> and honours the committed outcome status
+    Examples:
+      | id |
+      | change-annex |
+      | change-m-ed-knm |
+      | change-n-ed-kn |
+      | change-v-ed-kn |
+      | change-w-mm3 |
+      | change-a-mm2 |
+      | change-b-mm |
+      | change-h-mm |
+      | change-fmk |
+      | change-fc0-k |
+      | change-service-class |
+      | change-load-duration |
+      | change-m-crit-knm |
+      | change-f-ed-kn |
+      | change-a-ef-mm2 |
+      | change-fvk |
+      | change-fire-duration-min |
+      | change-section-depth-mm |
+      | change-a-vert-ms2 |
+      | change-n-cycles-bridge |
+
+  @id-inverse
+  @level-exhaustive
+  @mode-property
+  Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
+    Given the committed before-snapshot and mutation fixture for the <id> kind
+    When <id> is applied through apply_en1995_mutation
+    And the mutation's own computed inverse is applied through apply_en1995_mutation
+    Then the document matches the committed before-snapshot fixture again
+    Examples:
+      | id |
+      | change-annex |
+      | change-m-ed-knm |
+      | change-n-ed-kn |
+      | change-v-ed-kn |
+      | change-w-mm3 |
+      | change-a-mm2 |
+      | change-b-mm |
+      | change-h-mm |
+      | change-fmk |
+      | change-fc0-k |
+      | change-service-class |
+      | change-load-duration |
+      | change-m-crit-knm |
+      | change-f-ed-kn |
+      | change-a-ef-mm2 |
+      | change-fvk |
+      | change-fire-duration-min |
+      | change-section-depth-mm |
+      | change-a-vert-ms2 |
+      | change-n-cycles-bridge |
+
+  @id-identity-round-trip
+  @level-long
+  @mode-round-trip
+  Scenario: Decode the real committed EN 1995 document through every encoding it has
+    Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️glulam-footbridge/🖼️assets/🗣️glulam-footbridge.dsl.semio
+    And its committed binary twin asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️glulam-footbridge/🖼️assets/🎒️glulam-footbridge.pack.semio
+    When the text artifact is parsed, printed back to DSL and parsed again, and the same document is round-tripped through the binary pack protocol and the JSON projection
+    Then the canonical DSL rendering is reproduced byte for byte and every decoding agrees on one EN 1995 document

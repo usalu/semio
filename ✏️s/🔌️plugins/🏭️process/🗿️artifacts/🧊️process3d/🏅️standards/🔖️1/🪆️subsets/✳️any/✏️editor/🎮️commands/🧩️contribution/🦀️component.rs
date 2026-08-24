@@ -15,7 +15,7 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetContributions,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

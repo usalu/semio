@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `s.space.space` is a hub space's artifact INDEX — id-keyed metadata rows, never the indexed documents' own bytes — and it is semio-NATIVE, so no oracle is registered; see `noOracleDecisions` below for the two candidate families that were surveyed and declined.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "s-space-index-mutation-semantics",
+      "capabilities": [
+        "s-space-1-mutate"
+      ],
+      "rationale": "`s.space.space` is a semio-NATIVE artifact — no third party reads or writes `.sspace.dsl.semio` — and what it persists is a hub space's INDEX of artifact rows (id, name, kind id, schema, a `dialect` block, and two created/updated clock pairs), never the indexed artifacts' own document bytes. That is a workspace bookkeeping model, not an interchange format: nothing in the ecosystem defines it, so there is no library that could confirm or refute `create-artifact`/`delete-artifact`/`rename-artifact`/`touch-artifact`. Two adjacent families were considered and DECLINED rather than merely absent: generic table/CSV readers (`csv`, `calamine`) can parse a row grid but know nothing of the `dialect:BLOCK` column, of id-keyed identity, or of the create/touch clock distinction that gives this vocabulary its shape; and content-addressed store crates model blobs, not an editable metadata index. Evidence comes from the four committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/`, each handcrafted against a different hazard, plus the inverse law: `touch-artifact` is the only verb that writes a clock, so its inverse must restore BOTH the previous `updated_at_ms` and the previous `updated_by`, and dropping either one shows up immediately.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "s-space-1-any",
+      "capability": "s-space-1-mutate",
+      "kinds": [
+        "create-artifact",
+        "delete-artifact",
+        "rename-artifact",
+        "touch-artifact"
+      ]
+    }
+  ]
+}

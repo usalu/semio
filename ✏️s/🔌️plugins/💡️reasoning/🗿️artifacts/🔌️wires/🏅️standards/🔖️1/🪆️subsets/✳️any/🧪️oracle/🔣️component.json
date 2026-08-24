@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `s.reasoning.wires` is a semio-NATIVE argument board whose nodes live inside an untyped `DslValue` tree, so no oracle is registered and the evidence rests on the committed per-kind vectors — four refusals and six no-ops — plus the inverse law (see noOracleDecisions).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "wires-1-argument-board-mutation-semantics",
+      "capabilities": ["wires-1-mutate"],
+      "rationale": "No third party reads or writes `.wires.dsl.semio`, whose body is five hex-encoded `DslValue` lines this repository defines. More to the point, the document this vocabulary mutates is not a graph in any library's sense: `WiresSnapshot` carries an untyped `wiresFixture` tree holding `identities`, `relationships` and a nested `board`, and every node mutation edits one scalar key inside that tree through this facet's own `set_node_field`. A graph or JSON-patch crate asked to adjudicate `set-node-root` would be answering a question about JSON, not about whether an unflagged node set to not-root is a no-op. Confidence comes instead from the ten committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the production crate, and from the inverse law as a metamorphic property. What those ten vectors pin is unusual and worth stating: SIX of them are NO-OP vectors — an `applied` outcome carrying a `Warning`-level `mutation.no-op` because the field already holds the requested value — and only four are refusals. That split is the vocabulary's real shape: every single-field node verb here degrades to a warned no-op rather than an error when its target already matches, and the two branches must never be confused, so `mutate-wires-1` requires the exact `(code, severity)` pair per vector and separately applies a real-effect payload of its own to the same committed base for the observability the no-op vectors cannot give.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "wires-1-any",
+      "capability": "wires-1-mutate",
+      "kinds": ["create-node", "delete-node", "move-node", "resize-node", "change-node-kind", "change-node-shape", "edit-node-text", "set-node-root", "connect-nodes", "disconnect-nodes"]
+    }
+  ]
+}

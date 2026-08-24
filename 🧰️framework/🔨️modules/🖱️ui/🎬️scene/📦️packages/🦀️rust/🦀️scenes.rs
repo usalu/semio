@@ -73,6 +73,8 @@ pub struct Canvas2dScene {
     pub camera_y: f64,
     pub zoom: f64,
     pub layers_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<crate::Canvas2dSnapshotLease>,
 }
 
 impl SceneDoc for Canvas2dScene {

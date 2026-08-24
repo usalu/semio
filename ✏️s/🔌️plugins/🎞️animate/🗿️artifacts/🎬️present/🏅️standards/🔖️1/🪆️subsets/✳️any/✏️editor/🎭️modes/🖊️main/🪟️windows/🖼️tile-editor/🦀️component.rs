@@ -77,7 +77,7 @@ fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
 
 //#region 🔖️Render
 pub fn render(deck: &PresentSnapshot) -> BuiltNode {
-    let scene = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck) };
+    let scene = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck), snapshot: None };
     surface(encode(semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)).id(PRESENT_PLAY_SURFACE_MAIN).build()
 }
 //#endregion 🔖️Render

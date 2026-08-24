@@ -28,6 +28,15 @@ pub use super::change_notes::mutation::{change_notes, ChangeNotes};
 pub use super::change_status::mutation::{change_status, ChangeStatus};
 pub use super::remove_tag::mutation::{remove_tag, RemoveTag};
 pub use super::rename_vcs::mutation::{rename_vcs, RenameVcs};
+
+/// 🏷️ Kebab-case spelling of every [`VcsDemoMutation`] variant, in declaration order — the
+/// vocabulary the `vcs-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-vcs-1`'s exhaustive case measures itself against. There is deliberately no
+/// `no-mutation`/`set-snapshot` entry: whole-document replace is banned vocabulary here (see this
+/// file's header), which is the first thing that distinguishes this catalog from every
+/// `🗄️stdio` one. [`kinds_match_the_enum_and_the_catalog`] keeps the list honest against the enum,
+/// since the framework never parses Rust.
+pub const KINDS: &[&str] = &["rename-vcs", "change-counter", "change-notes", "change-status", "add-tag", "remove-tag"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -47,6 +56,33 @@ pub async fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMuta
     <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, snapshot)
 }
 //#endregion 🔖️Apply
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "addTag", …}`, camelCase payload
+/// fields) JSON projection — exactly the shape the committed
+/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification vectors carry — into a real
+/// [`VcsDemoMutation`]. The `mutate-vcs-1` adapter cannot reach `serde_json` (the generated test
+/// host links only `semio-repo-test-host` and this crate) and cannot name this crate's private
+/// `protocol`/`store` extern-crate aliases either, so the bridge belongs here rather than there.
+pub fn decode_vcs_mutation_json(text: &str) -> Result<VcsDemoMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ [`apply_vcs_mutation`]'s reporting, non-async twin: applies `mutation` in place and returns
+/// the diagnostic CODES it raised, in order. [`apply_vcs_mutation`] discards them and is `async`,
+/// so neither the outcome-policy claim a committed `🎯️outcome/🔣️component.json` makes nor a
+/// synchronous test adapter can be served by it.
+pub fn apply_vcs_mutation_reporting(snapshot: &mut VcsSnapshot, mutation: &VcsDemoMutation) -> Vec<String> {
+    let outcome = <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| message.code.0.clone()).collect()
+}
+
+/// ↩️ [`inverse_vcs_mutation`]'s non-async twin — the mutation's OWN computed undo steps, which is
+/// what an `inverse-<kind>` scenario has to apply for the metamorphic law to mean anything.
+pub fn inverse_vcs_mutation_steps(mutation: &VcsDemoMutation, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
+    <VcsDemoMutation as protocol::Mutation<VcsSnapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -117,6 +153,24 @@ mod tests {
         let base = empty_vcs_snapshot();
         let mutation = VcsDemoMutation::RemoveTag(RemoveTag { tag: "gone".into() });
         protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed
+    /// catalog — must agree, in spelling AND in order. The framework never parses Rust, so without
+    /// this test `KINDS` could drift from the enum and the catalog could keep measuring
+    /// `mutate-vcs-1` against a vocabulary the artifact no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = VcsDemoMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(!manifest.contains("\"set-snapshot\"") && !manifest.contains("\"no-mutation\""), "whole-document replace is banned vocabulary here — the catalog must not smuggle it back in");
     }
 
     #[semio_framework_async_macros::async_test]

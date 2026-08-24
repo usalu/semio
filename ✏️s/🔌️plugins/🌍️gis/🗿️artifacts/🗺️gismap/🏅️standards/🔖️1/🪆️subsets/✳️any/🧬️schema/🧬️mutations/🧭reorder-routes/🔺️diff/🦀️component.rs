@@ -8,7 +8,7 @@ use crate::artifacts::gismap::GisMapSnapshot;
 /// full id order from `base` by moving `id` to `to_index` — real handcrafted construction, never
 /// apply-then-capture, never a snapshot clone. Error `target-missing` when `id` doesn't name a
 /// route; Warning `no-op` when the resulting order is unchanged.
-pub async fn diff(payload: &ReorderRoutes, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+pub fn diff(payload: &ReorderRoutes, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
     let original: Vec<String> = base.routes.iter().map(|f| f.id.clone()).collect();
     let Some(from) = original.iter().position(|x| x == &payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Route \"{}\" does not exist.", payload.id), [payload.id.clone()]);

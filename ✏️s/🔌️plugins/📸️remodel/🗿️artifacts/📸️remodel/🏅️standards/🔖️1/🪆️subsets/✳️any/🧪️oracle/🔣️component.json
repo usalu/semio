@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `s.remodel.remodel` is a semio-NATIVE artifact carried in `.dsl.semio`/`.pack.semio`, so no third party can serve as its reference — see the noOracleDecision below.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "remodel-mutation-semantics",
+      "capabilities": ["remodel-1-mutate"],
+      "rationale": "No third-party crate reads or writes semio's `.dsl.semio`/`.pack.semio` envelope, and no photogrammetry library is authoritative over `RemodelMutation` — this is a reconstruction JOB document, not a point cloud or a mesh file, so a reader of COLMAP, LAS or PLY output would be judging a different artifact. What distinguishes this subset is that its 35 kinds fall into three genuinely different families with different laws: id-keyed create/delete/change over five referential pools (`streams`, `assets`, camera calibrations, rig extrinsics, GCPs — where deleting a stream or a GCP CASCADES into observations that point at it), `update-*-params` over the eight inseparable `ReconstructionParams` sub-records (each replaced whole because its fields are only meaningful together), and `replace-*` over the engine-owned result payloads. Confidence comes from the committed per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, already unit-tested inside the production crate, plus the inverse law as a metamorphic property — which for the cascading deletes means the undone document must carry the cascaded observations back, not merely the deleted record. `commit-reconstruction` is the one kind with NO committed vector: its diff reads process-global staging state (`commit_staged_remodel_reconstruction`, `durable_staged_remodel_asset`) that a `(before, mutation, after)` triple cannot carry, so `mutate-remodel-1` exercises it through its own documented refusal path instead and says so in its feature description.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "remodel-1-any",
+      "capability": "remodel-1-mutate",
+      "kinds": ["create-stream", "delete-stream", "change-stream-sync", "add-stream-frame", "remove-stream-frame", "replace-stream-source", "create-asset", "delete-asset", "create-camera-calibration", "update-camera-calibration", "delete-camera-calibration", "create-rig-extrinsic", "delete-rig-extrinsic", "update-rig-extrinsic", "create-gcp", "delete-gcp", "add-gcp-observation", "remove-gcp-observation", "update-ingest-params", "update-feature-params", "update-match-params", "update-sfm-params", "update-dense-params", "update-mesh-params", "update-motion-params", "update-geo-params", "replace-job", "replace-sparse", "replace-dense", "replace-mesh-result", "replace-trajectory", "replace-tracks", "replace-geo-products", "replace-qc", "commit-reconstruction"]
+    }
+  ]
+}

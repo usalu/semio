@@ -106,6 +106,6 @@ pub async fn render(document: &DrawSnapshot, config: &DrawConfig, gesture: &draw
     build_canvas_2d_scene(
         DRAW_PLAY_SURFACE_ID,
         crate::editor::draw::DRAW_PLAY_CONTROLLER_ID,
-        Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()) },
+        Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()), snapshot: None },
     )
 }

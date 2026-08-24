@@ -1,0 +1,49 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here rather than in a shared manifest. `din4108-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../🧬️schema/🧬️mutations/🦀️component.rs` fails the moment this list and the enum part company.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "din4108-1-mutation-semantics",
+      "capabilities": [
+        "din4108-1-mutate"
+      ],
+      "rationale": "`s.norm.din4108` is a semio-NATIVE artifact: the document is this repository's own `.dsl.semio`/`.pack.semio` envelope over a DIN 4108 — thermal protection and energy economy in buildings model, and no third-party library — in any ecosystem — reads or writes it, let alone one that could be authoritative over this subset's `Din4108Mutation` vocabulary. That vocabulary IS this subset's own specification (derived from `Din4108Snapshot`'s shape by `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️derivation-rules.md`), not a fact an external implementation could confirm or refute; a crate that parsed DIN 4108 data from some other interchange format would be judging a different document. Registering a weak or tangential crate here would be worse than registering none. Confidence comes instead from the 22 committed, independently handcrafted per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff, outcome)` quintet per kind, already unit-tested inside the production crate itself — re-exercised end to end here through `apply_din4108_mutation`, plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation document.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "din4108-1-any",
+      "capability": "din4108-1-mutate",
+      "kinds": [
+        "change-category",
+        "change-climate",
+        "change-airtightness-n50",
+        "change-psi-times-l-sum",
+        "change-rh-int",
+        "change-catalog-id",
+        "change-material-id",
+        "change-airtightness-class",
+        "change-t-int-c",
+        "change-solar-absorptance",
+        "change-irradiance-wm2",
+        "change-moisture-mu-exterior",
+        "change-moisture-mu-interior",
+        "change-envelope-area-m2",
+        "change-bb2-details-conform",
+        "change-application-type",
+        "change-declared-application-class",
+        "insert-layer",
+        "remove-layer",
+        "reorder-layers",
+        "change-layer-thickness",
+        "change-layer-lambda"
+      ]
+    }
+  ]
+}

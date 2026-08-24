@@ -367,7 +367,7 @@ pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<Str
 /// the document/config still carries the sentinel empty-object placeholder.
 pub fn fem3d_camera_json(camera: &crate::artifacts::fem3d::FemCamera) -> String {
     if camera.json == "{}" {
-        semio_framework_plugin::resolve_ready(semio_framework_plugin::world3d_default_camera())
+        semio_framework_plugin::world3d_default_camera()
     } else {
         camera.json.clone()
     }
@@ -972,7 +972,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn fem3d_camera_json_falls_back_to_world3d_default_for_empty_object() {
         let camera = crate::artifacts::fem3d::FemCamera::default();
-        assert_eq!(fem3d_camera_json(&camera), semio_framework_plugin::resolve_ready(semio_framework_plugin::world3d_default_camera()));
+        assert_eq!(fem3d_camera_json(&camera), semio_framework_plugin::world3d_default_camera());
         let custom = crate::artifacts::fem3d::FemCamera { json: "{\"x\":1}".into() };
         assert_eq!(fem3d_camera_json(&custom), "{\"x\":1}");
     }

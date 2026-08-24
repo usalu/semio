@@ -6,7 +6,7 @@ use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeCursor, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+pub fn inverse(_payload: &ChangeCursor, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
     vec![Process3dMutation::ChangeCursor(ChangeCursor { new_resolved_up_to: base.resolved_up_to })]
 }
 //#endregion 🔖️Inverse

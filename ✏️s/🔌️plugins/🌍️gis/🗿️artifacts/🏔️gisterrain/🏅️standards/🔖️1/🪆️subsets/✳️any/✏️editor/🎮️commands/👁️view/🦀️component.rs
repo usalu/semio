@@ -17,7 +17,7 @@ pub mod set_camera {
         pub camera_json: String,
     }
 
-    pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis3dConfigMutation::SetCamera { camera_json: payload.camera_json.clone() }]))
     }
 }

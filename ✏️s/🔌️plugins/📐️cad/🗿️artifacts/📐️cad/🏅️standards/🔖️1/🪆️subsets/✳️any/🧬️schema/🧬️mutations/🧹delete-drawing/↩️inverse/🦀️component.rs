@@ -6,7 +6,7 @@ use crate::artifacts::cad::mutations::{create_drawing, CadMutation};
 use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &DeleteDrawing, base: &CadSnapshot) -> Vec<CadMutation> {
+pub fn inverse(payload: &DeleteDrawing, base: &CadSnapshot) -> Vec<CadMutation> {
     match base.drawings.iter().find(|c| c.child_id == payload.child_id) {
         Some(existing) => vec![CadMutation::CreateDrawing(create_drawing::mutation::CreateDrawing { child_id: existing.child_id.clone(), target: existing.target.to_uri() })],
         None => Vec::new(),

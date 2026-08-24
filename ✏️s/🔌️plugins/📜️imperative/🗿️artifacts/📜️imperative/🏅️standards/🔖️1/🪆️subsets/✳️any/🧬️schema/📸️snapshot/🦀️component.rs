@@ -213,3 +213,42 @@ impl store::ArtifactPack for ImperativeSnapshot {
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
+
+//#region 🌉️ExternalCodecBridge
+/// 📤️ Renders an [`ImperativeSnapshot`] as this facet's own camelCase JSON projection — the
+/// comparison surface `mutate-imperative-1`'s scenarios are measured through, and the shape the
+/// committed `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors are written in. It carries `flow` and `text` as content-addressed HANDLES,
+/// never as content, which is what makes it a usable observability surface here: the `flow` handle
+/// moves if and only if the program moved.
+///
+/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
+/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+pub fn encode_imperative_snapshot_json(snapshot: &ImperativeSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("ImperativeSnapshot serialization is infallible")
+}
+
+/// 📥️ The inverse of [`encode_imperative_snapshot_json`] — decodes those committed specification
+/// vectors into real [`ImperativeSnapshot`] values, so `mutate-imperative-1`'s adapter reads the
+/// committed fixture rather than re-declaring it as a Rust literal beside it. Reaching `serde_json`
+/// from that adapter is impossible: the generated test host links only this crate and
+/// `semio-repo-test-host`.
+pub fn decode_imperative_snapshot_json(text: &str) -> Result<ImperativeSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Parses `.imperative.dsl.semio` text into an [`ImperativeSnapshot`] — a named, non-async
+/// pass-through of this type's own `store::ArtifactDsl` impl above, whose trait and error type are
+/// both unnameable outside this crate, so `mutate-imperative-1`'s `identity-round-trip` scenario
+/// reaches the real committed artifact (`../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`)
+/// through this instead.
+pub fn parse_imperative_dsl(text: &str) -> Result<ImperativeSnapshot, String> {
+    <ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+}
+
+/// 📝️ Renders an [`ImperativeSnapshot`] back as `.imperative.dsl.semio` text — the inverse of
+/// [`parse_imperative_dsl`], preamble and both hex-encoded child-handle lines included.
+pub fn print_imperative_dsl(snapshot: &ImperativeSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+//#endregion 🌉️ExternalCodecBridge

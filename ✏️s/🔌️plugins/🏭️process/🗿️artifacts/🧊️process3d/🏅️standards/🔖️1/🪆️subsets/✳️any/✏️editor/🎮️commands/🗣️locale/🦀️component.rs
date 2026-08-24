@@ -15,7 +15,7 @@ pub mod set_locale {
         pub value: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetLocale,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

@@ -56,7 +56,7 @@ pub async fn render(document: &DrawSnapshot) -> UiNode {
     for node in &scene_nodes {
         records.push(serde_json::to_value(node).unwrap_or(Value::Null));
     }
-    build_canvas_2d_scene(SURFACE_ID, DRAW_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()) })
+    build_canvas_2d_scene(SURFACE_ID, DRAW_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()), snapshot: None })
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension

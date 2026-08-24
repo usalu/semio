@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here rather than in a shared manifest. `s.writer.writer` is a semio-NATIVE artifact — it is persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs, and no third party reads or writes either — so no oracle is registered; see noOracleDecisions below.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "writer-document-mutation-semantics",
+      "capabilities": ["writer-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none could be authoritative over `WriterMutation` in any case: the four kinds are document-level scalar edits over a snapshot with five persistent fields and no collections at all (`schema`, `id`, `languageId`, `uri` and a composed `s.stdio.semio.document` child handle), which IS this subset's own specification rather than a fact an external reader could confirm or refute. What stands in its place is the committed, independently handcrafted `(before, mutation, after, diff, outcome)` specification vector under each of the four `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves — authored by hand and already unit-tested inside the production crate itself — plus the inverse law as a metamorphic property: applying a kind and then its OWN computed inverse must restore the exact pre-mutation vector. The `mutate-writer-1` case re-exercises those same committed bytes end to end through `apply_writer_mutation_outcome`/`inverse_writer_mutation_steps` rather than calling `protocol::Mutation::diff`/`inverse` directly the way the in-crate leaf tests do.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "writer-1-any",
+      "capability": "writer-1-mutate",
+      "kinds": ["rename-writer", "change-uri", "change-language", "edit-text"]
+    }
+  ]
+}

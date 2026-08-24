@@ -25,7 +25,7 @@ const FEM3D_VIEW_CONTROLLER_ID: &str = "fem3d-view";
 //#region 🔖️PreparedScene
 fn fem3d_camera_json(camera: &FemCamera) -> String {
     if camera.json == "{}" {
-        semio_framework_plugin::resolve_ready(semio_framework_plugin::world3d_default_camera())
+        semio_framework_plugin::world3d_default_camera()
     } else {
         camera.json.clone()
     }

@@ -1109,3 +1109,343 @@ mod tests {
     //#endregion 📋️DescriptorLaws
 }
 //#endregion 🧪️Tests
+
+//#region 🔖️Kinds
+/// 🏷️ Kebab-case spelling of every [`ProgramMutation`] variant, in declaration order — the vocabulary the
+/// `program-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and the
+/// exhaustive `mutate-*` case measures itself against (66 registers × create/delete/rename/replace, minus the four the two edge-shaped registers replace with connect/disconnect). The framework never
+/// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
+/// against both the enum and the committed catalog.
+pub const KINDS: &[&str] = &[
+    "create-information-requirement",
+    "delete-information-requirement",
+    "rename-information-requirement",
+    "replace-information-requirement",
+    "create-sustainability-requirement",
+    "delete-sustainability-requirement",
+    "rename-sustainability-requirement",
+    "replace-sustainability-requirement",
+    "create-accessibility-requirement",
+    "delete-accessibility-requirement",
+    "rename-accessibility-requirement",
+    "replace-accessibility-requirement",
+    "create-conflict",
+    "delete-conflict",
+    "rename-conflict",
+    "replace-conflict",
+    "create-option-evaluation",
+    "delete-option-evaluation",
+    "rename-option-evaluation",
+    "replace-option-evaluation",
+    "create-function",
+    "delete-function",
+    "rename-function",
+    "replace-function",
+    "create-risk",
+    "delete-risk",
+    "rename-risk",
+    "replace-risk",
+    "create-decision",
+    "delete-decision",
+    "rename-decision",
+    "replace-decision",
+    "create-validation-record",
+    "delete-validation-record",
+    "rename-validation-record",
+    "replace-validation-record",
+    "create-priority-record",
+    "delete-priority-record",
+    "rename-priority-record",
+    "replace-priority-record",
+    "create-flow-requirement",
+    "delete-flow-requirement",
+    "rename-flow-requirement",
+    "replace-flow-requirement",
+    "create-environmental-requirement",
+    "delete-environmental-requirement",
+    "rename-environmental-requirement",
+    "replace-environmental-requirement",
+    "create-workshop",
+    "delete-workshop",
+    "rename-workshop",
+    "replace-workshop",
+    "create-scenario",
+    "delete-scenario",
+    "rename-scenario",
+    "replace-scenario",
+    "create-benchmark-record",
+    "delete-benchmark-record",
+    "rename-benchmark-record",
+    "replace-benchmark-record",
+    "create-activity",
+    "delete-activity",
+    "rename-activity",
+    "replace-activity",
+    "create-infrastructure-requirement",
+    "delete-infrastructure-requirement",
+    "rename-infrastructure-requirement",
+    "replace-infrastructure-requirement",
+    "create-organizational-requirement",
+    "delete-organizational-requirement",
+    "rename-organizational-requirement",
+    "replace-organizational-requirement",
+    "create-issue",
+    "delete-issue",
+    "rename-issue",
+    "replace-issue",
+    "create-approval-record",
+    "delete-approval-record",
+    "rename-approval-record",
+    "replace-approval-record",
+    "create-stakeholder",
+    "delete-stakeholder",
+    "rename-stakeholder",
+    "replace-stakeholder",
+    "create-quality-record",
+    "delete-quality-record",
+    "rename-quality-record",
+    "replace-quality-record",
+    "create-resilience-requirement",
+    "delete-resilience-requirement",
+    "rename-resilience-requirement",
+    "replace-resilience-requirement",
+    "create-assumption",
+    "delete-assumption",
+    "rename-assumption",
+    "replace-assumption",
+    "create-cost-requirement",
+    "delete-cost-requirement",
+    "rename-cost-requirement",
+    "replace-cost-requirement",
+    "create-document",
+    "delete-document",
+    "rename-document",
+    "replace-document",
+    "create-schedule-requirement",
+    "delete-schedule-requirement",
+    "rename-schedule-requirement",
+    "replace-schedule-requirement",
+    "create-growth-plan",
+    "delete-growth-plan",
+    "rename-growth-plan",
+    "replace-growth-plan",
+    "create-performance-criterion",
+    "delete-performance-criterion",
+    "rename-performance-criterion",
+    "replace-performance-criterion",
+    "create-operational-requirement",
+    "delete-operational-requirement",
+    "rename-operational-requirement",
+    "replace-operational-requirement",
+    "create-requirement",
+    "delete-requirement",
+    "rename-requirement",
+    "replace-requirement",
+    "create-site-context",
+    "delete-site-context",
+    "rename-site-context",
+    "replace-site-context",
+    "create-template-record",
+    "delete-template-record",
+    "rename-template-record",
+    "replace-template-record",
+    "create-report-record",
+    "delete-report-record",
+    "rename-report-record",
+    "replace-report-record",
+    "create-audit-event",
+    "delete-audit-event",
+    "rename-audit-event",
+    "replace-audit-event",
+    "create-knowledge-record",
+    "delete-knowledge-record",
+    "rename-knowledge-record",
+    "replace-knowledge-record",
+    "create-regulatory-requirement",
+    "delete-regulatory-requirement",
+    "rename-regulatory-requirement",
+    "replace-regulatory-requirement",
+    "create-change-record",
+    "delete-change-record",
+    "rename-change-record",
+    "replace-change-record",
+    "create-communication-requirement",
+    "delete-communication-requirement",
+    "rename-communication-requirement",
+    "replace-communication-requirement",
+    "create-resource",
+    "delete-resource",
+    "rename-resource",
+    "replace-resource",
+    "create-status-record",
+    "delete-status-record",
+    "rename-status-record",
+    "replace-status-record",
+    "create-process",
+    "delete-process",
+    "rename-process",
+    "replace-process",
+    "create-search-filter",
+    "delete-search-filter",
+    "rename-search-filter",
+    "replace-search-filter",
+    "create-access-rule",
+    "delete-access-rule",
+    "rename-access-rule",
+    "replace-access-rule",
+    "create-privacy-requirement",
+    "delete-privacy-requirement",
+    "rename-privacy-requirement",
+    "replace-privacy-requirement",
+    "create-relationship",
+    "delete-relationship",
+    "rename-relationship",
+    "replace-relationship",
+    "create-quantity-requirement",
+    "delete-quantity-requirement",
+    "rename-quantity-requirement",
+    "replace-quantity-requirement",
+    "create-analysis-record",
+    "delete-analysis-record",
+    "rename-analysis-record",
+    "replace-analysis-record",
+    "create-storage-requirement",
+    "delete-storage-requirement",
+    "rename-storage-requirement",
+    "replace-storage-requirement",
+    "create-meeting-record",
+    "delete-meeting-record",
+    "rename-meeting-record",
+    "replace-meeting-record",
+    "create-survey",
+    "delete-survey",
+    "rename-survey",
+    "replace-survey",
+    "create-delivery-constraint",
+    "delete-delivery-constraint",
+    "rename-delivery-constraint",
+    "replace-delivery-constraint",
+    "create-constraint-record",
+    "delete-constraint-record",
+    "rename-constraint-record",
+    "replace-constraint-record",
+    "create-compliance-record",
+    "delete-compliance-record",
+    "rename-compliance-record",
+    "replace-compliance-record",
+    "create-service-requirement",
+    "delete-service-requirement",
+    "rename-service-requirement",
+    "replace-service-requirement",
+    "create-equipment",
+    "delete-equipment",
+    "rename-equipment",
+    "replace-equipment",
+    "create-security-requirement",
+    "delete-security-requirement",
+    "rename-security-requirement",
+    "replace-security-requirement",
+    "create-collaboration-record",
+    "delete-collaboration-record",
+    "rename-collaboration-record",
+    "replace-collaboration-record",
+    "create-safety-requirement",
+    "delete-safety-requirement",
+    "rename-safety-requirement",
+    "replace-safety-requirement",
+    "create-user-profile",
+    "delete-user-profile",
+    "rename-user-profile",
+    "replace-user-profile",
+    "create-human-factor-requirement",
+    "delete-human-factor-requirement",
+    "rename-human-factor-requirement",
+    "replace-human-factor-requirement",
+    "create-flexibility-requirement",
+    "delete-flexibility-requirement",
+    "rename-flexibility-requirement",
+    "replace-flexibility-requirement",
+    "create-wayfinding-requirement",
+    "delete-wayfinding-requirement",
+    "rename-wayfinding-requirement",
+    "replace-wayfinding-requirement",
+    "create-program-element",
+    "delete-program-element",
+    "rename-program-element",
+    "replace-program-element",
+    "connect-adjacency",
+    "disconnect-adjacency",
+    "connect-trace",
+    "disconnect-trace",
+    "rename-meta",
+    "replace-meta",
+    "rename-project",
+    "replace-project",
+    "rename-governance",
+    "replace-governance",
+];
+
+/// 🧮️ Applies `mutation` to `snapshot` and hands back the whole `protocol::MutationOutcome`, the
+/// diagnostics included — the shape an external conformance host needs, since a committed
+/// `🎯️outcome` vector declares a status AND its diagnostic codes. This facet is dispatch-only and
+/// has never carried an apply helper of its own; every in-crate caller goes through
+/// `store::ArtifactStore`, which an external host cannot construct.
+// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
+pub fn apply_program_mutation_outcome(snapshot: &mut ProgramSnapshot, mutation: &ProgramMutation) -> protocol::MutationOutcome<ProgramDiff> {
+    let outcome = <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
+}
+
+/// ↩️ `mutation`'s own inverse against `base`, as the step LIST `protocol::Mutation::inverse`
+/// returns. Reachable from outside this crate, which `protocol::Mutation` itself is not — the
+/// `protocol` extern-crate alias is private to `📦️glue.rs`.
+// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
+pub fn inverse_program_mutation_steps(mutation: &ProgramMutation, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
+    <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
+/// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors carry.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn decode_program_mutation_json(text: &str) -> Result<ProgramMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️component.json` vector.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn decode_program_snapshot_json(text: &str) -> Result<ProgramSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
+/// projection an external test host compares through.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn encode_program_snapshot_json(snapshot: &ProgramSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("a ProgramSnapshot is always serializable")
+}
+//#endregion 🔖️Kinds
+
+//#region 🧪️KindsCatalog
+#[cfg(test)]
+mod kinds_catalog {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
+    /// committed `program-1-any` catalog. The framework reads the catalog and never the enum, so
+    /// this is the only thing standing between a renamed variant and a mutation catalog that
+    /// silently measures a vocabulary the code no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <ProgramMutation as protocol::SemanticMutation<ProgramSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared ProgramMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsCatalog

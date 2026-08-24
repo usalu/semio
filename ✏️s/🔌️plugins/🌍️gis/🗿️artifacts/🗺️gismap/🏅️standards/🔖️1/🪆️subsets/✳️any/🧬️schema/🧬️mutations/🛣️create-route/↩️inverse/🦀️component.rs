@@ -7,7 +7,7 @@ use crate::artifacts::gismap::GisMapSnapshot;
 //#region 🔹Inverse
 /// ↩️ Undo removes the feature this mutation created, addressed by its own id (captured from the
 /// payload itself, not from `base` — a `create` has nothing to look up in pre-state).
-pub async fn inverse(payload: &CreateRoute, _base: &GisMapSnapshot) -> Vec<GisMapMutation> {
+pub fn inverse(payload: &CreateRoute, _base: &GisMapSnapshot) -> Vec<GisMapMutation> {
     vec![GisMapMutation::DeleteRoute(DeleteRoute { id: payload.item.id.clone() })]
 }
 //#endregion 🔹Inverse

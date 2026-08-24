@@ -20,7 +20,7 @@ pub mod set_stock {
     /// whole-document replace, not a targeted edit — no in-history mutation exists for that (see
     /// `📓️taxonomy.md`'s forbidden vocabulary), so this routes through
     /// `editor::process3d::reset_process3d_document_effect` (a `Effect::LoadDocument`) instead.
-    pub async fn handle(
+    pub fn handle(
         payload: &SetStock,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,

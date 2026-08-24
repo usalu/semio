@@ -1196,6 +1196,19 @@ impl AssemblyJobConstruction {
     }
 }
 
+impl AssemblyJob<'static> {
+    /// 🧭 Resolves one old node/DOF identity to its retained full and free equation indices.
+    pub fn visual_equation_indices(&self, node_id: &str, dof: Dof) -> Option<(usize, Option<usize>)> {
+        let old = self.plan.dof_map.get(node_id, dof)?;
+        let new = *self.plan.inv_perm.get(old)?;
+        Some((new, self.plan.compact_of_new.get(new).copied().flatten()))
+    }
+
+    pub fn visual_free_order(&self) -> usize {
+        self.plan.free_new.len()
+    }
+}
+
 struct UnfactoredSystem {
     plan: AssemblyPlan,
     k_full_coo: Coo,
@@ -1802,6 +1815,7 @@ pub struct AssemblyCsrBuild {
     values: Vec<f64>,
     last_key: Option<(u32, u32)>,
     matrix: Option<Csr>,
+    n: usize,
 }
 
 impl AssemblyCsrBuild {
@@ -1810,6 +1824,7 @@ impl AssemblyCsrBuild {
             return Err(assembly);
         }
         let entries = std::mem::take(&mut assembly.state.merged_full);
+        let n = assembly.plan.ndof;
         Ok(Self {
             assembly: Some(assembly),
             entries,
@@ -1824,11 +1839,37 @@ impl AssemblyCsrBuild {
             values: Vec::new(),
             last_key: None,
             matrix: None,
+            n,
+        })
+    }
+
+    /// 🧮 Transfers only the unconstrained free×free owner for a physical retained solve.
+    pub fn new_free(mut assembly: AssemblyJob<'static>) -> Result<Self, AssemblyJob<'static>> {
+        if assembly.state.stage != AssemblyJobStage::Complete {
+            return Err(assembly);
+        }
+        let entries = std::mem::take(&mut assembly.state.merged_free);
+        let n = assembly.plan.free_new.len();
+        Ok(Self {
+            assembly: Some(assembly),
+            entries,
+            stage: AssemblyCsrBuildStage::ReserveRows,
+            sort_outer: 1,
+            sort_inner: 1,
+            merge_cursor: 0,
+            row_cursor: 0,
+            row_counts: Vec::new(),
+            indptr: Vec::new(),
+            indices: Vec::new(),
+            values: Vec::new(),
+            last_key: None,
+            matrix: None,
+            n,
         })
     }
 
     pub fn step_one(&mut self) -> Result<bool, &'static [u8]> {
-        let n = self.assembly.as_ref().ok_or(b"fem.assembly-csr-owner-missing" as &'static [u8])?.plan.ndof;
+        let n = self.n;
         match self.stage {
             AssemblyCsrBuildStage::ReserveRows => {
                 if !reserve_exact_owner_page(&mut self.row_counts, n) {
@@ -1915,6 +1956,16 @@ impl AssemblyCsrBuild {
 
     pub fn take_complete(&mut self) -> Option<Csr> {
         (self.stage == AssemblyCsrBuildStage::Complete).then(|| self.matrix.take()).flatten()
+    }
+
+    /// ⚖️ Borrows one retained full-system triplet for bounded constrained-reaction recovery.
+    pub fn visual_full_entry(&self, index: usize) -> Option<(usize, usize, f64)> {
+        let entry = self.assembly.as_ref()?.state.merged_full.get(index)?;
+        Some((entry.row as usize, entry.col as usize, entry.value))
+    }
+
+    pub fn visual_compact_index(&self, new_index: usize) -> Option<usize> {
+        self.assembly.as_ref()?.plan.compact_of_new.get(new_index).copied().flatten()
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {

@@ -36,7 +36,7 @@ pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
 /// `GisTerrainSnapshot::imported_features_json`) and `scene:out` (this terrain as `3d.mesh`).
 /// `document_media_type` is Data×Value (the document is a scalar "exaggeration + imported overlay"
 /// record, not itself mesh geometry — `scene:out` is the actual renderable mesh/terrain surface).
-pub async fn gis3d_io() -> AppIo {
+pub fn gis3d_io() -> AppIo {
     AppIo {
         document_schema: GIS_3D_TERRAIN_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
@@ -50,7 +50,7 @@ pub async fn gis3d_io() -> AppIo {
 /// 🔌️ `map:in` — a `2d.map` producer (gis2d's `map:out`) feeding an overlay pin layer into this
 /// terrain (see `GisTerrainSnapshot::imported_features_json`). `One`/optional: exactly one map may
 /// be draped onto a terrain at a time, and a terrain with no upstream edge is valid.
-pub async fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
+pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "map:in".into(),
         label: "Map".into(),
@@ -65,7 +65,7 @@ pub async fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🔌️ `scene:out` — this terrain as `3d.mesh` (kind already registered by lowpoly; reused verbatim,
 /// not redeclared — WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). `Many`/optional: several
 /// downstream consumers may fan out from one terrain, and a terrain with no downstream edge is valid.
-pub async fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
+pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "scene:out".into(),
         label: "Scene".into(),
@@ -82,7 +82,7 @@ pub async fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🏔️terrain window's `render`/`build_terrain_scene_json`), so this exports the same terrain descriptor
 /// fields (exaggeration + imported overlay) as a structured `3d.mesh` payload rather than a real
 /// triangulated mesh — an honest placeholder for the day a tessellator lands, not a silent fake.
-pub async fn gis3d_scene_media(document: &GisTerrainSnapshot) -> Media {
+pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> Media {
     Media {
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         payload: MediaPayload::Structured {
@@ -298,27 +298,27 @@ pub(crate) mod testkit {
 
     pub type Gis3dApp = VcsArtifactApp<EditorApp<Gis3dPlayApp>>;
 
-    pub async fn app() -> Gis3dApp {
+    pub fn app() -> Gis3dApp {
         new_app::<EditorApp<Gis3dPlayApp>>()
     }
 
     /// ✏️ Adapts `create_gis3d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::assert_declared_actions_bridge_to_commands` still expects —
     /// framework testkit gap, not modifiable here.
-    pub async fn gis3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub fn gis3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_gis3d_app(), examples: Vec::new() }
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View/Shell-emits-operations rejection) runs.
-    pub async fn app_with_registry() -> Gis3dApp {
+    pub fn app_with_registry() -> Gis3dApp {
         new_app_with_registry::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut Gis3dApp, command: Gis3dCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut Gis3dApp, command: Gis3dCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut Gis3dApp, body_key: &str) -> String {
+    pub fn render(app: &mut Gis3dApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }

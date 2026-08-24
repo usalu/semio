@@ -1,0 +1,713 @@
+//! 🦀️ DIN EN 16798-1 exhaustive mutation case — Rust adapter. Ticket
+//! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 12 (the unregistered-vocabulary sweep). Recorded
+//! no-oracle decision `din16798-1-mutation-semantics`
+//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `s.norm.din16798` is a
+//! semio-native artifact with no third-party reader or writer, so the `oracle` handlers here
+//! read the committed, independently handcrafted per-kind specification vectors literally — no
+//! recomputation, no reimplementation of mutation semantics — while `subject` drives this
+//! repository's own `apply_din16798_mutation` over the full 62-kind `Din16798Mutation`
+//! vocabulary.
+//!
+//! Sixty-two document-root scalars and not one collection: this is the largest flat mutation
+//! vocabulary in the repository, and every kind is a `change-<field>`. The fields group into
+//! the standard's own clause families — thermal comfort (operative temperature, humidity,
+//! draught air speed, running-mean outdoor temperature), air quality (CO2, IDA class, supply
+//! airflow), daylight and acoustics, three separate occupancy models (non-residential persons,
+//! dwelling bedrooms, residential occupants) each with their own airflow field, specific fan
+//! power, heat recovery (achieved and required efficiency, mass flow, specific heat,
+//! temperature lift, operating hours, savings reference), infiltration and blower-door, cellar
+//! ventilation, transmission and ventilation heat transfer, cooling (set point, period, gains,
+//! utilization factor, reference, chiller type, EER, annual demand), storage and DHW, and duct
+//! leakage.
+//!
+//! ⚖️ WHERE THE ASSERTIONS LIVE. A recorded no-oracle case runs NO oracle role — the runner
+//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has
+//! none — so the comparison profile never gets two sides to compare. Every law this case claims
+//! is therefore asserted IN ROLE inside the subject handlers, through the shared
+//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module (`law::mutation_is_observable`,
+//! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
+//! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
+//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️component.json`. The oracle handlers still
+//! assert what a committed vector can prove on its own: that an `applied` vector genuinely
+//! moves the document and a `rejected` one genuinely does not.
+//!
+//! 🌉️ HOW THE FIXTURES REACH TYPED VALUES. The generated test host links only
+//! `semio-repo-test-host`, the stdio law crate and — behind `sut` — this plugin's own crate;
+//! `serde`, `serde_json` and this crate's `protocol`/`store`/`vcs` extern-crate aliases are all
+//! unreachable from here. The subset's own production code therefore exports the bridges
+//! (`decode_din16798_snapshot_json`/`encode_din16798_snapshot_json`,
+//! `decode_din16798_dsl`/`encode_din16798_dsl`, `decode_din16798_pack`/`encode_din16798_pack`
+//! in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`;
+//! `decode_din16798_mutation_json`, `apply_din16798_mutation`, `inverse_din16798_mutation` in
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`), whose
+//! signatures name only reachable types. Both roles read the SAME committed bytes — the oracle
+//! role via `include_str!`, the subject role by decoding that same text — so a fixture can
+//! never drift away from a Rust literal transcribed beside it, because there is none.
+//!
+//! 🚧️ The Rust SUBJECT phase cannot run at the time of writing: `semio-s-plugin-norm` does not
+//! compile (a concurrent session is mid-flight removing gratuitous `async fn` wrappers across
+//! the crate), and `semio-framework-os-kernel` is red for the same reason. The subject half is
+//! written against the SYNC trait surface the fixture tests in this crate already call
+//! (`Mutation::diff`, `MutationDiff::apply`, `Mutation::inverse`, `ArtifactDsl`,
+//! `ArtifactPack`) rather than against the plugin's async wrappers, and is `sut`-gated so the
+//! oracle-only run never links it.
+
+use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
+use semio_s_plugin_stdio_test_oracle::law;
+
+//#region 🔖️Kinds
+/// 🏷️ Mirrors `Din16798Mutation::KINDS` (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) —
+/// duplicated, not imported, because the oracle-only build must not link the subject crate. The
+/// contract's mutation-coverage gate keeps this list honest against the catalog;
+/// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
+const KINDS: &[&str] = &[
+    "change-annex",
+    "change-occupancy",
+    "change-comfort-category",
+    "change-t-op-c",
+    "change-rh-percent",
+    "change-air-speed-ms",
+    "change-theta-rm-c",
+    "change-co2-ppm",
+    "change-df-percent",
+    "change-l-aeq-db",
+    "change-persons",
+    "change-ida-class",
+    "change-ventilation-m3-h",
+    "change-floor-area-m2",
+    "change-bedrooms",
+    "change-dwelling-ventilation-m3-h",
+    "change-occupants",
+    "change-residential-ventilation-m3-h",
+    "change-sfp-wm3-s",
+    "change-sfp-required-class",
+    "change-heat-recovery-eta",
+    "change-heat-recovery-eta-min",
+    "change-system-type",
+    "change-years-since-inspection",
+    "change-humidification-required-kg-h",
+    "change-humidification-provided-kg-h",
+    "change-fan-qvm3-s",
+    "change-fan-t-run-h",
+    "change-fan-energy-reference-kwh",
+    "change-night-setback-k",
+    "change-hr-m-dot-kg-s",
+    "change-hr-cp-j-kgk",
+    "change-hr-delta-tc",
+    "change-hr-th",
+    "change-hr-savings-reference-kwh",
+    "change-n50-h-inv",
+    "change-volume-m3",
+    "change-infiltration-allowance-m3-h",
+    "change-cellar-area-m2",
+    "change-cellar-ventilation-m3-h",
+    "change-h-tr-wk",
+    "change-h-ve-wk",
+    "change-theta-ec",
+    "change-theta-set-c",
+    "change-cooling-delta-th",
+    "change-cooling-gains-kwh",
+    "change-cooling-utilization-factor",
+    "change-cooling-reference-kwh",
+    "change-chiller-type",
+    "change-eer-actual",
+    "change-qc-kwh",
+    "change-generation-reference-kwh",
+    "change-data-center-supply-c",
+    "change-h-st-wk",
+    "change-theta-st-c",
+    "change-theta-amb-c",
+    "change-storage-th",
+    "change-storage-allowance-kwh",
+    "change-dhw-delivery-c",
+    "change-duct-class",
+    "change-duct-test-pressure-pa",
+    "change-duct-leakage-m3-sm2",
+];
+
+/// 🗣️ The real committed DIN EN 16798-1 document, read where the domain already keeps it.
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+//#endregion 🔖️Kinds
+
+//#region 🔖️Fixtures
+/// 🧫️ The committed `(before, mutation, after, outcome)` specification vector for one kind, read
+/// literally via `include_str!` — this IS the independently handcrafted evidence the no-oracle
+/// decision rests on, never recomputed. One `include_str!` per committed file: the oracle role
+/// answers with `before`/`after`, the subject role decodes all four.
+fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
+    match kind {
+        "change-annex" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-annex/🧪️tests/switches-the-check-to-the-en-annex/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-annex/🧪️tests/switches-the-check-to-the-en-annex/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-annex/🧪️tests/switches-the-check-to-the-en-annex/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-annex/🧪️tests/switches-the-check-to-the-en-annex/🎯️outcome/🔣️component.json"),
+        ),
+        "change-occupancy" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂change-occupancy/🧪️tests/reclassifies-the-space-as-office/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂change-occupancy/🧪️tests/reclassifies-the-space-as-office/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂change-occupancy/🧪️tests/reclassifies-the-space-as-office/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂change-occupancy/🧪️tests/reclassifies-the-space-as-office/🎯️outcome/🔣️component.json"),
+        ),
+        "change-comfort-category" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛change-comfort-category/🧪️tests/tightens-the-comfort-category-to-i/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛change-comfort-category/🧪️tests/tightens-the-comfort-category-to-i/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛change-comfort-category/🧪️tests/tightens-the-comfort-category-to-i/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛change-comfort-category/🧪️tests/tightens-the-comfort-category-to-i/🎯️outcome/🔣️component.json"),
+        ),
+        "change-t-op-c" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊change-t-op-c/🧪️tests/raises-the-operative-temperature-to-24-point-5-c/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊change-t-op-c/🧪️tests/raises-the-operative-temperature-to-24-point-5-c/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊change-t-op-c/🧪️tests/raises-the-operative-temperature-to-24-point-5-c/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊change-t-op-c/🧪️tests/raises-the-operative-temperature-to-24-point-5-c/🎯️outcome/🔣️component.json"),
+        ),
+        "change-rh-percent" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌹change-rh-percent/🧪️tests/drops-indoor-humidity-to-42-point-5-percent/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌹change-rh-percent/🧪️tests/drops-indoor-humidity-to-42-point-5-percent/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌹change-rh-percent/🧪️tests/drops-indoor-humidity-to-42-point-5-percent/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌹change-rh-percent/🧪️tests/drops-indoor-humidity-to-42-point-5-percent/🎯️outcome/🔣️component.json"),
+        ),
+        "change-air-speed-ms" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀change-air-speed-ms/🧪️tests/doubles-the-draught-air-speed-to-0-point-25-ms/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀change-air-speed-ms/🧪️tests/doubles-the-draught-air-speed-to-0-point-25-ms/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀change-air-speed-ms/🧪️tests/doubles-the-draught-air-speed-to-0-point-25-ms/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀change-air-speed-ms/🧪️tests/doubles-the-draught-air-speed-to-0-point-25-ms/🎯️outcome/🔣️component.json"),
+        ),
+        "change-theta-rm-c" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-theta-rm-c/🧪️tests/raises-the-running-mean-outdoor-temperature-to-18-point-5-c/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-theta-rm-c/🧪️tests/raises-the-running-mean-outdoor-temperature-to-18-point-5-c/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-theta-rm-c/🧪️tests/raises-the-running-mean-outdoor-temperature-to-18-point-5-c/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-theta-rm-c/🧪️tests/raises-the-running-mean-outdoor-temperature-to-18-point-5-c/🎯️outcome/🔣️component.json"),
+        ),
+        "change-co2-ppm" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️change-co2-ppm/🧪️tests/raises-the-measured-co2-to-950-ppm/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️change-co2-ppm/🧪️tests/raises-the-measured-co2-to-950-ppm/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️change-co2-ppm/🧪️tests/raises-the-measured-co2-to-950-ppm/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️change-co2-ppm/🧪️tests/raises-the-measured-co2-to-950-ppm/🎯️outcome/🔣️component.json"),
+        ),
+        "change-df-percent" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵change-df-percent/🧪️tests/raises-the-daylight-factor-to-3-point-75-percent/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵change-df-percent/🧪️tests/raises-the-daylight-factor-to-3-point-75-percent/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵change-df-percent/🧪️tests/raises-the-daylight-factor-to-3-point-75-percent/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵change-df-percent/🧪️tests/raises-the-daylight-factor-to-3-point-75-percent/🎯️outcome/🔣️component.json"),
+        ),
+        "change-l-aeq-db" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳change-l-aeq-db/🧪️tests/raises-the-equivalent-sound-level-to-30-db/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳change-l-aeq-db/🧪️tests/raises-the-equivalent-sound-level-to-30-db/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳change-l-aeq-db/🧪️tests/raises-the-equivalent-sound-level-to-30-db/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳change-l-aeq-db/🧪️tests/raises-the-equivalent-sound-level-to-30-db/🎯️outcome/🔣️component.json"),
+        ),
+        "change-persons" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱change-persons/🧪️tests/raises-the-design-occupancy-to-16-people/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱change-persons/🧪️tests/raises-the-design-occupancy-to-16-people/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱change-persons/🧪️tests/raises-the-design-occupancy-to-16-people/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱change-persons/🧪️tests/raises-the-design-occupancy-to-16-people/🎯️outcome/🔣️component.json"),
+        ),
+        "change-ida-class" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵change-ida-class/🧪️tests/relaxes-the-indoor-air-class-to-ida-3/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵change-ida-class/🧪️tests/relaxes-the-indoor-air-class-to-ida-3/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵change-ida-class/🧪️tests/relaxes-the-indoor-air-class-to-ida-3/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌵change-ida-class/🧪️tests/relaxes-the-indoor-air-class-to-ida-3/🎯️outcome/🔣️component.json"),
+        ),
+        "change-ventilation-m3-h" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-ventilation-m3-h/🧪️tests/raises-the-supply-airflow-to-360-m3-per-hour/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-ventilation-m3-h/🧪️tests/raises-the-supply-airflow-to-360-m3-per-hour/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-ventilation-m3-h/🧪️tests/raises-the-supply-airflow-to-360-m3-per-hour/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-ventilation-m3-h/🧪️tests/raises-the-supply-airflow-to-360-m3-per-hour/🎯️outcome/🔣️component.json"),
+        ),
+        "change-floor-area-m2" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-floor-area-m2/🧪️tests/grows-the-conditioned-floor-area-to-120-m2/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-floor-area-m2/🧪️tests/grows-the-conditioned-floor-area-to-120-m2/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-floor-area-m2/🧪️tests/grows-the-conditioned-floor-area-to-120-m2/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧼change-floor-area-m2/🧪️tests/grows-the-conditioned-floor-area-to-120-m2/🎯️outcome/🔣️component.json"),
+        ),
+        "change-bedrooms" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-bedrooms/🧪️tests/adds-a-fourth-bedroom/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-bedrooms/🧪️tests/adds-a-fourth-bedroom/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-bedrooms/🧪️tests/adds-a-fourth-bedroom/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-bedrooms/🧪️tests/adds-a-fourth-bedroom/🎯️outcome/🔣️component.json"),
+        ),
+        "change-dwelling-ventilation-m3-h" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲change-dwelling-ventilation-m3-h/🧪️tests/raises-the-dwelling-airflow-to-96-m3-per-hour/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲change-dwelling-ventilation-m3-h/🧪️tests/raises-the-dwelling-airflow-to-96-m3-per-hour/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲change-dwelling-ventilation-m3-h/🧪️tests/raises-the-dwelling-airflow-to-96-m3-per-hour/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲change-dwelling-ventilation-m3-h/🧪️tests/raises-the-dwelling-airflow-to-96-m3-per-hour/🎯️outcome/🔣️component.json"),
+        ),
+        "change-occupants" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃change-occupants/🧪️tests/raises-the-household-to-five-occupants/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃change-occupants/🧪️tests/raises-the-household-to-five-occupants/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃change-occupants/🧪️tests/raises-the-household-to-five-occupants/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃change-occupants/🧪️tests/raises-the-household-to-five-occupants/🎯️outcome/🔣️component.json"),
+        ),
+        "change-residential-ventilation-m3-h" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌸change-residential-ventilation-m3-h/🧪️tests/raises-the-residential-airflow-to-110-m3-per-hour/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌸change-residential-ventilation-m3-h/🧪️tests/raises-the-residential-airflow-to-110-m3-per-hour/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌸change-residential-ventilation-m3-h/🧪️tests/raises-the-residential-airflow-to-110-m3-per-hour/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌸change-residential-ventilation-m3-h/🧪️tests/raises-the-residential-airflow-to-110-m3-per-hour/🎯️outcome/🔣️component.json"),
+        ),
+        "change-sfp-wm3-s" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌻change-sfp-wm3-s/🧪️tests/improves-the-specific-fan-power-to-1250-w-per-m3-s/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌻change-sfp-wm3-s/🧪️tests/improves-the-specific-fan-power-to-1250-w-per-m3-s/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌻change-sfp-wm3-s/🧪️tests/improves-the-specific-fan-power-to-1250-w-per-m3-s/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌻change-sfp-wm3-s/🧪️tests/improves-the-specific-fan-power-to-1250-w-per-m3-s/🎯️outcome/🔣️component.json"),
+        ),
+        "change-sfp-required-class" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌺change-sfp-required-class/🧪️tests/tightens-the-required-sfp-class-to-3/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌺change-sfp-required-class/🧪️tests/tightens-the-required-sfp-class-to-3/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌺change-sfp-required-class/🧪️tests/tightens-the-required-sfp-class-to-3/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌺change-sfp-required-class/🧪️tests/tightens-the-required-sfp-class-to-3/🎯️outcome/🔣️component.json"),
+        ),
+        "change-heat-recovery-eta" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-heat-recovery-eta/🧪️tests/raises-the-achieved-heat-recovery-to-0-point-875/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-heat-recovery-eta/🧪️tests/raises-the-achieved-heat-recovery-to-0-point-875/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-heat-recovery-eta/🧪️tests/raises-the-achieved-heat-recovery-to-0-point-875/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑change-heat-recovery-eta/🧪️tests/raises-the-achieved-heat-recovery-to-0-point-875/🎯️outcome/🔣️component.json"),
+        ),
+        "change-heat-recovery-eta-min" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪞change-heat-recovery-eta-min/🧪️tests/raises-the-required-heat-recovery-minimum-to-0-point-625/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪞change-heat-recovery-eta-min/🧪️tests/raises-the-required-heat-recovery-minimum-to-0-point-625/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪞change-heat-recovery-eta-min/🧪️tests/raises-the-required-heat-recovery-minimum-to-0-point-625/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪞change-heat-recovery-eta-min/🧪️tests/raises-the-required-heat-recovery-minimum-to-0-point-625/🎯️outcome/🔣️component.json"),
+        ),
+        "change-system-type" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌰change-system-type/🧪️tests/switches-to-a-decentral-mechanical-system/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌰change-system-type/🧪️tests/switches-to-a-decentral-mechanical-system/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌰change-system-type/🧪️tests/switches-to-a-decentral-mechanical-system/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌰change-system-type/🧪️tests/switches-to-a-decentral-mechanical-system/🎯️outcome/🔣️component.json"),
+        ),
+        "change-years-since-inspection" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-years-since-inspection/🧪️tests/ages-the-last-inspection-to-six-years/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-years-since-inspection/🧪️tests/ages-the-last-inspection-to-six-years/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-years-since-inspection/🧪️tests/ages-the-last-inspection-to-six-years/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-years-since-inspection/🧪️tests/ages-the-last-inspection-to-six-years/🎯️outcome/🔣️component.json"),
+        ),
+        "change-humidification-required-kg-h" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾change-humidification-required-kg-h/🧪️tests/raises-the-required-humidification-to-3-point-5-kg-per-hour/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾change-humidification-required-kg-h/🧪️tests/raises-the-required-humidification-to-3-point-5-kg-per-hour/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾change-humidification-required-kg-h/🧪️tests/raises-the-required-humidification-to-3-point-5-kg-per-hour/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌾change-humidification-required-kg-h/🧪️tests/raises-the-required-humidification-to-3-point-5-kg-per-hour/🎯️outcome/🔣️component.json"),
+        ),
+        "change-humidification-provided-kg-h" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀change-humidification-provided-kg-h/🧪️tests/drops-the-provided-humidification-to-1-point-25-kg-per-hour/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀change-humidification-provided-kg-h/🧪️tests/drops-the-provided-humidification-to-1-point-25-kg-per-hour/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀change-humidification-provided-kg-h/🧪️tests/drops-the-provided-humidification-to-1-point-25-kg-per-hour/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍀change-humidification-provided-kg-h/🧪️tests/drops-the-provided-humidification-to-1-point-25-kg-per-hour/🎯️outcome/🔣️component.json"),
+        ),
+        "change-fan-qvm3-s" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-fan-qvm3-s/🧪️tests/raises-the-fan-volume-flow-to-1-point-5-m3-per-second/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-fan-qvm3-s/🧪️tests/raises-the-fan-volume-flow-to-1-point-5-m3-per-second/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-fan-qvm3-s/🧪️tests/raises-the-fan-volume-flow-to-1-point-5-m3-per-second/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪥change-fan-qvm3-s/🧪️tests/raises-the-fan-volume-flow-to-1-point-5-m3-per-second/🎯️outcome/🔣️component.json"),
+        ),
+        "change-fan-t-run-h" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-fan-t-run-h/🧪️tests/extends-the-daily-fan-runtime-to-12-hours/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-fan-t-run-h/🧪️tests/extends-the-daily-fan-runtime-to-12-hours/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-fan-t-run-h/🧪️tests/extends-the-daily-fan-runtime-to-12-hours/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧴change-fan-t-run-h/🧪️tests/extends-the-daily-fan-runtime-to-12-hours/🎯️outcome/🔣️component.json"),
+        ),
+        "change-fan-energy-reference-kwh" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-fan-energy-reference-kwh/🧪️tests/raises-the-fan-energy-reference-to-18-kwh/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-fan-energy-reference-kwh/🧪️tests/raises-the-fan-energy-reference-to-18-kwh/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-fan-energy-reference-kwh/🧪️tests/raises-the-fan-energy-reference-to-18-kwh/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒change-fan-energy-reference-kwh/🧪️tests/raises-the-fan-energy-reference-to-18-kwh/🎯️outcome/🔣️component.json"),
+        ),
+        "change-night-setback-k" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁change-night-setback-k/🧪️tests/deepens-the-night-setback-to-5-kelvin/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁change-night-setback-k/🧪️tests/deepens-the-night-setback-to-5-kelvin/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁change-night-setback-k/🧪️tests/deepens-the-night-setback-to-5-kelvin/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍁change-night-setback-k/🧪️tests/deepens-the-night-setback-to-5-kelvin/🎯️outcome/🔣️component.json"),
+        ),
+        "change-hr-m-dot-kg-s" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿change-hr-m-dot-kg-s/🧪️tests/raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿change-hr-m-dot-kg-s/🧪️tests/raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿change-hr-m-dot-kg-s/🧪️tests/raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿change-hr-m-dot-kg-s/🧪️tests/raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second/🎯️outcome/🔣️component.json"),
+        ),
+        "change-hr-cp-j-kgk" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-hr-cp-j-kgk/🧪️tests/corrects-the-air-specific-heat-to-1010-j-per-kgk/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-hr-cp-j-kgk/🧪️tests/corrects-the-air-specific-heat-to-1010-j-per-kgk/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-hr-cp-j-kgk/🧪️tests/corrects-the-air-specific-heat-to-1010-j-per-kgk/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-hr-cp-j-kgk/🧪️tests/corrects-the-air-specific-heat-to-1010-j-per-kgk/🎯️outcome/🔣️component.json"),
+        ),
+        "change-hr-delta-tc" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-hr-delta-tc/🧪️tests/drops-the-heat-recovery-temperature-lift-to-12-point-5-c/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-hr-delta-tc/🧪️tests/drops-the-heat-recovery-temperature-lift-to-12-point-5-c/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-hr-delta-tc/🧪️tests/drops-the-heat-recovery-temperature-lift-to-12-point-5-c/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-hr-delta-tc/🧪️tests/drops-the-heat-recovery-temperature-lift-to-12-point-5-c/🎯️outcome/🔣️component.json"),
+        ),
+        "change-hr-th" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿change-hr-th/🧪️tests/extends-the-heat-recovery-operating-hours-to-14/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿change-hr-th/🧪️tests/extends-the-heat-recovery-operating-hours-to-14/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿change-hr-th/🧪️tests/extends-the-heat-recovery-operating-hours-to-14/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿change-hr-th/🧪️tests/extends-the-heat-recovery-operating-hours-to-14/🎯️outcome/🔣️component.json"),
+        ),
+        "change-hr-savings-reference-kwh" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁change-hr-savings-reference-kwh/🧪️tests/raises-the-heat-recovery-savings-reference-to-65-kwh/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁change-hr-savings-reference-kwh/🧪️tests/raises-the-heat-recovery-savings-reference-to-65-kwh/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁change-hr-savings-reference-kwh/🧪️tests/raises-the-heat-recovery-savings-reference-to-65-kwh/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛁change-hr-savings-reference-kwh/🧪️tests/raises-the-heat-recovery-savings-reference-to-65-kwh/🎯️outcome/🔣️component.json"),
+        ),
+        "change-n50-h-inv" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲change-n50-h-inv/🧪️tests/loosens-the-blower-door-result-to-2-point-5-per-hour/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲change-n50-h-inv/🧪️tests/loosens-the-blower-door-result-to-2-point-5-per-hour/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲change-n50-h-inv/🧪️tests/loosens-the-blower-door-result-to-2-point-5-per-hour/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲change-n50-h-inv/🧪️tests/loosens-the-blower-door-result-to-2-point-5-per-hour/🎯️outcome/🔣️component.json"),
+        ),
+        "change-volume-m3" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻change-volume-m3/🧪️tests/grows-the-air-volume-to-640-m3/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻change-volume-m3/🧪️tests/grows-the-air-volume-to-640-m3/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻change-volume-m3/🧪️tests/grows-the-air-volume-to-640-m3/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻change-volume-m3/🧪️tests/grows-the-air-volume-to-640-m3/🎯️outcome/🔣️component.json"),
+        ),
+        "change-infiltration-allowance-m3-h" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-infiltration-allowance-m3-h/🧪️tests/raises-the-infiltration-allowance-to-52-point-5-m3-per-hour/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-infiltration-allowance-m3-h/🧪️tests/raises-the-infiltration-allowance-to-52-point-5-m3-per-hour/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-infiltration-allowance-m3-h/🧪️tests/raises-the-infiltration-allowance-to-52-point-5-m3-per-hour/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌴change-infiltration-allowance-m3-h/🧪️tests/raises-the-infiltration-allowance-to-52-point-5-m3-per-hour/🎯️outcome/🔣️component.json"),
+        ),
+        "change-cellar-area-m2" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-cellar-area-m2/🧪️tests/grows-the-cellar-floor-area-to-62-point-5-m2/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-cellar-area-m2/🧪️tests/grows-the-cellar-floor-area-to-62-point-5-m2/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-cellar-area-m2/🧪️tests/grows-the-cellar-floor-area-to-62-point-5-m2/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-cellar-area-m2/🧪️tests/grows-the-cellar-floor-area-to-62-point-5-m2/🎯️outcome/🔣️component.json"),
+        ),
+        "change-cellar-ventilation-m3-h" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯change-cellar-ventilation-m3-h/🧪️tests/raises-the-cellar-airflow-to-22-point-5-m3-per-hour/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯change-cellar-ventilation-m3-h/🧪️tests/raises-the-cellar-airflow-to-22-point-5-m3-per-hour/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯change-cellar-ventilation-m3-h/🧪️tests/raises-the-cellar-airflow-to-22-point-5-m3-per-hour/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧯change-cellar-ventilation-m3-h/🧪️tests/raises-the-cellar-airflow-to-22-point-5-m3-per-hour/🎯️outcome/🔣️component.json"),
+        ),
+        "change-h-tr-wk" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-h-tr-wk/🧪️tests/improves-the-transmission-heat-transfer-to-175-w-per-k/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-h-tr-wk/🧪️tests/improves-the-transmission-heat-transfer-to-175-w-per-k/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-h-tr-wk/🧪️tests/improves-the-transmission-heat-transfer-to-175-w-per-k/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹change-h-tr-wk/🧪️tests/improves-the-transmission-heat-transfer-to-175-w-per-k/🎯️outcome/🔣️component.json"),
+        ),
+        "change-h-ve-wk" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-h-ve-wk/🧪️tests/raises-the-ventilation-heat-transfer-to-125-w-per-k/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-h-ve-wk/🧪️tests/raises-the-ventilation-heat-transfer-to-125-w-per-k/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-h-ve-wk/🧪️tests/raises-the-ventilation-heat-transfer-to-125-w-per-k/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺change-h-ve-wk/🧪️tests/raises-the-ventilation-heat-transfer-to-125-w-per-k/🎯️outcome/🔣️component.json"),
+        ),
+        "change-theta-ec" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨change-theta-ec/🧪️tests/raises-the-external-design-temperature-to-34-point-5-c/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨change-theta-ec/🧪️tests/raises-the-external-design-temperature-to-34-point-5-c/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨change-theta-ec/🧪️tests/raises-the-external-design-temperature-to-34-point-5-c/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨change-theta-ec/🧪️tests/raises-the-external-design-temperature-to-34-point-5-c/🎯️outcome/🔣️component.json"),
+        ),
+        "change-theta-set-c" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌎️change-theta-set-c/🧪️tests/lowers-the-cooling-set-point-to-25-c/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌎️change-theta-set-c/🧪️tests/lowers-the-cooling-set-point-to-25-c/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌎️change-theta-set-c/🧪️tests/lowers-the-cooling-set-point-to-25-c/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌎️change-theta-set-c/🧪️tests/lowers-the-cooling-set-point-to-25-c/🎯️outcome/🔣️component.json"),
+        ),
+        "change-cooling-delta-th" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚change-cooling-delta-th/🧪️tests/extends-the-cooling-period-to-12-point-5-hours/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚change-cooling-delta-th/🧪️tests/extends-the-cooling-period-to-12-point-5-hours/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚change-cooling-delta-th/🧪️tests/extends-the-cooling-period-to-12-point-5-hours/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚change-cooling-delta-th/🧪️tests/extends-the-cooling-period-to-12-point-5-hours/🎯️outcome/🔣️component.json"),
+        ),
+        "change-cooling-gains-kwh" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜change-cooling-gains-kwh/🧪️tests/raises-the-internal-cooling-gains-to-7-point-5-kwh/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜change-cooling-gains-kwh/🧪️tests/raises-the-internal-cooling-gains-to-7-point-5-kwh/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜change-cooling-gains-kwh/🧪️tests/raises-the-internal-cooling-gains-to-7-point-5-kwh/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜change-cooling-gains-kwh/🧪️tests/raises-the-internal-cooling-gains-to-7-point-5-kwh/🎯️outcome/🔣️component.json"),
+        ),
+        "change-cooling-utilization-factor" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣change-cooling-utilization-factor/🧪️tests/raises-the-cooling-utilization-factor-to-0-point-875/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣change-cooling-utilization-factor/🧪️tests/raises-the-cooling-utilization-factor-to-0-point-875/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣change-cooling-utilization-factor/🧪️tests/raises-the-cooling-utilization-factor-to-0-point-875/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣change-cooling-utilization-factor/🧪️tests/raises-the-cooling-utilization-factor-to-0-point-875/🎯️outcome/🔣️component.json"),
+        ),
+        "change-cooling-reference-kwh" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝change-cooling-reference-kwh/🧪️tests/raises-the-cooling-reference-to-25-kwh/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝change-cooling-reference-kwh/🧪️tests/raises-the-cooling-reference-to-25-kwh/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝change-cooling-reference-kwh/🧪️tests/raises-the-cooling-reference-to-25-kwh/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝change-cooling-reference-kwh/🧪️tests/raises-the-cooling-reference-to-25-kwh/🎯️outcome/🔣️component.json"),
+        ),
+        "change-chiller-type" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚨change-chiller-type/🧪️tests/switches-to-a-water-cooled-chiller/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚨change-chiller-type/🧪️tests/switches-to-a-water-cooled-chiller/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚨change-chiller-type/🧪️tests/switches-to-a-water-cooled-chiller/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚨change-chiller-type/🧪️tests/switches-to-a-water-cooled-chiller/🎯️outcome/🔣️component.json"),
+        ),
+        "change-eer-actual" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪤change-eer-actual/🧪️tests/raises-the-achieved-eer-to-3-point-5/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪤change-eer-actual/🧪️tests/raises-the-achieved-eer-to-3-point-5/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪤change-eer-actual/🧪️tests/raises-the-achieved-eer-to-3-point-5/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪤change-eer-actual/🧪️tests/raises-the-achieved-eer-to-3-point-5/🎯️outcome/🔣️component.json"),
+        ),
+        "change-qc-kwh" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌷change-qc-kwh/🧪️tests/raises-the-annual-cooling-demand-to-1250-kwh/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌷change-qc-kwh/🧪️tests/raises-the-annual-cooling-demand-to-1250-kwh/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌷change-qc-kwh/🧪️tests/raises-the-annual-cooling-demand-to-1250-kwh/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌷change-qc-kwh/🧪️tests/raises-the-annual-cooling-demand-to-1250-kwh/🎯️outcome/🔣️component.json"),
+        ),
+        "change-generation-reference-kwh" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-generation-reference-kwh/🧪️tests/raises-the-generation-reference-to-450-kwh/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-generation-reference-kwh/🧪️tests/raises-the-generation-reference-to-450-kwh/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-generation-reference-kwh/🧪️tests/raises-the-generation-reference-to-450-kwh/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-generation-reference-kwh/🧪️tests/raises-the-generation-reference-to-450-kwh/🎯️outcome/🔣️component.json"),
+        ),
+        "change-data-center-supply-c" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰change-data-center-supply-c/🧪️tests/raises-the-data-centre-supply-air-to-27-c/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰change-data-center-supply-c/🧪️tests/raises-the-data-centre-supply-air-to-27-c/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰change-data-center-supply-c/🧪️tests/raises-the-data-centre-supply-air-to-27-c/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰change-data-center-supply-c/🧪️tests/raises-the-data-centre-supply-air-to-27-c/🎯️outcome/🔣️component.json"),
+        ),
+        "change-h-st-wk" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-h-st-wk/🧪️tests/raises-the-storage-loss-coefficient-to-6-point-5-w-per-k/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-h-st-wk/🧪️tests/raises-the-storage-loss-coefficient-to-6-point-5-w-per-k/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-h-st-wk/🧪️tests/raises-the-storage-loss-coefficient-to-6-point-5-w-per-k/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪠change-h-st-wk/🧪️tests/raises-the-storage-loss-coefficient-to-6-point-5-w-per-k/🎯️outcome/🔣️component.json"),
+        ),
+        "change-theta-st-c" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌏️change-theta-st-c/🧪️tests/lowers-the-storage-temperature-to-55-c/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌏️change-theta-st-c/🧪️tests/lowers-the-storage-temperature-to-55-c/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌏️change-theta-st-c/🧪️tests/lowers-the-storage-temperature-to-55-c/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌏️change-theta-st-c/🧪️tests/lowers-the-storage-temperature-to-55-c/🎯️outcome/🔣️component.json"),
+        ),
+        "change-theta-amb-c" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚change-theta-amb-c/🧪️tests/lowers-the-storage-room-ambient-to-18-c/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚change-theta-amb-c/🧪️tests/lowers-the-storage-room-ambient-to-18-c/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚change-theta-amb-c/🧪️tests/lowers-the-storage-room-ambient-to-18-c/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚change-theta-amb-c/🧪️tests/lowers-the-storage-room-ambient-to-18-c/🎯️outcome/🔣️component.json"),
+        ),
+        "change-storage-th" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍄change-storage-th/🧪️tests/shortens-the-storage-standby-period-to-18-hours/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍄change-storage-th/🧪️tests/shortens-the-storage-standby-period-to-18-hours/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍄change-storage-th/🧪️tests/shortens-the-storage-standby-period-to-18-hours/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍄change-storage-th/🧪️tests/shortens-the-storage-standby-period-to-18-hours/🎯️outcome/🔣️component.json"),
+        ),
+        "change-storage-allowance-kwh" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌼change-storage-allowance-kwh/🧪️tests/tightens-the-storage-loss-allowance-to-4-point-5-kwh/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌼change-storage-allowance-kwh/🧪️tests/tightens-the-storage-loss-allowance-to-4-point-5-kwh/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌼change-storage-allowance-kwh/🧪️tests/tightens-the-storage-loss-allowance-to-4-point-5-kwh/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌼change-storage-allowance-kwh/🧪️tests/tightens-the-storage-loss-allowance-to-4-point-5-kwh/🎯️outcome/🔣️component.json"),
+        ),
+        "change-dhw-delivery-c" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶change-dhw-delivery-c/🧪️tests/raises-the-dhw-delivery-temperature-to-60-c/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶change-dhw-delivery-c/🧪️tests/raises-the-dhw-delivery-temperature-to-60-c/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶change-dhw-delivery-c/🧪️tests/raises-the-dhw-delivery-temperature-to-60-c/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧶change-dhw-delivery-c/🧪️tests/raises-the-dhw-delivery-temperature-to-60-c/🎯️outcome/🔣️component.json"),
+        ),
+        "change-duct-class" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡change-duct-class/🧪️tests/upgrades-the-duct-tightness-class-to-d/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡change-duct-class/🧪️tests/upgrades-the-duct-tightness-class-to-d/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡change-duct-class/🧪️tests/upgrades-the-duct-tightness-class-to-d/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪡change-duct-class/🧪️tests/upgrades-the-duct-tightness-class-to-d/🎯️outcome/🔣️component.json"),
+        ),
+        "change-duct-test-pressure-pa" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-duct-test-pressure-pa/🧪️tests/raises-the-duct-test-pressure-to-500-pa/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-duct-test-pressure-pa/🧪️tests/raises-the-duct-test-pressure-to-500-pa/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-duct-test-pressure-pa/🧪️tests/raises-the-duct-test-pressure-to-500-pa/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-duct-test-pressure-pa/🧪️tests/raises-the-duct-test-pressure-to-500-pa/🎯️outcome/🔣️component.json"),
+        ),
+        "change-duct-leakage-m3-sm2" => (
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-duct-leakage-m3-sm2/🧪️tests/halves-the-measured-duct-leakage-to-0-point-0625/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-duct-leakage-m3-sm2/🧪️tests/halves-the-measured-duct-leakage-to-0-point-0625/🦠️mutation/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-duct-leakage-m3-sm2/🧪️tests/halves-the-measured-duct-leakage-to-0-point-0625/📸️snapshot/➡️after/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-duct-leakage-m3-sm2/🧪️tests/halves-the-measured-duct-leakage-to-0-point-0625/🎯️outcome/🔣️component.json"),
+        ),
+        other => panic!("mutate-din16798-1: no committed fixture is registered for kind {other:?}"),
+    }
+}
+
+/// 🔎️ Parses one embedded fixture file into the framework's own dependency-free `Json`.
+fn canonical(text: &str) -> Json {
+    parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
+}
+
+/// 🎯️ The status the committed `🎯️outcome/🔣️component.json` declares for one kind — `applied` or
+/// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
+/// row is held to cannot drift away from the vector that states it.
+fn committed_status(kind: &str) -> String {
+    let (_before, _mutation, _after, outcome) = fixture_text(kind);
+    canonical(outcome).str("status")
+}
+//#endregion 🔖️Fixtures
+
+//#region 🔖️Oracle
+/// 🔮️ The forward reference answer: the committed AFTER snapshot, read literally. The one law a
+/// committed pair can carry on its own is asserted here in role — an `applied` vector must MOVE the
+/// document and a `rejected` vector must leave it identical — so a placeholder fixture that changed
+/// nothing could not sit in this table unnoticed.
+fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    move |_ctx: &Context| {
+        let (before, _mutation, after, _outcome) = fixture_text(kind);
+        let (base, projection) = (canonical(before), canonical(after));
+        match committed_status(kind).as_str() {
+            "applied" => law::mutation_is_observable(kind, &projection, &base, &[])?,
+            "rejected" if law::divergence(&projection, &base).is_some() => {
+                return Err(format!("mutate-{kind}: the committed outcome declares this vector rejected, so its after-snapshot must be identical to its before-snapshot"));
+            }
+            "rejected" => {}
+            other => return Err(format!("mutate-{kind}: unknown committed outcome status {other:?}")),
+        }
+        Ok(Outcome::with_raw(after.as_bytes().to_vec(), projection))
+    }
+}
+
+/// 🔮️ The inverse reference answer: the committed BEFORE snapshot — undoing any mutation must
+/// return to exactly where the specification vector started. The inverse LAW itself cannot be
+/// asserted from the committed vectors alone (nothing here computes an inverse), which is precisely
+/// why it is asserted in the subject handler below instead.
+fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    move |_ctx: &Context| {
+        let (before, _mutation, _after, _outcome) = fixture_text(kind);
+        Ok(Outcome::with_raw(before.as_bytes().to_vec(), canonical(before)))
+    }
+}
+//#endregion 🔖️Oracle
+
+//#region 🔖️Subject
+#[cfg(feature = "sut")]
+mod subject {
+    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use semio_s_plugin_norm::artifacts::din16798::standards::v1::subsets::any::schema::mutations::{apply_din16798_mutation, decode_din16798_mutation_json, inverse_din16798_mutation, Din16798Mutation};
+    use semio_s_plugin_norm::artifacts::din16798::standards::v1::subsets::any::schema::snapshot::{decode_din16798_dsl, decode_din16798_pack, decode_din16798_snapshot_json, encode_din16798_dsl, encode_din16798_pack, encode_din16798_snapshot_json, Din16798Snapshot};
+    use semio_s_plugin_stdio_test_oracle::law;
+
+    //#region 🔖️FixtureDecode
+    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
+    /// this subset's own production JSON bridge — real deserialization of the committed bytes, never
+    /// a Rust literal transcribed beside them.
+    fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<Din16798Snapshot, String> {
+        decode_din16798_snapshot_json(text).map_err(|error| format!("mutate-din16798-1: the committed {label}-snapshot for {kind:?} must decode: {error}"))
+    }
+
+    fn mutation_of(text: &str, kind: &str) -> Result<Din16798Mutation, String> {
+        decode_din16798_mutation_json(text).map_err(|error| format!("mutate-din16798-1: the committed mutation payload for {kind:?} must decode: {error}"))
+    }
+
+    fn projection(snapshot: &Din16798Snapshot) -> Result<Json, String> {
+        parse_json(&encode_din16798_snapshot_json(snapshot))
+    }
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same JSON the fixtures are written in,
+    /// so a red scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &Din16798Snapshot, expected: &Din16798Snapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", encode_din16798_snapshot_json(got), encode_din16798_snapshot_json(expected))
+    }
+    //#endregion 🔖️FixtureDecode
+
+    //#region 🔖️Handlers
+    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot, under whichever contract the committed `🎯️outcome` declares: an `applied`
+    /// vector must be accepted without a diagnostic and must move the projection (`law::
+    /// mutation_is_observable`), a `rejected` one must raise a diagnostic and leave the document
+    /// bit-identical. A handler that merely returned `Ok` would report a pass having checked nothing.
+    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        move |_ctx: &Context| {
+            let (before, mutation, after, _outcome) = super::fixture_text(kind);
+            let base = snapshot_of(before, "before", kind)?;
+            let expected = snapshot_of(after, "after", kind)?;
+            let mutation = mutation_of(mutation, kind)?;
+            let status = super::committed_status(kind);
+            let applied = apply_din16798_mutation(&base, &mutation);
+            let current = match (status.as_str(), applied) {
+                ("applied", Ok((snapshot, messages))) if messages.is_empty() => snapshot,
+                ("applied", Ok((_snapshot, messages))) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet it raised {messages:?}")),
+                ("applied", Err(error)) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet this implementation refused it: {error}")),
+                ("rejected", Ok((snapshot, messages))) if messages.is_empty() => return Err(format!("mutate-{kind}: the committed vector declares this mutation rejected, yet it raised no diagnostic at all — the document came back as {}", encode_din16798_snapshot_json(&snapshot))),
+                ("rejected", Ok((snapshot, _messages))) => snapshot,
+                ("rejected", Err(_error)) => base.clone(),
+                (other, _) => return Err(format!("mutate-{kind}: unknown committed outcome status {other:?}")),
+            };
+            if current != expected {
+                return Err(disagreement(&format!("mutate-{kind}: the applied document does not match the committed after-snapshot"), &current, &expected));
+            }
+            let (base_projection, mutated) = (projection(&base)?, projection(&current)?);
+            if status == "applied" {
+                law::mutation_is_observable(kind, &mutated, &base_projection, &[])?;
+            } else if law::divergence(&mutated, &base_projection).is_some() {
+                return Err(disagreement(&format!("mutate-{kind}: a rejected mutation must leave the document untouched"), &current, &base));
+            }
+            Ok(Outcome::with_raw(mutated.to_string().into_bytes(), mutated))
+        }
+    }
+
+    /// ↩️ The metamorphic inverse law, asserted in role through `law::inverse_restores`: applying the
+    /// kind and then its OWN computed inverse must restore the committed before-snapshot exactly —
+    /// collection POSITION included, not merely membership. A kind the committed outcome declares
+    /// `applied` must additionally produce a non-empty inverse, because a mutation that changes the
+    /// document and reports nothing to undo silently breaks the event-sourced undo history.
+    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        move |_ctx: &Context| {
+            let (before, mutation, _after, _outcome) = super::fixture_text(kind);
+            let base = snapshot_of(before, "before", kind)?;
+            let mutation = mutation_of(mutation, kind)?;
+            let original = projection(&base)?;
+            let mut current = match apply_din16798_mutation(&base, &mutation) {
+                Ok((snapshot, _messages)) => snapshot,
+                Err(error) => return Err(format!("inverse-{kind}: the forward mutation could not be applied to its own committed before-snapshot: {error}")),
+            };
+            let steps = inverse_din16798_mutation(&mutation, &base);
+            if super::committed_status(kind) == "applied" && steps.is_empty() {
+                return Err(format!("inverse-{kind}: this kind changes the document, so its computed inverse must not be empty"));
+            }
+            for step in &steps {
+                current = apply_din16798_mutation(&current, step).map_err(|error| format!("inverse-{kind}: an inverse step was rejected: {error}"))?.0;
+            }
+            law::inverse_restores(kind, &projection(&current)?, &original)?;
+            if current != base {
+                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
+            }
+            Ok(Outcome::with_raw(original.to_string().into_bytes(), original))
+        }
+    }
+
+    /// 🔁️ The real committed document through every encoding it has. The DSL carrier is deliberately
+    /// byte-preserving here — the committed file IS this printer's own canonical output — so
+    /// `law::carrier_is_exact` is the correct half of the identity law and the usual
+    /// no-byte-pass-through inequality would be the wrong claim. What proves the document was PARSED
+    /// rather than copied is the agreement of three independently written codecs: the hand-written
+    /// DSL grammar, the hand-written binary pack protocol, and the JSON projection. A shortcut that
+    /// handed back its input bytes could not survive the pack leg.
+    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed DIN EN 16798-1 artifact is not UTF-8: {error}"))?;
+        let parsed = decode_din16798_dsl(&text)?;
+        let reprinted = encode_din16798_dsl(&parsed);
+        law::carrier_is_exact(reprinted.as_bytes(), text.as_bytes())?;
+        let reparsed = decode_din16798_dsl(&reprinted)?;
+        if reparsed != parsed {
+            return Err(disagreement("identity-round-trip: printing the document back to DSL and reparsing it lost content", &reparsed, &parsed));
+        }
+        let repacked = decode_din16798_pack(&encode_din16798_pack(&parsed))?;
+        if repacked != parsed {
+            return Err(disagreement("identity-round-trip: encoding the document to a pack and decoding it back lost content", &repacked, &parsed));
+        }
+        let rejson = decode_din16798_snapshot_json(&encode_din16798_snapshot_json(&parsed))?;
+        if rejson != parsed {
+            return Err(disagreement("identity-round-trip: encoding the document to JSON and decoding it back lost content", &rejson, &parsed));
+        }
+        let projection = projection(&parsed)?;
+        law::round_trip_preserves(&projection(&repacked)?, &projection)?;
+        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+    }
+    //#endregion 🔖️Handlers
+}
+//#endregion 🔖️Subject
+
+//#region 🔖️Registration
+/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
+/// id, so the loop mirrors the feature's `Examples` tables exactly. `identity-round-trip` is
+/// deliberately subject-only: the reference answer for every other scenario is a committed JSON
+/// document the oracle role can read literally, but the real artifact is committed as DSL bytes
+/// ONLY, and turning those into a document needs this subset's own codec — which the oracle-only
+/// build must not link.
+pub fn adapter() -> Adapter {
+    let mut built = Adapter::new("rust");
+    for kind in KINDS {
+        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
+        #[cfg(feature = "sut")]
+        {
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+        }
+    }
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("identity-round-trip", subject::round_trip);
+    }
+    built
+}
+//#endregion 🔖️Registration

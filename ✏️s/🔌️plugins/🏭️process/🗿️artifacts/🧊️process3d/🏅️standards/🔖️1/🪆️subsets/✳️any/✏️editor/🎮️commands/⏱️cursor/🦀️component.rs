@@ -23,7 +23,7 @@ pub mod set_cursor {
         pub value: Option<u64>,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetCursor,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -46,7 +46,7 @@ pub mod step_cursor {
         pub delta: i64,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &StepCursor,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -67,7 +67,7 @@ pub mod step_cursor_back {
     #[dsl(keyword = "step-cursor-back")]
     pub struct StepCursorBack {}
 
-    pub async fn handle(
+    pub fn handle(
         _payload: &StepCursorBack,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -88,7 +88,7 @@ pub mod step_cursor_forward {
     #[dsl(keyword = "step-cursor-forward")]
     pub struct StepCursorForward {}
 
-    pub async fn handle(
+    pub fn handle(
         _payload: &StepCursorForward,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

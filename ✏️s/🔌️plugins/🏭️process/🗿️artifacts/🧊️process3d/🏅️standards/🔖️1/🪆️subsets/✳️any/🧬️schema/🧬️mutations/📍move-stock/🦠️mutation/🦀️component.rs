@@ -21,15 +21,15 @@ pub struct MoveStock {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for MoveStock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "stock", kind: "move-stock", record: "MovedStock" };
 
-    async fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::move_stock::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
         crate::artifacts::process3d::mutations::move_stock::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Move stock".to_string()
     }
 }

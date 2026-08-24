@@ -26,20 +26,20 @@ pub struct GisTerrainInference {
 }
 
 impl protocol::Inference<GisTerrainSnapshot> for GisTerrainInference {
-    async fn infer(snapshot: &GisTerrainSnapshot) -> Self {
+    fn infer(snapshot: &GisTerrainSnapshot) -> Self {
         let positions = imported_lon_lat_positions(snapshot);
         Self { position_count: positions.len(), bounds: lon_lat_bounds(&positions) }
     }
 }
 
 impl protocol::InferenceSpec<GisTerrainSnapshot> for GisTerrainInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.gis.gisterrain.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.positionCount", reads: &["importedFeaturesJson"] }, protocol::InferenceFieldSpec { id: "s.gis.gisterrain.inference.bounds", reads: &["importedFeaturesJson"] }]
     }
 }
@@ -194,7 +194,7 @@ async fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositio
 /// exaggeration) for the given document — `exaggeration` always mirrors the LIVE document, and the
 /// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
 /// `crate::artifacts::gisterrain::schema::default_terrain_document`.
-pub async fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
+pub fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
     let mut descriptor = terrain_fixture_text::parse_descriptor(crate::artifacts::gisterrain::dsl::REUSE_TERRAIN_EXAMPLE_TEXT, crate::artifacts::gisterrain::GIS_3D_TERRAIN_SCHEMA, document.exaggeration);
     descriptor.positions.extend(imported_positions(document));
     descriptor
@@ -204,7 +204,7 @@ pub async fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescripto
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.gis.gisterrain.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `gisterrain_artifact_schema_descriptor`'s registration.
-pub async fn gisterrain_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn gisterrain_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.gis.gisterrain.inference",
         inference: schema::FacetLeaves {

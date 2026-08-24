@@ -61,32 +61,32 @@ impl Default for Process3dSnapshot {
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`/`✳️object`/`✳️kit`'s own) — a handle is
 /// exactly two strings (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`), never the
 /// child's own content.
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
+pub(crate) fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-pub(crate) async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-pub(crate) async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
 
-async fn strip_brackets(s: &str) -> Result<&str, String> {
+fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -108,18 +108,18 @@ async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     out
 }
 
-pub(crate) async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-pub(crate) async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
     Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
-pub(crate) async fn enc_child_list<S>(items: &[store::ArtifactChild<S>]) -> String {
+pub(crate) fn enc_child_list<S>(items: &[store::ArtifactChild<S>]) -> String {
     format!("[{}]", items.iter().map(enc_child).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>, String> {
+pub(crate) fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_child).collect()
 }
 //#endregion 🔖️ChildCodecPrimitives
@@ -128,16 +128,16 @@ pub(crate) async fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChil
 /// 🧾️ `workshop`/`stock_pose` are structured but child-free — JSON-serialize then hex-encode
 /// through the shared `enc_str`/`dec_str`, matching `📐️cad`'s established `enc_json`/`dec_json`
 /// convention for structured fields that don't need a bespoke wire shape.
-async fn enc_json<T: Serialize>(value: &T) -> String {
+fn enc_json<T: Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("process3d structured fields are always JSON-serializable"))
 }
-async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️JsonFieldPrimitives
 
 //#region 🔖️TextPrimitives
-async fn print_process3d_snapshot_body(s: &Process3dSnapshot) -> String {
+fn print_process3d_snapshot_body(s: &Process3dSnapshot) -> String {
     format!(
         "workshop={}\nstockId={}\nstockLabel={}\nstockPose={}\nstockPayload={}\nstockSolid={}\nsteps={}\nstepPayloads={}\ntoolSolids={}\nresolvedUpTo={}",
         enc_json(&s.workshop),
@@ -152,7 +152,7 @@ async fn print_process3d_snapshot_body(s: &Process3dSnapshot) -> String {
         enc_json(&s.resolved_up_to),
     )
 }
-async fn parse_process3d_snapshot_body(body: &str) -> Result<Process3dSnapshot, String> {
+fn parse_process3d_snapshot_body(body: &str) -> Result<Process3dSnapshot, String> {
     let mut snapshot = crate::artifacts::process3d::empty_process3d_snapshot();
     let mut saw_workshop = false;
     for line in body.lines() {
@@ -193,42 +193,42 @@ async fn parse_process3d_snapshot_body(body: &str) -> Result<Process3dSnapshot, 
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
     write_str_lp(out, &r.to_uri());
 }
-async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
+fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
-async fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
-async fn write_child_list<S>(out: &mut Vec<u8>, items: &[store::ArtifactChild<S>]) {
+fn write_child_list<S>(out: &mut Vec<u8>, items: &[store::ArtifactChild<S>]) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
     for item in items {
         write_child(out, item);
     }
 }
-async fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<store::ArtifactChild<S>>, String> {
+fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<store::ArtifactChild<S>>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut items = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -237,7 +237,7 @@ async fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<st
     Ok(items)
 }
 
-async fn encode_process3d_snapshot_binary(s: &Process3dSnapshot) -> Vec<u8> {
+fn encode_process3d_snapshot_binary(s: &Process3dSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &serde_json::to_string(&s.workshop).expect("Workshop is always JSON-serializable"));
@@ -252,7 +252,7 @@ async fn encode_process3d_snapshot_binary(s: &Process3dSnapshot) -> Vec<u8> {
     write_str_lp(&mut out, &serde_json::to_string(&s.resolved_up_to).expect("Option<usize> is always JSON-serializable"));
     out
 }
-async fn decode_process3d_snapshot_binary(bytes: &[u8]) -> Result<Process3dSnapshot, String> {
+fn decode_process3d_snapshot_binary(bytes: &[u8]) -> Result<Process3dSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
@@ -280,17 +280,17 @@ async fn decode_process3d_snapshot_binary(bytes: &[u8]) -> Result<Process3dSnaps
 /// `Self::__dsl_spec()` path cannot express a composed child slot).
 impl store::ArtifactDsl for Process3dSnapshot {
     const EXTENSION: &'static str = "process3d";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "process.process3d"
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_process3d_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = print_process3d_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -298,13 +298,13 @@ impl store::ArtifactDsl for Process3dSnapshot {
 }
 
 impl store::ArtifactPack for Process3dSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_process3d_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -315,3 +315,33 @@ impl store::ArtifactPack for Process3dSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot
+
+//#region 🌉️IdentityBridge
+/// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
+/// language-neutral test adapter. Same reachability wall as `process3d_mutation_report_json`:
+/// `store::ArtifactDsl`/`store::ArtifactPack` and their error types are unnameable outside this
+/// crate, so the identity law's evidence has to be produced here and handed over as text.
+///
+/// `canonicalText` is `print_dsl` of the parsed document and `canonicalTextAgain` is `print_dsl` of
+/// re-parsing that — [`store::ArtifactDsl`]'s own documented LAW is that canonical output is a
+/// `parse_dsl` fixpoint (hand-written text may normalize on the way in), so the two must be
+/// byte-identical while neither is required to equal the committed file. `packDecoded` comes back
+/// through a SEPARATE binary codec, so agreeing on one snapshot cannot be achieved by carrying text
+/// bytes across.
+pub fn process3d_identity_report_json(dsl_text: &str) -> Result<String, String> {
+    let parsed = <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
+    let canonical = <Process3dSnapshot as store::ArtifactDsl>::print_dsl(&parsed);
+    let reparsed = <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
+    let canonical_again = <Process3dSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
+    let packed = <Process3dSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
+    let unpacked = <Process3dSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
+    let report = serde_json::json!({
+        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
+        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
+        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
+        "canonicalText": canonical,
+        "canonicalTextAgain": canonical_again,
+    });
+    Ok(report.to_string())
+}
+//#endregion 🌉️IdentityBridge

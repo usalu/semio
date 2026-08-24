@@ -8,7 +8,7 @@ use crate::artifacts::process3d::{Process3dMutation, Process3dSnapshot, PROCESS3
 use crate::viewer::process3d::modes::view;
 use crate::viewer::process3d::modes::view::windows::workpiece;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -21,10 +21,10 @@ pub enum Process3dViewCommand {
 }
 
 impl protocol::OpBinary for Process3dViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Process3dViewCommand::Noop)
     }
 }
@@ -60,17 +60,21 @@ impl ArtifactViewer for Process3dViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            workpiece::PROCESS3D_VIEW_BODY_MAIN => workpiece::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            workpiece::PROCESS3D_VIEW_BODY_MAIN => workpiece::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_process3d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_process3d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(PROCESS3D_DIALECT)
         .document(["semio", "process", "3d"])
         .icon_id("hammer")

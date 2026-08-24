@@ -65,12 +65,12 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ B1: `cfg.locale`-driven counterpart of the deleted `ViewModel`-driven `is_de_locale`.
-pub async fn cad_is_de_locale(cfg: &CadConfig) -> bool {
+pub fn cad_is_de_locale(cfg: &CadConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 /// 🗣️ `CadConfig.locale` (a BCP-47 tag, was shell-provided `ViewModel.locale` pre-B1) mapped onto the
 /// SDK's exhaustive `Locale` enum.
-pub async fn cad_locale(cfg: &CadConfig) -> Locale {
+pub fn cad_locale(cfg: &CadConfig) -> Locale {
     if cad_is_de_locale(cfg) {
         Locale::De
     } else {
@@ -80,7 +80,7 @@ pub async fn cad_locale(cfg: &CadConfig) -> Locale {
 
 /// 🗣️ `CadConfig.terminology` mapped onto the SDK's exhaustive `Terminology` enum; unknown/empty ids
 /// fall back to `Native`.
-pub async fn cad_terminology(cfg: &CadConfig) -> Terminology {
+pub fn cad_terminology(cfg: &CadConfig) -> Terminology {
     if cfg.terminology == "reuse" {
         Terminology::Reuse
     } else {
@@ -90,12 +90,12 @@ pub async fn cad_terminology(cfg: &CadConfig) -> Terminology {
 
 /// 🗣️ Resolves the active `CadLabels` cell from the config-carried locale/terminology (was
 /// shell-provided `ViewModel`, deleted by B1) via the SDK's two-axis `AppLabels::labels`.
-pub async fn cad_labels(cfg: &CadConfig) -> &'static CadLabels {
+pub fn cad_labels(cfg: &CadConfig) -> &'static CadLabels {
     CadLabels::labels(cad_locale(cfg), cad_terminology(cfg))
 }
 
 /// 🗣️ Resolves a typology catalog entry's display label from its stable id; unknown ids fall back to the catalog's native English text or the raw id.
-pub async fn typology_label<'a>(typology: &'a str, labels: &CadLabels) -> &'a str {
+pub fn typology_label<'a>(typology: &'a str, labels: &CadLabels) -> &'a str {
     match typology {
         "spatial.shape.primitive.box" => labels.typology_box.as_str(),
         "building.building.slab" | "structure.structure.onewayreinforcedconcreteslab" => labels.typology_slab.as_str(),

@@ -69,3 +69,55 @@ impl store::ArtifactPack for RewriteSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot
+
+//#region 🌉️ExternalCodecBridge
+/// 📤️ Renders a [`RewriteSnapshot`] as this facet's own camelCase JSON projection — the comparison
+/// surface `mutate-rewrite-1`'s scenarios are measured through, and the shape the committed
+/// `../🧬️mutations/<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors are written in. The three authored bodies travel as opaque JSON STRINGS,
+/// so the projection is JSON containing JSON — which is exactly the shape a transcribed Rust
+/// literal gets wrong silently.
+///
+/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
+/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+pub fn encode_rewrite_snapshot_json(snapshot: &RewriteSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("RewriteSnapshot serialization is infallible")
+}
+
+/// 📥️ The inverse of [`encode_rewrite_snapshot_json`] — decodes those committed specification
+/// vectors into real [`RewriteSnapshot`] values, so `mutate-rewrite-1`'s adapter reads the committed
+/// fixture rather than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
+/// adapter is impossible: the generated test host links only this crate and `semio-repo-test-host`.
+pub fn decode_rewrite_snapshot_json(text: &str) -> Result<RewriteSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Parses `.rewrite.dsl.semio` text into a [`RewriteSnapshot`] — a named, non-async pass-through
+/// of this type's own handcrafted `store::ArtifactDsl` impl above, whose trait and error type are
+/// both unnameable outside this crate, so `mutate-rewrite-1`'s `identity-round-trip` scenario
+/// reaches the real committed artifact
+/// (`../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`) through this instead.
+pub fn parse_rewrite_dsl(text: &str) -> Result<RewriteSnapshot, String> {
+    <RewriteSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+}
+
+/// 📝️ Renders a [`RewriteSnapshot`] back as `.rewrite.dsl.semio` text — the inverse of
+/// [`parse_rewrite_dsl`], preamble, quoted body strings and fenced `rhs-json` block included.
+pub fn print_rewrite_dsl(snapshot: &RewriteSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 🔎️ The rule's two keyed maps as sorted key lists plus the byte lengths of its three authored
+/// bodies — the readable half of a divergence message, so a failing scenario names WHICH axis moved
+/// rather than only that two long JSON-in-JSON documents differ.
+pub fn rewrite_rule_summary(snapshot: &RewriteSnapshot) -> String {
+    format!(
+        "bindings[{}] layout[{}] before={}B lhs={}B rhs={}B",
+        snapshot.parameter_bindings.keys().cloned().collect::<Vec<_>>().join(" "),
+        snapshot.rule_layout.keys().cloned().collect::<Vec<_>>().join(" "),
+        snapshot.before_fixture_json.len(),
+        snapshot.lhs_json.len(),
+        snapshot.rhs_json.len()
+    )
+}
+//#endregion 🌉️ExternalCodecBridge

@@ -9,7 +9,7 @@ use crate::artifacts::process3d::{Process3dSnapshot, Workshop};
 
 //#region 🔖️Diff
 /// 🏗️ Builds the new workshop value with the machine appended.
-pub async fn diff(payload: &CreateMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+pub fn diff(payload: &CreateMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     if base.workshop.machines.iter().any(|machine| machine.id == payload.machine.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A machine with id \"{}\" already exists.", payload.machine.id), [payload.machine.id.clone()]);
     }

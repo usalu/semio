@@ -10,14 +10,13 @@
 
 use crate::artifacts::process3d::schema::inferences::processed_mesh;
 use crate::artifacts::process3d::Process3dSnapshot;
-use semio_framework_plugin::{build_world_3d_scene, mesh_from_kind, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig};
+use semio_framework_plugin::app::WindowKit;
+use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use serde_json::json;
 
 //#region 🔖️Constants
 pub const PROCESS3D_VIEW_WINDOW_MAIN: &str = "process-workpiece-view";
 pub const PROCESS3D_VIEW_BODY_MAIN: &str = "process.view.main";
-const PROCESS3D_VIEW_SURFACE_MAIN: &str = "process.view";
-const PROCESS3D_VIEW_CONTROLLER_ID: &str = "process3d-view";
 const PROCESS3D_VIEW_FALLBACK_MESH_KIND: &str = "box";
 //#endregion 🔖️Constants
 
@@ -25,7 +24,7 @@ const PROCESS3D_VIEW_FALLBACK_MESH_KIND: &str = "box";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::process3d::create_process3d_viewer`. A
 /// read-only twin of the editor's `process-workpiece` window kind — same `SurfaceKind::World3d`
 /// body shape, no chrome measures (no sun toggle: the sun is a hardcoded default here).
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCESS3D_VIEW_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Workpiece", "Werkstück"),
@@ -48,19 +47,15 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🎥️ Hardcoded default camera/sun — the editor's own `Process3dConfig::default()` values, kept in
 /// step manually (the viewer has no config lane these could be read from).
-async fn default_camera_json() -> String {
+fn default_camera_json() -> String {
     world3d_camera_json([3.0, -3.0, 2.0], [0.0, 0.0, 0.0], 45.0)
-}
-
-async fn default_sun() -> WorldSunConfig {
-    WorldSunConfig { enabled: false, azimuth: 45.0, elevation: 35.0, intensity: 0.85, color: "#ffffff".into() }
 }
 
 /// 🖼️ Same fallback-box placeholder the editor's own `evaluated_preview_payload` already falls back
 /// to while composed-child object resolution is unimplemented (pre-existing
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave-4 gap, not introduced here) — real parity
 /// with the editor's *current* behavior, not a regression.
-async fn view_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
+fn view_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
     let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
     let mesh = processed_mesh(&scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_VIEW_FALLBACK_MESH_KIND));
     let meshes = json!([{ "id": "processed", "data": mesh }]);
@@ -78,9 +73,14 @@ async fn view_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
 }
 
 /// 👁️ The viewer's own pure render function — never calls into the sibling `editor` module.
-pub async fn render(fixture: &Process3dSnapshot) -> UiNode {
+pub fn render(fixture: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = view_preview_payload(fixture);
-    build_world_3d_scene(PROCESS3D_VIEW_SURFACE_MAIN, PROCESS3D_VIEW_CONTROLLER_ID, world3d_scene(default_camera_json(), meshes_json, instances_json, world3d_selection_json("rectangle", &[], None), &default_sun()))
+    MeshWindowKit::render(&MeshView {
+        camera_json: default_camera_json(),
+        meshes_json,
+        instances_json,
+        selection_json: world3d_selection_json("rectangle", &[], None),
+    })
 }
 //#endregion 🔖️Render
 
@@ -99,7 +99,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_world_scene_contains_processed_mesh() {
         let fixture = crate::artifacts::process3d::empty_process3d_snapshot();
-        let node = serde_json::to_string(&render(&fixture)).expect("render json");
+        let node = serde_json::to_string(&render(&fixture).expect("bounded workpiece")).expect("render json");
         assert!(node.contains("processed"), "expected the processed mesh id in scene json: {node}");
     }
 }

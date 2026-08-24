@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 /// exactly the dragged region, flush with the picked face — `box_prim_sync` places a primitive's corner
 /// (not its center) at the local origin, confirmed by `box_primitive_spans_from_local_origin_corner` in
 /// the artifact's `⚙️engine`.
-async fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f64, face_extent: Option<[f64; 2]>, labels: &Process3dLabels) -> Option<ProcessStep> {
+fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f64, face_extent: Option<[f64; 2]>, labels: &Process3dLabels) -> Option<ProcessStep> {
     if distance.abs() < 1e-6 {
         return None;
     }
@@ -49,7 +49,7 @@ pub mod world_pointer_down {
         pub position: [f64; 3],
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &WorldPointerDown,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
@@ -89,7 +89,7 @@ pub mod world_face_drag_end {
         pub face_extent: Option<[f64; 2]>,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &WorldFaceDragEnd,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,

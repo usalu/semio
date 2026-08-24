@@ -10,6 +10,6 @@ use crate::artifacts::cad::CadPaneId;
 use crate::editor::cad::{cad_action, cad_pane_camera_runtime, CadPlayRuntime};
 use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 
-pub async fn measure(runtime: &CadPlayRuntime, pane: CadPaneId) -> WindowMeasure {
+pub fn measure(runtime: &CadPlayRuntime, pane: CadPaneId) -> WindowMeasure {
     world3d_projection_measures(&format!("cad-{}", pane.model_definition_id()), &cad_camera_projection_config(cad_pane_camera_runtime(runtime, pane)), cad_action)
 }

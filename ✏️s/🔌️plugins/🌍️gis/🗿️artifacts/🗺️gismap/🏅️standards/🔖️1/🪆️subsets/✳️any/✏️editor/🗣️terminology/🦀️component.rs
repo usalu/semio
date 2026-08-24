@@ -41,13 +41,13 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn gis2d_labels(cfg: &Gis2dConfig) -> &'static Gis2dPlayLabels {
+pub fn gis2d_labels(cfg: &Gis2dConfig) -> &'static Gis2dPlayLabels {
     semio_framework_plugin::resolve_labels_for_locale::<Gis2dPlayLabels>(&cfg.locale)
 }
 
 /// 🗣️ Resolves a standard map layer's display label from its stable id; unknown ids fall back to the
 /// catalog's native English text.
-pub async fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static str {
+pub fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static str {
     match layer_id {
         "raster" => labels.layer_raster.as_str(),
         "water" => labels.layer_water.as_str(),

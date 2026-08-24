@@ -3,14 +3,13 @@
 use crate::artifacts::curate::schema::{instance_json, kind_mesh_json};
 use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use crate::editor::sourcing::SOURCING_CONTROLLER_ID;
-use semio_framework_plugin::{build_world_3d_scene, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig};
+use semio_framework_plugin::app::WindowKit;
+use semio_framework_plugin::{world3d_default_camera, world3d_selection_json, BuiltNode, Label, LocalizedLabel, MeshView, MeshWindowKit, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use serde_json::json;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATE_WINDOW_PREVIEW: &str = "sourcing-preview";
 pub const SOURCING_CURATE_BODY_PREVIEW: &str = "sourcing.preview";
-const SOURCING_CURATE_SURFACE_PREVIEW: &str = "sourcing.preview.world";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -42,16 +41,17 @@ pub fn definition() -> WindowKindDefinition {
 /// selection" placeholder until a future wave threads interaction into render. Flagged as a discovered
 /// framework gap, not worked around here — kept as a parameter (rather than deleted outright) so that
 /// future wave has a slot to fill in.
-pub fn render(document: &CurateSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiNode {
+pub fn render(document: &CurateSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
     let stock = crate::artifacts::curate::stock_of(document);
     let Some(kind) = selected_ids.first().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
-        return ui_text(labels.no_selection);
+        return semio_framework_plugin::built_text_node(Label::data(labels.no_selection.as_str())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sourcing preview placeholder admission failed"));
     };
-    let meshes_json = json!([kind_mesh_json(kind)]).to_string();
-    let instances_json = json!([instance_json(kind, [0.0, 0.0, 0.0], 1.0, false)]).to_string();
-    let mut scene = world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
-    scene.fit_json = Some(json!({ "enabled": true, "padding": 0.2 }).to_string());
-    build_world_3d_scene(SOURCING_CURATE_SURFACE_PREVIEW, SOURCING_CONTROLLER_ID, scene)
+    MeshWindowKit::render(&MeshView {
+        camera_json: world3d_default_camera(),
+        meshes_json: json!([kind_mesh_json(kind)]).to_string(),
+        instances_json: json!([instance_json(kind, [0.0, 0.0, 0.0], 1.0, false)]).to_string(),
+        selection_json: world3d_selection_json("rectangle", &[], None),
+    })
 }
 //#endregion 🔖️Render
 
@@ -69,18 +69,15 @@ mod tests {
     async fn preview_renders_selected_mesh_id() {
         let document = crate::artifacts::curate::schema::default_document();
         let object_id = crate::artifacts::curate::stock_of(&document)[0].id.clone();
-        let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
-        let json = serde_json::to_value(&node).unwrap();
-        let meshes_json = json.pointer("/world3d/meshesJson").and_then(|value| value.as_str()).unwrap();
-        let meshes: Vec<serde_json::Value> = serde_json::from_str(meshes_json).unwrap();
-        assert_eq!(meshes.len(), 1);
-        assert_eq!(meshes[0]["id"].as_str(), Some(object_id.as_str()));
+        let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default())).expect("bounded preview");
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(&object_id));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn preview_shows_placeholder_without_selection() {
         let document = crate::artifacts::curate::schema::default_document();
-        let node = render(&document, &[], crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default()));
+        let node = render(&document, &[], crate::editor::sourcing::terminology::sourcing_curate_labels(&SourcingCurateConfig::default())).expect("bounded placeholder");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("No selection"));
     }

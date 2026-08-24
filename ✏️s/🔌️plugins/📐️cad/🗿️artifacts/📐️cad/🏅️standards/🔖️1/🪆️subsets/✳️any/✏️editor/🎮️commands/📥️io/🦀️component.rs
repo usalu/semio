@@ -23,7 +23,7 @@ pub mod import_cad_file {
         pub payload: String,
     }
 
-    pub async fn handle(payload: &ImportCadFile, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &ImportCadFile, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let name_lower = payload.name.to_ascii_lowercase();
         let payload_value: Value = serde_json::from_str(&payload.payload).unwrap_or_else(|_| Value::String(payload.payload.clone()));
@@ -60,7 +60,7 @@ pub mod save_selected {
     #[dsl(keyword = "save-selected")]
     pub struct SaveSelected {}
 
-    pub async fn handle(_payload: &SaveSelected, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(_payload: &SaveSelected, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
         Ok(Emit::effect(cad_spatial_export_effect(&export_spatial_json(&view, "selected"), "cad.selected.spatial.dsl")))
     }
@@ -75,7 +75,7 @@ pub mod save_in_play {
     #[dsl(keyword = "save-in-play")]
     pub struct SaveInPlay {}
 
-    pub async fn handle(_payload: &SaveInPlay, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(_payload: &SaveInPlay, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg) };
         let effect = match export_solid_modelspace(&view, CAD_SOLID_EXPORT_DIALECT_STEP) {
             Some(export) => cad_solid_export_effect(export),
@@ -96,7 +96,7 @@ pub mod save_current {
         pub format: Option<String>,
     }
 
-    pub async fn handle(payload: &SaveCurrent, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &SaveCurrent, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let document = doc.snapshot;
         let format = match payload.format.as_deref() {
             Some("obj") => CAD_SOLID_EXPORT_DIALECT_OBJ,
@@ -122,7 +122,7 @@ pub mod load_raw_request {
     #[dsl(keyword = "load-raw-request")]
     pub struct LoadRawRequest {}
 
-    pub async fn handle(_payload: &LoadRawRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(_payload: &LoadRawRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen {
             req: semio_framework_plugin::RequestId(116),
             accept: ".dsl,.spatial.dsl,.spk,.ops,.stp,.step,.obj,.stl,.glb,application/octet-stream,text/plain".into(),

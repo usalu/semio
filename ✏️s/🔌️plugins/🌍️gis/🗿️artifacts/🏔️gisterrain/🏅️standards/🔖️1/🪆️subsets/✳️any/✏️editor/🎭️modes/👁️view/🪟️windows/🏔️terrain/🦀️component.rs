@@ -23,7 +23,7 @@ const GIS3D_PLAY_SURFACE: &str = "gis3d.play.composite";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: GIS3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Terrain", "Gelände"),
@@ -65,7 +65,7 @@ async fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub async fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiNode {
+pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiNode {
     let descriptor = parse_descriptor(document);
     let mut scene = world3d_scene_extended(
         cfg.camera_json.clone(),

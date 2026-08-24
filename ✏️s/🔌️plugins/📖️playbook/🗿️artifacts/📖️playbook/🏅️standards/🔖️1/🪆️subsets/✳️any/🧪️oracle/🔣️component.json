@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here. `s.playbook.playbook` is a semio-NATIVE artifact persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs; no third party reads or writes either, so no oracle is registered — see noOracleDecisions below.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "playbook-document-mutation-semantics",
+      "capabilities": [
+        "playbook-1-mutate"
+      ],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none could be authoritative over `PlaybookMutation`: the 9 kinds are this subset's own step/block flow-authoring verbs. What stands in its place is the committed, independently handcrafted specification vector under each of the 9 `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves, plus the inverse law as a metamorphic property. ⚠️ Recorded honestly, because it bounds what those vectors prove: eight of the nine pin a REJECTION or NO-OP branch rather than an effect, for the same structural reason forms records — `PlaybookSnapshot` keeps its step flow in a composed `s.stdio.semio.flow` CHILD handle that a successful mutation re-mints content-addressed, so the effect branch's `➡️after` cannot be hand-authored. The case therefore asserts each vector's declared status, diagnostic code and target rather than pretending they are effect vectors.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "playbook-1-any",
+      "capability": "playbook-1-mutate",
+      "kinds": [
+        "add-step",
+        "remove-step",
+        "move-step",
+        "add-block",
+        "remove-block",
+        "move-block",
+        "replace-block",
+        "update-step",
+        "change-title"
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
 use crate::editor::process3d::PROCESS3D_INTERACTION_DOMAIN;
-use semio_framework_plugin::{tree_item, tree_item_desc, ActionBinding, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::{tree_item, tree_item_desc, ActionBinding, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_WORKSHOP: &str = "process.play.workshop";
@@ -15,7 +15,7 @@ const PROCESS_3D_PLAY_PANEL_WORKSHOP: &str = "workshop";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(PROCESS_3D_PLAY_PANEL_WORKSHOP.into()),
         label: LocalizedLabel::native("Workshop", "Werkstatt"),
@@ -31,7 +31,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// `"machine:{id}"` — the SAME canonical `"geometry"` domain target the old `selected_id` used for a
 /// machine pick — so `.interaction_domain` binding stamps/prunes this section correctly; the catalog
 /// sections stay un-bound (their items are install actions, not domain targets)?.
-pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut builder = PanelTreeBuilder::new("process3d-play-workshop")?;
     let mut machine_items = semio_framework_plugin::UiFixedList::default();
     for machine in &fixture.workshop.machines {
@@ -41,19 +41,19 @@ pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, label
         row_actions
             .try_push(RowAction {
                 icon: semio_framework_plugin::UiText::try_from_str("trash").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.action-icon", "fixed workshop action icon admission failed"))?,
-                label: Some(labels.remove_machine.into()),
+                label: Some(crate::editor::process3d::ui_label(labels.remove_machine.as_str())?),
                 action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None },
                 placement: RowActionPlacement::Menu,
             })
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.row-actions", "fixed workshop row action admission failed"))?;
-        let mut item = tree_item(format!("machine:{}", machine.id), Label::data(machine.label.clone()))?;
+        let mut item = tree_item(format!("machine:{}", machine.id), crate::editor::process3d::ui_label(&machine.label)?)?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
             props.icon = Some(semio_framework_plugin::UiText::try_from_str(&machine.icon_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.icon", "fixed workshop icon admission failed"))?);
             props.row_actions = row_actions;
         }
         machine_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.machines", "fixed workshop machine admission failed"))?;
     }
-    builder = builder.section("process3d-play-workshop.machines", Some(labels.machines.into()), true, machine_items)?.interaction_domain(PROCESS3D_INTERACTION_DOMAIN)?;
+    builder = builder.section("process3d-play-workshop.machines", Some(crate::editor::process3d::ui_label(labels.machines.as_str())?), true, machine_items)?.interaction_domain(PROCESS3D_INTERACTION_DOMAIN)?;
     for catalog in installed_catalogs(contributions_json) {
         let catalog_id = catalog.catalog_id();
         let mut items = semio_framework_plugin::UiFixedList::default();
@@ -61,7 +61,7 @@ pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, label
             let id = format!("process3d-workshop.catalog.{catalog_id}.{}", machine.id);
             let already_installed = fixture.workshop.machines.iter().any(|existing| existing.id == machine.id);
             let item = if already_installed {
-                let mut item = tree_item_desc(id, Label::data(machine.label.clone()), Some(labels.installed.as_str().to_string()))?;
+                let mut item = tree_item_desc(id, crate::editor::process3d::ui_label(&machine.label)?, Some(labels.installed.as_str().to_string()))?;
                 if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
                     props.icon = Some(semio_framework_plugin::UiText::try_from_str(&machine.icon_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.icon", "fixed workshop icon admission failed"))?);
                     props.dimmed = Some(true);
@@ -72,11 +72,11 @@ pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, label
                     ("catalogId", crate::editor::process3d::ui_value_text(catalog_id)?),
                     ("machineId", crate::editor::process3d::ui_value_text(&machine.id)?),
                 ])?;
-                iconed_tree_item_with_action(id, Label::data(machine.label.clone()), &machine.icon_id, process3d_action("addWorkshopMachine", Some(args)))?
+                iconed_tree_item_with_action(id, &machine.label, &machine.icon_id, process3d_action("addWorkshopMachine", Some(args)))?
             };
             items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.catalogue", "fixed workshop catalogue admission failed"))?;
         }
-        builder = builder.section(format!("process3d-play-workshop.catalog.{catalog_id}"), Some(Label::data(catalog.label())), false, items)?;
+        builder = builder.section(format!("process3d-play-workshop.catalog.{catalog_id}"), Some(crate::editor::process3d::ui_label(catalog.label())?), false, items)?;
     }
     builder.build()
 }

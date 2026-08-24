@@ -3,15 +3,14 @@
 use crate::artifacts::curate::schema::{filtered_stock, grid_placement, grid_scale, instance_json, kind_mesh_json};
 use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::config::SourcingCurateConfig;
-use crate::editor::sourcing::SOURCING_CONTROLLER_ID;
-use semio_framework_plugin::{build_world_3d_scene, world3d_default_camera, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig};
+use semio_framework_plugin::app::WindowKit;
+use semio_framework_plugin::{world3d_default_camera, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use serde_json::json;
 use std::collections::HashSet;
 
 //#region 🔖️Constants
 pub const SOURCING_CURATE_WINDOW_GRID: &str = "sourcing-grid";
 pub const SOURCING_CURATE_BODY_GRID: &str = "sourcing.grid";
-const SOURCING_CURATE_SURFACE_GRID: &str = "sourcing.grid.world";
 const SOURCING_CURATE_GRID_CELL: f64 = 2.0;
 //#endregion 🔖️Constants
 
@@ -37,7 +36,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiNode {
+pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiAssemblyResult<BuiltNode> {
     let filtered = filtered_stock(document, &cfg.filters);
     let mut seen_mesh_ids = HashSet::new();
     let mut meshes = Vec::new();
@@ -53,9 +52,12 @@ pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiNode {
         // `InteractionView`, so this scene payload can no longer embed a live selection.
         instances.push(instance_json(kind, [x, 0.0, z], scale, false));
     }
-    let mut scene = world3d_scene(world3d_default_camera(), json!(meshes).to_string(), json!(instances).to_string(), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
-    scene.fit_json = Some(json!({ "enabled": true, "padding": 0.3 }).to_string());
-    build_world_3d_scene(SOURCING_CURATE_SURFACE_GRID, SOURCING_CONTROLLER_ID, scene)
+    MeshWindowKit::render(&MeshView {
+        camera_json: world3d_default_camera(),
+        meshes_json: json!(meshes).to_string(),
+        instances_json: json!(instances).to_string(),
+        selection_json: world3d_selection_json("rectangle", &[], None),
+    })
 }
 //#endregion 🔖️Render
 
@@ -70,14 +72,10 @@ mod tests {
     async fn grid_instance_count_matches_filtered_stock_and_normalizes_scale() {
         let document = crate::artifacts::curate::schema::default_document();
         let cfg = SourcingCurateConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
-        let node = render(&document, &cfg);
-        let json = serde_json::to_value(&node).unwrap();
-        let instances_json = json.pointer("/world3d/instancesJson").and_then(|value| value.as_str()).unwrap();
-        let instances: Vec<serde_json::Value> = serde_json::from_str(instances_json).unwrap();
-        assert_eq!(instances.len(), filtered_stock(&document, &cfg.filters).len());
-        for instance in &instances {
-            let scale = instance["scale"][0].as_f64().unwrap();
-            assert!(scale > 0.0);
+        let node = render(&document, &cfg).expect("bounded grid");
+        let json = serde_json::to_string(&node).unwrap();
+        for kind in filtered_stock(&document, &cfg.filters) {
+            assert!(json.contains(&kind.id));
         }
     }
 

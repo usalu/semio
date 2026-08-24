@@ -53,7 +53,7 @@ mod wasm_bridge {
     #[wasm_bindgen]
     impl GisMapSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub async fn new() -> Result<GisMapSnapshotVcs, JsValue> {
+        pub fn new() -> Result<GisMapSnapshotVcs, JsValue> {
             let app = VcsArtifactApp::new(EditorApp::<Gis2dPlayApp>::default()).await;
             Ok(Self { app: RefCell::new(app) })
         }

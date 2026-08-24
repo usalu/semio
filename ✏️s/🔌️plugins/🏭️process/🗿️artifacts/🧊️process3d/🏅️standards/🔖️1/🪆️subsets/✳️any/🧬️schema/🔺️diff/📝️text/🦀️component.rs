@@ -19,7 +19,7 @@ use protocol::MutationDiff;
 //#region 🔖️Apply
 impl Process3dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &Process3dArtifact) -> protocol::MutationApplyResult<Process3dArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &Process3dArtifact) -> protocol::MutationApplyResult<Process3dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -121,7 +121,7 @@ impl Process3dDiff {
 }
 
 impl MutationDiff<Process3dSnapshot> for Process3dDiff {
-    async fn apply(&self, snapshot: &Process3dSnapshot) -> protocol::MutationApplyResult<Process3dSnapshot> {
+    fn apply(&self, snapshot: &Process3dSnapshot) -> protocol::MutationApplyResult<Process3dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -160,7 +160,7 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -208,7 +208,7 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
 
 //#region 🔖️Helpers
 /// 📸️ Whole-snapshot replacement diff.
-pub async fn diff_set_snapshot(snapshot: &Process3dSnapshot) -> Process3dDiff {
+pub fn diff_set_snapshot(snapshot: &Process3dSnapshot) -> Process3dDiff {
     Process3dDiff { artifact: Some(Box::new(Process3dArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers

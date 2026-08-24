@@ -15,7 +15,7 @@ use serde_json::Value;
 pub const GIS2D_LOD_MODE_MEASURE_ID: &str = "gis2d-play-window.lod-mode";
 
 /// 🔽️ The automatic tier plus every LOD scale tier from the map descriptor, as `(value, label)` rows.
-pub async fn lod_select_entries(labels: &Gis2dPlayLabels) -> Vec<(String, String)> {
+pub fn lod_select_entries(labels: &Gis2dPlayLabels) -> Vec<(String, String)> {
     std::iter::once((GIS_MAP_LOD_MODE_AUTOMATIC.into(), labels.lod_automatic.into()))
         .chain(serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
             let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
@@ -27,7 +27,7 @@ pub async fn lod_select_entries(labels: &Gis2dPlayLabels) -> Vec<(String, String
 
 /// 🔽️ The static LOD-mode choices for the palette arg schema: the automatic mode plus each LOD scale
 /// tier from the map descriptor, labelled in the app's base locale (localization is applied by overlay).
-pub async fn lod_arg_options() -> Vec<ActionArgOption> {
+pub fn lod_arg_options() -> Vec<ActionArgOption> {
     std::iter::once(ActionArgOption::new(GIS_MAP_LOD_MODE_AUTOMATIC, LocalizedLabel::native("Automatic", "Automatisch")))
         .chain(serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
             let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
@@ -39,7 +39,7 @@ pub async fn lod_arg_options() -> Vec<ActionArgOption> {
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Option
-pub async fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
+pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
     WindowMeasure::Select {
         id: GIS2D_LOD_MODE_MEASURE_ID.into(),
         label: Some(labels.lod_mode.into()),

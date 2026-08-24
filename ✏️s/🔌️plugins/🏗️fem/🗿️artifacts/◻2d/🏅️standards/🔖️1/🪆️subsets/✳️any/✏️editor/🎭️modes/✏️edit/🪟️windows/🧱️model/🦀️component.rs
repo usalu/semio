@@ -7,6 +7,11 @@
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera, FemDof, FemElement, FemLoad};
 use crate::model::Dof;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
+use semio_framework_ui_scene::{
+    canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal,
+    canvas2d_snapshot_terminal_is_empty, canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, Canvas2dSnapshotDescriptor, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken,
+    CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY,
+};
 use serde_json::json;
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -186,17 +191,16 @@ pub struct Fem2dVisualFreshness {
 
 const FEM2D_MOUNTED_VISUAL_PAGE_COUNT: usize = FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES / FEM2D_MOUNTED_VISUAL_PAGE_BYTES;
 
-#[derive(Debug, PartialEq)]
-struct Fem2dFixedJsonPages {
-    pages: [Option<Box<[u8; FEM2D_MOUNTED_VISUAL_PAGE_BYTES]>>; FEM2D_MOUNTED_VISUAL_PAGE_COUNT],
-    lengths: [u16; FEM2D_MOUNTED_VISUAL_PAGE_COUNT],
+#[derive(Debug)]
+struct Fem2dFixedPacketPages {
+    pages: [Option<Canvas2dSnapshotPage>; FEM2D_MOUNTED_VISUAL_PAGE_COUNT],
     write_page: usize,
     len: usize,
 }
 
-impl Fem2dFixedJsonPages {
+impl Fem2dFixedPacketPages {
     fn new() -> Self {
-        Self { pages: std::array::from_fn(|_| None), lengths: [0; FEM2D_MOUNTED_VISUAL_PAGE_COUNT], write_page: 0, len: 0 }
+        Self { pages: std::array::from_fn(|_| None), write_page: 0, len: 0 }
     }
 
     fn admit_page(&mut self, page: usize) -> Result<(), &'static [u8]> {
@@ -204,23 +208,12 @@ impl Fem2dFixedJsonPages {
         if owner.is_some() {
             return Err(b"fem2d.visual-page-duplicate");
         }
-        *owner = Some(Box::new([0; FEM2D_MOUNTED_VISUAL_PAGE_BYTES]));
+        *owner = Some(Canvas2dSnapshotPage::new());
         Ok(())
     }
 
-    fn append_page(&self, page: usize, output: &mut String) {
-        let Some(owner) = self.pages[page].as_ref() else { return };
-        let len = usize::from(self.lengths[page]);
-        output.push_str(unsafe { std::str::from_utf8_unchecked(&owner[..len]) });
-    }
-
-    fn materialize(&self) -> String {
-        let mut output = String::with_capacity(self.len);
-        self.append_page(0, &mut output);
-        self.append_page(1, &mut output);
-        self.append_page(2, &mut output);
-        self.append_page(3, &mut output);
-        output
+    fn take_page(&mut self, page: usize) -> Option<Canvas2dSnapshotPage> {
+        self.pages.get_mut(page)?.take()
     }
 
     fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
@@ -237,34 +230,16 @@ impl Fem2dFixedJsonPages {
     }
 }
 
-impl Write for Fem2dFixedJsonPages {
+impl Write for Fem2dFixedPacketPages {
     fn write_str(&mut self, value: &str) -> std::fmt::Result {
         if value.len() > FEM2D_MOUNTED_VISUAL_PAGE_BYTES || self.len.checked_add(value.len()).is_none_or(|len| len > FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES) {
             return Err(std::fmt::Error);
         }
-        let first_page = self.pages.get_mut(self.write_page).and_then(Option::as_mut).ok_or(std::fmt::Error)?;
-        let first_len = usize::from(self.lengths[self.write_page]);
-        let mut first = value.len().min(FEM2D_MOUNTED_VISUAL_PAGE_BYTES - first_len);
-        if !value.is_char_boundary(first) {
-            first -= 1;
-        }
-        if !value.is_char_boundary(first) {
-            first -= 1;
-        }
-        if !value.is_char_boundary(first) {
-            first -= 1;
-        }
-        first_page[first_len..first_len + first].copy_from_slice(&value.as_bytes()[..first]);
-        self.lengths[self.write_page] += first as u16;
-        self.len += first;
-        if first != value.len() {
+        if self.pages.get(self.write_page).and_then(Option::as_ref).is_none_or(|page| page.remaining() < value.len()) {
             self.write_page += 1;
-            let second_page = self.pages.get_mut(self.write_page).and_then(Option::as_mut).ok_or(std::fmt::Error)?;
-            let rest = value.len() - first;
-            second_page[..rest].copy_from_slice(&value.as_bytes()[first..]);
-            self.lengths[self.write_page] = rest as u16;
-            self.len += rest;
         }
+        self.pages.get_mut(self.write_page).and_then(Option::as_mut).ok_or(std::fmt::Error)?.push(value.as_bytes()).map_err(|_| std::fmt::Error)?;
+        self.len += value.len();
         Ok(())
     }
 }
@@ -321,7 +296,8 @@ pub struct Fem2dMountedVisualLease {
     preview_sequence: u64,
     surface_generation: u64,
     renderer_scene_generation: u64,
-    pages: Fem2dFixedJsonPages,
+    snapshot: Canvas2dSnapshotLease,
+    close_started: bool,
     region_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_REGIONS>,
     assembly_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_ELEMENTS>,
     field_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_FIELDS>,
@@ -332,8 +308,8 @@ impl Fem2dMountedVisualLease {
         self.app_instance_id == app_instance_id && self.base_revision == base_revision && self.generation == generation
     }
 
-    pub(crate) fn layers_json(&self) -> String {
-        self.pages.materialize()
+    pub(crate) fn snapshot(&self) -> Canvas2dSnapshotLease {
+        self.snapshot
     }
 
     pub(crate) fn matches_freshness(&self, freshness: Fem2dVisualFreshness) -> bool {
@@ -350,11 +326,24 @@ impl Fem2dMountedVisualLease {
         if self.region_order.pop().is_some() || self.assembly_order.pop().is_some() || self.field_order.pop().is_some() {
             return (false, 1, std::mem::size_of::<usize>());
         }
-        self.pages.close_step(maximum_bytes)
+        if maximum_bytes < CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY {
+            return (false, 0, 0);
+        }
+        if !self.close_started {
+            if canvas2d_snapshot_begin_close(self.snapshot).is_err() {
+                return (false, 0, 0);
+            }
+            self.close_started = true;
+            return (false, 1, 0);
+        }
+        match canvas2d_snapshot_close_step(self.snapshot) {
+            Ok(terminal) => (terminal, usize::from(!terminal), usize::from(!terminal) * CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY),
+            Err(_) => (false, 0, 0),
+        }
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.pages.terminal_is_empty() && self.region_order.is_empty() && self.assembly_order.is_empty() && self.field_order.is_empty()
+        canvas2d_snapshot_terminal_is_empty(self.snapshot) && self.region_order.is_empty() && self.assembly_order.is_empty() && self.field_order.is_empty()
     }
 }
 
@@ -394,7 +383,9 @@ pub enum Fem2dVisualJobStage {
 pub struct Fem2dVisualJob {
     freshness: Fem2dVisualFreshness,
     stage: Fem2dVisualJobStage,
-    output: Fem2dFixedJsonPages,
+    output: Fem2dFixedPacketPages,
+    token: Option<Canvas2dSnapshotWriteToken>,
+    abort_started: bool,
     region_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_REGIONS>,
     element_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_ELEMENTS>,
     field_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_FIELDS>,
@@ -422,7 +413,9 @@ impl Fem2dVisualJob {
         Self {
             freshness,
             stage: Fem2dVisualJobStage::ReserveSnapshot,
-            output: Fem2dFixedJsonPages::new(),
+            output: Fem2dFixedPacketPages::new(),
+            token: None,
+            abort_started: false,
             region_order: Fem2dFixedOrder::new(),
             element_order: Fem2dFixedOrder::new(),
             field_order: Fem2dFixedOrder::new(),
@@ -451,7 +444,7 @@ impl Fem2dVisualJob {
     }
 
     fn layer_prefix(&mut self) -> Result<(), Vec<u8>> {
-        let separator = if std::mem::replace(&mut self.first, false) { "" } else { "," };
+        let separator = if std::mem::replace(&mut self.first, false) { "" } else { "\n" };
         self.output.write_str(separator).map_err(|_| b"fem2d.visual-output-capacity".to_vec())
     }
 
@@ -558,8 +551,18 @@ impl Fem2dVisualJob {
                 {
                     return Err(b"fem2d.visual-maximum-plus-one".to_vec());
                 }
-                if usize::from(self.reserve_lane) < FEM2D_MOUNTED_VISUAL_PAGE_COUNT {
-                    self.output.admit_page(usize::from(self.reserve_lane)).map_err(<[u8]>::to_vec)?;
+                if self.reserve_lane == 0 {
+                    self.token = Some(
+                        canvas2d_snapshot_begin(Canvas2dSnapshotDescriptor {
+                            revision: self.freshness.model_revision,
+                            generation: self.freshness.renderer_scene_generation,
+                            page_count: FEM2D_MOUNTED_VISUAL_PAGE_COUNT as u8,
+                            byte_count: FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES as u32,
+                        })
+                        .map_err(|_| b"fem2d.visual-snapshot-preflight".to_vec())?,
+                    );
+                } else if usize::from(self.reserve_lane) <= FEM2D_MOUNTED_VISUAL_PAGE_COUNT {
+                    self.output.admit_page(usize::from(self.reserve_lane) - 1).map_err(<[u8]>::to_vec)?;
                 } else {
                     self.stage = Fem2dVisualJobStage::ReadProgressScalar;
                     return Ok(false);
@@ -568,7 +571,9 @@ impl Fem2dVisualJob {
             }
             Fem2dVisualJobStage::ReadProgressScalar => {
                 match self.scalar_cursor {
-                    0 => self.output.write_char('[').map_err(|_| b"fem2d.visual-output-capacity".to_vec())?,
+                    0 => {
+                        let _ = visual.state;
+                    }
                     1 => {
                         let _ = visual.progress_completed;
                     }
@@ -634,23 +639,29 @@ impl Fem2dVisualJob {
                             self.lookup_cursor += 1;
                         }
                     }
-                    1 => {
-                        self.layer_prefix()?;
-                        write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"region-quality-{}-{}\",\"points\":[", self.quality.id(), region.id).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                        self.item_phase = 2;
-                    }
-                    2 => {
-                        if let Some(point) = region.outline.get(self.point_cursor) {
-                            let separator = if self.point_cursor == 0 { "" } else { "," };
-                            let (x, y) = screen_2d(point[0], point[1]);
-                            write!(self.output, "{separator}[{x},{y}]").map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                            self.point_cursor += 1;
-                        } else {
-                            self.item_phase = 3;
-                        }
-                    }
                     _ => {
-                        write!(self.output, "],\"color\":\"{}\"}}", self.quality.color()).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+                        if let Some(point) = region.outline.get(self.point_cursor) {
+                            let Some(next) = region.outline.get((self.point_cursor + 1) % region.outline.len().max(1)) else {
+                                self.cursor += 1;
+                                self.point_cursor = 0;
+                                self.item_phase = 0;
+                                return Ok(false);
+                            };
+                            let (x0, y0) = screen_2d(point[0], point[1]);
+                            let (x1, y1) = screen_2d(next[0], next[1]);
+                            self.layer_prefix()?;
+                            write!(
+                                self.output,
+                                "{{\"kind\":\"line\",\"id\":\"region-quality-{}-{}-{}\",\"x0\":{x0},\"y0\":{y0},\"x1\":{x1},\"y1\":{y1},\"color\":\"{}\"}}",
+                                self.quality.id(),
+                                region.id,
+                                self.point_cursor,
+                                self.quality.color()
+                            )
+                            .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+                            self.point_cursor += 1;
+                            return Ok(false);
+                        }
                         self.cursor += 1;
                         self.point_cursor = 0;
                         self.item_phase = 0;
@@ -722,7 +733,8 @@ impl Fem2dVisualJob {
                     return Ok(false);
                 };
                 self.layer_prefix()?;
-                write!(self.output, "{{\"id\":\"assembling-{id}\",\"transform\":[1,0,0,1,10,36],\"text\":{{\"content\":\"assembling {id}\",\"size\":11}}}}").map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+                write!(self.output, "{{\"kind\":\"text\",\"id\":\"assembling-{id}\",\"x\":10,\"y\":36,\"text\":{{\"content\":\"assembling {id}\",\"size\":11}}}}")
+                    .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                 self.cursor += 1;
             }
             Fem2dVisualJobStage::BuildLoadGlyph => {
@@ -741,7 +753,8 @@ impl Fem2dVisualJob {
                     FemLoad::Area { id, pressure, .. } => (id, [0.0, -pressure.signum() * 18.0]),
                 };
                 self.layer_prefix()?;
-                write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"load-{id}\",\"points\":[[20,52],[{},{}]],\"color\":\"#ef4444\"}}", 20.0 + vector[0], 52.0 - vector[1]).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+                write!(self.output, "{{\"kind\":\"line\",\"id\":\"load-{id}\",\"x0\":20,\"y0\":52,\"x1\":{},\"y1\":{}}}", 20.0 + vector[0], 52.0 - vector[1])
+                    .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                 self.load_cursor += 1;
             }
             Fem2dVisualJobStage::BuildSupportGlyph => {
@@ -770,19 +783,19 @@ impl Fem2dVisualJob {
                 match self.stage {
                     Fem2dVisualJobStage::BuildDisplacementEntry => write!(
                         self.output,
-                        "{{\"kind\":\"polyline\",\"id\":\"displacement-field-{}\",\"points\":[[30,80],[{},{}]],\"color\":\"#f472b6\"}}",
+                        "{{\"kind\":\"line\",\"id\":\"displacement-field-{}\",\"x0\":30,\"y0\":80,\"x1\":{},\"y1\":{}}}",
                         field.node_id,
                         30.0 + field.displacement[0] * SCALE_2D,
                         80.0 - field.displacement[1] * SCALE_2D
                     ),
                     Fem2dVisualJobStage::BuildResidualEntry => {
-                        write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"residual-field-{}\",\"points\":[[30,96],[{},{}]],\"color\":\"#eab308\"}}", field.node_id, 30.0 + field.residual[0], 96.0 - field.residual[1])
+                        write!(self.output, "{{\"kind\":\"line\",\"id\":\"residual-field-{}\",\"x0\":30,\"y0\":96,\"x1\":{},\"y1\":{}}}", field.node_id, 30.0 + field.residual[0], 96.0 - field.residual[1])
                     }
                     Fem2dVisualJobStage::BuildReactionEntry => {
-                        write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"reaction-field-{}\",\"points\":[[30,112],[{},{}]],\"color\":\"#fb7185\"}}", field.node_id, 30.0 + field.reaction[0], 112.0 - field.reaction[1])
+                        write!(self.output, "{{\"kind\":\"line\",\"id\":\"reaction-field-{}\",\"x0\":30,\"y0\":112,\"x1\":{},\"y1\":{}}}", field.node_id, 30.0 + field.reaction[0], 112.0 - field.reaction[1])
                     }
                     Fem2dVisualJobStage::BuildContourEntry => write!(self.output, "{{\"kind\":\"circle\",\"id\":\"contour-field-{}\",\"x\":{},\"y\":124,\"width\":8,\"height\":8,\"color\":\"#22d3ee\"}}", field.node_id, 30.0 + field.contour),
-                    _ => write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"mode-field-{}\",\"points\":[[30,140],[{},{}]],\"color\":\"#a78bfa\"}}", field.node_id, 30.0 + field.mode_shape[0], 140.0 - field.mode_shape[1]),
+                    _ => write!(self.output, "{{\"kind\":\"line\",\"id\":\"mode-field-{}\",\"x0\":30,\"y0\":140,\"x1\":{},\"y1\":{}}}", field.node_id, 30.0 + field.mode_shape[0], 140.0 - field.mode_shape[1]),
                 }
                 .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                 self.cursor += 1;
@@ -801,7 +814,7 @@ impl Fem2dVisualJob {
                 self.layer_prefix()?;
                 write!(
                     self.output,
-                    "{{\"id\":\"{stable_id}-{locale}-{}-{}\",\"transform\":[1,0,0,1,10,18],\"text\":{{\"content\":\"{text}: {}; {}/{}; residual {}; tolerance {}; {}\",\"size\":11}}}}",
+                    "{{\"kind\":\"text\",\"id\":\"{stable_id}-{locale}-{}-{}\",\"x\":10,\"y\":18,\"text\":{{\"content\":\"{text}: {}; {}/{}; residual {}; tolerance {}; {}\",\"size\":11}}}}",
                     visual.state.id(),
                     self.cursor,
                     visual.state.id(),
@@ -815,10 +828,14 @@ impl Fem2dVisualJob {
                 self.cursor += 1;
             }
             Fem2dVisualJobStage::SealPages => {
-                if self.page_cursor == 0 {
-                    self.output.write_char(']').map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                    self.page_cursor = 1;
-                } else if self.page_cursor <= FEM2D_MOUNTED_VISUAL_PAGE_COUNT {
+                if self.page_cursor < FEM2D_MOUNTED_VISUAL_PAGE_COUNT {
+                    let mut page = self.output.take_page(self.page_cursor).ok_or_else(|| b"fem2d.visual-seal-page".to_vec())?;
+                    page.seal().map_err(|_| b"fem2d.visual-seal-page".to_vec())?;
+                    let token = self.token.ok_or_else(|| b"fem2d.visual-page-token".to_vec())?;
+                    if let Err(rejected) = canvas2d_snapshot_admit_page(token, page) {
+                        self.output.pages[self.page_cursor] = Some(rejected.page);
+                        return Err(b"fem2d.visual-page-admission".to_vec());
+                    }
                     self.page_cursor += 1;
                 } else {
                     self.stage = Fem2dVisualJobStage::ValidateFreshness;
@@ -835,6 +852,8 @@ impl Fem2dVisualJob {
                 if !self.validated {
                     return Err(b"fem2d.visual-publication-without-freshness".to_vec());
                 }
+                let token = self.token.take().ok_or_else(|| b"fem2d.visual-page-token".to_vec())?;
+                let snapshot = canvas2d_snapshot_seal(token).map_err(|_| b"fem2d.visual-page-seal".to_vec())?;
                 self.complete = Some(Fem2dMountedVisualLease {
                     app_instance_id: freshness.app_instance_id,
                     base_revision: freshness.model_revision,
@@ -843,7 +862,8 @@ impl Fem2dVisualJob {
                     preview_sequence: freshness.numerical_preview_sequence,
                     surface_generation: freshness.surface_generation,
                     renderer_scene_generation: freshness.renderer_scene_generation,
-                    pages: std::mem::replace(&mut self.output, Fem2dFixedJsonPages::new()),
+                    snapshot,
+                    close_started: false,
                     region_order: std::mem::take(&mut self.region_order),
                     assembly_order: std::mem::take(&mut self.element_order),
                     field_order: std::mem::take(&mut self.field_order),
@@ -876,11 +896,33 @@ impl Fem2dVisualJob {
         if self.region_order.pop().is_some() || self.element_order.pop().is_some() || self.field_order.pop().is_some() {
             return (false, 1, std::mem::size_of::<usize>());
         }
+        if let Some(token) = self.token {
+            if !self.abort_started {
+                if canvas2d_snapshot_abort_write(token).is_err() {
+                    return (false, 0, 0);
+                }
+                self.abort_started = true;
+                return (false, 1, 0);
+            }
+            match canvas2d_snapshot_abort_write_step(token) {
+                Ok(true) => {
+                    self.token = None;
+                    return (false, 1, 0);
+                }
+                Ok(false) => return (false, 1, CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY),
+                Err(_) => return (false, 0, 0),
+            }
+        }
         self.output.close_step(maximum_bytes)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.complete.is_none() && self.output.terminal_is_empty() && self.region_order.is_empty() && self.element_order.is_empty() && self.field_order.is_empty()
+        self.complete.is_none()
+            && self.token.is_none_or(canvas2d_snapshot_write_terminal_is_empty)
+            && self.output.terminal_is_empty()
+            && self.region_order.is_empty()
+            && self.element_order.is_empty()
+            && self.field_order.is_empty()
     }
 }
 //#endregion 🧵️MountedVisualJob
@@ -1118,13 +1160,15 @@ pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin
         }));
     }
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 
 /// 👁️ Renders the model plus an optional replaceable worker-job progress snapshot.
 pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &FemCamera, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let layers_json = progress.map(Fem2dMountedVisualLease::layers_json).unwrap_or_else(|| "[]".into());
-    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
+    crate::app_surface::canvas_2d_surface(
+        BODY_KEY,
+        Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot) },
+    )
 }
 //#endregion 🔖️Render
 
@@ -1145,6 +1189,21 @@ mod tests {
             turns += 1;
         }
         job.take_complete().expect("sealed visual")
+    }
+
+    fn packet_contains(lease: &Fem2dMountedVisualLease, needle: &[u8]) -> bool {
+        (0..lease.snapshot.page_count).any(|page| {
+            canvas2d_snapshot_with_page(lease.snapshot, page, |owner| owner.bytes().windows(needle.len()).any(|window| window == needle)).unwrap_or(false)
+        })
+    }
+
+    fn packet_equal(left: &Fem2dMountedVisualLease, right: &Fem2dMountedVisualLease) -> bool {
+        left.snapshot.page_count == right.snapshot.page_count
+            && (0..left.snapshot.page_count).all(|page| {
+                let left_hash = canvas2d_snapshot_with_page(left.snapshot, page, |owner| owner.bytes().iter().fold((0xcbf2_9ce4_8422_2325_u64, 0_usize), |(hash, len), byte| ((hash ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3), len + 1))).ok();
+                let right_hash = canvas2d_snapshot_with_page(right.snapshot, page, |owner| owner.bytes().iter().fold((0xcbf2_9ce4_8422_2325_u64, 0_usize), |(hash, len), byte| ((hash ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3), len + 1))).ok();
+                left_hash == right_hash
+            })
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1246,7 +1305,7 @@ mod tests {
 
     #[test]
     fn mounted_visual_output_exact_maximum_plus_one_and_page_handback() {
-        let mut output = Fem2dFixedJsonPages::new();
+        let mut output = Fem2dFixedPacketPages::new();
         output.admit_page(0).expect("page zero");
         output.admit_page(1).expect("page one");
         output.admit_page(2).expect("page two");
@@ -1256,9 +1315,9 @@ mod tests {
         output.write_str(&exact).expect("page one exact");
         output.write_str(&exact).expect("page two exact");
         output.write_str(&exact).expect("page three exact");
-        let before = output.pages[0].as_ref().expect("page retained").as_ptr();
+        let before = output.pages[0].as_ref().expect("page retained").backing_identity();
         assert!(output.write_char('x').is_err(), "maximum plus one must reject before allocating");
-        assert_eq!(output.pages[0].as_ref().expect("same page").as_ptr(), before);
+        assert_eq!(output.pages[0].as_ref().expect("same page").backing_identity(), before);
 
         let mut released = 0;
         while !output.close_step(FEM2D_MOUNTED_VISUAL_PAGE_BYTES).0 {
@@ -1297,10 +1356,10 @@ mod tests {
         assert!(stale.terminal_is_empty());
 
         let current = sealed_visual(&doc, &visual);
-        let current_bytes = current.layers_json().as_bytes().to_vec();
+        let current_snapshot = current.snapshot();
         let mut rejected = Fem2dVisualJob::new(visual_freshness(29));
         assert!(!rejected.close_step(FEM2D_MOUNTED_VISUAL_PAGE_BYTES).0);
-        assert_eq!(current.layers_json().as_bytes(), current_bytes);
+        assert!(canvas2d_snapshot_with_page(current_snapshot, 0, |_| ()).is_ok());
     }
 
     #[test]
@@ -1309,11 +1368,11 @@ mod tests {
         let visual = Fem2dLiveVisual { state: FemVisualState::ValidatedFinal, validated_final: true, progress_completed: 1, progress_total: 1, tolerance: 1e-8, ..Default::default() };
         let first = sealed_visual(&doc, &visual);
         let second = sealed_visual(&doc, &visual);
-        assert_eq!(first.layers_json(), second.layers_json());
-        assert!(first.layers_json().contains("accessible-en"));
-        assert!(first.layers_json().contains("accessible-de"));
-        assert!(first.layers_json().contains("Cancel Retry Discard"));
-        assert!(first.layers_json().contains("Abbrechen Wiederholen Verwerfen"));
+        assert!(packet_equal(&first, &second));
+        assert!(packet_contains(&first, b"accessible-en"));
+        assert!(packet_contains(&first, b"accessible-de"));
+        assert!(packet_contains(&first, b"Cancel Retry Discard"));
+        assert!(packet_contains(&first, "Abbrechen Wiederholen Verwerfen".as_bytes()));
 
         let mut job = Fem2dVisualJob::new(visual_freshness(19));
         let started = std::time::Instant::now();

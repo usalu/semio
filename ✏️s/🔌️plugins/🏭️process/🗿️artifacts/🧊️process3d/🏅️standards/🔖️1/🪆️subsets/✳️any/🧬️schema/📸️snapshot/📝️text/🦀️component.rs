@@ -25,12 +25,12 @@ toolSolids=[]
 resolvedUpTo=32";
 
 /// 📖️ Parses `.process3d` DSL text into a `Process3dSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<Process3dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Process3dSnapshot, store::TextError> {
     <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Process3dSnapshot` back to `.process3d` DSL text.
-pub async fn print_dsl(document: &Process3dSnapshot) -> String {
+pub fn print_dsl(document: &Process3dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -44,11 +44,11 @@ mod tests {
         WorkshopMachine,
     };
 
-    async fn cut_step(id: &str) -> ProcessStep {
+    fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
-    async fn drill_step(id: &str) -> ProcessStep {
+    fn drill_step(id: &str) -> ProcessStep {
         ProcessStep {
             id: id.into(),
             label: "Drill".into(),
@@ -58,7 +58,7 @@ mod tests {
         }
     }
 
-    async fn attach_step(id: &str) -> ProcessStep {
+    fn attach_step(id: &str) -> ProcessStep {
         ProcessStep {
             id: id.into(),
             label: "Attach".into(),
@@ -68,11 +68,11 @@ mod tests {
         }
     }
 
-    async fn imported_mesh_stock() -> Stock {
+    fn imported_mesh_stock() -> Stock {
         Stock { id: "stock".into(), label: "Imported GLB".into(), solid: WorkingSolid::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }, pose: Pose::default() }
     }
 
-    async fn circular_saw_machine() -> WorkshopMachine {
+    fn circular_saw_machine() -> WorkshopMachine {
         WorkshopMachine {
             id: "circularSaw".into(),
             label: "Circular Saw".into(),
@@ -93,7 +93,7 @@ mod tests {
     /// and a non-default workshop machine (3-deep nesting), so the DSL round trip covers the full
     /// grammar. Real composed children minted from a literal `ProcessWorkingScene`
     /// (`process_working_scene_to_snapshot`), never a bare/hand-built handle.
-    async fn sample_document() -> Process3dSnapshot {
+    fn sample_document() -> Process3dSnapshot {
         let scene = ProcessWorkingScene {
             stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: WorkingSolid::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose { position: [0.0, 0.0, 0.12], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             steps: vec![cut_step("cut-1"), drill_step("drill-1"), attach_step("attach-1")],

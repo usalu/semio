@@ -19,15 +19,15 @@ pub struct ChangeCursor {
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeCursor {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cursor", kind: "change-cursor", record: "ChangedCursor" };
 
-    async fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         crate::artifacts::process3d::mutations::change_cursor::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+    fn inverse(&self, base: &Process3dSnapshot) -> Vec<Process3dMutation> {
         crate::artifacts::process3d::mutations::change_cursor::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         match self.new_resolved_up_to {
             Some(cursor) => format!("Move cursor to step {cursor}"),
             None => "Clear cursor".to_string(),

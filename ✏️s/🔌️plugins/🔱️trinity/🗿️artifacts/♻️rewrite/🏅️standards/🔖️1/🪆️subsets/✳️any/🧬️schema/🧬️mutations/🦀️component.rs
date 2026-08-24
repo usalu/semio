@@ -38,6 +38,44 @@ pub use super::edit_rhs::mutation::{edit_rhs, EditRhs};
 pub use super::remove_parameter_binding::mutation::{remove_parameter_binding, RemoveParameterBinding};
 pub use super::remove_rule_layout_point::mutation::{remove_rule_layout_point, RemoveRuleLayoutPoint};
 
+/// 🏷️ Kebab-case spelling of every [`RewriteRuleMutation`] variant, in declaration order — the
+/// vocabulary the `rewrite-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-rewrite-1`'s exhaustive case measures itself against. Seven kinds and no more: the three
+/// authored bodies are each ONE opaque JSON string on the wire, so each takes a single `edit` verb
+/// and no per-clause vocabulary, while the two key-addressed maps take the `change`/`remove` pair
+/// that a keyed map supports. Whole-document replace (the old `SetState`) is banned outright and
+/// `resetRule` routes through `Effect::LoadDocument` instead, which is why there is no
+/// `set-snapshot` here. [`kinds_match_the_enum_and_the_catalog`] keeps this list honest against the
+/// enum, since the framework never parses Rust.
+pub const KINDS: &[&str] = &["edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point"];
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "editRhs", …}`, camelCase payload
+/// fields) JSON projection — exactly the shape the committed
+/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification vectors carry, including
+/// the doubly-encoded JSON-inside-a-JSON-string the three body edits use — into a real
+/// [`RewriteRuleMutation`]. The test adapter cannot reach `serde_json` (the generated host links
+/// only `semio-repo-test-host` and this crate) and cannot name this crate's private
+/// `protocol`/`store` extern-crate aliases either, so the bridge belongs here rather than there.
+pub fn decode_rewrite_mutation_json(text: &str) -> Result<RewriteRuleMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
+/// pairs, so the committed `🎯️outcome/🔣️component.json`'s claim is checkable from outside this
+/// crate rather than only inside its own leaf tests.
+pub fn apply_rewrite_mutation_reporting(snapshot: &mut RewriteSnapshot, mutation: &RewriteRuleMutation) -> Vec<(String, String)> {
+    let outcome = <RewriteRuleMutation as protocol::Mutation<RewriteSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ The mutation's OWN computed undo steps, which is what an `inverse-<kind>` scenario has to
+/// apply for the metamorphic law to mean anything.
+pub fn inverse_rewrite_mutation_steps(mutation: &RewriteRuleMutation, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+    <RewriteRuleMutation as protocol::Mutation<RewriteSnapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
 //#region 🔖️Store
 pub type RewriteRuleEnvelope = ArtifactEnvelope<RewriteSnapshot, RewriteRuleMutation>;
 pub type RewriteRuleStore = ArtifactStore<RewriteSnapshot, RewriteRuleMutation>;
@@ -117,6 +155,24 @@ mod tests {
     use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
     use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
+
+    /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
+    /// — must agree, in spelling AND in order. The framework never parses Rust, so without this test
+    /// `KINDS` could drift from the enum and the catalog could keep measuring `mutate-rewrite-1`
+    /// against a vocabulary the artifact no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = RewriteRuleMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(!manifest.contains("\"set-state\"") && !manifest.contains("\"set-snapshot\""), "the banned whole-document replace must not reappear in the catalog");
+    }
     use std::collections::BTreeMap;
 
     async fn sample_rule_state() -> RewriteSnapshot {

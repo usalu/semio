@@ -34,7 +34,7 @@ impl Default for BoundingBox {
 //#region 🔖️Derivation
 /// 🌀️ Rodrigues' rotation formula — rotates `p` by `angle` radians around `axis` (normalized
 /// internally; a zero-length axis or zero angle is a no-op).
-async fn rotate_axis_angle(p: [f64; 3], axis: [f64; 3], angle: f64) -> [f64; 3] {
+fn rotate_axis_angle(p: [f64; 3], axis: [f64; 3], angle: f64) -> [f64; 3] {
     let norm = (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]).sqrt();
     if norm < 1e-12 || angle == 0.0 {
         return p;
@@ -50,7 +50,7 @@ async fn rotate_axis_angle(p: [f64; 3], axis: [f64; 3], angle: f64) -> [f64; 3] 
 /// rotated+translated vertex set (a standard, slightly-loose-but-honest OBB-corners-then-AABB
 /// technique). No vertices (untrimmed sphere/cylinder faces, or an empty placeholder) degenerates
 /// to a single point at `pose.position`.
-pub async fn brep_bounding_box(solid: &SemioBrepSnapshot, pose: &Pose) -> BoundingBox {
+pub fn brep_bounding_box(solid: &SemioBrepSnapshot, pose: &Pose) -> BoundingBox {
     if solid.vertices.is_empty() {
         return BoundingBox { min: pose.position, max: pose.position };
     }

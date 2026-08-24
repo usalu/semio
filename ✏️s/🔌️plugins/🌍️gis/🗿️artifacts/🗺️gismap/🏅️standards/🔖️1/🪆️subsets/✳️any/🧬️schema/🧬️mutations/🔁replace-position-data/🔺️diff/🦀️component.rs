@@ -8,7 +8,7 @@ use crate::artifacts::gismap::{GisMapSnapshot, MapFeaturePatch};
 /// real handcrafted construction, never apply-then-capture, never a snapshot clone. Error
 /// `target-missing` when `id` doesn't name a position; Warning `no-op` when `new_data` already
 /// equals the position's current data.
-pub async fn diff(payload: &ReplacePositionData, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
+pub fn diff(payload: &ReplacePositionData, base: &GisMapSnapshot) -> protocol::MutationOutcome<GisMapDiff> {
     let Some(existing) = base.positions.iter().find(|feature| feature.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Position \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

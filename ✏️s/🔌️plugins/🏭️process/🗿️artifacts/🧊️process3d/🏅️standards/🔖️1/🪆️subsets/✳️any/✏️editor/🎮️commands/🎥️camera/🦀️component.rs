@@ -19,7 +19,7 @@ pub mod set_camera {
         pub fov: f64,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetCamera,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

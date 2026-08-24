@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `s.mathematical.mathematical` declares 15 mutation kinds, of which 14 address a graph and a point cloud that are no longer persisted fields but composed children, and one (`change-coefficient`) edits the labelled equation AST. Semio-NATIVE, no oracle; the decision below records both the declined candidates and the thinness of the committed vectors for the 13 graph/geometry kinds.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "mathematical-mutation-semantics",
+      "capabilities": [
+        "mathematical-1-mutate"
+      ],
+      "rationale": "`s.mathematical.mathematical` is a semio-NATIVE artifact. Its persisted body is three composed child handles (`notation` → `s.stdio.semio.text`, `results` → `s.stdio.semio.table`, `computed` → `s.stdio.semio.value`) plus ONE plain field, `equation`: a labelled expression AST whose `EquationNodeLabel` allocator only ever increases, so an address survives edits that a positional path would not. Both candidate families were surveyed and DECLINED. `petgraph` is the credible Rust graph library, but it models a graph as an in-memory container — it cannot read `.dsl.semio`, it has no notion of node labels, positions, an algorithm selector or a directedness flag, and it has no editing vocabulary whose results could be compared with ours. On the algebra side an external CAS is likewise the wrong instrument: `symbolica` is commercially licensed and cannot be linked here, and the small expression crates (`meval`, `evalexpr`) EVALUATE a string rather than exposing an authored, labelled AST, so none of them can adjudicate `change-coefficient`, which edits a numbered term in place. Evidence is the fifteen committed specification vectors plus the inverse law — and, recorded here rather than hidden, that evidence is thin for thirteen of the fifteen kinds: the graph and point-cloud verbs address collections that live in composed children the fixtures cannot resolve, so nine of them carry `rejected` vectors (`mutation.target-missing`, `mutation.duplicate-id`) and four carry `applied`-but-`mutation.no-op` vectors. Only `change-coefficient` and `insert-point` carry a forward, observable vector.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "mathematical-1-any",
+      "capability": "mathematical-1-mutate",
+      "kinds": [
+        "change-graph-directed",
+        "update-graph-algorithm",
+        "replace-graph",
+        "create-node",
+        "delete-node",
+        "delete-nodes",
+        "change-node-label",
+        "move-node",
+        "connect-nodes",
+        "disconnect-nodes",
+        "replace-points",
+        "insert-point",
+        "remove-point",
+        "move-point",
+        "change-coefficient"
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@ use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 //#region 🔖️Option
 pub const GIS2D_RENDER_MODE_MEASURE_ID: &str = "gis2d-play-window.render-mode";
 
-pub async fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
+pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
     WindowMeasure::Select {
         id: GIS2D_RENDER_MODE_MEASURE_ID.into(),
         label: Some(labels.render_mode.into()),

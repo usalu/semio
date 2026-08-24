@@ -26,7 +26,7 @@ pub mod set_snapshot {
         pub json: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetDocument,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -51,7 +51,7 @@ pub mod set_active_example {
         pub example_id: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetActiveExample,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

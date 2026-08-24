@@ -63,6 +63,106 @@ pub async fn as_playbook_spec(snapshot: &FormsSnapshot) -> flow::playbook::Playb
 }
 //#endregion 🔖️PlaybookBridge
 
+//#region 🔖️Kinds
+/// 🏷️ Kebab-case spelling of every [`FormMutation`] variant, in declaration order — the vocabulary the
+/// `forms-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and the
+/// exhaustive `mutate-*` case measures itself against (5 step kinds, 4 block kinds and the document title). The framework never
+/// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
+/// against both the enum and the committed catalog.
+pub const KINDS: &[&str] = &[
+    "create-step",
+    "delete-step",
+    "reorder-step",
+    "rename-step",
+    "change-step-description",
+    "create-block",
+    "delete-block",
+    "move-block-to-step",
+    "replace-block",
+    "change-form-title",
+];
+
+/// 🧮️ Applies `mutation` to `base` and hands back the whole `protocol::MutationOutcome`, the
+/// diagnostics included — the shape an external conformance host needs, since a committed
+/// `🎯️outcome` vector declares a status AND its diagnostic codes, and the plain apply wrapper
+/// beside this one answers `Result<_, _>` and drops the messages.
+// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
+pub fn apply_form_mutation_outcome(snapshot: &mut FormsSnapshot, mutation: &FormMutation) -> protocol::MutationOutcome<FormsDiff> {
+    let outcome = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
+}
+
+/// ↩️ `mutation`'s own inverse against `base`, as the step LIST `protocol::Mutation::inverse`
+/// returns. Reachable from outside this crate, which `protocol::Mutation` itself is not — the
+/// `protocol` extern-crate alias is private to `📦️glue.rs`.
+// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
+pub fn inverse_form_mutation_steps(mutation: &FormMutation, base: &FormsSnapshot) -> Vec<FormMutation> {
+    <FormMutation as protocol::Mutation<FormsSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
+/// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors carry.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn decode_form_mutation_json(text: &str) -> Result<FormMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️component.json` vector.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn decode_form_snapshot_json(text: &str) -> Result<FormsSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
+/// projection an external test host compares through.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn encode_form_snapshot_json(snapshot: &FormsSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("a FormsSnapshot is always serializable")
+}
+/// 🌱 Seeds the working-scene cache behind this snapshot's composed `s.stdio.semio.value` `structure` child handle from a committed
+/// `[FormStep]` JSON document, and hands back what it decoded.
+///
+/// This subset's persisted snapshot holds only the child HANDLE; the live rows behind it are an
+/// ephemeral, session-side scene that a fresh process has never populated. A committed
+/// `📸️snapshot/⬅️before/🔣️component.json` vector is therefore only HALF of a before-state, and the
+/// other half lives today in each leaf's own `🧪️tests/<fixture>/🦀️component.rs` as a Rust literal.
+/// An external conformance host cannot reach that, so this bridge lets the scene half travel as
+/// DATA — the exhaustive `mutate-forms-1` case carries it in its own `Examples` table, with the leaf
+/// it was read from cited there. The right long-term fix is to commit the scene beside the snapshot
+/// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
+// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
+pub fn seed_form_scene_json(snapshot: &FormsSnapshot, steps_json: &str) -> Result<Vec<crate::artifacts::forms::FormStep>, String> {
+    let steps: Vec<crate::artifacts::forms::FormStep> = serde_json::from_str(steps_json).map_err(|error| error.to_string())?;
+    crate::artifacts::forms::cache_forms_steps(&snapshot.structure.child_id, steps.clone());
+    Ok(steps)
+}
+//#endregion 🔖️Kinds
+
+//#region 🧪️KindsCatalog
+#[cfg(test)]
+mod kinds_catalog {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
+    /// committed `forms-1-any` catalog. The framework reads the catalog and never the enum, so
+    /// this is the only thing standing between a renamed variant and a mutation catalog that
+    /// silently measures a vocabulary the code no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <FormMutation as protocol::SemanticMutation<FormsSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared FormMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsCatalog
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

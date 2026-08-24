@@ -20,7 +20,7 @@ pub mod toggle_layer_visibility {
         pub layer_id: String,
     }
 
-    pub async fn handle(payload: &ToggleLayerVisibility, _doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &ToggleLayerVisibility, _doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let visible = !layer_visible(cfg.snapshot, &payload.layer_id);
         Ok(Emit::config(vec![Gis2dConfigMutation::SetLayerVisibility { layer_id: payload.layer_id.clone(), visible }]))
     }
@@ -35,7 +35,7 @@ pub mod fit_world {
     #[dsl(keyword = "fit-world")]
     pub struct FitWorld {}
 
-    pub async fn handle(_payload: &FitWorld, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(_payload: &FitWorld, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let mut host = map_host_from(doc.snapshot, cfg.snapshot);
         host.fit_world_camera();
         Ok(Emit::config(vec![Gis2dConfigMutation::SetCamera { camera_json: host.camera_json() }]))
@@ -53,7 +53,7 @@ pub mod set_camera {
         pub camera_json: String,
     }
 
-    pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetCamera { camera_json: payload.camera_json.clone() }]))
     }
 }
@@ -69,7 +69,7 @@ pub mod set_render_mode {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetRenderMode, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetRenderMode, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetRenderMode { value: payload.value.clone() }]))
     }
 }
@@ -85,7 +85,7 @@ pub mod set_vector_style {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetVectorStyle, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetVectorStyle, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetVectorStyle { value: payload.value.clone() }]))
     }
 }
@@ -101,7 +101,7 @@ pub mod set_lod_mode {
         pub value: String,
     }
 
-    pub async fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLodMode, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetLodMode { value: payload.value.clone() }]))
     }
 }
@@ -121,7 +121,7 @@ pub mod focus_feature {
         pub feature_kind: String,
     }
 
-    pub async fn handle(payload: &FocusFeature, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &FocusFeature, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let mut host = map_host_from(doc.snapshot, cfg.snapshot);
         if host.focus_feature(&payload.feature_kind, &payload.feature_id) {
             Ok(Emit::config(vec![Gis2dConfigMutation::SetCamera { camera_json: host.camera_json() }]))
@@ -143,7 +143,7 @@ pub mod set_layer_stroke_scale {
         pub value: f64,
     }
 
-    pub async fn handle(payload: &SetLayerStrokeScale, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetLayerStrokeScale, _doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Gis2dConfigMutation::SetLayerStrokeScale { layer_id: payload.layer_id.clone(), value: clamp_map_layer_weight(payload.value) }]))
     }
 }

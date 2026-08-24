@@ -5,9 +5,9 @@ use crate::artifacts::process3d::schema::inferences::processed_mesh;
 use crate::artifacts::process3d::Process3dSnapshot;
 use crate::editor::process3d::config::Process3dConfig;
 use crate::editor::process3d::modes::edit::windows::workpiece::options;
-use crate::editor::process3d::process3d_action;
+use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{
-    build_world_3d_scene, mesh_from_kind, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus,
+    mesh_from_kind, world3d_camera_json, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus,
     WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
 };
 use serde_json::json;
@@ -23,7 +23,7 @@ const PROCESS3D_FALLBACK_MESH_KIND: &str = "box";
 /// 🧱️ Stitched into the app manifest by `crate::editor::process3d::create_process3d_app`. `options.measures`
 /// stays empty here on purpose: this window's measures are config-derived and rebuilt per frame by
 /// `window_measures`, never frozen into the manifest.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PROCESS_3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Workpiece", "Werkstück"),
@@ -43,7 +43,7 @@ pub async fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `🎚️options/*` components.
-pub async fn window_measures(config: &Process3dConfig) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &Process3dConfig) -> Vec<WindowMeasure> {
     vec![options::sun::measure(&config_sun(config))]
 }
 //#endregion 🔖️Definition
@@ -52,7 +52,7 @@ pub async fn window_measures(config: &Process3dConfig) -> Vec<WindowMeasure> {
 /// 🌞️ Reconstructs the shared framework `WorldSunConfig` shape from `Process3dConfig`'s flattened sun
 /// fields — `world3d_scene`/`world3d_sun_measures` are shared SDK primitives that still take the
 /// nested struct.
-pub async fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
+pub fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
     WorldSunConfig { enabled: cfg.sun_enabled, azimuth: cfg.sun_azimuth, elevation: cfg.sun_elevation, intensity: cfg.sun_intensity, color: cfg.sun_color.clone() }
 }
 //#endregion 🔖️Sun
@@ -68,13 +68,17 @@ pub async fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
 /// `selectionMode`/`targets`/`componentIds` are no longer emitted here, matching every other
 /// migrated world3d call site's empty-selection `world3d_selection_json` call (e.g. `📐️cad`'s
 /// `world_selection_json`).
-async fn process3d_selection_json(active_utility: &str) -> String {
+fn process3d_selection_json(active_utility: &str) -> String {
     let mut value: serde_json::Value = serde_json::from_str(&world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("engagementSessionActive".into(), json!(active_utility != "select"));
         object.insert("faceDragActive".into(), json!(active_utility == "select"));
     }
     value.to_string()
+}
+
+fn process3d_window_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: crate::editor::process3d::PROCESS_3D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
 }
 //#endregion 🔖️Selection
 
@@ -85,7 +89,7 @@ async fn process3d_selection_json(active_utility: &str) -> String {
 /// mesh-url fast path (which needed to inspect the resolved solid kind) can no longer trigger, and
 /// `processed_mesh` degrades to the empty working scene (falls back to
 /// `PROCESS3D_FALLBACK_MESH_KIND`), a documented gap.
-async fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
+fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
     let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
     let mesh = processed_mesh(&scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
     let meshes = json!([{ "id": "processed", "data": mesh }]);
@@ -102,24 +106,25 @@ async fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, Stri
     (meshes.to_string(), instances.to_string())
 }
 
-async fn preview_payload_cached(fixture: &Process3dSnapshot) -> (String, String) {
+fn preview_payload_cached(fixture: &Process3dSnapshot) -> (String, String) {
     evaluated_preview_payload(fixture)
 }
 //#endregion 🔖️PreviewCache
 
 //#region 🔖️Render
-pub async fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiNode {
+pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = preview_payload_cached(fixture);
-    build_world_3d_scene(
-        PROCESS_3D_PLAY_SURFACE_MAIN,
-        crate::editor::process3d::PROCESS_3D_PLAY_APP_ID,
-        world3d_scene(world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov), meshes_json, instances_json, process3d_selection_json(config.active_utility()), &config_sun(config)),
-    )
+    MeshWindowKit::render(&MeshView {
+        camera_json: world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov),
+        meshes_json,
+        instances_json,
+        selection_json: process3d_selection_json(config.active_utility()),
+    })
 }
 //#endregion 🔖️Render
 
 //#region 🔖️Engagement
-pub async fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
+pub fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
     let active_utility = config.active_utility();
     // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` is a composed CHILD
     // HANDLE now (no `.len()` — see `ProcessWorkingScene`'s doc comment), so the stepper's `max`
@@ -138,10 +143,10 @@ pub async fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, l
             value: Some(config.engagement_input.clone()),
             placeholder: Some("cut, drill, attach, back, forward, all".into()),
             disabled: None,
-            on_change: Some(process3d_action("engagementInput", None)),
-            on_submit: Some(process3d_action("engagementSubmit", None)),
+            on_change: Some(process3d_window_action("engagementInput", None)),
+            on_submit: Some(process3d_window_action("engagementSubmit", None)),
             on_repeat_last: None,
-            on_abort: Some(process3d_action("engagementAbort", None)),
+            on_abort: Some(process3d_window_action("engagementAbort", None)),
         }),
         control: Some(WindowEngagementControl::Stepper {
             id: Some("process3d-cursor".into()),
@@ -152,7 +157,7 @@ pub async fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, l
             step: Some(1.0),
             unit: None,
             disabled: None,
-            on_change: Some(process3d_action("setCursor", None)),
+            on_change: Some(process3d_window_action("setCursor", None)),
             on_commit: None,
         }),
         controls: None,

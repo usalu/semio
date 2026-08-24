@@ -2,14 +2,12 @@
 
 use crate::artifacts::curate::CurateSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use crate::editor::sourcing::{sourcing_action, SOURCING_CONTROLLER_ID, SOURCING_DRAG_MIME};
-use semio_framework_plugin::{build_table_scene, table_row_json, LocalizedLabel, SurfaceKind, TableCell, TableScene, UiNode, UiTreeActionPlacement, UiTreeItemAction, WindowKindDefinition, WindowOptions};
-use serde_json::{json, Value};
+use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SOURCING_CURATE_WINDOW_CURATED: &str = "sourcing-curated";
 pub const SOURCING_CURATE_BODY_CURATED: &str = "sourcing.curated";
-const SOURCING_CURATE_SURFACE_CURATED: &str = "sourcing.curated.table";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -34,44 +32,24 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &CurateSnapshot, labels: &SourcingLabels) -> UiNode {
-    let columns = json!([
-        {"id": "name", "label": labels.col_name.as_str()},
-        {"id": "availability", "label": labels.col_availability.as_str()},
-        {"id": "count", "label": labels.col_count.as_str()},
-        {"id": "actions", "label": ""},
-    ])
-    .to_string();
+fn view_model(document: &CurateSnapshot, labels: &SourcingLabels) -> TableView {
     let stock = crate::artifacts::curate::stock_of(document);
-    let rows: Vec<Value> = document
+    let rows = document
         .curated
         .iter()
         .filter_map(|item| {
             let kind = stock.iter().find(|kind| kind.id == item.object_id)?;
-            Some(table_row_json(
-                &kind.id,
-                Some(&json!({ "objectId": kind.id })),
-                &[
-                    ("name", TableCell::Text { value: kind.name.clone() }),
-                    ("availability", TableCell::Number { value: kind.availability as f64 }),
-                    ("count", TableCell::Stepper { value: item.count as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_action("curateSetCount", Some(json!({ "objectId": kind.id }))) }),
-                    (
-                        "actions",
-                        TableCell::Buttons {
-                            buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), placement: Some(UiTreeActionPlacement::Row) }],
-                        },
-                    ),
-                ],
-            ))
+            Some(vec![kind.name.clone(), kind.availability.to_string(), item.count.to_string()])
         })
         .collect();
-    let mut scene = TableScene::base(columns, serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()));
-    // 🕹️ Row selection is the framework-owned "rows" interaction domain now (ticket
-    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactApp::render` carries no
-    // `InteractionView`, so `scene.selection_json` stays at its default (unset) here.
-    scene.row_drag_mime = Some(SOURCING_DRAG_MIME.into());
-    scene.drop_action = Some(sourcing_action("dropOnCurated", None));
-    build_table_scene(SOURCING_CURATE_SURFACE_CURATED, SOURCING_CONTROLLER_ID, scene)
+    TableView {
+        columns: vec![labels.col_name.as_str().to_owned(), labels.col_availability.as_str().to_owned(), labels.col_count.as_str().to_owned()],
+        rows,
+    }
+}
+
+pub fn render(document: &CurateSnapshot, labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
+    TableWindowKit::render(&view_model(document, labels))
 }
 //#endregion 🔖️Render
 

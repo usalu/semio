@@ -7,7 +7,7 @@ use crate::artifacts::process3d::mutations::replace_stock_solid::mutation::Repla
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ReplaceStockSolid, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+pub fn diff(payload: &ReplaceStockSolid, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
     if base.stock_solid == payload.new_solid {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Stock solid handle is unchanged.".to_string());
     }

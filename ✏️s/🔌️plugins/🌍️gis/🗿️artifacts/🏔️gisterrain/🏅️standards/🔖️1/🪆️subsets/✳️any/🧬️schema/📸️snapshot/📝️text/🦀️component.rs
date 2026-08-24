@@ -12,12 +12,12 @@ use crate::artifacts::gisterrain::GisTerrainSnapshot;
 pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.gisterrain` DSL text into a `GisTerrainSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<GisTerrainSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<GisTerrainSnapshot, store::TextError> {
     <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `GisTerrainSnapshot` back to `.gisterrain` DSL text.
-pub async fn print_dsl(document: &GisTerrainSnapshot) -> String {
+pub fn print_dsl(document: &GisTerrainSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 

@@ -15,12 +15,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.cad` DSL text into a `CadSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<CadSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<CadSnapshot, store::TextError> {
     <CadSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `CadSnapshot` back to `.cad` DSL text.
-pub async fn print_dsl(document: &CadSnapshot) -> String {
+pub fn print_dsl(document: &CadSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 

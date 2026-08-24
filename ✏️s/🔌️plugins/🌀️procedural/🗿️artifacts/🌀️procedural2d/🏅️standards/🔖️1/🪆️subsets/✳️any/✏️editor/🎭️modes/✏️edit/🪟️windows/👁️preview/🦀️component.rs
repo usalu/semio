@@ -73,7 +73,7 @@ pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, sess
     crate::scene_surface(
         PROCEDURAL2D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
-        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()) },
+        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()), snapshot: None },
     )
 }
 //#endregion 🔖️Render

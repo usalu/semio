@@ -10998,7 +10998,7 @@ pub mod app {
         /// `ChildDispatch.op_schema` through as forward-compat metadata without interpreting it (see
         /// `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b2-store-composition-report.md`), so
         /// there is no schema REGISTRY this must resolve against yet.
-        pub async fn of<S, M>(slot: impl Into<String>, child_id: impl Into<String>, ops: Vec<M>) -> ChildEmit
+        pub fn of<S, M>(slot: impl Into<String>, child_id: impl Into<String>, ops: Vec<M>) -> ChildEmit
         where
             M: protocol::SemanticMutation<S> + ::protocol::OpBinary,
         {
@@ -11030,14 +11030,14 @@ pub mod app {
         /// @emoji 🔁️ Preview pattern (a): a per-tick coalesced DOCUMENT emission. The `coalesce_key` folds
         /// every tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is
         /// one undo. Use for cheap per-tick document operations. See `🔖️UtilityPreviewContract`.
-        pub async fn amend(artifact_mutations: Vec<Mutation>, coalesce_key: impl Into<String>) -> Self {
+        pub fn amend(artifact_mutations: Vec<Mutation>, coalesce_key: impl Into<String>) -> Self {
             Self { artifact_mutations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
         }
 
         /// @emoji 📌️ Preview pattern (b): the gesture-end commit of an app-runtime scratch draft as one
         /// described DOCUMENT edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick
         /// amending would be O(N²) (draw drafts, lowpoly strokes). See `🔖️UtilityPreviewContract`.
-        pub async fn commit(artifact_mutations: Vec<Mutation>, description: impl Into<String>) -> Self {
+        pub fn commit(artifact_mutations: Vec<Mutation>, description: impl Into<String>) -> Self {
             Self { artifact_mutations, description: Some(description.into()), ..Default::default() }
         }
 
@@ -11049,34 +11049,34 @@ pub mod app {
         }
 
         /// @emoji 📝️ A draft-operation emission carrying `draft_mutations` and nothing else.
-        pub async fn draft(draft_mutations: Vec<DraftMutation>) -> Self {
+        pub fn draft(draft_mutations: Vec<DraftMutation>) -> Self {
             Self { draft_mutations, ..Default::default() }
         }
 
         /// @emoji 🔁️ `amend`'s CONFIG-targeted twin — coalesces one live gesture's ticks into a single
         /// amendable config edit (e.g. a live camera drag).
-        pub async fn amend_config(config_mutations: Vec<ConfigMutation>, coalesce_key: impl Into<String>) -> Self {
+        pub fn amend_config(config_mutations: Vec<ConfigMutation>, coalesce_key: impl Into<String>) -> Self {
             Self { config_mutations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
         }
 
         /// @emoji 📌️ `commit`'s CONFIG-targeted twin — a described, non-coalesced config edit.
-        pub async fn commit_config(config_mutations: Vec<ConfigMutation>, description: impl Into<String>) -> Self {
+        pub fn commit_config(config_mutations: Vec<ConfigMutation>, description: impl Into<String>) -> Self {
             Self { config_mutations, description: Some(description.into()), ..Default::default() }
         }
 
         /// @emoji 🐚️ A single host effect and no operations (a shell action).
-        pub async fn effect(effect: Effect) -> Self {
+        pub fn effect(effect: Effect) -> Self {
             Self { effects: vec![effect], ..Default::default() }
         }
 
         /// @emoji 📣️ A single app event and no operations.
-        pub async fn event(event: AppEvent) -> Self {
+        pub fn event(event: AppEvent) -> Self {
             Self { events: vec![event], ..Default::default() }
         }
 
         /// @emoji 🧵️ A single spawned `AsyncTask` and no operations — the common case for "this
         /// command's only job is to kick off host work" (e.g. a search-as-you-type debounce).
-        pub async fn task(task: AsyncTask<Mutation, ConfigMutation, DraftMutation>) -> Self {
+        pub fn task(task: AsyncTask<Mutation, ConfigMutation, DraftMutation>) -> Self {
             Self { tasks: vec![task], ..Default::default() }
         }
     }
@@ -22313,19 +22313,19 @@ pub mod app {
     }
 
     impl<ConfigMutation> ViewEmit<ConfigMutation> {
-        pub async fn new() -> Self {
+        pub fn new() -> Self {
             Self::default()
         }
         /// 🧮️ A config-operation emission carrying `config_mutations` and nothing else.
-        pub async fn config(config_mutations: Vec<ConfigMutation>) -> Self {
+        pub fn config(config_mutations: Vec<ConfigMutation>) -> Self {
             Self { config_mutations, ..Default::default() }
         }
         /// 🐚️ A single host effect and no config operations.
-        pub async fn effect(effect: Effect) -> Self {
+        pub fn effect(effect: Effect) -> Self {
             Self { effects: vec![effect], ..Default::default() }
         }
         /// 🐢️ Narrows which rendered UI sections this emission invalidates.
-        pub async fn dirty(ui_dirty: semio_framework::kernel::UiDirtyScope) -> Self {
+        pub fn dirty(ui_dirty: semio_framework::kernel::UiDirtyScope) -> Self {
             Self { ui_dirty, ..Default::default() }
         }
     }
@@ -28253,12 +28253,12 @@ pub mod plugin_runtime {
                     }
                     TestCommand::SetLabel { value } => Ok(Emit { artifact_mutations: vec![TestMutation::SetLabel { value: value.clone() }], coalesce_key: Some("label".into()), ..Default::default() }),
                     TestCommand::SetLabelViaCommand { value } => Ok(Emit::mutations(vec![TestMutation::SetLabel { value: value.clone() }])),
-                    TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestMutation::SetLabel { value: value.clone() }], "label").await),
-                    TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestMutation::SetLabel { value: value.clone() }], "commit label").await),
+                    TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestMutation::SetLabel { value: value.clone() }], "label")),
+                    TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestMutation::SetLabel { value: value.clone() }], "commit label")),
                     TestCommand::BadView => Ok(Emit::mutations(vec![TestMutation::SetCount { value: 99 }])),
-                    TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) }).await),
+                    TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) })),
                     TestCommand::Select { id } => Ok(Emit::config(vec![TestConfigMutation::SetSelected { value: id.clone() }])),
-                    TestCommand::Navigate => Ok(Emit::effect(Effect::Navigate { uri: "semio://home".into() }).await),
+                    TestCommand::Navigate => Ok(Emit::effect(Effect::Navigate { uri: "semio://home".into() })),
                     TestCommand::NoopMutation => Ok(Emit::default()),
                     TestCommand::ViewNoScope => Ok(Emit { ui_scope: UiDirtyScope::None, ..Default::default() }),
                     TestCommand::ViewPartialScope => {
@@ -28271,7 +28271,7 @@ pub mod plugin_runtime {
                     }),
                     TestCommand::ProbeChild { slot, child_id } => {
                         let _snapshot = doc.children.typed_read::<TestSnapshot>(slot, child_id).await?;
-                        Ok(Emit::effect(Effect::DispatchAction { req: RequestId(91_001), action: "probeChildContinuation".into(), args: None, delay_ms: 0 }).await)
+                        Ok(Emit::effect(Effect::DispatchAction { req: RequestId(91_001), action: "probeChildContinuation".into(), args: None, delay_ms: 0 }))
                     }
                     // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: no mutations of its own — the
                     // task's eventual `TaskResolution::Command` follow-up is what mutates the
@@ -30884,12 +30884,12 @@ pub mod world3d_host {
     }
 
     /** 🌳️ Measure group with optional open state and no header slider fields. */
-    async fn measure_group_with_open(id: String, label: impl Into<String>, default_open: Option<bool>, children: Vec<WindowMeasure>) -> WindowMeasure {
+    fn measure_group_with_open(id: String, label: impl Into<String>, default_open: Option<bool>, children: Vec<WindowMeasure>) -> WindowMeasure {
         WindowMeasure::Group { id, label: label.into(), default_open, active_utility_id: None, value: None, min: None, max: None, step: None, ready: None, loading: None, waiting: None, on_change: None, children }
     }
 
     /** 🌞️ Shared "Sun" window-options group (enable toggle + azimuth/elevation/intensity sliders), see `lowpoly_window_measures`'s "Show Edges" toggle for the sibling pattern. */
-    pub async fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
+    pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
         measure_group_with_open(
             format!("{id_prefix}-measure-sun"),
             "Sun",
@@ -30940,7 +30940,6 @@ pub mod world3d_host {
                 },
             ],
         )
-        .await
     }
 
     /** 🌞️ Applies a sun-related action id to `sun`, returning whether it was handled — mirrors `lowpoly`'s `"toggleShowEdges"` action-handler shape. */
@@ -31157,8 +31156,7 @@ pub mod world3d_host {
                 vec![("plan", "Plan"), ("top", "Top"), ("bottom", "Bottom"), ("front", "Front"), ("back", "Back"), ("left", "Left"), ("right", "Right")],
                 "orthographicView",
             )],
-        )
-        .await;
+        );
 
         let mut axo_children = vec![
             select(
@@ -31175,7 +31173,7 @@ pub mod world3d_host {
         if p.kind == "axonometric" && p.axonometric_variant == "trimetric" {
             axo_children.push(slider(format!("{id_prefix}-projection-axonometric-angle-b"), "Angle B", p.axonometric_angle_b, 5.0, 75.0, 0.5, "axonometricAngleB"));
         }
-        let axonometric = measure_group_with_open(format!("{id_prefix}-projection-axonometric"), "Axonometric", Some(false), axo_children).await;
+        let axonometric = measure_group_with_open(format!("{id_prefix}-projection-axonometric"), "Axonometric", Some(false), axo_children);
 
         let mut oblique_children = vec![select(
             format!("{id_prefix}-projection-oblique-variant"),
@@ -31189,9 +31187,9 @@ pub mod world3d_host {
                 oblique_children.push(slider(format!("{id_prefix}-projection-oblique-depth"), "Depth Scale", p.oblique_depth, 0.05, 1.0, 0.05, "obliqueDepth"));
             }
         }
-        let oblique = measure_group_with_open(format!("{id_prefix}-projection-oblique"), "Oblique", Some(false), oblique_children).await;
+        let oblique = measure_group_with_open(format!("{id_prefix}-projection-oblique"), "Oblique", Some(false), oblique_children);
 
-        let parallel = measure_group_with_open(format!("{id_prefix}-projection-parallel"), "Parallel", Some(true), vec![orthographic, axonometric, oblique]).await;
+        let parallel = measure_group_with_open(format!("{id_prefix}-projection-parallel"), "Parallel", Some(true), vec![orthographic, axonometric, oblique]);
 
         let perspective_kind_value = match p.kind.as_str() {
             "onePoint" => "onePoint",
@@ -31223,7 +31221,7 @@ pub mod world3d_host {
         }
         let perspective = measure_group_with_open(format!("{id_prefix}-projection-perspective"), "Perspective", Some(true), perspective_children);
 
-        measure_group_with_open(format!("{id_prefix}-projection"), "Projection", Some(false), vec![parallel, perspective.await]).await
+        measure_group_with_open(format!("{id_prefix}-projection"), "Projection", Some(false), vec![parallel, perspective])
     }
 
     /** 📐️ Applies `setProjection`/`setProjectionParam` to `p`, returning whether the action was handled. */
@@ -31417,7 +31415,7 @@ pub mod world3d_host {
         }
     }
 
-    pub async fn world3d_default_camera() -> String {
+    pub fn world3d_default_camera() -> String {
         world3d_camera_json([4.0, -4.0, 3.0], [0.0, 0.0, 0.0], 45.0)
     }
 
@@ -31772,6 +31770,7 @@ pub use app::{
     AppActionRegistry,
     AppBuilder,
     AppInstance,
+    AppOperationContext,
     ArtifactAnalysis,
     ArtifactAnalyzer,
     ArtifactApp,
@@ -31789,6 +31788,8 @@ pub use app::{
     ArtifactDeserializer,
     ArtifactDownloadOutput,
     ArtifactEditor,
+    ArtifactEnvelopeDecodeOperationHandle,
+    ArtifactEnvelopeDecodeOperationPoll,
     ArtifactExecutableIdentity,
     ArtifactIdentity,
     ArtifactIdentityClaim,
@@ -31929,7 +31930,7 @@ pub use plugin_runtime::{
 };
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};
-pub use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, UiFixedList, UiListBuilder, UiMapBuilder, UiText, UiValue};
+pub use semio_framework_ui_contract::{ActionBinding, ActionId, Buildable, Component, HasBase, HasChildren, RowAction, RowActionPlacement, Trigger, UiFixedList, UiListBuilder, UiMapBuilder, UiText, UiValue};
 pub use world3d_host::{
     apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera, world3d_environment_json, world3d_mesh_id_from_url,
     world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_projection_spec_json, world3d_scene,

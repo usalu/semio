@@ -15,7 +15,7 @@ pub mod set_active_utility {
         pub utility_id: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &SetActiveUtility,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

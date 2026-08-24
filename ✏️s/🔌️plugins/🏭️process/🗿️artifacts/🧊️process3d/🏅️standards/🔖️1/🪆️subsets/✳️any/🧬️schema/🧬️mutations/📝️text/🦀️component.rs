@@ -96,7 +96,7 @@ enum Process3dMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for Process3dMutationDsl {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -107,7 +107,7 @@ impl OpText for Process3dMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -116,16 +116,16 @@ impl OpText for Process3dMutationDsl {
 }
 
 impl protocol::OpBinary for Process3dMutationDsl {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-async fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationDsl {
+fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationDsl {
     match mutation {
         Process3dMutation::CreateStep(payload) => Process3dMutationDsl::CreateStep { index: payload.index, step_json: serde_json::to_string(&payload.step).expect("ProcessStep is always JSON-serializable") },
         Process3dMutation::DeleteStep(payload) => Process3dMutationDsl::DeleteStep { id: payload.id.clone() },
@@ -146,7 +146,7 @@ async fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMut
     }
 }
 
-async fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutation {
+fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutation {
     match mutation {
         Process3dMutationDsl::CreateStep { index, step_json } => Process3dMutation::CreateStep(create_step::mutation::CreateStep { index, step: serde_json::from_str(&step_json).expect("valid ProcessStep json") }),
         Process3dMutationDsl::DeleteStep { id } => Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id }),
@@ -170,11 +170,11 @@ async fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3
 }
 
 impl OpText for Process3dMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(process3d_mutation_from_dsl(<Process3dMutationDsl as OpText>::parse_op(line)?))
     }
 
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         <Process3dMutationDsl as OpText>::print_op(&process3d_mutation_to_dsl(self))
     }
 }
@@ -182,11 +182,11 @@ impl OpText for Process3dMutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `Process3dMutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for Process3dMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         process3d_mutation_to_dsl(self).encode_op()
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(process3d_mutation_from_dsl(Process3dMutationDsl::decode_op(bytes)?))
     }
 }
@@ -200,11 +200,11 @@ mod tests {
     use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, Process3dSnapshot, WorkingSolid};
     use protocol::Mutation;
 
-    async fn cut_step(id: &str) -> ProcessStep {
+    fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
-    async fn circular_saw_machine() -> WorkshopMachine {
+    fn circular_saw_machine() -> WorkshopMachine {
         use crate::artifacts::process3d::{CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity};
         WorkshopMachine {
             id: "circularSaw".into(),

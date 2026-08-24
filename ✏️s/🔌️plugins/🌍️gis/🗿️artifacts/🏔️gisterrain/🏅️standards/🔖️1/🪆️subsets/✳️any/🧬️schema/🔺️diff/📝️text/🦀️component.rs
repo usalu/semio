@@ -12,7 +12,7 @@ use protocol::MutationDiff;
 //#region 🔹Apply
 impl GisTerrainDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> protocol::MutationApplyResult<GisTerrainArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> protocol::MutationApplyResult<GisTerrainArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -36,7 +36,7 @@ impl GisTerrainDiff {
 }
 
 impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
-    async fn apply(&self, snapshot: &GisTerrainSnapshot) -> protocol::MutationApplyResult<GisTerrainSnapshot> {
+    fn apply(&self, snapshot: &GisTerrainSnapshot) -> protocol::MutationApplyResult<GisTerrainSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -54,7 +54,7 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -76,15 +76,15 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
 
 //#region 🔹Helpers
 /// ⚡️ Diff helpers used by mutations.
-pub async fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
+pub fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
     GisTerrainDiff { exaggeration: Some(exaggeration), ..Default::default() }
 }
 
-pub async fn diff_imported_features_json(features_json: String) -> GisTerrainDiff {
+pub fn diff_imported_features_json(features_json: String) -> GisTerrainDiff {
     GisTerrainDiff { imported_features_json: Some(features_json), ..Default::default() }
 }
 
-pub async fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
+pub fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
     GisTerrainDiff { artifact: Some(Box::new(GisTerrainArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔹Helpers

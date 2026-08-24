@@ -7,7 +7,7 @@ use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
 /// 🎛️ Move and Rotate handle groups shown only while this window owns the Dislocate utility.
-pub async fn measure(options: CadDislocateOptions, is_de: bool) -> WindowMeasure {
+pub fn measure(options: CadDislocateOptions, is_de: bool) -> WindowMeasure {
     WindowMeasure::Group {
         id: "cad-play-utility-options-dislocate".into(),
         label: String::new(),

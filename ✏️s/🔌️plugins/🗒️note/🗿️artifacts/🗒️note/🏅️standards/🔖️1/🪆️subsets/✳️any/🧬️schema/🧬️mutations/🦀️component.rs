@@ -109,6 +109,112 @@ pub async fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutat
 }
 //#endregion 🔖️Helpers
 
+//#region 🔖️Kinds
+/// 🏷️ Kebab-case spelling of every [`NoteMutation`] variant, in declaration order — the vocabulary the
+/// `note-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and the
+/// exhaustive `mutate-*` case measures itself against (9 document-root scalars, 3 asset-pool kinds and 21 block-tree kinds). The framework never
+/// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
+/// against both the enum and the committed catalog.
+pub const KINDS: &[&str] = &[
+    "rename-note",
+    "change-grid-visible",
+    "change-grid-spacing",
+    "change-grid-subdivisions",
+    "change-grid-opacity",
+    "change-snap-enabled",
+    "change-snap-grid-spacing",
+    "change-pencil-width",
+    "change-eraser-radius",
+    "create-asset",
+    "replace-asset-payload",
+    "delete-asset",
+    "create-block",
+    "delete-block",
+    "delete-blocks",
+    "duplicate-block",
+    "duplicate-blocks",
+    "move-block-to-container",
+    "drag-blocks",
+    "rename-block",
+    "change-block-visible",
+    "change-block-locked",
+    "move-block",
+    "resize-block",
+    "change-block-font-size",
+    "edit-block-text",
+    "edit-block-math",
+    "change-block-ink-width",
+    "edit-block-ink-stroke",
+    "insert-table-row",
+    "remove-table-row",
+    "insert-table-column",
+    "remove-table-column",
+];
+
+/// 🧮️ Applies `mutation` to `base` and hands back the whole `protocol::MutationOutcome`, the
+/// diagnostics included — the shape an external conformance host needs, since a committed
+/// `🎯️outcome` vector declares a status AND its diagnostic codes, and the plain apply wrapper
+/// beside this one answers `Result<_, _>` and drops the messages.
+// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
+pub fn apply_note_mutation_outcome(snapshot: &mut NoteSnapshot, mutation: &NoteMutation) -> protocol::MutationOutcome<NoteDiff> {
+    let outcome = <NoteMutation as protocol::Mutation<NoteSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
+}
+
+/// ↩️ `mutation`'s own inverse against `base`, as the step LIST `protocol::Mutation::inverse`
+/// returns. Reachable from outside this crate, which `protocol::Mutation` itself is not — the
+/// `protocol` extern-crate alias is private to `📦️glue.rs`.
+// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
+pub fn inverse_note_mutation_steps(mutation: &NoteMutation, base: &NoteSnapshot) -> Vec<NoteMutation> {
+    <NoteMutation as protocol::Mutation<NoteSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
+/// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors carry.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn decode_note_mutation_json(text: &str) -> Result<NoteMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️component.json` vector.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn decode_note_snapshot_json(text: &str) -> Result<NoteSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
+/// projection an external test host compares through.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn encode_note_snapshot_json(snapshot: &NoteSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("a NoteSnapshot is always serializable")
+}
+//#endregion 🔖️Kinds
+
+//#region 🧪️KindsCatalog
+#[cfg(test)]
+mod kinds_catalog {
+    use super::*;
+
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
+    /// committed `note-1-any` catalog. The framework reads the catalog and never the enum, so
+    /// this is the only thing standing between a renamed variant and a mutation catalog that
+    /// silently measures a vocabulary the code no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <NoteMutation as protocol::SemanticMutation<NoteSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared NoteMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsCatalog
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

@@ -24,10 +24,10 @@ pub enum CadViewCommand {
 }
 
 impl protocol::OpBinary for CadViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(CadViewCommand::Noop)
     }
 }
@@ -79,7 +79,7 @@ impl ArtifactViewer for CadViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_cad_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_cad_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(CAD_DIALECT).document(["semio", "cad"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::CAD_VIEW_MODE_VIEW).window_kind_def(shape::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

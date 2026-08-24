@@ -20,7 +20,7 @@ pub const CAD_PLAY_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::cad::create_cad_app`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: CAD_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
@@ -35,7 +35,7 @@ async fn cad_window_stack(window_kind_id: &str, title: &str, size: Option<f64>) 
 }
 
 /// @emoji 🪟️ Quad play layout: shape/building left column, energy/structure classic right column.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
             kind: "row".into(),
@@ -60,21 +60,21 @@ pub async fn layout() -> WindowLayout {
 /// scene payload is unreachable at this render boundary. Documented reduced-fidelity gap, matching
 /// this file's own pre-existing `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` gap notes; always `false` until
 /// a future wave threads render-time interaction state through.
-pub async fn instance_is_component_hovered(_runtime: &CadPlayRuntime, _object_id: &str) -> bool {
+pub fn instance_is_component_hovered(_runtime: &CadPlayRuntime, _object_id: &str) -> bool {
     false
 }
 
 /// @emoji 🕹️ Whether this window's active Dislocate utility has a visible handle for the selection.
 /// ⚠️ Same `render`-has-no-`InteractionView` gap as `instance_is_component_hovered` — the gumball
 /// cannot know the current mesh selection here, so it never shows. Documented gap.
-pub async fn gumball_active(_runtime: &CadPlayRuntime, _active_utility: Option<&str>, _options: CadDislocateOptions) -> bool {
+pub fn gumball_active(_runtime: &CadPlayRuntime, _active_utility: Option<&str>, _options: CadDislocateOptions) -> bool {
     false
 }
 
 /// ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `selected` is always `false` here — see
 /// `instance_is_component_hovered`'s doc comment for why `render` cannot know the current mesh
 /// selection. Documented reduced-fidelity gap.
-pub(crate) async fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
+pub(crate) fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
     let instances: Vec<Value> = objects
         .iter()
         .filter(|object| object.visible)
@@ -102,7 +102,7 @@ pub(crate) async fn world_instances_json(objects: &[CadObject], runtime: &CadPla
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub(crate) async fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
+pub(crate) fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
     let urls = collect_mesh_urls(objects);
     if !urls.is_empty() {
         return semio_framework_plugin::world3d_meshes_json_from_urls(&urls);
@@ -129,7 +129,7 @@ pub(crate) async fn world_meshes_json(objects: &[CadObject], geometry: Option<&C
 /// here (the client no longer needs them from this payload either: `interaction_domain`-bound UI
 /// gets its presence stamped by the framework wrapper post-render). `gumball_active` is always
 /// `false` for the same reason.
-pub async fn world_selection_json(_document: &CadSnapshot, runtime: &CadPlayRuntime, active_utility: Option<&str>, options: CadDislocateOptions) -> String {
+pub fn world_selection_json(_document: &CadSnapshot, runtime: &CadPlayRuntime, active_utility: Option<&str>, options: CadDislocateOptions) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         let active = gumball_active(runtime, active_utility, options);
@@ -157,7 +157,7 @@ pub async fn world_selection_json(_document: &CadSnapshot, runtime: &CadPlayRunt
     value.to_string()
 }
 
-pub async fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<String> {
+pub fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<String> {
     let references = document.references_by_model_definition_id.get(pane.model_definition_id())?;
     if references.is_empty() {
         return None;
@@ -186,7 +186,7 @@ pub async fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> O
 /// `🔖️Composition` in `🏪️store/🦀️component.rs`). Renders an empty object list per pane until a
 /// resolved-child-content render path exists; `world_instances_json`/`world_meshes_json` themselves
 /// are untouched real functions, just fed an empty slice here.
-pub async fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiNode {
+pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiNode {
     let objects: &[CadObject] = &[];
     let preview = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane).map(preview_display_items).filter(|items| !items.is_empty()).map(|items| serde_json::to_string(&items).unwrap_or_else(|_| "[]".into()));
     build_world_3d_scene(
@@ -224,7 +224,7 @@ pub async fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId,
 //#endregion 🔖️WorldScene
 
 //#region 🔖️Engagement
-pub async fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
+pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is framework-owned
     // now and unreachable at this render boundary (see `instance_is_component_hovered`'s doc
     // comment) — the status HUD can no longer report a live selected-object count. Documented gap.

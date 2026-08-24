@@ -110,3 +110,114 @@ mod tests {
     //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests
+
+//#region 🌉️ExternalCodecBridge
+/// 🧩️ Decodes one committed `📸️snapshot/⬅️before/🔣️component.json` document together with the
+/// `🦠️mutation/🔣️component.json` payload beside it — the same bytes the leaf's own fixture test
+/// reads — into real typed values.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(PlaygroundSnapshot, PlaygroundMutation), String> {
+    let snapshot: PlaygroundSnapshot = serde_json::from_str(snapshot_json).map_err(|error| format!("the committed playground snapshot JSON does not decode: {error}"))?;
+    let mutation: PlaygroundMutation = serde_json::from_str(mutation_json).map_err(|error| format!("the committed playground mutation JSON does not decode: {error}"))?;
+    Ok((snapshot, mutation))
+}
+
+/// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
+/// no-op kind is a RESULT this bridge reports, never an error it swallows.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bridge_step(snapshot: &PlaygroundSnapshot, mutation: &PlaygroundMutation) -> Result<(PlaygroundSnapshot, Vec<String>), String> {
+    use protocol::{Mutation, MutationDiff};
+    let outcome = <PlaygroundMutation as Mutation<PlaygroundSnapshot>>::diff(mutation, snapshot);
+    let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => Ok((next, messages)),
+        Err(error) => Err(format!("{error:?}")),
+    }
+}
+
+/// 📤️ The bridge's answer shape: the resulting document beside the codes it raised, so a caller
+/// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn bridge_render(snapshot: &PlaygroundSnapshot, messages: Vec<String>) -> Result<String, String> {
+    serde_json::to_string(&serde_json::json!({ "snapshot": snapshot, "messages": messages })).map_err(|error| error.to_string())
+}
+
+/// 🌉️ Applies one committed mutation payload to one committed before-document and answers
+/// `{"snapshot": …, "messages": [ … ]}`.
+///
+/// The bridge exists because the generated Rust test host links only `semio-repo-test-host` and,
+/// behind its `sut` feature, this crate — `serde_json`, `protocol` and `store` are private
+/// extern-crate aliases (`📦️glue.rs`) and cannot be named from a case adapter. Same shape and same
+/// reason as `🗄️stdio`'s `decode_semio_mesh_mutation_json`/`apply_semio_mesh_mutation` pair.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_playground_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
+    let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
+    let (applied, messages) = bridge_step(&snapshot, &mutation)?;
+    bridge_render(&applied, messages)
+}
+
+/// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
+/// answering in the same shape — the metamorphic half of the evidence the `playground-mutation-semantics` no-oracle
+/// decision rests on. The inverse is computed against the PRE-mutation document, which is the only
+/// state that carries what a delete removed.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn undo_playground_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
+    use protocol::Mutation;
+    let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
+    let (mut current, mut messages) = bridge_step(&base, &mutation)?;
+    for undo in <PlaygroundMutation as Mutation<PlaygroundSnapshot>>::inverse(&mutation, &base) {
+        let (next, raised) = bridge_step(&current, &undo)?;
+        current = next;
+        messages.extend(raised);
+    }
+    bridge_render(&current, messages)
+}
+
+/// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering
+/// `{"printed": …, "snapshot": …, "reparsed": …}` so a caller can weigh the identity law's two
+/// halves — the bytes against the committed artifact, and the projection against itself.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn round_trip_playground_dsl(text: &str) -> Result<String, String> {
+    use store::ArtifactDsl;
+    let parsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed playground example does not parse: {error:?}"))?;
+    let printed = <PlaygroundSnapshot as ArtifactDsl>::print_dsl(&parsed);
+    let reparsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted playground document does not parse: {error:?}"))?;
+    serde_json::to_string(&serde_json::json!({ "printed": printed, "snapshot": parsed, "reparsed": reparsed })).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🔖️Kinds
+/// 🏷️ Kebab-case spelling of every `PlaygroundMutation` variant — one entry, because this
+/// demonstrator artifact's whole persistent snapshot is one metadata string. It is the vocabulary
+/// the `playground-1-any` catalog (`../../🧪️oracle/🔣️component.json`) declares and the
+/// `mutate-playground-1` case measures itself against. `kinds_match_the_enum_and_the_catalog` below
+/// is what keeps this list honest against the enum, since the framework never parses Rust.
+pub const KINDS: &[&str] = &[
+    "change-schema",
+];
+//#endregion 🔖️Kinds
+
+//#region 🧪️KindsCatalog
+#[cfg(test)]
+mod kinds_catalog_tests {
+    use super::*;
+    use protocol::SemanticMutation;
+
+    /// 🏷️ `KINDS` must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed
+    /// catalog — the framework reads the manifest and never parses Rust, so this test is the only
+    /// thing that keeps the two in step. A plain `#[test]`: it suspends on nothing.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = PlaygroundMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared PlaygroundMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed playground-1-any catalog");
+        }
+    }
+}
+//#endregion 🧪️KindsCatalog

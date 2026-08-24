@@ -1,18 +1,18 @@
 //! 🚪️ IO s.cad (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
+pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"]
 }
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
+pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"]
 }
-pub async fn cad_to_wire(from: &crate::artifacts::cad::CadSnapshot) -> Vec<u8> {
+pub fn cad_to_wire(from: &crate::artifacts::cad::CadSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
 }
-pub async fn cad_from_wire(bytes: &[u8]) -> Result<crate::artifacts::cad::CadSnapshot, store::PackError> {
+pub fn cad_from_wire(bytes: &[u8]) -> Result<crate::artifacts::cad::CadSnapshot, store::PackError> {
     <crate::artifacts::cad::CadSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
-pub async fn pack_err_as_text(err: store::PackError) -> store::TextError {
+pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
     store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
 }
 //#region 🎹️DerivedComposition
@@ -264,7 +264,7 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES
             .get_or_init(|| {
                 vec![
@@ -435,7 +435,7 @@ async fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<
 /// which both validates the kernel's output against stdio's AP214 entity-graph walk and produces
 /// the export from the SAME codec stdio/semio uses everywhere else. STL is base64-wrapped since it
 /// is a binary format, OBJ/STEP stay UTF-8 text.
-pub async fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &str, stem: &str) -> Option<CadSolidExport> {
+pub fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], format: &str, stem: &str) -> Option<CadSolidExport> {
     let extension = cad_solid_export_extension(format)?;
     let filename = format!("{stem}.{extension}");
     let mime_type = cad_solid_export_mime_type(format)?.to_string();
@@ -470,7 +470,7 @@ pub async fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], form
 // (rule 5), not artifact-engine compute.
 /// @emoji 📦️ Decodes a `requestFileOpen` payload (a `data:` URL when `readAs: "dataUrl"` was
 /// requested, otherwise a raw string) into bytes.
-pub async fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
+pub fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
     let raw = payload.as_str()?;
     if raw.starts_with("data:") {
         let (_, encoded) = raw.split_once(',')?;
@@ -481,7 +481,7 @@ pub async fn cad_file_bytes_from_payload(payload: &Value) -> Option<Vec<u8>> {
 }
 
 /// @emoji 📦️ Decodes a `requestFileOpen` payload into UTF-8 text; see `cad_file_bytes_from_payload`.
-pub async fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
+pub fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
     String::from_utf8(cad_file_bytes_from_payload(payload)?).ok()
 }
 
@@ -491,7 +491,7 @@ pub async fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
 /// kernel session / gets bridged to a real `SemioBrepSnapshot` on export via `export_solids_as`,
 /// never re-duplicated here). Composing the returned element into a pane's `SemioModelSnapshot`
 /// child is the caller's job (a `create`/`change` mutation dispatched against that CHILD document).
-pub async fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = kernel.import_step(text).ok()?.into_iter().next()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-step"), handle))
@@ -499,14 +499,14 @@ pub async fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::arti
 
 /// @emoji 🧊️ Imports an OBJ payload into the shared kernel as a new `SemioModelElement` — see
 /// `import_step_object`'s doc comment for the returned shape's rationale.
-pub async fn import_obj_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_obj_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = kernel.import_obj(text, 0.01).ok()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-obj"), handle))
 }
 
 /// @emoji 🧊️ Imports an STL payload into the shared kernel as a new `SemioModelElement`.
-pub async fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = kernel.import_stl(bytes, 0.01).ok()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-stl"), handle))
@@ -515,7 +515,7 @@ pub async fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::art
 /// @emoji 🧊️ Imports a GLB payload by decoding it to a tessellated mesh (via the shared
 /// `MeshImporter` codec) and re-importing that mesh into the kernel as a solid, matching the
 /// DWG-derived import path since GLB carries no exact B-Rep to preserve.
-pub async fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle_id = mesh_to_obj_text_for_import(&mesh).and_then(|text| kernel.import_obj(&text, 0.01).ok())?;
@@ -558,7 +558,7 @@ fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::Me
 /// @emoji 🗂️ Routes a `requestFileOpen` payload to the matching native-geometry import by the
 /// picked file's extension; returns `None` for anything else so the caller can fall back to the
 /// spatial-JSON document path.
-pub async fn import_cad_object_by_extension(name: &str, payload: &Value) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
+pub fn import_cad_object_by_extension(name: &str, payload: &Value) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     if name.ends_with(".stp") || name.ends_with(".step") {
         return import_step_object(&cad_file_text_from_payload(payload)?);
     }
@@ -581,7 +581,7 @@ pub async fn import_cad_object_by_extension(name: &str, payload: &Value) -> Opti
 // (`crate::artifacts::cad::io::{cad_document_from_dwg, cad_document_from_mesh,
 // cad_mesh_from_document}`) because two OTHER plugins import them at the artifact-level (not
 // through an app-internal engine): 🎪️demonstrator/🎪️panes/📐️koordinator and 💠️lowpoly's schema.
-pub async fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
+pub fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
     if raw.get("modelSpace").is_some() {
         return raw.get("modelSpace").cloned();
     }
@@ -604,7 +604,7 @@ pub async fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
 /// and composed as that pane's `CadModelChild` (`crate::artifacts::cad::cad_model_child_handle`) —
 /// panes with no objects, or an id this document doesn't recognize, are left `None` rather than
 /// fabricating an empty child. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
-pub async fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::cad::CadSnapshot> {
+pub fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifacts::cad::CadSnapshot> {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{objects_from_fixture_model, parse_geometry, semio_model_snapshot_from_objects};
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
     use crate::artifacts::cad::{cad_model_child_handle, cad_pane_from_model_definition_id, CadPaneId};
@@ -653,7 +653,7 @@ pub async fn scene_from_spatial_payload(payload: &Value) -> Option<crate::artifa
     Some(document)
 }
 
-pub async fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+pub fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
     let scene: crate::artifacts::cad::CadSnapshot = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::export_mesh_from_scene(&scene))
 }
@@ -664,7 +664,7 @@ pub async fn cad_mesh_from_document(doc: &Value) -> Result<semio_framework_plugi
 /// — the identical OBJ-text bridge every other native-geometry import path in this file already
 /// uses. A layer with no entities (or none that triangulate) contributes no object — never a
 /// fabricated placeholder.
-pub async fn cad_working_scene_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> crate::artifacts::cad::CadWorkingScene {
+pub fn cad_working_scene_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> crate::artifacts::cad::CadWorkingScene {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::cad_object_from_mesh;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, next_cad_id};
     let mut kernel = cad_brep_kernel();
@@ -696,7 +696,7 @@ pub async fn cad_working_scene_from_dwg(drawing: &semio_s_plugin_stdio::artifact
 /// pure function CAN produce. An empty drawing (no layer contributes real geometry) mints no
 /// child, matching `scene_from_spatial_payload`'s "no fabricated child" rule. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
-pub async fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
+pub fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<Value, String> {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects;
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     use crate::artifacts::cad::{cad_model_child_handle, CadPaneId};
@@ -712,7 +712,7 @@ pub async fn cad_document_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dw
 
 /// ⚠️ See `scene_from_spatial_payload`'s doc comment — same documented gap for a `MeshImporter`
 /// (GLB) payload.
-pub async fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
     serde_json::to_value(default_document()).map_err(|err| err.to_string())
 }

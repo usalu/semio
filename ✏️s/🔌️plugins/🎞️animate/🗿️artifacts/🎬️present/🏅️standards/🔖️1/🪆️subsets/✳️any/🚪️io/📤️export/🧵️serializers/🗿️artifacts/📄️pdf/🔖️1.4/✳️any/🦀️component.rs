@@ -19,6 +19,6 @@ impl Serializer<PresentSnapshot> for PresentIntoPdf {
     async fn serialize(from: &PresentSnapshot) -> IoResult<IoPayload> {
         let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("PresentIntoPdf: {error}"), diagnostics: Vec::new() })?;
         let wire: PdfSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("PresentIntoPdf: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(&wire))).await)
+        Ok(IoOutcome::clean(IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(&wire))))
     }
 }

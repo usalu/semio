@@ -134,6 +134,22 @@ pub async fn print_dsl(projection: &WriterSnapshot) -> String {
     store::ArtifactDsl::print_dsl(projection)
 }
 
+//#region 🔖️ExternalBridges
+/// 📖️ [`parse_dsl`] with a plain-`String` error, reachable from OUTSIDE this crate — `store` is a
+/// private `extern crate` alias (`📦️glue.rs`), so `store::TextError` cannot be named by the
+/// `mutate-writer-1` test adapter that has to read the committed `🗣️example.dsl.semio` artifact.
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn parse_writer_dsl(text: &str) -> Result<WriterSnapshot, String> {
+    <WriterSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 🖨️ [`print_dsl`] under a name an external caller can reach, paired with [`parse_writer_dsl`].
+// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
+pub fn print_writer_dsl(snapshot: &WriterSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+//#endregion 🔖️ExternalBridges
+
 //#region 🔖️Examples
 /// 📄️ The `jack` example, parsed once from {@link JACK_EXAMPLE_TEXT} — the source of truth for every
 /// call site below (`setActiveExample`, `.example("jack", ...)`, tests, "file-text"); never re-embed the

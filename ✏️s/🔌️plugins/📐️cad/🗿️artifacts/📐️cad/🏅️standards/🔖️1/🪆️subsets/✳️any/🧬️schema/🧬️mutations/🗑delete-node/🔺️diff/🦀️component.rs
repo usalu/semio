@@ -4,7 +4,7 @@ use crate::artifacts::cad::diff::{CadDiff, CadNodesDelta};
 use crate::artifacts::cad::CadSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &DeleteNode, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
+pub fn diff(payload: &DeleteNode, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
     if !base.nodes.iter().any(|node| node.id == payload.node_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id), [payload.node_id.clone()]);
     }

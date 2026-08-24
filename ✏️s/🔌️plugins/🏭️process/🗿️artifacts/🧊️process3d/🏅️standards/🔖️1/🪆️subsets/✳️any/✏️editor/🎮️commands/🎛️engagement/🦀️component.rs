@@ -16,7 +16,7 @@ pub mod engagement_submit {
     #[dsl(keyword = "engagement-submit")]
     pub struct EngagementSubmit {}
 
-    pub async fn handle(
+    pub fn handle(
         _payload: &EngagementSubmit,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
@@ -54,7 +54,7 @@ pub mod engagement_input {
         pub value: String,
     }
 
-    pub async fn handle(
+    pub fn handle(
         payload: &EngagementInput,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
@@ -73,7 +73,7 @@ pub mod engagement_abort {
     #[dsl(keyword = "engagement-abort")]
     pub struct EngagementAbort {}
 
-    pub async fn handle(
+    pub fn handle(
         _payload: &EngagementAbort,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,

@@ -36,6 +36,79 @@ pub use super::delete_step::mutation::{delete_step, DeleteStep};
 pub use super::edit_step_params::mutation::{edit_step_params, EditStepParams};
 pub use super::reorder_steps::mutation::{reorder_steps, ReorderSteps};
 
+/// 🏷️ Kebab-case spelling of every [`ImperativeMutation`] variant, in declaration order — the
+/// vocabulary the `imperative-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares
+/// and `mutate-imperative-1`'s exhaustive case measures itself against. Four kinds, and every one of
+/// them addresses a `PathRef` rather than a bare id, because a step list is NESTED: `{}` is the root
+/// program and `{"owner": "step-3", "slot": "then"}` is a branch body inside it, and the same step id
+/// in the two scopes is two different targets. There is no `set-snapshot` and no `edit-step-kind`:
+/// whole-document replace reaches the store through its non-history path, and a step's `kind`
+/// determines which bodies it may carry, so retyping one is a create/delete pair rather than an edit.
+/// [`kinds_match_the_enum_and_the_catalog`] keeps this list honest against the enum, since the
+/// framework never parses Rust.
+pub const KINDS: &[&str] = &["create-step", "delete-step", "reorder-steps", "edit-step-params"];
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "createStep", …}`, camelCase payload
+/// fields) JSON projection — exactly the shape the committed
+/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification vectors and
+/// `mutate-imperative-1`'s own `Examples` payloads carry — into a real [`ImperativeMutation`]. The
+/// test adapter cannot reach `serde_json` (the generated host links only `semio-repo-test-host` and
+/// this crate) and cannot name this crate's private `protocol`/`store` extern-crate aliases either,
+/// so the bridge belongs here rather than there.
+pub fn decode_imperative_mutation_json(text: &str) -> Result<ImperativeMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 🌱 Resolves `snapshot`'s composed `s.stdio.semio.flow` child to the program in `program_json`
+/// (a `{"steps": [...]}` `Path`). An imperative document persists only a content-addressed HANDLE,
+/// and the working scene is a thread-local scratch cache, so a decoded `⬅️before` stands for no
+/// program at all until something caches one — which is exactly what each triad leaf's own
+/// `cached_program()` does inside this crate. `mutate-imperative-1` needs the same seeding from
+/// outside, where neither `Path` nor `cache_imperative_flow`'s `Dictionary`/`Value` argument types
+/// can be constructed, so the program travels as JSON and is decoded here.
+pub fn seed_imperative_flow_json(snapshot: &ImperativeSnapshot, program_json: &str) -> Result<(), String> {
+    let path: Path = serde_json::from_str(program_json).map_err(|error| error.to_string())?;
+    crate::artifacts::imperative::cache_imperative_flow(&snapshot.flow.child_id, &path);
+    Ok(())
+}
+
+/// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
+/// pairs. All four committed vectors leave the document byte-identical — two refusals and two
+/// `Warning`-level no-ops — so the pair is the evidence rather than a side channel.
+pub fn apply_imperative_mutation_reporting(snapshot: &mut ImperativeSnapshot, mutation: &ImperativeMutation) -> Vec<(String, String)> {
+    let outcome = <ImperativeMutation as protocol::Mutation<ImperativeSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ The mutation's OWN computed undo steps, which is what an `inverse-<kind>` scenario has to
+/// apply for the metamorphic law to mean anything.
+pub fn inverse_imperative_mutation_steps(mutation: &ImperativeMutation, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {
+    <ImperativeMutation as protocol::Mutation<ImperativeSnapshot>>::inverse(mutation, base)
+}
+
+/// 🔎️ The program the document's composed flow child currently resolves to, rendered as nested
+/// `id:kind` entries in list order — the readable half of a divergence message, so a failing
+/// scenario names WHICH step moved rather than only that two content digests differ.
+pub fn imperative_program_summary(snapshot: &ImperativeSnapshot) -> String {
+    fn render(path: &Path) -> String {
+        path.steps
+            .iter()
+            .map(|step| {
+                let bodies = step.bodies.iter().map(|(slot, body)| format!("{slot}{{{}}}", render(body))).collect::<Vec<_>>().join(" ");
+                if bodies.is_empty() {
+                    format!("{}:{}", step.id, step.kind)
+                } else {
+                    format!("{}:{}[{bodies}]", step.id, step.kind)
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+    render(&crate::artifacts::imperative::imperative_working_scene(snapshot).path)
+}
+//#endregion 🌉️ExternalCodecBridge
+
 /// 🔎️ Resolves the step list a `PathRef` addresses (read from the live `flow` working scene, since
 /// `ImperativeSnapshot` no longer carries `path` directly — ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); a not-yet-materialized nested slot reads as
@@ -90,6 +163,24 @@ mod tests {
     use neural_engine::{Atom, Value};
     use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
+
+    /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
+    /// — must agree, in spelling AND in order. The framework never parses Rust, so without this test
+    /// `KINDS` could drift from the enum and the catalog could keep measuring `mutate-imperative-1`
+    /// against a vocabulary the artifact no longer has.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = ImperativeMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(!manifest.contains("\"set-snapshot\"") && !manifest.contains("\"edit-step-kind\""), "neither whole-document replace nor a step-kind edit is a mutation here — the catalog must not smuggle either in");
+    }
     use std::collections::BTreeMap;
 
     fn step(id: &str, kind: &str) -> Step {

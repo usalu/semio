@@ -7,7 +7,7 @@
 
 use crate::artifacts::curate::{stock_of, CurateSnapshot};
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
 
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
@@ -28,7 +28,7 @@ pub fn view_model(document: &CurateSnapshot) -> TableView {
     TableView { columns: vec!["Id".into(), "Name".into(), "Module".into(), "Typology".into(), "Availability".into()], rows }
 }
 
-pub fn render(document: &CurateSnapshot) -> UiNode {
+pub fn render(document: &CurateSnapshot) -> UiAssemblyResult<BuiltNode> {
     TableWindowKit::render(&view_model(document))
 }
 //#endregion 🔖️Render
@@ -57,7 +57,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_table_ui_node() {
         let document = crate::artifacts::curate::schema::default_document();
-        let json = serde_json::to_string(&render(&document)).expect("render json");
+        let json = serde_json::to_string(&render(&document).expect("bounded table")).expect("render json");
         assert!(json.contains("table"), "expected a table UiNode: {json}");
     }
 }

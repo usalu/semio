@@ -3859,6 +3859,44 @@ struct CanvasLayer {
     text: Option<CanvasTextFieldJson>,
 }
 
+#[derive(Deserialize)]
+struct Canvas2dPacketText<'a> {
+    #[serde(borrow)]
+    content: &'a str,
+    #[serde(default = "canvas2d_packet_text_size")]
+    size: f64,
+}
+
+#[derive(Deserialize)]
+struct Canvas2dPacketItem<'a> {
+    #[serde(borrow)]
+    kind: &'a str,
+    #[serde(borrow)]
+    id: &'a str,
+    #[serde(default)]
+    x: f64,
+    #[serde(default)]
+    y: f64,
+    #[serde(default)]
+    width: f64,
+    #[serde(default)]
+    height: f64,
+    #[serde(default)]
+    x0: f64,
+    #[serde(default)]
+    y0: f64,
+    #[serde(default)]
+    x1: f64,
+    #[serde(default)]
+    y1: f64,
+    #[serde(default, borrow)]
+    text: Option<Canvas2dPacketText<'a>>,
+}
+
+fn canvas2d_packet_text_size() -> f64 {
+    11.0
+}
+
 fn canvas_layer_should_render(layer: &CanvasLayer) -> bool {
     layer.role.as_deref() != Some("meta") && layer.visible.unwrap_or(true)
 }
@@ -4413,12 +4451,38 @@ fn render_canvas_shape_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewp
 const CANVAS2D_SELECTION_RING: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.95);
 const CANVAS2D_SELECTION_GLOW: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.28);
 
+fn render_canvas2d_packet_item(item: &Canvas2dPacketItem<'_>, viewport: &Viewport, inner: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
+    let color = if item.id.starts_with("residual-field-") {
+        Rgba::new(0.918, 0.702, 0.031, 1.0)
+    } else if item.id.starts_with("reaction-field-") || item.id.starts_with("load-") {
+        Rgba::new(0.984, 0.443, 0.522, 1.0)
+    } else if item.id.starts_with("displacement-field-") || item.id.starts_with("mode-field-") {
+        Rgba::new(0.847, 0.42, 0.91, 1.0)
+    } else {
+        theme.diagram_accent
+    };
+    if item.kind == "line" {
+        let (x0, y0) = viewport.world_to_screen(item.x0 as f32, item.y0 as f32, inner);
+        let (x1, y1) = viewport.world_to_screen(item.x1 as f32, item.y1 as f32, inner);
+        ctx.draw.push_line(x0, y0, x1, y1, color, (2.0 * viewport.zoom).max(1.0));
+    } else if item.kind == "circle" {
+        let (x, y) = viewport.world_to_screen(item.x as f32, item.y as f32, inner);
+        let width = (item.width as f32 * viewport.zoom).max(4.0);
+        let height = (item.height as f32 * viewport.zoom).max(4.0);
+        ctx.draw.push_solid([x, y, width, height], color);
+    } else if item.kind == "text" {
+        let Some(text) = item.text.as_ref() else { return };
+        let (x, y) = viewport.world_to_screen(item.x as f32, item.y as f32, inner);
+        draw_text(ctx, text.content, x, y + text.size as f32, (text.size as f32).max(8.0), theme.text);
+    }
+}
+
 fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(canvas) = &scene.canvas_2d else {
         return render_placeholder("canvas-2d", bounds, ctx);
     };
-    let layers: Vec<CanvasLayer> = serde_json::from_str(&canvas.layers_json).unwrap_or_default();
     let inner = bounds;
     ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let mut viewport = Viewport { x: canvas.camera_x as f32, y: canvas.camera_y as f32, zoom: canvas.zoom as f32 };
@@ -4427,6 +4491,18 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         viewport = local.viewport;
     }
     draw_canvas_infinite_grid(ctx.draw, &viewport, inner, theme);
+    if let Some(snapshot) = canvas.snapshot {
+        for page_index in 0..snapshot.page_count {
+            let _ = ui_wgpu::wgpu::canvas2d_snapshot_with_page(snapshot, page_index, |page| {
+                for item in serde_json::Deserializer::from_slice(page.bytes()).into_iter::<Canvas2dPacketItem<'_>>().flatten() {
+                    render_canvas2d_packet_item(&item, &viewport, inner, ctx);
+                }
+            });
+        }
+        ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.surface_id.clone()), kind: HitKind::Generic, drag_axis: Some(DragAxis::Both), drag_data: None });
+        return;
+    }
+    let layers: Vec<CanvasLayer> = serde_json::from_str(&canvas.layers_json).unwrap_or_default();
     let has_polyline = layers.iter().any(|layer| layer.kind == "polyline");
     if has_polyline {
         draw_checkerboard(ctx.draw, &viewport, inner, ctx.theme, 1024.0);
@@ -4544,7 +4620,7 @@ mod canvas2d_tests {
             pane_id: None,
             binding_id: None,
             presence: UiPresence::default(),
-            canvas_2d: Some(ui_wgpu::wgpu::Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json }),
+            canvas_2d: Some(ui_wgpu::wgpu::Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json, snapshot: None }),
             world_3d: None,
             node_graph: None,
             text_editor: None,
