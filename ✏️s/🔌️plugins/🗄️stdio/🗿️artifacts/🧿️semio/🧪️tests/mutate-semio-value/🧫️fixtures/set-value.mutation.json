@@ -1,0 +1,13 @@
+{
+  "mutation": "setValue",
+  "path": [
+    {
+      "kind": "key",
+      "key": "count"
+    }
+  ],
+  "value": {
+    "kind": "float",
+    "lexeme": "41.5"
+  }
+}

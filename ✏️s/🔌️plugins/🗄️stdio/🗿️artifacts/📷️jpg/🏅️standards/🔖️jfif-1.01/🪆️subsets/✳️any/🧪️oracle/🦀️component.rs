@@ -123,9 +123,38 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     }
 }
 
+/// ↩️ Applies the INDEPENDENTLY computed inverse of `spec` on top of `mutated`. `JpgMutation`'s own
+/// algebraic law (`../🧬️schema/🧬️mutations/🦀️component.rs`) is "restore `base`'s own value for the
+/// facet this kind replaced", which over the reference `image` codec's observable surface means:
+/// `set-snapshot` restores the whole original raster, `set-pixels` puts the original samples back
+/// into the mutated document's geometry, `set-re-encode-quality` re-encodes at the default quality
+/// the fixture's own snapshot carries, and every metadata-only kind (whose forward effect this
+/// codec's encoder cannot make observable at all — see the module doc comment) inverts to another
+/// decode → re-encode of the mutated document.
+#[cfg(feature = "oracles")]
+pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+    let kind = spec.str("kind");
+    match kind.as_str() {
+        "" => Err("mutation spec carries no `kind`".to_string()),
+        "set-snapshot" => passthrough(original_input),
+        "set-pixels" => {
+            let (_, _, original_rgba) = decode_rgba(original_input)?;
+            let (width, height, _) = decode_rgba(mutated)?;
+            encode_rgba(width, height, &original_rgba, DEFAULT_QUALITY)
+        }
+        "no-mutation" | "set-re-encode-quality" | "set-jfif-header" | "set-quant-table" | "remove-quant-table" | "set-huffman-table" | "remove-huffman-table" | "set-restart-interval" | "insert-other-segment" | "remove-other-segment" => passthrough(mutated),
+        other => Err(format!("mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),
+    }
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

@@ -1,0 +1,23 @@
+{
+  "mutation": "insertLayout",
+  "layout": {
+    "id": "l-2",
+    "masterId": "master1",
+    "shapes": [
+      {
+        "shapeKind": "placeholder",
+        "frame": {
+          "origin": {
+            "x": 0.0,
+            "y": 60.0
+          },
+          "width": 100.0,
+          "height": 12.0
+        },
+        "kind": {
+          "kind": "body"
+        }
+      }
+    ]
+  }
+}

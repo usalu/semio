@@ -28,15 +28,15 @@ pub async fn definition() -> PanelTabDefinition {
 /// granularity via `forms_play_step_tree_id`, questions at the "field" granularity via their own raw
 /// id — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item click
-/// action is declared here anymore (clicks are translated into `interactionSelect` generically).
-pub async fn render(spec: &FormsSnapshot, labels: &FormsLabels) -> UiNode {
+/// action is declared here anymore (clicks are translated into `interactionSelect` generically)?.
+pub async fn render(spec: &FormsSnapshot, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let step_items: Vec<UiTreeItemNode> = forms_steps(spec)
         .iter()
         .map(|step| {
             let question_items: Vec<UiTreeItemNode> = step
                 .blocks
                 .iter()
-                .map(|question| UiTreeItemNode { icon_id: Some("help-circle".into()), draggable: Some(true), menu: None, ..tree_item_desc(question.id.clone(), Label::data(question.label.clone()), Some(question.kind.clone())) })
+                .map(|question| UiTreeItemNode { icon_id: Some("help-circle".into()), draggable: Some(true), menu: None, ..tree_item_desc(question.id.clone(), Label::data(question.label.clone()), Some(question.kind.clone()))? })
                 .collect();
             UiTreeItemNode {
                 icon_id: Some("list-tree".into()),
@@ -44,13 +44,13 @@ pub async fn render(spec: &FormsSnapshot, labels: &FormsLabels) -> UiNode {
                 draggable: Some(true),
                 items: Some(question_items),
                 menu: None,
-                ..tree_item_desc(forms_play_step_tree_id(&step.id), Label::data(step.title.clone()), Some(format!("{} questions", step.blocks.len())))
+                ..tree_item_desc(forms_play_step_tree_id(&step.id), Label::data(step.title.clone()), Some(format!("{} questions", step.blocks.len())))?
             }
         })
         .collect();
-    PanelTreeBuilder::new("forms-play-document")
-        .section_or_placeholder("forms-play-document.steps", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, step_items, labels.no_steps_tree_item)
-        .interaction_domain(FORMS_INTERACTION_FIELDS)
+    PanelTreeBuilder::new("forms-play-document")?
+        .section_or_placeholder("forms-play-document.steps", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, step_items, labels.no_steps_tree_item)?
+        .interaction_domain(FORMS_INTERACTION_FIELDS)?
         .drop_action(forms_action("dropQuestionKind", None))
         .build()
 }

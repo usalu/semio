@@ -31,8 +31,8 @@ pub use crate::db_engine::{
     take_database_capability_open_terminal, take_database_catalog_read_terminal, take_next_database_capability_open_terminal, ArtifactHandle, ArtifactHistoryTerminalConstructionFault, ArtifactHistoryTerminalHandle, ArtifactSpec, CatalogEntry,
     CatalogView, CommandReceipt, Consistency, Database, DatabaseCapabilityOpenCloseStep, DatabaseCapabilityOpenFuture, DatabaseCapabilityOpenProgress, DatabaseCapabilityOpenRejected, DatabaseCapabilityOpenResult,
     DatabaseCapabilityOpenTerminalHandle, DatabaseCapabilityOpenTerminalResult, DatabaseCatalogReadCloseStep, DatabaseCatalogReadFuture, DatabaseCatalogReadProgress, DatabaseCatalogReadRejected, DatabaseCatalogReadResult,
-    DatabaseCatalogReadTerminalHandle, DatabaseCatalogReadTerminalResult, DatabaseCatalogRootKey, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind,
-    SnapshotReceipt, SubmitFuture,
+    DatabaseCatalogReadTerminalHandle, DatabaseCatalogReadTerminalResult, DatabaseCatalogRootKey, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryResultEntry, QueryStream, SecurityAuthzHook, SnapshotFuture,
+    SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
 
 /// 🗄️🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db` family
@@ -203,6 +203,17 @@ pub mod storage_neo4j {
 mod tests {
     use super::*;
 
+    async fn decode_query_json(mut stream: QueryStream) -> serde_json::Value {
+        let mut bytes = Vec::new();
+        for fragment in stream.get(0).and_then(|entry| entry.value()).expect("retained query value").fragments() {
+            bytes.extend_from_slice(fragment);
+        }
+        let value = document::decode_pathmap_json(&bytes).await.unwrap();
+        while stream.close_step().unwrap() {}
+        assert!(stream.terminal_is_empty());
+        value
+    }
+
     fn test_pool() -> std::sync::Arc<semio_framework_async::WorkerPool> {
         std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)))
     }
@@ -253,7 +264,7 @@ mod tests {
         assert!(receipt.conflicts.is_empty());
 
         let queried = handle.query(Query::Get { path: "name".to_string() }, Consistency::Canonical).await.unwrap();
-        let value: serde_json::Value = document::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).await.unwrap();
+        let value = decode_query_json(queried).await;
         assert_eq!(value, serde_json::json!("hello"));
 
         let frontier = handle.frontier().await.unwrap();
@@ -295,8 +306,8 @@ mod tests {
         map = map.insert("k".to_string(), 1);
         assert_eq!(map.len(), 1);
 
-        let memory_storage = storage::MemoryStorage::new();
-        let _: storage::DbBackend = storage::DbBackend::Memory(memory_storage.await);
+        let memory_storage = storage::MemoryStorage::new(crate::db_storage::db_io_test_pool());
+        let _: storage::DbBackend = storage::DbBackend::Memory(memory_storage.await.unwrap());
 
         assert_eq!(wal::WAL_SEGMENT_HEADER, 0x40);
         assert!(wal::is_wal_record_kind(wal::WAL_COMMAND).await);

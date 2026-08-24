@@ -6,13 +6,13 @@ use semio_framework_plugin::{tree_item_with_action, IconName, LocalizedLabel, Pa
 use serde_json::json;
 
 //#region 🔖️Constants
-pub const LOWPOLY_PLAY_BODY_CATALOGUE: &str = "lowpoly.play.catalogue";
+pub(crate) const LOWPOLY_PLAY_BODY_CATALOGUE: &str = "lowpoly.play.catalogue";
 
 const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[("box", "Cube", "box"), ("plane", "Plane", "square"), ("cylinder", "Cylinder", "cylinder"), ("cone", "Cone", "triangle"), ("ico_sphere", "Ico Sphere", "globe")];
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub(crate) async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -24,15 +24,15 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(labels: &LowpolyLabels) -> UiNode {
+pub(crate) async fn render(labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let items: Vec<UiTreeItemNode> = PRIMITIVE_CATALOG
         .iter()
         .map(|(kind, label, icon)| UiTreeItemNode {
             icon_id: IconName::from_str(icon),
-            ..tree_item_with_action(format!("lowpoly-play-catalogue.{kind}"), primitive_catalog_label(kind, label, labels), Some((*kind).to_string()), lowpoly_action("addPrimitive", Some(json!({ "kind": kind }))))
+            ..tree_item_with_action(format!("lowpoly-play-catalogue.{kind}"), primitive_catalog_label(kind, label, labels), Some((*kind).to_string()), lowpoly_action("addPrimitive", Some(json!({ "kind": kind }))))?
         })
         .collect();
-    PanelTreeBuilder::new("lowpoly-play-catalogue").section("lowpoly-play-catalogue.primitives", Some(labels.primitives.into()), true, items).build()
+    PanelTreeBuilder::new("lowpoly-play-catalogue")?.section("lowpoly-play-catalogue.primitives", Some(labels.primitives.into()), true, items)?.build()
 }
 //#endregion 🔖️Render
 

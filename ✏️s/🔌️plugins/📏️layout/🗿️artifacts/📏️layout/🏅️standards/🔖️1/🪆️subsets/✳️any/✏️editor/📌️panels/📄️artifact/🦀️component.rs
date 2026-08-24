@@ -70,10 +70,10 @@ async fn style_row_id(style_id: &str) -> String {
 /// 🌳️ Layout's row shape (id/label/description/icon/optional-action) over the SDK's
 /// `tree_item_desc`/`tree_item_with_action` — the icon assignment is the only bit the SDK helpers
 /// don't cover, since not every plugin's rows carry one.
-async fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<ActionDescriptor>) -> UiTreeItemNode {
+async fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<ActionDescriptor>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut item = match action {
-        Some(action) => tree_item_with_action(id, label, description, action),
-        None => tree_item_desc(id, label, description),
+        Some(action) => tree_item_with_action(id, label, description, action)?,
+        None => tree_item_desc(id, label, description)?,
     };
     item.icon_id = icon_id.and_then(|id| IconName::from_str(&id));
     item
@@ -81,16 +81,16 @@ async fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, descri
 
 /// 🕹️ Used to build a `layout_tree_item` that additionally dispatched `setHover`/clear-hover on
 /// hover/unhover — deleted along with the framework-owned "elements" domain's presence stamping,
-/// which now highlights any `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)` row on hover
+/// which now highlights any `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?` row on hover
 /// automatically (matching hover-source id against the row's own `id`), no per-row wiring needed
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 
 /// 🕹️ `_config` is unused now — page/frame selection moved into the framework-owned "elements"
-/// interaction domain; `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)` below has the framework's
+/// interaction domain; `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?` below has the framework's
 /// renderer translate row hover into `interactionHover` and stamp presence from `InteractionState`,
-/// replacing the deleted `.selected()`/`.highlighted()`/`.selection_change()` calls.
-pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
-    let spread_items: Vec<UiTreeItemNode> = doc.spreads.iter().map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None)).collect();
+/// replacing the deleted `.selected()?`/`.highlighted()?`/`.selection_change()` calls.
+pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let spread_items: Vec<UiTreeItemNode> = doc.spreads.iter().map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None)?).collect();
 
     let page_items: Vec<UiTreeItemNode> = doc
         .pages
@@ -102,12 +102,12 @@ pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &Layou
                 page.parent_page_id.as_ref().map(|parent_id| format!("{}: {parent_id}", labels.parent.as_str())),
                 Some("file".into()),
                 Some(layout_action("setActivePage", Some(json!({ "pageId": page.id })))),
-            )
+            )?
         })
         .collect();
 
     // 🕹️ Row `id` is the BARE frame id (not a `frame_row_id(...)`-prefixed row id) — the framework's
-    // `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)` presence stamping matches `state.selection`/
+    // `.interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?` presence stamping matches `state.selection`/
     // `.hover` ids against a row's own `id` verbatim, and canvas hit-testing (`DisplayList::hit_test`)
     // resolves those exact bare ids too; a prefixed row id would desync tree/canvas cross-highlighting.
     let frame_items: Vec<UiTreeItemNode> = doc
@@ -121,14 +121,14 @@ pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &Layou
                     Some(format!("{} · {}", page.name, frame.kind_str())),
                     Some(frame_icon(frame.kind_str()).into()),
                     Some(layout_action(INTERACTION_SELECT_ACTION_ID, Some(layout_select_action_args(&[frame.id().to_string()], "replace")))),
-                )
+                )?
             })
         })
         .collect();
-    let frame_items = if frame_items.is_empty() { vec![layout_tree_item("layout-document.frames.empty", labels.drop_here, None, Some("inbox".into()), None)] } else { frame_items };
+    let frame_items = if frame_items.is_empty() { vec![layout_tree_item("layout-document.frames.empty", labels.drop_here, None, Some("inbox".into()), None)?] } else { frame_items };
 
     let parent_page_items: Vec<UiTreeItemNode> =
-        doc.parent_pages.iter().map(|parent| layout_tree_item(parent_page_row_id(&parent.id), Label::data(parent.name.clone()), Some(format!("{}×{}", parent.width as i64, parent.height as i64)), Some("copy".into()), None)).collect();
+        doc.parent_pages.iter().map(|parent| layout_tree_item(parent_page_row_id(&parent.id), Label::data(parent.name.clone()), Some(format!("{}×{}", parent.width as i64, parent.height as i64)), Some("copy".into()), None)?).collect();
 
     let layer_items: Vec<UiTreeItemNode> = doc
         .pages
@@ -136,12 +136,12 @@ pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &Layou
         .flat_map(|page| {
             page.layers
                 .iter()
-                .map(move |layer| layout_tree_item(layer_row_id(&page.id, &layer.id), Label::data(format!("{} · {}", page.name, layer.name)), Some(format!("{} {}", layer.object_ids.len(), labels.objects.as_str())), Some("layers".into()), None))
+                .map(move |layer| layout_tree_item(layer_row_id(&page.id, &layer.id), Label::data(format!("{} · {}", page.name, layer.name)), Some(format!("{} {}", layer.object_ids.len(), labels.objects.as_str())), Some("layers".into()), None)?)
         })
         .collect();
 
     let story_items: Vec<UiTreeItemNode> =
-        doc.stories.iter().map(|story| layout_tree_item(story_row_id(&story.id), Label::data(story.id.clone()), Some(format!("{} {}", story.content.chars().count(), labels.chars.as_str())), Some("file-text".into()), None)).collect();
+        doc.stories.iter().map(|story| layout_tree_item(story_row_id(&story.id), Label::data(story.id.clone()), Some(format!("{} {}", story.content.chars().count(), labels.chars.as_str())), Some("file-text".into()), None)?).collect();
 
     let link_items: Vec<UiTreeItemNode> = doc
         .links
@@ -162,12 +162,12 @@ pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &Layou
                 Some(link.state.clone().unwrap_or_else(|| "ok".into())),
                 Some("link".into()),
                 (!referencing_ids.is_empty()).then(|| layout_action(INTERACTION_SELECT_ACTION_ID, Some(layout_select_action_args(&referencing_ids, "replace")))),
-            )
+            )?
         })
         .collect();
 
     let mut style_items: Vec<UiTreeItemNode> =
-        doc.paragraph_styles.iter().map(|style| layout_tree_item(style_row_id(&style.id), Label::data(style.name.clone()), Some(format!("{} · {}pt", style.font_family, style.font_size as i64)), Some("type".into()), None)).collect();
+        doc.paragraph_styles.iter().map(|style| layout_tree_item(style_row_id(&style.id), Label::data(style.name.clone()), Some(format!("{} · {}pt", style.font_family, style.font_size as i64)), Some("type".into()), None)?).collect();
     style_items.extend(doc.character_styles.iter().map(|style| {
         let name = style.name.clone().unwrap_or_else(|| style.id.clone());
         let font_family = style.font_family.as_deref().unwrap_or("—");
@@ -175,23 +175,23 @@ pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &Layou
             Some(size) => format!("{font_family} · {}pt", size as i64),
             None => font_family.to_string(),
         };
-        layout_tree_item(style_row_id(&style.id), Label::data(name), Some(description), Some("type".into()), None)
+        layout_tree_item(style_row_id(&style.id), Label::data(name), Some(description), Some("type".into()), None)?
     }));
 
-    // 🕹️ `.selected()`/`.highlighted()`/`.selection_change()` deleted — the framework stamps this
+    // 🕹️ `.selected()?`/`.highlighted()?`/`.selection_change()` deleted — the framework stamps this
     // tree's presence from the "elements" `InteractionState` post-render and would overwrite
     // whatever this function stamped anyway (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-    PanelTreeBuilder::new("layout-document")
-        .section("layout-document.document", Some(labels.document.into()), true, vec![layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None)])
-        .section("layout-document.spreads", Some(labels.spreads.into()), false, spread_items)
-        .section("layout-document.pages", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, page_items)
-        .section("layout-document.frames", Some(labels.frames.into()), true, frame_items)
-        .section("layout-document.parentPages", Some(labels.parent_pages.into()), false, parent_page_items)
-        .section("layout-document.layers", Some(labels.layers.into()), false, layer_items)
-        .section("layout-document.stories", Some(labels.stories.into()), false, story_items)
-        .section("layout-document.links", Some(labels.links.into()), false, link_items)
-        .section("layout-document.styles", Some(labels.styles.into()), false, style_items)
-        .interaction_domain(LAYOUT_INTERACTION_ELEMENTS)
+    PanelTreeBuilder::new("layout-document")?
+        .section("layout-document.document", Some(labels.document.into()), true, vec![layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None)?])?
+        .section("layout-document.spreads", Some(labels.spreads.into()), false, spread_items)?
+        .section("layout-document.pages", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, page_items)?
+        .section("layout-document.frames", Some(labels.frames.into()), true, frame_items)?
+        .section("layout-document.parentPages", Some(labels.parent_pages.into()), false, parent_page_items)?
+        .section("layout-document.layers", Some(labels.layers.into()), false, layer_items)?
+        .section("layout-document.stories", Some(labels.stories.into()), false, story_items)?
+        .section("layout-document.links", Some(labels.links.into()), false, link_items)?
+        .section("layout-document.styles", Some(labels.styles.into()), false, style_items)?
+        .interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?
         .build()
 }
 //#endregion 🔖️Render

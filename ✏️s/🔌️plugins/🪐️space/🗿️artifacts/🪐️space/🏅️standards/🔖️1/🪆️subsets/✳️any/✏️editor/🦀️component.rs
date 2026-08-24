@@ -65,9 +65,65 @@ async fn create_artifact_kind_options() -> Vec<ActionArgOption> {
 /// mirrors `draw_play_action`'s precedent (`🖍️draw`'s editor root).
 pub const SPACE_INDEX_CONTROLLER_ID: &str = "s-space-index";
 
-pub async fn space_index_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub fn space_index_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     ActionFactory::new(SPACE_INDEX_CONTROLLER_ID).action(action, args)
 }
+
+
+/// 🧱️ Admits one fixed UI text action value without JSON staging.
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref())
+        .map(semio_framework_plugin::UiValue::Text)
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+}
+
+/// 🔘️ Admits one boolean UI action value.
+pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Bool(value)
+}
+
+/// 🔢️ Admits one numeric UI action value.
+pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Number(value.into())
+}
+
+
+/// 📚️ Admits one fixed UI list action value without dynamic staging.
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    for value in values {
+        builder
+            .push(value)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+}
+
+/// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    for (key, value) in values {
+        builder
+            .push(key.to_owned(), value)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        let node = value?;
+        nodes
+            .try_push(node)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+    }
+    Ok(nodes)
+}
+
 //#endregion 🔖️Actions
 
 //#region 🔖️Commands
@@ -183,7 +239,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot, cfg.snapshot),
             members_panel::SPACE_INDEX_BODY_MEMBERS => members_panel::render(cfg.snapshot),
@@ -228,12 +284,12 @@ pub async fn create_space_index_editor() -> semio_framework_plugin::AppDefinitio
         .dialog(
             DialogDefinition::new("createArtifact", LocalizedLabel::native("Create Artifact", "Artefakt erstellen"), ActionRef::new("createArtifact"))
                 .args(vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::select("kindId", LocalizedLabel::native("Kind", "Art"), create_artifact_kind_options()).required()])
-                .submit_label(LocalizedLabel::native("Create", "Erstellen")),
+                .submit_label(LocalizedLabel::native("Create", "Erstellen"))?,
         )
         .dialog(
             DialogDefinition::new("deleteArtifact", LocalizedLabel::native("Delete Artifact?", "Artefakt löschen?"), ActionRef::new("deleteArtifact"))
                 .body(LocalizedLabel::native("This removes the artifact from the space. This cannot be undone.", "Dies entfernt das Artefakt aus dem Space. Dies kann nicht rückgängig gemacht werden."))
-                .submit_label(LocalizedLabel::native("Delete", "Löschen")),
+                .submit_label(LocalizedLabel::native("Delete", "Löschen"))?,
         )
         .dialog(
             DialogDefinition::new("inviteMember", LocalizedLabel::native("Invite Member", "Mitglied einladen"), ActionRef::new("inviteMember"))
@@ -241,7 +297,7 @@ pub async fn create_space_index_editor() -> semio_framework_plugin::AppDefinitio
                     ActionArgDef::text("email", LocalizedLabel::native("Email", "E-Mail")).required(),
                     ActionArgDef::select("role", LocalizedLabel::native("Role", "Rolle"), vec![ActionArgOption::new("author", LocalizedLabel::native("Author", "Autor")), ActionArgOption::new("spectator", LocalizedLabel::native("Spectator", "Betrachter"))]).default_value("spectator").required(),
                 ])
-                .submit_label(LocalizedLabel::native("Invite", "Einladen")),
+                .submit_label(LocalizedLabel::native("Invite", "Einladen"))?,
         )
         .build_definition()
 }
@@ -311,10 +367,10 @@ mod tests {
         let definition = create_space_index_editor();
         assert_eq!(definition.dialogs.len(), 3);
         let by_id = |id: &str| definition.dialogs.iter().find(|dialog| dialog.id == id).unwrap_or_else(|| panic!("dialog {id} must be registered"));
-        assert_eq!(by_id("createArtifact").submit_action, ActionRef::new("createArtifact"));
+        assert_eq!(by_id("createArtifact").submit_action, ActionRef::new("createArtifact")?);
         assert_eq!(by_id("createArtifact").args.len(), 2);
-        assert_eq!(by_id("deleteArtifact").submit_action, ActionRef::new("deleteArtifact"));
-        assert_eq!(by_id("inviteMember").submit_action, ActionRef::new("inviteMember"));
+        assert_eq!(by_id("deleteArtifact").submit_action, ActionRef::new("deleteArtifact")?);
+        assert_eq!(by_id("inviteMember").submit_action, ActionRef::new("inviteMember")?);
         assert_eq!(by_id("inviteMember").args.len(), 2);
     }
 

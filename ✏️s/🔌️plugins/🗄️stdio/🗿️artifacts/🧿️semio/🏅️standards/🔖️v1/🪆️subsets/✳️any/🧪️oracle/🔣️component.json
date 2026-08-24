@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio` is the semio ENVELOPE — a union over eighteen semio-native subsets — so no third party reads or writes it and no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-envelope-routing",
+      "capabilities": ["semio-v1-any-mutate"],
+      "rationale": "`s.stdio.semio` is the ENVELOPE union over all eighteen semio subsets; there is no third-party crate that reads or writes `.dsl.semio`/`.pack.semio`, and there could not be one authoritative over a vocabulary whose eighteen wrapper variants each embed another semio-native subset's own mutation enum. What this subset OWNS is not the payload semantics — those belong to the eighteen arms and are covered by their own leaf fixtures and their own cases — but the envelope-level ROUTING: does a wrapped mutation whose arm matches the base snapshot's arm thread through, does a MISMATCHED one get refused with `mutation.target-missing` instead of silently corrupting the document, and is `set-snapshot` genuinely the only verb that can change the subset kind. Every scenario is written against exactly that, with a projection the envelope can answer without naming any arm's snapshot type: `{schema, subset, diagnostics, matchesReference}`. Confidence comes from the committed `(before, mutation, after, diff)` specification vector under `../🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/`, already unit-tested inside the production crate, plus the routing and inverse laws as metamorphic properties. Honest limits, recorded rather than papered over: the eighteen delegating arms are exercised against each arm's OWN empty snapshot rather than a real-world document, because no real-world `.semio` artifact exists outside this repository and the committed example assets can only be decoded through `store::ArtifactDsl`/`store::ArtifactPack`, traits reached solely via a private extern-crate alias that nothing re-exports — the same structural gap wave 7 recorded for `kit`, `object`, `text` and `table`. Re-exporting those two traits would let this case read the committed `.dsl.semio` examples directly and is the single change that would most strengthen it.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-any",
+      "capability": "semio-v1-any-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "brep", "mesh", "model", "value", "document", "cad", "drawing", "image", "video", "audio", "animation", "presentation", "flow", "text", "table", "graph", "object", "kit"]
+    }
+  ]
+}

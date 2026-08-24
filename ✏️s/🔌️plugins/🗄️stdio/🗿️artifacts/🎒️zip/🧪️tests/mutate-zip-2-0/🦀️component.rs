@@ -11,6 +11,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::any::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_mutation};
+use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves, unordered};
 
 //#region 🔖️Input
 /// 🦠️ Every declared `ZipMutation` variant, kebab-case — mirrors `../../🏅️standards/🔖️2.0/🪆️subsets/
@@ -41,19 +42,39 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
+/// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase: the reference
+/// applies the kind and then its own computed inverse, and the restored archive's independent
+/// projection must equal the REAL original's own. `semantic-archive-mutate-v1` declares
+/// `arrays: "set"`, so member ORDER is writer freedom and the two projections are compared through
+/// [`unordered`] — exactly the profile's own tolerance, never stricter. Without this the scenario
+/// would only prove the inverse ran without erroring, which is not what `@mode-property` claims.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let scenario_spec = spec(ctx)?;
     let mutated = oracle_apply_mutation(&input, &scenario_spec)?;
     let restored = oracle_apply_inverse(&input, &mutated, &scenario_spec)?;
     let projection = project_zip_mutation(&restored)?;
+    let original = project_zip_mutation(&input)?;
+    inverse_restores(&scenario_spec.str("kind"), &unordered(&projection, &["entries"]), &unordered(&original, &["entries"]))?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
+/// 🔁️ The identity law, asserted in role — but NOT through the must-differ tripwire every parsed
+/// format in this wave uses, because for THIS fixture that tripwire is a fabricated law and was
+/// measured to be false. `read_archive` genuinely inflates every member (`read_to_end` on a
+/// `ZipFile`) and `write_archive` genuinely re-deflates it, yet the output is bit-identical to the
+/// 1,605,927-byte input — because the fixture itself was authored ONCE by this same `zip` reference
+/// writer with these same default `FileOptions` (see the feature file's provenance paragraph, and
+/// the archive's own `1980-01-01` timestamps and version-20/Unix headers, which are that writer's
+/// defaults). Bit-stability is what this pairing can honestly claim, so it is what is asserted:
+/// the exact-bytes law plus preservation of the semantic projection. Both still fail loudly if the
+/// reader, the writer, the compression defaults or the entry order ever drift.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_round_trip(&input)?;
+    carrier_is_exact(&bytes, &input)?;
     let projection = project_zip_mutation(&bytes)?;
+    round_trip_preserves(&unordered(&projection, &["entries"]), &unordered(&project_zip_mutation(&input)?, &["entries"]))?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

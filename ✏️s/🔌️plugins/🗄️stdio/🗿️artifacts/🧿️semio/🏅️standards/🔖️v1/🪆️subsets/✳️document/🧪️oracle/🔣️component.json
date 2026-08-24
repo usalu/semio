@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.document`'s (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.document` is a semio-NATIVE format — no third party in any ecosystem reads or writes `.dsl.semio`/`.pack.semio` — so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-document-mutation-semantics",
+      "capabilities": [
+        "semio-v1-document-mutate"
+      ],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over this subset's `SemioDocumentMutation` vocabulary — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. The nearest candidate was surveyed and rejected on the merits rather than for absence: this subset ships real CommonMark, DOCX ECMA-376, PDF 1.7 and UTF-8 text export serializers under `../🚪️io/`, and `comrak` 0.54 is already linked into this owner's oracle crate and does read AND write CommonMark, so a comrak-mediated differential looks available. It is not, for two independent reasons. First, the oracle role must produce its reference answer from the committed input alone and must never link the subject crate, so the only way to hand `comrak` a document would be to route the semio snapshot through THIS repository's own Markdown exporter first — which makes the reference an artefact of the implementation it is supposed to judge. Second, CommonMark cannot express most of what is being measured: it has no named style table (`insert-style`, `remove-style`, `set-style-name`, `set-style-based-on`, `set-paragraph-style` — five of eighteen kinds), no id-keyed embedded image store (`insert-image`, `remove-image`, `set-image-bytes` — three more), and no run-level character formatting that survives a parse-render cycle intact (`set-run-style`). Ten of the eighteen kinds would have had nothing to compare against. The cross-language hosts have landed — the runner materializes a Rust, a Python (cache-local interpreter), a TypeScript (npm-resolving), a Go and a .NET host — so a Python or JavaScript reference was checked as well, and it fails one level earlier than a Rust one would: no package in any of those registries reads a semio envelope at all, because the `semio <envelope-id> v1` preamble, the hex/bracket value grammar and the LEB128 pack framing are defined by this repository alone. Confidence comes instead from specification vectors — the committed `(before, mutation, after)` triple per kind under this case's own `🧫️fixtures/`, derived by an INDEPENDENT Python implementation of both the committed DSL grammar and this vocabulary's specification (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/🐍️semio-pattern-a-vectors.py`), never by running this repository's own Rust — plus the metamorphic inverse law: applying a mutation and then its own computed inverse must restore the pre-mutation snapshot exactly. The `identity-round-trip` scenario ties the two together by asserting that production's own `parse_dsl` of the SAME real artifact equals the `before` snapshot every vector starts from, so a mistake in the Python decoder surfaces as a red scenario rather than as a quietly agreeable one.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-document",
+      "capability": "semio-v1-document-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "insert-block",
+        "remove-block",
+        "set-block-content",
+        "set-paragraph-style",
+        "set-heading-level",
+        "set-list-ordered",
+        "set-run-text",
+        "set-run-style",
+        "set-image-block",
+        "insert-style",
+        "remove-style",
+        "set-style-name",
+        "set-style-based-on",
+        "insert-image",
+        "remove-image",
+        "set-image-bytes"
+      ]
+    }
+  ]
+}

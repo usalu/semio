@@ -32,7 +32,7 @@ use store::EngineHandles;
 //#region 🔖️Constants
 pub const GIS2D_PLAY_APP_ID: &str = "gis2d-play";
 
-/// 🗂️ The app-wide map layer stack: `(id, native English name, icon id)`. Every chrome node (document
+/// 🗂️ The app-wide map layer stack: `(id, native English name, icon id)?`. Every chrome node (document
 /// and catalogue trees, the layers/weights window options, the inspector summary) enumerates it.
 pub const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
     ("raster", "Raster", "layers"),
@@ -50,16 +50,72 @@ pub const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎚️options/*`) builds its `on_change`/item actions with.
-pub async fn gis2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub fn gis2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(GIS2D_PLAY_APP_ID).action(action, args)
 }
+
+
+/// 🧱️ Admits one fixed UI text action value without JSON staging.
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref())
+        .map(semio_framework_plugin::UiValue::Text)
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+}
+
+/// 🔘️ Admits one boolean UI action value.
+pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Bool(value)
+}
+
+/// 🔢️ Admits one numeric UI action value.
+pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Number(value.into())
+}
+
+
+/// 📚️ Admits one fixed UI list action value without dynamic staging.
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    for value in values {
+        builder
+            .push(value)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+}
+
+/// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    for (key, value) in values {
+        builder
+            .push(key.to_owned(), value)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        let node = value?;
+        nodes
+            .try_push(node)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+    }
+    Ok(nodes)
+}
+
 
 /// 🌳️ A layer tree item — `tree_item_with_action`/`tree_item` plus the icon that identifies each map
 /// layer, since the SDK's `PanelKit` family has no icon-carrying constructor. Shared by the document
 /// panel (`action: None` — the tree is `interaction_domain`-bound now, so the framework's renderer
 /// translates clicks into injected `interactionSelect`) and the catalogue panel (`action: Some(..)` —
 /// a real, non-selection click that toggles layer visibility).
-pub async fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: Option<String>, icon_id: &str, action: Option<ActionDescriptor>) -> UiTreeItemNode {
+pub async fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: Option<String>, icon_id: &str, action: Option<ActionDescriptor>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let base = match action {
         Some(action) => tree_item_with_action(id, label, description, action),
         None => UiTreeItemNode { description, menu: None, ..tree_item(id, label) },
@@ -378,7 +434,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         semio_framework_plugin::ConfigSpec::empty()
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let config = cfg.snapshot;
         let labels = gis2d_labels(config);
         match body_key {

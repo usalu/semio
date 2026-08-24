@@ -34,6 +34,62 @@ fn action(action: &str, args: Option<Value>) -> (semio_framework_ui_contract::Ac
     ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
+
+/// 🧱️ Admits one fixed UI text action value without JSON staging.
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref())
+        .map(semio_framework_plugin::UiValue::Text)
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+}
+
+/// 🔘️ Admits one boolean UI action value.
+pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Bool(value)
+}
+
+/// 🔢️ Admits one numeric UI action value.
+pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Number(value.into())
+}
+
+
+/// 📚️ Admits one fixed UI list action value without dynamic staging.
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    for value in values {
+        builder
+            .push(value)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+}
+
+/// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    for (key, value) in values {
+        builder
+            .push(key.to_owned(), value)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        let node = value?;
+        nodes
+            .try_push(node)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+    }
+    Ok(nodes)
+}
+
+
 fn select_action(granularity: &str, id: &str) -> (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>) {
     let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
     action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
@@ -45,7 +101,7 @@ fn binding((action, args): (semio_framework_ui_contract::ActionId, Option<semio_
 
 fn selectable_item(id: impl Into<String>, label: impl Into<Label>, icon: &str, action: (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)) -> semio_framework_ui_contract::TreeItemBuilder {
     let (action_id, args) = action;
-    let builder = ui::tree_item(label).id(id).icon(icon);
+    let builder = ui::tree_item(label)?.id(id).icon(icon);
     match args {
         Some(args) => builder.on_with(Trigger::Activate, action_id, args),
         None => builder.on(Trigger::Activate, action_id),
@@ -72,7 +128,7 @@ fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, flag_a
 
 //#region 🔖️Render
 /// 🌳️ The four document sections, memoized by the app against the fixture's geometry fingerprint.
-pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> BuiltNode {
+pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let object_items: Vec<BuiltNode> = fixture
         .objects
         .iter()
@@ -125,12 +181,12 @@ pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> BuiltNode {
         .collect();
     let attraction_items: Vec<BuiltNode> =
         fixture.attractions.iter().map(|attraction| selectable_item(attraction.id.clone(), format!("{} → {}", attraction.attracting, attraction.attracted), "link", select_action(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id)).build()).collect();
-    PanelTreeBuilder::new("puzzle3d-play-document")
-        .section("puzzle3d-play-document.objects", Some(labels.objects.as_str().into()), true, object_items)
-        .section("puzzle3d-play-document.references", Some(labels.references.as_str().into()), false, reference_items)
-        .section("puzzle3d-play-document.target-volumes", Some(labels.target_volumes.as_str().into()), false, target_volume_items)
-        .section("puzzle3d-play-document.attractions", Some(labels.attractions.as_str().into()), false, attraction_items)
-        .interaction_domain(PUZZLE3D_INTERACTION_DOMAIN)
+    PanelTreeBuilder::new("puzzle3d-play-document")?
+        .section("puzzle3d-play-document.objects", Some(labels.objects.as_str().into()), true, object_items)?
+        .section("puzzle3d-play-document.references", Some(labels.references.as_str().into()), false, reference_items)?
+        .section("puzzle3d-play-document.target-volumes", Some(labels.target_volumes.as_str().into()), false, target_volume_items)?
+        .section("puzzle3d-play-document.attractions", Some(labels.attractions.as_str().into()), false, attraction_items)?
+        .interaction_domain(PUZZLE3D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

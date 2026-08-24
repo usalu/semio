@@ -11,6 +11,7 @@
 use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::stl::standards::v_ascii::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip};
 use semio_s_plugin_stdio_test_oracle::mesh::project_stl;
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, round_trip_preserves_within};
 
 //#region 🔖️Kinds
 /// 🧾️ Mirrors `StlMutation::KINDS` (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`)
@@ -18,6 +19,14 @@ use semio_s_plugin_stdio_test_oracle::mesh::project_stl;
 /// gates, which fail loudly if this list and the catalog ever drift apart.
 const KINDS: [&str; 7] = ["no-mutation", "set-snapshot", "set-solid-name", "insert-triangle", "remove-triangle", "set-triangle-normal", "set-triangle-vertices"];
 //#endregion 🔖️Kinds
+
+//#region 🔖️Profile
+/// 📏️ `semantic-mesh-v1`'s own declared tolerances (`../../../../🧪️oracle/🔣️component.json`),
+/// mirrored here so an in-handler law check is exactly as strict as the profile the case is
+/// measured by — never stricter, which would invent a failure the comparison itself would forgive.
+const MESH_WRITER_FREEDOM: &[&str] = &["generator", "comment", "byteLength", "fileSize", "precision", "solidName"];
+const MESH_TOLERANCE: f64 = 1e-5;
+//#endregion 🔖️Profile
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🧊️hexagonal-cut-concrete-forest-left.stl";
@@ -39,7 +48,11 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 }
 
 /// ↩️ Applies `<id>` forward, then its independently computed inverse — both against the SAME
-/// untouched `input`, matching `StlMutation::inverse()`'s own base-relative semantics.
+/// untouched `input`, matching `StlMutation::inverse()`'s own base-relative semantics — and ASSERTS
+/// the law here rather than deferring it to the parity phase: the restored solid's independent
+/// `stl_io` projection must equal the REAL original's own, within `semantic-mesh-v1`'s own declared
+/// tolerance and no stricter. Without the check the scenario would pass for any inverse `stl_io`
+/// merely tolerated.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -47,9 +60,13 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let inverse_spec = oracle_inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &inverse_spec)?;
     let projection = project_stl(&restored)?;
+    inverse_restores_within(&spec.str("kind"), &projection, &project_stl(&input)?, MESH_WRITER_FREEDOM, MESH_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
+/// 🔁️ The identity law, both halves asserted in role: the triangle soup must survive the
+/// decode/re-encode unchanged, and the output must not be the input back again — `stl_io` writes
+/// BINARY STL, so a bit-identical result against this ASCII fixture could only be a copy.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_round_trip(&input)?;
@@ -57,6 +74,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
         return Err("byte pass-through: oracle output is bit-identical to the input".to_string());
     }
     let projection = project_stl(&bytes)?;
+    round_trip_preserves_within(&projection, &project_stl(&input)?, MESH_WRITER_FREEDOM, MESH_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -70,6 +88,7 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation, StlMutation};
     use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::schema::snapshot::{StlSnapshot, StlTriangle};
     use semio_s_plugin_stdio_test_oracle::mesh::project_stl;
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, round_trip_preserves_within};
 
     //#region 🔖️SpecReaders
     fn params_of(spec: &Json) -> Json {

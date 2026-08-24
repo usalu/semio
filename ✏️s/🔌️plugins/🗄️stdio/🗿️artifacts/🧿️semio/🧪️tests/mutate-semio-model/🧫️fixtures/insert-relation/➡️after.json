@@ -1,0 +1,130 @@
+{
+  "schema": "stdio.semio.model",
+  "spatial": [
+    {
+      "id": "site-1",
+      "kind": "site",
+      "name": "Site One",
+      "parentId": null,
+      "placement": {
+        "translation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "scale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      }
+    },
+    {
+      "id": "storey-1",
+      "kind": "storey",
+      "name": "Ground Floor",
+      "parentId": "site-1",
+      "placement": {
+        "translation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 3.0
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "scale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      }
+    }
+  ],
+  "elements": [
+    {
+      "id": "wall-1",
+      "class": {
+        "kind": "wall"
+      },
+      "placement": {
+        "translation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "rotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "scale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      },
+      "geometry": {
+        "kind": "brep",
+        "brep_id": "brep-1"
+      },
+      "spatialId": "storey-1",
+      "psets": [
+        {
+          "name": "Pset_WallCommon",
+          "properties": [
+            {
+              "key": "IsExternal",
+              "value": {
+                "kind": "boolean",
+                "value": true
+              }
+            },
+            {
+              "key": "FireRating",
+              "value": {
+                "kind": "text",
+                "value": "REI60"
+              }
+            },
+            {
+              "key": "ThermalTransmittance",
+              "value": {
+                "kind": "number",
+                "value": 0.24
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "id": "rel-1",
+      "kind": {
+        "kind": "containedIn"
+      },
+      "from": "wall-1",
+      "to": "storey-1"
+    },
+    {
+      "id": "rel-2",
+      "kind": {
+        "kind": "aggregates"
+      },
+      "from": "site-1",
+      "to": "storey-1"
+    }
+  ]
+}

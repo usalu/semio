@@ -27,16 +27,16 @@ pub async fn definition() -> PanelTabDefinition {
 /// `flow_graph_node_target_id`/`flow_graph_edge_target_id` targets `FlowPlayApp::interaction_topology`
 /// declares for the "graph" domain — the framework stamps this tree's selection/hover presence from
 /// that domain (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item
-/// click action is declared here anymore (clicks are translated into `interactionSelect` generically).
-pub async fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> UiNode {
+/// click action is declared here anymore (clicks are translated into `interactionSelect` generically)?.
+pub async fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let live = fixture.to_fixture();
-    let widget_items: Vec<UiTreeItemNode> = live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()))).collect();
+    let widget_items: Vec<UiTreeItemNode> = live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()))?).collect();
     let synapse_items: Vec<UiTreeItemNode> =
-        live.synapses.iter().map(|synapse| tree_item_desc(flow_graph_edge_target_id(&synapse.id), Label::data(format!("{} → {}", synapse.from, synapse.to)), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
-    PanelTreeBuilder::new("flow-play-document")
-        .section_or_placeholder("flow-play-document.widgets", Some(labels.widgets.into()), true, widget_items, labels.none_placeholder)
-        .section_or_placeholder("flow-play-document.synapses", Some(labels.synapses.into()), false, synapse_items, labels.none_placeholder)
-        .interaction_domain(FLOW_INTERACTION_GRAPH)
+        live.synapses.iter().map(|synapse| tree_item_desc(flow_graph_edge_target_id(&synapse.id), Label::data(format!("{} → {}", synapse.from, synapse.to)), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))?).collect();
+    PanelTreeBuilder::new("flow-play-document")?
+        .section_or_placeholder("flow-play-document.widgets", Some(labels.widgets.into()), true, widget_items, labels.none_placeholder)?
+        .section_or_placeholder("flow-play-document.synapses", Some(labels.synapses.into()), false, synapse_items, labels.none_placeholder)?
+        .interaction_domain(FLOW_INTERACTION_GRAPH)?
         .build()
 }
 //#endregion 🔖️Render

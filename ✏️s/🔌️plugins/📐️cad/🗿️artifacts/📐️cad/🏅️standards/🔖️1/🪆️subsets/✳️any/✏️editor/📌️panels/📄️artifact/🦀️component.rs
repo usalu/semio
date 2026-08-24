@@ -28,7 +28,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub(crate) async fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> UiTreeItemNode {
+pub(crate) async fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let primitive_items: Vec<UiTreeItemNode> = object
         .primitives
         .iter()
@@ -45,10 +45,10 @@ pub(crate) async fn object_tree_item(id_suffix: &str, object: &CadObject, labels
                 Label::data(format!("{}: {}", primitive.slot, primitive.primitive_id)),
                 Some("hexagon"),
                 cad_action("focusModelDefinition", Some(json!({ "modelDefinitionId": id_suffix }))),
-            )
+            )?
         })
         .collect();
-    let mut item = cad_tree_item(format!("cad-object:{id_suffix}:{}", object.id), Label::data(object.label.clone()), Some("box"), cad_action("focusModelDefinition", Some(json!({ "modelDefinitionId": id_suffix }))));
+    let mut item = cad_tree_item(format!("cad-object:{id_suffix}:{}", object.id), Label::data(object.label.clone()), Some("box"), cad_action("focusModelDefinition", Some(json!({ "modelDefinitionId": id_suffix }))))?;
     if !object.typology.is_empty() {
         item.description = Some(typology_label(&object.typology, labels).to_string());
     }
@@ -77,13 +77,13 @@ pub(crate) async fn object_tree_item(id_suffix: &str, object: &CadObject, labels
     item
 }
 
-pub async fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiTreeItemNode {
+pub async fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut item = cad_tree_item(
         format!("cad-reference:{model_definition_id}:{}", reference.id),
         Label::data(reference.id.clone()),
         Some("image"),
         cad_action("setReferenceSelection", Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id }))),
-    );
+    )?;
     item.description = Some(reference.source_url.clone());
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `UiTreeItemNode` no longer carries
     // `hoverAction`/`unhoverAction` — no generic tree-hover mechanism replaces it for a non-
@@ -134,7 +134,7 @@ pub async fn references_for<'a>(document: &'a CadSnapshot, model_definition_id: 
 /// `interaction_domain` for that reason (its item ids, `"cad-object:…"`/`"cad-reference:…"`/
 /// `"cad-node:…"`, are UI-namespaced composites, not the domain's raw ids anyway).
 pub async fn document_tree_selected_ids(_document: &CadSnapshot, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
-    if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
+    if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref()?, runtime.selected_reference_id.as_deref()?) {
         return Some(vec![format!("cad-reference:{model_definition_id}:{reference_id}")]);
     }
     None
@@ -153,17 +153,17 @@ pub async fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &Cad
 
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded.
 pub(crate) async fn document_pane_section(label: impl Into<Label>, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
-    (format!("cad-play-document.{id_suffix}"), Some(label.into()), true, objects.iter().map(|object| object_tree_item(id_suffix, object, labels)).collect())
+    (format!("cad-play-document.{id_suffix}"), Some(label.into()), true, objects.iter().map(|object| object_tree_item(id_suffix, object, labels)?).collect())
 }
 
 /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
 pub async fn artifact_references_section(document: &CadSnapshot, model_definition_id: &str, labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
-    (format!("cad-play-document.references.{model_definition_id}"), Some(labels.references.into()), false, references_for(document, model_definition_id).iter().map(|reference| reference_tree_item(model_definition_id, reference, labels)).collect())
+    (format!("cad-play-document.references.{model_definition_id}"), Some(labels.references.into()), false, references_for(document, model_definition_id).iter().map(|reference| reference_tree_item(model_definition_id, reference, labels)?).collect())
 }
 
-pub async fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
+pub async fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let node_items: Vec<UiTreeItemNode> =
-        envelope.document.nodes.iter().map(|node| cad_tree_item(format!("cad-node:{}", node.id), Label::data(node.label.clone()), Some("git-branch"), cad_action("setNodeSelection", Some(json!({ "nodeIds": [node.id] }))))).collect();
+        envelope.document.nodes.iter().map(|node| cad_tree_item(format!("cad-node:{}", node.id), Label::data(node.label.clone()), Some("git-branch"), cad_action("setNodeSelection", Some(json!({ "nodeIds": [node.id] }))))?).collect();
 
     // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `CadSnapshot`'s inline
     // per-pane object lists are gone (composed `s.stdio.semio.model` CHILD documents now, unresolved
@@ -179,21 +179,21 @@ pub async fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> 
     let (structure_id, structure_label, structure_open, structure_items) = document_pane_section(labels.pane_structure_classic, "structure-classic", &no_objects, labels);
     let (structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items) = artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, labels);
 
-    let mut builder = PanelTreeBuilder::new("cad-play-document")
-        .section(shape_id, shape_label, shape_open, shape_items)
-        .section_or_placeholder(shape_refs_id, shape_refs_label, shape_refs_open, shape_refs_items, labels.none_placeholder)
-        .section(building_id, building_label, building_open, building_items)
-        .section_or_placeholder(building_refs_id, building_refs_label, building_refs_open, building_refs_items, labels.none_placeholder)
-        .section(energy_id, energy_label, energy_open, energy_items)
-        .section_or_placeholder(energy_refs_id, energy_refs_label, energy_refs_open, energy_refs_items, labels.none_placeholder)
-        .section(structure_id, structure_label, structure_open, structure_items)
-        .section_or_placeholder(structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items, labels.none_placeholder)
-        .section("cad-play-document.nodes", Some(labels.nodes.into()), true, node_items);
+    let mut builder = PanelTreeBuilder::new("cad-play-document")?
+        .section(shape_id, shape_label, shape_open, shape_items)?
+        .section_or_placeholder(shape_refs_id, shape_refs_label, shape_refs_open, shape_refs_items, labels.none_placeholder)?
+        .section(building_id, building_label, building_open, building_items)?
+        .section_or_placeholder(building_refs_id, building_refs_label, building_refs_open, building_refs_items, labels.none_placeholder)?
+        .section(energy_id, energy_label, energy_open, energy_items)?
+        .section_or_placeholder(energy_refs_id, energy_refs_label, energy_refs_open, energy_refs_items, labels.none_placeholder)?
+        .section(structure_id, structure_label, structure_open, structure_items)?
+        .section_or_placeholder(structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items, labels.none_placeholder)?
+        .section("cad-play-document.nodes", Some(labels.nodes.into()), true, node_items)?;
     if let Some(ids) = document_tree_selected_ids(&envelope.document, &envelope.runtime) {
-        builder = builder.selected(ids);
+        builder = builder.selected(ids)?;
     }
     if let Some(ids) = document_tree_highlighted_ids(&envelope.document, &envelope.runtime) {
-        builder = builder.highlighted(ids);
+        builder = builder.highlighted(ids)?;
     }
     builder.build()
 }
@@ -217,7 +217,7 @@ mod tests {
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: pane object sections
         // render empty at this boundary now (documented gap, see `build_document_tree`'s own doc
         // comment) — `object_tree_item_shows_name_with_kind_as_secondary_label`/
-        // `object_tree_item_includes_primitive_children` below cover the real (still-working)
+        // `object_tree_item_includes_primitive_children` below cover the real (still-working)?
         // tree-item builder directly instead.
         let mut app = new_app();
         let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
@@ -230,13 +230,13 @@ mod tests {
         let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
         object.label = "U2".into();
         let labels = cad_labels(&CadConfig::default());
-        let item = object_tree_item("shape", &object, labels);
+        let item = object_tree_item("shape", &object, labels)?;
         assert_eq!(item.label.as_str(), "U2");
         assert_eq!(item.description.as_deref(), Some("Beam"));
 
         let de_config = CadConfig { locale: "de".into(), ..CadConfig::default() };
         let de_labels = cad_labels(&de_config);
-        let de_item = object_tree_item("shape", &object, de_labels);
+        let de_item = object_tree_item("shape", &object, de_labels)?;
         assert_eq!(de_item.description.as_deref(), Some("Träger"));
     }
 
@@ -245,7 +245,7 @@ mod tests {
         let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
         object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
         let labels = cad_labels(&CadConfig::default());
-        let item = object_tree_item("shape", &object, labels);
+        let item = object_tree_item("shape", &object, labels)?;
         let json = serde_json::to_string(&item).unwrap();
         assert!(json.contains("cad-primitive:"));
     }

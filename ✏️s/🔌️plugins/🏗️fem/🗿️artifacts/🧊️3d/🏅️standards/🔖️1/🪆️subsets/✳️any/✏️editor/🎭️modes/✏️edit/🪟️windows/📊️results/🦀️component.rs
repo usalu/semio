@@ -70,12 +70,12 @@ fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
 /// field, so a vertical `UiNode` stack (already how the shell composes surfaces) is the idiomatic way to
 /// show a frequency/load-factor/case caption in-scene. `caption` is genuine runtime data (a case id,
 /// mode index, frequency, …), so it is wrapped via `Label::data` rather than any `LocalizedLabel`.
-fn with_caption(scene: BuiltNode, caption: String) -> BuiltNode {
+fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     semio_framework_ui_contract::column().children([built_text_node(Label::data(caption)), scene]).build()
 }
 
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> BuiltNode {
+pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let display = config_result_display(cfg);
     let camera = &cfg.camera;
     match display.mode {
@@ -90,7 +90,7 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> BuiltNode {
 /// additionally colored by nodal-averaged von Mises stress. `source_id` selects a `fem3d_solve_all`
 /// case/combination id, falling back to the first load case when `None`/unknown. Caption names the
 /// active case.
-fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> BuiltNode {
+fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::fem3d_solve_all;
 
@@ -120,7 +120,7 @@ fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamer
 
 /// 📊️ Modal mode-shape overlay: instances offset by the selected mode's shape, normalized to unit peak
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, with a frequency caption.
-fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> BuiltNode {
+fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::modal_buckling::fem3d_modal_mode_values;
@@ -142,7 +142,7 @@ fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> B
 /// peak then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent. `source_id` selects the
 /// reference load case, falling back to the first load case when `None`. Caption names the mode and its
 /// load factor.
-fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> BuiltNode {
+fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::modal_buckling::fem3d_buckling_mode_values;

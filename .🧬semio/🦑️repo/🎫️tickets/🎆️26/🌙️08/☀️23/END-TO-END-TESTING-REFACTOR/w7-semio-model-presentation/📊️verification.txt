@@ -1,0 +1,75 @@
+=== 2026-08-24T01:54:13Z verification, ticket 26/08/23/END-TO-END-TESTING-REFACTOR, subsets semio ✳️model + ✳️presentation
+
+--- bun ./📜️script.ts contract --owner 🗄️stdio --case mutate-semio-model
+3 high-priority breach(es) across 1 rule(s):
+      3  testing/contract
+
+  testing/contract  zip-2-0-iso21320  Mutation catalog zip-2-0-iso21320 (8 kinds) is claimed by no feature
+  testing/contract  svg-1-1-basic  Mutation catalog svg-1-1-basic (11 kinds) is claimed by no feature
+  testing/contract  svg-1-1-tiny  Mutation catalog svg-1-1-tiny (10 kinds) is claimed by no feature
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json
+exit=1
+
+--- bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-model
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model (recorded no-oracle decision semio-model-mutation-semantics — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=1 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=1
+exit=0
+
+--- bun ./📜️script.ts contract --owner 🗄️stdio --case mutate-semio-presentation
+3 high-priority breach(es) across 1 rule(s):
+      3  testing/contract
+
+  testing/contract  zip-2-0-iso21320  Mutation catalog zip-2-0-iso21320 (8 kinds) is claimed by no feature
+  testing/contract  svg-1-1-basic  Mutation catalog svg-1-1-basic (11 kinds) is claimed by no feature
+  testing/contract  svg-1-1-tiny  Mutation catalog svg-1-1-tiny (10 kinds) is claimed by no feature
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json
+exit=1
+
+--- bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-presentation
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation (recorded no-oracle decision semio-presentation-mutation-semantics — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=1 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=1
+exit=0
+
+--- bun ./📜️script.ts subject exhaustive --owner 🗄️stdio --case mutate-semio-model  (upstream blocker)
+error[E0599]: no method named `generation` found for struct `WorkerJobSession<J>` in the current scope
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0499]: cannot borrow `self.rejected` as mutable more than once at a time
+error: could not compile `semio-framework-job` (lib) due to 6 previous errors; 6 warnings emitted
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model: no result stream at /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-semio-97645a-mutate-semio-model-subject-rust/📤️results.jsonl
+exit=(pipe)
+
+--- standalone adapter compile check (oracle half real, subject half parsed): cargo run --manifest-path adapter-check/Cargo.toml
+   1 warning: `adapter-check` (bin "adapter-check") generated 12 warnings
+  12 warning: unexpected `cfg` condition value: `sut`
+model oracle scenarios: 23
+  model identity-round-trip
+  model inverse-insert-element
+  model inverse-insert-relation
+  (23 = 11 kinds x 2 + identity-round-trip; 31 = 15 kinds x 2 + identity-round-trip)
+
+--- fixture provenance: every string / number in the committed before-fixture is recoverable from the REAL .dsl.semio asset
+model: 13 distinct fixture strings, 0 not recoverable from the real asset
+presentation: 10 distinct fixture strings, 0 not recoverable from the real asset
+model: 2 distinct non-trivial fixture numbers, 0 not recoverable from the real asset
+presentation: 9 distinct non-trivial fixture numbers, 0 not recoverable from the real asset
+
+--- repo-wide stdio contract at close of work (all remaining breaches belong to peers' in-flight cases)
+9 high-priority breach(es) across 1 rule(s):
+      9  testing/contract
+
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧪️tests/mutate-docx-ecma-376-strict  Test case has no implementation adapter
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧪️tests/mutate-docx-ecma-376-transitional  Test case has no implementation adapter
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧪️tests/mutate-pptx-ecma-376-strict  Test case has no implementation adapter
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧪️tests/mutate-pptx-ecma-376-transitional  Test case has no implementation adapter
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-tiny  Test case has no implementation adapter
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376-strict  Test case has no implementation adapter
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376-transitional  Test case has no implementation adapter
+  testing/contract  zip-2-0-iso21320  Mutation catalog zip-2-0-iso21320 (8 kinds) is claimed by no feature
+  testing/contract  svg-1-1-basic  Mutation catalog svg-1-1-basic (11 kinds) is claimed by no feature
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json

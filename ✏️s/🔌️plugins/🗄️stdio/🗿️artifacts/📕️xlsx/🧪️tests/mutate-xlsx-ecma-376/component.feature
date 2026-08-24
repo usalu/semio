@@ -36,6 +36,19 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
   the fixture into the case work directory before touching it; the committed file is never written
   to.
 
+  THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because the reference
+  pairing did not error. `inverse-<kind>` applies the mutation, applies its own independently
+  computed inverse, and fails with the first diverging cell unless the result projects onto exactly
+  what the real workbook projects onto. `identity-round-trip` fails unless the rebuilt bytes differ
+  from the input AND their projection is identical to the input's. ONE axis is exempt, and only for
+  `set-snapshot`: `sharedStringCount`. It is adapter-tracked arithmetic rather than an observation
+  (`calamine` cannot read the pool), and this case's `set-snapshot` target carries no pool at all —
+  the JSON `sheets` shape has nowhere to put one, so the oracle's rebuild and the subject's
+  `XlsxWorkbook { shared_strings: vec![] }` both genuinely land on 0 instead of back on the real
+  229. `set-snapshot` is therefore not invertible on that axis by the vocabulary's own shape, which
+  is stated here rather than checked with a contrived number; its sheet grid is still held to the
+  full law, as is everything about every other kind.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

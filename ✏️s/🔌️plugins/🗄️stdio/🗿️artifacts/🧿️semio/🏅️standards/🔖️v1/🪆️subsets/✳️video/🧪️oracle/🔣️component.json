@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.video`'s (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.video` is a semio-NATIVE format — no third party in any ecosystem reads or writes `.dsl.semio`/`.pack.semio` — so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-video-mutation-semantics",
+      "capabilities": ["semio-v1-video-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over this subset's `SemioVideoMutation` vocabulary — that vocabulary IS this subset's own specification. The candidates already registered by this plugin were surveyed: `mp4` 0.14 (the `mp4-isobmff` oracle) and `riff` 2.0 (the AVI oracle) both read and write CONTAINERS, and this snapshot is deliberately container-neutral and payload-OPAQUE — `SemioVideoSample.data` is an uninterpreted byte string, `SemioVideoStream.rate` an exact rational rather than a timescale/duration pair, and a stream carries no track id, no edit list and no codec-configuration record for either crate to round-trip. Every kind here except `set-sample-data` would therefore have to be projected through a container write that invents fields the snapshot does not carry, and comparing that invention against our own would compare an implementation with itself. The cross-language hosts have landed (a cache-local Python venv and an npm-resolving TypeScript host, see 📓️cross-language-oracle-hosts-2026-08-24.md), so a Python or JavaScript reference was checked too and fails one level earlier: `pymp4`/`mp4box.js` parse ISOBMFF, and nothing in any registry reads a semio envelope. Confidence comes instead from specification vectors — the committed `(before, mutation, after)` triple per kind under `../../../../🧪️tests/mutate-semio-video/🧫️fixtures/`, whose BEFORE snapshot is the exact decoded content of this standard's own committed real artifact `✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio` — plus the metamorphic inverse law: applying a mutation and then its own computed inverse must restore the pre-mutation snapshot exactly.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-video",
+      "capability": "semio-v1-video-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"]
+    }
+  ]
+}

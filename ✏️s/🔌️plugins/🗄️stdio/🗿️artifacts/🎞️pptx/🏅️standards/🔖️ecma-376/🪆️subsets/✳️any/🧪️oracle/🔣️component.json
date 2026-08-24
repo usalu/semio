@@ -20,8 +20,13 @@
       "rationale": "A PPTX is a ZIP of XML parts (ECMA-376 Part 2 OPC). No standalone `pptx` crate is registered: the only one on crates.io is a 0.1.0 first release, and a first-release crate judging our implementation would be worse than none (fleet brief instruction). `zip` and `quick-xml` are both already linked for other subsets (🎒zip, 📰xml, 🎨svg) and both genuinely independent of this repository's own PPTX codec — this oracle unzips with `zip`, parses/edits/re-serializes `ppt/presentation.xml` and every `ppt/slides/slideN.xml` with `quick-xml`, and rezips with `zip`. Every mutation kind is expressed as a pure operation on an independent, typed, ordered slide/shape list, then EVERY slide-related OPC part (slides, their `.rels`, `presentation.xml`'s `p:sldIdLst`, `presentation.xml.rels`'s slide relationships, `[Content_Types].xml`'s slide `Override`s) is freshly regenerated from that list — a genuine re-serialization on every call, never a byte pass-through, including `no-mutation` and `identity-round-trip`.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "packages": [
-        "zip",
-        "quick-xml"
+        {
+          "package": "quick-xml",
+          "version": "0.42",
+          "license": "MIT",
+          "homepage": "https://github.com/tafia/quick-xml",
+          "role": "independent XML reader/writer for every part inside the archive"
+        }
       ]
     }
   ],

@@ -107,7 +107,58 @@ fn inverse_spec(kind: &str) -> Json {
 }
 //#endregion 🔖️Inverse
 
+//#region 🔖️Laws
+/// 🔍️ First point at which two projections disagree, as a `path: expected != read` sentence -- a law
+/// violation must name the field that broke it rather than dump two whole documents at the reader.
+fn first_divergence(path: &str, expected: &Json, actual: &Json) -> Option<String> {
+    match (expected, actual) {
+        (Json::Object(left), Json::Object(right)) => {
+            for (key, value) in left {
+                match right.iter().find(|(name, _)| name == key) {
+                    Some((_, other)) => {
+                        if let Some(found) = first_divergence(&format!("{path}.{key}"), value, other) {
+                            return Some(found);
+                        }
+                    }
+                    None => return Some(format!("{path}.{key} is absent from the result")),
+                }
+            }
+            right.iter().find(|(key, _)| !left.iter().any(|(name, _)| name == key)).map(|(key, _)| format!("{path}.{key} appeared in the result out of nowhere"))
+        }
+        (Json::Array(left), Json::Array(right)) => {
+            if left.len() != right.len() {
+                return Some(format!("{path} holds {} member(s), expected {}", right.len(), left.len()));
+            }
+            left.iter().zip(right.iter()).enumerate().find_map(|(index, (value, other))| first_divergence(&format!("{path}[{index}]"), value, other))
+        }
+        _ if expected == actual => None,
+        _ => Some(format!("{path}: expected {} but read {}", expected.to_string(), actual.to_string())),
+    }
+}
+
+/// ⚖️ Turns a projection law into a real verdict: `Ok` only when the two projections agree, otherwise
+/// an `Err` naming the FIRST field that diverged. Without this an oracle handler asserts nothing and
+/// its scenario passes whenever the reference library merely declined to error.
+fn assert_same_projection(law: &str, expected: &Json, actual: &Json) -> Result<(), String> {
+    match first_divergence("projection", expected, actual) {
+        Some(divergence) => Err(format!("{law}: {divergence}")),
+        None => Ok(()),
+    }
+}
+//#endregion 🔖️Laws
+
 //#region 🔖️Oracle
+/// 🧾️ The `no-mutation` spec, spelled once. Every kind this dispatcher performs is one full
+/// `ruststep` parse plus one from-scratch Part-21 write, so a law's baseline must go through exactly
+/// as many of those cycles as the document it judges -- otherwise a divergence would name the
+/// writer's own normal form instead of the mutation pair.
+fn no_mutation() -> Json {
+    json_spec("no-mutation", json_obj(vec![]))
+}
+
+/// 🔮️ One handler shared by every `mutate-<kind>` scenario id. This handler asserts nothing BY
+/// DESIGN: it produces the reference result, and the parity phase is what compares it against the
+/// subject.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -116,24 +167,40 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
+/// ↩️ One handler shared by every `inverse-<kind>` scenario id, and the ORACLE side of the inverse
+/// law -- a law that is checkable in-role, without a subject: the reference dispatcher applies the
+/// forward mutation and then the independently computed `inverse_spec`, and the restored
+/// exchange structure MUST project exactly as the untouched one does. `no-mutation` is NOT short-circuited: it runs the same
+/// two cycles as every other kind, so the trivial case is evidence rather than an exemption. The
+/// baseline runs two `no-mutation` cycles for the same reason -- both sides then carry identical
+/// serializer normalisation and the comparison isolates the mutation pair itself.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
-    let restored = if kind == "no-mutation" {
-        input.clone()
-    } else {
-        let mutated = oracle_apply_mutation(&input, &spec)?;
-        oracle_apply_mutation(&mutated, &inverse_spec(&kind))?
-    };
+    let baseline = project_ifc_4_any(&oracle_apply_mutation(&oracle_apply_mutation(&input, &no_mutation())?, &no_mutation())?)?;
+    let mutated = oracle_apply_mutation(&input, &spec)?;
+    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&kind))?;
     let projection = project_ifc_4_any(&restored)?;
+    assert_same_projection(&format!("inverse law violated for {kind:?} -- undoing it did not restore the exchange structure"), &baseline, &projection)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
+/// 🔒️ The ORACLE side of the identity round trip, asserted in-role: the reference dispatcher fully
+/// parses the real exchange structure with `ruststep` and re-serializes it from its own
+/// from-scratch Part-21 writer alone, so the re-encoded bytes MUST carry the same semantic projection as the input AND
+/// MUST NOT be bit-identical to it. ISO 10303-21 clear text is not a byte-preserving carrier -- the
+/// whole exchange structure is regenerated from the parsed model -- so the byte tripwire is real
+/// evidence that the document was parsed rather than copied.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let bytes = oracle_apply_mutation(&input, &json_spec("no-mutation", json_obj(vec![])))?;
+    let before = project_ifc_4_any(&input)?;
+    let bytes = oracle_apply_mutation(&input, &no_mutation())?;
+    if bytes == input {
+        return Err("byte pass-through: the re-encoded output is bit-identical to the input, so nothing here proves the document was parsed".to_string());
+    }
     let projection = project_ifc_4_any(&bytes)?;
+    assert_same_projection("identity round trip is not semantics-preserving", &before, &projection)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

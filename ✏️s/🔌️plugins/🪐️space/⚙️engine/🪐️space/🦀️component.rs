@@ -63,9 +63,65 @@ pub const S_PLAY_INTERACTION_DOMAIN: &str = "graph";
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
-pub(crate) async fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub(crate) fn s_play_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(S_PLAY_CONTROLLER_ID).action(action, args)
 }
+
+
+/// 🧱️ Admits one fixed UI text action value without JSON staging.
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref())
+        .map(semio_framework_plugin::UiValue::Text)
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+}
+
+/// 🔘️ Admits one boolean UI action value.
+pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Bool(value)
+}
+
+/// 🔢️ Admits one numeric UI action value.
+pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
+    semio_framework_plugin::UiValue::Number(value.into())
+}
+
+
+/// 📚️ Admits one fixed UI list action value without dynamic staging.
+pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    for value in values {
+        builder
+            .push(value)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+}
+
+/// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    for (key, value) in values {
+        builder
+            .push(key.to_owned(), value)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        let node = value?;
+        nodes
+            .try_push(node)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+    }
+    Ok(nodes)
+}
+
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
 /// action targeting one `(granularity, id)` pair in the `graph` domain — replaces the deleted
@@ -438,7 +494,7 @@ impl ArtifactApp for SpaceApp {
         InteractionTopology { domains }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let projection = doc.snapshot;
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale);

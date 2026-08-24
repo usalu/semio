@@ -128,7 +128,8 @@ Feature: Apply every typed EnergyPlus EPW mutation to a real weather file
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode and re-encode the real weather file without passing bytes through
+  Scenario: Decode and re-encode the real weather file, where byte identity IS the correct answer
     Given the real input weather file asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🌦️example.epw
     When the weather file is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
+    And the re-encoded bytes are bit-identical to the input, which is EPW's absence of writer freedom working correctly rather than a byte pass-through

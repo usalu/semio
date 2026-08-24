@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.kinds";
-/// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx) reads to auto-wire catalogue drag sources.
+/// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx)? reads to auto-wire catalogue drag sources.
 const PUZZLE5D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 //#endregion 🔖️Constants
 
@@ -51,7 +51,7 @@ fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> HashMap<Stri
     HashMap::from([(PUZZLE5D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
 }
 
-fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&str>) -> Vec<BuiltNode> {
+fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     let actions = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID);
     entries
         .iter()
@@ -65,8 +65,8 @@ fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&s
                     Some(kind_id.into()),
                     actions.action(action, Some(json!({ "partKind": kind_id }))),
                     &json!(puzzle5d_catalog_item_drag_data(kind_id, entry)),
-                ),
-                None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), catalog_kind_label(entry), Some(kind_id.into())),
+                )?,
+                None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), catalog_kind_label(entry), Some(kind_id.into()))?,
             }
         })
         .collect()
@@ -74,7 +74,7 @@ fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&s
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> BuiltNode {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let catalogs = envelope.document.kind_catalogs.clone().unwrap_or(json!({}));
     let slice = |key: &str| catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default();
     let mut part_entries = slice("parts");
@@ -87,11 +87,11 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> BuiltNode {
     let grips = slice("grips");
     let fasteners = slice("fasteners");
     let ropes = slice("ropes");
-    PanelTreeBuilder::new("puzzle5d-play-kinds")
-        .section_or_placeholder("puzzle5d-play-kinds.parts", Some(labels.parts.as_str().into()), !part_entries.is_empty(), kind_catalog_items("puzzle5d-play-kinds.parts", &part_entries, Some("addPartKind")), labels.none.as_str())
-        .section_or_placeholder("puzzle5d-play-kinds.grips", Some(labels.grips.as_str().into()), !grips.is_empty(), kind_catalog_items("puzzle5d-play-kinds.grips", &grips, None), labels.none.as_str())
-        .section_or_placeholder("puzzle5d-play-kinds.fasteners", Some(labels.fasteners.as_str().into()), !fasteners.is_empty(), kind_catalog_items("puzzle5d-play-kinds.fasteners", &fasteners, None), labels.none.as_str())
-        .section_or_placeholder("puzzle5d-play-kinds.ropes", Some(labels.ropes.as_str().into()), !ropes.is_empty(), kind_catalog_items("puzzle5d-play-kinds.ropes", &ropes, None), labels.none.as_str())
+    PanelTreeBuilder::new("puzzle5d-play-kinds")?
+        .section_or_placeholder("puzzle5d-play-kinds.parts", Some(labels.parts.as_str().into()), !part_entries.is_empty(), kind_catalog_items("puzzle5d-play-kinds.parts", &part_entries, Some("addPartKind")), labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-kinds.grips", Some(labels.grips.as_str().into()), !grips.is_empty(), kind_catalog_items("puzzle5d-play-kinds.grips", &grips, None), labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-kinds.fasteners", Some(labels.fasteners.as_str().into()), !fasteners.is_empty(), kind_catalog_items("puzzle5d-play-kinds.fasteners", &fasteners, None), labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-kinds.ropes", Some(labels.ropes.as_str().into()), !ropes.is_empty(), kind_catalog_items("puzzle5d-play-kinds.ropes", &ropes, None), labels.none.as_str())?
         .build()
 }
 //#endregion 🔖️Render

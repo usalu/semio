@@ -459,6 +459,107 @@ fn model_from_json(value: &Json) -> Result<Model, String> {
 }
 //#endregion 🔖️ItemParsing
 
+//#region 🔖️ItemRendering
+/// 🔢️ A JSON object built from `(key, value)` pairs, the shape every params grammar here speaks.
+#[cfg(feature = "oracles")]
+fn json_object(entries: Vec<(&str, Json)>) -> Json {
+    Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
+}
+
+#[cfg(feature = "oracles")]
+fn optional_number(value: Option<f64>) -> Option<Json> {
+    value.map(Json::Number)
+}
+
+#[cfg(feature = "oracles")]
+fn vertex_to_json(vertex: &Vertex) -> Json {
+    let mut entries = vec![("x", Json::Number(vertex.x)), ("y", Json::Number(vertex.y)), ("z", Json::Number(vertex.z))];
+    if let Some(w) = optional_number(vertex.w) {
+        entries.push(("w", w));
+    }
+    json_object(entries)
+}
+
+#[cfg(feature = "oracles")]
+fn texcoord_to_json(texcoord: &TexCoord) -> Json {
+    let mut entries = vec![("u", Json::Number(texcoord.u)), ("v", Json::Number(texcoord.v))];
+    if let Some(w) = optional_number(texcoord.w) {
+        entries.push(("w", w));
+    }
+    json_object(entries)
+}
+
+#[cfg(feature = "oracles")]
+fn normal_to_json(normal: &Normal) -> Json {
+    json_object(vec![("x", Json::Number(normal.x)), ("y", Json::Number(normal.y)), ("z", Json::Number(normal.z))])
+}
+
+#[cfg(feature = "oracles")]
+fn face_to_json(face: &Face) -> Json {
+    json_object(vec![(
+        "vertices",
+        Json::Array(
+            face.vertices
+                .iter()
+                .map(|corner| {
+                    let mut entries = vec![("vertex", Json::Number(corner.vertex as f64))];
+                    if let Some(texcoord) = corner.texcoord {
+                        entries.push(("texcoord", Json::Number(texcoord as f64)));
+                    }
+                    if let Some(normal) = corner.normal {
+                        entries.push(("normal", Json::Number(normal as f64)));
+                    }
+                    json_object(entries)
+                })
+                .collect(),
+        ),
+    )])
+}
+
+#[cfg(feature = "oracles")]
+fn membership_to_json(entries: &[(String, Vec<usize>)]) -> Json {
+    Json::Array(entries.iter().map(|(name, faces)| json_object(vec![("name", Json::String(name.clone())), ("faces", Json::Array(faces.iter().map(|index| Json::Number(*index as f64)).collect()))])).collect())
+}
+
+/// 📦️ The exact `snapshot` payload [`model_from_json`] consumes, emitted from an independently
+/// parsed model — the round trip `set-snapshot`'s own inverse needs. Without it an adapter has no
+/// honest way to say "put the whole document back": it would have to hand the pristine input bytes
+/// straight to the comparison, which asserts nothing about the reference at all.
+#[cfg(feature = "oracles")]
+fn model_to_json(model: &Model) -> Json {
+    let mut entries = vec![
+        ("vertices", Json::Array(model.vertices.iter().map(vertex_to_json).collect())),
+        ("texcoords", Json::Array(model.texcoords.iter().map(texcoord_to_json).collect())),
+        ("normals", Json::Array(model.normals.iter().map(normal_to_json).collect())),
+        ("faces", Json::Array(model.faces.iter().map(face_to_json).collect())),
+        ("groups", membership_to_json(&model.groups)),
+        ("objects", membership_to_json(&model.objects)),
+        ("usemtlRanges", Json::Array(model.usemtl.iter().map(|(from, material)| json_object(vec![("faceIndexFrom", Json::Number(*from as f64)), ("material", Json::String(material.clone()))])).collect())),
+        (
+            "smoothingGroups",
+            Json::Array(
+                model
+                    .smoothing
+                    .iter()
+                    .map(|(from, group)| {
+                        let mut fields = vec![("faceIndexFrom", Json::Number(*from as f64))];
+                        if let Some(value) = group {
+                            fields.push(("group", Json::Number(*value as f64)));
+                        }
+                        json_object(fields)
+                    })
+                    .collect(),
+            ),
+        ),
+        ("unknownStatements", Json::Array(model.unknown.iter().map(|raw| json_object(vec![("raw", Json::String(raw.clone()))])).collect())),
+    ];
+    if let Some(lib) = &model.mtllib {
+        entries.push(("mtllib", Json::String(lib.clone())));
+    }
+    json_object(entries)
+}
+//#endregion 🔖️ItemRendering
+
 //#region 🔖️Apply
 /// 🦠️ Applies one declared kind to the independently-parsed model — one arm per `ObjMutation`
 /// variant this subset's catalog declares, matched by its kebab-case `KINDS` spelling.
@@ -625,9 +726,57 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     Ok(render(&model).into_bytes())
 }
 
+/// 📦️ The whole document as the `snapshot` payload `set-snapshot` carries, read independently of
+/// this subset's own `ObjSnapshot`. This is what makes `set-snapshot`'s INVERSE a real mutation
+/// (replace the document with the original one) instead of a hand-back of the pristine input bytes.
+#[cfg(feature = "oracles")]
+pub fn oracle_snapshot_json(input: &[u8]) -> Result<Json, String> {
+    let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
+    Ok(model_to_json(&parse(text)?))
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_snapshot_json(_input: &[u8]) -> Result<Json, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
 //#endregion 🔖️Dispatch
+
+//#region 🧪️Tests
+#[cfg(all(test, feature = "oracles"))]
+mod tests {
+    use super::*;
+
+    const DOCUMENT: &str = "# a retained comment\nmtllib pattern.mtl\nv 0 0 0\nv 1 0 0\nv 0 1 0\nvt 0 0\nvt 1 0\nvt 0 1\nvn 0 0 1\ng band\no cap\nusemtl pattern\ns 1\nf 1/1/1 2/2/1 3/3/1\n";
+
+    fn spec(kind: &str, params: Json) -> Json {
+        Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
+    }
+
+    #[test]
+    fn the_emitted_snapshot_is_what_set_snapshot_consumes() {
+        let bytes = DOCUMENT.as_bytes();
+        let snapshot = oracle_snapshot_json(bytes).unwrap();
+        let replaced = oracle_apply_mutation(bytes, &spec("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]))).unwrap();
+        assert_eq!(String::from_utf8(replaced).unwrap(), render(&parse(DOCUMENT).unwrap()), "set-snapshot fed the document's own emitted snapshot must reproduce that document");
+    }
+
+    #[test]
+    fn the_emitted_snapshot_carries_every_retained_concern() {
+        let snapshot = oracle_snapshot_json(DOCUMENT.as_bytes()).unwrap();
+        assert_eq!(snapshot.array("vertices").len(), 3);
+        assert_eq!(snapshot.array("faces").len(), 1);
+        assert_eq!(snapshot.str("mtllib"), "pattern.mtl");
+        assert_eq!(snapshot.array("groups").len(), 1);
+        assert_eq!(snapshot.array("objects").len(), 1);
+        assert_eq!(snapshot.array("usemtlRanges").len(), 1);
+        assert_eq!(snapshot.array("smoothingGroups").len(), 1);
+        assert_eq!(snapshot.array("unknownStatements").len(), 1);
+    }
+}
+//#endregion 🧪️Tests

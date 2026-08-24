@@ -72,6 +72,14 @@ impl Default for SemioImageMutation {
     }
 }
 
+/// 🏷️ Kebab-case spelling of every `SemioImageMutation` variant, in declaration order — the
+/// vocabulary the `semio-v1-image` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-semio-image`'s exhaustive test case measures itself against. This enum is hand-rolled
+/// (no `#[derive(dsl::Mutations)]`, so there is no generated `kinds()` to read), which is why
+/// `kinds_match_the_enum_and_the_catalog` below pins the list with a WILDCARD-FREE match: adding a
+/// variant without extending `KINDS` stops compiling rather than silently shrinking the catalog.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-dimensions", "set-colorspace", "set-bit-depth", "set-icc", "insert-frame", "remove-frame", "move-frame", "set-frame-delay", "set-frame-pixels", "set-metadata-entry", "remove-metadata-entry"];
+
 impl Mutation<SemioImageSnapshot> for SemioImageMutation {
     type Diff = SemioImageDiff;
 
@@ -147,6 +155,17 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
 pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> protocol::MutationOutcome<SemioImageDiff> {
     let outcome = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ Free-function face of [`Mutation::inverse`], named only in this subset's own reachable types.
+/// `protocol` is a private `extern crate semio_framework_os_kernel as protocol;` alias that nothing
+/// re-exports, so an owner-root test adapter compiled as an external crate cannot bring the
+/// `Mutation` trait into scope to call the method form — the structural gap wave 7 recorded for
+/// `kit`/`object`/`text`/`table`, and the same thin-wrapper remedy `kit` adopted. Used by
+/// `mutate-semio-image`'s `inverse-*` scenarios.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(mutation, base)
 }
 //#endregion 🔖️Mutation
 
@@ -487,6 +506,58 @@ mod tests {
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
+
+    //#region 🔖️CatalogLaw
+    /// 🏷️ The wildcard-free spelling map that makes [`KINDS`] compiler-checked: a new variant has
+    /// no arm here, so the crate stops building until both this match and `KINDS` name it.
+    fn kind_of(mutation: &SemioImageMutation) -> &'static str {
+        match mutation {
+            SemioImageMutation::NoMutation => "no-mutation",
+            SemioImageMutation::SetSnapshot { .. } => "set-snapshot",
+            SemioImageMutation::SetDimensions { .. } => "set-dimensions",
+            SemioImageMutation::SetColorspace { .. } => "set-colorspace",
+            SemioImageMutation::SetBitDepth { .. } => "set-bit-depth",
+            SemioImageMutation::SetIcc { .. } => "set-icc",
+            SemioImageMutation::InsertFrame { .. } => "insert-frame",
+            SemioImageMutation::RemoveFrame { .. } => "remove-frame",
+            SemioImageMutation::MoveFrame { .. } => "move-frame",
+            SemioImageMutation::SetFrameDelay { .. } => "set-frame-delay",
+            SemioImageMutation::SetFramePixels { .. } => "set-frame-pixels",
+            SemioImageMutation::SetMetadataEntry { .. } => "set-metadata-entry",
+            SemioImageMutation::RemoveMetadataEntry { .. } => "remove-metadata-entry",
+        }
+    }
+
+    /// 🏷️ `KINDS` must name every declared variant, in declaration order and in the exact spelling
+    /// the committed `semio-v1-image` catalog carries — the framework never parses Rust, so this is
+    /// the only thing that keeps the catalog honest against the enum.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let one_per_variant = [
+            SemioImageMutation::NoMutation,
+            SemioImageMutation::SetSnapshot { snapshot: SemioImageSnapshot::default() },
+            SemioImageMutation::SetDimensions { width: 4, height: 2 },
+            SemioImageMutation::SetColorspace { colorspace: SemioColorspace::Rgba },
+            SemioImageMutation::SetBitDepth { bit_depth: 16 },
+            SemioImageMutation::SetIcc { icc: None },
+            SemioImageMutation::InsertFrame { index: 0, frame: SemioImageFrame::default() },
+            SemioImageMutation::RemoveFrame { index: 0 },
+            SemioImageMutation::MoveFrame { from: 1, to: 0 },
+            SemioImageMutation::SetFrameDelay { index: 0, delay_ms: 40 },
+            SemioImageMutation::SetFramePixels { index: 0, rgba8: Vec::new() },
+            SemioImageMutation::SetMetadataEntry { key: "Author".into(), value: "semio".into() },
+            SemioImageMutation::RemoveMetadataEntry { key: "Author".into() },
+        ];
+        assert_eq!(KINDS.len(), one_per_variant.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, mutation) in KINDS.iter().zip(one_per_variant.iter()) {
+            assert_eq!(*kind, kind_of(mutation), "KINDS must follow the enum's own declaration order and kebab-case spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🔖️CatalogLaw
 }
 //#endregion 🔖️Tests
 

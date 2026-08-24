@@ -7,7 +7,8 @@
 //! INDEPENDENT `tobj` reader before the `semantic-mesh-v1` profile compares them.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::obj::standards::v3_0::subsets::any::oracle_apply_mutation;
+use semio_s_plugin_stdio_test_oracle::artifacts::obj::standards::v3_0::subsets::any::{oracle_apply_mutation, oracle_snapshot_json};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, reparsed_not_copied, round_trip_preserves_within};
 use semio_s_plugin_stdio_test_oracle::mesh::project_obj;
 
 //#region 🔖️Kinds
@@ -70,6 +71,14 @@ fn json_spec(kind: &str, params: Json) -> Json {
 }
 //#endregion 🔖️JsonBuild
 
+//#region 🔖️Profile
+/// 📏️ `semantic-mesh-v1`'s own declared tolerances (`../../../../🧪️oracle/🔣️component.json`),
+/// mirrored here so an in-handler law check is exactly as strict as the profile the case is
+/// measured by — never stricter, which would invent a failure the comparison itself would forgive.
+const MESH_WRITER_FREEDOM: &[&str] = &["generator", "comment", "byteLength", "fileSize", "precision", "solidName"];
+const MESH_TOLERANCE: f64 = 1e-5;
+//#endregion 🔖️Profile
+
 //#region 🔖️Inverse
 /// ↩️ The original real fixture's 7 retained comment lines, in file order (`🧫️fixtures/
 /// 🧊️pattern-sphere.obj`'s own header plus its trailing orphan-vertex note) — `set-unknown-
@@ -88,10 +97,13 @@ const ORIGINAL_UNKNOWN_STATEMENTS: [&str; 7] = [
 /// pristine fixture's own known real values — index/name-aware, mirroring the same per-variant
 /// `ObjMutation::inverse()` semantics `../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
 /// 🦀️component.rs` documents, computed independently here since neither the oracle nor this adapter
-/// can reach that subject-side method. `set-snapshot`'s inverse is handled by its caller directly
-/// (restoring the pristine original bytes), never routed through this function.
-fn inverse_spec(kind: &str) -> Json {
-    match kind {
+/// can reach that subject-side method. `set-snapshot`'s inverse is a REAL `set-snapshot` carrying
+/// the original document's own independently emitted payload (`oracle_snapshot_json`) — never a
+/// hand-back of the pristine input bytes, which would let the scenario pass without the reference
+/// re-serializing anything at all, which is why it needs `base` rather than the kind alone.
+fn inverse_spec(kind: &str, base: &[u8]) -> Result<Json, String> {
+    Ok(match kind {
+        "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", oracle_snapshot_json(base)?)])),
         "no-mutation" => json_spec("no-mutation", json_obj(vec![])),
         "insert-vertex" => json_spec("remove-vertex", json_obj(vec![("index", json_num(8449.0))])),
         "remove-vertex" => json_spec("insert-vertex", json_obj(vec![("index", json_num(8448.0)), ("vertex", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))])),
@@ -127,7 +139,7 @@ fn inverse_spec(kind: &str) -> Json {
             json_spec("set-unknown-statements", json_obj(vec![("unknownStatements", Json::Array(lines))]))
         }
         other => json_spec(other, json_obj(vec![])),
-    }
+    })
 }
 //#endregion 🔖️Inverse
 
@@ -140,24 +152,34 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
+/// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase: every kind — INCLUDING
+/// `set-snapshot`, which now inverts through a real `set-snapshot` of the original document instead
+/// of returning the pristine bytes — is applied forward and then undone, and the restored mesh's
+/// independent `tobj` projection must equal the REAL original's own. `semantic-mesh-v1`'s own
+/// tolerance (1e-5, `generator`/`comment`/`precision` writer freedom) is what the comparison uses,
+/// never a stricter one.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
-    let restored = if kind == "set-snapshot" {
-        input.clone()
-    } else {
-        let mutated = oracle_apply_mutation(&input, &spec)?;
-        oracle_apply_mutation(&mutated, &inverse_spec(&kind))?
-    };
+    let mutated = oracle_apply_mutation(&input, &spec)?;
+    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&kind, &input)?)?;
     let projection = project_obj(&restored)?;
+    inverse_restores_within(&kind, &projection, &project_obj(&input)?, MESH_WRITER_FREEDOM, MESH_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
+/// 🔁️ The identity law, both halves asserted in role: parsing the real fixture and re-rendering the
+/// whole OBJ grammar from the parsed model alone must preserve the mesh projection, and must NOT
+/// hand back the input bytes — `render` re-derives every statement and emits the retained comment
+/// lines after the geometry rather than where the file carried them, so bit-identical output would
+/// mean nothing was parsed.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_apply_mutation(&input, &json_spec("no-mutation", json_obj(vec![])))?;
+    reparsed_not_copied(&bytes, &input)?;
     let projection = project_obj(&bytes)?;
+    round_trip_preserves_within(&projection, &project_obj(&input)?, MESH_WRITER_FREEDOM, MESH_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -311,16 +333,16 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
+    /// ↩️ Every kind, INCLUDING `set-snapshot`, is genuinely applied forward and then undone through
+    /// this repository's own `ObjMutation` pipeline — `set-snapshot` inverts through a real
+    /// `set-snapshot` carrying the original document's independently emitted payload, never through
+    /// a hand-back of the pristine input bytes.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
-        let restored = if kind == "set-snapshot" {
-            input.clone()
-        } else {
-            let mutated = apply_and_encode(&input, &spec)?;
-            apply_and_encode(&mutated, &inverse_spec(&kind))?
-        };
+        let mutated = apply_and_encode(&input, &spec)?;
+        let restored = apply_and_encode(&mutated, &inverse_spec(&kind, &input)?)?;
         let projection = project_obj(&restored)?;
         Ok(Outcome::with_raw(restored, projection))
     }

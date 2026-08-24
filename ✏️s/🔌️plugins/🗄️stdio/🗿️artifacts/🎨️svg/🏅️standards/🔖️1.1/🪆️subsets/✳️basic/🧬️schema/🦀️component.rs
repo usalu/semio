@@ -6,11 +6,22 @@
 //! present per `🔣️taxonomy.json`'s `subsetChildDirs`, without duplicating the schema definition.
 
 pub use crate::artifacts::svg::standards::v1_1::subsets::any::schema::*;
+
+//#region 🧬️Mutations
+/// 🧬️ THIS subset's own mutation vocabulary — `SvgBasicMutation`, not the `✳️any` subset's
+/// `SvgMutation` the glob re-export above would otherwise supply. Declared here rather than in the
+/// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
+/// over the glob import, which is exactly the intent.
+#[path = "🧬️mutations/🦀️component.rs"]
+pub mod mutations;
+pub use mutations::{apply_svg_basic_mutation, SvgBasicMutation, KINDS as BASIC_MUTATION_KINDS};
+//#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::set_element_attr;
     use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::check_svg_basic_conformance;
-    use crate::artifacts::svg::{SvgDiff, SvgMutation, SvgSnapshot};
+    use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::mutations::{apply_svg_basic_mutation, SvgBasicMutation};
+    use crate::artifacts::svg::{SvgDiff, SvgSnapshot};
     use dsl::Diagnostic;
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -22,7 +33,7 @@ pub mod derived_construction {
 
     impl ArtifactBuilder for SvgBasicBuilderConstruction {
         type Snapshot = SvgSnapshot;
-        type Mutation = SvgMutation;
+        type Mutation = SvgBasicMutation;
         type Diff = SvgDiff;
 
         async fn empty() -> Self {
@@ -42,7 +53,7 @@ pub mod derived_construction {
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_svg_basic_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
@@ -93,7 +104,7 @@ pub mod derived_construction {
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
                 children.push(XmlNode::Element { name: "filter".into(), attrs: vec![XmlAttr { name: "id".into(), value: "f1".into() }], children: vec![XmlNode::Element { name: "feMorphology".into(), attrs: vec![], children: vec![] }] });
             }
-            let (mutated, _diff) = SvgBasicBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgMutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = SvgBasicBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgBasicMutation::SetSnapshot { snapshot });
             let err = mutated.build().expect_err("a feMorphology primitive must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_FILTER_PRIMITIVE));
         }

@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the oracle registration, the comparison profile and the catalog for `s.stdio.json@rfc8259/i-json` live here rather than in a shared manifest. The reference runs in PYTHON, not Rust: see the oracle entry's own rationale.",
+  "oracles": [
+    {
+      "id": "simplejson-json-rfc8259-i-json-mutate",
+      "ecosystem": "python",
+      "package": "simplejson",
+      "version": "4.1.1",
+      "capabilities": ["json-rfc8259-i-json-mutate"],
+      "comparisonProfiles": ["semantic-i-json-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/simplejson/simplejson",
+      "rationale": "RFC 7493 I-JSON is a restriction of the JSON VALUE SPACE, so the reference has to be a codec that (a) reads and writes RFC 8259 text and (b) surfaces the three facts the profile turns on — the ORDERED member list of every object including duplicate names, the exact number LEXEME, and the decoded string — none of which a codec that eagerly normalizes into a hash map can report. `simplejson` does all three: `object_pairs_hook` hands back `[(name, value), ...]` in document order with duplicates intact (a `dict`-producing parser silently collapses them, which would make RFC 7493 §2.3 unobservable), `parse_int`/`parse_float` hand back the raw lexeme so §2.2's ±(2^53−1) bound is checked on the digits rather than through a lossy double, and it re-serializes, so every one of this subset's ten kinds is genuinely DIFFERENTIAL rather than merely read-back. It is deliberately not CPython's stdlib `json`: that module is registrable only as the package name `json`, which the platform's own production-purity probe would then match against every `import json` in the repository, and a probe that cannot distinguish a reference library from the language's standard library is not a probe. It is deliberately not `serde_json` either: this subset's ✳️any parent declares `impl From<serde_json::Value> for JsonValue` in production, so a `serde_json` differential would compare this implementation against something it already converts from. `simplejson` has neither relationship — no file in this repository imports it, and this subset's codec has no conversion path to or from its types.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle"
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-i-json-v1",
+      "description": "I-JSON documents compared structurally: array order IS normative and is never sorted, object member order is NOT (RFC 8259 §4 leaves it to the producer, and RFC 7493 §2.3 only requires names to be unique — so this subset's own insertion-order codec and the reference's own emission order never register as a difference). Numbers are compared by value with a 1e-12 tolerance rather than by lexeme: RFC 8259 §6 permits arbitrary precision and this subset's snapshot keeps the original lexeme, while the reference re-emits a shortest-round-trip decimal, so `2.7` and `2.70` are the same number and only a real numeric difference is one. The tolerance is representation noise only — it is far below the smallest magnitude difference any of this case's mutations makes.",
+      "arrays": "ordered",
+      "tolerance": 1e-12
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "json-rfc8259-i-json",
+      "capability": "json-rfc8259-i-json-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "set-top-level", "upsert-member", "remove-member", "rename-member", "set-safe-number", "set-string", "insert-array-element", "remove-array-element"]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+[package]
+name = "subject"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+protocol = { path = "../protocol" }
+serde = { version = "1", features = ["derive"] }
+semio-framework-async-macros = { path = "../async-macros" }

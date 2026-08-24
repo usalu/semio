@@ -82,6 +82,28 @@ pub enum SemioAnimationMutation {
         value: AnimValue,
     },
 }
+
+/// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.animation`, in enum
+/// declaration order — what the `mutate-semio-animation` case's completeness gate counts against
+/// and what `../../🧪️oracle/🔣️component.json`'s catalog repeats. Unlike its audio/video siblings
+/// this subset's wire keywords are the two-letter `OP_KEYWORDS` tags (`IT`, `KV`, …), so the two
+/// tables are related only by position; `kinds_match_the_enum_and_the_catalog` below asserts that
+/// positional agreement rather than string equality.
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "insert-timeline",
+    "remove-timeline",
+    "set-timeline-name",
+    "insert-channel",
+    "remove-channel",
+    "set-channel-target",
+    "set-channel-interpolation",
+    "insert-keyframe",
+    "remove-keyframe",
+    "set-keyframe-time",
+    "set-keyframe-value",
+];
 //#endregion 🔖️Mutation
 
 //#region 🔖️DiffBuilders
@@ -195,6 +217,16 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
 pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation) -> protocol::MutationOutcome<SemioAnimationDiff> {
     let outcome = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ Free-function face of [`SemioAnimationMutation`]'s own `protocol::Mutation::inverse`. `Mutation` is
+/// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `protocol` in
+/// `📦️glue.rs`) and is therefore not nameable by a consumer that links only this crate — a
+/// generated test host being the concrete case. Paired with [`apply_semio_animation_mutation`] it makes the
+/// undo law reachable without importing a trait the caller cannot name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_animation_mutation(mutation: &SemioAnimationMutation, base: &SemioAnimationSnapshot) -> Vec<SemioAnimationMutation> {
+    <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, base)
 }
 
 //#region SnapshotLit
@@ -429,6 +461,27 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// 🧪️ `kinds_match_the_enum_and_the_catalog`: `KINDS` names every declared variant, at the
+    /// position `variant_ordinal` assigns it, and every one of those names also appears in the
+    /// committed oracle manifest's catalog. The bijection against `demo_mutation_cases` is what
+    /// makes a newly added variant fail here instead of silently shrinking the vocabulary
+    /// `mutate-semio-animation` claims to cover.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        assert_eq!(KINDS.len(), OP_KEYWORDS.len(), "KINDS must name exactly one kind per declared variant, same length as the op tag table");
+        let mut seen = vec![false; KINDS.len()];
+        for mutation in demo_mutation_cases() {
+            let ordinal = variant_ordinal(&mutation) as usize;
+            assert!(!seen[ordinal], "ordinal {ordinal} is represented twice — demo_mutation_cases must carry exactly one case per declared variant");
+            seen[ordinal] = true;
+        }
+        assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in demo_mutation_cases");
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
 
     /// 🧪️ mutation_diff_law: `m.diff(base).diff().apply(base) == { apply_x_mutation(&mut s, m); s }`.
     #[semio_framework_async_macros::async_test]

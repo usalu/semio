@@ -48,7 +48,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// `handle()` already treats as "open the confirm/staged-form dialog first" (see `🎮️commands/🏷️rename-
 /// space`, `🔗️share-space`, `🗑️delete-space`), so a row button never bypasses those dialogs.
 async fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> Vec<TableRowAction> {
-    let action = |action_id: &str| -> ActionDescriptor { ActionFactory::new(S_HOME_CONTROLLER_ID).action(action_id, Some(serde_json::json!({ "spaceId": row.id }))) };
+    let action = |action_id: &str| -> ActionDescriptor { ActionFactory::new(S_HOME_CONTROLLER_ID).action(action_id, Some(serde_json::json!({ "spaceId": row.id })))? };
     let mut actions = vec![TableRowAction { icon_id: IconName::FolderOpen, label: Some(labels.action_open.into()), action: action("openSpace") }];
     if row.origin == "hub" {
         actions.push(TableRowAction { icon_id: IconName::Pencil, label: Some(labels.action_rename.into()), action: action("renameSpace") });
@@ -62,7 +62,7 @@ async fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> Vec<Tab
 /// in ISOLATION from `crate::list_all_space_catalog_entries()`'s process-global catalog singleton
 /// (shared across every test in this crate's test binary — genuinely never guaranteed empty once any
 /// other test has created a studio, which is why `render` itself cannot be probed for "empty" reliably).
-async fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> UiNode {
+async fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if rows.is_empty() {
         return semio_framework_plugin::ui_text(semio_framework_plugin::Label::data(table.empty_message.as_str().to_string()));
     }
@@ -104,23 +104,23 @@ async fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, acti
 /// hosts already get it. Two empty separators (measured: ~6.4px of clearance each from the stack's own
 /// `gap-double`) reliably clear the dead-line with margin; confirmed live via Playwright-style
 /// `elementFromPoint` hit-testing at the button's own center before/after.
-async fn window_content_dead_line_spacer() -> UiNode {
+async fn window_content_dead_line_spacer() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     UiNode::Separator(UiSeparatorNode { presence: Default::default(), menu: None })
 }
 
-async fn create_space_button(actions: &SHomeLabels) -> UiNode {
+async fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     ui_control_to_node(UiControlNode::Button(UiButtonNode {
         id: Some("s-home-create-space".into()),
         icon_id: IconName::Plus,
         label: actions.action_create.into(),
-        action: ActionFactory::new(S_HOME_CONTROLLER_ID).action("createSpace", None),
+        action: ActionFactory::new(S_HOME_CONTROLLER_ID).action("createSpace", None)?,
         style: None,
         presence: Default::default(),
         menu: None,
     }))
 }
 
-pub async fn render(cfg: &HomeConfig) -> UiNode {
+pub async fn render(cfg: &HomeConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table = semio_framework_plugin::resolve_labels_for_locale::<HomeTableLabels>(&cfg.locale);
     let actions = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.locale);
     let table_node = render_rows(&crate::home_space_rows(&cfg.directory()), table, actions);
@@ -243,7 +243,7 @@ mod tests {
 
     /// 🧪️ `render`'s own composition, isolated from `crate::list_all_space_catalog_entries()`'s
     /// process-global singleton — mirrors `render_rows`'s own isolation rationale above.
-    async fn render_rows_wrapped_for_test(rows: &[crate::HomeSpaceRow]) -> UiNode {
+    async fn render_rows_wrapped_for_test(rows: &[crate::HomeSpaceRow]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
         let table_node = render_rows(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN);
         ui_stack_vertical(vec![window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_space_button(&SHomeLabels::NATIVE_EN), table_node])
     }

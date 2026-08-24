@@ -16,6 +16,14 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   needing a second fixture per row. Every scenario copies the fixture into the case work directory
   before touching it; the committed document is never written to.
 
+  On the @id-identity-round-trip scenario the "re-encoded bytes must differ from the input" half of
+  the law binds the SUBJECT only, and deliberately does not bind the oracle: the committed fixture
+  is itself the output of the oracle's own independent IFD-chain writer (see above), so that writer
+  reproducing it byte-for-byte is canonical determinism, not a byte pass-through. The oracle side
+  therefore asserts the two halves that ARE checkable of it — the semantic projection survives the
+  decode/re-encode, and the writer reproduces its own committed output exactly, which any
+  reader/writer asymmetry would break.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

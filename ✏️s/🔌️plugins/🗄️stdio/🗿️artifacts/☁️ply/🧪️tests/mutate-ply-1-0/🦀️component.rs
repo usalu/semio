@@ -8,6 +8,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::ply::standards::v1_0::subsets::any::{oracle_apply_mutation, project_ply};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `PlyMutation::KINDS` (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/
@@ -16,6 +17,13 @@ use semio_s_plugin_stdio_test_oracle::artifacts::ply::standards::v1_0::subsets::
 /// coverage against the `ply-1-0-any` catalog) is what keeps the two lists honest against each other.
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"];
 //#endregion 🔖️Kinds
+
+//#region 🔖️Profile
+/// 📏️ `semantic-ply-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/
+/// 🧪️oracle/🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as
+/// the profile the case is measured by — never stricter.
+const PLY_TOLERANCE: f64 = 1e-5;
+//#endregion 🔖️Profile
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🧊️pattern-sphere.ply";
@@ -78,10 +86,14 @@ const VERTEX_0_ROW: [f64; 8] = [0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.00390625, 0.0]
 /// pristine fixture's own known real values — index/name-aware, mirroring the same per-variant
 /// `PlyMutation::inverse()` semantics `../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
 /// 🦀️component.rs` documents, computed independently here since neither the oracle nor this adapter
-/// can reach that subject-side method. `set-snapshot`'s inverse is handled by its caller directly
-/// (restoring the pristine original bytes), never routed through this function.
-fn inverse_spec(kind: &str) -> Json {
-    match kind {
+/// can reach that subject-side method. `set-snapshot`'s inverse is a REAL `set-snapshot` carrying
+/// the original document's own independent projection — which is exactly the payload shape this
+/// subset's oracle consumes (`ply_from_json` reads the `{format, comments, elements}` object
+/// `project_ply` emits) — never a hand-back of the pristine input bytes, which would let the
+/// scenario pass without `ply-rs` re-serializing anything at all.
+fn inverse_spec(kind: &str, base: &[u8]) -> Result<Json, String> {
+    Ok(match kind {
+        "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", project_ply(base)?)])),
         "no-mutation" => json_spec("no-mutation", json_obj(vec![])),
         "set-format" => json_spec("set-format", json_obj(vec![("format", json_str("ascii"))])),
         "insert-comment" => json_spec("remove-comment", json_obj(vec![("index", json_num(0.0))])),
@@ -92,7 +104,7 @@ fn inverse_spec(kind: &str) -> Json {
         "remove-row" => json_spec("insert-row", json_obj(vec![("elementName", json_str("vertex")), ("index", json_num(8448.0)), ("row", json_row(VERTEX_0_ROW.iter().map(|v| json_num(*v)).collect()))])),
         "set-row-property" => json_spec("set-row-property", json_obj(vec![("elementName", json_str("vertex")), ("rowIndex", json_num(0.0)), ("propertyName", json_str("x")), ("value", json_num(0.0))])),
         other => json_spec(other, json_obj(vec![])),
-    }
+    })
 }
 //#endregion 🔖️Inverse
 
@@ -105,24 +117,33 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
+/// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase: every kind —
+/// INCLUDING `set-snapshot`, which now inverts through a real `set-snapshot` of the original
+/// document instead of returning the pristine bytes — is applied forward and then undone, and the
+/// restored document's independent `ply-rs` projection must equal the REAL original's own, within
+/// `semantic-ply-v1`'s own declared tolerance and no stricter.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
-    let restored = if kind == "set-snapshot" {
-        input.clone()
-    } else {
-        let mutated = oracle_apply_mutation(&input, &spec)?;
-        oracle_apply_mutation(&mutated, &inverse_spec(&kind))?
-    };
+    let mutated = oracle_apply_mutation(&input, &spec)?;
+    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&kind, &input)?)?;
     let projection = project_ply(&restored)?;
+    inverse_restores_within(&kind, &projection, &project_ply(&input)?, &[], PLY_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
+/// 🔁️ The identity law, both halves asserted in role: `ply-rs` parses the real document into its
+/// own `Ply<DefaultElement>` and re-serializes from that model alone, so the projection must be
+/// preserved AND the output must not be the input bytes back — the writer re-derives the whole
+/// header and re-formats every ASCII payload value, so bit-identical output would mean nothing was
+/// parsed.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_apply_mutation(&input, &json_spec("no-mutation", json_obj(vec![])))?;
+    reparsed_not_copied(&bytes, &input)?;
     let projection = project_ply(&bytes)?;
+    round_trip_preserves_within(&projection, &project_ply(&input)?, &[], PLY_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -337,16 +358,16 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
+    /// ↩️ Every kind, INCLUDING `set-snapshot`, is genuinely applied forward and then undone through
+    /// this repository's own `PlyMutation` pipeline — `set-snapshot` inverts through a real
+    /// `set-snapshot` carrying the original document's independent projection, never through a
+    /// hand-back of the pristine input bytes.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let kind = json_str(&spec, "kind").unwrap_or_default();
-        let restored = if kind == "set-snapshot" {
-            input.clone()
-        } else {
-            let mutated = apply_and_encode(&input, &spec)?;
-            apply_and_encode(&mutated, &inverse_spec(&kind))?
-        };
+        let mutated = apply_and_encode(&input, &spec)?;
+        let restored = apply_and_encode(&mutated, &inverse_spec(&kind, &input)?)?;
         let projection = project_ply(&restored)?;
         Ok(Outcome::with_raw(restored, projection))
     }

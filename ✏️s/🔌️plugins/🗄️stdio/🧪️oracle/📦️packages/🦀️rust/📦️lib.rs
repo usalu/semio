@@ -11,6 +11,12 @@
 //! production target enables.
 
 //#region 🔖️Modules
+// ⚖️ The metamorphic laws every mutation case's `inverse-<kind>` and `identity-round-trip`
+// scenarios claim, made assertable in role. Format-neutral and dependency-free — it knows the shape
+// of the argument, never a format — so it sits beside the family modules rather than inside one.
+#[path = "../../⚖️law/🦀️component.rs"]
+pub mod law;
+
 #[path = "../../📄️document/🦀️component.rs"]
 pub mod document;
 
@@ -28,6 +34,13 @@ pub mod tabular;
 
 #[path = "../../🧊️mesh/🦀️component.rs"]
 pub mod mesh;
+
+// 📰 Shared markup reference machinery (quick-xml tree, SVG geometry grammars, semantic
+// projection). Contributed for the 🎨️svg 1.1 ✳️tiny and ✳️basic subset oracles, which are two
+// profile restrictions of ONE schema and therefore genuinely share every parse, write, address
+// and projection step — the family-module rule, not a copy in each subset.
+#[path = "../../📰markup/🦀️component.rs"]
+pub mod markup;
 //#endregion 🔖️Modules
 
 //#region 🔖️Artifacts
@@ -156,6 +169,22 @@ pub mod artifacts {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ The conformance-class subset — its oracle sits at the same taxonomy address as the
+                    // implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod strict {
+                        #[path = "../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ The conformance-class subset — its oracle sits at the same taxonomy address as the
+                    // implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod transitional {
+                        #[path = "../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -302,10 +331,34 @@ pub mod artifacts {
             #[path = "."]
             pub mod v2x3 {
                 #[path = "."]
+                pub mod reference {
+                    #[path = "../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🧪️oracle/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+                #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod cobie {
+                        #[path = "../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod cv20 {
+                        #[path = "../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod sav {
+                        #[path = "../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -531,6 +584,22 @@ pub mod artifacts {
                         mod component;
                         pub use component::*;
                     }
+                    // 🏅️ The conformance-class subset — its oracle sits at the same taxonomy address as the
+                    // implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod strict {
+                        #[path = "../../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ The conformance-class subset — its oracle sits at the same taxonomy address as the
+                    // implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod transitional {
+                        #[path = "../../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
                 }
             }
         }
@@ -582,6 +651,18 @@ pub mod artifacts {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod tiny {
+                        #[path = "../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod basic {
+                        #[path = "../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -675,6 +756,22 @@ pub mod artifacts {
                         mod component;
                         pub use component::*;
                     }
+                    // 🏅️ The conformance-class subset — its oracle sits at the same taxonomy address as the
+                    // implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod strict {
+                        #[path = "../../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ The conformance-class subset — its oracle sits at the same taxonomy address as the
+                    // implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod transitional {
+                        #[path = "../../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
                 }
             }
         }
@@ -708,6 +805,12 @@ pub mod artifacts {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod iso21320 {
+                        #[path = "../../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }

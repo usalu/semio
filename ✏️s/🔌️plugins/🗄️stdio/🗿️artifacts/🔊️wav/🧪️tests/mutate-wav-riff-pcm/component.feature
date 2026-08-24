@@ -18,6 +18,16 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
   anywhere in the pipeline). This is the audio-format cousin of an optical film soundtrack: real
   captured brightness reused as a real captured amplitude, not a computed tone.
 
+  On the @id-identity-round-trip scenario the "re-encoded bytes must differ from the input" half of
+  the law binds the SUBJECT only, and deliberately does not bind the oracle. RIFF/WAVE 16-bit PCM
+  has exactly one canonical layout for a recording carrying no auxiliary chunks — a 44-byte
+  RIFF/fmt /data header followed by the samples — and this fixture is precisely that (mono, 8000 Hz,
+  16-bit, data at offset 44, no LIST or fact chunk). The reference writer reproducing it
+  byte-for-byte is the format being canonical, not the input being copied. The oracle side therefore
+  asserts the two halves that ARE checkable of it: the semantic projection survives the
+  decode/re-encode, and the reference codec reproduces that canonical layout exactly — a dropped
+  chunk, a miscounted sample or a wrong byte rate would all move the bytes.
+
   Every scenario copies the immutable fixture into the case work directory before touching it; the
   committed fixture is never written to. The reference implementation (`hound`) is used only by the
   test oracle, and both results are read back by an INDEPENDENT reader before the

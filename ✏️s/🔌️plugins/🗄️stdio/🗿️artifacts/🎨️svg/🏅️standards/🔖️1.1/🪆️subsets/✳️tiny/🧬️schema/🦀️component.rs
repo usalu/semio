@@ -6,11 +6,22 @@
 //! present per `🔣️taxonomy.json`'s `subsetChildDirs`, without duplicating the schema definition.
 
 pub use crate::artifacts::svg::standards::v1_1::subsets::any::schema::*;
+
+//#region 🧬️Mutations
+/// 🧬️ THIS subset's own mutation vocabulary — `SvgTinyMutation`, not the `✳️any` subset's
+/// `SvgMutation` the glob re-export above would otherwise supply. Declared here rather than in the
+/// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
+/// over the glob import, which is exactly the intent.
+#[path = "🧬️mutations/🦀️component.rs"]
+pub mod mutations;
+pub use mutations::{apply_svg_tiny_mutation, SvgTinyMutation, KINDS as TINY_MUTATION_KINDS};
+//#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::set_element_attr;
     use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::check_svg_tiny_conformance;
-    use crate::artifacts::svg::{SvgDiff, SvgMutation, SvgSnapshot};
+    use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::{apply_svg_tiny_mutation, SvgTinyMutation};
+    use crate::artifacts::svg::{SvgDiff, SvgSnapshot};
     use dsl::Diagnostic;
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -22,7 +33,7 @@ pub mod derived_construction {
 
     impl ArtifactBuilder for SvgTinyBuilderConstruction {
         type Snapshot = SvgSnapshot;
-        type Mutation = SvgMutation;
+        type Mutation = SvgTinyMutation;
         type Diff = SvgDiff;
 
         async fn empty() -> Self {
@@ -42,7 +53,7 @@ pub mod derived_construction {
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_svg_tiny_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
@@ -94,7 +105,7 @@ pub mod derived_construction {
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
                 children.push(XmlNode::Element { name: "script".into(), attrs: vec![], children: vec![XmlNode::Text { text: "alert(1)".into() }] });
             }
-            let (mutated, _diff) = SvgTinyBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgMutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = SvgTinyBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgTinyMutation::SetSnapshot { snapshot });
             let err = mutated.build().expect_err("a <script> element must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_ELEMENT));
         }

@@ -1,0 +1,9 @@
+[package]
+name = "semio-framework-async-macros"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "semio_framework_async_macros"
+proc-macro = true

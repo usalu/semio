@@ -34,12 +34,12 @@ pub fn definition() -> PanelTabDefinition {
 /// render against and always falls through to the document summary below. Flagged to the coordinator
 /// as the same framework-level gap noted on `puzzle3d_brush_target_vortex` — not fixed here
 /// (framework file, out of this crate's remit).
-pub fn render(envelope: &Puzzle3dScene, term_labels: &Puzzle3dLabels) -> BuiltNode {
+pub fn render(envelope: &Puzzle3dScene, term_labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let rows = vec![
         ui::text(format!("{}: {}", term_labels.schema.as_str(), envelope.fixture.schema)).id("puzzle3d-play-inspector.schema").build(),
         ui::text(format!("{}: {}", term_labels.domain.as_str(), envelope.fixture.domain)).id("puzzle3d-play-inspector.domain").build(),
         ui::text(format!("{}: {}", term_labels.objects.as_str(), envelope.fixture.objects.len())).id("puzzle3d-play-inspector.objects").build(),
     ];
-    PanelTreeBuilder::new("puzzle3d-play-inspector").section("puzzle3d-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, rows).build()
+    PanelTreeBuilder::new("puzzle3d-play-inspector")?.section("puzzle3d-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, rows)?.build()
 }
 //#endregion 🔖️Render

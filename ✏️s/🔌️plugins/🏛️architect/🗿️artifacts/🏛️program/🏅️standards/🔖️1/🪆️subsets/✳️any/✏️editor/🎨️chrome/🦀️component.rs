@@ -16,11 +16,11 @@ use serde::Serialize;
 use serde_json::{json, Value};
 
 //#region 🔖️Tree
-pub async fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
+pub async fn tree_item(id: impl Into<String>, label: impl Into<String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     UiTreeItemNode::base(id, Label::data(label.into()))
 }
 
-pub async fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
+pub async fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     UiTreeItemNode { description, action: Some(action), menu: None, ..UiTreeItemNode::base(id, Label::data(label.into())) }
 }
 
@@ -32,12 +32,12 @@ pub async fn tree_section(id: impl Into<String>, label: Option<String>, items: V
 /// no interaction domain to bind (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); the
 /// one tree that IS selectable (the document panel's element list) is built directly via the SDK's
 /// `PanelTreeBuilder` instead, so this helper no longer takes a `selected_ids` param.
-pub async fn tree_node(sections: Vec<UiTreeSectionNode>) -> UiNode {
+pub async fn tree_node(sections: Vec<UiTreeSectionNode>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), interaction_domain: None, drop_action: None, menu: None })
 }
 
 /// 🧱️ A horizontal stack — the adjacency matrix's glyph-strip + pair-tree pairing.
-pub async fn stack_row(id: impl Into<String>, children: Vec<UiNode>) -> UiNode {
+pub async fn stack_row(id: impl Into<String>, children: Vec<UiNode>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     UiNode::Stack(UiStackNode { direction: "row".into(), gap: Some("0.5rem".into()), padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
 }
 //#endregion 🔖️Tree
@@ -74,7 +74,7 @@ pub async fn inspector_patch_action(register_id: &str, entity_id: &str, patch: &
     architect_action("patchRegisterItem", Some(json!({ "registerId": register_id, "entityId": entity_id, "patch": patch })))
 }
 
-pub async fn inspector_text_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[String], key: &str) -> UiNode {
+pub async fn inspector_text_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[String], key: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mixed = ui_inspector_mixed_text(values);
     let patch_value = mixed.value.clone();
     UiNode::Field(UiFieldNode {
@@ -102,7 +102,7 @@ pub async fn inspector_text_field(register_id: &str, entity_id: &str, field_id: 
     })
 }
 
-pub async fn inspector_number_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[f64], key: &str) -> UiNode {
+pub async fn inspector_number_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[f64], key: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mixed = ui_inspector_mixed_number(values);
     let patch_value = mixed.value;
     UiNode::Field(UiFieldNode {
@@ -126,7 +126,7 @@ pub async fn inspector_number_field(register_id: &str, entity_id: &str, field_id
     })
 }
 
-pub async fn inspector_toggle_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[bool], key: &str) -> UiNode {
+pub async fn inspector_toggle_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[bool], key: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mixed = ui_inspector_mixed_toggle(values);
     let patch_value = mixed.pressed;
     UiNode::Field(UiFieldNode {

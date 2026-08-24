@@ -13,7 +13,7 @@ import { join, relative, sep } from "node:path";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, mutationCoverageBreaches, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, surveyUnmanagedTests, testCacheDir, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./📦️index.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCoverageBreaches, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, surveyUnmanagedTests, testCacheDir, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./📦️index.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -328,10 +328,15 @@ describe("🔒️ dependency ratchet", () => {
       expect(["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle"]).toContain(entry.kinds[0]);
       for (const area of exemptAreas()) expect(entry.users.every((user) => !user.startsWith(`${area}/`)), `${entry.name} is attributed to the exempt area ${area}`).toBe(true);
     }
+    // 🧩️EVERY package an oracle links, not only the one its id is named after: a composed reference
+    // (reader + writer, archive + XML) that declared just its primary package would leave the others
+    // linked into the host and absent from the ratchet, which is a gate that cannot see its subject.
     for (const oracle of loadOracleRegistry(repoRoot).oracles) {
-      const entry = baseline.entries.find((candidate) => candidate.name === oracle.package);
-      expect(entry?.kinds).toEqual(["test-oracle"]);
-      expect(entry?.productionReachable).toBe(false);
+      for (const linked of oracleLinkedPackages(oracle)) {
+        const entry = baseline.entries.find((candidate) => candidate.name === linked.package);
+        expect(entry?.kinds, `${linked.package} is linked by oracle ${oracle.id} but is absent from the dependency baseline`).toEqual(["test-oracle"]);
+        expect(entry?.productionReachable).toBe(false);
+      }
     }
   });
 });
@@ -425,6 +430,72 @@ describe("🚫️ oracle purity", () => {
   }, 60_000);
 });
 
+
+describe("🧩️ cross-language oracle hosts", () => {
+  test("a contributed host package is selected for whichever implementation declares it, not for Rust alone", () => {
+    const registry = loadOracleRegistry(repoRoot);
+    const owners = new Set(discoverTestCases(repoRoot).map((entry) => entry.owner));
+    const selected = [...owners].flatMap((owner) => (["rust", "typescript", "python", "go", "dotnet"] as const).flatMap((implementation) => oracleHostPackagesFor(registry, owner, implementation).map((entry) => entry.implementation)));
+    // 🧩️Every implementation an owner declared must be reachable through the selector; a value that
+    // parses, merges and is then discarded is a manifest field that silently does nothing.
+    for (const declared of registry.contributions.flatMap((entry) => entry.oracleHostPackages)) expect(selected, `no owner reaches the declared ${declared.implementation} host package ${declared.package}`).toContain(declared.implementation);
+    expect(new Set(selected).size).toBeGreaterThan(1);
+  }, 60_000);
+
+  test("a host package carrying a path is local source; one without a path is an external distribution", () => {
+    const registry = loadOracleRegistry(repoRoot);
+    const external = externalOracleHostPackages(registry);
+    const declared = registry.contributions.flatMap((entry) => entry.oracleHostPackages);
+    expect(external.map((entry) => entry.name).sort()).toEqual(declared.filter((entry) => entry.path === undefined).map((entry) => entry.package).sort());
+    for (const entry of external) expect(entry.users.every((user) => user.endsWith(testTaxonomy(repoRoot).testContributionFilename))).toBe(true);
+    expect(dependencyEcosystemOf("typescript")).toBe("js");
+    expect(dependencyEcosystemOf("python")).toBe("python");
+  }, 30_000);
+
+  test("the import name defaults to the distribution name and is overridable", () => {
+    expect(oracleHostModule({ implementation: "python", package: "ply-rs" })).toBe("ply_rs");
+    expect(oracleHostModule({ implementation: "python", package: "Pillow", module: "PIL" })).toBe("PIL");
+  });
+
+  test("every ecosystem's own import syntax is what the purity gate looks for", () => {
+    expect(importProbe("python", "pypdf").pattern.test("import pypdf\n")).toBe(true);
+    expect(importProbe("python", "pypdf").pattern.test("from pypdf import PdfReader\n")).toBe(true);
+    expect(importProbe("python", "pypdf").pattern.test("from pypdf.generic import NameObject\n")).toBe(true);
+    expect(importProbe("python", "pypdf").pattern.test("# pypdf is mentioned in a comment\n")).toBe(false);
+    expect(importProbe("rust", "lopdf").pattern.test("use lopdf::Document;")).toBe(true);
+    expect(importProbe("javascript", "semver").pattern.test('import semver from "semver";')).toBe(true);
+    expect(importProbe("javascript", "semver").pattern.test('const semver = require("semver");')).toBe(true);
+    expect(importProbe("dotnet", "SixLabors").pattern.test("using SixLabors.ImageSharp;")).toBe(true);
+  });
+
+  test("an ecosystem's import syntax is only looked for in that ecosystem's files", () => {
+    // 🚫️Regression guard: one regular expression pretending to be five languages matched a Rust
+    // crate named `json` against every Python `import json` in the repository, so the gate had to
+    // stay blind to Python imports altogether to avoid reporting breaches that do not exist.
+    expect(importProbe("rust", "json").files.test("🐍️component.py")).toBe(false);
+    expect(importProbe("python", "json").files.test("🦀️component.rs")).toBe(false);
+    expect(importProbe("python", "pypdf").files.test("🐍️component.py")).toBe(true);
+    expect(importProbe("javascript", "clsx").files.test("🟦️component.tsx")).toBe(true);
+  });
+
+  test("an external host package is ratcheted exactly like an oracle package — declaring one is not a way around the gate", () => {
+    const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [], contributions: [] } as unknown as import("./📦️index.ts").OracleRegistry;
+    const base = [{ ecosystem: "rust" as const, name: "existing", version: "1", kinds: ["production-runtime" as const], users: [], productionReachable: true }];
+    const verdict = ratchetDependencies(base, [...base, { ecosystem: "python" as const, name: "an-unregistered-reference-library", version: "1", kinds: ["test-oracle" as const], users: [], productionReachable: false }], registry);
+    expect(verdict.ok).toBe(false);
+    expect(verdict.unregisteredTestDeps).toEqual(["python:an-unregistered-reference-library"]);
+  });
+
+  test("the committed baseline classifies every external host package as a test-only dependency", () => {
+    const baseline = JSON.parse(readFileSync(join(repoRoot, "🔒️dependencies.json"), "utf8")) as { entries: { ecosystem: string; name: string; kinds: string[]; productionReachable: boolean }[] };
+    for (const host of externalOracleHostPackages(loadOracleRegistry(repoRoot))) {
+      const entry = baseline.entries.find((candidate) => candidate.ecosystem === host.ecosystem && candidate.name === host.name);
+      expect(entry, `${host.ecosystem}:${host.name} is on a generated host's import path but is absent from the dependency baseline`).toBeDefined();
+      expect(entry!.kinds).toEqual(["test-oracle"]);
+      expect(entry!.productionReachable).toBe(false);
+    }
+  }, 30_000);
+});
 
 describe("🔒️ recorded production debt", () => {
   test("an oracle claiming testOnly while already production-reachable must record the debt, not hide it", () => {

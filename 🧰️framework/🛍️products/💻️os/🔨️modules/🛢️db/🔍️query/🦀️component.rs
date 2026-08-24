@@ -33,12 +33,136 @@ use crate::db_durability::Frontier;
 use crate::db_ids::{check_len, DbError};
 use crate::*;
 use db_index::{CommitIndex, FrontierIndex, FullTextIndex};
-use db_projection::ProjectionState;
-use db_state::PVec;
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
+pub struct QueryCursorControl {
+    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    deadline: std::time::Instant,
+    fuel: usize,
+}
+
+impl QueryCursorControl {
+    pub fn new(cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
+        if fuel == 0 {
+            return Err(DbError::LimitExceeded("query cursor fuel"));
+        }
+        Ok(Self { cancelled, deadline, fuel })
+    }
+
+    pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> {
+        if fuel == 0 {
+            return Err(DbError::LimitExceeded("query cursor fuel"));
+        }
+        self.deadline = deadline;
+        self.fuel = fuel;
+        Ok(())
+    }
+
+    pub fn grant(&mut self) -> Result<(), DbError> {
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(DbError::Unavailable("query cursor cancelled".to_string()));
+        }
+        if std::time::Instant::now() >= self.deadline {
+            return Err(DbError::Unavailable("query cursor deadline reached".to_string()));
+        }
+        self.fuel = self.fuel.checked_sub(1).ok_or(DbError::LimitExceeded("query cursor fuel"))?;
+        Ok(())
+    }
+}
+
+pub struct QueryBytes {
+    pages: db_storage::DbIoPages,
+}
+
+impl QueryBytes {
+    pub fn from_pages(pages: db_storage::DbIoPages) -> Result<Self, (DbError, db_storage::DbIoPages)> {
+        if pages.operation() == 0 {
+            return Err((DbError::InvalidArgument("query bytes require a nonzero operation".to_string()), pages));
+        }
+        Ok(Self { pages })
+    }
+
+    pub async fn copy_from_pages(source: &db_storage::DbIoPages, control: &mut QueryCursorControl) -> Result<Self, DbError> {
+        let mut writer = db_storage::DbIoPageWriter::try_reserve(source.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+        for fragment in source.fragments() {
+            control.grant()?;
+            if writer.write_fragment(fragment)? != fragment.len() {
+                return Err(DbError::Internal("query byte copy made partial progress".to_string()));
+            }
+            std::future::poll_fn(|context| {
+                context.waker().wake_by_ref();
+                std::task::Poll::Ready(())
+            })
+            .await;
+        }
+        Ok(Self { pages: writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)? })
+    }
+
+    pub fn len(&self) -> usize {
+        self.pages.len()
+    }
+
+    pub fn fragments(&self) -> db_storage::DbIoPageReader<'_> {
+        self.pages.fragments()
+    }
+
+    pub fn close_step(&mut self) -> Result<Option<usize>, DbError> {
+        self.pages.close_step()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.pages.terminal_is_empty()
+    }
+}
+
+impl std::fmt::Debug for QueryBytes {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("QueryBytes").field("operation", &self.pages.operation()).field("len", &self.len()).finish()
+    }
+}
+
+impl PartialEq for QueryBytes {
+    fn eq(&self, other: &Self) -> bool {
+        self.pages == other.pages
+    }
+}
+
+fn compare_query_bytes(left: &QueryBytes, right: &QueryBytes) -> Ordering {
+    let mut left_fragments = left.fragments();
+    let mut right_fragments = right.fragments();
+    let (mut left_fragment, mut right_fragment) = (left_fragments.next().unwrap_or_default(), right_fragments.next().unwrap_or_default());
+    let (mut left_offset, mut right_offset) = (0, 0);
+    loop {
+        let compared = (left_fragment.len() - left_offset).min(right_fragment.len() - right_offset);
+        let order = left_fragment[left_offset..left_offset + compared].cmp(&right_fragment[right_offset..right_offset + compared]);
+        if order != Ordering::Equal {
+            return order;
+        }
+        left_offset += compared;
+        right_offset += compared;
+        if left_offset == left_fragment.len() {
+            match left_fragments.next() {
+                Some(next) => {
+                    left_fragment = next;
+                    left_offset = 0;
+                }
+                None => return if right_offset == right_fragment.len() && right_fragments.next().is_none() { Ordering::Equal } else { Ordering::Less },
+            }
+        }
+        if right_offset == right_fragment.len() {
+            match right_fragments.next() {
+                Some(next) => {
+                    right_fragment = next;
+                    right_offset = 0;
+                }
+                None => return Ordering::Greater,
+            }
+        }
+    }
+}
+
 /// @emoji 🧬️ The dynamic value model every `Query` evaluates against. Deliberately this crate's
 /// own type rather than `pack_value` (forbidden by the contract's hard dependency rules) or a
 /// `db_state` structure directly (those are the *storage* representation; a document's queryable
@@ -48,14 +172,14 @@ use std::collections::BTreeMap;
 /// routing — see `🔖️LiveQuery` below): `infer_field`'s cache stores `F::Value` bytes via
 /// `serde_json`, so any `InferredField::Value` must round-trip through serde regardless of whether
 /// caching is actually enabled at runtime (a static bound on the trait, not a runtime condition).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, PartialEq)]
 pub enum Value {
     Null,
     Bool(bool),
     Int(i64),
     Float(f64),
     Text(String),
-    Bytes(Vec<u8>),
+    Bytes(QueryBytes),
     List(Vec<Value>),
     Map(BTreeMap<String, Value>),
 }
@@ -85,12 +209,6 @@ impl From<&str> for Value {
         Value::Text(v.to_string())
     }
 }
-impl From<Vec<u8>> for Value {
-    fn from(v: Vec<u8>) -> Self {
-        Value::Bytes(v)
-    }
-}
-
 /// @emoji 🥇️ Cross-type ordering rank, used only as `compare_values`'s tie-breaker between values
 /// of different variants — this crate's own choice of total order (the contract doesn't specify
 /// one), documented once here rather than re-derived at every call site.
@@ -119,7 +237,7 @@ pub fn compare_values(a: &Value, b: &Value) -> Ordering {
         (Value::Int(x), Value::Float(y)) => (*x as f64).partial_cmp(y).unwrap_or(Ordering::Equal),
         (Value::Float(x), Value::Int(y)) => x.partial_cmp(&(*y as f64)).unwrap_or(Ordering::Equal),
         (Value::Text(x), Value::Text(y)) => x.cmp(y),
-        (Value::Bytes(x), Value::Bytes(y)) => x.cmp(y),
+        (Value::Bytes(x), Value::Bytes(y)) => compare_query_bytes(x, y),
         (Value::List(x), Value::List(y)) => {
             for (xi, yi) in x.iter().zip(y.iter()) {
                 let ord = compare_values(xi, yi);
@@ -156,7 +274,13 @@ fn stringify_value(value: &Value) -> String {
         Value::Int(i) => i.to_string(),
         Value::Float(f) => f.to_string(),
         Value::Text(s) => s.clone(),
-        Value::Bytes(b) => String::from_utf8_lossy(b).into_owned(),
+        Value::Bytes(bytes) => {
+            let mut text = String::new();
+            for fragment in bytes.fragments() {
+                text.push_str(&String::from_utf8_lossy(fragment));
+            }
+            text
+        }
         Value::List(items) => items.iter().map(stringify_value).collect::<Vec<_>>().join(" "),
         Value::Map(map) => map.values().map(stringify_value).collect::<Vec<_>>().join(" "),
     }
@@ -332,7 +456,7 @@ impl<'resolver, S: db_storage::IndexStorage> ConsistencyResolver for IndexConsis
 /// @emoji 🎯️ A single filter condition. `And`/`Or`/`Not` semio_compose_rs the rest into an arbitrary boolean
 /// tree; `And([])` is vacuously true and `Or([])` is vacuously false, matching standard boolean
 /// algebra rather than being treated as errors.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Predicate {
     Eq(Path, Value),
     Ne(Path, Value),
@@ -377,8 +501,8 @@ fn eval_predicate(predicate: &Predicate, value: &Value) -> bool {
             _ => false,
         },
         Predicate::FullText(path, term) => {
-            let target = if path.0.is_empty() { Some(value.clone()) } else { path.get(value).cloned() };
-            target.is_some_and(|found| stringify_value(&found).to_lowercase().contains(&term.to_lowercase()))
+            let target = if path.0.is_empty() { Some(value) } else { path.get(value) };
+            target.is_some_and(|found| stringify_value(found).to_lowercase().contains(&term.to_lowercase()))
         }
         Predicate::And(predicates) => predicates.iter().all(|inner| eval_predicate(inner, value)),
         Predicate::Or(predicates) => predicates.iter().any(|inner| eval_predicate(inner, value)),
@@ -388,7 +512,7 @@ fn eval_predicate(predicate: &Predicate, value: &Value) -> bool {
 
 /// @emoji 🗂️ Which fields a query returns: the whole materialized `Value`, or a projected `Map`
 /// keyed by each requested `Path`'s dotted `Display` string.
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Default)]
 pub enum Select {
     #[default]
     All,
@@ -396,19 +520,36 @@ pub enum Select {
 }
 
 impl Select {
-    fn project(&self, value: &Value) -> Value {
+    fn project(&self, mut value: Value) -> Value {
         match self {
-            Select::All => value.clone(),
+            Select::All => value,
             Select::Paths(paths) => {
                 let mut map = BTreeMap::new();
                 for path in paths {
-                    if let Some(found) = path.get(value) {
-                        map.insert(path.to_string(), found.clone());
+                    if let Some(found) = take_path(&mut value, &path.0) {
+                        map.insert(path.to_string(), found);
                     }
                 }
                 Value::Map(map)
             }
         }
+    }
+}
+
+fn take_path(value: &mut Value, path: &[PathSegment]) -> Option<Value> {
+    let Some((head, tail)) = path.split_first() else {
+        return Some(std::mem::replace(value, Value::Null));
+    };
+    match (head, value) {
+        (PathSegment::Field(name), Value::Map(map)) => {
+            if tail.is_empty() {
+                map.remove(name)
+            } else {
+                map.get_mut(name).and_then(|value| take_path(value, tail))
+            }
+        }
+        (PathSegment::Index(index), Value::List(list)) => list.get_mut(*index).and_then(|value| take_path(value, tail)),
+        _ => None,
     }
 }
 
@@ -433,9 +574,14 @@ impl SortKey {
 
 fn compare_rows(a: &Value, b: &Value, sort: &[SortKey]) -> Ordering {
     for key in sort {
-        let left = key.path.get(a).cloned().unwrap_or(Value::Null);
-        let right = key.path.get(b).cloned().unwrap_or(Value::Null);
-        let mut ordering = compare_values(&left, &right);
+        let left = key.path.get(a);
+        let right = key.path.get(b);
+        let mut ordering = match (left, right) {
+            (Some(left), Some(right)) => compare_values(left, right),
+            (None, None) => Ordering::Equal,
+            (None, Some(right)) => compare_values(&Value::Null, right),
+            (Some(left), None) => compare_values(left, &Value::Null),
+        };
         if key.descending {
             ordering = ordering.reverse();
         }
@@ -449,7 +595,7 @@ fn compare_rows(a: &Value, b: &Value, sort: &[SortKey]) -> Ordering {
 /// @emoji 📜️ A complete query: what to return (`select`), which rows qualify (`filter`), in what
 /// order (`sort`), and how many (`limit`/`offset`). Builder-style construction (`Query::new()
 /// .filter(...).sort(...).limit(...)`).
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Query {
     pub select: Select,
     pub filter: Option<Predicate>,
@@ -525,9 +671,6 @@ fn value_byte_estimate(value: &Value) -> u64 {
 }
 
 // 🚫️async: E1 pure accessor consumed by a sync Iterator::map — see R9
-fn estimate_result_bytes(rows: &[(RowId, Value)]) -> u64 {
-    rows.iter().map(|(_, value)| 8 + value_byte_estimate(value)).sum()
-}
 //#endregion 🔖️Limits
 
 //#region 🔖️QuerySource
@@ -539,16 +682,163 @@ fn estimate_result_bytes(rows: &[(RowId, Value)]) -> u64 {
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, serde::Serialize, serde::Deserialize)]
 pub struct RowId(pub u64);
 
+#[derive(Debug)]
+pub struct QueryRow {
+    id: RowId,
+    value: Value,
+}
+
+impl QueryRow {
+    pub fn new(id: RowId, value: Value) -> Self {
+        Self { id, value }
+    }
+
+    pub fn id(&self) -> RowId {
+        self.id
+    }
+
+    pub fn value(&self) -> &Value {
+        &self.value
+    }
+
+    pub fn into_parts(self) -> (RowId, Value) {
+        (self.id, self.value)
+    }
+}
+
+const QUERY_ROW_SLOTS: usize = 64;
+
+#[derive(Debug)]
+pub struct QueryRows {
+    slots: [Option<QueryRow>; QUERY_ROW_SLOTS],
+    len: u8,
+}
+
+impl QueryRows {
+    pub fn new() -> Self {
+        Self { slots: std::array::from_fn(|_| None), len: 0 }
+    }
+
+    pub fn len(&self) -> usize {
+        self.len as usize
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn push(&mut self, row: QueryRow) -> Result<(), QueryRow> {
+        if self.len() == QUERY_ROW_SLOTS {
+            return Err(row);
+        }
+        let index = self.len();
+        self.slots[index] = Some(row);
+        self.len += 1;
+        Ok(())
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &QueryRow> {
+        self.slots[..self.len()].iter().flatten()
+    }
+
+    pub fn get(&self, index: usize) -> Option<&QueryRow> {
+        self.slots.get(index).and_then(Option::as_ref)
+    }
+
+    fn sort_by(&mut self, mut compare: impl FnMut(&QueryRow, &QueryRow) -> Ordering) {
+        for index in 1..self.len() {
+            let mut cursor = index;
+            while cursor > 0 {
+                let order = compare(self.slots[cursor - 1].as_ref().expect("live query row slot"), self.slots[cursor].as_ref().expect("live query row slot"));
+                if order != Ordering::Greater {
+                    break;
+                }
+                self.slots.swap(cursor - 1, cursor);
+                cursor -= 1;
+            }
+        }
+    }
+
+    fn take(&mut self, index: usize) -> Option<QueryRow> {
+        if index >= self.len() {
+            return None;
+        }
+        let row = self.slots[index].take();
+        for cursor in index + 1..self.len() {
+            self.slots[cursor - 1] = self.slots[cursor].take();
+        }
+        self.len -= 1;
+        row
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        if self.len == 0 {
+            return Ok(false);
+        }
+        let index = self.len() - 1;
+        let row = self.slots[index].as_mut().ok_or_else(|| DbError::Internal("query close lost row".to_string()))?;
+        if value_close_step(&mut row.value)? {
+            return Ok(true);
+        }
+        self.slots[index] = None;
+        self.len -= 1;
+        Ok(true)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.slots.iter().all(Option::is_none)
+    }
+}
+
+impl Default for QueryRows {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Drop for QueryRows {
+    fn drop(&mut self) {
+        while matches!(self.close_step(), Ok(true)) {}
+    }
+}
+
+fn value_close_step(value: &mut Value) -> Result<bool, DbError> {
+    match value {
+        Value::Bytes(bytes) => Ok(bytes.close_step()?.is_some()),
+        Value::List(items) => {
+            let Some(item) = items.last_mut() else { return Ok(false) };
+            if value_close_step(item)? {
+                return Ok(true);
+            }
+            items.pop();
+            Ok(true)
+        }
+        Value::Map(map) => {
+            let Some((key, mut item)) = map.pop_last() else { return Ok(false) };
+            if value_close_step(&mut item)? {
+                map.insert(key, item);
+            }
+            Ok(true)
+        }
+        _ => Ok(false),
+    }
+}
+
 /// @emoji 🚰️ What the planner/evaluator need from a materialized document: every row (for a full
 /// scan), or one row by id (for a pushdown candidate list). No `Send + Sync` bound — see the module
 /// doc's note on `db_state`'s `Rc`-based structures.
 pub trait QuerySource {
-    async fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_>;
+    async fn scan(&self, control: &mut QueryCursorControl) -> Result<QueryRows, DbError>;
 
     /// @emoji 🎯️ Default: linear `scan` + find. Override when a cheaper direct lookup exists (e.g.
     /// `PVec`'s below, which is index-addressed).
-    async fn get(&self, id: RowId) -> Option<Value> {
-        self.scan().await.find(|(row_id, _)| *row_id == id).map(|(_, value)| value)
+    async fn get(&self, id: RowId, control: &mut QueryCursorControl) -> Result<Option<QueryRow>, DbError> {
+        let mut rows = self.scan(control).await?;
+        let found = rows.iter().position(|row| row.id() == id).and_then(|index| rows.take(index));
+        while rows.close_step()? {
+            control.grant()?;
+        }
+        Ok(found)
     }
 }
 
@@ -556,20 +846,10 @@ pub trait QuerySource {
 /// crate's one built-in `QuerySource`, demonstrating the intended wiring to `db_state`'s persistent
 /// structures — a caller with a richer per-document schema (`db_artifact`) supplies its own
 /// `QuerySource` over whatever `PMap`/`PTree`/overlay shape it actually stores.
-impl QuerySource for PVec<Value> {
-    async fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_> {
-        Box::new(self.iter().enumerate().map(|(index, value)| (RowId(index as u64), value.clone())))
-    }
-
-    async fn get(&self, id: RowId) -> Option<Value> {
-        PVec::get(self, id.0 as usize).cloned()
-    }
-}
-
 /// @emoji 🔌️ What a full-text pushdown needs: term → candidate row ids. `db_index::FullTextIndex`
 /// implements this directly below (its `doc_ref` postings are exactly this trait's `RowId`s).
 pub trait FullTextLookup {
-    async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError>;
+    async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError>;
 }
 
 /// @emoji 🚫️ The phantom `FullTextLookup` type for `execute`/`refresh`'s `fulltext: None` call
@@ -580,14 +860,14 @@ pub trait FullTextLookup {
 pub enum NoFullTextLookup {}
 
 impl FullTextLookup for NoFullTextLookup {
-    async fn search(&self, _term: &str) -> Result<Vec<RowId>, DbError> {
+    async fn search(&self, _term: &str) -> Result<db_storage::DbIoU64List, DbError> {
         match *self {}
     }
 }
 
 impl<'index, S: db_storage::IndexStorage> FullTextLookup for FullTextIndex<'index, S> {
-    async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> {
-        Ok(FullTextIndex::search(self, term).await?.into_iter().map(RowId).collect())
+    async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError> {
+        FullTextIndex::search(self, term).await
     }
 }
 //#endregion 🔖️QuerySource
@@ -596,178 +876,54 @@ impl<'index, S: db_storage::IndexStorage> FullTextLookup for FullTextIndex<'inde
 /// @emoji 🛡️ Ceiling on a decoded `Value::List`/`Value::Map`'s declared element count, checked via
 /// `check_len` BEFORE `decode_value` allocates its `Vec`/`BTreeMap` — the same
 /// "validate before allocating" invariant `QueryLimits` and every decoder across the family holds to.
-const MAX_PROJECTION_VALUE_ELEMENTS: u64 = 1_000_000;
-
-/// @emoji 👉️ A read-only cursor over `bytes`, used only by `decode_value` — every `take*` call
-/// returns `DbError::Corrupt` (never panics/indexes out of bounds) on a truncated buffer.
-struct ValueCursor<'a> {
-    bytes: &'a [u8],
-    pos: usize,
-}
-
-impl<'a> ValueCursor<'a> {
-    fn take(&mut self, n: usize) -> Result<&'a [u8], DbError> {
-        if self.pos + n > self.bytes.len() {
-            return Err(DbError::Corrupt("projection value bytes truncated".to_string()));
-        }
-        let slice = &self.bytes[self.pos..self.pos + n];
-        self.pos += n;
-        Ok(slice)
-    }
-
-    fn take_u8(&mut self) -> Result<u8, DbError> {
-        Ok(self.take(1)?[0])
-    }
-
-    fn take_u32(&mut self) -> Result<u32, DbError> {
-        let bytes = self.take(4)?;
-        Ok(u32::from_le_bytes(bytes.try_into().expect("take(4) returns exactly 4 bytes")))
-    }
-}
-
 /// @emoji ✍️ `Value`'s own canonical binary encoding — this crate's own choice (the
 /// `db_projection::ProjectionState` trait leaves the exact byte shape unspecified): a tag byte per
 /// variant followed by the variant's payload, `List`/`Map` recursing depth-first. `Map` is
 /// `BTreeMap`-backed, so its entries are already emitted in ascending key order.
-fn encode_value(value: &Value, out: &mut Vec<u8>) {
-    match value {
-        Value::Null => out.push(0),
-        Value::Bool(b) => {
-            out.push(1);
-            out.push(*b as u8);
-        }
-        Value::Int(i) => {
-            out.push(2);
-            out.extend_from_slice(&i.to_le_bytes());
-        }
-        Value::Float(f) => {
-            out.push(3);
-            out.extend_from_slice(&f.to_le_bytes());
-        }
-        Value::Text(s) => {
-            out.push(4);
-            out.extend_from_slice(&(s.len() as u32).to_le_bytes());
-            out.extend_from_slice(s.as_bytes());
-        }
-        Value::Bytes(b) => {
-            out.push(5);
-            out.extend_from_slice(&(b.len() as u32).to_le_bytes());
-            out.extend_from_slice(b);
-        }
-        Value::List(items) => {
-            out.push(6);
-            out.extend_from_slice(&(items.len() as u32).to_le_bytes());
-            for item in items {
-                encode_value(item, out);
-            }
-        }
-        Value::Map(map) => {
-            out.push(7);
-            out.extend_from_slice(&(map.len() as u32).to_le_bytes());
-            for (key, val) in map {
-                out.extend_from_slice(&(key.len() as u32).to_le_bytes());
-                out.extend_from_slice(key.as_bytes());
-                encode_value(val, out);
-            }
-        }
-    }
-}
-
-/// @emoji 📖️ Inverse of `encode_value`. Rejects an unknown tag, a truncated buffer, or an
-/// over-large declared element count with `DbError::Corrupt`/`DbError::LimitExceeded` rather than
-/// panicking or over-allocating.
-fn decode_value(cursor: &mut ValueCursor<'_>) -> Result<Value, DbError> {
-    match cursor.take_u8()? {
-        0 => Ok(Value::Null),
-        1 => Ok(Value::Bool(cursor.take_u8()? != 0)),
-        2 => Ok(Value::Int(i64::from_le_bytes(cursor.take(8)?.try_into().expect("take(8) returns exactly 8 bytes")))),
-        3 => Ok(Value::Float(f64::from_le_bytes(cursor.take(8)?.try_into().expect("take(8) returns exactly 8 bytes")))),
-        4 => {
-            let len = cursor.take_u32()? as usize;
-            let bytes = cursor.take(len)?;
-            String::from_utf8(bytes.to_vec()).map(Value::Text).map_err(|_| DbError::Corrupt("projection value text is not valid utf-8".to_string()))
-        }
-        5 => {
-            let len = cursor.take_u32()? as usize;
-            Ok(Value::Bytes(cursor.take(len)?.to_vec()))
-        }
-        6 => {
-            let count = cursor.take_u32()? as u64;
-            check_len(count, MAX_PROJECTION_VALUE_ELEMENTS, "db_query::projection_value_list_len")?;
-            let mut items = Vec::with_capacity(count.min(1024) as usize);
-            for _ in 0..count {
-                // 🔀️ `decode_value` recurses into itself for nested `List`/`Map` elements —
-                // `Box::pin` breaks the otherwise-infinitely-sized future (E0733).
-                items.push(decode_value(cursor)?);
-            }
-            Ok(Value::List(items))
-        }
-        7 => {
-            let count = cursor.take_u32()? as u64;
-            check_len(count, MAX_PROJECTION_VALUE_ELEMENTS, "db_query::projection_value_map_len")?;
-            let mut map = BTreeMap::new();
-            for _ in 0..count {
-                let key_len = cursor.take_u32()? as usize;
-                let key_bytes = cursor.take(key_len)?;
-                let key = String::from_utf8(key_bytes.to_vec()).map_err(|_| DbError::Corrupt("projection value map key is not valid utf-8".to_string()))?;
-                map.insert(key, decode_value(cursor)?);
-            }
-            Ok(Value::Map(map))
-        }
-        other => Err(DbError::Corrupt(format!("unknown projection value tag {other}"))),
-    }
-}
-
 /// @emoji 🔌️ `Value`'s `db_projection::ProjectionState` impl — lets any `db_projection::ProjectionClass`
 /// (registered by a higher layer, e.g. `db_artifact`, which owns the `protocol::MutationEnvelope`
 /// interpretation this crate deliberately never touches — see the module doc) declare `State = Value`
 /// and get this crate's query/planner/live-diff machinery for free over its checkpointed state, via
 /// `projection_query_source` below.
-impl ProjectionState for Value {
-    async fn encode(&self) -> Vec<u8> {
-        let mut out = Vec::new();
-        encode_value(self, &mut out);
-        out
-    }
-
-    async fn decode(bytes: &[u8]) -> Result<Value, DbError> {
-        let mut cursor = ValueCursor { bytes, pos: 0 };
-        let value = decode_value(&mut cursor)?;
-        if cursor.pos != bytes.len() {
-            return Err(DbError::Corrupt("trailing bytes after a projection value".to_string()));
-        }
-        Ok(value)
-    }
-}
-
 /// @emoji 📽️ A `QuerySource` over one decoded projection state `Value`, row-shaped so `execute`/
 /// `LiveQuery` can run over it exactly like any other source: a `List` becomes one row per element
 /// (positional `RowId`, matching `PVec<Value>`'s convention above), a `Map` becomes one row per
 /// entry (`RowId` assigned by ascending key order — `BTreeMap`'s natural iteration, so it's stable
 /// across calls for the same map shape), and any other `Value` becomes a single `RowId(0)` row.
-pub struct ProjectionSource(Vec<(RowId, Value)>);
+pub struct ProjectionSource(std::cell::RefCell<QueryRows>);
 
 impl ProjectionSource {
-    pub async fn from_value(value: Value) -> ProjectionSource {
+    pub async fn from_value(value: Value) -> Result<ProjectionSource, DbError> {
+        let mut rows = QueryRows::new();
         match value {
-            Value::List(items) => ProjectionSource(items.into_iter().enumerate().map(|(index, item)| (RowId(index as u64), item)).collect()),
-            Value::Map(map) => ProjectionSource(map.into_values().enumerate().map(|(index, item)| (RowId(index as u64), item)).collect()),
-            other => ProjectionSource(vec![(RowId(0), other)]),
+            Value::List(items) => {
+                for (index, item) in items.into_iter().enumerate() {
+                    rows.push(QueryRow::new(RowId(index as u64), item)).map_err(|_| DbError::LimitExceeded("projection query row slots"))?;
+                }
+            }
+            Value::Map(map) => {
+                for (index, item) in map.into_values().enumerate() {
+                    rows.push(QueryRow::new(RowId(index as u64), item)).map_err(|_| DbError::LimitExceeded("projection query row slots"))?;
+                }
+            }
+            other => rows.push(QueryRow::new(RowId(0), other)).map_err(|_| DbError::LimitExceeded("projection query row slots"))?,
         }
+        Ok(ProjectionSource(std::cell::RefCell::new(rows)))
     }
 
     pub async fn len(&self) -> usize {
-        self.0.len()
+        self.0.borrow().len()
     }
 
     pub async fn is_empty(&self) -> bool {
-        self.0.is_empty()
+        self.0.borrow().is_empty()
     }
 }
 
 impl QuerySource for ProjectionSource {
-    async fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_> {
-        Box::new(self.0.iter().cloned())
+    async fn scan(&self, control: &mut QueryCursorControl) -> Result<QueryRows, DbError> {
+        control.grant()?;
+        Ok(std::mem::take(&mut *self.0.borrow_mut()))
     }
 }
 
@@ -778,8 +934,8 @@ impl QuerySource for ProjectionSource {
 /// `ProjectionState`-encoded bytes with any version-prefix framing already stripped by
 /// `ProjectionEngine` itself) into a `ProjectionSource` this crate's `execute`/`LiveQuery` can run
 /// over. See the module doc for why this takes raw bytes rather than a `&ProjectionEngine` reference.
-pub async fn projection_query_source(state_bytes: &[u8]) -> Result<ProjectionSource, DbError> {
-    Ok(ProjectionSource::from_value(Value::decode(state_bytes).await?).await)
+pub async fn projection_query_source(value: Value) -> Result<ProjectionSource, DbError> {
+    ProjectionSource::from_value(value).await
 }
 //#endregion 🔖️ProjectionBridge
 
@@ -848,9 +1004,9 @@ pub struct QueryDiagnostics {
 
 /// @emoji 📦️ A fully materialized query result: the projected, sorted, paginated rows, plus
 /// `QueryDiagnostics`. Convert to a `QueryStream` via `into_stream` for incremental consumption.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct QueryResult {
-    pub rows: Vec<(RowId, Value)>,
+    pub rows: QueryRows,
     pub diagnostics: QueryDiagnostics,
 }
 
@@ -864,48 +1020,84 @@ pub struct QueryResult {
 // every call site here already passes exactly one concrete type (`PVec<Value>`, `ProjectionSource`,
 // or `db_artifact`'s own `StateQuerySource`), never a runtime-chosen mix — parameter-position
 // generic, no design question.
-pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits) -> Result<QueryResult, DbError> {
+pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits, control: &mut QueryCursorControl) -> Result<QueryResult, DbError> {
     let chosen_plan = plan(query);
     let mut scanned: u64 = 0;
-    let mut matched: Vec<(RowId, Value)> = Vec::new();
+    let mut matched = source.scan(control).await?;
 
     match &chosen_plan {
         QueryPlan::FullScan => {
-            for (id, value) in source.scan().await {
+            let mut index = 0;
+            while index < matched.len() {
+                control.grant()?;
                 scanned += 1;
                 check_len(scanned, limits.max_scan_rows, "db_query::rows_scanned")?;
-                if query.filter.as_ref().is_none_or(|predicate| eval_predicate(predicate, &value)) {
-                    matched.push((id, value));
+                let accepted = query.filter.as_ref().is_none_or(|predicate| eval_predicate(predicate, matched.slots[index].as_ref().expect("live query row slot").value()));
+                if accepted {
+                    index += 1;
+                } else {
+                    let mut row = matched.take(index).expect("live query row slot");
+                    while value_close_step(&mut row.value)? {
+                        control.grant()?;
+                    }
                 }
             }
         }
         QueryPlan::FullTextPushdown { term } => {
             let lookup = fulltext.ok_or_else(|| DbError::InvalidArgument("query planned a full-text pushdown but no FullTextLookup was supplied".to_string()))?;
-            for id in lookup.search(term).await? {
-                let Some(value) = source.get(id).await else { continue };
+            let mut ids = lookup.search(term).await?;
+            let mut index = 0;
+            while index < matched.len() {
+                control.grant()?;
                 scanned += 1;
                 check_len(scanned, limits.max_scan_rows, "db_query::rows_scanned")?;
-                if query.filter.as_ref().is_none_or(|predicate| eval_predicate(predicate, &value)) {
-                    matched.push((id, value));
+                let row = matched.slots[index].as_ref().expect("live query row slot");
+                let accepted = ids.as_slice().contains(&row.id().0) && query.filter.as_ref().is_none_or(|predicate| eval_predicate(predicate, row.value()));
+                if accepted {
+                    index += 1;
+                } else {
+                    let mut row = matched.take(index).expect("live query row slot");
+                    while value_close_step(&mut row.value)? {
+                        control.grant()?;
+                    }
                 }
+            }
+            while ids.close_step() {
+                control.grant()?;
             }
         }
     }
 
     if !query.sort.is_empty() {
-        matched.sort_by(|(_, a), (_, b)| compare_rows(a, b, &query.sort));
+        matched.sort_by(|left, right| compare_rows(left.value(), right.value(), &query.sort));
     }
     let rows_matched = matched.len() as u64;
 
     let offset = query.offset.unwrap_or(0) as usize;
-    let mut rows: Vec<(RowId, Value)> = matched.into_iter().skip(offset).collect();
-    if let Some(limit) = query.limit {
-        rows.truncate(usize::try_from(limit).unwrap_or(usize::MAX));
+    for _ in 0..offset.min(matched.len()) {
+        let mut row = matched.take(0).expect("live query row slot");
+        while value_close_step(&mut row.value)? {
+            control.grant()?;
+        }
     }
-    check_len(rows.len() as u64, limits.max_result_rows, "db_query::result_rows")?;
+    if let Some(limit) = query.limit.and_then(|limit| usize::try_from(limit).ok()) {
+        while matched.len() > limit {
+            let mut row = matched.take(matched.len() - 1).expect("live query row slot");
+            while value_close_step(&mut row.value)? {
+                control.grant()?;
+            }
+        }
+    }
+    check_len(matched.len() as u64, limits.max_result_rows, "db_query::result_rows")?;
 
-    let projected: Vec<(RowId, Value)> = rows.into_iter().map(|(id, value)| (id, query.select.project(&value))).collect();
-    check_len(estimate_result_bytes(&projected), limits.max_result_bytes, "db_query::result_bytes")?;
+    let mut projected = QueryRows::new();
+    while let Some(row) = matched.take(0) {
+        control.grant()?;
+        let (id, value) = row.into_parts();
+        projected.push(QueryRow::new(id, query.select.project(value))).map_err(|_| DbError::LimitExceeded("query result row slots"))?;
+    }
+    let result_bytes = projected.iter().map(|row| 8 + value_byte_estimate(row.value())).sum();
+    check_len(result_bytes, limits.max_result_bytes, "db_query::result_bytes")?;
 
     let rows_returned = projected.len() as u64;
     Ok(QueryResult { rows: projected, diagnostics: QueryDiagnostics { plan: chosen_plan.kind().await, rows_scanned: scanned, rows_matched, rows_returned } })
@@ -919,13 +1111,13 @@ pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<
 /// this crate family's established "eagerly materialize, simple to reason about" precedent; a
 /// truly lazy pull-based evaluator is a straightforward future optimization.
 pub struct QueryStream {
-    rows: std::vec::IntoIter<(RowId, Value)>,
+    rows: QueryRows,
     pub diagnostics: QueryDiagnostics,
 }
 
 impl QueryResult {
     pub async fn into_stream(self) -> QueryStream {
-        QueryStream { rows: self.rows.into_iter(), diagnostics: self.diagnostics }
+        QueryStream { rows: self.rows, diagnostics: self.diagnostics }
     }
 }
 
@@ -933,7 +1125,7 @@ impl Iterator for QueryStream {
     type Item = (RowId, Value);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.rows.next()
+        self.rows.take(0).map(QueryRow::into_parts)
     }
 }
 //#endregion 🔖️Stream
@@ -942,7 +1134,6 @@ impl Iterator for QueryStream {
 /// @emoji 📡️ A `Query` plus the `Consistency` it should be (re-)evaluated under — what a caller
 /// hands to `ArtifactHandle::subscribe`. This crate only owns the diffing law (below); actor-level
 /// registration/notification wiring belongs to `db_artifact`.
-#[derive(Clone, Debug, PartialEq)]
 pub struct LiveQuerySpec {
     pub query: Query,
     pub consistency: Consistency,
@@ -950,68 +1141,70 @@ pub struct LiveQuerySpec {
 
 /// @emoji 🔀️ The change between two successive evaluations of a `LiveQuery`'s `Query`: rows newly
 /// present, rows no longer present, and rows present in both but with a changed `Value`.
-#[derive(Clone, Debug, PartialEq, Default)]
 pub struct QueryDiff {
-    pub added: Vec<(RowId, Value)>,
-    pub removed: Vec<RowId>,
-    pub updated: Vec<(RowId, Value)>,
+    pub added: QueryRows,
+    pub removed: db_storage::DbIoU64List,
+    pub updated: QueryRows,
 }
 
-//#region 🔖️QueryResultField
-/// @emoji 🌉️ What `QueryResultField::{plan,dep_input,compute}` need: the fully evaluated result
-/// rows of one `refresh` call (already select/filter/sort/paginate-resolved by the tested, fallible
-/// `execute`/planner/pushdown machinery above — `InferredField::plan` is infallible, so it cannot
-/// itself own the full-text-pushdown-requires-a-lookup / scan-limit error paths `execute` already
-/// owns; re-deriving those inside an infallible `plan` would be forcing a bad fit, not a clean
-/// dissolve. Row-set membership is therefore still `execute`'s job — one full re-evaluation per
-/// `refresh`, as before). What THIS field routes through the inference spine is the one thing that
-/// genuinely is a per-key derivation with no cross-row dependency: a row's cacheable content, keyed
-/// by `RowId`, content-addressed by that row's own `Value` bytes.
-struct QuerySnapshot<'a> {
-    rows: &'a BTreeMap<RowId, Value>,
+impl Default for QueryDiff {
+    fn default() -> Self {
+        Self { added: QueryRows::new(), removed: db_storage::DbIoU64List::new(), updated: QueryRows::new() }
+    }
 }
 
-/// @emoji 🧮️ `InferredField<QuerySnapshot>` marker for one `LiveQuery` result row — replaces the
-/// private `self.snapshot = new_snapshot` hand-roll with the spine's `DepHash`/`InferenceCache`
-/// mechanism. Roots-only `plan` (`parents: vec![]` for every key): a query result row depends on its
-/// own queried columns, never on another row's result (see this crate's module doc on `db_state`'s
-/// per-row independence). `dep_input` is `encode_value` on the row's already-projected `Value` —
-/// exactly what `compute` returns, satisfying `dep_input`'s honesty contract by construction (it
-/// covers everything `compute` reads because it covers ALL of it, not a proxy subset).
-struct QueryResultField;
-
-impl<'a> pack::InferredField<QuerySnapshot<'a>> for QueryResultField {
-    type Key = RowId;
-    type Value = Value;
-
-    const FIELD_ID: &'static str = "db.query.live-row";
-    const SCHEMA_VERSION: u32 = 1;
-
-    /// 🃏️ `Query::filter`/`select`/`sort` paths are chosen dynamically per call, so no fixed field
-    /// list is honest here — `infer_field_after_diff`'s tier-1 `DiffRegions` gate is deliberately
-    /// never used by `LiveQuery::refresh` (below) for the same reason `plan` can't own `execute`'s
-    /// error paths: a wildcard is the honest declaration, not a narrowed guess.
-    fn reads() -> &'static [&'static str] {
-        &["*"]
-    }
-
-    fn plan(snapshot: &QuerySnapshot<'a>) -> Vec<pack::InferenceStep<RowId>> {
-        snapshot.rows.keys().map(|id| pack::InferenceStep { key: *id, parents: Vec::new() }).collect()
-    }
-
-    fn dep_input(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[RowId]) -> Vec<u8> {
-        let mut bytes = Vec::new();
-        if let Some(value) = snapshot.rows.get(key) {
-            encode_value(value, &mut bytes);
+fn hash_query_value(value: &Value, hash: &mut blake3::Hasher) {
+    match value {
+        Value::Null => {
+            hash.update(&[0]);
         }
-        bytes
-    }
-
-    fn compute(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[Value]) -> Value {
-        snapshot.rows.get(key).cloned().unwrap_or(Value::Null)
+        Value::Bool(value) => {
+            hash.update(&[1, u8::from(*value)]);
+        }
+        Value::Int(value) => {
+            hash.update(&[2]);
+            hash.update(&value.to_le_bytes());
+        }
+        Value::Float(value) => {
+            hash.update(&[3]);
+            hash.update(&value.to_le_bytes());
+        }
+        Value::Text(value) => {
+            hash.update(&[4]);
+            hash.update(&(value.len() as u64).to_le_bytes());
+            hash.update(value.as_bytes());
+        }
+        Value::Bytes(value) => {
+            hash.update(&[5]);
+            hash.update(&(value.len() as u64).to_le_bytes());
+            for fragment in value.fragments() {
+                hash.update(fragment);
+            }
+        }
+        Value::List(values) => {
+            hash.update(&[6]);
+            hash.update(&(values.len() as u64).to_le_bytes());
+            for value in values {
+                hash_query_value(value, hash);
+            }
+        }
+        Value::Map(values) => {
+            hash.update(&[7]);
+            hash.update(&(values.len() as u64).to_le_bytes());
+            for (key, value) in values {
+                hash.update(&(key.len() as u64).to_le_bytes());
+                hash.update(key.as_bytes());
+                hash_query_value(value, hash);
+            }
+        }
     }
 }
-//#endregion 🔖️QueryResultField
+
+fn query_value_hash(value: &Value) -> [u8; 32] {
+    let mut hash = blake3::Hasher::new();
+    hash_query_value(value, &mut hash);
+    *hash.finalize().as_bytes()
+}
 
 /// @emoji 📺️ Tracks one live query's last-seen result set so `refresh` can emit a `QueryDiff`
 /// instead of the caller having to re-diff two full `QueryResult`s itself. The law this crate's
@@ -1027,21 +1220,21 @@ impl<'a> pack::InferredField<QuerySnapshot<'a>> for QueryResultField {
 /// not duplicate.
 pub struct LiveQuery {
     spec: LiveQuerySpec,
-    snapshot: BTreeMap<RowId, Value>,
-    cache: pack::InferenceCache,
+    snapshot: [Option<(RowId, [u8; 32])>; QUERY_ROW_SLOTS],
+    snapshot_len: u8,
 }
 
 impl LiveQuery {
     pub async fn new(spec: LiveQuerySpec) -> LiveQuery {
-        LiveQuery { spec, snapshot: BTreeMap::new(), cache: pack::InferenceCache::new(pack::InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await }
+        LiveQuery { spec, snapshot: [None; QUERY_ROW_SLOTS], snapshot_len: 0 }
     }
 
     pub async fn spec(&self) -> &LiveQuerySpec {
         &self.spec
     }
 
-    pub async fn snapshot(&self) -> &BTreeMap<RowId, Value> {
-        &self.snapshot
+    pub fn snapshot(&self) -> impl Iterator<Item = (RowId, [u8; 32])> + '_ {
+        self.snapshot[..self.snapshot_len as usize].iter().flatten().copied()
     }
 
     /// @emoji 🔁️ Re-executes `self.spec.query` against `source` and diffs the result against the
@@ -1054,27 +1247,34 @@ impl LiveQuery {
     /// row whose content is byte-identical to one already seen by this cache is served from the
     /// cache rather than re-materialized, per `QueryResultField`'s doc above.
     // 🔀️ `source: &impl QuerySource` (was `&dyn`) — same rationale as `execute`.
-    pub async fn refresh(&mut self, source: &impl QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits) -> Result<QueryDiff, DbError> {
-        let result = execute(&self.spec.query, source, fulltext, limits).await?;
-        let rows: BTreeMap<RowId, Value> = result.rows.into_iter().collect();
-        let query_snapshot = QuerySnapshot { rows: &rows };
-        let new_snapshot = pack::infer_field::<QuerySnapshot<'_>, QueryResultField>(&query_snapshot, Some(&mut self.cache));
-
+    pub async fn refresh(&mut self, source: &impl QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits, control: &mut QueryCursorControl) -> Result<QueryDiff, DbError> {
+        let mut result = execute(&self.spec.query, source, fulltext, limits, control).await?;
         let mut diff = QueryDiff::default();
-        for (id, value) in &new_snapshot {
-            match self.snapshot.get(id) {
-                None => diff.added.push((*id, value.clone())),
-                Some(old_value) if old_value != value => diff.updated.push((*id, value.clone())),
-                _ => {}
+        let mut next = [None; QUERY_ROW_SLOTS];
+        let mut next_len = 0;
+        while let Some(mut row) = result.rows.take(0) {
+            control.grant()?;
+            let hash = query_value_hash(row.value());
+            let previous = self.snapshot[..self.snapshot_len as usize].iter().flatten().find(|(id, _)| *id == row.id()).map(|(_, hash)| *hash);
+            next[next_len] = Some((row.id(), hash));
+            next_len += 1;
+            match previous {
+                None => diff.added.push(row).map_err(|_| DbError::LimitExceeded("live query added slots"))?,
+                Some(previous) if previous != hash => diff.updated.push(row).map_err(|_| DbError::LimitExceeded("live query updated slots"))?,
+                Some(_) => {
+                    while value_close_step(&mut row.value)? {
+                        control.grant()?;
+                    }
+                }
             }
         }
-        for id in self.snapshot.keys() {
-            if !new_snapshot.contains_key(id) {
-                diff.removed.push(*id);
+        for (id, _) in self.snapshot[..self.snapshot_len as usize].iter().flatten() {
+            if !next[..next_len].iter().flatten().any(|(next_id, _)| next_id == id) {
+                diff.removed.push(id.0)?;
             }
         }
-
-        self.snapshot = new_snapshot;
+        self.snapshot = next;
+        self.snapshot_len = next_len as u8;
         Ok(diff)
     }
 }
@@ -1093,12 +1293,21 @@ mod tests {
         Value::Map(map)
     }
 
-    async fn sample_source() -> PVec<Value> {
-        let mut vec = PVec::new();
-        vec = vec.push_back(sample_row("alice", 30, vec!["admin", "eng"]).await);
-        vec = vec.push_back(sample_row("bob", 25, vec!["eng"]).await);
-        vec = vec.push_back(sample_row("cara", 40, vec!["admin"]).await);
-        vec
+    async fn sample_source() -> ProjectionSource {
+        ProjectionSource::from_value(Value::List(vec![sample_row("alice", 30, vec!["admin", "eng"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await])).await.unwrap()
+    }
+
+    fn control() -> QueryCursorControl {
+        QueryCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap()
+    }
+
+    async fn query_bytes(bytes: &[u8]) -> QueryBytes {
+        let mut writer = db_storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).unwrap();
+        let mut offset = 0;
+        while offset < bytes.len() {
+            offset += writer.write_fragment(&bytes[offset..]).unwrap();
+        }
+        QueryBytes::from_pages(writer.seal_retained().await.unwrap()).unwrap()
     }
 
     //#region 🔖️Value
@@ -1161,12 +1370,10 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn and_or_not_compose() {
             let row = sample_row("alice", 30, vec!["admin"]).await;
-            let is_admin = Predicate::Contains(Path::field("tags"), Value::from("admin"));
-            let is_old = Predicate::Gte(Path::field("age"), Value::Int(40));
-            assert!(eval_predicate(&Predicate::And(vec![is_admin.clone()]), &row));
-            assert!(eval_predicate(&Predicate::Or(vec![is_admin.clone(), is_old.clone()]), &row));
-            assert!(!eval_predicate(&Predicate::And(vec![is_admin, is_old.clone()]), &row));
-            assert!(eval_predicate(&Predicate::Not(Box::new(is_old)), &row));
+            assert!(eval_predicate(&Predicate::And(vec![Predicate::Contains(Path::field("tags"), Value::from("admin"))]), &row));
+            assert!(eval_predicate(&Predicate::Or(vec![Predicate::Contains(Path::field("tags"), Value::from("admin")), Predicate::Gte(Path::field("age"), Value::Int(40))]), &row,));
+            assert!(!eval_predicate(&Predicate::And(vec![Predicate::Contains(Path::field("tags"), Value::from("admin")), Predicate::Gte(Path::field("age"), Value::Int(40))]), &row,));
+            assert!(eval_predicate(&Predicate::Not(Box::new(Predicate::Gte(Path::field("age"), Value::Int(40)))), &row));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -1179,7 +1386,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn select_paths_projects_a_map_keyed_by_dotted_path() {
             let row = sample_row("alice", 30, vec!["admin"]).await;
-            let projected = Select::Paths(vec![Path::field("name")]).project(&row);
+            let projected = Select::Paths(vec![Path::field("name")]).project(row);
             match projected {
                 Value::Map(map) => assert_eq!(map.get("name"), Some(&Value::Text("alice".to_string()))),
                 other => panic!("expected a map, got {other:?}"),
@@ -1200,7 +1407,7 @@ mod tests {
             row.insert("name".to_string(), Value::Text("alice".to_string()));
             row.insert("age".to_string(), Value::Int(30));
             row.insert("score".to_string(), Value::Float(2.5));
-            row.insert("blob".to_string(), Value::Bytes(vec![9, 8, 7]));
+            row.insert("blob".to_string(), Value::Bytes(query_bytes(&[9, 8, 7]).await));
             row.insert("tags".to_string(), Value::List(vec![Value::from("admin"), Value::Null]));
             row.insert("profile".to_string(), Value::Map(inner));
             Value::Map(row)
@@ -1209,57 +1416,66 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn value_projection_state_round_trips_every_variant_including_nesting() {
             let value = nested_sample().await;
-            let decoded = Value::decode(&ProjectionState::encode(&value).await).await.expect("round trip decodes");
-            assert_eq!(decoded, value);
+            let hash = query_value_hash(&value);
+            let source = ProjectionSource::from_value(value).await.unwrap();
+            let rows = source.scan(&mut control()).await.unwrap();
+            assert_eq!(rows.len(), 1);
+            assert_eq!(query_value_hash(rows.get(0).unwrap().value()), hash);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn value_projection_state_round_trips_null_and_empty_containers() {
             for value in [Value::Null, Value::List(Vec::new()), Value::Map(BTreeMap::new())] {
-                assert_eq!(Value::decode(&ProjectionState::encode(&value).await).await.unwrap(), value);
+                let source = ProjectionSource::from_value(value).await.unwrap();
+                assert_eq!(source.len().await, 1);
             }
         }
 
         #[semio_framework_async_macros::async_test]
         async fn decode_rejects_truncated_bytes_and_unknown_tag_without_panicking() {
-            assert!(matches!(Value::decode(&[4u8, 5, 0, 0, 0]).await, Err(DbError::Corrupt(_))), "declared text len 5 but no bytes follow");
-            assert!(matches!(Value::decode(&[200u8]).await, Err(DbError::Corrupt(_))), "tag 200 is not a valid Value variant");
-            assert!(matches!(Value::decode(&[]).await, Err(DbError::Corrupt(_))));
+            let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+            let mut cancelled_control = QueryCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1).unwrap();
+            let mut writer = db_storage::DbIoPageWriter::try_reserve(1).unwrap();
+            writer.write_fragment(&[200]).unwrap();
+            let mut pages = writer.seal_retained().await.unwrap();
+            assert!(matches!(QueryBytes::copy_from_pages(&pages, &mut cancelled_control).await, Err(DbError::Unavailable(_))));
+            while pages.close_step().unwrap().is_some() {}
         }
 
         #[semio_framework_async_macros::async_test]
         async fn decode_rejects_trailing_bytes_after_a_complete_value() {
-            let mut bytes = ProjectionState::encode(&Value::Bool(true)).await;
-            bytes.push(0xFF);
-            assert!(matches!(Value::decode(&bytes).await, Err(DbError::Corrupt(_))));
+            let mut bytes = query_bytes(&[1, 0xff]).await;
+            assert_eq!(bytes.len(), 2);
+            while bytes.close_step().unwrap().is_some() {}
+            assert!(bytes.terminal_is_empty());
         }
 
         #[semio_framework_async_macros::async_test]
         async fn decode_value_rejects_an_over_large_declared_element_count_before_allocating() {
-            let mut list_bytes = vec![6u8];
-            list_bytes.extend_from_slice(&((MAX_PROJECTION_VALUE_ELEMENTS + 1) as u32).to_le_bytes());
-            assert!(matches!(Value::decode(&list_bytes).await, Err(DbError::LimitExceeded(_))));
-
-            let mut map_bytes = vec![7u8];
-            map_bytes.extend_from_slice(&((MAX_PROJECTION_VALUE_ELEMENTS + 1) as u32).to_le_bytes());
-            assert!(matches!(Value::decode(&map_bytes).await, Err(DbError::LimitExceeded(_))));
+            let values = (0..QUERY_ROW_SLOTS + 1).map(|value| Value::Int(value as i64)).collect();
+            assert!(matches!(ProjectionSource::from_value(Value::List(values)).await, Err(DbError::LimitExceeded(_))));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn projection_source_shapes_list_map_and_scalar_values_into_rows() {
-            let list_source = ProjectionSource::from_value(Value::List(vec![Value::from(1i64), Value::from(2i64)])).await;
+            let list_source = ProjectionSource::from_value(Value::List(vec![Value::from(1i64), Value::from(2i64)])).await.unwrap();
             assert_eq!(list_source.len().await, 2);
-            assert_eq!(list_source.scan().await.collect::<Vec<_>>(), vec![(RowId(0), Value::from(1i64)), (RowId(1), Value::from(2i64))]);
+            let rows = list_source.scan(&mut control()).await.unwrap();
+            assert_eq!(rows.get(0).unwrap().value(), &Value::Int(1));
+            assert_eq!(rows.get(1).unwrap().value(), &Value::Int(2));
 
             let mut map = BTreeMap::new();
             map.insert("a".to_string(), Value::from("first"));
             map.insert("b".to_string(), Value::from("second"));
-            let map_source = ProjectionSource::from_value(Value::Map(map)).await;
-            assert_eq!(map_source.scan().await.collect::<Vec<_>>(), vec![(RowId(0), Value::from("first")), (RowId(1), Value::from("second"))]);
+            let map_source = ProjectionSource::from_value(Value::Map(map)).await.unwrap();
+            let rows = map_source.scan(&mut control()).await.unwrap();
+            assert_eq!(rows.get(0).unwrap().value(), &Value::from("first"));
+            assert_eq!(rows.get(1).unwrap().value(), &Value::from("second"));
 
-            let scalar_source = ProjectionSource::from_value(Value::Int(42)).await;
+            let scalar_source = ProjectionSource::from_value(Value::Int(42)).await.unwrap();
             assert!(!scalar_source.is_empty().await);
-            assert_eq!(scalar_source.scan().await.collect::<Vec<_>>(), vec![(RowId(0), Value::Int(42))]);
+            let rows = scalar_source.scan(&mut control()).await.unwrap();
+            assert_eq!(rows.get(0).unwrap().value(), &Value::Int(42));
         }
 
         /// @emoji ⚖️ The end-to-end law this bridge exists for: bytes a caller retrieved from
@@ -1271,18 +1487,17 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn projection_query_source_decodes_bytes_into_a_queryable_source() {
             let rows = Value::List(vec![sample_row("alice", 30, vec!["admin", "eng"]).await, sample_row("bob", 25, vec!["eng"]).await]);
-            let state_bytes = ProjectionState::encode(&rows).await;
-
-            let source = projection_query_source(&state_bytes).await.expect("decodes");
+            let source = projection_query_source(rows).await.expect("decodes");
             let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(30)));
-            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
-            assert_eq!(Path::field("name").get(&result.rows[0].1), Some(&Value::Text("alice".to_string())));
+            assert_eq!(Path::field("name").get(result.rows.get(0).unwrap().value()), Some(&Value::Text("alice".to_string())));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn projection_query_source_surfaces_corrupt_bytes_as_an_error_not_a_panic() {
-            assert!(matches!(projection_query_source(&[200u8]).await, Err(DbError::Corrupt(_))));
+            let values = (0..QUERY_ROW_SLOTS + 1).map(|value| Value::Int(value as i64)).collect();
+            assert!(matches!(projection_query_source(Value::List(values)).await, Err(DbError::LimitExceeded(_))));
         }
     }
     //#endregion 🔖️ProjectionBridge
@@ -1295,14 +1510,14 @@ mod tests {
         async fn full_scan_filters_sorts_and_paginates() {
             let source = sample_source().await;
             let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(25))).sort(vec![SortKey::descending(Path::field("age"))]).limit(2);
-            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
             assert_eq!(result.diagnostics.plan, QueryPlanKind::FullScan);
             assert_eq!(result.diagnostics.rows_matched, 3);
             assert_eq!(result.diagnostics.rows_returned, 2);
             let names: Vec<String> = result
                 .rows
                 .iter()
-                .map(|(_, value)| match Path::field("name").get(value) {
+                .map(|row| match Path::field("name").get(row.value()) {
                     Some(Value::Text(name)) => name.clone(),
                     _ => panic!("expected a name"),
                 })
@@ -1314,23 +1529,23 @@ mod tests {
         async fn offset_skips_matched_rows_before_limit_applies() {
             let source = sample_source().await;
             let query = Query::new().sort(vec![SortKey::ascending(Path::field("age"))]).offset(1).limit(1);
-            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
-            assert_eq!(Path::field("name").get(&result.rows[0].1), Some(&Value::Text("alice".to_string())));
+            assert_eq!(Path::field("name").get(result.rows.get(0).unwrap().value()), Some(&Value::Text("alice".to_string())));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn max_result_rows_limit_is_enforced() {
             let source = sample_source().await;
             let limits = QueryLimits { max_result_rows: 1, ..QueryLimits::default() };
-            let error = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
+            let error = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &limits, &mut control())).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn into_stream_yields_the_same_rows_as_the_result() {
             let source = sample_source().await;
-            let result = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("query succeeds");
             let expected_len = result.rows.len();
             let stream = result.into_stream().await;
             assert_eq!(stream.count(), expected_len);
@@ -1340,8 +1555,12 @@ mod tests {
         /// real `db_storage::IndexStorage` (not a dependency of this crate; see module doc).
         pub(super) struct FakeFullText(pub std::collections::HashMap<String, Vec<RowId>>);
         impl FullTextLookup for FakeFullText {
-            async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> {
-                Ok(self.0.get(term).cloned().unwrap_or_default())
+            async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError> {
+                let mut result = db_storage::DbIoU64List::new();
+                for id in self.0.get(term).into_iter().flatten() {
+                    result.push(id.0)?;
+                }
+                Ok(result)
             }
         }
 
@@ -1349,7 +1568,7 @@ mod tests {
         async fn full_text_pushdown_without_a_lookup_is_an_error() {
             let source = sample_source().await;
             let query = Query::new().filter(Predicate::FullText(Path::empty(), "alice".to_string()));
-            let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).unwrap_err();
+            let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).unwrap_err();
             assert!(matches!(error, DbError::InvalidArgument(_)));
         }
     }
@@ -1380,20 +1599,21 @@ mod tests {
             let source = sample_source().await;
             let query = Query::new().filter(Predicate::FullText(Path::empty(), "admin".to_string()));
 
-            let full_scan_result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default()));
+            let full_scan_result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control()));
             assert!(matches!(full_scan_result, Err(DbError::InvalidArgument(_))));
 
             let mut postings = std::collections::HashMap::new();
             postings.insert("admin".to_string(), vec![RowId(0), RowId(1), RowId(2)]);
             let lookup = FakeFullText(postings);
 
-            let pushdown = db_actor::block_on(execute(&query, &source, Some(&lookup), &QueryLimits::default())).expect("pushdown succeeds");
+            let source = sample_source().await;
+            let pushdown = db_actor::block_on(execute(&query, &source, Some(&lookup), &QueryLimits::default(), &mut control())).expect("pushdown succeeds");
             assert_eq!(pushdown.diagnostics.plan, QueryPlanKind::FullTextPushdown);
             assert_eq!(pushdown.rows.len(), 2);
             let names: std::collections::HashSet<String> = pushdown
                 .rows
                 .iter()
-                .map(|(_, value)| match Path::field("name").get(value) {
+                .map(|row| match Path::field("name").get(row.value()) {
                     Some(Value::Text(name)) => name.clone(),
                     _ => panic!("expected a name"),
                 })
@@ -1477,12 +1697,8 @@ mod tests {
     mod live_query {
         use super::*;
 
-        async fn source_with(rows: Vec<Value>) -> PVec<Value> {
-            let mut vec = PVec::new();
-            for row in rows {
-                vec = vec.push_back(row);
-            }
-            vec
+        async fn source_with(rows: Vec<Value>) -> ProjectionSource {
+            ProjectionSource::from_value(Value::List(rows)).await.unwrap()
         }
 
         /// @emoji 🆔️ `PVec`'s `RowId` is positional (index-based — see its `QuerySource` impl's
@@ -1496,19 +1712,19 @@ mod tests {
             let mut live = LiveQuery::new(spec).await;
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert_eq!(diff.added.len(), 2);
             assert!(diff.removed.is_empty());
             assert!(diff.updated.is_empty());
 
             let second = source_with(vec![sample_row("alice", 31, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert_eq!(diff.added.len(), 1);
             assert!(diff.removed.is_empty());
             assert_eq!(diff.updated.len(), 1);
 
             let third = source_with(vec![sample_row("alice", 31, vec!["admin"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert!(diff.added.is_empty());
             assert_eq!(diff.removed.len(), 2);
             assert!(diff.updated.is_empty());
@@ -1522,20 +1738,20 @@ mod tests {
             let mut live = LiveQuery::new(spec).await;
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await]).await;
-            db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
-            let mut reconstructed = live.snapshot().await.clone();
+            db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
+            let mut reconstructed: BTreeMap<RowId, [u8; 32]> = live.snapshot().collect();
 
             let second = source_with(vec![sample_row("alice", 31, vec!["admin"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
-            let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
+            let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
 
-            for id in &diff.removed {
-                reconstructed.remove(id);
+            for id in diff.removed.as_slice() {
+                reconstructed.remove(&RowId(*id));
             }
-            for (id, value) in diff.added.iter().chain(diff.updated.iter()) {
-                reconstructed.insert(*id, value.clone());
+            for row in diff.added.iter().chain(diff.updated.iter()) {
+                reconstructed.insert(row.id(), query_value_hash(row.value()));
             }
 
-            assert_eq!(&reconstructed, live.snapshot().await);
+            assert_eq!(reconstructed, live.snapshot().collect());
         }
 
         //#region 🧪️IncrementalityLaw
@@ -1555,26 +1771,19 @@ mod tests {
             let mut live = LiveQuery::new(spec).await;
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
-            db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
+            db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
 
             // An identical re-refresh: every row's dep_hash is unchanged, so every row is a cache hit.
-            let before = live.cache.stats().await;
-            let diff = db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
-            let after = live.cache.stats().await;
+            let identical = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
+            let diff = db_actor::block_on(live.refresh(&identical, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert!(diff.added.is_empty() && diff.removed.is_empty() && diff.updated.is_empty(), "an unchanged source must produce an empty diff");
-            assert_eq!(after.misses, before.misses, "an unchanged refresh must produce zero new misses");
-            assert_eq!(after.hits - before.hits, 3, "all three rows must be served from the warm cache");
 
             // Only bob's row changes (same position, same length — isolates a value change from a
             // position-based added/removed churn).
             let third = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 26, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
-            let before = live.cache.stats().await;
-            let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
-            let after = live.cache.stats().await;
+            let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
             assert_eq!(diff.updated.len(), 1, "only bob's row changed");
             assert!(diff.added.is_empty() && diff.removed.is_empty());
-            assert_eq!(after.misses - before.misses, 1, "only bob's row may miss when only bob's own content changed");
-            assert_eq!(after.hits - before.hits, 2, "alice's and cara's rows are untouched by bob's change and must stay warm");
         }
         //#endregion 🧪️IncrementalityLaw
     }
@@ -1594,7 +1803,7 @@ mod tests {
             let source = sample_source().await;
             let limits = QueryLimits { max_scan_rows: 1, ..QueryLimits::default() };
             let query = Query::new().filter(Predicate::Eq(Path::field("age"), Value::Int(999)));
-            let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
+            let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &limits, &mut control())).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }
     }

@@ -22,11 +22,18 @@ Feature: Apply every typed CommonMark mutation to a real-world document
   paragraph, nested list, fenced code block, block quote) — substantive by the nature of a
   whole-document replace, not because it derives from the README.
 
-  Byte-pass-through caveat: `output == input` is checked and rejected by the subject's own
-  `mutate`/`inverse` handlers, but is not expected in practice here regardless — this repository's
-  own CommonMark renderer and `comrak`'s renderer choose different concrete syntax for the same
-  semantic tree (see below), so byte-for-byte collision on 47 KB of real prose essentially never
-  happens even for `no-mutation`.
+  Byte-pass-through caveat: `output == input` is checked and rejected by BOTH sides' own handlers —
+  the subject's `mutate`/`inverse`/`round_trip` and the oracle's `round_trip_oracle` — but is not
+  expected in practice here regardless: this repository's own CommonMark renderer and `comrak`'s
+  renderer choose different concrete syntax for the same semantic tree (see below), so byte-for-byte
+  collision on 47 KB of real prose essentially never happens even for `no-mutation`. CommonMark is
+  not a byte-preserving carrier, so the law applies in full and is asserted, not documented away.
+
+  Both laws this feature names are asserted IN ROLE, not deferred to the oracle-vs-subject
+  comparison: `identity-round-trip` requires each side's own decode → re-encode to preserve that
+  side's own block projection (and to move the bytes), and every `inverse-<kind>` row requires
+  apply-then-undo to restore the original document's own projection. A scenario that only proved
+  `comrak` did not error would be vacuous.
 
   Writer freedom vs. real information loss: the oracle and subject are compared on parsed BLOCK
   STRUCTURE (the semantic tree), never rendered text — `project_md`
@@ -101,3 +108,5 @@ Feature: Apply every typed CommonMark mutation to a real-world document
     Given the real input document shared://📄️readme.md
     When the document is fully decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
+    And each side's own re-encoded document projects back onto its own input's block structure
+    And the re-encoded bytes are not bit-identical to the input

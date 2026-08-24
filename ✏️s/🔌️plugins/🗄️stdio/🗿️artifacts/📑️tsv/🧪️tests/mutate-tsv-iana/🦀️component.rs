@@ -11,6 +11,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::tsv::standards::v_iana::subsets::any::{oracle_apply_mutation, project_tsv_grid, read_grid, write_grid};
+use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `tsv-iana-any` catalog. Duplicated, not imported, from
@@ -104,6 +105,11 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(output, projection))
 }
 
+/// ↩️ The inverse law, asserted HERE by the reference against its own pre-mutation reading rather
+/// than deferred to the parity phase: `apply(m)` followed by `apply(inverse(m))` has to land back
+/// on the ORIGINAL table's semantic projection — including `trailingNewline` and `lineTerminator`,
+/// which `semantic-tabular-mutate-v1` deliberately keeps live because this subset's own vocabulary
+/// mutates them.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -111,16 +117,27 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let undo = inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &undo)?;
     let projection = project_tsv_grid(&restored)?;
+    inverse_restores(&spec.str("kind"), &projection, &project_tsv_grid(&input)?)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
 /// 🔁️ The oracle's own decode/re-encode, through the SAME independent `csv` reader/writer this
-/// subset's mutations use — proves the reference library itself is stable on the real fixture before
-/// the subject's own codec is asked to be.
+/// subset's mutations use.
+///
+/// The no-byte-pass-through tripwire every OTHER container in this wave asserts does NOT apply to
+/// IANA TSV, and asserting it here would be a fabricated law: the format has no quoting, no
+/// escaping and no other writer freedom, and the only two choices it does leave — the line
+/// terminator and whether the last record is terminated — are carried in `TsvBody` and reproduced
+/// exactly (`write_tsv`, and that module's own `no_mutation_is_a_true_byte_identity` test). A
+/// byte-exact result is therefore the CORRECT outcome, so the honest form of the law is asserted
+/// instead: the output must equal the input exactly, and the projection must be preserved. Both
+/// are still real failures if the reference's reader or writer ever drifts.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = write_grid(&read_grid(&input)?)?;
+    carrier_is_exact(&output, &input)?;
     let projection = project_tsv_grid(&output)?;
+    round_trip_preserves(&projection, &project_tsv_grid(&input)?)?;
     Ok(Outcome::with_raw(output, projection))
 }
 //#endregion 🔖️Oracle

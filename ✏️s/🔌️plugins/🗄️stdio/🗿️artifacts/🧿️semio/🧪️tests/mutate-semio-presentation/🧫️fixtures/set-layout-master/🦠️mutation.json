@@ -1,0 +1,5 @@
+{
+  "mutation": "setLayoutMaster",
+  "id": "layout1",
+  "master_id": "m-2"
+}

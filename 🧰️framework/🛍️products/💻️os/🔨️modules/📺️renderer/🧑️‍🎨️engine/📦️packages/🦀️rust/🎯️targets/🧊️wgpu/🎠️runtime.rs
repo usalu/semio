@@ -171,8 +171,8 @@ impl ParallelRuntime {
     /// 🌉️ `to_actor_turn_result` + `Kernel::complete`. Callers pass the RAW
     /// `semio_framework::kernel::TurnResult` a `ShardOutcome::Turn` carried, plus host-measured
     /// `wall_us`/`memory_bytes` (this crate has no clock of its own by design).
-    pub async fn complete(&mut self, actor: ActorId, result: &KernelTurnResult, wall_us: u64, memory_bytes: u64, now_ms: u64) -> Result<FailureEscalation, KernelError> {
-        let actor_result = to_actor_turn_result(result, wall_us, memory_bytes).await;
+    pub async fn complete(&mut self, actor: ActorId, result: KernelTurnResult, wall_us: u64, memory_bytes: u64, now_ms: u64) -> Result<FailureEscalation, KernelError> {
+        let actor_result = to_actor_turn_result(result, actor.0, wall_us, memory_bytes).await;
         self.kernel.complete(actor, &actor_result, now_ms).await
     }
 

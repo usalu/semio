@@ -10,6 +10,7 @@
 use std::collections::{HashMap, VecDeque};
 
 use crate::wgpu::component::layout::WindowLayout;
+#[cfg(test)]
 use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
@@ -19,8 +20,10 @@ use crate::wgpu::scene_slots::{collect_scene_slots, SceneHost};
 use crate::wgpu::shell::{Shell, ShellEvent};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::Theme;
-use crate::wgpu::tree::{NodeFlags, UiTree};
+use crate::wgpu::tree::{NodeFlags, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree};
 use crate::wgpu::IconName;
+use semio_framework_job::StepContext;
+use ui_contract::{UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedList, UiNodeId, UI_DOCUMENT_NODES};
 
 //#region 🔖️UiWindow
 /// 🪟️ One window's retained pipeline state: its `UiTree` (`reconcile`'s diff target), the taffy
@@ -38,11 +41,25 @@ struct UiWindow {
     lane: SurfaceLane,
     queued: bool,
     revision: u64,
+    document_ingress: Option<UiDocumentIngress>,
+    retiring_document: Option<UiDocumentTree>,
 }
 
 impl UiWindow {
     fn new(window_id: &str) -> Self {
-        Self { tree: UiTree::new(), layout: LayoutEngine::new(), router: EventRouter::new(window_id), draw: DrawList::default(), viewport: (0.0, 0.0), layout_job: None, lane: SurfaceLane::UserVisible, queued: false, revision: 1 }
+        Self {
+            tree: UiTree::new(),
+            layout: LayoutEngine::new(),
+            router: EventRouter::new(window_id),
+            draw: DrawList::default(),
+            viewport: (0.0, 0.0),
+            layout_job: None,
+            lane: SurfaceLane::UserVisible,
+            queued: false,
+            revision: 1,
+            document_ingress: None,
+            retiring_document: None,
+        }
     }
 
     /// 🚨️ Whether this window's root (and thus, transitively, anything below it per
@@ -52,6 +69,35 @@ impl UiWindow {
     }
 }
 //#endregion 🔖️UiWindow
+
+//#region 📄️DocumentIngress
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiDocumentIngressFault {
+    Cancelled,
+    Deadline,
+    StaleGeneration,
+    InterruptedClose,
+    ValidationPending,
+    Invalid(UiDocumentTreeFault),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiDocumentIngressStatus {
+    Vacant,
+    Pending { next_page: usize, node_count: usize },
+    Published,
+}
+
+struct UiDocumentIngress {
+    document: UiDocumentTree,
+    next_page: usize,
+    node_count: usize,
+    validation_cursor: usize,
+    validation_started: bool,
+    validation_stack: UiFixedList<UiNodeId, UI_DOCUMENT_NODES>,
+    validation_seen: UiFixedList<UiNodeId, UI_DOCUMENT_NODES>,
+}
+//#endregion 📄️DocumentIngress
 
 //#region 🚦️SurfaceScheduling
 /// 🚦️Priority lane for resumable per-surface layout. The weighted wheel favors direct
@@ -165,6 +211,7 @@ impl Ui {
 
     /// 🔁️ Runs `UiTree::apply_tree` (`reconcile`) to diff `ui_node` into `window_id`'s retained tree,
     /// creating that window's tree/layout-engine/event-router on first use.
+    #[cfg(test)]
     pub fn apply_tree(&mut self, window_id: &str, ui_node: &UiNode) {
         let window = self.window_mut(window_id);
         let unchanged = window.tree.root.and_then(|root| window.tree.node(root)).is_some_and(|node| node.spec.0 == *ui_node);
@@ -180,6 +227,140 @@ impl Ui {
             self.enqueue_layout(window_id);
         }
     }
+
+    //#region 📄️DocumentIngress
+    pub fn document_status(&self, window_id: &str, generation: u64) -> UiDocumentIngressStatus {
+        let Some(window) = self.windows.get(window_id) else { return UiDocumentIngressStatus::Vacant };
+        if window.tree.document().is_some_and(|document| document.generation() == generation) {
+            return UiDocumentIngressStatus::Published;
+        }
+        window
+            .document_ingress
+            .as_ref()
+            .filter(|ingress| ingress.document.generation() == generation)
+            .map_or(UiDocumentIngressStatus::Vacant, |ingress| UiDocumentIngressStatus::Pending { next_page: ingress.next_page, node_count: ingress.node_count })
+    }
+
+    pub fn begin_document(&mut self, window_id: &str, header: UiDocumentLeaseHeader, cx: &mut StepContext<'_>) -> Result<(), (UiDocumentIngressFault, UiDocumentLeaseHeader)> {
+        if cx.is_cancelled() {
+            return Err((UiDocumentIngressFault::Cancelled, header));
+        }
+        if cx.should_yield() {
+            return Err((UiDocumentIngressFault::Deadline, header));
+        }
+        if cx.generation().0 != header.generation {
+            return Err((UiDocumentIngressFault::StaleGeneration, header));
+        }
+        let window = self.window_mut(window_id);
+        if let Some(retiring) = window.retiring_document.as_mut() {
+            if !retiring.close_step() {
+                return Err((UiDocumentIngressFault::InterruptedClose, header));
+            }
+            window.retiring_document = None;
+            return Err((UiDocumentIngressFault::InterruptedClose, header));
+        }
+        if let Some(ingress) = window.document_ingress.as_mut() {
+            if ingress.document.generation() == header.generation {
+                return Ok(());
+            }
+            if !ingress.document.close_step() {
+                return Err((UiDocumentIngressFault::InterruptedClose, header));
+            }
+            window.document_ingress = None;
+            return Err((UiDocumentIngressFault::InterruptedClose, header));
+        }
+        if window.tree.document().is_some_and(|document| document.generation() >= header.generation) {
+            return Err((UiDocumentIngressFault::StaleGeneration, header));
+        }
+        let node_count = header.node_count;
+        let document = UiDocumentTree::new(header.clone()).map_err(|fault| (UiDocumentIngressFault::Invalid(fault), header))?;
+        window.document_ingress = Some(UiDocumentIngress { document, next_page: 0, node_count, validation_cursor: 0, validation_started: false, validation_stack: UiFixedList::default(), validation_seen: UiFixedList::default() });
+        Ok(())
+    }
+
+    pub fn apply_document_page(&mut self, window_id: &str, page: UiDocumentNodePage, cx: &mut StepContext<'_>) -> Result<usize, UiDocumentPageRejection> {
+        let window = self.window_mut(window_id);
+        let Some(ingress) = window.document_ingress.as_mut() else {
+            return Err(UiDocumentPageRejection { fault: UiDocumentTreeFault::Generation, generation: page.generation(), revision: page.revision(), index: page.index(), record: page.into_record() });
+        };
+        if cx.is_cancelled() || cx.should_yield() || cx.generation().0 != ingress.document.generation() {
+            return Err(UiDocumentPageRejection { fault: UiDocumentTreeFault::Generation, generation: page.generation(), revision: page.revision(), index: page.index(), record: page.into_record() });
+        }
+        ingress.document.try_push_page(page, ingress.next_page)?;
+        ingress.next_page += 1;
+        cx.consume_fuel(1);
+        Ok(ingress.next_page)
+    }
+
+    pub fn finish_document(&mut self, window_id: &str, generation: u64, cx: &mut StepContext<'_>) -> Result<(), UiDocumentIngressFault> {
+        if cx.is_cancelled() {
+            return Err(UiDocumentIngressFault::Cancelled);
+        }
+        if cx.should_yield() {
+            return Err(UiDocumentIngressFault::Deadline);
+        }
+        if cx.generation().0 != generation {
+            return Err(UiDocumentIngressFault::StaleGeneration);
+        }
+        let window = self.window_mut(window_id);
+        let Some(ingress) = window.document_ingress.as_mut() else { return Err(UiDocumentIngressFault::StaleGeneration) };
+        if ingress.document.generation() != generation || ingress.next_page != ingress.node_count {
+            return Err(UiDocumentIngressFault::StaleGeneration);
+        }
+        ingress.document.validate_header().map_err(UiDocumentIngressFault::Invalid)?;
+        if ingress.validation_cursor < ingress.node_count {
+            ingress.document.validate_record(ingress.validation_cursor).map_err(UiDocumentIngressFault::Invalid)?;
+            ingress.validation_cursor += 1;
+            return Err(UiDocumentIngressFault::ValidationPending);
+        }
+        if !ingress.validation_started {
+            ingress.validation_stack.try_push(ingress.document.root_id()).map_err(|_| UiDocumentIngressFault::Invalid(UiDocumentTreeFault::NodeCapacity))?;
+            ingress.validation_started = true;
+            return Err(UiDocumentIngressFault::ValidationPending);
+        }
+        if let Some(id) = ingress.validation_stack.pop() {
+            if ingress.validation_seen.iter().any(|visited| *visited == id) {
+                return Err(UiDocumentIngressFault::Invalid(UiDocumentTreeFault::Cycle));
+            }
+            ingress.validation_seen.try_push(id).map_err(|_| UiDocumentIngressFault::Invalid(UiDocumentTreeFault::NodeCapacity))?;
+            let record = ingress.document.record(id).ok_or(UiDocumentIngressFault::Invalid(UiDocumentTreeFault::MissingChild))?;
+            for child in record.children.iter().rev() {
+                ingress.validation_stack.try_push(*child).map_err(|_| UiDocumentIngressFault::Invalid(UiDocumentTreeFault::NodeCapacity))?;
+            }
+            return Err(UiDocumentIngressFault::ValidationPending);
+        }
+        if ingress.validation_seen.len() != ingress.node_count {
+            return Err(UiDocumentIngressFault::Invalid(UiDocumentTreeFault::Cycle));
+        }
+        let ingress = window.document_ingress.take().expect("validated document ingress");
+        window.retiring_document = window.tree.publish_document(ingress.document);
+        window.revision = window.revision.checked_add(1).unwrap_or(u64::MAX);
+        Ok(())
+    }
+
+    pub fn close_document_step(&mut self, window_id: &str) -> bool {
+        let Some(window) = self.windows.get_mut(window_id) else { return true };
+        if let Some(ingress) = window.document_ingress.as_mut() {
+            if !ingress.document.close_step() {
+                return false;
+            }
+            window.document_ingress = None;
+            return false;
+        }
+        if let Some(retiring) = window.retiring_document.as_mut() {
+            if !retiring.close_step() {
+                return false;
+            }
+            window.retiring_document = None;
+            return false;
+        }
+        if let Some(document) = window.tree.take_document() {
+            window.retiring_document = Some(document);
+            return false;
+        }
+        true
+    }
+    //#endregion 📄️DocumentIngress
 
     /// 🚦️Changes a surface lane without duplicating its pending queue entry.
     pub fn set_surface_lane(&mut self, window_id: &str, lane: SurfaceLane) {
@@ -1661,4 +1842,110 @@ mod tests {
     }
     //#endregion 🧩️WidgetsInternalsTests
 }
+//#region 🧪️RetainedDocumentHostileFixtures
+#[cfg(test)]
+mod retained_document_hostile_fixtures {
+    use super::*;
+    use ui_contract::{Component, SeparatorProps, SurfaceId, UiDocumentBuilder, UiNodeChildren, UiNodeId, UiNodeRecord, UiRevision};
+
+    fn record(id: u64, children: &[u64]) -> UiNodeRecord {
+        let mut child_ids = UiNodeChildren::default();
+        for child in children {
+            child_ids.try_push(UiNodeId(*child)).expect("bounded hostile child");
+        }
+        UiNodeRecord {
+            id: UiNodeId(id),
+            key: format!("node-{id}").try_into().expect("bounded hostile key"),
+            component: Component::Separator(SeparatorProps {}),
+            layout: Default::default(),
+            style: Default::default(),
+            activity: Default::default(),
+            disabled: false,
+            transition: None,
+            accessibility: Default::default(),
+            bindings: Default::default(),
+            menu: None,
+            children: child_ids,
+        }
+    }
+
+    fn lease(generation: u64, nodes: &[(u64, &[u64])]) -> ui_contract::UiDocumentLease {
+        let surface = SurfaceId::try_from("hostile.surface").expect("bounded hostile surface");
+        let mut builder = UiDocumentBuilder::try_new(generation, surface, UiRevision(generation), Some(UiNodeId(nodes[0].0)), generation).expect("hostile builder");
+        for (id, children) in nodes {
+            builder.try_push(record(*id, children)).expect("hostile page");
+        }
+        builder.finish().expect("hostile lease")
+    }
+
+    fn step(generation: u64, preview: &mut u64) -> StepContext<'_> {
+        let now = semio_framework_job::default_now_ms();
+        StepContext::new(
+            semio_framework_job::OperationId(generation),
+            semio_framework_job::Generation(generation),
+            semio_framework_job::StepBudget::new(1, now.saturating_add(100)),
+            semio_framework_job::CancelToken::root_now(),
+            semio_framework_job::default_now_ms,
+            preview,
+        )
+    }
+
+    fn cancelled_step(generation: u64, preview: &mut u64) -> StepContext<'_> {
+        let cancel = semio_framework_job::CancelToken::root_now();
+        cancel.cancel_now();
+        StepContext::new(semio_framework_job::OperationId(generation), semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_ms, preview)
+    }
+
+    #[test]
+    fn max_plus_one_stale_aba_interrupted_close_nested_depth_lost_handle_device_drop_and_last_valid_snapshot() {
+        let mut leases = Vec::new();
+        for generation in 1..=ui_contract::UI_DOCUMENT_LEASE_SLOTS as u64 {
+            leases.push(lease(generation, &[(1, &[])]));
+        }
+        let rejected_surface = SurfaceId::try_from("hostile.max-plus-one").expect("bounded hostile surface");
+        let rejected = UiDocumentBuilder::try_new(99, rejected_surface, UiRevision(99), Some(UiNodeId(1)), 99).expect_err("max plus one returns surface owner");
+        assert_eq!(rejected.1.as_ref(), "hostile.max-plus-one");
+        drop(leases);
+        while !ui_contract::close_ui_document_page_one() {}
+
+        let mut ui = Ui::new();
+        let first = lease(101, &[(1, &[])]);
+        let header = first.header().expect("first header");
+        let mut preview = 0;
+        ui.begin_document("window", header, &mut step(101, &mut preview)).expect("first begin");
+        ui.apply_document_page("window", first.read_node_page(0).expect("first read").expect("first page"), &mut step(101, &mut preview)).expect("first apply");
+        loop {
+            match ui.finish_document("window", 101, &mut step(101, &mut preview)) {
+                Ok(()) => break,
+                Err(UiDocumentIngressFault::ValidationPending) => {}
+                Err(fault) => panic!("first publish failed: {fault:?}"),
+            }
+        }
+        assert_eq!(ui.windows["window"].tree.document().map(UiDocumentTree::generation), Some(101));
+
+        let aba = lease(100, &[(1, &[])]);
+        let aba_rejected = ui.begin_document("window", aba.header().expect("aba header"), &mut step(100, &mut preview));
+        assert!(matches!(aba_rejected, Err((UiDocumentIngressFault::StaleGeneration, _))));
+        let cancelled = lease(104, &[(1, &[])]);
+        let cancelled_rejected = ui.begin_document("window", cancelled.header().expect("cancelled header"), &mut cancelled_step(104, &mut preview));
+        assert!(matches!(cancelled_rejected, Err((UiDocumentIngressFault::Cancelled, _))));
+
+        let nested = lease(102, &[(1, &[2]), (2, &[3]), (3, &[])]);
+        ui.begin_document("window", nested.header().expect("nested header"), &mut step(102, &mut preview)).expect("nested begin");
+        ui.apply_document_page("window", nested.read_node_page(0).expect("nested read").expect("nested page"), &mut step(102, &mut preview)).expect("nested first page");
+        let stale = lease(103, &[(1, &[])]);
+        let interrupted = ui.begin_document("window", stale.header().expect("stale header"), &mut step(103, &mut preview));
+        assert!(matches!(interrupted, Err((UiDocumentIngressFault::InterruptedClose, _))));
+        assert_eq!(ui.windows["window"].tree.document().map(UiDocumentTree::generation), Some(101));
+        drop(aba);
+        drop(cancelled);
+        drop(first);
+        drop(nested);
+        drop(stale);
+        while !ui.close_document_step("window") {}
+        while !ui_contract::close_ui_document_page_one() {}
+        assert!(ui.windows["window"].tree.document().is_none());
+    }
+}
+//#endregion 🧪️RetainedDocumentHostileFixtures
 // #endregion engine

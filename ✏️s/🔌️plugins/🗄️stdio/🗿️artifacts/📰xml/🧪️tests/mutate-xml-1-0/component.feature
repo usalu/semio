@@ -34,6 +34,25 @@ Feature: Apply every typed XML 1.0 mutation to a real-world document
   `XmlSnapshot`/`XmlMutation`, and both results are read back through the SAME independent `quick-xml`
   projection (`project_xml_1_0`) before comparison.
 
+  Both non-differential laws are asserted IN ROLE, by the handler that plays the role, and are not
+  deferred to the oracle-vs-subject comparison: every `inverse-<kind>` row requires apply-then-undo
+  to restore that side's OWN reading of the original document's projection, and
+  `identity-round-trip` requires that side's own decode → re-encode both to preserve its own
+  projection and to move the bytes. XML 1.0 is not a byte-preserving carrier — a conforming writer
+  re-derives every tag, quote and character reference from the tree — so the byte half of the law
+  applies in full on both sides. A scenario that only proved the reference library did not error
+  would be vacuous — it is checkable without a second producer, so it is checked without one.
+  ⚠️ OPEN, and left red rather than tuned away: the byte half of `identity-round-trip` FAILS on the
+  ORACLE side today. `shared://📰️ooxml-word-document.xml` is byte-identical to the
+  `word/document.xml` part of
+  ../../📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx, and
+  that DOCX carries no `docProps`, zeroed zip timestamps and a 14-byte `numbering.xml` — it is this
+  repository's own minified OOXML writer's output, not Microsoft Word's. `quick-xml`'s canonical
+  serialization agrees with it character for character, so `output == input` here is two minifying
+  writers coinciding rather than a pass-through, and the assertion cannot tell the two apart. The
+  remedy belongs to the FIXTURE — re-derive the part from a genuinely Word-authored DOCX, whose
+  `<?xml …?>` declaration and attribute quoting break the coincidence — not to the assertion.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

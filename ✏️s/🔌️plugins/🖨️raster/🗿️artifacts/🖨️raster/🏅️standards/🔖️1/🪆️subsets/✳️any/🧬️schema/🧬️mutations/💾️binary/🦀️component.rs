@@ -3919,7 +3919,10 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     Ok(true) => {
                         drop(self.control_reservation.take());
                         self.phase = RasterStoreInitializationPhase::Complete;
-                        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() })
+                        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                        })
                     }
                     Ok(false) => semio_framework_job::StepOutcome::Yield,
                     Err(code) => {
@@ -3947,7 +3950,10 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     semio_framework_job::StepOutcome::Yield
                 }
             },
-            RasterStoreInitializationPhase::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() }),
+            RasterStoreInitializationPhase::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+            }),
             RasterStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
             RasterStoreInitializationPhase::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.clone().unwrap_or_else(|| b"raster-store.initializer-fault".to_vec()) }),
         }

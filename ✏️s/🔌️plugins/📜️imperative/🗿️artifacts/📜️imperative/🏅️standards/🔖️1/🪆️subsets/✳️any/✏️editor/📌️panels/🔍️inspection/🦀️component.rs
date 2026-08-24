@@ -28,10 +28,10 @@ pub fn definition() -> PanelTabDefinition {
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `🖍️draw`'s `📌️panels/🔍️properties/🦀️component.rs`: falls through to a step-count summary until a
 /// resolved-selection render path exists.
-pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> BuiltNode {
+pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
-    let field = tree_item_desc("imperative-play-inspector.steps", labels.inspector_steps.as_str(), Some(path.steps.len().to_string()));
-    PanelTreeBuilder::new("imperative-play-inspector").section("imperative-play-inspector.summary", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, vec![field]).build()
+    let field = tree_item_desc("imperative-play-inspector.steps", labels.inspector_steps.as_str(), Some(path.steps.len().to_string()))?;
+    PanelTreeBuilder::new("imperative-play-inspector")?.section("imperative-play-inspector.summary", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, vec![field])?.build()
 }
 //#endregion 🔖️Render
 

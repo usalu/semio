@@ -7,7 +7,7 @@
 //! ```text
 //! pub struct SurfaceProps {
 //!     pub kind: SurfaceKind,
-//!     pub doc_schema: String,      // "<kind>@<version>", e.g. "world3d@1"
+//!     pub doc_schema: UiText,      // "<kind>@<version>", e.g. "world3d@1"
 //!     pub doc: SurfaceDoc,         // opaque pack-encoded bytes; this crate NEVER parses them
 //!     pub bindings: Vec<ActionBinding>,
 //! }
@@ -113,9 +113,9 @@ pub enum SurfaceKind {
 /// 📦️ An opaque, pack-encoded payload. The contract never parses it — `doc_schema` on the owning
 /// [`SurfaceProps`] names the version-specific shape (e.g. `"world3d@1"`) that some other layer (the
 /// `🎬️scene` crate) knows how to decode.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SurfaceDoc {
-    pub bytes: Vec<u8>,
+    pub bytes: crate::UiFixedBytes,
 }
 
 /// 🗺️ An embedded product surface. Replaces the old `UiComponentSceneNode`'s 15 sparse
@@ -124,20 +124,30 @@ pub struct SurfaceDoc {
 /// later packet, never into this dependency-free contract crate. See this file's own module doc for
 /// the exact reasoning behind each field (and each field the scaffold this replaces used to carry but
 /// no longer does).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SurfaceProps {
     pub kind: SurfaceKind,
     /// 🏷️ `"<kind>@<version>"`, e.g. `"world3d@1"` — the axis a renderer gates its own per-kind decode
     /// logic on. Never validated against `kind` by this crate (see [`parse_doc_schema`]); a mismatch
     /// between the two is a `🎬️scene`-crate-level authoring bug, not a contract violation.
-    pub doc_schema: String,
+    pub doc_schema: crate::UiText,
     pub doc: SurfaceDoc,
     /// 🔗️ Surface-level intents — bindings that fire against the surface itself (e.g. a "focus"/
     /// "reset view" action a host chrome offers around the embedded content), as opposed to intents the
     /// embedded content's own scene graph interprets internally via `doc`'s opaque bytes.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub bindings: Vec<crate::ActionBinding>,
+    #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    pub bindings: crate::UiNodeBindings,
+}
+
+impl SurfaceProps {
+    pub fn credited_clone(&self) -> Option<Self> {
+        let mut bindings = crate::UiNodeBindings::default();
+        for binding in self.bindings.iter() {
+            bindings.try_push(binding.credited_clone()?).ok()?;
+        }
+        Some(Self { kind: self.kind, doc_schema: self.doc_schema.clone(), doc: self.doc.clone(), bindings })
+    }
 }
 
 /// 🧩️ One `doc_schema` string, split into its `kind`/`version` halves — never the payload itself.

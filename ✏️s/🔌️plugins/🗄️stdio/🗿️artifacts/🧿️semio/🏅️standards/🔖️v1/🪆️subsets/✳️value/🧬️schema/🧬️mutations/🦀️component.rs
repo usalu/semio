@@ -113,6 +113,14 @@ impl Default for SemioValueMutation {
         SemioValueMutation::NoMutation
     }
 }
+
+/// 🏷️ Kebab-case spelling of every `SemioValueMutation` variant, in declaration order — the
+/// vocabulary the `semio-v1-value` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-semio-value`'s exhaustive test case measures itself against. This enum is hand-rolled
+/// (no `#[derive(dsl::Mutations)]`, so there is no generated `kinds()` to read), which is why
+/// `kinds_match_the_enum_and_the_catalog` below pins the list with a WILDCARD-FREE match: adding a
+/// variant without extending `KINDS` stops compiling rather than silently shrinking the catalog.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️DiffAtPath
@@ -147,6 +155,17 @@ fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioVa
 pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &SemioValueMutation) -> protocol::MutationOutcome<SemioValueTreeDiff> {
     let outcome = <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ Free-function face of [`Mutation::inverse`], named only in this subset's own reachable types.
+/// `protocol` is a private `extern crate semio_framework_os_kernel as protocol;` alias that nothing
+/// re-exports, so an owner-root test adapter compiled as an external crate cannot bring the
+/// `Mutation` trait into scope to call the method form — the structural gap wave 7 recorded for
+/// `kit`/`object`/`text`/`table`, and the same thin-wrapper remedy `kit` adopted. Used by
+/// `mutate-semio-value`'s `inverse-*` scenarios.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValueSnapshot) -> Vec<SemioValueMutation> {
+    <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(mutation, base)
 }
 //#endregion 🔖️Apply
 
@@ -756,6 +775,50 @@ mod tests {
         }
     }
     //#endregion 🔖️OpCodecTests
+
+    //#region 🔖️CatalogLaw
+    /// 🏷️ The wildcard-free spelling map that makes [`KINDS`] compiler-checked: a new variant has
+    /// no arm here, so the crate stops building until both this match and `KINDS` name it.
+    fn kind_of(mutation: &SemioValueMutation) -> &'static str {
+        match mutation {
+            SemioValueMutation::NoMutation => "no-mutation",
+            SemioValueMutation::SetSnapshot { .. } => "set-snapshot",
+            SemioValueMutation::SetValue { .. } => "set-value",
+            SemioValueMutation::SetMapEntry { .. } => "set-map-entry",
+            SemioValueMutation::RemoveMapEntry { .. } => "remove-map-entry",
+            SemioValueMutation::InsertListItem { .. } => "insert-list-item",
+            SemioValueMutation::RemoveListItem { .. } => "remove-list-item",
+            SemioValueMutation::SetNode { .. } => "set-node",
+            SemioValueMutation::RemoveNode { .. } => "remove-node",
+        }
+    }
+
+    /// 🏷️ `KINDS` must name every declared variant, in declaration order and in the exact spelling
+    /// the committed `semio-v1-value` catalog carries — the framework never parses Rust, so this is
+    /// the only thing that keeps the catalog honest against the enum.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let one_per_variant = [
+            SemioValueMutation::NoMutation,
+            SemioValueMutation::SetSnapshot { snapshot: SemioValueSnapshot::default() },
+            SemioValueMutation::SetValue { path: Vec::new(), value: SemioValue::Null },
+            SemioValueMutation::SetMapEntry { path: Vec::new(), key: "status".into(), value: SemioValue::Null },
+            SemioValueMutation::RemoveMapEntry { path: Vec::new(), key: "status".into() },
+            SemioValueMutation::InsertListItem { path: Vec::new(), index: 0, value: SemioValue::Null },
+            SemioValueMutation::RemoveListItem { path: Vec::new(), index: 0 },
+            SemioValueMutation::SetNode { id: ValueId::new("n-1"), value: SemioValue::Null },
+            SemioValueMutation::RemoveNode { id: ValueId::new("n-1") },
+        ];
+        assert_eq!(KINDS.len(), one_per_variant.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, mutation) in KINDS.iter().zip(one_per_variant.iter()) {
+            assert_eq!(*kind, kind_of(mutation), "KINDS must follow the enum's own declaration order and kebab-case spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🔖️CatalogLaw
 }
 //#endregion 🔖️Tests
 

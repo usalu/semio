@@ -43,6 +43,28 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
   where the oracle's re-escaped `&#10;` sequences do not. This is real loss in a shared module out of
   this subset's ownership, reported here rather than hidden by narrowing the projection.
 
+  Both non-differential laws are asserted IN ROLE, by the handler that plays the role, and are not
+  deferred to the oracle-vs-subject comparison: every `inverse-<kind>` row requires apply-then-undo
+  to restore that side's OWN reading of the original document's projection, and
+  `identity-round-trip` requires that side's own decode → re-encode both to preserve its own
+  projection and to move the bytes. SVG 1.1 is XML and is not a byte-preserving carrier — a
+  conforming writer re-derives every tag, quote and character reference from the tree — so the byte
+  half of the law applies in full on both sides. A scenario that only proved the reference library
+  did not error would be vacuous — it is checkable without a second producer, so it is checked
+  without one.
+  ⚠️ OPEN, and left red rather than tuned away: `inverse-remove-element` FAILS on the ORACLE side
+  today, and it is a real defect in the reference module's inverse ROUTING, not in the vocabulary.
+  `oracles::apply_mutation_inverse` re-serializes between the forward step and the undo step and
+  re-parses those bytes, so the two steps do not see the same tree. In the real drawing every `<g
+  …>\n<rect …/>\n</g>` group holds `[text "\n", rect, text "\n"]`; removing index 1 leaves two
+  ADJACENT text nodes, which XML parsing coalesces into the single node `"\n\n"` on the way back in.
+  The undo therefore inserts the rect at index 1 of a one-child list and the restored drawing
+  projects as `[text "\n\n", rect]` instead of the original three children. `mutate-xml-1-0` shares
+  the routing and does not show it only because its minified fixture carries no inter-element
+  whitespace at all. The remedy is to apply the forward step and its inverse to ONE parsed tree, or
+  to address the undo against the mutated document's own indices — either way in the oracle module,
+  not by relaxing the law here.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

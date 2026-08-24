@@ -943,7 +943,10 @@ impl MeshJob {
     }
 
     fn encode_preview(&mut self, context: &mut StepContext<'_>) -> Vec<u8> {
-        let sequence = context.next_preview_sequence();
+        let sequence = match context.next_preview_sequence() {
+            Ok(sequence) => sequence,
+            Err(_) => return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+        };
         self.operation.preview_sequence = sequence + 1;
         self.encode_mesh(sequence, false)
     }
@@ -1239,6 +1242,24 @@ impl InteractiveJob for MeshJob {
                 StepOutcome::Complete(CommitCandidate { state: output.clone(), output })
             }
         }
+    }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let (complete, released_items, released_bytes) = MeshJob::close_step(self, maximum_bytes);
+        if complete {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.close_lane > 10
     }
 }
 // #endregion 🧵️IncrementalMeshJob

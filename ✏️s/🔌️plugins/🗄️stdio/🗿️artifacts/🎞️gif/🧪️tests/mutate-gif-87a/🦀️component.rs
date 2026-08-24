@@ -9,6 +9,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::{oracle_apply_mutation, oracle_inverse_spec};
+use semio_s_plugin_stdio_test_oracle::law;
 use semio_s_plugin_stdio_test_oracle::raster::project_gif;
 
 //#region 🔖️Input
@@ -39,8 +40,14 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
+/// ↩️ `@id-inverse`: applies the row's kind with the reference `gif` codec, applies the reference's
+/// OWN computed inverse on top, and ASSERTS the semantic projection is back to the pristine
+/// original's. The law is checkable without a subject, so it is checked here rather than left for
+/// the parity phase: a scenario that only re-serializes and returns would pass whenever `gif` did
+/// not error.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = ctx.fixture_bytes(INPUT)?;
+    let before = project_gif(&input)?;
     let forward = spec(ctx)?;
     let kind = forward.str("kind");
     let params = forward.get("params").cloned().unwrap_or_else(empty_params);
@@ -48,16 +55,23 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let inverse = oracle_inverse_spec(&input, &kind, &params)?;
     let restored = oracle_apply_mutation(&mutated, &inverse)?;
     let projection = project_gif(&restored)?;
+    law::inverse_restores(&kind, &projection, &before)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
-/// 🔁️ The identity round trip's oracle side: a correct decode/re-encode must project identically
-/// to the untouched input, so the oracle simply IS that input — the subject supplies the actual
-/// decode/re-encode and enforces the byte-pass-through tripwire on its own side.
+/// 🔁️ `@id-identity-round-trip`: the no-byte-pass-through law, asserted on the ORACLE side too.
+/// The reference `gif` codec fully parses the real GIF87a and re-serializes it from its own model
+/// alone, so the bytes must change (its own LZW writer and block layout are not the fixture's) while
+/// the semantic projection must not.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = ctx.fixture_bytes(INPUT)?;
-    let projection = project_gif(&input)?;
-    Ok(Outcome::with_raw(input, projection))
+    let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), empty_params())]);
+    let output = oracle_apply_mutation(&input, &no_mutation)?;
+    law::reparsed_not_copied(&output, &input)?;
+    let before = project_gif(&input)?;
+    let after = project_gif(&output)?;
+    law::round_trip_preserves(&after, &before)?;
+    Ok(Outcome::with_raw(output, after))
 }
 //#endregion 🔖️Oracle
 

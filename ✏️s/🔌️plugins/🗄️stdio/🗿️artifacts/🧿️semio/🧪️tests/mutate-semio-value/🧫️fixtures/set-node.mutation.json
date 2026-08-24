@@ -1,0 +1,10 @@
+{
+  "mutation": "setNode",
+  "id": {
+    "value": "n-1"
+  },
+  "value": {
+    "kind": "str",
+    "value": "final"
+  }
+}

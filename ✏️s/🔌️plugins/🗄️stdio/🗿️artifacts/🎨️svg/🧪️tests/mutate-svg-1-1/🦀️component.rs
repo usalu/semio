@@ -42,23 +42,54 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔮️ One handler shared by every `inverse-<kind>` scenario id.
+/// ⚖️ First point at which two projections diverge, as a character offset into the canonical
+/// rendering plus the window around it on both sides -- an equality check whose failure names WHAT
+/// changed rather than only that something did.
+fn projection_divergence(restored: &Json, original: &Json) -> Option<String> {
+    let (left, right): (Vec<char>, Vec<char>) = (restored.to_string().chars().collect(), original.to_string().chars().collect());
+    if left == right {
+        return None;
+    }
+    let at = left.iter().zip(right.iter()).position(|(a, b)| a != b).unwrap_or(left.len().min(right.len()));
+    let window = |text: &[char]| text.iter().skip(at.saturating_sub(60)).take(160).collect::<String>();
+    Some(format!("first divergence at char {at} of {} vs {} -- got …{}… want …{}…", left.len(), right.len(), window(&left), window(&right)))
+}
+
+/// ↩️ The inverse law, ASSERTED on the ORACLE side rather than deferred to the parity phase:
+/// `quick-xml` applies the kind and then its own computed inverse, and the restored drawing's
+/// independent projection must equal the REAL original's own. Without this the scenario would only
+/// prove that the reference library did not error, which is not what `@mode-property` claims -- and
+/// with the subject phase blocked, this is the only place the law can be checked today.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let bytes = oracle_apply_mutation_inverse(&input, &spec)?;
     let projection = project_svg_1_1(&bytes)?;
+    let original = project_svg_1_1(&input)?;
+    if let Some(divergence) = projection_divergence(&projection, &original) {
+        return Err(format!("inverse law violated: {:?} followed by its own inverse did not restore the original drawing's projection -- {divergence}", spec.str("kind")));
+    }
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔒️ The ORACLE side of the no-byte-pass-through law: `quick-xml` fully parses the real document
-/// and re-serializes it from its own element tree alone, independent evidence that a full
-/// parse/re-serialize is possible before the SUBJECT is held to the same standard below.
+/// 🔒️ The ORACLE side of the no-byte-pass-through law, ASSERTED rather than narrated: `quick-xml`
+/// fully parses the real drawing and re-serializes it from its own element tree alone, so BOTH
+/// halves of the law are checkable here without a subject -- the re-encoded bytes must differ from
+/// the input (SVG 1.1 is XML, not a byte-preserving carrier: the writer re-derives every tag, quote
+/// and escape from the tree, so bit-identity would prove the artifact was copied rather than
+/// parsed), and the re-encoded drawing's own projection must still equal the input's.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
     let bytes = oracle_apply_mutation(&input, &no_mutation)?;
+    if bytes == input {
+        return Err("byte pass-through: the oracle's re-encoded bytes are bit-identical to the input, so nothing here proves the drawing was parsed rather than copied".to_string());
+    }
     let projection = project_svg_1_1(&bytes)?;
+    let original = project_svg_1_1(&input)?;
+    if let Some(divergence) = projection_divergence(&projection, &original) {
+        return Err(format!("round-trip law violated: decode then re-encode did not preserve the semantic projection -- {divergence}"));
+    }
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

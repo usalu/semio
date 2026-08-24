@@ -11,7 +11,8 @@
 //! oracle-only run never compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subsets::any::{oracle_apply_mutation, project_mp4_mutation};
+use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_mp4_mutation};
+use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 📇️ The catalog's own kinds (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`),
@@ -39,19 +40,33 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔮️ The inverse property's reference claim: after mutate-then-undo the video is unchanged, so the
-/// trusted result is simply the pristine original projected through the SAME independent reader.
+/// ↩️ The inverse law, asserted rather than assumed: `mp4` applies the row's kind, then its own
+/// independently computed inverse on top of that result, and the re-muxed movie must project back
+/// onto the pristine original. Returning the untouched original (what this used to do) asserted
+/// nothing — the scenario passed whenever `mp4` merely parsed the fixture.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let bytes = mutable_input(ctx)?;
-    let projection = project_mp4_mutation(&bytes)?;
-    Ok(Outcome::with_raw(bytes, projection))
+    let input = mutable_input(ctx)?;
+    let spec = ctx.doc_json()?;
+    let before = project_mp4_mutation(&input)?;
+    let mutated = oracle_apply_mutation(&input, &spec)?;
+    let restored = oracle_apply_mutation_inverse(&input, &spec, &mutated)?;
+    let projection = project_mp4_mutation(&restored)?;
+    law::inverse_restores(&spec.str("kind"), &projection, &before)?;
+    Ok(Outcome::with_raw(restored, projection))
 }
 
-/// 🔮️ The round-trip's reference claim: the pristine original, projected independently.
+/// 🔁️ The no-byte-pass-through law on the ORACLE side: `Mp4Reader` parses the real movie into
+/// tracks and samples and `Mp4Writer` re-muxes a fresh file from that model alone, so the bytes must
+/// move (a second muxer's box order and `mdat` layout are not this fixture's) while the semantic
+/// projection must not.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let bytes = mutable_input(ctx)?;
-    let projection = project_mp4_mutation(&bytes)?;
-    Ok(Outcome::with_raw(bytes, projection))
+    let input = mutable_input(ctx)?;
+    let output = oracle_identity_round_trip(&input)?;
+    law::reparsed_not_copied(&output, &input)?;
+    let before = project_mp4_mutation(&input)?;
+    let after = project_mp4_mutation(&output)?;
+    law::round_trip_preserves(&after, &before)?;
+    Ok(Outcome::with_raw(output, after))
 }
 //#endregion 🔖️Oracle
 

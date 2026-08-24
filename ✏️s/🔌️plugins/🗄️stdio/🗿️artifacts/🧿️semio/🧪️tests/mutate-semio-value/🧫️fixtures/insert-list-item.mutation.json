@@ -1,0 +1,14 @@
+{
+  "mutation": "insertListItem",
+  "path": [
+    {
+      "kind": "key",
+      "key": "tags"
+    }
+  ],
+  "index": 1,
+  "value": {
+    "kind": "str",
+    "value": "holz"
+  }
+}

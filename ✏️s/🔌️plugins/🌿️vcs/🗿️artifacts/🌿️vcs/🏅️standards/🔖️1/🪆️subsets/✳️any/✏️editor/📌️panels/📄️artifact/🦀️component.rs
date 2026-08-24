@@ -32,8 +32,8 @@ pub async fn definition() -> PanelTabDefinition {
 /// interaction domain (`VCS_INTERACTION_HISTORY`'s doc comment) — the framework now owns and stamps
 /// checkpoint multi-select highlighting, replacing the deleted `selected`/`setSelection` plumbing.
 /// Per-row `checkoutCheckpoint`/`switchAlternative` clicks stay app actions (navigation, not selection).
-pub async fn render(history: &HistoryView, labels: &VcsPlayLabels) -> UiNode {
-    let builder = PanelTreeBuilder::new("vcs-play-document");
+pub async fn render(history: &HistoryView, labels: &VcsPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let builder = PanelTreeBuilder::new("vcs-play-document")?;
     let checkpoint_items: Vec<UiTreeItemNode> = history
         .columns
         .iter()
@@ -42,11 +42,11 @@ pub async fn render(history: &HistoryView, labels: &VcsPlayLabels) -> UiNode {
             icon_id: Some("git-commit".into()),
             menu: None,
             ..tree_item_with_action(
-                builder.item_id("checkpoint", &column.checkpoint_id),
+                builder.item_id("checkpoint", &column.checkpoint_id)?,
                 Label::data(column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone())),
                 Some(column.timestamp.clone()),
                 vcs_action("checkoutCheckpoint", Some(json!({ "checkpointId": column.checkpoint_id }))),
-            )
+            )?
         })
         .collect();
     let mut alternative_ids: Vec<String> = Vec::new();
@@ -65,18 +65,18 @@ pub async fn render(history: &HistoryView, labels: &VcsPlayLabels) -> UiNode {
                 icon_id: Some("git-branch".into()),
                 menu: None,
                 ..tree_item_with_action(
-                    builder.item_id("alternative", alternative_id),
+                    builder.item_id("alternative", alternative_id)?,
                     Label::data(alternative_id.clone()),
                     Some(format!("{count} {}", labels.checkpoints.as_str())),
                     vcs_action("switchAlternative", Some(json!({ "alternativeId": alternative_id }))),
-                )
+                )?
             }
         })
         .collect();
     builder
-        .section_or_placeholder("vcs-play-document.checkpoints", Some(labels.document.into()), true, checkpoint_items, labels.no_checkpoints)
-        .section("vcs-play-document.alternatives", Some(labels.alternatives.into()), true, alternative_items)
-        .interaction_domain(VCS_INTERACTION_HISTORY)
+        .section_or_placeholder("vcs-play-document.checkpoints", Some(labels.document.into()), true, checkpoint_items, labels.no_checkpoints)?
+        .section("vcs-play-document.alternatives", Some(labels.alternatives.into()), true, alternative_items)?
+        .interaction_domain(VCS_INTERACTION_HISTORY)?
         .build()
 }
 //#endregion 🔖️Render

@@ -53,6 +53,12 @@ pub enum SemioAudioMutation {
         value: String,
     },
 }
+
+/// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.audio`, in enum declaration
+/// order — what the `mutate-semio-audio` case's completeness gate counts against and what
+/// `../../🧪️oracle/🔣️component.json`'s catalog repeats. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -62,6 +68,16 @@ pub enum SemioAudioMutation {
 pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> protocol::MutationOutcome<SemioAudioDiff> {
     let outcome = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ Free-function face of [`SemioAudioMutation`]'s own `protocol::Mutation::inverse`. `Mutation` is
+/// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `protocol` in
+/// `📦️glue.rs`) and is therefore not nameable by a consumer that links only this crate — a
+/// generated test host being the concrete case. Paired with [`apply_semio_audio_mutation`] it makes the
+/// undo law reachable without importing a trait the caller cannot name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
+    <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::inverse(mutation, base)
 }
 //#endregion 🔖️Apply
 
@@ -360,6 +376,29 @@ mod tests {
         let mut snap = base.clone();
         apply_semio_audio_mutation(&mut snap, &SemioAudioMutation::RemoveChannel { index: 99 });
         assert_eq!(snap, base);
+    }
+
+    /// 🧪️ `kinds_match_the_enum_and_the_catalog`: `KINDS` names every declared variant, in the
+    /// declaration order `variant_ordinal` assigns and the spelling `print_audio_mutation` emits,
+    /// and every one of those names also appears in the committed oracle manifest's catalog. The
+    /// bijection against `all_variants` is what makes a newly added variant fail here instead of
+    /// silently shrinking the vocabulary the `mutate-semio-audio` case claims to cover.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        assert_eq!(KINDS, &OP_KEYWORDS[..], "KINDS must be exactly the op keyword table — one kebab-case name per declared variant, in declaration order");
+        let base = base_snapshot();
+        let mut seen = vec![false; KINDS.len()];
+        for mutation in all_variants(&base) {
+            let ordinal = variant_ordinal(&mutation) as usize;
+            assert!(!seen[ordinal], "ordinal {ordinal} is represented twice — all_variants must carry exactly one case per declared variant");
+            seen[ordinal] = true;
+            assert_eq!(KINDS[ordinal], print_audio_mutation(&mutation).split(' ').next().unwrap_or_default(), "KINDS[{ordinal}] must be the keyword {mutation:?} prints");
+        }
+        assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in all_variants");
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
     }
 
     /// 🧪️ `op_text_binary_roundtrip_law`: hand-rolled `OpText`/`OpBinary` round-trip over the

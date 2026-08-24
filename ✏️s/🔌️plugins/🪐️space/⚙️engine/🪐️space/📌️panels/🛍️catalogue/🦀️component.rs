@@ -40,7 +40,7 @@ struct CatalogueAppEntry {
 
 /// 🌳️ Builds a catalogue tree item on top of the SDK's `tree_item_desc` skeleton — only the per-app
 /// drag-data/icon/children extensions are this app's own concern.
-async fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> UiTreeItemNode {
+async fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let id_path = path.join(".");
     let children = node
         .children
@@ -53,7 +53,7 @@ async fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode
         .collect::<Vec<_>>();
     let app = node.app;
     let description = app.as_ref().and_then(|entry| (!entry.yields.is_empty()).then(|| entry.yields.clone()));
-    let mut item = tree_item_desc(format!("s-play-catalogue.document.{id_path}"), Label::data(label), description);
+    let mut item = tree_item_desc(format!("s-play-catalogue.document.{id_path}"), Label::data(label), description)?;
     item.icon_id = app.as_ref().and_then(|entry| IconName::from_str(&entry.app_id));
     item.default_open = (!children.is_empty()).then_some(true);
     if let Some(app) = &app {
@@ -69,7 +69,7 @@ async fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode
 /// 🎨️ Builds the app catalogue tree straight from the production registry — `workflow_palette()`
 /// (every registered `(plugin_id, app_id)`) joined with `os_app_registration` for the document
 /// breadcrumb/primary output kind. Always live, never stale.
-pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> UiNode {
+pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut document = AppCatalogueNode::default();
     for entry in workflow_palette() {
         if entry.app_id == crate::engine::space::S_PLAY_APP_ID {
@@ -99,7 +99,7 @@ pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> UiN
         let label = app.label.clone();
         items.push(app_catalogue_item(&[id], &label, AppCatalogueNode { children: BTreeMap::new(), app: Some(app) }));
     }
-    PanelTreeBuilder::new(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID).section(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID, Some(labels.apps_section.into()), true, items).build()
+    PanelTreeBuilder::new(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID)?.section(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID, Some(labels.apps_section.into()), true, items)?.build()
 }
 //#endregion 🔖️Render
 

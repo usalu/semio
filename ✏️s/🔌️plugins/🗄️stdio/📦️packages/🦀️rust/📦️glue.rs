@@ -604,6 +604,13 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🧬️mutations/🦀️component.rs"]
+                                mod component;
+                                pub use component::*;
+                            }
                         }
                         #[path = "."]
                         pub mod io {
@@ -1907,6 +1914,16 @@ pub mod artifacts {
                 pub mod engine {
                     pub use super::subsets::any::io::*;
                     pub use super::subsets::any::schema::*;
+                }
+                // 🏗️ Part-21 editing primitives the three model-view-definition subsets
+                // (✳️cv20/✳️cobie/✳️sav) genuinely share — an MVD is a conformance filter over one
+                // schema, so their vocabularies differ in meaning, never in mechanics. Mounted at
+                // the STANDARD level rather than copied into each subset's own mutations module.
+                #[path = "."]
+                pub mod mvd {
+                    #[path = "../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🧬️mvd/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
                 }
                 #[path = "."]
                 pub mod subsets {

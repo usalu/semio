@@ -1,0 +1,13 @@
+# 🧭️ Own workspace root: a throwaway verification crate must never join the contended repository
+# workspace, whose root manifest is a shared file.
+[workspace]
+
+[package]
+name = "step-ap214-length-measure-check"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "check"
+path = "src/main.rs"

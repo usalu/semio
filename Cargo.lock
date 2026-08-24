@@ -6235,7 +6235,6 @@ dependencies = [
 name = "semio-framework-os-kernel-db"
 version = "0.1.0"
 dependencies = [
- "base64",
  "blake3",
  "neo4rs",
  "rusqlite",

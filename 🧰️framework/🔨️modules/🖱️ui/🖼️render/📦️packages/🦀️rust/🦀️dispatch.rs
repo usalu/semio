@@ -742,8 +742,8 @@ type DropAcceptPredicate = Box<dyn Fn(&DragPayload) -> bool>;
 /// (see this file's report for why: `Trigger::Drop` already exists in the contract's closed set, so a
 /// drop commit is just an ordinary fired binding like any other, no special command needed).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn drag_payload_to_value(payload: &DragPayload) -> UiValue {
-    UiValue::Map(payload.iter().map(|(key, value)| (key.clone(), UiValue::Text(value.clone()))).collect())
+fn drag_payload_to_value(payload: &DragPayload) -> Option<UiValue> {
+    payload.is_empty().then(|| UiValue::Map(ui_contract::UiMap::default()))
 }
 
 //#endregion 🔖️Drag
@@ -913,7 +913,7 @@ impl Dispatcher {
             if !self.edit_states.contains_key(&next) {
                 let value = tree.element_node(next).and_then(|id| tree.node(id)).and_then(|node| node.listeners.value.as_ref());
                 let text = match value {
-                    Some(UiValue::Text(text)) if text.len() <= 16 * 1024 => text.clone(),
+                    Some(UiValue::Text(text)) => text.to_string(),
                     _ => String::new(),
                 };
                 let caret = text.len();
@@ -1260,7 +1260,7 @@ impl Dispatcher {
             trigger: Trigger::Commit,
             action: ActionId::v1("dispatch", name),
             args: None,
-            input: (!text.is_empty()).then_some(UiValue::Text(text)),
+            input: (!text.is_empty()).then(|| ui_contract::UiText::try_from_string(text).ok()).flatten().map(UiValue::Text),
             seq: self.seq,
         }
     }
@@ -1429,9 +1429,11 @@ impl Dispatcher {
                                 outcome.invalidation.insert(InvalidationReason::PAINT);
                                 if let Some(target) = drag.drop_target {
                                     if let Some(target_id) = tree.element_node(target) {
-                                        if let Some(intent) = self.fire(tree, target_id, Trigger::Drop, Some(drag_payload_to_value(&drag.payload))) {
-                                            outcome.intents.push(intent);
-                                            outcome.invalidation.insert(InvalidationReason::STRUCTURE);
+                                        if let Some(value) = drag_payload_to_value(&drag.payload) {
+                                            if let Some(intent) = self.fire(tree, target_id, Trigger::Drop, Some(value)) {
+                                                outcome.intents.push(intent);
+                                                outcome.invalidation.insert(InvalidationReason::STRUCTURE);
+                                            }
                                         }
                                     }
                                 }
@@ -1580,7 +1582,14 @@ mod tests {
     }
 
     fn listen_editable(value: &str) -> ListenerSet {
-        ListenerSet { surface: SurfaceId::from("s"), node: UiNodeId(1), node_key: "k".into(), revision: UiRevision(0), value: Some(UiValue::Text(value.into())), bindings: Vec::new() }
+        ListenerSet {
+            surface: SurfaceId::from("s"),
+            node: UiNodeId(1),
+            node_key: "k".into(),
+            revision: UiRevision(0),
+            value: Some(UiValue::Text(ui_contract::UiText::try_from_str(value).expect("bounded fixture text"))),
+            bindings: Vec::new(),
+        }
     }
 
     fn ptr(id: u64) -> PointerInfo {
@@ -1868,7 +1877,7 @@ mod tests {
         assert_eq!(dispatcher.drag_session().and_then(|drag| drag.drop_target), Some(target_element));
 
         let outcome = dispatcher.dispatch(&tree, &up(1, 120.0, 120.0));
-        assert!(outcome.intents.iter().any(|intent| intent.trigger == Trigger::Drop && intent.action == act("drop") && intent.input == Some(drag_payload_to_value(&payload))));
+        assert!(outcome.intents.iter().any(|intent| intent.trigger == Trigger::Drop && intent.action == act("drop") && intent.input == drag_payload_to_value(&payload)));
         assert_eq!(dispatcher.capture_of(PointerId(1)), None);
         assert!(dispatcher.drag_session().is_none());
     }
@@ -2021,7 +2030,10 @@ mod tests {
         dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "End".into(), modifiers: EventModifiers { shift: true, ..Default::default() } });
         let outcome = dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "c".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() } });
 
-        assert!(outcome.intents.iter().any(|intent| intent.action == ActionId::v1("dispatch", "clipboardCopy") && intent.input == Some(UiValue::Text("hello".into()))));
+        assert!(outcome.intents.iter().any(|intent| {
+            intent.action == ActionId::v1("dispatch", "clipboardCopy")
+                && intent.input == Some(UiValue::Text(ui_contract::UiText::try_from_str("hello").expect("bounded fixture text")))
+        }));
         assert_eq!(dispatcher.edit_state(input_element).unwrap().text, "hello", "copy must not mutate the buffer");
     }
 

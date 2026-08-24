@@ -283,7 +283,10 @@ impl EnergyJob {
     }
 
     fn publish_preview(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        let sequence = context.next_preview_sequence();
+        let sequence = match context.next_preview_sequence() {
+            Ok(sequence) => sequence,
+            Err(_) => return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+        };
         let mut zone_temperatures_c = Vec::new();
         let mut zone_heating_w = Vec::new();
         let mut zone_cooling_w = Vec::new();

@@ -20,8 +20,13 @@
       "rationale": "bcfzip is a flat ZIP of per-topic markup.bcf/.bcfv/snapshot.png parts (no OPC apparatus). `zip` 6 is the reference archive reader/writer, `quick-xml` 0.42 the reference XML reader/writer for every part inside it; composed here into one independent BCF-XML 2.1 reader/writer covering the full 14-kind `BcfMutation` vocabulary this subset declares. Distinct id/capability from the top-level `zip`/`xml` entries' own capabilities: this composition is surveyed specifically for BCF's markup.xsd/visinfo.xsd shapes, not for either library's generic archive/XML capability.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "packages": [
-        "zip",
-        "quick-xml"
+        {
+          "package": "quick-xml",
+          "version": "0.42",
+          "license": "MIT",
+          "homepage": "https://github.com/tafia/quick-xml",
+          "role": "independent XML reader/writer for every part inside the archive"
+        }
       ]
     }
   ],

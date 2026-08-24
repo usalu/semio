@@ -22,7 +22,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
+pub async fn build_catalogue_tree(labels: &CadLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let items: Vec<UiTreeItemNode> = TYPOLOGY_CATALOG
         .iter()
         .map(|entry| {
@@ -31,10 +31,10 @@ pub async fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
                 Label::data(typology_label(entry.typology, labels)),
                 Some(entry.icon),
                 cad_action("addObject", Some(json!({ "typology": entry.typology, "modelDefinitionId": entry.model_definition_id }))),
-            )
+            )?
         })
         .collect();
-    PanelTreeBuilder::new("cad-play-catalogue").section("cad-play-catalogue.typologies", Some(labels.typologies.into()), true, items).build()
+    PanelTreeBuilder::new("cad-play-catalogue")?.section("cad-play-catalogue.typologies", Some(labels.typologies.into()), true, items)?.build()
 }
 //#endregion 🔖️Render
 

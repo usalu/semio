@@ -55,12 +55,16 @@ pub fn read_record_grid(record_text: &str) -> Result<Vec<Vec<String>>, String> {
     reader.records().map(|result| result.map(|record| record.iter().map(|cell| cell.to_string()).collect())).collect::<Result<Vec<_>, _>>().map_err(|error| format!("independent reader could not read an EPW record: {error}"))
 }
 
-/// 📤️ Independent write of the RECORD half: the reference writer decides its own minimal quoting
-/// and its own CRLF terminator (the `csv` crate's default, matching EPW's own real convention), so a
-/// mutated grid round-trips through it rather than through any hand-rolled join.
+/// 📤️ Independent write of the RECORD half: the reference writer decides its own minimal quoting,
+/// and the terminator is set EXPLICITLY to CRLF because that is EPW's own real convention — the
+/// `csv` crate's writer default is a bare `\n` (only its READER treats CRLF permissively), so
+/// leaving it unset silently emitted an LF-terminated weather file whose records no longer matched
+/// the format the header half above is written in. Caught by the `identity-round-trip` scenario's
+/// carrier-law assertion, which reported a 6100-byte output against a 6124-byte input — exactly one
+/// lost byte per data record.
 #[cfg(feature = "oracles")]
 pub fn write_record_grid(grid: &[Vec<String>]) -> Result<String, String> {
-    let mut writer = csv::WriterBuilder::new().flexible(true).from_writer(Vec::new());
+    let mut writer = csv::WriterBuilder::new().flexible(true).terminator(csv::Terminator::CRLF).from_writer(Vec::new());
     for record in grid {
         writer.write_record(record).map_err(|error| format!("epw record: {error}"))?;
     }

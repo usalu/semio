@@ -70,6 +70,12 @@ pub enum SemioVideoMutation {
         key: bool,
     },
 }
+
+/// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.video`, in enum declaration
+/// order — what the `mutate-semio-video` case's completeness gate counts against and what
+/// `../../🧪️oracle/🔣️component.json`'s catalog repeats. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -80,6 +86,16 @@ pub enum SemioVideoMutation {
 pub fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation) -> protocol::MutationOutcome<SemioVideoDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ Free-function face of [`SemioVideoMutation`]'s own `protocol::Mutation::inverse`. `Mutation` is
+/// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `protocol` in
+/// `📦️glue.rs`) and is therefore not nameable by a consumer that links only this crate — a
+/// generated test host being the concrete case. Paired with [`apply_semio_video_mutation`] it makes the
+/// undo law reachable without importing a trait the caller cannot name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
+    <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(mutation, base)
 }
 //#endregion 🔖️Apply
 
@@ -362,6 +378,30 @@ mod tests {
         }
     }
     //#endregion 🔖️Fixtures
+
+    //#region 🔖️KindsLaw
+    /// 🧪️ `kinds_match_the_enum_and_the_catalog`: `KINDS` names every declared variant, in the
+    /// declaration order `variant_ordinal` assigns and the spelling `print_semio_video_mutation`
+    /// emits, and every one of those names also appears in the committed oracle manifest's
+    /// catalog. The bijection against `sample_mutations` is what makes a newly added variant fail
+    /// here instead of silently shrinking the vocabulary `mutate-semio-video` claims to cover.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        assert_eq!(KINDS, &OP_KEYWORDS[..], "KINDS must be exactly the op keyword table — one kebab-case name per declared variant, in declaration order");
+        let mut seen = vec![false; KINDS.len()];
+        for mutation in sample_mutations() {
+            let ordinal = variant_ordinal(&mutation) as usize;
+            assert!(!seen[ordinal], "ordinal {ordinal} is represented twice — sample_mutations must carry exactly one case per declared variant");
+            seen[ordinal] = true;
+            assert_eq!(KINDS[ordinal], print_semio_video_mutation(&mutation).split(' ').next().unwrap_or_default(), "KINDS[{ordinal}] must be the keyword {mutation:?} prints");
+        }
+        assert!(seen.iter().all(|hit| *hit), "every declared variant must be represented in sample_mutations");
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🔖️KindsLaw
 
     //#region 🔖️MutationDiffLaw
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

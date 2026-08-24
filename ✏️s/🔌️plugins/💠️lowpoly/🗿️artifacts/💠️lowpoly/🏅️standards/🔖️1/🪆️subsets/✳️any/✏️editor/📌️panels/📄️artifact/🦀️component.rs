@@ -27,7 +27,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> UiNode {
+pub async fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let active_id = resolve_active_object_id(view.snapshot, view.config);
     let items: Vec<UiTreeItemNode> = view
         .snapshot
@@ -72,9 +72,9 @@ pub async fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &Lowpo
         .collect();
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `.interaction_domain` binds this tree
     // to the "mesh" domain — the framework OVERWRITES every row's `presence.selected`/`.hovered` from the
-    // live `InteractionState` right after render, so this app never calls `.selected()`/`.highlighted()`
+    // live `InteractionState` right after render, so this app never calls `.selected()?`/`.highlighted()?`
     // again (dead code the wrapper would silently discard anyway).
-    PanelTreeBuilder::new("lowpoly-play-document").section("lowpoly-play-document.meshes", Some(labels.meshes.into()), true, items).interaction_domain(MESH_INTERACTION_DOMAIN).build()
+    PanelTreeBuilder::new("lowpoly-play-document")?.section("lowpoly-play-document.meshes", Some(labels.meshes.into()), true, items)?.interaction_domain(MESH_INTERACTION_DOMAIN)?.build()
 }
 //#endregion 🔖️Render
 

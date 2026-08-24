@@ -38,7 +38,7 @@ async fn catalog_kind_label(entry: &DslValue) -> String {
     entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-async fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> Vec<UiTreeItemNode> {
+async fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     entries
         .iter()
         .enumerate()
@@ -49,20 +49,20 @@ async fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &
                 "relationship-kinds" => wires_action("addRelationship", Some(json!({ "kind": kind_id }))),
                 _ => wires_action("addNode", Some(json!({ "kind": kind_id }))),
             };
-            tree_item_with_action(namespace.item_id(kind, &format!("{index}.{kind_id}")), Label::data(catalog_kind_label(entry)), Some(kind_id.into()), action)
+            tree_item_with_action(namespace.item_id(kind, &format!("{index}.{kind_id}"))?, Label::data(catalog_kind_label(entry)), Some(kind_id.into()), action)?
         })
         .collect()
 }
 
-pub async fn render(wires: &DslValue, labels: &WiresLabels) -> UiNode {
-    let namespace = PanelTreeBuilder::new("wires-play-kinds");
+pub async fn render(wires: &DslValue, labels: &WiresLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let namespace = PanelTreeBuilder::new("wires-play-kinds")?;
     let identity_entries = wires_kind_catalog_entries(wires, "identityKinds");
     let relationship_entries = wires_kind_catalog_entries(wires, "relationshipKinds");
     let identity_items = kind_catalog_items(&namespace, "identity-kinds", &identity_entries);
     let relationship_items = kind_catalog_items(&namespace, "relationship-kinds", &relationship_entries);
     namespace
-        .section_or_placeholder("wires-play-kinds.identity-kinds", Some(labels.identity_kinds.into()), true, identity_items, Label::data("(none)"))
-        .section_or_placeholder("wires-play-kinds.relationship-kinds", Some(labels.relationship_kinds.into()), true, relationship_items, Label::data("(none)"))
+        .section_or_placeholder("wires-play-kinds.identity-kinds", Some(labels.identity_kinds.into()), true, identity_items, Label::data("(none)"))?
+        .section_or_placeholder("wires-play-kinds.relationship-kinds", Some(labels.relationship_kinds.into()), true, relationship_items, Label::data("(none)"))?
         .build()
 }
 //#endregion 🔖️Render

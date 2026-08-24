@@ -24,6 +24,33 @@ fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<O
     Ok(Some((1, bytes)))
 }
 
+fn close_map_owner_step<K: Ord, V>(owner: &mut Vec<BTreeMap<K, V>>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
+    if let Some(map) = owner.last_mut() {
+        if !map.is_empty() {
+            let bytes = std::mem::size_of::<(K, V)>();
+            if bytes > maximum_bytes {
+                return Err(());
+            }
+            map.pop_last();
+            return Ok(Some((1, bytes)));
+        }
+        owner.pop();
+        return Ok(Some((1, 0)));
+    }
+    close_vec_owner_step(owner, maximum_bytes)
+}
+
+fn close_nested_vec_owner_step<T>(owner: &mut Vec<Vec<T>>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
+    if let Some(child) = owner.last_mut() {
+        if let Some(step) = close_vec_owner_step(child, maximum_bytes)? {
+            return Ok(Some(step));
+        }
+        owner.pop();
+        return Ok(Some((1, 0)));
+    }
+    close_vec_owner_step(owner, maximum_bytes)
+}
+
 // #region 🔖️Coo
 /// 🧱️ Triplet (row, col, value) accumulator for FEM-style assembly — duplicate `(row, col)`
 /// entries are summed lazily by whichever `to_*` conversion reads them.
@@ -355,6 +382,42 @@ impl LdltJob {
     pub fn factor(&self) -> Option<LdltFactor> {
         (self.state.column == self.state.a.n).then(|| LdltFactor { n: self.state.a.n, l_cols: self.state.l_cols.clone(), d: self.state.d.clone() })
     }
+
+    fn close_retained_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        for step in [close_nested_vec_owner_step(&mut self.state.row_lists, maximum_bytes), close_map_owner_step(&mut self.state.l_cols, maximum_bytes)] {
+            match step {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        for owner in [&mut self.state.d, &mut self.state.a.vals] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        for owner in [&mut self.state.a.rowind, &mut self.state.a.colptr] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        (true, 0, 0)
+    }
+
+    fn close_terminal_is_empty(&self) -> bool {
+        self.state.row_lists.is_empty()
+            && self.state.row_lists.capacity() == 0
+            && self.state.l_cols.is_empty()
+            && self.state.l_cols.capacity() == 0
+            && self.state.d.capacity() == 0
+            && self.state.a.vals.capacity() == 0
+            && self.state.a.rowind.capacity() == 0
+            && self.state.a.colptr.capacity() == 0
+    }
 }
 
 impl InteractiveJob for LdltJob {
@@ -383,6 +446,24 @@ impl InteractiveJob for LdltJob {
             return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&factor).expect("ldlt output is serializable") });
         }
         StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.column as u64 })
+    }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let (complete, released_items, released_bytes) = self.close_retained_step(maximum_bytes);
+        if complete {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.close_terminal_is_empty()
     }
 }
 
@@ -1006,6 +1087,24 @@ impl InteractiveJob for PcgJob {
         }
         StepOutcome::Yield
     }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let (complete, released_items, released_bytes) = PcgJob::close_step(self, maximum_bytes);
+        if complete {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.close_lane > 9
+    }
 }
 
 /// ➰️ Jacobi-preconditioned conjugate gradient — mutates `x0` in place, converges when
@@ -1308,6 +1407,42 @@ impl SubspaceIterationJob {
         self.state.iteration += 1;
         self.state.checkpoint_due = true;
     }
+
+    fn close_retained_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        match close_map_owner_step(&mut self.state.k_factor.l_cols, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
+        for owner in [&mut self.state.k_factor.d, &mut self.state.b.vals, &mut self.state.x.data, &mut self.state.prev_theta, &mut self.state.final_theta, &mut self.state.final_x.data, &mut self.state.residuals] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        for owner in [&mut self.state.b.indices, &mut self.state.b.indptr] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        (true, 0, 0)
+    }
+
+    fn close_terminal_is_empty(&self) -> bool {
+        self.state.k_factor.l_cols.capacity() == 0
+            && self.state.k_factor.d.capacity() == 0
+            && self.state.b.vals.capacity() == 0
+            && self.state.b.indices.capacity() == 0
+            && self.state.b.indptr.capacity() == 0
+            && self.state.x.data.capacity() == 0
+            && self.state.prev_theta.capacity() == 0
+            && self.state.final_theta.capacity() == 0
+            && self.state.final_x.data.capacity() == 0
+            && self.state.residuals.capacity() == 0
+    }
 }
 
 impl InteractiveJob for SubspaceIterationJob {
@@ -1335,6 +1470,24 @@ impl InteractiveJob for SubspaceIterationJob {
             return StepOutcome::Cancelled;
         }
         StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("subspace preview is serializable"))
+    }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let (complete, released_items, released_bytes) = self.close_retained_step(maximum_bytes);
+        if complete {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.close_terminal_is_empty()
     }
 }
 

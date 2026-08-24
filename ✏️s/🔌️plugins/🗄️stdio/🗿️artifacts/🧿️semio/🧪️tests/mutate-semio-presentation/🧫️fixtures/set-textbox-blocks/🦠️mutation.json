@@ -1,0 +1,43 @@
+{
+  "mutation": "setTextBoxBlocks",
+  "slide_index": 0,
+  "shape_index": 0,
+  "blocks": [
+    {
+      "kind": "paragraph",
+      "style_id": null,
+      "runs": [
+        {
+          "text": "Hallo Folie",
+          "style": {
+            "bold": false,
+            "italic": false,
+            "underline": false,
+            "size": null,
+            "font": null,
+            "color": null,
+            "link": null
+          }
+        }
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "style_id": null,
+      "runs": [
+        {
+          "text": "Zweiter Absatz",
+          "style": {
+            "bold": false,
+            "italic": false,
+            "underline": false,
+            "size": null,
+            "font": null,
+            "color": null,
+            "link": null
+          }
+        }
+      ]
+    }
+  ]
+}

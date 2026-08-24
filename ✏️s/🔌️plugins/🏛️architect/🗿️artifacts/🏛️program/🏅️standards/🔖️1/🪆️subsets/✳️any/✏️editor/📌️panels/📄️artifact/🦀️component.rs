@@ -35,29 +35,29 @@ pub async fn definition() -> PanelTabDefinition {
 /// `interactionSelect` generically. Register rows keep their own `selectRegister` action (switching
 /// the active register is unrelated to entity selection) and sit in the SAME tree, unaffected —
 /// mirrors note's document panel (`action_rows` + bare `block_items` coexisting under one
-/// `.interaction_domain(...)`).
-pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+/// `.interaction_domain(...)?`).
+pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let summary = status_summary(program);
-    let element_items: Vec<UiTreeItemNode> = program.elements.iter().map(|element| tree_item_desc(element.header.id.to_string(), Label::data(format!("{} ({:?})", element.header.name, element.kind)), Some(element.header.id.to_string()))).collect();
+    let element_items: Vec<UiTreeItemNode> = program.elements.iter().map(|element| tree_item_desc(element.header.id.to_string(), Label::data(format!("{} ({:?})", element.header.name, element.kind)), Some(element.header.id.to_string()))?).collect();
     let register_items: Vec<UiTreeItemNode> = summary
         .by_register
         .iter()
-        .map(|row| tree_item_with_action(format!("architect-document.register.{}", row.register), format!("{} ({})", row.register, row.count), None, architect_action("selectRegister", Some(json!({ "registerId": row.register })))))
+        .map(|row| tree_item_with_action(format!("architect-document.register.{}", row.register), format!("{} ({})", row.register, row.count), None, architect_action("selectRegister", Some(json!({ "registerId": row.register }))))?)
         .collect();
-    PanelTreeBuilder::new("architect-document")
+    PanelTreeBuilder::new("architect-document")?
         .section(
             "architect-document.meta",
             Some(Label::data("ProgramSnapshot")),
             true,
             vec![
-                tree_item("architect-document.meta.title", format!("Title: {}", program.meta.title)),
-                tree_item("architect-document.meta.project", format!("Project: {} ({})", program.project.client_name, program.project.code)),
-                tree_item("architect-document.meta.entities", format!("Entities tracked: {} (active register: {} / {})", summary.total_entities, active_register(cfg), register_len(program, active_register(cfg)))),
+                tree_item("architect-document.meta.title", format!("Title: {}", program.meta.title))?,
+                tree_item("architect-document.meta.project", format!("Project: {} ({})", program.project.client_name, program.project.code))?,
+                tree_item("architect-document.meta.entities", format!("Entities tracked: {} (active register: {} / {})", summary.total_entities, active_register(cfg), register_len(program, active_register(cfg))))?,
             ],
-        )
-        .section("architect-document.registers", Some(Label::data("Registers")), true, register_items)
-        .section_or_placeholder("architect-document.elements", Some(Label::data("Elements")), true, element_items, Label::data("(none)"))
-        .interaction_domain(ARCHITECT_INTERACTION_PROGRAM)
+        )?
+        .section("architect-document.registers", Some(Label::data("Registers")), true, register_items)?
+        .section_or_placeholder("architect-document.elements", Some(Label::data("Elements")), true, element_items, Label::data("(none)"))?
+        .interaction_domain(ARCHITECT_INTERACTION_PROGRAM)?
         .build()
 }
 //#endregion 🔖️Render

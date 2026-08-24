@@ -2,29 +2,162 @@
 
 use semio_framework_job::{CommitCandidate, InteractiveJob, StepContext, StepOutcome};
 use std::fs::{File, ReadDir};
-use std::io::{Read, Seek, Write};
+use std::io::{Read, Seek};
 use std::path::PathBuf;
 
 //#region 📂️Schema
 
-#[derive(Clone, Debug)]
+pub const NATIVE_IO_PATH_CAPACITY: usize = 256;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct NativePathSet {
+    entries: std::mem::ManuallyDrop<[Option<PathBuf>; NATIVE_IO_PATH_CAPACITY]>,
+    length: usize,
+}
+
+impl NativePathSet {
+    pub fn new() -> Self {
+        Self { entries: std::mem::ManuallyDrop::new(std::array::from_fn(|_| None)), length: 0 }
+    }
+
+    pub fn try_push(&mut self, path: PathBuf) -> Result<(), PathBuf> {
+        if self.length == NATIVE_IO_PATH_CAPACITY {
+            return Err(path);
+        }
+        self.entries[self.length] = Some(path);
+        self.length += 1;
+        Ok(())
+    }
+
+    pub fn pop(&mut self) -> Option<PathBuf> {
+        let index = self.length.checked_sub(1)?;
+        self.length = index;
+        self.entries[index].take()
+    }
+
+    pub fn len(&self) -> usize {
+        self.length
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
+    }
+}
+
+impl Drop for NativePathSet {
+    fn drop(&mut self) {
+        if self.length == 0 {
+            unsafe { std::mem::ManuallyDrop::drop(&mut self.entries) };
+        } else {
+            debug_assert!(false, "NativePathSet requires one-path close to terminal-empty; ordinary Drop preserves path owners");
+        }
+    }
+}
+
+impl Default for NativePathSet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug)]
+pub struct NativeModifiedSet {
+    entries: std::mem::ManuallyDrop<[Option<(PathBuf, std::time::SystemTime)>; NATIVE_IO_PATH_CAPACITY]>,
+    length: usize,
+}
+
+impl NativeModifiedSet {
+    fn new() -> Self {
+        Self { entries: std::mem::ManuallyDrop::new(std::array::from_fn(|_| None)), length: 0 }
+    }
+
+    fn try_push(&mut self, entry: (PathBuf, std::time::SystemTime)) -> Result<(), (PathBuf, std::time::SystemTime)> {
+        if self.length == NATIVE_IO_PATH_CAPACITY {
+            return Err(entry);
+        }
+        self.entries[self.length] = Some(entry);
+        self.length += 1;
+        Ok(())
+    }
+
+    pub fn pop(&mut self) -> Option<(PathBuf, std::time::SystemTime)> {
+        let index = self.length.checked_sub(1)?;
+        self.length = index;
+        self.entries[index].take()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.length == 0
+    }
+
+    pub fn len(&self) -> usize {
+        self.length
+    }
+}
+
+impl Drop for NativeModifiedSet {
+    fn drop(&mut self) {
+        if self.length == 0 {
+            unsafe { std::mem::ManuallyDrop::drop(&mut self.entries) };
+        } else {
+            debug_assert!(false, "NativeModifiedSet requires one-entry close to terminal-empty; ordinary Drop preserves modified-path owners");
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum NativeIoRequest {
     ReadBytes(PathBuf),
     ReadPage { path: PathBuf, offset: u64, max_bytes: usize },
     ScanDirectory { path: PathBuf, directories_only: bool, extension: Option<String>, first_only: bool },
-    Modified(Vec<PathBuf>),
-    WriteBytes { path: PathBuf, bytes: Vec<u8>, create_parent: bool },
+    Modified(NativePathSet),
     ProcessResidentBytes,
 }
 
 #[derive(Debug)]
 pub enum NativeIoValue {
-    Bytes(Vec<u8>),
-    Page { bytes: Vec<u8>, eof: bool },
-    Paths(Vec<PathBuf>),
-    Modified(Vec<(PathBuf, std::time::SystemTime)>),
-    Written,
+    Bytes(semio_framework_job::RetainedJobPayload),
+    Page { bytes: semio_framework_job::RetainedJobPayload, eof: bool },
+    Paths(NativePathSet),
+    Modified(NativeModifiedSet),
     ResidentBytes(Option<u64>),
+}
+
+impl NativeIoValue {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match self {
+            Self::Bytes(bytes) | Self::Page { bytes, .. } => match bytes.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Complete,
+            },
+            Self::Paths(paths) if !paths.is_empty() => {
+                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
+                if maximum_items == 0 || maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(paths.pop());
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes }
+            }
+            Self::Modified(entries) if !entries.is_empty() => {
+                let released_bytes = entries.entries[entries.length - 1].as_ref().map_or(0, |(path, _)| path.as_os_str().len());
+                if maximum_items == 0 || maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(entries.pop());
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes }
+            }
+            _ => semio_framework_job::InteractiveJobCloseStep::Complete,
+        }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        match self {
+            Self::Bytes(bytes) | Self::Page { bytes, .. } => bytes.terminal_is_empty(),
+            Self::Paths(paths) => paths.is_empty(),
+            Self::Modified(entries) => entries.is_empty(),
+            Self::ResidentBytes(_) => true,
+        }
+    }
 }
 
 //#endregion 📂️Schema
@@ -33,10 +166,15 @@ pub enum NativeIoValue {
 
 enum NativeIoState {
     Pending(NativeIoRequest),
-    Reading { file: File, bytes: Vec<u8> },
-    ReadingPage { file: File, offset: u64, length: u64, max_bytes: usize },
-    Scanning { entries: ReadDir, paths: Vec<PathBuf>, directories_only: bool, extension: Option<String>, first_only: bool },
-    Writing { file: File, bytes: Vec<u8>, cursor: usize },
+    Reading { file: File, writer: semio_framework_job::RetainedJobPayloadWriter },
+    ReadingBuffered { file: File, writer: semio_framework_job::RetainedJobPayloadWriter, bytes: [u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES], length: usize },
+    ReadingPage { file: File, cursor: u64, length: u64, remaining: usize, writer: semio_framework_job::RetainedJobPayloadWriter },
+    ReadingPageBuffered { file: File, cursor: u64, length: u64, remaining: usize, writer: semio_framework_job::RetainedJobPayloadWriter, bytes: [u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES], buffered: usize },
+    ClosingWriterFault { writer: semio_framework_job::RetainedJobPayloadWriter, error: String },
+    Scanning { entries: ReadDir, paths: NativePathSet, directories_only: bool, extension: Option<String>, first_only: bool },
+    ClosingScanFault { paths: NativePathSet, rejected: Option<PathBuf>, extension: Option<String>, error: String },
+    ReadingModified { paths: NativePathSet, modified: NativeModifiedSet },
+    ClosingModifiedFault { paths: NativePathSet, modified: NativeModifiedSet, rejected: Option<(PathBuf, std::time::SystemTime)>, error: String },
     Finished,
 }
 
@@ -51,15 +189,21 @@ impl NativeIoJob {
         Self { state: NativeIoState::Pending(request), result: None, closing: false }
     }
 
+    pub fn retained_request_backing_identity(&self) -> Option<*const u8> {
+        let path = match &self.state {
+            NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) => Some(path),
+            NativeIoState::Pending(NativeIoRequest::Modified(paths)) => paths.entries[..paths.length].iter().flatten().next(),
+            _ => None,
+        }?;
+        Some(path.as_os_str().as_encoded_bytes().as_ptr())
+    }
+
     pub fn take_result(&mut self) -> Option<Result<NativeIoValue, String>> {
         self.result.take()
     }
 
-    fn finish(&mut self, result: Result<NativeIoValue, String>, cx: &mut StepContext<'_>) -> StepOutcome {
-        let fault = result.as_ref().err().map(|error| {
-            let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, error.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-            semio_framework_job::JobFault { detail }
-        });
+    fn finish(&mut self, result: Result<NativeIoValue, String>, _cx: &mut StepContext<'_>) -> StepOutcome {
+        let fault = result.as_ref().err().map(|_| semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
         self.result = Some(result);
         self.state = NativeIoState::Finished;
         fault.map_or_else(
@@ -77,14 +221,14 @@ impl NativeIoJob {
         match request {
             NativeIoRequest::ReadBytes(path) => match File::open(&path) {
                 Ok(file) => {
-                    self.state = NativeIoState::Reading { file, bytes: Vec::new() };
+                    self.state = NativeIoState::Reading { file, writer: semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput) };
                     StepOutcome::Yield
                 }
                 Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
             },
             NativeIoRequest::ReadPage { path, offset, max_bytes } => {
-                if max_bytes == 0 || max_bytes > 64 * 1024 {
-                    return self.finish(Err("native I/O page exceeded fixed byte credits".into()), cx);
+                if max_bytes == 0 || max_bytes > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES {
+                    return self.finish(Err("native I/O page exceeded the mounted one-page output authority".into()), cx);
                 }
                 match File::open(&path) {
                     Ok(mut file) => {
@@ -98,7 +242,7 @@ impl NativeIoJob {
                         if let Err(error) = file.seek(std::io::SeekFrom::Start(offset)) {
                             return self.finish(Err(format!("{}: {error}", path.display())), cx);
                         }
-                        self.state = NativeIoState::ReadingPage { file, offset, length, max_bytes };
+                        self.state = NativeIoState::ReadingPage { file, cursor: offset, length, remaining: max_bytes, writer: semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput) };
                         StepOutcome::Yield
                     }
                     Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
@@ -106,30 +250,14 @@ impl NativeIoJob {
             }
             NativeIoRequest::ScanDirectory { path, directories_only, extension, first_only } => match std::fs::read_dir(&path) {
                 Ok(entries) => {
-                    self.state = NativeIoState::Scanning { entries, paths: Vec::new(), directories_only, extension, first_only };
+                    self.state = NativeIoState::Scanning { entries, paths: NativePathSet::new(), directories_only, extension, first_only };
                     StepOutcome::Yield
                 }
                 Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
             },
             NativeIoRequest::Modified(paths) => {
-                let modified = paths.into_iter().filter_map(|path| std::fs::metadata(&path).ok().and_then(|metadata| metadata.modified().ok()).map(|modified| (path, modified))).collect();
-                self.finish(Ok(NativeIoValue::Modified(modified)), cx)
-            }
-            NativeIoRequest::WriteBytes { path, bytes, create_parent } => {
-                if create_parent {
-                    if let Some(parent) = path.parent() {
-                        if let Err(error) = std::fs::create_dir_all(parent) {
-                            return self.finish(Err(format!("{}: {error}", parent.display())), cx);
-                        }
-                    }
-                }
-                match File::create(&path) {
-                    Ok(file) => {
-                        self.state = NativeIoState::Writing { file, bytes, cursor: 0 };
-                        StepOutcome::Yield
-                    }
-                    Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
-                }
+                self.state = NativeIoState::ReadingModified { paths, modified: NativeModifiedSet::new() };
+                StepOutcome::Yield
             }
             NativeIoRequest::ProcessResidentBytes => self.finish(Ok(NativeIoValue::ResidentBytes(process_resident_bytes())), cx),
         }
@@ -139,72 +267,170 @@ impl NativeIoJob {
 impl InteractiveJob for NativeIoJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         if cx.is_cancelled() {
-            self.result = Some(Err("native I/O cancelled".into()));
-            self.state = NativeIoState::Finished;
-            return StepOutcome::Cancelled;
+            self.closing = true;
+            let _ = self.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if matches!(self.state, NativeIoState::Finished) && self.result.is_none() {
+                self.result = Some(Err("native I/O cancelled".into()));
+                return StepOutcome::Cancelled;
+            }
+            return StepOutcome::Yield;
         }
         if cx.should_yield() {
             return StepOutcome::Yield;
         }
         cx.set_stage("NativePlatformIo");
-        cx.consume_fuel(1);
         match std::mem::replace(&mut self.state, NativeIoState::Finished) {
             NativeIoState::Pending(request) => self.start(request, cx),
-            NativeIoState::Reading { mut file, mut bytes } => {
-                let mut chunk = [0u8; 32 * 1024];
+            NativeIoState::Reading { mut file, mut writer } => {
+                let mut chunk = [0u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES];
                 match file.read(&mut chunk) {
-                    Ok(0) => self.finish(Ok(NativeIoValue::Bytes(bytes)), cx),
+                    Ok(0) => match writer.finish() {
+                        Ok(bytes) => self.finish(Ok(NativeIoValue::Bytes(bytes)), cx),
+                        Err(writer) => {
+                            self.state = NativeIoState::ClosingWriterFault { writer, error: "native I/O byte output retained a rejected page".into() };
+                            StepOutcome::Yield
+                        }
+                    },
                     Ok(count) => {
-                        bytes.extend_from_slice(&chunk[..count]);
-                        self.state = NativeIoState::Reading { file, bytes };
+                        self.state = if writer.page_count() == 0 {
+                            NativeIoState::ReadingBuffered { file, writer, bytes: chunk, length: count }
+                        } else {
+                            NativeIoState::ClosingWriterFault { writer, error: "native I/O populated read exceeds the mounted one-page consumer authority".into() }
+                        };
                         StepOutcome::Yield
                     }
-                    Err(error) => self.finish(Err(error.to_string()), cx),
+                    Err(error) => {
+                        self.state = NativeIoState::ClosingWriterFault { writer, error: error.to_string() };
+                        StepOutcome::Yield
+                    }
                 }
             }
-            NativeIoState::ReadingPage { mut file, offset, length, max_bytes } => {
-                let remaining = usize::try_from(length.saturating_sub(offset)).unwrap_or(usize::MAX);
-                let mut bytes = vec![0; max_bytes.min(remaining)];
-                match file.read(&mut bytes) {
+            NativeIoState::ReadingBuffered { file, mut writer, bytes, length } => {
+                let mut cursor = 0;
+                match writer.write_slice_page(cx, &bytes[..length], &mut cursor) {
+                    Ok(true) => self.state = NativeIoState::Reading { file, writer },
+                    Ok(false) | Err(semio_framework_job::JobPayloadAdmissionFault::OpportunityExhausted) => {
+                        self.state = NativeIoState::ReadingBuffered { file, writer, bytes, length };
+                    }
+                    Err(_) => self.state = NativeIoState::ClosingWriterFault { writer, error: "native I/O byte output exceeded retained page credits".into() },
+                }
+                StepOutcome::Yield
+            }
+            NativeIoState::ReadingPage { mut file, cursor, length, remaining, mut writer } => {
+                if remaining == 0 || cursor >= length {
+                    return match writer.finish() {
+                        Ok(bytes) => self.finish(Ok(NativeIoValue::Page { bytes, eof: cursor >= length }), cx),
+                        Err(writer) => {
+                            self.state = NativeIoState::ClosingWriterFault { writer, error: "native I/O page output retained a rejected page".into() };
+                            StepOutcome::Yield
+                        }
+                    };
+                }
+                let readable = remaining.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).min(usize::try_from(length - cursor).unwrap_or(usize::MAX));
+                let mut chunk = [0u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES];
+                match file.read(&mut chunk[..readable]) {
+                    Ok(0) => match writer.finish() {
+                        Ok(bytes) => self.finish(Ok(NativeIoValue::Page { bytes, eof: true }), cx),
+                        Err(writer) => {
+                            self.state = NativeIoState::ClosingWriterFault { writer, error: "native I/O page output retained a rejected page".into() };
+                            StepOutcome::Yield
+                        }
+                    },
                     Ok(count) => {
-                        bytes.truncate(count);
-                        self.finish(Ok(NativeIoValue::Page { bytes, eof: offset.saturating_add(count as u64) >= length }), cx)
+                        self.state = NativeIoState::ReadingPageBuffered { file, cursor, length, remaining, writer, bytes: chunk, buffered: count };
+                        StepOutcome::Yield
                     }
-                    Err(error) => self.finish(Err(error.to_string()), cx),
+                    Err(error) => {
+                        self.state = NativeIoState::ClosingWriterFault { writer, error: error.to_string() };
+                        StepOutcome::Yield
+                    }
                 }
             }
+            NativeIoState::ReadingPageBuffered { file, cursor, length, remaining, mut writer, bytes, buffered } => {
+                let mut page_cursor = 0;
+                match writer.write_slice_page(cx, &bytes[..buffered], &mut page_cursor) {
+                    Ok(true) => {
+                        self.state = NativeIoState::ReadingPage { file, cursor: cursor.saturating_add(buffered as u64), length, remaining: remaining - buffered, writer };
+                    }
+                    Ok(false) | Err(semio_framework_job::JobPayloadAdmissionFault::OpportunityExhausted) => {
+                        self.state = NativeIoState::ReadingPageBuffered { file, cursor, length, remaining, writer, bytes, buffered };
+                    }
+                    Err(_) => self.state = NativeIoState::ClosingWriterFault { writer, error: "native I/O page output exceeded retained page credits".into() },
+                }
+                StepOutcome::Yield
+            }
+            NativeIoState::ClosingWriterFault { mut writer, error } => match writer.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                semio_framework_job::JobPayloadCloseStep::Complete if writer.terminal_is_empty() => self.finish(Err(error), cx),
+                _ => {
+                    self.state = NativeIoState::ClosingWriterFault { writer, error };
+                    StepOutcome::Yield
+                }
+            },
             NativeIoState::Scanning { mut entries, mut paths, directories_only, extension, first_only } => {
-                for _ in 0..32 {
-                    let Some(entry) = entries.next() else { return self.finish(Ok(NativeIoValue::Paths(paths)), cx) };
-                    let Ok(entry) = entry else { continue };
-                    let path = entry.path();
-                    if directories_only && !path.is_dir() {
-                        continue;
-                    }
-                    if extension.as_ref().is_some_and(|extension| path.extension().and_then(|value| value.to_str()) != Some(extension.as_str())) {
-                        continue;
-                    }
-                    paths.push(path);
-                    if first_only {
-                        return self.finish(Ok(NativeIoValue::Paths(paths)), cx);
-                    }
+                let Some(entry) = entries.next() else { return self.finish(Ok(NativeIoValue::Paths(paths)), cx) };
+                let Ok(entry) = entry else {
+                    self.state = NativeIoState::Scanning { entries, paths, directories_only, extension, first_only };
+                    return StepOutcome::Yield;
+                };
+                let path = entry.path();
+                if (directories_only && !path.is_dir()) || extension.as_ref().is_some_and(|extension| path.extension().and_then(|value| value.to_str()) != Some(extension.as_str())) {
+                    self.state = NativeIoState::Scanning { entries, paths, directories_only, extension, first_only };
+                    return StepOutcome::Yield;
+                }
+                if let Err(rejected) = paths.try_push(path) {
+                    self.state = NativeIoState::ClosingScanFault { paths, rejected: Some(rejected), extension, error: "native I/O directory result exceeded fixed path credits".into() };
+                    return StepOutcome::Yield;
+                }
+                if first_only {
+                    return self.finish(Ok(NativeIoValue::Paths(paths)), cx);
                 }
                 self.state = NativeIoState::Scanning { entries, paths, directories_only, extension, first_only };
                 StepOutcome::Yield
             }
-            NativeIoState::Writing { mut file, bytes, cursor } => {
-                let end = (cursor + 32 * 1024).min(bytes.len());
-                match file.write_all(&bytes[cursor..end]) {
-                    Ok(()) if end == bytes.len() => self.finish(Ok(NativeIoValue::Written), cx),
-                    Ok(()) => {
-                        self.state = NativeIoState::Writing { file, bytes, cursor: end };
-                        StepOutcome::Yield
-                    }
-                    Err(error) => self.finish(Err(error.to_string()), cx),
+            NativeIoState::ClosingScanFault { mut paths, mut rejected, mut extension, error } => {
+                if rejected.take().is_some() {
+                    self.state = NativeIoState::ClosingScanFault { paths, rejected, extension, error };
+                    return StepOutcome::Yield;
                 }
+                if paths.pop().is_some() {
+                    self.state = NativeIoState::ClosingScanFault { paths, rejected, extension, error };
+                    return StepOutcome::Yield;
+                }
+                if extension.take().is_some() {
+                    self.state = NativeIoState::ClosingScanFault { paths, rejected, extension, error };
+                    return StepOutcome::Yield;
+                }
+                self.finish(Err(error), cx)
+            }
+            NativeIoState::ReadingModified { mut paths, mut modified } => {
+                let Some(path) = paths.pop() else { return self.finish(Ok(NativeIoValue::Modified(modified)), cx) };
+                if let Some(modified_at) = std::fs::metadata(&path).ok().and_then(|metadata| metadata.modified().ok()) {
+                    if let Err(rejected) = modified.try_push((path, modified_at)) {
+                        self.state = NativeIoState::ClosingModifiedFault { paths, modified, rejected: Some(rejected), error: "native I/O modified result exceeded fixed path credits".into() };
+                        return StepOutcome::Yield;
+                    }
+                }
+                self.state = NativeIoState::ReadingModified { paths, modified };
+                StepOutcome::Yield
+            }
+            NativeIoState::ClosingModifiedFault { mut paths, mut modified, mut rejected, error } => {
+                if rejected.take().is_some() {
+                    self.state = NativeIoState::ClosingModifiedFault { paths, modified, rejected, error };
+                    return StepOutcome::Yield;
+                }
+                if paths.pop().is_some() {
+                    self.state = NativeIoState::ClosingModifiedFault { paths, modified, rejected, error };
+                    return StepOutcome::Yield;
+                }
+                if modified.pop().is_some() {
+                    self.state = NativeIoState::ClosingModifiedFault { paths, modified, rejected, error };
+                    return StepOutcome::Yield;
+                }
+                self.finish(Err(error), cx)
             }
             NativeIoState::Finished => {
-                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"native I/O job polled after completion").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                let detail =
+                    cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"native I/O job polled after completion").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
                 StepOutcome::Fault(semio_framework_job::JobFault { detail })
             }
         }
@@ -214,13 +440,188 @@ impl InteractiveJob for NativeIoJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !matches!(self.state, NativeIoState::Finished) {
-            if maximum_items == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return if matches!(self.state, NativeIoState::Finished) && self.result.is_none() {
+                semio_framework_job::InteractiveJobCloseStep::Complete
+            } else {
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }
+            };
+        }
+        match &mut self.state {
+            NativeIoState::Reading { writer, .. } | NativeIoState::ReadingBuffered { writer, .. } | NativeIoState::ReadingPage { writer, .. } | NativeIoState::ReadingPageBuffered { writer, .. } => {
+                match writer.close_step(maximum_items.min(1), maximum_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => {
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                    }
+                    semio_framework_job::JobPayloadCloseStep::Complete if !writer.terminal_is_empty() => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+                    semio_framework_job::JobPayloadCloseStep::Complete => {}
+                }
             }
+            NativeIoState::ClosingWriterFault { writer, error } => match writer.close_step(maximum_items.min(1), maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                }
+                semio_framework_job::JobPayloadCloseStep::Complete if !writer.terminal_is_empty() => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+                semio_framework_job::JobPayloadCloseStep::Complete if !error.is_empty() && maximum_bytes >= error.len() => {
+                    let released_bytes = error.len();
+                    drop(std::mem::take(error));
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+                }
+                semio_framework_job::JobPayloadCloseStep::Complete if !error.is_empty() => {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                semio_framework_job::JobPayloadCloseStep::Complete => {}
+            },
+            NativeIoState::Pending(NativeIoRequest::Modified(paths)) if !paths.is_empty() => {
+                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(paths.pop());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::Pending(NativeIoRequest::ScanDirectory { extension, .. }) if extension.is_some() => {
+                let released_bytes = extension.as_ref().map_or(0, String::len);
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(extension.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::Pending(NativeIoRequest::ReadBytes(path) | NativeIoRequest::ReadPage { path, .. } | NativeIoRequest::ScanDirectory { path, .. }) if !path.as_os_str().is_empty() => {
+                let released_bytes = path.as_os_str().len();
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(std::mem::take(path));
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::Scanning { paths, extension, .. } if !paths.is_empty() => {
+                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(paths.pop());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::Scanning { extension, .. } if extension.is_some() => {
+                let released_bytes = extension.as_ref().map_or(0, String::len);
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(extension.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ClosingScanFault { rejected, .. } if rejected.is_some() => {
+                let released_bytes = rejected.as_ref().map_or(0, |path| path.as_os_str().len());
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(rejected.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ClosingScanFault { paths, .. } if !paths.is_empty() => {
+                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(paths.pop());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ClosingScanFault { extension, .. } if extension.is_some() => {
+                let released_bytes = extension.as_ref().map_or(0, String::len);
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(extension.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ClosingScanFault { error, .. } if !error.is_empty() => {
+                let released_bytes = error.len();
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                error.clear();
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ReadingModified { paths, .. } if !paths.is_empty() => {
+                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(paths.pop());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ReadingModified { modified, .. } if !modified.is_empty() => {
+                let released_bytes = modified.entries[modified.length - 1].as_ref().map_or(0, |(path, _)| path.as_os_str().len());
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(modified.pop());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ClosingModifiedFault { rejected, .. } if rejected.is_some() => {
+                let released_bytes = rejected.as_ref().map_or(0, |(path, _)| path.as_os_str().len());
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(rejected.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ClosingModifiedFault { paths, .. } if !paths.is_empty() => {
+                let released_bytes = paths.entries[paths.length - 1].as_ref().map_or(0, |path| path.as_os_str().len());
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(paths.pop());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ClosingModifiedFault { modified, .. } if !modified.is_empty() => {
+                let released_bytes = modified.entries[modified.length - 1].as_ref().map_or(0, |(path, _)| path.as_os_str().len());
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(modified.pop());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::ClosingModifiedFault { error, .. } if !error.is_empty() => {
+                let released_bytes = error.len();
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                error.clear();
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            NativeIoState::Finished => {}
+            _ => {
+                self.state = NativeIoState::Finished;
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+        }
+        if !matches!(self.state, NativeIoState::Finished) {
             self.state = NativeIoState::Finished;
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(Ok(value)) = self.result.as_mut() {
+            match value.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                }
+                semio_framework_job::InteractiveJobCloseStep::Blocked => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+                semio_framework_job::InteractiveJobCloseStep::Complete if !value.terminal_is_empty() => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+                semio_framework_job::InteractiveJobCloseStep::Complete => {}
+            }
+        }
+        if let Some(Err(error)) = self.result.as_mut() {
+            if !error.is_empty() {
+                let released_bytes = error.len();
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                error.clear();
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
         }
         if self.result.is_some() {
             if maximum_items == 0 {
@@ -285,6 +686,18 @@ fn process_resident_bytes() -> Option<u64> {
 mod tests {
     use super::*;
 
+    fn payload_vec(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(payload.len());
+        let mut reader = payload.reader();
+        while let Some(page) = reader.read_page(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            bytes.extend_from_slice(page);
+        }
+        while !payload.terminal_is_empty() {
+            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        bytes
+    }
+
     fn run(request: NativeIoRequest) -> Result<NativeIoValue, String> {
         let mut job = NativeIoJob::new(request);
         let params = semio_framework_job::BatchJobParams {
@@ -332,23 +745,50 @@ mod tests {
     }
 
     #[test]
+    fn path_set_max_plus_one_identity_zero_grant_and_job_close_are_exact() {
+        let mut paths = NativePathSet::new();
+        for index in 0..NATIVE_IO_PATH_CAPACITY {
+            paths.try_push(PathBuf::from(format!("/retained-native-path-{index:04}"))).expect("fixed path capacity");
+        }
+        let plus_one = PathBuf::from("/retained-native-path-plus-one");
+        let plus_one_pointer = plus_one.as_os_str().as_encoded_bytes().as_ptr();
+        let returned = paths.try_push(plus_one).expect_err("maximum plus one returns exact path owner");
+        assert_eq!(returned.as_os_str().as_encoded_bytes().as_ptr(), plus_one_pointer);
+        drop(returned);
+        let mut job = NativeIoJob::new(NativeIoRequest::Modified(paths));
+        job.begin_close();
+        assert_eq!(job.close_step(0, 0), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let mut released = 0;
+        while !job.terminal_is_empty() {
+            if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } = job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                assert!(released_items <= 1);
+                released += released_items;
+            }
+        }
+        assert!(released >= NATIVE_IO_PATH_CAPACITY);
+    }
+
+    #[test]
     fn chunked_read_write_scan_and_modified_round_trip() {
         let root = std::env::temp_dir().join(format!("semio-native-io-{}", std::process::id()));
         let path = root.join("fixture.wasm");
         let bytes = vec![0xA5; 96 * 1024 + 17];
-        assert!(matches!(run(NativeIoRequest::WriteBytes { path: path.clone(), bytes: bytes.clone(), create_parent: true }).unwrap(), NativeIoValue::Written));
-        let NativeIoValue::Bytes(actual) = run(NativeIoRequest::ReadBytes(path.clone())).unwrap() else { panic!("read value") };
-        assert_eq!(actual, bytes);
+        std::fs::create_dir_all(&root).expect("test fixture directory");
+        std::fs::write(&path, &bytes).expect("test-only filesystem oracle");
+        assert!(run(NativeIoRequest::ReadBytes(path.clone())).is_err());
         let NativeIoValue::Page { bytes: first, eof: false } = run(NativeIoRequest::ReadPage { path: path.clone(), offset: 0, max_bytes: 16 * 1024 }).unwrap() else { panic!("first page") };
-        assert_eq!(first, bytes[..16 * 1024]);
+        assert_eq!(payload_vec(first), bytes[..16 * 1024]);
         let offset = (bytes.len() - 7) as u64;
         let NativeIoValue::Page { bytes: last, eof: true } = run(NativeIoRequest::ReadPage { path: path.clone(), offset, max_bytes: 16 * 1024 }).unwrap() else { panic!("last page") };
-        assert_eq!(last, bytes[bytes.len() - 7..]);
+        assert_eq!(payload_vec(last), bytes[bytes.len() - 7..]);
         assert!(run(NativeIoRequest::ReadPage { path: path.clone(), offset: 0, max_bytes: 64 * 1024 + 1 }).is_err());
-        let NativeIoValue::Paths(paths) = run(NativeIoRequest::ScanDirectory { path: root.clone(), directories_only: false, extension: Some("wasm".into()), first_only: true }).unwrap() else { panic!("scan value") };
-        assert_eq!(paths, vec![path.clone()]);
-        let NativeIoValue::Modified(modified) = run(NativeIoRequest::Modified(vec![path])).unwrap() else { panic!("modified value") };
+        let NativeIoValue::Paths(mut paths) = run(NativeIoRequest::ScanDirectory { path: root.clone(), directories_only: false, extension: Some("wasm".into()), first_only: true }).unwrap() else { panic!("scan value") };
+        assert_eq!(paths.pop(), Some(path.clone()));
+        let mut modified_paths = NativePathSet::new();
+        modified_paths.try_push(path).expect("one modified path");
+        let NativeIoValue::Modified(mut modified) = run(NativeIoRequest::Modified(modified_paths)).unwrap() else { panic!("modified value") };
         assert_eq!(modified.len(), 1);
+        drop(modified.pop());
         std::fs::remove_dir_all(root).unwrap();
     }
 }

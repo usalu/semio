@@ -9,7 +9,8 @@
 //! implementation.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::subsets::any::{oracle_apply_mutation, project_wav_mutation};
+use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_wav_mutation};
+use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🔊️bauen-mit-bestand-ausschnitt.wav";
@@ -35,19 +36,43 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔮️ The inverse property's reference claim: after mutate-then-undo the recording is unchanged, so
-/// the trusted result is simply the pristine original projected through the SAME independent reader.
+/// ↩️ The inverse law, asserted rather than assumed: `hound` applies the row's kind, then the
+/// reference's own computed inverse on top of that result, and the rewritten recording must project
+/// back onto the pristine original. Returning the untouched original (what this used to do) asserted
+/// nothing — the scenario passed whenever `hound` merely parsed the fixture.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let bytes = mutable_input(ctx)?;
-    let projection = project_wav_mutation(&bytes)?;
-    Ok(Outcome::with_raw(bytes, projection))
+    let input = mutable_input(ctx)?;
+    let spec = ctx.doc_json()?;
+    let before = project_wav_mutation(&input)?;
+    let mutated = oracle_apply_mutation(&input, &spec)?;
+    let restored = oracle_apply_mutation_inverse(&input, &spec, &mutated)?;
+    let projection = project_wav_mutation(&restored)?;
+    law::inverse_restores(&spec.str("kind"), &projection, &before)?;
+    Ok(Outcome::with_raw(restored, projection))
 }
 
-/// 🔮️ The round-trip's reference claim: the pristine original, projected independently.
+/// 🔁️ The identity round trip, asserted rather than assumed: `hound` decodes the `fmt `/`data` pair
+/// and writes a fresh file from the decoded model alone, and the semantic projection — format
+/// block, every decoded sample, every retained chunk — must survive that unchanged.
+///
+/// 🚫️ The "re-encoded bytes must differ from the input" half of the law does NOT hold on this side
+/// and is deliberately not contrived into one that does. RIFF/WAVE 16-bit PCM has exactly ONE
+/// canonical layout for a recording with no auxiliary chunks — a 44-byte `RIFF`/`fmt `/`data`
+/// header followed by the samples — and `shared://🔊️bauen-mit-bestand-ausschnitt.wav` is precisely
+/// that (verified: mono, 8000 Hz, 16-bit, `data` starts at offset 44, no `LIST`/`fact`/anything
+/// else). A conforming writer reproducing it byte-for-byte is the format being canonical, not the
+/// input being smuggled through. What IS assertable of a canonical writer — and asserted here — is
+/// that it is a fixpoint on that layout: a dropped chunk, a miscounted sample or a wrong byte rate
+/// would all move the bytes. The pass-through tripwire still binds on the SUBJECT side, whose
+/// `encode_wav` is held to it independently below.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let bytes = mutable_input(ctx)?;
-    let projection = project_wav_mutation(&bytes)?;
-    Ok(Outcome::with_raw(bytes, projection))
+    let input = mutable_input(ctx)?;
+    let output = oracle_identity_round_trip(&input)?;
+    let before = project_wav_mutation(&input)?;
+    let after = project_wav_mutation(&output)?;
+    law::round_trip_preserves(&after, &before)?;
+    law::carrier_is_exact(&output, &input)?;
+    Ok(Outcome::with_raw(output, after))
 }
 //#endregion 🔖️Oracle
 

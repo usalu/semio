@@ -4,7 +4,10 @@ use crate::artifacts::layout::{Frame, GridSettings, LayoutBounds, LayoutSnapshot
 use crate::editor::layout::config::LayoutConfigMutation;
 use crate::editor::layout::LayoutPlayApp;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_job::{BatchDriveConfig, BatchJobParams, Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveStage, JobFault, Operation, RevisionId, StepContext, StepOutcome};
+use semio_framework_job::{
+    BatchDriveConfig, BatchJobParams, Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter,
+    RevisionId, StepContext, StepOutcome,
+};
 use semio_framework_plugin::app::{
     ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion,
 };
@@ -2133,6 +2136,7 @@ enum PackageSection {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum LayoutExportCloseStage {
+    Publication,
     JsonValidation,
     TypedValidation,
     PackageJson,
@@ -2153,6 +2157,81 @@ enum LayoutExportCloseStage {
     Snapshot,
     SnapshotOwner,
     Complete,
+}
+
+#[derive(Clone, Copy)]
+enum LayoutExportPublicationKind {
+    Preview,
+    Checkpoint { applied_progress: u64 },
+    Commit,
+    Fault,
+}
+
+struct LayoutExportPublication {
+    kind: LayoutExportPublicationKind,
+    bytes: [u8; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES],
+    length: usize,
+    cursor: usize,
+    writer: Option<RetainedJobPayloadWriter>,
+}
+
+impl LayoutExportPublication {
+    fn new(kind: LayoutExportPublicationKind, bytes: &[u8]) -> Result<Self, String> {
+        if bytes.len() > MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES {
+            return Err("layout-export-publication-limit".into());
+        }
+        let mut storage = [0; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES];
+        storage[..bytes.len()].copy_from_slice(bytes);
+        let stream = match kind {
+            LayoutExportPublicationKind::Preview => JobPayloadStream::Preview,
+            LayoutExportPublicationKind::Checkpoint { .. } => JobPayloadStream::CheckpointState,
+            LayoutExportPublicationKind::Commit => JobPayloadStream::CommitState,
+            LayoutExportPublicationKind::Fault => JobPayloadStream::Fault,
+        };
+        Ok(Self { kind, bytes: storage, length: bytes.len(), cursor: 0, writer: Some(RetainedJobPayloadWriter::new(stream)) })
+    }
+
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        let writer = self.writer.as_mut().expect("layout publication owns writer until finish");
+        match writer.write_slice_page(context, &self.bytes[..self.length], &mut self.cursor) {
+            Ok(false) | Err(_) => StepOutcome::Yield,
+            Ok(true) => {
+                let writer = self.writer.take().expect("layout publication owns completed writer");
+                let payload = match writer.finish() {
+                    Ok(payload) => payload,
+                    Err(writer) => {
+                        self.writer = Some(writer);
+                        return StepOutcome::Yield;
+                    }
+                };
+                match self.kind {
+                    LayoutExportPublicationKind::Preview => StepOutcome::PreviewReady(payload),
+                    LayoutExportPublicationKind::Checkpoint { applied_progress } => StepOutcome::CheckpointReady(Checkpoint { state: payload, applied_progress }),
+                    LayoutExportPublicationKind::Commit => StepOutcome::Complete(CommitCandidate { state: payload, output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) }),
+                    LayoutExportPublicationKind::Fault => StepOutcome::Fault(JobFault { detail: payload }),
+                }
+            }
+        }
+    }
+
+    fn begin_close(&mut self) {
+        if let Some(writer) = self.writer.as_mut() {
+            writer.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> JobPayloadCloseStep {
+        let Some(writer) = self.writer.as_mut() else { return JobPayloadCloseStep::Complete };
+        let step = writer.close_step(maximum_items, maximum_bytes);
+        if writer.terminal_is_empty() {
+            self.writer = None;
+        }
+        step
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.writer.is_none()
+    }
 }
 
 pub struct LayoutExportJob {
@@ -2198,6 +2277,9 @@ pub struct LayoutExportJob {
     completed_units: u64,
     restore_target: Option<LayoutExportCheckpoint>,
     snapshot_close: Option<ArtifactSnapshotCloseLease<LayoutSnapshot>>,
+    snapshot_placeholder: Option<Arc<LayoutSnapshot>>,
+    publication: Option<LayoutExportPublication>,
+    closing: bool,
     close_stage: LayoutExportCloseStage,
 }
 
@@ -2220,7 +2302,7 @@ impl InteractiveJob for LayoutExportToolJob {
         match self.inner.step(context) {
             StepOutcome::Complete(candidate) => {
                 if self.completed {
-                    return StepOutcome::Fault(JobFault { detail: b"layout-export-duplicate-completion".to_vec() });
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                 }
                 if self.completion.is_none() {
                     self.completed = true;
@@ -2229,7 +2311,8 @@ impl InteractiveJob for LayoutExportToolJob {
                 let download = ArtifactDownloadOutput::new(format!("{}.{}", sanitize_filename(&self.name), self.kind.extension()), self.kind.mime_type(), self.kind.binary().then(|| "base64".into()), self.inner.output_chunks.clone());
                 if let Some(completion) = &self.completion {
                     if let Err(error) = completion.complete_download(download, EphemeralEmit::<EditorApp<LayoutPlayApp>>::default()) {
-                        return StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() });
+                        let _ = error;
+                        return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                     }
                 }
                 self.completed = true;
@@ -2237,6 +2320,37 @@ impl InteractiveJob for LayoutExportToolJob {
             }
             outcome => outcome,
         }
+    }
+
+    fn begin_close(&mut self) {
+        self.inner.begin_close();
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        match InteractiveJob::close_step(&mut self.inner, maximum_items, maximum_bytes) {
+            InteractiveJobCloseStep::Complete => {}
+            step => return step,
+        }
+        if !self.name.is_empty() {
+            if maximum_items == 0 || maximum_bytes < self.name.len() {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let released_bytes = self.name.len();
+            self.name.clear();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+        }
+        if self.completion.is_none() {
+            return InteractiveJobCloseStep::Complete;
+        }
+        if maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        self.completion = None;
+        InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.name.is_empty() && self.completion.is_none() && self.inner.terminal_is_empty()
     }
 }
 
@@ -2261,28 +2375,49 @@ impl InteractiveJob for LayoutMediaExportJob {
         match self.inner.step(context) {
             StepOutcome::Complete(candidate) => {
                 if self.completed {
-                    return StepOutcome::Fault(JobFault { detail: b"layout-media-export-duplicate-completion".to_vec() });
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                 }
                 if let Some(credit) = &self.inner.media_output_credit {
                     if let Err(error) = credit.credit(LAYOUT_MEDIA_EXPORT_SCHEMA.len()) {
-                        return StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() });
+                        let _ = error;
+                        return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                     }
                 }
                 let media = match ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, LAYOUT_MEDIA_EXPORT_SCHEMA, self.inner.output_chunks.clone()) {
                     Ok(media) => media,
-                    Err(error) => return StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() }),
+                    Err(error) => {
+                        let _ = error;
+                        return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                    }
                 };
                 let Some(completion) = self.completion.as_ref() else {
-                    return StepOutcome::Fault(JobFault { detail: b"layout-media-export-completion-closed".to_vec() });
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                 };
                 if let Err(error) = completion.complete(Ok(media)) {
-                    return StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() });
+                    let _ = error;
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                 }
                 self.completed = true;
                 StepOutcome::Complete(candidate)
             }
             outcome => outcome,
         }
+    }
+
+    fn begin_close(&mut self) {
+        self.inner.begin_close();
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(PluginCloseStep::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(PluginCloseStep::Complete) => InteractiveJobCloseStep::Complete,
+            Err(_) => InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ArtifactReservedJob::terminal_is_empty(self)
     }
 }
 
@@ -2442,6 +2577,9 @@ impl LayoutExportJob {
             completed_units: 0,
             restore_target: None,
             snapshot_close: None,
+            snapshot_placeholder: Some(Arc::new(empty_close_snapshot())),
+            publication: None,
+            closing: false,
             close_stage: LayoutExportCloseStage::JsonValidation,
         })
     }
@@ -2572,6 +2710,7 @@ impl LayoutExportJob {
             return Self::close_pending(0, 0);
         }
         match self.close_stage {
+            LayoutExportCloseStage::Publication => Err(Fault::from("layout-export-publication-close-not-dispatched")),
             LayoutExportCloseStage::JsonValidation => Self::close_json_cursor(&mut self.json_validation, LayoutExportCloseStage::TypedValidation, &mut self.close_stage),
             LayoutExportCloseStage::TypedValidation => Self::close_typed_cursor(&mut self.typed_validation, LayoutExportCloseStage::PackageJson, &mut self.close_stage, maximum_bytes),
             LayoutExportCloseStage::PackageJson => Self::close_typed_cursor(&mut self.package_json, LayoutExportCloseStage::Rects, &mut self.close_stage, maximum_bytes),
@@ -2668,16 +2807,23 @@ impl LayoutExportJob {
                 Self::close_pending(1, 0)
             }
             LayoutExportCloseStage::Snapshot => {
-                let lease = self.snapshot_close.as_ref().ok_or_else(|| Fault::from("layout-export-close-snapshot-unwitnessed"))?;
-                if !lease.can_release(&self.request.snapshot) {
-                    return Err(Fault::from("layout-export-close-snapshot-owner-missing"));
+                if let Some(lease) = self.snapshot_close.as_ref() {
+                    if !lease.can_release(&self.request.snapshot) {
+                        return Err(Fault::from("layout-export-close-snapshot-owner-missing"));
+                    }
+                } else if Arc::strong_count(&self.request.snapshot) <= 1 {
+                    return Err(Fault::from("layout-export-close-snapshot-unwitnessed"));
                 }
-                let snapshot = std::mem::replace(&mut self.request.snapshot, Arc::new(empty_close_snapshot()));
+                let snapshot = std::mem::replace(&mut self.request.snapshot, self.snapshot_placeholder.take().expect("layout close owns pre-admitted snapshot placeholder"));
                 drop(snapshot);
                 self.close_stage = LayoutExportCloseStage::SnapshotOwner;
                 Self::close_pending(1, 0)
             }
-            LayoutExportCloseStage::SnapshotOwner => Err(Fault::from("layout snapshot close lease lacks stable app-owner transfer")),
+            LayoutExportCloseStage::SnapshotOwner => {
+                drop(self.snapshot_close.take());
+                self.close_stage = LayoutExportCloseStage::Complete;
+                Self::close_pending(1, 0)
+            }
             LayoutExportCloseStage::Complete => Ok(PluginCloseStep::Complete),
         }
     }
@@ -2702,6 +2848,7 @@ impl LayoutExportJob {
             && self.output_chunks.chunks_remaining() == 0
             && self.media_output_credit.is_none()
             && self.snapshot_close.is_none()
+            && self.snapshot_placeholder.is_none()
     }
 
     pub fn restore(operation: Operation, request: LayoutExportRequest, state: &[u8]) -> Result<Self, String> {
@@ -2719,10 +2866,27 @@ impl LayoutExportJob {
         }
     }
 
-    fn checkpoint(&self) -> Result<Checkpoint, String> {
+    fn checkpoint_publication(&self) -> Result<LayoutExportPublication, String> {
         let checkpoint = LayoutExportCheckpoint { completed_units: self.completed_units, output_bytes: self.active_output().len as u64, output_digest: self.active_output().digest };
         let state = encode_checkpoint(&self.operation, &self.request, &checkpoint)?;
-        Ok(Checkpoint { state, applied_progress: self.completed_units })
+        LayoutExportPublication::new(LayoutExportPublicationKind::Checkpoint { applied_progress: self.completed_units }, &state)
+    }
+
+    fn preview_publication(&self) -> Result<LayoutExportPublication, String> {
+        LayoutExportPublication::new(LayoutExportPublicationKind::Preview, self.stage_name().as_bytes())
+    }
+
+    fn fault_publication(error: &str) -> LayoutExportPublication {
+        let bytes = &error.as_bytes()[..error.len().min(MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES)];
+        LayoutExportPublication::new(LayoutExportPublicationKind::Fault, bytes).expect("bounded layout fault publication")
+    }
+
+    fn drive_publication(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        let outcome = self.publication.as_mut().expect("scheduled layout publication").step(context);
+        if !matches!(outcome, StepOutcome::Yield) {
+            self.publication = None;
+        }
+        outcome
     }
 
     fn page(&self) -> Result<&Page, String> {
@@ -3471,24 +3635,34 @@ impl LayoutExportJob {
         Ok(())
     }
 
-    fn commit(&mut self) -> Result<CommitCandidate, String> {
-        let state = self.checkpoint()?.state;
-        Ok(CommitCandidate { state, output: Vec::new() })
+    fn commit_publication(&mut self) -> Result<LayoutExportPublication, String> {
+        let checkpoint = LayoutExportCheckpoint { completed_units: self.completed_units, output_bytes: self.active_output().len as u64, output_digest: self.active_output().digest };
+        let state = encode_checkpoint(&self.operation, &self.request, &checkpoint)?;
+        LayoutExportPublication::new(LayoutExportPublicationKind::Commit, &state)
     }
 }
 
 impl InteractiveJob for LayoutExportJob {
     fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if let Some(publication) = self.publication.as_mut() {
+            let outcome = publication.step(context);
+            if !matches!(outcome, StepOutcome::Yield) {
+                self.publication = None;
+            }
+            return outcome;
+        }
         if context.is_cancelled() {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: b"layout-export-stale-operation".to_vec() });
+            self.publication = Some(Self::fault_publication("layout-export-stale-operation"));
+            return self.drive_publication(context);
         }
         context.set_stage(self.stage_name());
         loop {
             if let Err(error) = self.advance_one() {
-                return StepOutcome::Fault(JobFault { detail: error.into_bytes() });
+                self.publication = Some(Self::fault_publication(&error));
+                return self.drive_publication(context);
             }
             self.completed_units = self.completed_units.saturating_add(1);
             context.consume_fuel(1);
@@ -3496,29 +3670,72 @@ impl InteractiveJob for LayoutExportJob {
                 return StepOutcome::Cancelled;
             }
             match self.verify_restore_target() {
-                Ok(true) => return StepOutcome::PreviewReady(format!("{{\"stage\":\"{}\",\"completedUnits\":{}}}", self.stage_name(), self.completed_units).into_bytes()),
+                Ok(true) => {
+                    self.publication = self.preview_publication().ok();
+                    return self.drive_publication(context);
+                }
                 Ok(false) => {}
-                Err(error) => return StepOutcome::Fault(JobFault { detail: error.into_bytes() }),
+                Err(error) => {
+                    self.publication = Some(Self::fault_publication(&error));
+                    return self.drive_publication(context);
+                }
             }
             if matches!(self.stage, ExportStage::Complete) {
-                return match self.commit() {
-                    Ok(candidate) => StepOutcome::Complete(candidate),
-                    Err(error) => StepOutcome::Fault(JobFault { detail: error.into_bytes() }),
-                };
+                self.publication = Some(match self.commit_publication() {
+                    Ok(publication) => publication,
+                    Err(error) => Self::fault_publication(&error),
+                });
+                return self.drive_publication(context);
             }
             if self.completed_units % 64 == 0 {
-                return match self.checkpoint() {
-                    Ok(checkpoint) => StepOutcome::CheckpointReady(checkpoint),
-                    Err(error) => StepOutcome::Fault(JobFault { detail: error.into_bytes() }),
-                };
+                self.publication = Some(match self.checkpoint_publication() {
+                    Ok(publication) => publication,
+                    Err(error) => Self::fault_publication(&error),
+                });
+                return self.drive_publication(context);
             }
             if self.completed_units % 16 == 0 {
-                return StepOutcome::PreviewReady(format!("{{\"stage\":\"{}\",\"completedUnits\":{}}}", self.stage_name(), self.completed_units).into_bytes());
+                self.publication = self.preview_publication().ok();
+                return self.drive_publication(context);
             }
             if context.should_yield() {
                 return StepOutcome::Yield;
             }
         }
+    }
+
+    fn begin_close(&mut self) {
+        if self.closing {
+            return;
+        }
+        self.closing = true;
+        self.close_stage = LayoutExportCloseStage::Publication;
+        if let Some(publication) = self.publication.as_mut() {
+            publication.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        if self.close_stage == LayoutExportCloseStage::Publication {
+            if let Some(publication) = self.publication.as_mut() {
+                match publication.close_step(maximum_items, maximum_bytes) {
+                    JobPayloadCloseStep::Pending { released_items, released_bytes } => return InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    JobPayloadCloseStep::Complete if !publication.terminal_is_empty() => return InteractiveJobCloseStep::Blocked,
+                    JobPayloadCloseStep::Complete => self.publication = None,
+                }
+            }
+            self.close_stage = LayoutExportCloseStage::JsonValidation;
+            return InteractiveJobCloseStep::Pending { released_items: usize::from(maximum_items > 0), released_bytes: 0 };
+        }
+        match self.close_export_step(maximum_items, maximum_bytes) {
+            Ok(PluginCloseStep::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(PluginCloseStep::Complete) => InteractiveJobCloseStep::Complete,
+            Err(_) => InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.publication.as_ref().is_none_or(LayoutExportPublication::terminal_is_empty) && self.close_terminal_is_empty()
     }
 }
 
@@ -3674,31 +3891,43 @@ fn checkpoint_kind(kind: LayoutExportKind) -> u8 {
     }
 }
 
-fn push_fixed_authority(bytes: &mut Vec<u8>, value: &str) -> Result<(), String> {
-    if value.len() > MAX_LAYOUT_EXPORT_AUTHORITY_BYTES {
-        return Err("layout-export-authority-invalid".into());
-    }
-    push_u16(bytes, value.len() as u16);
-    bytes.extend_from_slice(value.as_bytes());
-    bytes.resize(bytes.len() + MAX_LAYOUT_EXPORT_AUTHORITY_BYTES - value.len(), 0);
-    Ok(())
+struct CheckpointWriter {
+    bytes: [u8; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES],
+    cursor: usize,
 }
 
-fn encode_checkpoint(operation: &Operation, request: &LayoutExportRequest, checkpoint: &LayoutExportCheckpoint) -> Result<Vec<u8>, String> {
-    let mut state = Vec::with_capacity(MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES);
-    state.extend_from_slice(LAYOUT_EXPORT_CHECKPOINT_MAGIC);
-    state.push(checkpoint_kind(request.kind));
-    state.push(u8::from(request.page_id.is_some()));
-    push_fixed_authority(&mut state, request.page_id.as_deref().unwrap_or_default())?;
-    push_fixed_authority(&mut state, &request.parent_document_id)?;
-    state.extend_from_slice(request.canonical_base_revision_hex.as_bytes());
-    for value in [operation.operation.0, operation.base_revision.0, operation.generation.0, checkpoint.completed_units, checkpoint.output_bytes, checkpoint.output_digest] {
-        state.extend_from_slice(&value.to_le_bytes());
+impl CheckpointWriter {
+    fn write(&mut self, bytes: &[u8]) -> Result<(), String> {
+        let end = self.cursor.checked_add(bytes.len()).ok_or("layout-export-checkpoint-encode")?;
+        self.bytes.get_mut(self.cursor..end).ok_or("layout-export-checkpoint-encode")?.copy_from_slice(bytes);
+        self.cursor = end;
+        Ok(())
     }
-    if state.len() != MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES {
+
+    fn authority(&mut self, value: &str) -> Result<(), String> {
+        if value.len() > MAX_LAYOUT_EXPORT_AUTHORITY_BYTES {
+            return Err("layout-export-authority-invalid".into());
+        }
+        self.write(&(value.len() as u16).to_le_bytes())?;
+        self.write(value.as_bytes())?;
+        self.write(&[0; MAX_LAYOUT_EXPORT_AUTHORITY_BYTES][..MAX_LAYOUT_EXPORT_AUTHORITY_BYTES - value.len()])
+    }
+}
+
+fn encode_checkpoint(operation: &Operation, request: &LayoutExportRequest, checkpoint: &LayoutExportCheckpoint) -> Result<[u8; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES], String> {
+    let mut state = CheckpointWriter { bytes: [0; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES], cursor: 0 };
+    state.write(LAYOUT_EXPORT_CHECKPOINT_MAGIC)?;
+    state.write(&[checkpoint_kind(request.kind), u8::from(request.page_id.is_some())])?;
+    state.authority(request.page_id.as_deref().unwrap_or_default())?;
+    state.authority(&request.parent_document_id)?;
+    state.write(request.canonical_base_revision_hex.as_bytes())?;
+    for value in [operation.operation.0, operation.base_revision.0, operation.generation.0, checkpoint.completed_units, checkpoint.output_bytes, checkpoint.output_digest] {
+        state.write(&value.to_le_bytes())?;
+    }
+    if state.cursor != MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES {
         return Err("layout-export-checkpoint-encode".into());
     }
-    Ok(state)
+    Ok(state.bytes)
 }
 
 fn decode_checkpoint(operation: &Operation, request: &LayoutExportRequest, state: &[u8]) -> Result<LayoutExportCheckpoint, String> {
@@ -3808,11 +4037,13 @@ fn base64_value(byte: u8) -> Result<u8, String> {
 }
 //#endregion 🔧️CodecPrimitives
 
-//#region 🏁️BatchAdapters
+//#region 🧪️TestOracle
+#[cfg(test)]
 pub fn run_layout_export_headless_batch(operation: Operation, request: LayoutExportRequest) -> Result<LayoutExportCommit, String> {
     let kind = request.kind;
     let name = output_name(&request);
-    let mut job = LayoutExportJob::new(operation, request)?;
+    let snapshot_owner = Arc::clone(&request.snapshot);
+    let job = LayoutExportJob::new(operation, request)?;
     let output_chunks = job.output_chunks.clone();
     let params = BatchJobParams {
         operation: operation.operation,
@@ -3821,14 +4052,42 @@ pub fn run_layout_export_headless_batch(operation: Operation, request: LayoutExp
         config: BatchDriveConfig { site: "layout.export.batch", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
         now_ms: semio_framework_job::default_now_ms,
     };
-    match semio_framework_job::run_to_completion(&mut job, &params) {
-        StepOutcome::Complete(_) => LayoutExportCommit::from_chunks(kind, &name, &output_chunks),
-        StepOutcome::Cancelled => Err("layout-export-cancelled".into()),
-        StepOutcome::Fault(fault) => Err(String::from_utf8_lossy(&fault.detail).into_owned()),
-        outcome => Err(format!("layout-export-nonterminal:{outcome:?}")),
+    let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
+        Ok(session) => session,
+        Err(mut rejected) => {
+            rejected.begin_close();
+            while !rejected.terminal_is_empty() {
+                let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            return Err("layout-export-test-oracle-admission-rejected".into());
+        }
+    };
+    loop {
+        session.step().map_err(|error| format!("layout-export-test-oracle-contention:{error:?}"))?;
+        let Some(mut outcome) = session.take_outcome() else { continue };
+        let terminal = outcome.is_terminal();
+        let result = match &outcome {
+            StepOutcome::Complete(_) => Some(LayoutExportCommit::from_chunks(kind, &name, &output_chunks)),
+            StepOutcome::Cancelled => Some(Err("layout-export-cancelled".into())),
+            StepOutcome::Fault(fault) => Some(Err(fault.detail.single_page().and_then(|page| std::str::from_utf8(page).ok()).unwrap_or("layout-export-fault").to_owned())),
+            StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => None,
+        };
+        while !outcome.terminal_is_empty() {
+            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        if terminal {
+            session.begin_close();
+            while !session.terminal_is_empty() {
+                let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            drop(snapshot_owner);
+            return result.expect("terminal layout test oracle result");
+        }
+        session.resume().map_err(|error| format!("layout-export-test-oracle-resume:{error:?}"))?;
     }
 }
 
+#[cfg(test)]
 fn headless_batch_export(kind: LayoutExportKind, snapshot: &LayoutSnapshot, page_id: Option<&str>, preflight_json: Option<&str>) -> Result<LayoutExportCommit, String> {
     let operation = Operation::new(semio_framework_job::allocate_operation_id(), RevisionId(0), Generation(0), 0);
     run_layout_export_headless_batch(
@@ -3844,6 +4103,7 @@ fn headless_batch_export(kind: LayoutExportKind, snapshot: &LayoutSnapshot, page
     )
 }
 
+#[cfg(test)]
 pub fn export_document_svg_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<String, crate::artifacts::layout::io::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
         return Err(crate::artifacts::layout::io::LayoutError::PageNotFound(page_id.into()));
@@ -3851,6 +4111,7 @@ pub fn export_document_svg_headless_batch(doc: &LayoutSnapshot, page_id: &str) -
     headless_batch_export(LayoutExportKind::Svg, doc, Some(page_id), None).map(|commit| commit.data).map_err(crate::artifacts::layout::io::LayoutError::Svg)
 }
 
+#[cfg(test)]
 pub fn export_document_pdf_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::artifacts::layout::io::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
         return Err(crate::artifacts::layout::io::LayoutError::PageNotFound(page_id.into()));
@@ -3859,6 +4120,7 @@ pub fn export_document_pdf_headless_batch(doc: &LayoutSnapshot, page_id: &str) -
     decode_base64(&commit.data).map_err(crate::artifacts::layout::io::LayoutError::Svg)
 }
 
+#[cfg(test)]
 pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::artifacts::layout::io::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
         return Err(crate::artifacts::layout::io::LayoutError::PageNotFound(page_id.into()));
@@ -3867,20 +4129,60 @@ pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -
     decode_base64(&commit.data).map_err(crate::artifacts::layout::io::LayoutError::Svg)
 }
 
+#[cfg(test)]
 pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, crate::artifacts::layout::io::LayoutError> {
     let snapshot: LayoutSnapshot = serde_json::from_str(doc_json)?;
     let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(crate::artifacts::layout::io::LayoutError::Svg)?;
     decode_base64(&commit.data).map_err(crate::artifacts::layout::io::LayoutError::Svg)
 }
-//#endregion 🏁️BatchAdapters
+//#endregion 🧪️TestOracle
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn drive_test_job<J: InteractiveJob + 'static>(job: J, params: BatchJobParams) -> StepOutcome {
+        let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
+            Ok(session) => session,
+            Err(mut rejected) => {
+                rejected.begin_close();
+                while !rejected.terminal_is_empty() {
+                    let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
+                panic!("test oracle admits retained session");
+            }
+        };
+        loop {
+            session.step().expect("test oracle caller opportunity");
+            let Some(mut outcome) = session.take_outcome() else { continue };
+            let terminal = outcome.is_terminal();
+            while !outcome.terminal_is_empty() {
+                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            if terminal {
+                session.begin_close();
+                while !session.terminal_is_empty() {
+                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
+                return outcome;
+            }
+            session.resume().expect("test oracle resumes exact owner");
+        }
+    }
+
     fn operation() -> Operation {
         Operation::new(semio_framework_job::OperationId(71), RevisionId(9), Generation(3), 17)
+    }
+
+    #[test]
+    fn layout_retained_publication_zero_grant_and_exact_writer_close_are_exact() {
+        let mut publication = LayoutExportPublication::new(LayoutExportPublicationKind::Preview, b"layout-preview").expect("bounded retained preview");
+        publication.begin_close();
+        assert_eq!(publication.close_step(0, 0), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert!(!publication.terminal_is_empty());
+        let _ = publication.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        assert!(publication.terminal_is_empty());
     }
 
     fn request(kind: LayoutExportKind) -> LayoutExportRequest {
@@ -3894,7 +4196,9 @@ mod tests {
         let bus = semio_framework::ActionBus::new();
         bus.register(LayoutExportJobFactory::new("layout-test")).expect("factory registration");
         let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
-        let spec = semio_framework::ToolOperationSpec::new("layout-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, LayoutExportToolPayload { request: request(kind), output_chunks: output_chunks.clone(), completion: None }, operation);
+        let request = request(kind);
+        let snapshot_owner = Arc::clone(&request.snapshot);
+        let spec = semio_framework::ToolOperationSpec::new("layout-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, LayoutExportToolPayload { request, output_chunks: output_chunks.clone(), completion: None }, operation);
         let dispatch = bus.dispatch(spec).expect("exact factory dispatch");
         assert_eq!(bus.dispatch_count(), 1);
         let cancel = semio_framework_job::root_cancel_token();
@@ -3908,9 +4212,9 @@ mod tests {
             config: BatchDriveConfig { site: "layout.export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
             now_ms: semio_framework_job::default_now_ms,
         };
-        let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::HeadlessBatch, worker_count));
-        let outcome = semio_framework_job::run_on_worker(&pool, semio_framework_job::Lane::UserVisible, dispatch.job, params).recv().expect("worker result");
-        pool.shutdown();
+        let _ = worker_count;
+        let outcome = drive_test_job(dispatch.job, params);
+        drop(snapshot_owner);
         (outcome, output_chunks)
     }
 
@@ -3934,7 +4238,9 @@ mod tests {
         let operation = operation();
         let bus = semio_framework::ActionBus::new();
         bus.register(LayoutMediaExportJobFactory::new("layout-media-test")).expect("media factory registration");
-        let payload = ArtifactReservedToolJob::new(LayoutExportJob::new(operation, request(LayoutExportKind::Svg)).expect("media payload job"));
+        let request = request(LayoutExportKind::Svg);
+        let snapshot_owner = Arc::clone(&request.snapshot);
+        let payload = ArtifactReservedToolJob::new(LayoutExportJob::new(operation, request).expect("media payload job"));
         let spec = semio_framework::ToolOperationSpec::new("layout-media-test", LAYOUT_MEDIA_EXPORT_TOOL_ID, LAYOUT_MEDIA_EXPORT_PAYLOAD_SCHEMA, payload, operation);
         let dispatch = bus.dispatch(spec).expect("exact media factory dispatch");
         assert_eq!(bus.dispatch_count(), 1);
@@ -3945,9 +4251,8 @@ mod tests {
             config: BatchDriveConfig { site: "layout.media-export.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
             now_ms: semio_framework_job::default_now_ms,
         };
-        let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::HeadlessBatch, 1));
-        assert!(matches!(semio_framework_job::run_on_worker(&pool, semio_framework_job::Lane::UserVisible, dispatch.job, params).recv().expect("media worker result"), StepOutcome::Complete(_)));
-        pool.shutdown();
+        assert!(matches!(drive_test_job(dispatch.job, params), StepOutcome::Complete(_)));
+        drop(snapshot_owner);
     }
 
     #[test]
@@ -4011,12 +4316,11 @@ mod tests {
     }
 
     #[test]
-    fn reserved_close_never_completes_while_snapshot_retirement_has_no_app_owner_transfer() {
+    fn reserved_close_releases_the_witness_after_snapshot_handback() {
         let mut job = LayoutExportJob::new(operation(), request(LayoutExportKind::Svg)).expect("job");
         job.close_stage = LayoutExportCloseStage::SnapshotOwner;
-        assert!(ArtifactReservedJob::close_step(&mut job, 1, OUTPUT_CHUNK_BYTES).is_err());
-        assert!(!ArtifactReservedJob::terminal_is_empty(&job));
-        assert_eq!(job.close_stage, LayoutExportCloseStage::SnapshotOwner);
+        assert_eq!(ArtifactReservedJob::close_step(&mut job, 1, OUTPUT_CHUNK_BYTES).expect("witness handback"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        assert_eq!(job.close_stage, LayoutExportCloseStage::Complete);
     }
 
     #[test]
@@ -4220,6 +4524,7 @@ mod tests {
     fn terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes() {
         let operation = operation();
         let mut job = LayoutExportJob::new(operation, request(LayoutExportKind::Png)).expect("job");
+        let snapshot_owner = Arc::clone(&job.request.snapshot);
         let chunks = job.output_chunks.clone();
         let params = BatchJobParams {
             operation: operation.operation,
@@ -4228,7 +4533,8 @@ mod tests {
             config: BatchDriveConfig { site: "layout.export.segment-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
             now_ms: semio_framework_job::default_now_ms,
         };
-        let candidate = match semio_framework_job::run_to_completion(&mut job, &params) {
+        drop(snapshot_owner);
+        let candidate = match drive_test_job(job, params.clone()) {
             StepOutcome::Complete(candidate) => candidate,
             outcome => panic!("unexpected terminal outcome: {outcome:?}"),
         };
@@ -4271,15 +4577,19 @@ mod tests {
         let mut job = LayoutExportJob::new(operation, request_value.clone()).expect("job");
         let cancel = semio_framework_job::root_cancel_token();
         let mut sequence = 0;
-        let checkpoint = loop {
+        let mut checkpoint = loop {
             let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
                 break checkpoint;
             }
         };
         assert_eq!(checkpoint.state.len(), MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES);
+        let checkpoint_state = checkpoint.state.single_page().expect("checkpoint owns one retained page").to_vec();
+        while !checkpoint.state.terminal_is_empty() {
+            let _ = checkpoint.state.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
         let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
-        let mut restored = LayoutExportJob::restore(operation, request_value.clone(), &checkpoint.state).expect("matching authority").with_output_chunks(output_chunks.clone());
+        let restored = LayoutExportJob::restore(operation, request_value.clone(), &checkpoint_state).expect("matching authority").with_output_chunks(output_chunks.clone());
         let params = BatchJobParams {
             operation: operation.operation,
             generation: operation.generation,
@@ -4287,7 +4597,7 @@ mod tests {
             config: BatchDriveConfig { site: "layout.export.restore-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
             now_ms: semio_framework_job::default_now_ms,
         };
-        match semio_framework_job::run_to_completion(&mut restored, &params) {
+        match drive_test_job(restored, params.clone()) {
             StepOutcome::Complete(candidate) => assert!(candidate.output.is_empty()),
             outcome => panic!("resumed outcome: {outcome:?}"),
         }
@@ -4295,8 +4605,8 @@ mod tests {
         let uninterrupted = run_layout_export_headless_batch(operation, request_value).expect("uninterrupted").data.into_bytes();
         assert_eq!(resumed, uninterrupted);
         let stale = Operation::new(semio_framework_job::OperationId(72), RevisionId(9), Generation(3), 17);
-        assert!(LayoutExportJob::restore(stale, request(LayoutExportKind::Package), &checkpoint.state).is_err());
-        let mut malformed = checkpoint.state.clone();
+        assert!(LayoutExportJob::restore(stale, request(LayoutExportKind::Package), &checkpoint_state).is_err());
+        let mut malformed = checkpoint_state;
         malformed[0] ^= 0xff;
         assert!(LayoutExportJob::restore(operation, request(LayoutExportKind::Package), &malformed).is_err());
     }

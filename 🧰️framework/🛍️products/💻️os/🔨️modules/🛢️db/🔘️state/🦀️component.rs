@@ -80,16 +80,295 @@ fn hash_bytes(bytes: &[u8]) -> pack::ContentHash {
 /// @emoji 📦️ An immutable, content-addressed byte page: its `hash` is the blake3 digest of
 /// `bytes`, computed once at construction. `db_snapshot` will use pages of this shape as the
 /// unit written into `KIND_CHUNK` segments.
-#[derive(Clone)]
 pub struct Page {
     pub hash: pack::ContentHash,
-    pub bytes: Rc<[u8]>,
+    pages: db_storage::DbIoPages,
 }
 
 impl Page {
-    pub fn new(bytes: Vec<u8>) -> Page {
-        let hash = hash_bytes(&bytes);
-        Page { hash, bytes: Rc::from(bytes) }
+    pub async fn try_from_pages(pages: db_storage::DbIoPages) -> Result<Page, DbError> {
+        if pages.operation() == 0 {
+            return Err(DbError::InvalidArgument("state page requires a nonzero DB I/O operation".to_string()));
+        }
+        let hash = db_storage::db_io_hash_pages(&pages).await;
+        Ok(Page { hash, pages })
+    }
+
+    pub fn operation(&self) -> u64 {
+        self.pages.operation()
+    }
+
+    pub fn len(&self) -> usize {
+        self.pages.len()
+    }
+
+    pub fn fragments(&self) -> db_storage::DbIoPageReader<'_> {
+        self.pages.fragments()
+    }
+
+    pub fn pages(&self) -> &db_storage::DbIoPages {
+        &self.pages
+    }
+
+    pub fn close_step(&mut self) -> Result<Option<usize>, DbError> {
+        self.pages.close_step()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.pages.terminal_is_empty()
+    }
+}
+
+const RETAINED_STATE_ENTRIES: usize = 64;
+
+pub struct StateCursorControl {
+    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    deadline: std::time::Instant,
+    fuel: usize,
+}
+
+impl StateCursorControl {
+    pub fn new(cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
+        if fuel == 0 {
+            return Err(DbError::LimitExceeded("state cursor fuel"));
+        }
+        Ok(Self { cancelled, deadline, fuel })
+    }
+
+    pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> {
+        if fuel == 0 {
+            return Err(DbError::LimitExceeded("state cursor fuel"));
+        }
+        self.deadline = deadline;
+        self.fuel = fuel;
+        Ok(())
+    }
+
+    pub fn grant(&mut self) -> Result<(), DbError> {
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(DbError::Unavailable("state cursor cancelled".to_string()));
+        }
+        if std::time::Instant::now() >= self.deadline {
+            return Err(DbError::Unavailable("state cursor deadline reached".to_string()));
+        }
+        self.fuel = self.fuel.checked_sub(1).ok_or(DbError::LimitExceeded("state cursor fuel"))?;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct StateEntry {
+    key: db_storage::DbIoText,
+    value: db_storage::DbIoPages,
+}
+
+#[derive(Debug)]
+pub struct StateEntryRejected {
+    source: Option<Vec<u8>>,
+    writer: Option<db_storage::DbIoPageWriter>,
+    error: DbError,
+}
+
+impl StateEntry {
+    pub fn try_new(key: &str, value: db_storage::DbIoPages) -> Result<Self, (DbError, db_storage::DbIoPages)> {
+        match db_storage::DbIoText::try_from_str(key) {
+            Ok(key) => Ok(Self { key, value }),
+            Err(error) => Err((error, value)),
+        }
+    }
+
+    pub fn key(&self) -> &str {
+        self.key.as_str()
+    }
+
+    pub fn value(&self) -> &db_storage::DbIoPages {
+        &self.value
+    }
+
+    pub fn operation(&self) -> u64 {
+        self.value.operation()
+    }
+
+    pub fn into_parts(self) -> (db_storage::DbIoText, db_storage::DbIoPages) {
+        (self.key, self.value)
+    }
+
+    pub async fn try_admit(key: &str, source: Vec<u8>, maximum: u64, control: &mut StateCursorControl) -> Result<Self, StateEntryRejected> {
+        let key = match db_storage::DbIoText::try_from_str(key) {
+            Ok(key) => key,
+            Err(error) => return Err(StateEntryRejected { source: Some(source), writer: None, error }),
+        };
+        if source.capacity() as u64 > maximum {
+            return Err(StateEntryRejected { source: Some(source), writer: None, error: DbError::LimitExceeded("state source backing capacity") });
+        }
+        let mut writer = match db_storage::DbIoPageWriter::try_reserve(source.capacity().div_ceil(db_storage::DB_IO_PAGE_BYTES)) {
+            Ok(writer) => writer,
+            Err(rejected) => return Err(StateEntryRejected { source: Some(source), writer: rejected.into_writer(), error: DbError::Unavailable("state page admission rejected".to_string()) }),
+        };
+        let mut reservation = match db_storage::DbIoDriverReservation::try_reserve(writer.operation(), source.capacity()) {
+            Ok(reservation) => reservation,
+            Err(error) => return Err(StateEntryRejected { source: Some(source), writer: Some(writer), error }),
+        };
+        if let Err(error) = reservation.observe_capacity(source.capacity()) {
+            return Err(StateEntryRejected { source: Some(source), writer: Some(writer), error });
+        }
+        let mut offset = 0;
+        while offset < source.len() {
+            if let Err(error) = control.grant() {
+                return Err(StateEntryRejected { source: Some(source), writer: Some(writer), error });
+            }
+            match writer.write_fragment(&source[offset..]) {
+                Ok(written) => offset += written,
+                Err(error) => return Err(StateEntryRejected { source: Some(source), writer: Some(writer), error }),
+            }
+            std::future::poll_fn(|context| {
+                context.waker().wake_by_ref();
+                std::task::Poll::Ready(())
+            })
+            .await;
+        }
+        drop(source);
+        if let Err(error) = reservation.close_step() {
+            return Err(StateEntryRejected { source: None, writer: Some(writer), error });
+        }
+        writer.finish().map(|value| Self { key, value }).map_err(|error| StateEntryRejected { source: None, writer: Some(writer), error })
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        if self.value.close_step()?.is_some() {
+            return Ok(true);
+        }
+        Ok(self.key.close_step())
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.key.terminal_is_empty() && self.value.terminal_is_empty()
+    }
+}
+
+impl StateEntryRejected {
+    pub fn source(&self) -> Option<&Vec<u8>> {
+        self.source.as_ref()
+    }
+
+    pub fn into_source(self) -> Option<Vec<u8>> {
+        self.source
+    }
+
+    pub fn error(&self) -> &DbError {
+        &self.error
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        if let Some(writer) = self.writer.as_mut() {
+            if writer.close_step()?.is_some() {
+                return Ok(true);
+            }
+        }
+        self.writer = None;
+        Ok(false)
+    }
+}
+
+pub struct RetainedStateMap {
+    entries: [Option<StateEntry>; RETAINED_STATE_ENTRIES],
+    len: u8,
+}
+
+impl RetainedStateMap {
+    pub fn new() -> Self {
+        Self { entries: std::array::from_fn(|_| None), len: 0 }
+    }
+
+    pub fn len(&self) -> usize {
+        self.len as usize
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    fn position(&self, key: &str) -> Result<usize, usize> {
+        self.entries[..self.len()].binary_search_by(|entry| entry.as_ref().map_or(std::cmp::Ordering::Less, |entry| entry.key().cmp(key)))
+    }
+
+    pub fn get(&self, key: &str) -> Option<&db_storage::DbIoPages> {
+        self.position(key).ok().and_then(|position| self.entries[position].as_ref().map(StateEntry::value))
+    }
+
+    pub fn insert(&mut self, entry: StateEntry) -> Result<Option<StateEntry>, StateEntry> {
+        match self.position(entry.key()) {
+            Ok(position) => Ok(self.entries[position].replace(entry)),
+            Err(position) => {
+                if self.len() == RETAINED_STATE_ENTRIES {
+                    return Err(entry);
+                }
+                for index in (position..self.len()).rev() {
+                    self.entries[index + 1] = self.entries[index].take();
+                }
+                self.entries[position] = Some(entry);
+                self.len += 1;
+                Ok(None)
+            }
+        }
+    }
+
+    pub fn remove(&mut self, key: &str) -> Option<StateEntry> {
+        let position = self.position(key).ok()?;
+        let removed = self.entries[position].take();
+        for index in position + 1..self.len() {
+            self.entries[index - 1] = self.entries[index].take();
+        }
+        self.len -= 1;
+        removed
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &StateEntry> {
+        self.entries[..self.len()].iter().flatten()
+    }
+
+    pub async fn content_hash(&self, control: &mut StateCursorControl) -> Result<pack::ContentHash, DbError> {
+        let mut hash = blake3::Hasher::new();
+        for entry in self.iter() {
+            control.grant()?;
+            hash.update(&(entry.key().len() as u64).to_le_bytes());
+            hash.update(entry.key().as_bytes());
+            hash.update(&(entry.value().len() as u64).to_le_bytes());
+            for fragment in entry.value().fragments() {
+                control.grant()?;
+                hash.update(fragment);
+                std::future::poll_fn(|context| {
+                    context.waker().wake_by_ref();
+                    std::task::Poll::Ready(())
+                })
+                .await;
+            }
+        }
+        Ok(pack::ContentHash(*hash.finalize().as_bytes()))
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        if self.len == 0 {
+            return Ok(false);
+        }
+        let index = self.len() - 1;
+        let entry = self.entries[index].as_mut().ok_or_else(|| DbError::Internal("retained state close lost entry".to_string()))?;
+        if entry.close_step()? {
+            return Ok(true);
+        }
+        self.entries[index] = None;
+        self.len -= 1;
+        Ok(true)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.entries.iter().all(Option::is_none)
+    }
+}
+
+impl Default for RetainedStateMap {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -97,10 +376,12 @@ impl Page {
 /// returns the same hash and shares the one underlying allocation — the structural-sharing/dedup
 /// mechanism `db_snapshot`'s incremental generations build on.
 #[derive(Default)]
+#[cfg(test)]
 pub struct PageStore {
     pages: std::collections::HashMap<pack::ContentHash, Rc<[u8]>>,
 }
 
+#[cfg(test)]
 impl PageStore {
     pub fn new() -> Self {
         Self::default()
@@ -1461,6 +1742,59 @@ mod tests {
     //#endregion 🔖️PGraph
 
     //#region 🔖️Pages
+    #[semio_framework_async_macros::async_test]
+    async fn retained_state_exact_backing_cancel_capacity_and_close_are_hostile() {
+        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut control = StateCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+        let mut source = Vec::with_capacity(db_storage::DB_IO_PAGE_BYTES + 1);
+        source.push(0x41);
+        let mut entry = StateEntry::try_admit("one-byte", source, (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut control).await.unwrap();
+        assert_eq!(entry.value().len(), 1);
+        while entry.close_step().unwrap() {}
+        assert!(entry.terminal_is_empty());
+
+        let mut source = Vec::with_capacity(17);
+        source.push(7);
+        let pointer = source.as_ptr();
+        let mut rejected = StateEntry::try_admit("max-plus-one", source, 16, &mut control).await.unwrap_err();
+        while rejected.close_step().unwrap() {
+            control.grant().unwrap();
+        }
+        let source = rejected.into_source().unwrap();
+        assert_eq!(source.as_ptr(), pointer);
+        assert_eq!(source.capacity(), 17);
+
+        cancelled.store(true, std::sync::atomic::Ordering::Release);
+        let mut cancelled_rejection = StateEntry::try_admit("cancelled", vec![1], 1, &mut control).await.unwrap_err();
+        assert!(matches!(cancelled_rejection.error(), DbError::Unavailable(_)));
+        cancelled.store(false, std::sync::atomic::Ordering::Release);
+        while cancelled_rejection.close_step().unwrap() {
+            control.grant().unwrap();
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_state_sorted_fixed_capacity_hash_and_terminal_close_are_deterministic() {
+        let mut map = RetainedStateMap::new();
+        let mut control = StateCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+        for index in (0..RETAINED_STATE_ENTRIES).rev() {
+            let entry = StateEntry::try_admit(&format!("key-{index:02}"), vec![index as u8], 1, &mut control).await.unwrap();
+            assert!(map.insert(entry).unwrap().is_none());
+        }
+        assert!(map.iter().map(StateEntry::key).is_sorted());
+        let first = map.content_hash(&mut control).await.unwrap();
+        let rejected = StateEntry::try_admit("overflow", vec![0xff], 1, &mut control).await.unwrap();
+        let mut rejected = map.insert(rejected).unwrap_err();
+        while rejected.close_step().unwrap() {
+            control.grant().unwrap();
+        }
+        assert_eq!(first, map.content_hash(&mut control).await.unwrap());
+        while map.close_step().unwrap() {
+            control.grant().unwrap();
+        }
+        assert!(map.terminal_is_empty());
+    }
+
     #[test]
     fn page_store_interns_identical_bytes_once() {
         let mut store = PageStore::new();

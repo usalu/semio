@@ -18,6 +18,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{independent_render, independent_split, oracle_apply_mutation, project_txt};
+use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `txt-utf-8-any` catalog. Duplicated, not imported, from
@@ -126,6 +127,11 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(output, projection))
 }
 
+/// ↩️ The inverse law, asserted HERE by the independent implementation against its own pre-mutation
+/// reading rather than deferred to a comparison: `apply(m)` followed by `apply(inverse(m))` has to
+/// land back on the ORIGINAL document's semantic projection — every line, the trailing-terminator
+/// flag and the whole-document line ending. This subset carries a recorded no-oracle decision, so
+/// nothing else will ever check it.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -133,6 +139,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let undo = inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &undo)?;
     let projection = project_txt(&restored)?;
+    inverse_restores(&spec.str("kind"), &projection, &project_txt(&input)?)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
@@ -141,13 +148,18 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// CORRECT and EXPECTED result — splitting a string on a fixed separator and rejoining with that
 /// same separator is a mathematical identity regardless of content (this subset's carrier law; see
 /// the feature file's own note and `mixed_crlf_lf_is_still_a_lossless_round_trip` in the oracle
-/// module). No pass-through tripwire is asserted here or in `subject::identity_round_trip`.
+/// module). A must-differ tripwire would therefore be a fabricated law; the carrier law is asserted
+/// in its place, which is the same claim stated the way this format can honestly satisfy it: the
+/// output must equal the input EXACTLY, and the projection must be preserved. Both still fail
+/// loudly if the split or the render ever drifts.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let body = std::str::from_utf8(&input).map_err(|error| format!("input is not UTF-8: {error}"))?;
     let (lines, trailing, crlf) = independent_split(body);
     let output = independent_render(&lines, trailing, crlf).into_bytes();
+    carrier_is_exact(&output, &input)?;
     let projection = project_txt(&output)?;
+    round_trip_preserves(&projection, &project_txt(&input)?)?;
     Ok(Outcome::with_raw(output, projection))
 }
 

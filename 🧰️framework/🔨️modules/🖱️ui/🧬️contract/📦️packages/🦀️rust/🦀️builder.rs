@@ -9,7 +9,9 @@
 //! other way — see `📦️glue.rs`). The runtime converts a `BuiltNode` tree into its own reconciler
 //! input; if the two shapes drift, that conversion is the one place to fix, never a second builder.
 
-use std::collections::HashMap;
+use std::fmt;
+use std::ops::{Index, IndexMut};
+use std::sync::{LazyLock, Mutex};
 
 use serde::{Deserialize, Serialize};
 
@@ -31,12 +33,316 @@ fn is_false(value: &bool) -> bool {
 /// `children` nested inline rather than addressed by [`crate::UiNodeId`], since a freshly authored
 /// tree has no ids yet to address by. Every field below serializes away at its default, mirroring the
 /// wire-cost guarantee this whole builder family exists to make automatic.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub const UI_BUILT_CHILDREN_MAX: usize = 32;
+pub const UI_BUILT_CHILD_RETIRE_SLOTS: usize = 384;
+
+type BuiltChildBacking = Box<[Option<BuiltNode>; UI_BUILT_CHILDREN_MAX]>;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct BuiltChildRetireKey {
+    slot: usize,
+    epoch: u64,
+}
+
+struct BuiltChildRetireSlot {
+    epoch: u64,
+    reserved: bool,
+    owner: Option<BuiltChildRetireOwner>,
+}
+
+impl Default for BuiltChildRetireSlot {
+    fn default() -> Self {
+        Self { epoch: 0, reserved: false, owner: None }
+    }
+}
+
+struct BuiltChildRetireOwner {
+    backing: BuiltChildBacking,
+    len: usize,
+    cursor: usize,
+}
+
+struct BuiltChildRetireAuthority {
+    slots: [BuiltChildRetireSlot; UI_BUILT_CHILD_RETIRE_SLOTS],
+    reserve_cursor: usize,
+    close_cursor: usize,
+}
+
+impl Default for BuiltChildRetireAuthority {
+    fn default() -> Self {
+        Self { slots: std::array::from_fn(|_| BuiltChildRetireSlot::default()), reserve_cursor: 0, close_cursor: 0 }
+    }
+}
+
+static BUILT_CHILD_RETIRE_AUTHORITY: LazyLock<Mutex<BuiltChildRetireAuthority>> = LazyLock::new(|| Mutex::new(BuiltChildRetireAuthority::default()));
+
+fn with_built_child_retire_authority<T>(f: impl FnOnce(&mut BuiltChildRetireAuthority) -> T) -> T {
+    let mut authority = BUILT_CHILD_RETIRE_AUTHORITY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    f(&mut authority)
+}
+
+impl BuiltChildRetireAuthority {
+    fn reserve(&mut self) -> Option<BuiltChildRetireKey> {
+        for offset in 0..UI_BUILT_CHILD_RETIRE_SLOTS {
+            let slot = (self.reserve_cursor + offset) % UI_BUILT_CHILD_RETIRE_SLOTS;
+            let entry = &mut self.slots[slot];
+            if entry.reserved || entry.owner.is_some() {
+                continue;
+            }
+            let epoch = entry.epoch.checked_add(1)?;
+            entry.epoch = epoch;
+            entry.reserved = true;
+            self.reserve_cursor = (slot + 1) % UI_BUILT_CHILD_RETIRE_SLOTS;
+            return Some(BuiltChildRetireKey { slot, epoch });
+        }
+        None
+    }
+
+    fn release(&mut self, key: BuiltChildRetireKey) {
+        let entry = &mut self.slots[key.slot];
+        if entry.epoch == key.epoch && entry.owner.is_none() {
+            entry.reserved = false;
+        }
+    }
+
+    fn publish(&mut self, key: BuiltChildRetireKey, owner: BuiltChildRetireOwner) {
+        let entry = &mut self.slots[key.slot];
+        entry.epoch = key.epoch;
+        entry.reserved = true;
+        entry.owner = Some(owner);
+    }
+
+    fn take_close_page(&mut self) -> Option<BuiltNode> {
+        for offset in 0..UI_BUILT_CHILD_RETIRE_SLOTS {
+            let slot = (self.close_cursor + offset) % UI_BUILT_CHILD_RETIRE_SLOTS;
+            let entry = &mut self.slots[slot];
+            let Some(owner) = entry.owner.as_mut() else { continue };
+            while owner.cursor < owner.len {
+                let cursor = owner.cursor;
+                let Some(next) = owner.cursor.checked_add(1) else { return None };
+                owner.cursor = next;
+                if let Some(node) = owner.backing[cursor].take() {
+                    self.close_cursor = slot;
+                    return Some(node);
+                }
+            }
+            entry.owner = None;
+            entry.reserved = false;
+            self.close_cursor = (slot + 1) % UI_BUILT_CHILD_RETIRE_SLOTS;
+            return None;
+        }
+        None
+    }
+
+    fn is_terminal_empty(&self) -> bool {
+        self.slots.iter().all(|slot| !slot.reserved && slot.owner.is_none())
+    }
+}
+
+pub fn close_built_node_page_one() -> bool {
+    let node = with_built_child_retire_authority(BuiltChildRetireAuthority::take_close_page);
+    drop(node);
+    with_built_child_retire_authority(BuiltChildRetireAuthority::is_terminal_empty)
+}
+
+pub struct BuiltChildren {
+    backing: Option<BuiltChildBacking>,
+    len: usize,
+    handback: Option<BuiltChildRetireKey>,
+}
+
+impl Default for BuiltChildren {
+    fn default() -> Self {
+        Self { backing: None, len: 0, handback: None }
+    }
+}
+
+impl fmt::Debug for BuiltChildren {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.debug_struct("BuiltChildren").field("len", &self.len).finish()
+    }
+}
+
+impl BuiltChildren {
+    pub fn try_push(&mut self, node: BuiltNode) -> Result<(), BuiltNode> {
+        if self.len == UI_BUILT_CHILDREN_MAX {
+            return Err(node);
+        }
+        if self.backing.is_none() {
+            let Some(handback) = with_built_child_retire_authority(BuiltChildRetireAuthority::reserve) else { return Err(node) };
+            self.backing = Some(Box::new(std::array::from_fn(|_| None)));
+            self.handback = Some(handback);
+        }
+        let Some(backing) = self.backing.as_mut() else { return Err(node) };
+        let Some(slot) = backing.get_mut(self.len) else { return Err(node) };
+        if slot.is_some() {
+            return Err(node);
+        }
+        let Some(len) = self.len.checked_add(1) else { return Err(node) };
+        *slot = Some(node);
+        self.len = len;
+        Ok(())
+    }
+
+    pub fn pop(&mut self) -> Option<BuiltNode> {
+        let index = self.len.checked_sub(1)?;
+        self.len = index;
+        self.backing.as_mut()?.get_mut(index)?.take()
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = &BuiltNode> {
+        self.backing.iter().flat_map(|backing| backing[..self.len].iter()).filter_map(Option::as_ref)
+    }
+
+    pub fn iter_mut(&mut self) -> impl DoubleEndedIterator<Item = &mut BuiltNode> {
+        let len = self.len;
+        self.backing.iter_mut().flat_map(move |backing| backing[..len].iter_mut()).filter_map(Option::as_mut)
+    }
+}
+
+impl Index<usize> for BuiltChildren {
+    type Output = BuiltNode;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.backing.as_ref().and_then(|backing| backing.get(index)).and_then(Option::as_ref).expect("built child index must be admitted")
+    }
+}
+
+impl IndexMut<usize> for BuiltChildren {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.backing.as_mut().and_then(|backing| backing.get_mut(index)).and_then(Option::as_mut).expect("built child index must be admitted")
+    }
+}
+
+impl<'a> IntoIterator for &'a BuiltChildren {
+    type Item = &'a BuiltNode;
+    type IntoIter = std::iter::FilterMap<std::slice::Iter<'a, Option<BuiltNode>>, fn(&Option<BuiltNode>) -> Option<&BuiltNode>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        fn present(value: &Option<BuiltNode>) -> Option<&BuiltNode> {
+            value.as_ref()
+        }
+        self.backing.as_deref().map_or([].as_slice(), |backing| &backing[..self.len]).iter().filter_map(present)
+    }
+}
+
+impl<'a> IntoIterator for &'a mut BuiltChildren {
+    type Item = &'a mut BuiltNode;
+    type IntoIter = std::iter::FilterMap<std::slice::IterMut<'a, Option<BuiltNode>>, fn(&mut Option<BuiltNode>) -> Option<&mut BuiltNode>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        fn present(value: &mut Option<BuiltNode>) -> Option<&mut BuiltNode> {
+            value.as_mut()
+        }
+        let len = self.len;
+        self.backing.as_deref_mut().map_or([].as_mut_slice(), |backing| &mut backing[..len]).iter_mut().filter_map(present)
+    }
+}
+
+pub struct BuiltChildrenIntoIter {
+    backing: Option<BuiltChildBacking>,
+    len: usize,
+    cursor: usize,
+    handback: Option<BuiltChildRetireKey>,
+}
+
+impl Iterator for BuiltChildrenIntoIter {
+    type Item = BuiltNode;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while self.cursor < self.len {
+            let cursor = self.cursor;
+            let Some(next) = self.cursor.checked_add(1) else { return None };
+            self.cursor = next;
+            if let Some(node) = self.backing.as_mut()?.get_mut(cursor)?.take() {
+                return Some(node);
+            }
+        }
+        if let Some(handback) = self.handback.take() {
+            with_built_child_retire_authority(|authority| authority.release(handback));
+        }
+        self.backing = None;
+        None
+    }
+}
+
+impl ExactSizeIterator for BuiltChildrenIntoIter {
+    fn len(&self) -> usize {
+        self.len.checked_sub(self.cursor).unwrap_or(0)
+    }
+}
+
+impl Drop for BuiltChildrenIntoIter {
+    fn drop(&mut self) {
+        if let (Some(backing), Some(handback)) = (self.backing.take(), self.handback.take()) {
+            with_built_child_retire_authority(|authority| authority.publish(handback, BuiltChildRetireOwner { backing, len: self.len, cursor: self.cursor }));
+        }
+    }
+}
+
+impl IntoIterator for BuiltChildren {
+    type Item = BuiltNode;
+    type IntoIter = BuiltChildrenIntoIter;
+
+    fn into_iter(mut self) -> Self::IntoIter {
+        BuiltChildrenIntoIter { backing: self.backing.take(), len: self.len, cursor: 0, handback: self.handback.take() }
+    }
+}
+
+impl Drop for BuiltChildren {
+    fn drop(&mut self) {
+        if let (Some(backing), Some(handback)) = (self.backing.take(), self.handback.take()) {
+            with_built_child_retire_authority(|authority| authority.publish(handback, BuiltChildRetireOwner { backing, len: self.len, cursor: 0 }));
+        }
+    }
+}
+
+impl Serialize for BuiltChildren {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::{Error, SerializeSeq};
+        if !self.is_empty() {
+            return Err(S::Error::custom("BuiltChildren requires retained page transport"));
+        }
+        serializer.serialize_seq(Some(0))?.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for BuiltChildren {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        use serde::de::{SeqAccess, Visitor};
+        struct BuiltChildrenVisitor;
+        impl<'de> Visitor<'de> for BuiltChildrenVisitor {
+            type Value = BuiltChildren;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("empty built children; populated pages require retained transport")
+            }
+
+            fn visit_seq<A: SeqAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
+                if access.next_element::<BuiltNode>()?.is_some() {
+                    return Err(serde::de::Error::custom("BuiltChildren requires retained page transport"));
+                }
+                Ok(BuiltChildren::default())
+            }
+        }
+        deserializer.deserialize_seq(BuiltChildrenVisitor)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BuiltNode {
     /// 🔑️ The reconciliation key — an author-set [`HasBase::id`] or a positional `"#N"` fallback. See
     /// [`HasChildren::child`] for why the fallback is only stable while sibling order is unchanged.
-    pub key: String,
+    pub key: crate::UiText,
     pub component: crate::Component,
     #[serde(default, skip_serializing_if = "is_default")]
     pub layout: crate::LayoutSpec,
@@ -48,12 +354,72 @@ pub struct BuiltNode {
     pub disabled: bool,
     #[serde(default, skip_serializing_if = "is_default")]
     pub accessibility: crate::AccessibilitySpec,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub bindings: Vec<crate::ActionBinding>,
+    #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    pub bindings: crate::UiNodeBindings,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub menu: Option<crate::MenuRef>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub children: Vec<BuiltNode>,
+    #[serde(default, skip_serializing_if = "BuiltChildren::is_empty")]
+    pub children: BuiltChildren,
+    #[serde(skip)]
+    pub rejected_children: BuiltChildren,
+}
+
+impl BuiltNode {
+    pub fn try_new(key: impl AsRef<str>, component: crate::Component) -> Result<Self, crate::Component> {
+        let Some(key) = crate::UiText::try_from_str(key.as_ref()) else { return Err(component) };
+        Ok(Self {
+            key,
+            component,
+            layout: crate::LayoutSpec::default(),
+            style: crate::StyleSpec::default(),
+            activity: crate::Activity::default(),
+            disabled: false,
+            accessibility: crate::AccessibilitySpec::default(),
+            bindings: crate::UiNodeBindings::default(),
+            menu: None,
+            children: BuiltChildren::default(),
+            rejected_children: BuiltChildren::default(),
+        })
+    }
+
+    pub fn try_at(position: usize, component: crate::Component) -> Result<Self, crate::Component> {
+        let Some(key) = positional_key(position) else { return Err(component) };
+        Self::try_new(key, component)
+    }
+
+    pub fn empty_separator() -> Self {
+        Self {
+            key: crate::UiText::default(),
+            component: crate::Component::Separator(crate::SeparatorProps {}),
+            layout: crate::LayoutSpec::default(),
+            style: crate::StyleSpec::default(),
+            activity: crate::Activity::default(),
+            disabled: false,
+            accessibility: crate::AccessibilitySpec::default(),
+            bindings: crate::UiNodeBindings::default(),
+            menu: None,
+            children: BuiltChildren::default(),
+            rejected_children: BuiltChildren::default(),
+        }
+    }
+
+    pub fn try_with_children(mut self, children: impl IntoIterator<Item = BuiltNode>) -> Result<Self, (Self, BuiltNode)> {
+        for mut child in children {
+            if child.key.is_empty() {
+                let Some(key) = positional_key(self.children.len()) else { return Err((self, child)) };
+                child.key = key;
+            }
+            if let Err(child) = self.children.try_push(child) {
+                return Err((self, child));
+            }
+        }
+        Ok(self)
+    }
+
+    #[cfg(test)]
+    pub fn with_children(self, children: impl IntoIterator<Item = BuiltNode>) -> Self {
+        self.try_with_children(children).unwrap_or_else(|(node, _)| node)
+    }
 }
 //#endregion 🧱️BuiltNode
 
@@ -62,21 +428,33 @@ pub struct BuiltNode {
 /// methods on [`HasBase`]/[`HasChildren`]/[`HasStackLayout`], never through its own fields, which stay
 /// private to this module.
 pub struct NodeBase {
-    id: Option<String>,
+    id: Option<crate::UiText>,
     layout: crate::LayoutSpec,
     style: crate::StyleSpec,
     activity: crate::Activity,
     disabled: bool,
     accessibility: crate::AccessibilitySpec,
-    bindings: Vec<crate::ActionBinding>,
+    bindings: crate::UiNodeBindings,
     menu: Option<crate::MenuRef>,
-    children: Vec<BuiltNode>,
+    children: BuiltChildren,
+    rejected_children: BuiltChildren,
 }
 
 impl NodeBase {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn with_layout(layout: crate::LayoutSpec) -> Self {
-        Self { id: None, layout, style: crate::StyleSpec::default(), activity: crate::Activity::default(), disabled: false, accessibility: crate::AccessibilitySpec::default(), bindings: Vec::new(), menu: None, children: Vec::new() }
+        Self {
+            id: None,
+            layout,
+            style: crate::StyleSpec::default(),
+            activity: crate::Activity::default(),
+            disabled: false,
+            accessibility: crate::AccessibilitySpec::default(),
+            bindings: crate::UiNodeBindings::default(),
+            menu: None,
+            children: BuiltChildren::default(),
+            rejected_children: BuiltChildren::default(),
+        }
     }
 
     /// 🍃️ A terminal node's own base — [`crate::LayoutSpec::Leaf`], the crate's own default.
@@ -95,8 +473,8 @@ impl NodeBase {
 /// 🔢️ The fallback key for a node at `index` among its siblings — stable only while sibling count
 /// and order stay fixed; see [`HasChildren::child`].
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn positional_key(index: usize) -> String {
-    format!("#{index}")
+fn positional_key(index: usize) -> Option<crate::UiText> {
+    crate::UiText::try_format(format_args!("#{index}"))
 }
 
 /// 🏗️ Assembles `base` and `component` into a [`BuiltNode`], leaving `key` empty when `base.id` was
@@ -115,6 +493,7 @@ fn assemble(base: NodeBase, component: crate::Component) -> BuiltNode {
         bindings: base.bindings,
         menu: base.menu,
         children: base.children,
+        rejected_children: base.rejected_children,
     }
 }
 //#endregion 🧩️Base
@@ -133,9 +512,10 @@ pub trait HasBase: Sized {
 
     /// 🔑️ Sets the reconciliation key explicitly.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn id(mut self, id: impl Into<String>) -> Self {
-        self.base_mut().id = Some(id.into());
-        self
+    fn try_id(mut self, id: impl AsRef<str>) -> Result<Self, Self> {
+        let Some(id) = crate::UiText::try_from_str(id.as_ref()) else { return Err(self) };
+        self.base_mut().id = Some(id);
+        Ok(self)
     }
 
     /// 🚫️ Marks the node non-interactive without removing it from the tree.
@@ -203,31 +583,39 @@ pub trait HasBase: Sized {
 
     /// 🎬️ Binds `trigger` to `action` with no args.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn on(mut self, trigger: crate::Trigger, action: crate::ActionId) -> Self {
-        self.base_mut().bindings.push(crate::ActionBinding { trigger, action, args: None, capability: None });
-        self
+    fn try_on(mut self, trigger: crate::Trigger, action: crate::ActionId) -> Result<Self, (Self, crate::ActionBinding)> {
+        let binding = crate::ActionBinding { trigger, action, args: None, capability: None };
+        match self.base_mut().bindings.try_push(binding) {
+            Ok(()) => Ok(self),
+            Err(binding) => Err((self, binding)),
+        }
     }
 
     /// 🎬️ Binds `trigger` to `action`, carrying `args` for the action to consume.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn on_with(mut self, trigger: crate::Trigger, action: crate::ActionId, args: crate::UiValue) -> Self {
-        self.base_mut().bindings.push(crate::ActionBinding { trigger, action, args: Some(args), capability: None });
-        self
+    fn try_on_with(mut self, trigger: crate::Trigger, action: crate::ActionId, args: crate::UiValue) -> Result<Self, (Self, crate::ActionBinding)> {
+        let binding = crate::ActionBinding { trigger, action, args: Some(args), capability: None };
+        match self.base_mut().bindings.try_push(binding) {
+            Ok(()) => Ok(self),
+            Err(binding) => Err((self, binding)),
+        }
     }
 
     /// ♿️ Overrides the node's accessible name. [`button`] and [`tree_item`] already derive this from
     /// their visible label; call this only to override that default.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn label(mut self, label: impl Into<crate::Label>) -> Self {
-        self.base_mut().accessibility.label = Some(label.into());
-        self
+    fn try_label(mut self, label: impl AsRef<str>) -> Result<Self, Self> {
+        let Some(label) = crate::UiText::try_from_str(label.as_ref()).map(crate::Label) else { return Err(self) };
+        self.base_mut().accessibility.label = Some(label);
+        Ok(self)
     }
 
     /// ♿️ Sets the node's accessible description.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn describe(mut self, description: impl Into<crate::Label>) -> Self {
-        self.base_mut().accessibility.description = Some(description.into());
-        self
+    fn try_describe(mut self, description: impl AsRef<str>) -> Result<Self, Self> {
+        let Some(description) = crate::UiText::try_from_str(description.as_ref()).map(crate::Label) else { return Err(self) };
+        self.base_mut().accessibility.description = Some(description);
+        Ok(self)
     }
 }
 
@@ -238,23 +626,44 @@ pub trait HasChildren: HasBase {
     /// siblings do not change, which is why a node whose position can shift (a reorderable list row,
     /// for instance) should carry an explicit [`HasBase::id`] instead.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn child(mut self, child: impl Into<BuiltNode>) -> Self {
+    fn try_child(mut self, child: impl Into<BuiltNode>) -> Result<Self, (Self, BuiltNode)> {
         let mut node = child.into();
         if node.key.is_empty() {
-            node.key = positional_key(self.base_mut().children.len());
+            let Some(key) = positional_key(self.base_mut().children.len()) else { return Err((self, node)) };
+            node.key = key;
         }
-        self.base_mut().children.push(node);
-        self
+        if let Err(node) = self.base_mut().children.try_push(node) {
+            return Err((self, node));
+        }
+        Ok(self)
     }
 
-    /// 👶️ Appends every item of `children` in order, each through [`HasChildren::child`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn children<T: Into<BuiltNode>, I: IntoIterator<Item = T>>(mut self, children: I) -> Self {
-        for child in children {
-            self = self.child(child);
+    fn try_children<T: Into<BuiltNode>, I: IntoIterator<Item = T>>(mut self, children: I) -> Result<Self, RetainedChildren<Self, I::IntoIter>> {
+        let mut remaining = children.into_iter();
+        while let Some(child) = remaining.next() {
+            match self.try_child(child) {
+                Ok(builder) => self = builder,
+                Err((builder, rejected)) => return Err(RetainedChildren { builder, rejected, remaining }),
+            }
         }
-        self
+        Ok(self)
     }
+
+    #[cfg(test)]
+    fn child(self, child: impl Into<BuiltNode>) -> Self {
+        self.try_child(child).unwrap_or_else(|(builder, _)| builder)
+    }
+
+    #[cfg(test)]
+    fn children<T: Into<BuiltNode>, I: IntoIterator<Item = T>>(self, children: I) -> Self {
+        self.try_children(children).unwrap_or_else(|error| error.builder)
+    }
+}
+
+pub struct RetainedChildren<B, I> {
+    pub builder: B,
+    pub rejected: BuiltNode,
+    pub remaining: I,
 }
 
 /// 📏️ Adds [`crate::StackLayout`] tuning to a builder whose default layout is
@@ -323,15 +732,16 @@ pub trait HasStackLayout: HasBase {
 /// at compile time, rather than present but panicking.
 pub trait Buildable: Into<BuiltNode> {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn build(self) -> BuiltNode
+    fn try_build(self) -> Result<BuiltNode, BuiltNode>
     where
         Self: Sized,
     {
         let mut node: BuiltNode = self.into();
         if node.key.is_empty() {
-            node.key = positional_key(0);
+            let Some(key) = positional_key(0) else { return Err(node) };
+            node.key = key;
         }
-        node
+        Ok(node)
     }
 }
 
@@ -387,9 +797,9 @@ pub struct ContainerBuilder {
     base: NodeBase,
     role: crate::ContainerRole,
     label: crate::Label,
-    description: Option<String>,
+    description: Option<crate::UiText>,
     required: Option<bool>,
-    error: Option<String>,
+    error: Option<crate::UiText>,
     default_open: Option<bool>,
     drop_overlay: Option<crate::DropOverlaySpec>,
 }
@@ -402,8 +812,8 @@ impl ContainerBuilder {
 
     /// 📝️ Sets the container's help/description copy.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn description(mut self, description: impl Into<String>) -> Self {
-        self.description = Some(description.into());
+    pub fn description(mut self, description: crate::UiText) -> Self {
+        self.description = Some(description);
         self
     }
 
@@ -416,8 +826,8 @@ impl ContainerBuilder {
 
     /// ⚠️ Sets a validation error message.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn error(mut self, error: impl Into<String>) -> Self {
-        self.error = Some(error.into());
+    pub fn error(mut self, error: crate::UiText) -> Self {
+        self.error = Some(error);
         self
     }
 
@@ -438,14 +848,14 @@ impl ContainerBuilder {
 
 /// 🗂️ A labeled, collapsible section — `Component::Container(role: Section)`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn section(label: impl Into<crate::Label>) -> ContainerBuilder {
-    ContainerBuilder::new(crate::ContainerRole::Section, label.into())
+pub fn section(label: crate::Label) -> ContainerBuilder {
+    ContainerBuilder::new(crate::ContainerRole::Section, label)
 }
 
 /// 🗂️ A labeled form field — `Component::Container(role: Field)`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn field(label: impl Into<crate::Label>) -> ContainerBuilder {
-    ContainerBuilder::new(crate::ContainerRole::Field, label.into())
+pub fn field(label: crate::Label) -> ContainerBuilder {
+    ContainerBuilder::new(crate::ContainerRole::Field, label)
 }
 
 impl HasBase for ContainerBuilder {
@@ -486,8 +896,8 @@ pub struct TextBuilder {
 
 /// 📝️ Display text reading `value`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn text(value: impl Into<crate::Label>) -> TextBuilder {
-    TextBuilder { base: NodeBase::leaf(), value: value.into(), emphasize: None }
+pub fn text(value: crate::Label) -> TextBuilder {
+    TextBuilder { base: NodeBase::leaf(), value, emphasize: None }
 }
 
 impl TextBuilder {
@@ -519,24 +929,23 @@ impl From<TextBuilder> for BuiltNode {
 pub struct ButtonBuilder {
     base: NodeBase,
     label: crate::Label,
-    icon: String,
+    icon: crate::UiText,
 }
 
 /// 🔘️ A button reading `label`. Its accessible name defaults to `label` — override with
 /// [`HasBase::label`] if the visible and accessible text should differ.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn button(label: impl Into<crate::Label>) -> ButtonBuilder {
-    let label = label.into();
+pub fn button(label: crate::Label) -> ButtonBuilder {
     let mut base = NodeBase::leaf();
     base.accessibility.label = Some(label.clone());
-    ButtonBuilder { base, label, icon: String::new() }
+    ButtonBuilder { base, label, icon: crate::UiText::default() }
 }
 
 impl ButtonBuilder {
     /// 🖼️ Sets the icon key.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn icon(mut self, icon: impl Into<String>) -> Self {
-        self.icon = icon.into();
+    pub fn icon(mut self, icon: crate::UiText) -> Self {
+        self.icon = icon;
         self
     }
 }
@@ -561,40 +970,40 @@ impl From<ButtonBuilder> for BuiltNode {
 pub struct InputBuilder {
     base: NodeBase,
     kind: crate::InputKind,
-    value: String,
+    value: crate::UiText,
     placeholder: Option<crate::Label>,
-    commit: Option<String>,
+    commit: Option<crate::UiText>,
     min: Option<f64>,
     max: Option<f64>,
     step: Option<f64>,
-    accept: Option<String>,
+    accept: Option<crate::UiText>,
 }
 
 /// ⌨️ An input of `kind`, initially empty.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn input(kind: crate::InputKind) -> InputBuilder {
-    InputBuilder { base: NodeBase::leaf(), kind, value: String::new(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None }
+    InputBuilder { base: NodeBase::leaf(), kind, value: crate::UiText::default(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None }
 }
 
 impl InputBuilder {
     /// ✍️ Sets the current value.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn value(mut self, value: impl Into<String>) -> Self {
-        self.value = value.into();
+    pub fn value(mut self, value: crate::UiText) -> Self {
+        self.value = value;
         self
     }
 
     /// 💬️ Sets placeholder copy.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn placeholder(mut self, placeholder: impl Into<crate::Label>) -> Self {
-        self.placeholder = Some(placeholder.into());
+    pub fn placeholder(mut self, placeholder: crate::Label) -> Self {
+        self.placeholder = Some(placeholder);
         self
     }
 
     /// 🫳️ Sets the commit convention (e.g. `"blur"`).
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn commit(mut self, commit: impl Into<String>) -> Self {
-        self.commit = Some(commit.into());
+    pub fn commit(mut self, commit: crate::UiText) -> Self {
+        self.commit = Some(commit);
         self
     }
 
@@ -621,8 +1030,8 @@ impl InputBuilder {
 
     /// 📎️ Sets the accepted file-type filter (`InputKind::File`).
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn accept(mut self, accept: impl Into<String>) -> Self {
-        self.accept = Some(accept.into());
+    pub fn accept(mut self, accept: crate::UiText) -> Self {
+        self.accept = Some(accept);
         self
     }
 }
@@ -650,29 +1059,28 @@ impl From<InputBuilder> for BuiltNode {
 pub struct ToggleBuilder {
     base: NodeBase,
     on: bool,
-    icon: String,
+    icon: crate::UiText,
     text: Option<crate::Label>,
 }
 
 /// 🔀️ A toggle currently `on` or off.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn toggle(on: bool) -> ToggleBuilder {
-    ToggleBuilder { base: NodeBase::leaf(), on, icon: String::new(), text: None }
+    ToggleBuilder { base: NodeBase::leaf(), on, icon: crate::UiText::default(), text: None }
 }
 
 impl ToggleBuilder {
     /// 🖼️ Sets the icon key.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn icon(mut self, icon: impl Into<String>) -> Self {
-        self.icon = icon.into();
+    pub fn icon(mut self, icon: crate::UiText) -> Self {
+        self.icon = icon;
         self
     }
 
     /// 📝️ Sets the visible text, and — unless [`HasBase::label`] already set one explicitly — the
     /// accessible name too, for the same "hard to omit" reason [`button`] auto-derives its own.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn text(mut self, text: impl Into<crate::Label>) -> Self {
-        let text = text.into();
+    pub fn text(mut self, text: crate::Label) -> Self {
         self.base.accessibility.label.get_or_insert_with(|| text.clone());
         self.text = Some(text);
         self
@@ -698,36 +1106,32 @@ impl From<ToggleBuilder> for BuiltNode {
 /// 🔽️ A single-choice dropdown — `Component::Select`. Build with [`select`].
 pub struct SelectBuilder {
     base: NodeBase,
-    value: String,
-    items: Vec<crate::SelectItem>,
+    value: crate::UiText,
+    items: crate::UiFixedList<crate::SelectItem>,
     placeholder: Option<crate::Label>,
 }
 
 /// 🔽️ A select currently holding `value`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn select(value: impl Into<String>) -> SelectBuilder {
-    SelectBuilder { base: NodeBase::leaf(), value: value.into(), items: Vec::new(), placeholder: None }
+pub fn select(value: crate::UiText) -> SelectBuilder {
+    SelectBuilder { base: NodeBase::leaf(), value, items: crate::UiFixedList::default(), placeholder: None }
 }
 
 impl SelectBuilder {
     /// ➕️ Appends one option.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn item(mut self, value: impl Into<String>, label: impl Into<crate::Label>) -> Self {
-        self.items.push(crate::SelectItem { value: value.into(), label: label.into() });
-        self
-    }
-
-    /// ➕️ Appends every option of `items` in order.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn items(mut self, items: impl IntoIterator<Item = crate::SelectItem>) -> Self {
-        self.items.extend(items);
-        self
+    pub fn try_item(mut self, value: crate::UiText, label: crate::Label) -> Result<Self, (Self, crate::SelectItem)> {
+        let item = crate::SelectItem { value, label };
+        match self.items.try_push(item) {
+            Ok(()) => Ok(self),
+            Err(item) => Err((self, item)),
+        }
     }
 
     /// 💬️ Sets placeholder copy shown while no option is selected.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn placeholder(mut self, placeholder: impl Into<crate::Label>) -> Self {
-        self.placeholder = Some(placeholder.into());
+    pub fn placeholder(mut self, placeholder: crate::Label) -> Self {
+        self.placeholder = Some(placeholder);
         self
     }
 }
@@ -755,7 +1159,7 @@ pub struct SliderBuilder {
     min: f64,
     max: f64,
     step: f64,
-    unit: Option<String>,
+    unit: Option<crate::UiText>,
 }
 
 /// 🎚️ A slider currently at `value`, defaulting to the `0.0..=1.0` normalized range with a `0.1`
@@ -789,8 +1193,8 @@ impl SliderBuilder {
 
     /// 📏️ Sets the displayed unit suffix.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn unit(mut self, unit: impl Into<String>) -> Self {
-        self.unit = Some(unit.into());
+    pub fn unit(mut self, unit: crate::UiText) -> Self {
+        self.unit = Some(unit);
         self
     }
 }
@@ -815,7 +1219,7 @@ impl From<SliderBuilder> for BuiltNode {
 /// [`HasChildren::child`]ren, not inline fields. Build with [`tree`].
 pub struct TreeBuilder {
     base: NodeBase,
-    interaction_domain: Option<String>,
+    interaction_domain: Option<crate::UiText>,
 }
 
 /// 🌲️ An empty tree, ready for [`tree_section`]/[`tree_item`] children.
@@ -827,8 +1231,8 @@ pub fn tree() -> TreeBuilder {
 impl TreeBuilder {
     /// 🕹️ Binds this tree to an app-declared `InteractionDefinition` domain.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn interaction_domain(mut self, domain: impl Into<String>) -> Self {
-        self.interaction_domain = Some(domain.into());
+    pub fn interaction_domain(mut self, domain: crate::UiText) -> Self {
+        self.interaction_domain = Some(domain);
         self
     }
 }
@@ -859,8 +1263,8 @@ pub struct TreeSectionBuilder {
 
 /// 🌲️ A tree section reading `label`, ready for [`tree_item`] children.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn tree_section(label: impl Into<crate::Label>) -> TreeSectionBuilder {
-    TreeSectionBuilder { base: NodeBase::stack(crate::Axis::Vertical), label: label.into(), default_open: None }
+pub fn tree_section(label: crate::Label) -> TreeSectionBuilder {
+    TreeSectionBuilder { base: NodeBase::stack(crate::Axis::Vertical), label, default_open: None }
 }
 
 impl TreeSectionBuilder {
@@ -893,37 +1297,36 @@ impl From<TreeSectionBuilder> for BuiltNode {
 pub struct TreeItemBuilder {
     base: NodeBase,
     label: crate::Label,
-    description: Option<String>,
-    icon: Option<String>,
+    description: Option<crate::UiText>,
+    icon: Option<crate::UiText>,
     default_open: Option<bool>,
     draggable: Option<bool>,
-    drag_data: Option<HashMap<String, String>>,
+    drag_data: Option<crate::UiFixedMap<crate::UiText>>,
     dimmed: Option<bool>,
-    row_actions: Vec<crate::RowAction>,
+    row_actions: crate::UiFixedList<crate::RowAction>,
 }
 
 /// 🌿️ A tree row reading `label`. Its accessible name defaults to `label`, the same "hard to omit"
 /// derivation [`button`] applies.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn tree_item(label: impl Into<crate::Label>) -> TreeItemBuilder {
-    let label = label.into();
+pub fn tree_item(label: crate::Label) -> TreeItemBuilder {
     let mut base = NodeBase::stack(crate::Axis::Vertical);
     base.accessibility.label = Some(label.clone());
-    TreeItemBuilder { base, label, description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, row_actions: Vec::new() }
+    TreeItemBuilder { base, label, description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, row_actions: crate::UiFixedList::default() }
 }
 
 impl TreeItemBuilder {
     /// 📝️ Sets secondary description copy.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn description(mut self, description: impl Into<String>) -> Self {
-        self.description = Some(description.into());
+    pub fn description(mut self, description: crate::UiText) -> Self {
+        self.description = Some(description);
         self
     }
 
     /// 🖼️ Sets the icon key.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn icon(mut self, icon: impl Into<String>) -> Self {
-        self.icon = Some(icon.into());
+    pub fn icon(mut self, icon: crate::UiText) -> Self {
+        self.icon = Some(icon);
         self
     }
 
@@ -943,7 +1346,7 @@ impl TreeItemBuilder {
 
     /// 🏷️ Sets the payload a drag of this row carries.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn drag_data(mut self, drag_data: HashMap<String, String>) -> Self {
+    pub fn drag_data(mut self, drag_data: crate::UiFixedMap<crate::UiText>) -> Self {
         self.drag_data = Some(drag_data);
         self
     }
@@ -958,17 +1361,13 @@ impl TreeItemBuilder {
 
     /// 🎬️ Appends one row action.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn row_action(mut self, row_action: crate::RowAction) -> Self {
-        self.row_actions.push(row_action);
-        self
+    pub fn try_row_action(mut self, row_action: crate::RowAction) -> Result<Self, (Self, crate::RowAction)> {
+        match self.row_actions.try_push(row_action) {
+            Ok(()) => Ok(self),
+            Err(row_action) => Err((self, row_action)),
+        }
     }
 
-    /// 🎬️ Appends every row action of `row_actions` in order.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn row_actions(mut self, row_actions: impl IntoIterator<Item = crate::RowAction>) -> Self {
-        self.row_actions.extend(row_actions);
-        self
-    }
 }
 
 impl HasBase for TreeItemBuilder {
@@ -1013,12 +1412,11 @@ pub struct NoAlt;
 /// carries a decided accessible name (either real alt text or an explicit decorative opt-out). Only
 /// `ImageBuilder<HasAlt>` implements `Into<BuiltNode>`, which is what makes [`Buildable::build`]
 /// available on it and not on `ImageBuilder<NoAlt>`.
-pub struct HasAlt;
+pub struct HasAlt(ImageAlt);
 
 /// 🖼️ Whether an [`ImageBuilder`] carries real accessible text or has deliberately opted out —
-/// `ImageBuilder<HasAlt>` is only ever constructed with this set to `Some`, by [`ImageBuilder::alt`] or
-/// [`ImageBuilder::decorative`], so [`ImageBuilder`]'s own `From` impl can treat the `None` case as an
-/// internal invariant rather than a user-reachable failure (see [`From<ImageBuilder<HasAlt>>`]).
+/// `ImageBuilder<HasAlt>` stores this value directly in its typestate payload, so no optional runtime
+/// invariant or panicking owner transition exists.
 enum ImageAlt {
     Text(crate::Label),
     Decorative,
@@ -1045,30 +1443,29 @@ enum ImageAlt {
 /// ```
 pub struct ImageBuilder<State = NoAlt> {
     base: NodeBase,
-    src: String,
-    alt: Option<ImageAlt>,
-    _state: std::marker::PhantomData<State>,
+    src: crate::UiText,
+    alt: State,
 }
 
 /// 🖼️ An image loaded from `src`, in state [`NoAlt`] — call [`ImageBuilder::alt`] or
 /// [`ImageBuilder::decorative`] before `.build()` becomes callable at all.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn image(src: impl Into<String>) -> ImageBuilder<NoAlt> {
-    ImageBuilder { base: NodeBase::leaf(), src: src.into(), alt: None, _state: std::marker::PhantomData }
+pub fn image(src: crate::UiText) -> ImageBuilder<NoAlt> {
+    ImageBuilder { base: NodeBase::leaf(), src, alt: NoAlt }
 }
 
 impl<State> ImageBuilder<State> {
     /// ♿️ Supplies the accessible alt text, unlocking `.build()` by transitioning to [`HasAlt`].
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn alt(self, alt: impl Into<crate::Label>) -> ImageBuilder<HasAlt> {
-        ImageBuilder { base: self.base, src: self.src, alt: Some(ImageAlt::Text(alt.into())), _state: std::marker::PhantomData }
+    pub fn alt(self, alt: crate::Label) -> ImageBuilder<HasAlt> {
+        ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Text(alt)) }
     }
 
     /// 🙈️ Explicitly opts out: the image is decorative and hidden from the accessibility tree.
     /// Unlocks `.build()` by transitioning to [`HasAlt`], the same as [`ImageBuilder::alt`].
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn decorative(self) -> ImageBuilder<HasAlt> {
-        ImageBuilder { base: self.base, src: self.src, alt: Some(ImageAlt::Decorative), _state: std::marker::PhantomData }
+        ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Decorative) }
     }
 }
 
@@ -1083,7 +1480,7 @@ impl From<ImageBuilder<HasAlt>> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: ImageBuilder<HasAlt>) -> Self {
         let ImageBuilder { mut base, src, alt, .. } = builder;
-        let alt = alt.expect("🚫️ ImageBuilder<HasAlt> is only ever constructed by .alt(..)/.decorative(), both of which set Some — an internal invariant, never a user-reachable panic");
+        let HasAlt(alt) = alt;
         let alt_label = match alt {
             ImageAlt::Text(label) => {
                 base.accessibility.label.get_or_insert_with(|| label.clone());
@@ -1132,14 +1529,14 @@ impl From<SurfaceBuilder> for BuiltNode {
 /// 🧩️ An external plugin slot — `Component::Extension`. Build with [`extension`].
 pub struct ExtensionBuilder {
     base: NodeBase,
-    extension: String,
+    extension: crate::UiText,
     props: crate::UiValue,
 }
 
 /// 🧩️ An extension slot addressed by `name`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn extension(name: impl Into<String>) -> ExtensionBuilder {
-    ExtensionBuilder { base: NodeBase::leaf(), extension: name.into(), props: crate::UiValue::Null }
+pub fn extension(name: crate::UiText) -> ExtensionBuilder {
+    ExtensionBuilder { base: NodeBase::leaf(), extension: name, props: crate::UiValue::Null }
 }
 
 impl ExtensionBuilder {
@@ -1227,8 +1624,9 @@ mod tests {
     #[test]
     fn on_with_carries_args() {
         let action = crate::ActionId::v1("app", "setValue");
-        let node = input(crate::InputKind::Text).on_with(crate::Trigger::Change, action, crate::UiValue::Text("hi".into())).build();
-        assert_eq!(node.bindings[0].args, Some(crate::UiValue::Text("hi".into())));
+        let value = crate::UiText::try_from_str("hi").expect("bounded fixture text");
+        let node = input(crate::InputKind::Text).on_with(crate::Trigger::Change, action, crate::UiValue::Text(value.clone())).build();
+        assert_eq!(node.bindings[0].args, Some(crate::UiValue::Text(value)));
     }
     //#endregion 🔖️Bindings
 

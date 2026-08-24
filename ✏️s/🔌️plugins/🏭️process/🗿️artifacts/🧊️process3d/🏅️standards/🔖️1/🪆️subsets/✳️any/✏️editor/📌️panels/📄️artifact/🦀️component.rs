@@ -33,10 +33,10 @@ pub async fn definition() -> PanelTabDefinition {
 ///
 /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): item ids (`fixture.stock_id`, each
 /// step id) are the SAME canonical targets the framework-owned `"geometry"` interaction domain
-/// selects — the tree binds `.interaction_domain` and stamps no `.selected()`/`.highlighted()`
+/// selects — the tree binds `.interaction_domain` and stamps no `.selected()?`/`.highlighted()?`
 /// itself; the framework's post-render pass overwrites item presence from live selection/hover, and
 /// clicks translate into `interactionSelect` generically (mirrors `🧱️block`'s `📌️panels/📄️artifact`).
-pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> UiNode {
+pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let stock_item = UiTreeItemNode { icon_id: Some("box".into()), menu: None, ..UiTreeItemNode::base(fixture.stock_id.clone(), Label::data(fixture.stock_label.clone())) };
     let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
     let cursor = fixture.resolved_up_to.unwrap_or(scene.steps.len());
@@ -61,10 +61,10 @@ pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> Ui
             ..UiTreeItemNode::base(step.id.clone(), Label::data(step.label.clone()))
         })
         .collect();
-    PanelTreeBuilder::new("process3d-play-document")
-        .section("process3d-play-document.stock", Some(labels.stock.into()), true, vec![stock_item])
-        .section("process3d-play-document.steps", Some(labels.steps.into()), true, step_items)
-        .interaction_domain(PROCESS3D_INTERACTION_DOMAIN)
+    PanelTreeBuilder::new("process3d-play-document")?
+        .section("process3d-play-document.stock", Some(labels.stock.into()), true, vec![stock_item])?
+        .section("process3d-play-document.steps", Some(labels.steps.into()), true, step_items)?
+        .interaction_domain(PROCESS3D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

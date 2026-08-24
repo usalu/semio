@@ -21,7 +21,7 @@ pub async fn definition() -> PanelTabDefinition {
 async fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>, labels: &RasterPlayLabels) {
     if let RasterLayerNode::Pixel { id, name, mask, .. } | RasterLayerNode::Group { id, name, mask, .. } = layer {
         if mask.as_ref().is_some_and(|mask| mask.enabled) {
-            items.push(UiTreeItemNode { icon_id: Some("scan".into()), ..tree_item_desc(mask_row_id(id), Label::data(format!("{name} {}", labels.mask_suffix.as_str())), Some("mask".into())) });
+            items.push(UiTreeItemNode { icon_id: Some("scan".into()), ..tree_item_desc(mask_row_id(id), Label::data(format!("{name} {}", labels.mask_suffix.as_str())), Some("mask".into()))? });
         }
     }
     if let RasterLayerNode::Group { children, .. } = layer {
@@ -32,16 +32,16 @@ async fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>,
 }
 
 /// 🕹️ `runtime` is unused now — the masked-layer highlight used to mirror `RasterConfig.selected_ids`
-/// (deleted, ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). This tree stays un-bound to
-/// `.interaction_domain("layers")`: its item ids (`mask_row_id`) are a different namespace than the
+/// (deleted, ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM)?. This tree stays un-bound to
+/// `.interaction_domain("layers")?`: its item ids (`mask_row_id`) are a different namespace than the
 /// document/layers tree's (`layer_row_id`), so the two trees cannot both mirror the same domain
 /// without id collisions — dropped rather than shown stale (matches the acceptance-bar precedent in
 /// lowpoly's inspection panel).
-pub async fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
+pub async fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut items = Vec::new();
     for layer in &document.layers {
         collect_masks(layer, &mut items, labels);
     }
-    PanelTreeBuilder::new(RASTER_TREE_PREFIX).section_or_placeholder("raster-play-masks", Some(labels.masks.into()), true, items, labels.no_masks).build()
+    PanelTreeBuilder::new(RASTER_TREE_PREFIX)?.section_or_placeholder("raster-play-masks", Some(labels.masks.into()), true, items, labels.no_masks)?.build()
 }
 //#endregion 🔖️Render

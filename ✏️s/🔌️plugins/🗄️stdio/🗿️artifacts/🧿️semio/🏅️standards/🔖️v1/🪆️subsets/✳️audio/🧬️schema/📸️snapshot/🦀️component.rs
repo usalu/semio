@@ -385,6 +385,25 @@ impl store::ArtifactDsl for SemioAudioSnapshot {
     }
 }
 
+//#region 🔖️DslFreeFunctions
+/// 📝️ Free-function face of [`SemioAudioSnapshot`]'s own `store::ArtifactDsl` text codec. `ArtifactDsl` is
+/// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `store` in
+/// `📦️glue.rs`) and is therefore not nameable by a consumer that links only this crate — a
+/// generated test host being the concrete case. The codec itself is the subset's, so its entry
+/// point belongs here rather than behind a trait the caller cannot import.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_audio_dsl(text: &str) -> Result<SemioAudioSnapshot, String> {
+    <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
+}
+
+/// 📝️ Free-function face of [`SemioAudioSnapshot`]'s own `store::ArtifactDsl` printer — see
+/// [`parse_semio_audio_dsl`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_audio_dsl(snapshot: &SemioAudioSnapshot) -> String {
+    <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+}
+//#endregion 🔖️DslFreeFunctions
+
 impl store::ArtifactPack for SemioAudioSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;

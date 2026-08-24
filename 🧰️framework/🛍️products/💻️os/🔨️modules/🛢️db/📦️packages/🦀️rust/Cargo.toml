@@ -27,14 +27,14 @@ otel = []
 # same-named features one level up, which forward into these.
 sqlite = ["dep:rusqlite"]
 postgres = ["dep:sqlx"]
-neo4j = ["dep:neo4rs", "dep:base64"]
+neo4j = ["dep:neo4rs"]
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-replication = { workspace = true }
-# 🔌️ `db_storage`'s `DbFuture`-returning trait family crosses the sync/async boundary through its
-# own `run_blocking_op`, which submits onto `semio-framework-async`'s process-wide `WorkerPool` —
-# `FsStorage`/`db_storage_sqlite::SqliteStorage` dispatch their genuinely blocking bodies there, and
+# 🔌️ `db_storage`'s schema-first task family crosses the sync/async boundary through the
+# process-wide `WorkerPool` I/O lane; `FsStorage`/`db_storage_sqlite::SqliteStorage` dispatch
+# their typed, retained operations there, and
 # this crate names no concrete executor (no `tokio`, no `futures`) anywhere: that stays confined to
 # `🛎️services` per the repo's rule. See `db_storage`'s module doc ("Async-first").
 # 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — `VersionGraph`'s
@@ -49,7 +49,6 @@ semio-framework-trace = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 blake3 = "1"
-base64 = { version = "0.22", optional = true }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rusqlite = { version = "0.38.0", features = ["bundled"], optional = true }
 # 🔌️ Same `sqlx-core`/`sqlx-postgres` major version `🌎️hub/📦️packages/🦀️rust/Cargo.toml` pins for its

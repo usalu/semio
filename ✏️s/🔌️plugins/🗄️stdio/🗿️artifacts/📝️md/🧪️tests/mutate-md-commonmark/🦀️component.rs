@@ -43,6 +43,19 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
+/// ⚖️ First point at which two projections diverge, as a character offset into the canonical
+/// rendering plus the window around it on both sides -- an equality check whose failure names WHAT
+/// changed rather than only that something did.
+fn projection_divergence(restored: &Json, original: &Json) -> Option<String> {
+    let (left, right): (Vec<char>, Vec<char>) = (restored.to_string().chars().collect(), original.to_string().chars().collect());
+    if left == right {
+        return None;
+    }
+    let at = left.iter().zip(right.iter()).position(|(a, b)| a != b).unwrap_or(left.len().min(right.len()));
+    let window = |text: &[char]| text.iter().skip(at.saturating_sub(60)).take(160).collect::<String>();
+    Some(format!("first divergence at char {at} of {} vs {} -- got …{}… want …{}…", left.len(), right.len(), window(&left), window(&right)))
+}
+
 /// ↩️ Applies the row's forward mutation, then this subset's own algebraic inverse of it (computed
 /// by `inverse_mutation_spec` from the ORIGINAL document's own INDEPENDENT `comrak` projection, the
 /// same restore-the-prior-value law `MdMutation::inverse` implements), and asserts the restoration
@@ -56,17 +69,32 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let inverse_spec = inverse_mutation_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &inverse_spec)?;
     let projection = project_md(&restored)?;
-    if projection != original_projection {
-        return Err(format!("inverse of {} did not restore the oracle's original semantic projection", spec.str("kind")));
+    if let Some(divergence) = projection_divergence(&projection, &original_projection) {
+        return Err(format!("inverse law violated: {:?} followed by its own inverse did not restore the original document's projection -- {divergence}", spec.str("kind")));
     }
     Ok(Outcome::with_raw(restored, projection))
 }
 
+/// 🔒️ The ORACLE side of the round-trip law, ASSERTED rather than narrated: `comrak` parses the real
+/// document into its own AST and re-renders CommonMark from that AST alone, so BOTH halves of the
+/// law are checkable here without a subject -- the re-rendered bytes must differ from the input
+/// (CommonMark is not a byte-preserving carrier: the renderer re-derives every marker, fence and
+/// escape from the tree, and this repository's own README uses concrete syntax `comrak` does not
+/// reproduce verbatim), and the re-rendered document's own block projection must still equal the
+/// input's, since the projection carries only what `MdBlock`/`MdInline` themselves carry and is
+/// therefore blind to the writer freedom the feature file documents.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx, INPUT, "input.md")?;
     let spec = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(Vec::new()))]);
     let bytes = oracle_apply_mutation(&input, &spec)?;
+    if bytes == input {
+        return Err("byte pass-through: the oracle's re-rendered bytes are bit-identical to the input, so nothing here proves the document was parsed rather than copied".to_string());
+    }
     let projection = project_md(&bytes)?;
+    let original = project_md(&input)?;
+    if let Some(divergence) = projection_divergence(&projection, &original) {
+        return Err(format!("round-trip law violated: decode then re-encode did not preserve the semantic block projection -- {divergence}"));
+    }
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

@@ -110,7 +110,22 @@ although production preflight includes them. The final extension covers all ten 
 mutations; the independent audit in
 `PUZZLE-3D-RESUMABLE-VERTICAL-SLICE/📓️terra-final-p4e-b1-weight-acceptance-audit-2026-08-24.md`
 accepts P4e B1/B2 and retained P4d/P4e static source **GREEN**. P4e is therefore source-accepted.
-The exact P5b live reconcile repair is now under Sol-High implementation.
+The P5b handoff in
+`PHASE-5-RESUMABLE-FRAME-TRANSACTION-AND-RENDERER/📓️sol-p5b-live-reconcile-exact-owner-liveness-repair-2026-08-24.md`
+reports all B1–B5 production repairs, hostile census/credit/saturation/exhaustion/public-Drop
+fixtures, and 33 faithful mutations. Scoped format/diff/interactivity self-test gates pass; a fresh
+independent Terra audit rejected four counterexamples: BTreeMap `iter().nth` re-walk per grant;
+dynamic/uncredited reconcile backing plus uncapped reactor pending-patch transfer; max generation
+consumed before terminal reservation succeeds; and an unbounded boxed public-handback chain with
+linear retrieval. B3, mounted reachability, zero production reconcile, and O(1) revision are
+accepted. The exact B1/B2/B4/B5 handoff was then independently audited in
+`PHASE-5-RESUMABLE-FRAME-TRANSACTION-AND-RENDERER/📓️terra-fresh-p5b-live-reconcile-exact-owner-liveness-acceptance-audit-2026-08-24.md`
+and remains **RED**. The fresh audit found that last-key BTree range lookup still restarts traversal
+each grant; BTree and collection backing credit remains synthetic and mounted commit still accepts
+whole source trees; Patch ACK advances the tracker before matching published-owner validation;
+populated reconciler/ready/unadmitted false and Drop paths can destroy or lose retained state; and
+deep-tree retirement can overflow its fixed frames. B3 terminal-first close and B4 transactional
+generation issuance remain accepted. A Sol-High counterexample remediation is active.
 
 ### FEM2d P6g second remediation
 
@@ -140,7 +155,24 @@ records that `DbIoPages` is one ordinary `Vec` credited by logical length, not a
 capacity. Generic I/O work/result close also recursively drops uncensused graphs. P1w/P1x must wait
 for P1q's actual-page/typed-output ownership repair. The exact repair packet in
 `PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1q-actual-db-io-page-ownership-repair-contract-2026-08-24.md`
-is now under Sol-High implementation.
+is implemented in
+`PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️sol-high-independent-p1q-actual-db-io-page-ownership-remediation-2026-08-24.md`,
+with the syscall boundary separately recorded in `📓️p1q-r4-platform-syscall-census-2026-08-24.md`.
+The handoff reports real fixed pages, typed tasks/results on `Lane::Io`, complete caller migration,
+exact take/resume/lost-handle/close, hostile fixtures/mutations, and clean scoped static gates. The
+independent audit in
+`PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️terra-p1q-actual-db-io-page-ownership-acceptance-audit-2026-08-24.md`
+rejected six actual-caller/lifecycle gaps: Postgres/Neo4j raw-driver bypass; no aggregate operation
+credit identity; result detachment before close; recursive opaque close callbacks; implicit backend
+Arc retirement; and missing capacity/async/ABA fixtures plus verifier source coverage. The next
+B1–B6 handoff was independently rejected again in
+`PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️terra-fresh-independent-p1q-b1-b6-source-audit-2026-08-24.md`:
+memory still created a private pool; PostgreSQL/Neo4j driver work escaped the I/O-lane task;
+post-driver raw Vec/String/base64 results and uncensused memory graphs bypassed the ledger;
+ordinary Drop returned handback/credit; loss-ring and retry exhaustion panicked; lost PostgreSQL
+facade retirement could not satisfy its backend-empty witness; and snapshot/index/WAL still
+contained whole Vec/String/sort/collect paths missed by the verifier. A new exact remediation is
+active; P1w/P1x/P1y/P1z remain blocked.
 
 ## Active Universal Job Foundation
 

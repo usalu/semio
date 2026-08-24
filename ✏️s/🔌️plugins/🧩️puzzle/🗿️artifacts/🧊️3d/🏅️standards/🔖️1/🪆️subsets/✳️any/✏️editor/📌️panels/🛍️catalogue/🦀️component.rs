@@ -33,7 +33,7 @@ fn catalog_entry_label(entry: &Value) -> String {
     entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-fn object_kind_vortex_items(entry: &Value) -> Vec<BuiltNode> {
+fn object_kind_vortex_items(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     entry
         .get("vortices")
         .and_then(|value| value.as_array())
@@ -44,14 +44,14 @@ fn object_kind_vortex_items(entry: &Value) -> Vec<BuiltNode> {
                 .map(|(index, template)| {
                     let vortex_kind = template.get("vortexKind").and_then(|value| value.as_str()).unwrap_or("vortex");
                     let position = template.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0]));
-                    ui::tree_item(vortex_kind).id(format!("puzzle3d-kind-vortex.{index}.{vortex_kind}")).description(position.to_string()).icon("circle-dot").build()
+                    ui::tree_item(vortex_kind)?.id(format!("puzzle3d-kind-vortex.{index}.{vortex_kind}")).description(position.to_string()).icon("circle-dot").build()
                 })
                 .collect()
         })
         .unwrap_or_default()
 }
 
-fn object_kind_item(entry: &Value) -> BuiltNode {
+fn object_kind_item(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     let mesh_url = entry
         .get("meshUrl")
@@ -60,8 +60,8 @@ fn object_kind_item(entry: &Value) -> BuiltNode {
         .map(str::to_string)
         .or_else(|| entry.get("representations").and_then(Value::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(Value::as_str)).find(|url| !url.is_empty()).map(str::to_string));
     let draggable = mesh_url.is_some();
-    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(json!({ "objectKind": kind_id })));
-    let mut builder = ui::tree_item(catalog_entry_label(entry)).id(kind_id.clone()).description(kind_id.clone()).icon("box").default_open(false).children(object_kind_vortex_items(entry));
+    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(json!({ "objectKind": kind_id })))?;
+    let mut builder = ui::tree_item(catalog_entry_label(entry))?.id(kind_id.clone()).description(kind_id.clone()).icon("box").default_open(false).children(object_kind_vortex_items(entry));
     builder = match args {
         Some(args) => builder.on_with(Trigger::Activate, action, args),
         None => builder.on(Trigger::Activate, action),
@@ -76,25 +76,25 @@ fn object_kind_item(entry: &Value) -> BuiltNode {
     builder.build()
 }
 
-fn catalog_kind_item(entry: &Value, icon_id: &str) -> BuiltNode {
+fn catalog_kind_item(entry: &Value, icon_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
-    ui::tree_item(catalog_entry_label(entry)).id(format!("puzzle3d-kind-entry:{kind_id}")).description(kind_id).icon(icon_id).build()
+    ui::tree_item(catalog_entry_label(entry))?.id(format!("puzzle3d-kind-entry:{kind_id}")).description(kind_id).icon(icon_id).build()
 }
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> BuiltNode {
+pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let entries = |section: &str| crate::editor::puzzle3d::puzzle3d_catalog_entries(&envelope.fixture, section);
     let object_entries = entries("objects");
     let vortex_entries = entries("vortices");
     let cable_entries = entries("cables");
     let attraction_entries = entries("attractions");
-    PanelTreeBuilder::new("puzzle3d-play-kinds")
-        .section("puzzle3d-play-kinds.objects", Some(labels.objects.as_str().into()), false, object_entries.iter().map(object_kind_item).collect())
-        .section("puzzle3d-play-kinds.vortices", Some(labels.vortices.as_str().into()), false, vortex_entries.iter().map(|entry| catalog_kind_item(entry, "circle-dot")).collect())
-        .section("puzzle3d-play-kinds.cables", Some(labels.cables.as_str().into()), false, cable_entries.iter().map(|entry| catalog_kind_item(entry, "plug")).collect())
-        .section("puzzle3d-play-kinds.attractions", Some(labels.attractions.as_str().into()), false, attraction_entries.iter().map(|entry| catalog_kind_item(entry, "link")).collect())
-        .interaction_domain(crate::editor::puzzle3d::PUZZLE3D_INTERACTION_DOMAIN)
+    PanelTreeBuilder::new("puzzle3d-play-kinds")?
+        .section("puzzle3d-play-kinds.objects", Some(labels.objects.as_str().into()), false, object_entries.iter().map(object_kind_item).collect())?
+        .section("puzzle3d-play-kinds.vortices", Some(labels.vortices.as_str().into()), false, vortex_entries.iter().map(|entry| catalog_kind_item(entry, "circle-dot")).collect())?
+        .section("puzzle3d-play-kinds.cables", Some(labels.cables.as_str().into()), false, cable_entries.iter().map(|entry| catalog_kind_item(entry, "plug")).collect())?
+        .section("puzzle3d-play-kinds.attractions", Some(labels.attractions.as_str().into()), false, attraction_entries.iter().map(|entry| catalog_kind_item(entry, "link")).collect())?
+        .interaction_domain(crate::editor::puzzle3d::PUZZLE3D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

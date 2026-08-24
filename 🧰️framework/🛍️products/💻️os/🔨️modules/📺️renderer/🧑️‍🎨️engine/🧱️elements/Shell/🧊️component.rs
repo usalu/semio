@@ -8,7 +8,7 @@
 
 use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockStackTab, DockState, WindowSilhouette};
 use crate::engine_canvas::theme_is_dark;
-use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
+use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document, resolve_ui_image};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
@@ -20,6 +20,7 @@ use std::collections::{BTreeMap, HashMap};
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::PresencePeer;
+use ui_contract::{UiDocumentLease, UiFixedList, UI_DOCUMENT_LEASE_SLOTS};
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
 // re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
@@ -81,8 +82,8 @@ const FRAMEWORK_SETTINGS_THEME_TAB_ID: &str = "framework.settings.theme";
 /// 🎛️ wgpu-only: React surfaces its command palette as a persistent `bottom-middle` dock anchor
 /// (`buildCommandCategoryTabs`), which this renderer has no equivalent of (`group_side`/`PanelGroup::
 /// anchor` only ever map to the four corners — see that function's own doc comment). This gives
-/// `ShellState::build_command_panel_ui`'s already-built, already-tested content a real, reachable
-/// surface as a second Settings-column tab instead, the closest available honest substitute.
+/// The local builder remains a test oracle; production panel content now requires retained semantic
+/// document publication.
 const FRAMEWORK_SETTINGS_COMMANDS_TAB_ID: &str = "framework.settings.commands";
 const CHROME_ICON_TINY: f32 = 14.0;
 
@@ -1251,9 +1252,10 @@ pub struct ShellState {
     pub plugin_filter: String,
     pub space_mode: bool,
     pub session: Option<ActiveSession>,
-    pub window_ui: HashMap<String, UiNode>,
-    pub panel_ui: HashMap<String, UiNode>,
-    pub spawned_ui: Option<UiNode>,
+    pub window_ui: HashMap<String, UiDocumentLease>,
+    pub panel_documents: HashMap<String, UiDocumentLease>,
+    pub spawned_ui: Option<UiDocumentLease>,
+    closing_documents: UiFixedList<UiDocumentLease, UI_DOCUMENT_LEASE_SLOTS>,
     pub active_window_id: Option<String>,
     pub left_panel_open: bool,
     pub right_panel_open: bool,
@@ -1485,40 +1487,6 @@ impl Drop for ShellState {
     }
 }
 
-async fn resolve_external_slots_in_tree(node: UiNode, plugins: &[ProgramBridgeEntry], contributor_instances: &mut HashMap<String, u32>, view_state: &ViewModel) -> Result<UiNode, String> {
-    match node {
-        UiNode::ExternalSlot(slot) => {
-            let program = plugins.iter().find(|entry| entry.plugin_id == slot.plugin_id).cloned().ok_or_else(|| format!("contributor program missing: {}", slot.plugin_id))?;
-            let instance_id = if let Some(id) = contributor_instances.get(&slot.plugin_id) {
-                *id
-            } else {
-                let id = program.create_app(&slot.app_id).await?;
-                contributor_instances.insert(slot.plugin_id.clone(), id);
-                id
-            };
-            let rendered = program.render_with_document(instance_id, &slot.body_key, view_state, Some(slot.params_json.as_str()), None).await?;
-            Box::pin(resolve_external_slots_in_tree(rendered, plugins, contributor_instances, view_state)).await
-        }
-        UiNode::Stack(mut stack) => {
-            let mut children = Vec::with_capacity(stack.children.len());
-            for child in stack.children {
-                children.push(Box::pin(resolve_external_slots_in_tree(child, plugins, contributor_instances, view_state)).await?);
-            }
-            stack.children = children;
-            Ok(UiNode::Stack(stack))
-        }
-        UiNode::Section(mut section) => {
-            let mut children = Vec::with_capacity(section.children.len());
-            for child in section.children {
-                children.push(Box::pin(resolve_external_slots_in_tree(child, plugins, contributor_instances, view_state)).await?);
-            }
-            section.children = children;
-            Ok(UiNode::Section(section))
-        }
-        other => Ok(other),
-    }
-}
-
 //#region ShellLifecycle
 //#region 🧭️PanelAnchorModel
 /// 🧭️ The framework's generic 8-anchor panel positioning model — mirrors `PanelGroup::anchor()`
@@ -1729,8 +1697,9 @@ impl ShellState {
             space_mode,
             session: None,
             window_ui: HashMap::new(),
-            panel_ui: HashMap::new(),
+            panel_documents: HashMap::new(),
             spawned_ui: None,
+            closing_documents: UiFixedList::default(),
             active_window_id: None,
             left_panel_open: false,
             right_panel_open: false,
@@ -2076,17 +2045,15 @@ impl ShellState {
         serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into())
     }
 
-    async fn resolve_external_slots(&mut self, node: UiNode, view_state: &ViewModel) -> Result<UiNode, String> {
-        let plugins = self.plugins.clone();
-        resolve_external_slots_in_tree(node, &plugins, &mut self.contributor_instances, view_state).await
-    }
-
     pub async fn refresh_ui(&mut self) -> Result<(), String> {
         let Some(session) = self.session.clone() else {
             return Ok(());
         };
+        self.close_document_one();
         self.sync_dock();
-        self.window_ui.clear();
+        for (_, document) in std::mem::take(&mut self.window_ui) {
+            self.retain_document_for_close(document);
+        }
         let mut view_state = session.view_state.clone();
         view_state.contributions_json = Some(Self::contributions_json_from_plugins(&self.plugins));
         let mut refresh_effects = Vec::new();
@@ -2094,23 +2061,18 @@ impl ShellState {
             let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
             for kind in &session.app.window_kinds {
                 view_state.active_utility_id = self.active_utility_by_window.get(&kind.id).cloned();
-                let node = program.render_with_document(session.instance_id, &kind.body_key, &view_state, None, Some(&mut refresh_effects)).await?;
-                let resolved = self.resolve_external_slots(node, &view_state).await?;
-                let ui = match validate_window_body_surface(kind, &resolved) {
-                    Ok(()) => resolved,
-                    Err(message) => UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data(format!("Framework rejected render plan: {message}")), emphasize: Some(true), data_attributes: None, menu: None }),
-                };
-                self.window_ui.insert(kind.id.clone(), ui);
+                let document = program.render_with_document(session.instance_id, &kind.body_key, &view_state, None, Some(&mut refresh_effects)).await?;
+                self.window_ui.insert(kind.id.clone(), document);
             }
         }
-        self.panel_ui.clear();
-        self.ensure_framework_panel_ui(&session);
+        for (_, document) in std::mem::take(&mut self.panel_documents) {
+            self.retain_document_for_close(document);
+        }
         let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
         for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
             let body_key = tab.body_key.as_deref().unwrap_or_default();
-            let node = program.render_with_document(session.instance_id, body_key, &view_state, None, Some(&mut refresh_effects)).await?;
-            let resolved = self.resolve_external_slots(node, &view_state).await?;
-            self.panel_ui.insert(tab.id().to_string(), resolved);
+            let document = program.render_with_document(session.instance_id, body_key, &view_state, None, Some(&mut refresh_effects)).await?;
+            self.panel_documents.insert(tab.id().to_string(), document);
         }
         // 🧰️ The utility bar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
         // window kind) via `ui_wgpu::wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
@@ -2139,16 +2101,36 @@ impl ShellState {
                                 active_tool_id: None,
                                 active_utility_by_window_id: HashMap::new(),
                             };
+                            if let Some(document) = self.spawned_ui.take() {
+                                self.retain_document_for_close(document);
+                            }
                             self.spawned_ui = Some(spawn_plugin.render(spawned.instance_id, &body_key, &view_state).await?);
                         }
                     }
                 } else {
-                    self.spawned_ui = None;
+                    if let Some(document) = self.spawned_ui.take() {
+                        self.retain_document_for_close(document);
+                    }
                 }
             }
         }
         self.queue_host_effects(&session.app.controller_id, refresh_effects);
         Ok(())
+    }
+
+    fn retain_document_for_close(&mut self, document: UiDocumentLease) {
+        if let Err(mut rejected) = self.closing_documents.try_push(document) {
+            let _ = rejected.close_step();
+        }
+    }
+
+    fn close_document_one(&mut self) -> bool {
+        if self.closing_documents.is_empty() {
+            return !ui_contract::close_ui_document_page_one();
+        }
+        let _ = self.closing_documents.get_mut(0).map(UiDocumentLease::close_step);
+        drop(self.closing_documents.swap_remove(0));
+        true
     }
 
     fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework::kernel::Effect>) {
@@ -2204,19 +2186,7 @@ impl ShellState {
         }
     }
 
-    fn ensure_framework_panel_ui(&mut self, session: &ActiveSession) {
-        let windows_ui = self.build_display_windows_ui(session);
-        self.panel_ui.insert(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(), windows_ui);
-        let layout_ui = self.build_display_layout_ui(session);
-        self.panel_ui.insert(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID.into(), layout_ui);
-        let settings_ui = self.build_settings_general_ui();
-        self.panel_ui.insert(FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into(), settings_ui);
-        let theme_ui = self.build_settings_theme_ui();
-        self.panel_ui.insert(FRAMEWORK_SETTINGS_THEME_TAB_ID.into(), theme_ui);
-        let commands_ui = self.build_command_panel_ui();
-        self.panel_ui.insert(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID.into(), commands_ui);
-    }
-
+    #[cfg(test)]
     fn build_display_windows_ui(&self, session: &ActiveSession) -> UiNode {
         let items: Vec<UiNode> = session
             .app
@@ -2240,6 +2210,7 @@ impl ShellState {
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, children: items, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
     }
 
+    #[cfg(test)]
     fn build_display_layout_ui(&self, session: &ActiveSession) -> UiNode {
         let items: Vec<UiNode> = session
             .app
@@ -2263,6 +2234,7 @@ impl ShellState {
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, children: items, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
     }
 
+    #[cfg(test)]
     fn build_settings_general_ui(&self) -> UiNode {
         UiNode::Stack(UiStackNode {
             direction: "column".into(),
@@ -2325,6 +2297,7 @@ impl ShellState {
     /// React's full multi-hundred-token editor "out of proportion to this ticket"; this wave only closes
     /// the *reachability* gap (the registry/resolver was already live in `frame()`'s `resolve_theme_for_ids`
     /// call, just invisible — no UI could ever select "mono" or a saved custom theme before this).
+    #[cfg(test)]
     fn build_settings_theme_ui(&self) -> UiNode {
         let is_de = self.locale_id == "de";
         let active_id = self.chrome_build.preferences.theme_id.clone();
@@ -7164,15 +7137,14 @@ impl ShellState {
     /// dock anchor, which this renderer has no equivalent of — `PanelGroup::anchor` only ever maps to the
     /// four corners, and the two middle anchors "start empty... never via a `PanelGroup`" per its own doc
     /// comment; building a real middle anchor would mean touching `dock`/restructuring `ShellTypes`'s
-    /// hardcoded 2-column model, both out of scope). **Wired** (`ensure_framework_panel_ui` in
-    /// `ShellLifecycle` registers this under `FRAMEWORK_SETTINGS_COMMANDS_TAB_ID`, reachable as a second
-    /// tab in the Settings panel column — see `right_tabs`) — this used to be dead, ready-but-unreachable
-    /// content per `report-w3-command-palette.md`'s wiring request; that gap is closed as of this pass.
+    /// hardcoded 2-column model, both out of scope). This builder is a test oracle until framework
+    /// chrome publishes through the retained semantic document boundary.
     /// Every row for a command whose id already has a `"framework"` `dispatch_action` arm
     /// (appearance/driver/locale/terminology/themeId) is fully interactive; `os.resetDock` has no such
     /// arm to attach a plain `ActionDescriptor` to (only the ⌘️K search's `"os-command:"` string redirect
     /// can reach `apply_os_command` for it), so it renders as a pointer to command search instead of a
     /// non-functional button.
+    #[cfg(test)]
     pub(crate) fn build_command_panel_ui(&self) -> UiNode {
         let resolved: Vec<_> = self.resolved_commands().into_iter().filter(|entry| entry.definition.in_palette).collect();
         let categories = command_categories(&resolved);
@@ -7211,6 +7183,7 @@ impl ShellState {
     /// has a "framework" `dispatch_action` arm, else a plain (non-interactive) label — see
     /// `build_command_panel_ui`'s doc comment for why `os.resetDock` and any future arg-carrying
     /// Plugin/App/Mode command fall into that last case.
+    #[cfg(test)]
     fn build_command_panel_row(&self, entry: &ResolvedCommand) -> UiNode {
         let definition = &entry.definition;
         if let Some(arg) = definition.args.first() {
@@ -9132,6 +9105,8 @@ impl ShellState {
         engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
         world_resources: &mut infinite_world::world::World3dBuildContext,
     ) {
+        let close_consumed = self.close_document_one();
+        begin_ui_document_opportunity(close_consumed);
         self.load_ui_prefs_once();
         if let Some(app_id) = self.session.as_ref().map(|session| session.app.id.clone()) {
             self.chrome_build.introduction_seen.entry(app_id.clone()).or_insert_with(|| read_stored_introduction_seen(&app_id));
@@ -9638,7 +9613,7 @@ impl ShellState {
         let scroll_y = *self.scroll_offsets.get(&scroll_key).unwrap_or(&0.0);
         panel_draw.push_scissor(content);
         input.register_hit(HitTarget { rect: content, event: None, control_id: Some(scroll_key.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
-        if let Some(ui) = self.panel_ui.get(active_tab_id).cloned() {
+        if self.panel_documents.contains_key(active_tab_id) {
             let scrolled = Rect::new(content.x, content.y - scroll_y, content.w, content.h);
             let scroll_offsets = &mut self.scroll_offsets;
             let collapsed_sections = &mut self.collapsed_sections;
@@ -9646,7 +9621,21 @@ impl ShellState {
             let widget_maps = &mut self.widget_maps;
             let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
             ctx.pick_clip = Some(content);
-            render_ui_node(&ui, scrolled, &mut ctx, active_tab_id, engine_resources, world_resources, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
+            if let Some(document) = self.panel_documents.get(active_tab_id) {
+                render_ui_document(
+                    document,
+                    scrolled,
+                    &mut ctx,
+                    active_tab_id,
+                    engine_resources,
+                    world_resources,
+                    &mut self.world3d_states,
+                    &mut self.node_graph_states,
+                    &mut self.tiled_map_states,
+                    &mut self.icon_render_states,
+                    &mut self.board2d_states,
+                );
+            }
         }
         panel_draw.pop_scissor();
         panel_draw.end_glass_content();
@@ -9723,8 +9712,9 @@ impl ShellState {
         let mut canvas = bounds.inset(theme.panel_inset);
         canvas = self.render_studio_canvas_bars(draw, atlas, icons, input, theme, canvas, &session);
         if self.space_mode {
-            if let Some(spawned_ui) = self.spawned_ui.clone() {
+            if let Some(spawned_ui) = self.spawned_ui.take() {
                 self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, canvas, canvas, &[canvas], &spawned_ui, "spawned", engine_resources, world_resources);
+                self.spawned_ui = Some(spawned_ui);
                 return;
             }
         }
@@ -9748,13 +9738,14 @@ impl ShellState {
             let mut window_chip_hits: Vec<(Rect, String)> = Vec::new();
             let content_viewport = silhouette.as_ref().map(WindowSilhouette::content_bounds).unwrap_or(safe_body);
             self.window_content_rects.insert(window_id.clone(), content_viewport);
-            if let Some(ui) = self.window_ui.get(&window_id).cloned() {
+            if let Some(ui) = self.window_ui.remove(&window_id) {
                 let content_layout = content_viewport;
                 let clip_rects = silhouette.as_ref().map(WindowSilhouette::content_clip_rects).unwrap_or_else(|| vec![safe_body]);
                 let hit_regions: Vec<Rect> = clip_rects.iter().filter_map(|clip| Self::intersect_content_rect(*clip, content_viewport)).collect();
                 draw.begin_silhouette_clip(&clip_rects);
                 self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, content_viewport, content_layout, &hit_regions, &ui, &window_id, engine_resources, world_resources);
                 draw.end_silhouette_clip();
+                self.window_ui.insert(window_id.clone(), ui);
             }
             if let Some(kind) = window_kind {
                 let measures_outcome = self.render_window_measures_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind);
@@ -9852,7 +9843,7 @@ impl ShellState {
         viewport: Rect,
         layout: Rect,
         hit_regions: &[Rect],
-        ui: &UiNode,
+        ui: &UiDocumentLease,
         window_id: &str,
         engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
         world_resources: &mut infinite_world::world::World3dBuildContext,
@@ -9876,7 +9867,7 @@ impl ShellState {
         let widget_maps = &mut self.widget_maps;
         let mut ctx = framework_widget_context(draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
         ctx.pick_clip = Some(viewport);
-        render_ui_node(ui, scrolled, &mut ctx, window_id, engine_resources, world_resources, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
+        render_ui_document(ui, scrolled, &mut ctx, window_id, engine_resources, world_resources, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
         drop(ctx);
         input.pointer_x = pointer.0;
         input.pointer_y = pointer.1;

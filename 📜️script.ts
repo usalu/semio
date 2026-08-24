@@ -914,6 +914,24 @@ function toolJobProductionSource(source: string): string {
   return lines.join("\n");
 }
 
+function toolJobProductionProtocolSource(raw: string): string {
+  let source = toolJobProductionSource(raw);
+  const marker = /#\[cfg\((?:all\([^\]]*\btest\b[^\]]*\)|test)\)\]/g;
+  for (;;) {
+    const match = marker.exec(source);
+    if (!match) return source;
+    const item = match.index + match[0].length;
+    const semicolon = source.indexOf(";", item);
+    const open = source.indexOf("{", item);
+    let end: number;
+    if (semicolon >= 0 && (open < 0 || semicolon < open)) end = semicolon + 1;
+    else if (open >= 0) end = toolJobRustBlock(source, open)?.end ?? source.length;
+    else end = source.length;
+    source = `${source.slice(0, match.index)}${" ".repeat(end - match.index)}${source.slice(end)}`;
+    marker.lastIndex = 0;
+  }
+}
+
 /** 🎯️ Enumerates macro and ordinary builder registrations without trusting a manifest disposition. */
 function toolJobStaticRows(files: ReadonlyMap<string, string>): ToolJobStaticRow[] {
   const rows: ToolJobStaticRow[] = [];
@@ -3402,6 +3420,168 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, model:
   );
 }
 
+function toolJobLayoutColdRelayRetainedExact(layoutExport: string, layoutWasm: string, pluginHost: string): boolean {
+  const relayCompletionStart = pluginHost.indexOf("enum GuestRelayCompletion");
+  const relayCompletion = relayCompletionStart < 0 ? undefined : toolJobRustBlock(pluginHost, pluginHost.indexOf("{", relayCompletionStart));
+  const relaySenderStart = pluginHost.indexOf("struct GuestRelayCompletionSender");
+  const relaySender = relaySenderStart < 0 ? undefined : toolJobRustBlock(pluginHost, pluginHost.indexOf("{", relaySenderStart));
+  const relayRunStart = pluginHost.indexOf("async fn run_job_on_worker");
+  const relayRun = relayRunStart < 0 ? undefined : toolJobRustBlock(pluginHost, pluginHost.indexOf("{", relayRunStart));
+  return (
+    layoutExport.includes("struct LayoutExportPublication") &&
+    layoutExport.includes("bytes: [u8; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES]") &&
+    layoutExport.includes("writer: Option<RetainedJobPayloadWriter>") &&
+    layoutExport.includes("fn encode_checkpoint(") &&
+    layoutExport.includes("Result<[u8; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES], String>") &&
+    layoutExport.includes("fn layout_retained_publication_zero_grant_and_exact_writer_close_are_exact()") &&
+    layoutExport.includes("fn begin_close(&mut self)") &&
+    layoutExport.includes("self.close_stage = LayoutExportCloseStage::Publication") &&
+    layoutExport.includes("snapshot_placeholder: Option<Arc<LayoutSnapshot>>") &&
+    layoutWasm.includes("WorkerJobSession::try_new(job, params)") &&
+    layoutWasm.includes("const LAYOUT_EXPORT_REJECTION_SLOTS: usize = 8") &&
+    layoutWasm.includes("ClosingSession { session: WorkerJobSession<LayoutExportJob>, snapshot_owner: Arc<LayoutSnapshot> }") &&
+    layoutWasm.includes("session.try_step_on_caller()") &&
+    layoutWasm.includes("session.take_outcome(ticket)") &&
+    layoutWasm.includes("session.take_terminal()") &&
+    layoutWasm.includes("owner.resume()") &&
+    layoutWasm.includes("owner.begin_close()") &&
+    layoutWasm.includes("outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES)") &&
+    layoutWasm.includes("retain_layout_export_session(") &&
+    layoutWasm.includes("retain_layout_export_rejection(") &&
+    !layoutWasm.includes("session.step(&self.pool") &&
+    relayCompletion !== undefined &&
+    relayCompletion.body.includes("Stepped(Result<GuestRelayStepCompletion, TurnFault>)") &&
+    relayCompletion.body.includes("Rejected(GuestRelayOwnedBytes)") &&
+    relayCompletion.body.includes("Fault(GuestRelayOwnedBytes)") &&
+    !relayCompletion.body.includes("Result<JobStep") &&
+    !relayCompletion.body.includes("Rejected(Vec<u8>)") &&
+    !relayCompletion.body.includes("Fault(Vec<u8>)") &&
+    pluginHost.includes("Running { progress: Option<GuestRelayOwnedBytes> }") &&
+    pluginHost.includes("Done { output: GuestRelayOwnedBytes }") &&
+    pluginHost.includes("Failed { error: GuestRelayOwnedBytes }") &&
+    relaySender !== undefined &&
+    relaySender.body.includes("slot: Arc<GuestRelayCompletionSlot>") &&
+    !relaySender.body.includes("oneshot") &&
+    pluginHost.includes("struct GuestRelayPublication") &&
+    pluginHost.includes("writer: Option<semio_framework_job::RetainedJobPayloadWriter>") &&
+    pluginHost.includes("const GUEST_RELAY_MOUNTED_SLOTS: usize = 16") &&
+    pluginHost.includes("struct GuestRelayMountedRegistry") &&
+    pluginHost.includes("struct GuestRelayMountedOutput") &&
+    pluginHost.includes("Box<[std::mem::MaybeUninit<u8>; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]>") &&
+    !pluginHost.includes("terminal_bytes: Vec<u8>") &&
+    pluginHost.includes("next_generation: std::sync::atomic::AtomicU64") &&
+    pluginHost.includes("u64::MAX => Some(0)") &&
+    pluginHost.includes("fn guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact()") &&
+    pluginHost.includes("assert_eq!(output.storage.as_ptr(), output_identity)") &&
+    pluginHost.includes("fn guest_cold_relay_publication_max_plus_one_selects_retained_fault_without_losing_source()") &&
+    pluginHost.includes("impl std::future::Future for GuestRelayMountedFuture") &&
+    pluginHost.includes("self.registry.pump(self.index, self.generation, context.waker())") &&
+    pluginHost.includes("fn begin_close(&mut self)") &&
+    pluginHost.includes("fn terminal_is_empty(&self) -> bool") &&
+    relayRun !== undefined &&
+    relayRun.body.includes("WorkerJobSession::try_new(relay, params)") &&
+    relayRun.body.includes("self.relay_registry.mount(index, mounted_generation, owner)") &&
+    !relayRun.body.includes("loop {") &&
+    !relayRun.body.includes("session.step(")
+  );
+}
+
+function toolJobUniversalRetainedOwnershipExact(jobRuntime: string, nativeIo: string, wgpu: string, rustFiles: ReadonlyMap<string, string>): boolean {
+  const mandatoryClose = [...rustFiles.entries()].every(([, raw]) => {
+    const source = toolJobProductionProtocolSource(raw);
+    for (const match of source.matchAll(/\bInteractiveJob\s+for\s+[^\{]+\{/g)) {
+      const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+      if (!block || !block.body.includes("fn begin_close(") || !block.body.includes("fn close_step(") || !block.body.includes("fn terminal_is_empty(")) return false;
+    }
+    return true;
+  });
+  const production = [...rustFiles.values()].map(toolJobProductionProtocolSource).join("\n");
+  const layoutExport = [...rustFiles.values()].find((source) => source.includes("pub struct LayoutExportJob"));
+  const layoutWasm = [...rustFiles.values()].find((source) => source.includes("pub struct LayoutExportOperation"));
+  const pluginHost = [...rustFiles.values()].find((source) => source.includes("struct GuestColdRelayJob"));
+  const layoutColdRelay = layoutExport === undefined && layoutWasm === undefined && pluginHost === undefined ? true : layoutExport !== undefined && layoutWasm !== undefined && pluginHost !== undefined && toolJobLayoutColdRelayRetainedExact(layoutExport, layoutWasm, pluginHost);
+  const animate = [...rustFiles.values()].map(toolJobProductionProtocolSource).find((source) => source.includes("pub struct PresentEnvelopeMaterializeHandle"));
+  const futureStart = wgpu.indexOf("impl std::future::Future for RendererIoHandle");
+  const future = futureStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", futureStart));
+  const presenterStart = wgpu.indexOf("pub(crate) fn present_step(&mut self)");
+  const presenter = presenterStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", presenterStart));
+  const closeCounterStart = jobRuntime.indexOf("fn checked_out_and_worker_begin_close_transitions_report_exact_zero_release()");
+  const closeCounter = closeCounterStart < 0 ? undefined : toolJobRustBlock(jobRuntime, jobRuntime.indexOf("{", closeCounterStart));
+  return (
+    mandatoryClose &&
+    layoutColdRelay &&
+    !production.includes("WorkerJobSession::new") &&
+    !/semio_framework_job::run_(?:to_completion|on_worker|on_worker_async)\s*\(/.test(production) &&
+    !/semio_framework_job::drive_step\s*\(/.test(production) &&
+    !/use\s+semio_framework_job::\{[^}]*\bdrive_step\b/s.test(production) &&
+    !/\bjob::drive_step\s*\(/.test(production) &&
+    !production.includes("Receiver<RuntimeFrameResult>") &&
+    production.includes("session: Option<semio_framework_job::WorkerJobSession<ActiveFrameBuild>>") &&
+    production.includes("rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ActiveFrameBuild>>") &&
+    jobRuntime.includes("pub trait InteractiveJob: Send") &&
+    jobRuntime.includes("fn begin_close(&mut self);") &&
+    jobRuntime.includes("fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize)") &&
+    jobRuntime.includes("fn terminal_is_empty(&self) -> bool;") &&
+    jobRuntime.includes("preadmitted_fault: Option<RetainedJobPayload>") &&
+    jobRuntime.includes("preadmitted_static_payload(&payload_ledger") &&
+    jobRuntime.includes('authority.preadmitted_fault.take().expect("worker panic retains its pre-admitted terminal fault page")') &&
+    jobRuntime.includes("fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent()") &&
+    jobRuntime.includes("assert_eq!(returned_fault_pointer, preadmitted_fault_pointer)") &&
+    closeCounter !== undefined &&
+    (closeCounter.body.match(/batch\.close_step\(1, JOB_PAYLOAD_PAGE_BYTES\)[\s\S]{0,160}?released_items:\s*0/g)?.length ?? 0) >= 2 &&
+    jobRuntime.includes("child begin-close transfers control without claiming an owner release") &&
+    !jobRuntime.includes("fn retained_static_payload(") &&
+    jobRuntime.includes("pub fn try_step_on_caller(&self)") &&
+    jobRuntime.includes("pub fn try_new(job: J, params: BatchJobParams) -> Result<Self, WorkerJobSessionAdmissionRejected<J>>") &&
+    jobRuntime.includes("fault_source: ManuallyDrop<Option<JobPayloadPageSource>>") &&
+    nativeIo.includes("pub struct NativePathSet") &&
+    nativeIo.includes("pub struct NativeModifiedSet") &&
+    nativeIo.includes("entries: std::mem::ManuallyDrop<[Option<PathBuf>; NATIVE_IO_PATH_CAPACITY]>") &&
+    nativeIo.includes("entries: std::mem::ManuallyDrop<[Option<(PathBuf, std::time::SystemTime)>; NATIVE_IO_PATH_CAPACITY]>") &&
+    nativeIo.includes("fn path_set_max_plus_one_identity_zero_grant_and_job_close_are_exact()") &&
+    nativeIo.includes("assert_eq!(returned.as_os_str().as_encoded_bytes().as_ptr(), plus_one_pointer)") &&
+    nativeIo.includes("ReadingModified { paths: NativePathSet, modified: NativeModifiedSet }") &&
+    nativeIo.includes("ClosingScanFault") &&
+    nativeIo.includes("ClosingModifiedFault") &&
+    nativeIo.includes("pub fn retained_request_backing_identity(&self) -> Option<*const u8>") &&
+    !nativeIo.includes("Paths(Vec<PathBuf>)") &&
+    !nativeIo.includes("Modified(Vec<") &&
+    !nativeIo.includes("WriteBytes") &&
+    wgpu.includes("const RENDERER_IO_SESSION_SLOTS: usize = semio_framework_job::WORKER_JOB_SESSION_SLOTS + 1") &&
+    wgpu.includes("generation: std::sync::atomic::AtomicU64") &&
+    wgpu.includes("cancel_requested: std::sync::atomic::AtomicBool") &&
+    wgpu.includes("fn pump_renderer_io_sessions(maximum_sessions: usize)") &&
+    wgpu.includes("fn mounted_registry_max_plus_one_zero_pump_drop_and_generation_are_exact()") &&
+    wgpu.includes("assert_eq!(returned_pointer, plus_one_request_pointer)") &&
+    wgpu.includes("assert_eq!(pump_renderer_io_sessions(0), 0)") &&
+    wgpu.includes('assert_eq!(pump_renderer_io_sessions(1), 1, "one host turn advances one mounted control opportunity")') &&
+    wgpu.includes("session: Option<semio_framework_job::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>") &&
+    wgpu.includes("rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>>") &&
+    wgpu.includes("checked_out_job_mut()?.take_packet()") &&
+    wgpu.includes("slot.generation.load(std::sync::atomic::Ordering::Acquire) != generation") &&
+    future !== undefined &&
+    future.body.includes("renderer_io_with_node") &&
+    future.body.includes("node.waker = Some(cx.waker().clone())") &&
+    !future.body.includes("try_submit_step") &&
+    !future.body.includes("close_step(") &&
+    !future.body.includes("pump_one(") &&
+    presenter !== undefined &&
+    presenter.body.includes("pump_renderer_io_sessions(1)") &&
+    presenter.body.includes("pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)") &&
+    animate !== undefined &&
+    animate.includes("rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<PresentEnvelopeMaterializeJob>>>") &&
+    animate.includes("pending: Option<semio_framework_job::WorkerJobTicket>") &&
+    animate.includes("retained_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>") &&
+    animate.includes("fault_writer: std::mem::ManuallyDrop<Option<semio_framework_job::RetainedJobPayloadWriter>>") &&
+    animate.includes("retained_nested_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>") &&
+    animate.includes("WorkerJobSession::try_new(job, params)") &&
+    animate.includes("retained_present_envelope_caller_faults_and_zero_grant_closes_malformed_pack") &&
+    animate.includes("retained_present_envelope_caller_cancels_and_zero_grant_closes_without_output") &&
+    animate.includes("registry.close_step(operation, generation, &pool, 0, 0)") &&
+    !animate.includes("oneshot::Receiver")
+  );
+}
+
 /** 🧪️ Proves the verifier rejects the historical and audited false-positive classes. */
 function toolJobCoverageSelfTests(): number {
   const evaluate = (sources: Record<string, string>) => {
@@ -4780,7 +4960,122 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobPagedIngressExact(unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-close-registry-without-pollable-exact-owner-handle was falsely accepted.");
   const shutdownDropsClose = "pub(crate) struct KernelCloseHandle; pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle; KernelRequest::DestroyApp { owner: self.clone() }; owner.finish(KernelCloseStatus::Complete); fn shutdown_step() { drop(owner); }";
   if (toolJobPagedIngressExact(shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-queue-shutdown-dropped-close-completion-owner was falsely accepted.");
-  return fixtures.length + 323;
+  const universalJob = `
+pub trait InteractiveJob: Send { fn step(&mut self); fn begin_close(&mut self); fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize); fn terminal_is_empty(&self) -> bool; }
+struct ExactJob;
+impl InteractiveJob for ExactJob { fn step(&mut self) {} fn begin_close(&mut self) {} fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) {} fn terminal_is_empty(&self) -> bool { true } }
+struct WorkerJobAuthority { preadmitted_fault: Option<RetainedJobPayload> }
+fn admission() { preadmitted_static_payload(&payload_ledger, stream, bytes, source); authority.preadmitted_fault.take().expect("worker panic retains its pre-admitted terminal fault page"); }
+fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() { assert_eq!(returned_fault_pointer, preadmitted_fault_pointer); }
+fn checked_out_and_worker_begin_close_transitions_report_exact_zero_release() { assert_eq!(batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES), WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 }); assert_eq!(batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES), WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 }); }
+fn child_counter() { "child begin-close transfers control without claiming an owner release"; }
+pub struct WorkerJobSessionAdmissionRejected { fault_source: ManuallyDrop<Option<JobPayloadPageSource>> }
+impl WorkerJobSession { pub fn try_step_on_caller(&self) {} }
+impl BatchJobSession { pub fn try_new(job: J, params: BatchJobParams) -> Result<Self, WorkerJobSessionAdmissionRejected<J>> {} }
+`;
+  const universalNative = `
+const NATIVE_IO_PATH_CAPACITY: usize = 256;
+pub struct NativePathSet { entries: std::mem::ManuallyDrop<[Option<PathBuf>; NATIVE_IO_PATH_CAPACITY]> } pub struct NativeModifiedSet { entries: std::mem::ManuallyDrop<[Option<(PathBuf, std::time::SystemTime)>; NATIVE_IO_PATH_CAPACITY]> }
+enum NativeIoState { ReadingModified { paths: NativePathSet, modified: NativeModifiedSet }, ClosingScanFault, ClosingModifiedFault }
+impl NativeIoJob { pub fn retained_request_backing_identity(&self) -> Option<*const u8> {} }
+fn path_set_max_plus_one_identity_zero_grant_and_job_close_are_exact() { assert_eq!(returned.as_os_str().as_encoded_bytes().as_ptr(), plus_one_pointer); }
+`;
+  const universalWgpu = `
+const RENDERER_IO_SESSION_SLOTS: usize = semio_framework_job::WORKER_JOB_SESSION_SLOTS + 1;
+struct Slot { generation: std::sync::atomic::AtomicU64, cancel_requested: std::sync::atomic::AtomicBool }
+struct Prepared { session: Option<semio_framework_job::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>, rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>> }
+struct FrameBuildHandle { session: Option<semio_framework_job::WorkerJobSession<ActiveFrameBuild>>, rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ActiveFrameBuild>> }
+fn take_prepared() { checked_out_job_mut()?.take_packet(); }
+fn renderer_io_with_node() { slot.generation.load(std::sync::atomic::Ordering::Acquire) != generation; }
+fn pump_renderer_io_sessions(maximum_sessions: usize) {}
+fn mounted_registry_max_plus_one_zero_pump_drop_and_generation_are_exact() { assert_eq!(returned_pointer, plus_one_request_pointer); assert_eq!(pump_renderer_io_sessions(0), 0); assert_eq!(pump_renderer_io_sessions(1), 1, "one host turn advances one mounted control opportunity"); }
+impl std::future::Future for RendererIoHandle { fn poll(&mut self, cx: &mut Context) { renderer_io_with_node(); node.waker = Some(cx.waker().clone()); } }
+impl Presenter { pub(crate) fn present_step(&mut self) { pump_renderer_io_sessions(1); pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES); } }
+`;
+  const universalAnimate = `
+pub struct PresentEnvelopeMaterializeJob { fault_writer: std::mem::ManuallyDrop<Option<semio_framework_job::RetainedJobPayloadWriter>>, retained_nested_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>> }
+impl InteractiveJob for PresentEnvelopeMaterializeJob { fn step(&mut self) {} fn begin_close(&mut self) {} fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) {} fn terminal_is_empty(&self) -> bool { true } }
+pub struct PresentEnvelopeMaterializeHandle {
+  rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<PresentEnvelopeMaterializeJob>>>,
+  pending: Option<semio_framework_job::WorkerJobTicket>,
+  retained_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>,
+}
+fn submit_materialize_present_projection() { WorkerJobSession::try_new(job, params); }
+fn retained_present_envelope_caller_faults_and_zero_grant_closes_malformed_pack() { registry.close_step(operation, generation, &pool, 0, 0); }
+fn retained_present_envelope_caller_cancels_and_zero_grant_closes_without_output() { registry.close_step(operation, generation, &pool, 0, 0); }
+`;
+  const universal = (job = universalJob, nativeIo = universalNative, wgpu = universalWgpu, animate = universalAnimate) => toolJobUniversalRetainedOwnershipExact(job, nativeIo, wgpu, new Map([["job.rs", job], ["native_io.rs", nativeIo], ["wgpu.rs", wgpu], ["animate.rs", animate]]));
+  if (!universal()) throw new Error("[verify interactivity tool-jobs] self-test universal-retained-ownership-valid was falsely rejected.");
+  if (universal(universalJob.replace("fn begin_close(&mut self) {}", "fn close_now(&mut self) {}"))) throw new Error("[verify interactivity tool-jobs] self-test universal-job-missing-mandatory-close was falsely accepted.");
+  if (universal(`${universalJob}\nWorkerJobSession::new(job, params);`)) throw new Error("[verify interactivity tool-jobs] self-test universal-legacy-session-constructor was falsely accepted.");
+  if (universal(`${universalJob}\nsemio_framework_job::run_to_completion(job);`)) throw new Error("[verify interactivity tool-jobs] self-test universal-legacy-terminal-drain was falsely accepted.");
+  if (universal(`${universalJob}\nsemio_framework_job::drive_step(job, params);`)) throw new Error("[verify interactivity tool-jobs] self-test universal-direct-drive-bypasses-retained-session was falsely accepted.");
+  if (universal(`${universalJob}\nuse semio_framework_job::{drive_step, StepBudget};\nfn bypass() { drive_step(job, params); }`)) throw new Error("[verify interactivity tool-jobs] self-test universal-imported-direct-drive-bypasses-retained-session was falsely accepted.");
+  if (universal(`${universalJob}\nfn bypass() { job::drive_step(job, params); }`)) throw new Error("[verify interactivity tool-jobs] self-test universal-aliased-direct-drive-bypasses-retained-session was falsely accepted.");
+  if (universal(`${universalJob}\nstruct FrameBuildHandle { runtime_in_flight: Option<Receiver<RuntimeFrameResult>> }`)) throw new Error("[verify interactivity tool-jobs] self-test universal-frame-async-receiver-bypasses-retained-session was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu.replace("rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ActiveFrameBuild>>", "rejected: Option<String>"))) throw new Error("[verify interactivity tool-jobs] self-test universal-frame-admission-rejection-owner-missing was falsely accepted.");
+  if (universal(universalJob.replace("preadmitted_static_payload(&payload_ledger", "retained_static_payload(&payload_ledger"))) throw new Error("[verify interactivity tool-jobs] self-test universal-post-work-fault-allocation was falsely accepted.");
+  if (universal(universalJob.replace("assert_eq!(returned_fault_pointer, preadmitted_fault_pointer);", "assert_eq!(fault.detail.len(), 26);"))) throw new Error("[verify interactivity tool-jobs] self-test universal-preadmitted-fault-identity-proof-missing was falsely accepted.");
+  if (universal(universalJob.replace("released_items: 0, released_bytes: 0 }); assert_eq!(batch.close_step", "released_items: 1, released_bytes: 0 }); assert_eq!(batch.close_step"))) throw new Error("[verify interactivity tool-jobs] self-test universal-begin-close-exact-counter-proof-missing was falsely accepted.");
+  if (universal(universalJob, `${universalNative}\nenum Bad { Paths(Vec<PathBuf>) }`)) throw new Error("[verify interactivity tool-jobs] self-test native-I/O-resizable-path-output was falsely accepted.");
+  if (universal(universalJob, `${universalNative}\nenum Bad { WriteBytes { bytes: Vec<u8> } }`)) throw new Error("[verify interactivity tool-jobs] self-test native-I/O-whole-write-buffer was falsely accepted.");
+  if (universal(universalJob, universalNative.replace("std::mem::ManuallyDrop<[Option<PathBuf>; NATIVE_IO_PATH_CAPACITY]>", "[Option<PathBuf>; NATIVE_IO_PATH_CAPACITY]"))) throw new Error("[verify interactivity tool-jobs] self-test native-I/O-path-set-deep-drop-was falsely accepted.");
+  if (universal(universalJob, universalNative.replace("assert_eq!(returned.as_os_str().as_encoded_bytes().as_ptr(), plus_one_pointer);", "assert_eq!(returned, expected_path);"))) throw new Error("[verify interactivity tool-jobs] self-test native-I/O-plus-one-path-identity-proof-missing was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu.replace("node.waker = Some(cx.waker().clone());", "node.waker = Some(cx.waker().clone()); session.try_submit_step();"))) throw new Error("[verify interactivity tool-jobs] self-test renderer-future-advances-worker-session was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu.replace("pump_renderer_io_sessions(1);", ""))) throw new Error("[verify interactivity tool-jobs] self-test renderer-host-pump-missing was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu.replace("slot.generation.load(std::sync::atomic::Ordering::Acquire) != generation;", "true;"))) throw new Error("[verify interactivity tool-jobs] self-test renderer-generation-recheck-missing was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu.replace("assert_eq!(returned_pointer, plus_one_request_pointer);", "assert!(returned_pointer.is_null());"))) throw new Error("[verify interactivity tool-jobs] self-test renderer-plus-one-request-identity-proof-missing was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu.replace("assert_eq!(pump_renderer_io_sessions(0), 0);", "pump_renderer_io_sessions(1);"))) throw new Error("[verify interactivity tool-jobs] self-test renderer-zero-grant-proof-missing was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu.replace("rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>>", "rejected: Option<String>"))) throw new Error("[verify interactivity tool-jobs] self-test renderer-prepared-admission-rejection-owner-missing was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu.replace("checked_out_job_mut()?.take_packet()", "job.take_packet()"))) throw new Error("[verify interactivity tool-jobs] self-test renderer-prepared-packet-bypasses-checked-out-owner was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu, universalAnimate.replace("WorkerJobSession::try_new(job, params)", "WorkerJobSession::new(job, params)"))) throw new Error("[verify interactivity tool-jobs] self-test Animate-mounted-session-fallible-admission-missing was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu, universalAnimate.replace("pending: Option<semio_framework_job::WorkerJobTicket>", "pending: Option<semio_framework_async::oneshot::Receiver<semio_framework_job::StepOutcome>>"))) throw new Error("[verify interactivity tool-jobs] self-test Animate-mounted-session-ticket-owner-replaced-by-receiver was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu, universalAnimate.replace("retained_nested_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>", "discard_nested_outcome: bool"))) throw new Error("[verify interactivity tool-jobs] self-test Animate-nested-output-close-owner-missing was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu, universalAnimate.replace("fault_writer: std::mem::ManuallyDrop<Option<semio_framework_job::RetainedJobPayloadWriter>>", "fault: Option<Vec<u8>>"))) throw new Error("[verify interactivity tool-jobs] self-test Animate-retained-fault-writer-replaced-by-Vec was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu, universalAnimate.replace("retained_present_envelope_caller_faults_and_zero_grant_closes_malformed_pack", "retained_present_envelope_caller_fault_drops_owner"))) throw new Error("[verify interactivity tool-jobs] self-test Animate-fault-zero-grant-fixture-missing was falsely accepted.");
+  if (universal(universalJob, universalNative, universalWgpu, universalAnimate.replace("retained_present_envelope_caller_cancels_and_zero_grant_closes_without_output", "retained_present_envelope_caller_cancel_drops_owner"))) throw new Error("[verify interactivity tool-jobs] self-test Animate-cancel-zero-grant-fixture-missing was falsely accepted.");
+  const retainedLayoutExport = `
+pub struct LayoutExportJob; struct LayoutExportPublication { bytes: [u8; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES], writer: Option<RetainedJobPayloadWriter> }
+fn encode_checkpoint() -> Result<[u8; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES], String> {}
+fn layout_retained_publication_zero_grant_and_exact_writer_close_are_exact() {}
+fn begin_close(&mut self) { self.close_stage = LayoutExportCloseStage::Publication; }
+fn close_step(&mut self) {} fn terminal_is_empty(&self) -> bool {}
+snapshot_placeholder: Option<Arc<LayoutSnapshot>>
+`;
+  const retainedLayoutWasm = `
+pub struct LayoutExportOperation; const LAYOUT_EXPORT_REJECTION_SLOTS: usize = 8;
+enum Slot { ClosingSession { session: WorkerJobSession<LayoutExportJob>, snapshot_owner: Arc<LayoutSnapshot> } }
+fn submit() { WorkerJobSession::try_new(job, params); session.try_step_on_caller(); session.take_outcome(ticket); session.take_terminal(); owner.resume(); owner.begin_close(); outcome.close_step(1, JOB_PAYLOAD_PAGE_BYTES); retain_layout_export_session(); retain_layout_export_rejection(); }
+`;
+  const retainedColdRelay = `
+enum GuestRelayCompletion { Stepped(Result<GuestRelayStepCompletion, TurnFault>), Rejected(GuestRelayOwnedBytes), Fault(GuestRelayOwnedBytes) }
+enum GuestRelayStepCompletion { Running { progress: Option<GuestRelayOwnedBytes> }, Done { output: GuestRelayOwnedBytes }, Failed { error: GuestRelayOwnedBytes } }
+struct GuestRelayCompletionSender { slot: Arc<GuestRelayCompletionSlot> }
+struct GuestColdRelayJob; struct GuestRelayPublication { writer: Option<semio_framework_job::RetainedJobPayloadWriter> }
+const GUEST_RELAY_MOUNTED_SLOTS: usize = 16;
+struct GuestRelayMountedOutput { storage: Box<[std::mem::MaybeUninit<u8>; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]> }
+struct GuestRelayMountedRegistry { next_generation: std::sync::atomic::AtomicU64 }
+fn reserve() { match generation { u64::MAX => Some(0), generation => Some(generation + 1) }; }
+fn guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact() { assert_eq!(output.storage.as_ptr(), output_identity); }
+fn guest_cold_relay_publication_max_plus_one_selects_retained_fault_without_losing_source() {}
+impl std::future::Future for GuestRelayMountedFuture { fn poll() { self.registry.pump(self.index, self.generation, context.waker()); } }
+fn begin_close(&mut self) {} fn terminal_is_empty(&self) -> bool {}
+async fn run_job_on_worker() { WorkerJobSession::try_new(relay, params); self.relay_registry.mount(index, mounted_generation, owner); }
+`;
+  if (!toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay)) throw new Error("[verify interactivity tool-jobs] self-test Layout-and-cold-relay-retained-valid was falsely rejected.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport.replace("writer: Option<RetainedJobPayloadWriter>", "bytes: Vec<u8>"), retainedLayoutWasm, retainedColdRelay)) throw new Error("[verify interactivity tool-jobs] self-test Layout-retained-publication-writer-removal was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm.replace("WorkerJobSession::try_new(job, params)", "WorkerJobSession::new(job, params)"), retainedColdRelay)) throw new Error("[verify interactivity tool-jobs] self-test Layout-Wasm-fallible-admission-removal was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm.replace("retain_layout_export_session();", "drop(session);"), retainedColdRelay)) throw new Error("[verify interactivity tool-jobs] self-test Layout-Wasm-live-drop-retirement-removal was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("slot: Arc<GuestRelayCompletionSlot>", "receiver: oneshot::Receiver<GuestRelayCompletion>"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-oneshot-restoration was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("Rejected(GuestRelayOwnedBytes)", "Rejected(Vec<u8>)"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-direct-Vec-completion-restoration was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("Stepped(Result<GuestRelayStepCompletion, TurnFault>)", "Stepped(Result<JobStep, TurnFault>)"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-indirect-Vec-step-completion-restoration was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("Box<[std::mem::MaybeUninit<u8>; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]>", "Vec<u8>"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-mounted-output-backing-resized was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("u64::MAX => Some(0)", "generation => Some(generation.wrapping_add(1))"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-mounted-generation-wrap-restoration was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("assert_eq!(output.storage.as_ptr(), output_identity);", "assert_eq!(generation, generation);"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-mounted-output-identity-proof-removal was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("const GUEST_RELAY_MOUNTED_SLOTS: usize = 16", "slots: Vec<GuestRelayMountedSession>"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-fixed-mounted-registry-removal was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("self.relay_registry.mount(index, mounted_generation, owner);", "loop { session.step().await; }"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-run-loop-restoration was falsely accepted.");
+  if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact", "guest_cold_relay_registry_smoke"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-max-plus-one-generation-fixture-removal was falsely accepted.");
+  return fixtures.length + 360;
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -4838,6 +5133,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const mcpWorkspace = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️component.rs");
   const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs");
   const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs");
+  const nativeIo = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️native_io.rs");
   const shardHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs");
   const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
   const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
@@ -4945,6 +5241,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobPeerInteractionRootsExact(plugin, store, channel)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
   if (!toolJobActorProgressOverlayExact(actor, shardHost, wgpuHost)) failures.push("actor Job publications lack a fixed preview/progress overlay, independent autonomous-shard authority, presenter-adopted ACK, exact rejected-owner handback, or app/fault/realm retirement");
+  if (!toolJobUniversalRetainedOwnershipExact(jobRuntime, nativeIo, wgpuHost, allRustFiles)) failures.push("universal retained job ownership still permits optional job close, post-work fault allocation, legacy drains/constructors, resizable Native I/O outputs, or future-driven mounted session progress");
   if (!toolJobFem2dMountedSessionExact(fem2dSession, fem2dEditor, fem2dModel, femMesh, femPluginRoot, femGlue, reactorJobs, femAnalyses, reactor, store, plugin)) failures.push("live FEM2D revisions lack a fixed generation-tagged retained worker session, mounted visual/mesh/stiffness backing, exact snapshot-return witness, or live visual consumer");
   if (!puzzleReservedExact) failures.push("Puzzle5d clipboard/import routes lack exact owner-qualified route-specific resumable factories and state machines");
   if (!toolJobMediaExportBounded(`${plugin}\n${jobRuntime}`)) failures.push("owned media export lacks nonblocking per-instance polling, exact sealed structural output credit, or pending/drop/isolation regressions");
@@ -5046,6 +5343,10 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "interactivity" && segments[1] === "tool-jobs") {
       this.runToolJobCoverage(segments.slice(2));
+      return;
+    }
+    if (segments[0] === "interactivity" && segments[1] === "p1q-b1-b6") {
+      this.runInteractivityP1qB1B6();
       return;
     }
     if (segments[0] === "interactivity") {
@@ -5163,6 +5464,20 @@ export class VerifyScript extends Script {
     const failures = report.blockingBridgeUnlisted.length + report.staleAllowlistEntries.length + otherCategoryFindings;
     if (failures > 0) throw new Error(`[verify interactivity] DENY mode — ${failures} failure(s) (unlisted block_on/run_blocking, stale allowlist entries, or any sync-fs/net/clipboard/process/db/thread-pool finding).`);
     console.log("[verify interactivity] DENY mode — clean.");
+  }
+
+  /** 🗄️ Runs the isolated P1q B1–B6 retained DB I/O source and hostile-mutation gate. */
+  private runInteractivityP1qB1B6(): void {
+    interactivityDbIoB1B6SelfTests();
+    const failures = interactivityDbIoB1B6Failures(
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_STORAGE_FILE),
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_SQLITE_FILE),
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE),
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_NEO4J_FILE),
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FILE),
+    );
+    if (failures.length > 0) throw new Error(`[verify interactivity p1q-b1-b6] ${failures.join("; ")}`);
+    console.log("[verify interactivity p1q-b1-b6] live-source and hostile mutations clean.");
   }
 
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
@@ -5583,10 +5898,22 @@ const INTERACTIVITY_AUDIT_MCP_ROOT_FILE = "🧰️framework/🛍️products/💻
 const INTERACTIVITY_AUDIT_STORE_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_STORAGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_SQLITE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_POSTGRES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_NEO4J_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🌐️neo4j/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ENGINE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_WAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️component.rs";
+const INTERACTIVITY_AUDIT_SPR_FORMAT_FILE = "🧰️framework/🔨️modules/📡️replication/📐️format/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PACK_FORMAT_FILE = "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_INDEX_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔢️index/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_COMPACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_CLUSTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🌐️cluster/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_STATE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_QUERY_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_PROJECTION_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📽️projection/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_ROOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_CLI_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/🦀️component.rs";
 const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/📦️packages/🦀️rust/📦️bin.rs";
@@ -5599,8 +5926,18 @@ const INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE = "✏️s/🔌️plugins/🧩
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx";
 const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs";
+const INTERACTIVITY_AUDIT_UI_VALUE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️action.rs";
+const INTERACTIVITY_AUDIT_UI_BUILDER_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️builder.rs";
+const INTERACTIVITY_AUDIT_UI_COMPONENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️component.rs";
+const INTERACTIVITY_AUDIT_UI_ACCESSIBILITY_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️accessibility.rs";
+const INTERACTIVITY_AUDIT_UI_SURFACE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️surface.rs";
+const INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️document.rs";
+const INTERACTIVITY_AUDIT_UI_LIMITS_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️limits.rs";
+const INTERACTIVITY_AUDIT_UI_PRESENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️present.rs";
 const INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️component.rs";
 const INTERACTIVITY_AUDIT_REACTOR_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs";
+const INTERACTIVITY_AUDIT_KERNEL_FILE = "🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs";
+const INTERACTIVITY_AUDIT_SHARD_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs";
 const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs";
@@ -5853,14 +6190,51 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   interactivityDbIoSelfTests();
   const dbStorage = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_STORAGE_FILE);
   const dbSqlite = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_SQLITE_FILE);
+  const dbPostgres = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE);
+  const dbNeo4j = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_NEO4J_FILE);
   const dbEngine = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
   const dbSync = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_SYNC_FILE);
   const dbArtifact = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE);
   const dbWal = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_WAL_FILE);
+  const sprFormat = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_SPR_FORMAT_FILE);
+  const packFormat = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PACK_FORMAT_FILE);
+  const dbSnapshot = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE);
+  const dbIndex = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_INDEX_FILE);
+  const dbCompact = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_COMPACT_FILE);
+  const dbCluster = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_CLUSTER_FILE);
+  const dbState = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_STATE_FILE);
+  const dbQuery = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_QUERY_FILE);
+  const dbProjection = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_PROJECTION_FILE);
+  const dbRoot = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ROOT_FILE);
   const dbCli = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_CLI_FILE);
   const dbTestkit = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_TESTKIT_FILE);
   const hubBin = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
   for (const failure of interactivityDbIoFailures(dbStorage, dbSqlite, dbEngine, dbTestkit, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
+  interactivityDbIoB1B6SelfTests();
+  for (const failure of interactivityDbIoB1B6Failures(dbStorage, dbSqlite, dbPostgres, dbNeo4j, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
+  interactivityDbIoCallerMigrationSelfTests();
+  for (const failure of interactivityDbIoCallerMigrationFailures([
+    [INTERACTIVITY_AUDIT_DB_STORAGE_FILE, dbStorage],
+    [INTERACTIVITY_AUDIT_DB_SQLITE_FILE, dbSqlite],
+    [INTERACTIVITY_AUDIT_DB_POSTGRES_FILE, dbPostgres],
+    [INTERACTIVITY_AUDIT_DB_NEO4J_FILE, dbNeo4j],
+    [INTERACTIVITY_AUDIT_DB_ENGINE_FILE, dbEngine],
+    [INTERACTIVITY_AUDIT_DB_SYNC_FILE, dbSync],
+    [INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE, dbArtifact],
+    [INTERACTIVITY_AUDIT_DB_WAL_FILE, dbWal],
+    [INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE, dbSnapshot],
+    [INTERACTIVITY_AUDIT_DB_INDEX_FILE, dbIndex],
+    [INTERACTIVITY_AUDIT_DB_COMPACT_FILE, dbCompact],
+    [INTERACTIVITY_AUDIT_DB_CLUSTER_FILE, dbCluster],
+    [INTERACTIVITY_AUDIT_DB_STATE_FILE, dbState],
+    [INTERACTIVITY_AUDIT_DB_QUERY_FILE, dbQuery],
+    [INTERACTIVITY_AUDIT_DB_PROJECTION_FILE, dbProjection],
+    [INTERACTIVITY_AUDIT_DB_ROOT_FILE, dbRoot],
+    [INTERACTIVITY_AUDIT_DB_TESTKIT_FILE, dbTestkit],
+    [INTERACTIVITY_AUDIT_HUB_BIN_FILE, hubBin],
+  ])) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
+  interactivityDbIoDirectWriterSelfTests();
+  for (const failure of interactivityDbIoDirectWriterFailures(dbEngine, dbSnapshot, dbIndex, dbWal, sprFormat, packFormat)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
   for (const failure of interactivityDbIoCursorCallerFailures(dbSync)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_SYNC_FILE, line: 0, text: failure });
   interactivityArtifactSubmitSelfTests();
   for (const failure of interactivityArtifactSubmitFailures(dbEngine, dbArtifact)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
@@ -5894,9 +6268,21 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   for (const failure of interactivityPuzzleFillP4eFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillGeometry, puzzleFillSchema, puzzleFillTransport, puzzleFillRenderer)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
   interactivityLiveReconcileSelfTests(repoRoot);
   const uiReconcile = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
+  const uiValue = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_VALUE_FILE);
+  const kernel = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_KERNEL_FILE);
+  const kernelTurn = kernel.slice(kernel.indexOf("//#region 🔖️TurnResult"), kernel.indexOf("//#endregion 🔖️TurnResult"));
+  const uiSchema = [
+    INTERACTIVITY_AUDIT_UI_BUILDER_FILE,
+    INTERACTIVITY_AUDIT_UI_COMPONENT_FILE,
+    INTERACTIVITY_AUDIT_UI_ACCESSIBILITY_FILE,
+    INTERACTIVITY_AUDIT_UI_SURFACE_FILE,
+    INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE,
+    INTERACTIVITY_AUDIT_UI_LIMITS_FILE,
+    INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
+  ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn;
   const reactorPatches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
-  const reactor = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_FILE);
-  for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
+  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
+  for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor, uiValue, uiSchema)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
 
@@ -6286,19 +6672,222 @@ function interactivityPuzzleFillP4eSelfTests(repoRoot: string): void {
   if (failures.length !== 0) throw new Error(`[verify interactivity] Puzzle fill P4e baseline was falsely rejected: ${failures.join("; ")}`);
 }
 
-function interactivityLiveReconcileFailures(reconcileSource: string, patchesSource: string, reactorSource: string): string[] {
+export function interactivityLiveReconcileFailures(reconcileSource: string, patchesSource: string, reactorSource: string, valueSource: string, schemaSource = ""): string[] {
   const reconcile = interactivityProductionSource(reconcileSource);
   const patches = interactivityProductionSource(patchesSource);
   const reactor = interactivityProductionSource(reactorSource);
+  const value = interactivityProductionSource(valueSource);
+  const schema = interactivityProductionSource(schemaSource);
   const driveStart = reconcile.indexOf("    pub fn drive_one(&mut self, cx:");
   const driveEnd = reconcile.indexOf("    pub fn fault(&self)", driveStart);
   const drive = reconcile.slice(driveStart, driveEnd);
   const failures: string[] = [];
+  if (
+    !value.includes("pub struct UiList") ||
+    !value.includes("pub struct UiMap") ||
+    !value.includes("pub struct UiText") ||
+    !value.includes("pub struct UiFixedList<T, const N: usize") ||
+    !value.includes("pub struct UiFixedMap<V> {") ||
+    !value.includes("pub struct UiFixedBytes {") ||
+    !value.includes("List(UiList)") ||
+    !value.includes("Map(UiMap)") ||
+    !value.includes("struct UiValueArena") ||
+    !value.includes("pages: [UiPageSlot; UI_VALUE_AGGREGATE_ITEMS]") ||
+    !value.includes("collections: [UiCollectionSlot; UI_VALUE_ADMISSION_SLOTS]") ||
+    !value.includes("free_pages: [usize; UI_VALUE_AGGREGATE_ITEMS]") ||
+    !value.includes("retirement: [usize; UI_VALUE_ADMISSION_SLOTS]") ||
+    !value.includes("epoch: u64") ||
+    !value.includes("aliases: u64") ||
+    !value.includes("pub struct UiListBuilder") ||
+    !value.includes("pub struct UiMapBuilder") ||
+    !value.includes("pub fn credited_clone") ||
+    !value.includes("fn try_push_page(&mut self, handle: UiCollectionHandle, value: UiPageValue) -> Result<(), UiPageValue>") ||
+    !value.includes("fn try_clone_handle(&mut self, handle: UiCollectionHandle) -> Option<UiCollectionHandle>") ||
+    !value.includes("impl Drop for UiList {") ||
+    !value.includes("impl Drop for UiMap {") ||
+    !value.includes("pub fn close_ui_value_page_one()") ||
+    !value.includes("let bytes = std::mem::size_of::<UiPageSlot>()") ||
+    value.includes("value.semantic_bytes()") ||
+    !value.includes("if values.is_empty() { Ok(Self::default()) } else { Err(values) }") ||
+    !value.includes("if entries.is_empty() { Ok(Self::default()) } else { Err(entries) }") ||
+    !reactor.includes("ui_contract::close_ui_value_page_one()") ||
+    value.includes("BTreeMap<String, UiValue>") ||
+    value.includes("List(Vec<UiValue>)") ||
+    value.includes("Arc<") ||
+    value.includes("Box<[Ui") ||
+    value.includes("items: Box<[Option<T>; N]>") ||
+    value.includes("entries: Box<UiFixedList<(UiText, V)>>") ||
+    value.includes("bytes: Box<[u8; UI_FIXED_BYTES]>") ||
+    value.includes("into_boxed_slice") ||
+    value.includes("std::process::abort") ||
+    value.includes("fn admit_page(") ||
+    value.includes("push_reserved_page_back") ||
+    value.includes("impl Clone for UiList") ||
+    value.includes("impl Clone for UiMap") ||
+    value.includes("#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]\n#[serde(untagged)]\npub enum UiValue") ||
+    value.includes("saturating_") ||
+    value.includes("wrapping_") ||
+    value.includes("serializer.collect_seq") ||
+    value.includes("Vec::<UiValue>::deserialize") ||
+    value.includes("while let Some") ||
+    value.includes("sort_by(")
+  ) failures.push("UiValue list/map schema is not a generation-qualified fixed arena with credited aliases, retained cursors, fail-closed source refusal, and one-page retirement");
+  if (
+    !schema.includes("pub struct BuiltChildren") ||
+    !schema.includes("pub fn try_with_children") ||
+    !schema.includes("fn try_child(") ||
+    !schema.includes("pub struct ComponentTreeProducer") ||
+    !schema.includes("pub use ui_contract::BuiltNode as TreeNode") ||
+    schema.includes("pub struct TreeNode {") ||
+    schema.includes("pub children: Vec<BuiltNode>") ||
+    schema.includes("pub children: Vec<UiNodeId>") ||
+    schema.includes("pub ops: Vec<UiPatchOp>") ||
+    schema.includes("pub nodes: HashMap<UiNodeId, UiNodeRecord>") ||
+    schema.includes("pub bytes: Vec<u8>") ||
+    schema.includes("Option<HashMap<String, String>>") ||
+    schema.includes("pub items: Vec<SelectItem>") ||
+    schema.includes("pub entries: Vec<KeyValueEntry>") ||
+    schema.includes("pub row_actions: Vec<RowAction>")
+    || schema.includes("pub struct Label(pub String)")
+    || schema.includes("pub struct SurfaceId(pub String)")
+    || schema.includes("pub key: String")
+    || schema.includes("pub scope: String")
+    || schema.includes("pub name: String")
+    || schema.includes("pub node_key: String")
+    || schema.includes("pub id: String")
+    || schema.includes("pub doc_schema: String")
+    || schema.includes("pub shortcut: Option<String>")
+    || schema.includes("pub bindings: Vec<crate::ActionBinding>")
+    || schema.includes("pub children: Vec<")
+    || schema.includes("pub nodes: Vec<")
+    || schema.includes("pub ops: Vec<")
+    || schema.includes('expect("fixed child backing follows its reservation")')
+    || schema.includes('expect("🚫️ ImageBuilder<HasAlt>')
+    || schema.includes("owner.cursor += 1")
+    || schema.includes("retire_scalar += 1")
+  ) failures.push("component/accessibility/surface/action/document schema still exposes recursive or dynamically backed mounted owners");
+  if (
+    !schema.includes("pub const UI_DOCUMENT_LEASE_SLOTS: usize = 8") ||
+    !schema.includes("pub const UI_DOCUMENT_LEASE_ALIASES: u64 = 8") ||
+    !schema.includes("slots: [UiDocumentSlot; UI_DOCUMENT_LEASE_SLOTS]") ||
+    !schema.includes("pub struct UiDocumentBuilder") ||
+    !schema.includes("pub struct UiDocumentLease") ||
+    !schema.includes("pub struct UiDocumentNodePage") ||
+    !schema.includes("impl UiDocumentLease {\n    pub fn generation(&self) -> u64") ||
+    !schema.includes("pub fn try_alias(&self) -> Result<Self, UiDocumentLeaseError>") ||
+    !schema.includes("pub fn read_node_page(&self, index: usize) -> Result<Option<UiDocumentNodePage>, UiDocumentLeaseError>") ||
+    !schema.includes("pub fn close_step(&mut self) -> bool") ||
+    !schema.includes("pub fn close_ui_document_page_one() -> bool") ||
+    schema.includes("slots: Vec<UiDocumentSlot>") ||
+    schema.includes("pub struct UiDocumentLease {\n    state: UiSnapshotState") ||
+    !reactor.includes("ui_contract::close_ui_document_page_one()")
+  ) failures.push("renderer document publication is not a generation-qualified fixed lease with one-node page reads and mounted incremental close");
+  if (
+    !reconcile.includes("pub struct SurfaceDocumentProducer") ||
+    !reconcile.includes("pub enum SurfaceDocumentProducerStep") ||
+    !reconcile.includes("pub struct SurfaceDocumentOutcome") ||
+    !reconcile.includes("pub fn drive_one(&mut self, current: &SurfaceReconciler, cx: &mut semio_framework_job::StepContext<'_>)") ||
+    !reconcile.includes("cx.generation().0 != self.generation") ||
+    !reconcile.includes("current.revision != self.revision") ||
+    !reconcile.includes("current.retained.get_index(self.next_node)") ||
+    !reconcile.includes("builder.try_push(record)") ||
+    !reconcile.includes("pub fn take_ready(mut self) -> Result<SurfaceDocumentOutcome, Self>") ||
+    reconcile.includes("current.retained.values().cloned().collect")
+  ) failures.push("retained reconciler does not expose a stale-safe one-record-per-opportunity fixed document producer/outcome seam");
+  if (
+    !schema.includes("pub struct UiPatchApplyProducer") ||
+    !schema.includes("pub enum UiPatchApplyStep") ||
+    !schema.includes("pub struct UiPatchApplyOutcome") ||
+    !schema.includes("pub struct UiPatchApplyRejected") ||
+    !schema.includes("pub fn try_new(state: crate::UiSnapshotState, patch: crate::UiPatch, limits: UiDocumentLimits, generation: u64)") ||
+    !schema.includes("pub fn drive_one(&mut self, generation: u64, cancelled: bool, deadline_expired: bool)") ||
+    !schema.includes("fn census_patch_one(&mut self)") ||
+    !schema.includes("fn clone_state_one(&mut self)") ||
+    !schema.includes("fn apply_op_one(&mut self)") ||
+    !schema.includes("fn remove_subtree_one(&mut self)") ||
+    !schema.includes("UiPatchApplyPhase::RemoveSubtree") ||
+    !schema.includes("fn validate_candidate_one(&mut self)") ||
+    !schema.includes("validation_stack: crate::UiFixedList<UiPatchValidateFrame") ||
+    !schema.includes("validation_seen: [crate::UiFixedList<crate::UiText") ||
+    !schema.includes("pub fn take_ready(mut self) -> Result<UiPatchApplyOutcome, Self>") ||
+    !schema.includes("pub fn take_rejected(mut self) -> Result<UiPatchApplyRejected, Self>") ||
+    !schema.includes("fn retire_snapshot_one") ||
+    !schema.includes("fn retire_patch_one") ||
+    !schema.includes("pub const UI_PATCH_APPLY_SLOTS: usize = 8") ||
+    !schema.includes("slots: [UiPatchApplySlot; UI_PATCH_APPLY_SLOTS]") ||
+    !schema.includes("retirement_handle: Option<UiPatchApplyHandle>") ||
+    !schema.includes("impl Drop for UiPatchApplyProducer") ||
+    !schema.includes("impl Drop for UiPatchApplyOutcome") ||
+    !schema.includes("impl Drop for UiPatchApplyRejected") ||
+    !schema.includes("remove_record: Option<crate::UiNodeRecord>") ||
+    !schema.includes("pub fn close_ui_patch_owner_one() -> bool") ||
+    !reactor.includes("ui_contract::close_ui_patch_owner_one()") ||
+    !schemaSource.includes("#[cfg(test)]\npub fn validate_snapshot") ||
+    schema.includes("pub fn apply_patch(state: &mut crate::UiSnapshotState")
+  ) failures.push("renderer patch application is not a by-value retained generation-qualified transactional producer with exact outcome/rejection retirement");
+  if (
+    !schema.includes("pub const UI_TURN_PATCHES_MAXIMUM: usize = 1") ||
+    !schema.includes("pub struct UiTurnPatches") ||
+    !schema.includes("patches: semio_framework_ui_contract::UiFixedList<UiPatch, UI_TURN_PATCHES_MAXIMUM>") ||
+    !schema.includes("pub fn try_push_ui_patch(&mut self, patch: UiPatch) -> Result<(), UiPatch>") ||
+    !schema.includes("pub const UI_TURN_PATCH_RETIRE_SLOTS: usize = 64") ||
+    !schema.includes("slots: [UiTurnPatchRetireSlot; UI_TURN_PATCH_RETIRE_SLOTS]") ||
+    !schema.includes("retirement: Option<UiTurnPatchRetireKey>") ||
+    !schema.includes("impl Drop for UiTurnPatches") ||
+    !schema.includes("pub fn close_ui_turn_patch_owner_one() -> bool") ||
+    !schema.includes("pub const UI_TURN_PATCH_TRANSPORT_SLOTS: usize = 64") ||
+    !schema.includes("pub struct UiTurnPatchTransportProducer") ||
+    !schema.includes("pub fn drive_one(&mut self, session: u64, cancelled: bool, deadline_expired: bool)") ||
+    !schema.includes("pub struct UiTurnPatchTransportLease") ||
+    !schema.includes("pub fn try_from_token(token: &[u8], expected_session: u64)") ||
+    !schema.includes("pub fn close_ui_turn_patch_transport_one() -> bool") ||
+    !schema.includes("impl<'de> Deserialize<'de> for UiTurnPatches") ||
+    !schema.includes("struct UiTurnPatchesVisitor") ||
+    !schema.includes("pub ui_patches: UiTurnPatches") ||
+    schema.includes("pub ui_patches: Vec<UiPatch>") ||
+    !reactor.includes("let mut ui_patches = semio_framework::kernel::UiTurnPatches::default()") ||
+    !reactor.includes("ui_patches.try_push_ui_patch(patch)") ||
+    !reactor.includes("close_ui_turn_patch_owner_one()") ||
+    !reactor.includes("result.ui_patches.into_iter().map(kernel_ui_patch_to_wit)") ||
+    !reactor.includes("Result<semio_framework_actor::TurnResult, semio_framework::Fault>") ||
+    !reactor.includes("to_actor_turn_result(mut result: TurnResult") ||
+    !reactor.includes("UiTurnPatchTransportProducer::try_new(session, owner)") ||
+    !reactor.includes("patch_transport.drive_one(session, false, false)") ||
+    !reactor.includes("patch_transport.take_ready()") ||
+    !reactor.includes("semio_framework_async::yield_once().await") ||
+    reactor.includes("serde_json::to_vec(&result.ui_patches)")
+  ) failures.push("TurnResult patch ownership escapes through a growable vector or infallible whole-turn encoder instead of the fixed exact-owner authority");
+  for (const fixture of [
+    "document_lease_publishes_complete_generation_and_closes_incrementally",
+    "document_builder_returns_exact_max_plus_one_node_owner",
+    "retained_patch_applies_one_census_node_op_and_validation_owner_per_opportunity",
+    "retained_patch_max_plus_one_returns_exact_state_and_patch",
+    "retained_patch_cancel_stale_and_deadline_preserve_owner",
+    "retained_patch_remove_advances_one_node_or_child_per_opportunity",
+    "retained_patch_duplicate_and_deep_validation_are_cursorized",
+    "patch_handback_arena_max_plus_one_refuses_without_reusing_a_live_generation",
+    "abandoned_patch_owner_moves_to_incremental_handback_and_reopens_capacity",
+    "ui_turn_patches_max_plus_one_returns_the_exact_patch_owner",
+    "ui_turn_patches_fixed_serde_visitor_rejects_plus_one",
+    "ui_turn_patches_close_retires_one_op_or_patch_owner_per_step",
+    "ui_turn_patch_retirement_max_plus_one_refuses_before_owner_transfer",
+    "ui_turn_patch_retirement_rejects_stale_epoch_release_and_closes_one_owner_per_step",
+    "ui_turn_patch_transport_round_trip_is_single_claim_and_preserves_populated_owner",
+    "ui_turn_patch_transport_rejects_truncated_stale_and_cancelled_tokens",
+    "ui_turn_patch_transport_max_plus_one_returns_exact_owner_and_session_close_is_incremental",
+  ]) if (!schemaSource.includes(`fn ${fixture}`)) failures.push(`fixed document lease fixture missing ${fixture}`);
+  for (const fixture of [
+    "fixed_page_max_plus_one_returns_the_exact_untransferred_owner",
+    "ascending_map_duplicate_refusal_preserves_key_and_value",
+    "credited_alias_keeps_pages_live_after_original_handle_is_lost",
+    "poisoned_arena_lock_recovers_without_losing_fixed_authority",
+    "arena_initialization_is_a_fixed_control_and_page_taxonomy",
+  ]) if (!valueSource.includes(`fn ${fixture}`)) failures.push(`fixed UiValue arena fixture missing ${fixture}`);
   for (const cap of [
     "SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 64",
     "SURFACE_RECONCILE_PAGE_BYTES: usize = 16 * 1_024",
-    "max_nodes: 4_096",
-    "max_items: 32_769",
+    "max_nodes: SURFACE_RECONCILE_FIXED_NODES",
+    "max_items: 4_097",
     "max_bytes: 2 * 1_024 * 1_024",
     "max_identifier_bytes: 256",
     "SURFACE_RECONCILE_AGGREGATE_BYTES: usize = 8 * 1_024 * 1_024",
@@ -6309,26 +6898,69 @@ function interactivityLiveReconcileFailures(reconcileSource: string, patchesSour
   if (reserveAt < 0 || cursorAt < 0 || reserveAt > cursorAt || !reconcile.includes("slots: [SurfaceReconcileAdmissionSlot; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !reconcile.includes("next_items > SURFACE_RECONCILE_AGGREGATE_ITEMS") || !reconcile.includes("next_bytes > SURFACE_RECONCILE_AGGREGATE_BYTES")) failures.push("live reconcile does not reserve fixed item/byte/generation credit before by-value tree cursor construction");
   if (reconcile.includes("pub fn reconcile(&mut self") || patches.includes(".reconcile(") || patches.includes("snapshot().revision") || patches.includes("tree.clone()") || reactor.includes("patches.diff(")) failures.push("mounted reactor reconcile reintroduced a synchronous, snapshot-clone, or cloned-tree compatibility path");
   if (driveStart < 0 || (drive.match(/cursor\.step\(current\)/g) ?? []).length !== 1 || drive.includes("while ") || drive.includes("for ") || !drive.includes("cx.generation().0 != state.generation") || !drive.includes("cx.is_cancelled()") || !drive.includes("cx.should_yield()") || !drive.includes("cx.consume_fuel(1)") || drive.indexOf("cx.should_yield()") > drive.indexOf("cursor.step(current)")) failures.push("live reconcile grant does not advance exactly one fresh fuel/deadline/cancel/generation cursor opportunity");
-  const takeReady = reconcile.slice(reconcile.indexOf("pub fn take_ready"), reconcile.indexOf("pub fn into_terminal", reconcile.indexOf("pub fn take_ready")));
-  if (!reconcile.includes("RetireCursor") || !reconcile.includes("RetirePrevious") || !reconcile.includes("state.phase = SurfaceReconcileJobPhase::Ready") || !reconcile.includes("reconciler.persistent_credit = state.credit.take()") || takeReady.includes("release_surface_reconcile(credit)") || !reconcile.includes("4 => {\n                if let Some(credit) = self.persistent_credit.take()")) failures.push("live reconcile persistent credit does not transfer through ready and return only after exact previous-owner retirement");
+  const reconcileJobImpl = reconcile.indexOf("impl SurfaceReconcileJob {");
+  const reconcileTakeReady = reconcile.indexOf("pub fn take_ready", reconcileJobImpl);
+  const takeReady = reconcile.slice(reconcileTakeReady, reconcile.indexOf("pub fn into_terminal", reconcileTakeReady));
+  if (!reconcile.includes("RetireCursor") || !reconcile.includes("RetirePrevious") || !reconcile.includes("state.phase = SurfaceReconcileJobPhase::Ready") || !reconcile.includes("split_surface_reconcile(credit)") || !reconcile.includes("reconciler.persistent_credit = Some(candidate_credit)") || !reconcile.includes("credit: Some(patch_credit)") || takeReady.includes("release_surface_reconcile(credit)")) failures.push("live reconcile persistent credit does not split and transfer through candidate/publication owners after exact previous-owner retirement");
   const semanticAt = reconcile.indexOf("struct SurfaceSemanticCensusCursor");
-  const cloneAt = reconcile.indexOf("self.seen.insert((parent, node.key.clone()))", semanticAt);
+  const cloneAt = reconcile.indexOf("self.seen.try_insert((parent, node.key.clone()))", semanticAt);
   const semanticRegion = reconcile.slice(semanticAt, reconcile.indexOf("pub(crate) struct SurfaceReconcileCursor", semanticAt));
   for (const cursor of ["field: u8", "container: u8", "entry: usize", "binding: usize", "action: u8", "data_attribute: u8", "string_byte: usize", "depth: usize", "value_stack: [Option<SurfaceSemanticValueFrame>; SURFACE_RECONCILE_VALUE_DEPTH]"]) if (!reconcile.includes(cursor)) failures.push(`live reconcile semantic census cursor missing ${cursor}`);
-  if (semanticAt < 0 || cloneAt < 0 || semanticAt > cloneAt || reconcile.includes("tree_node_semantic_usage") || reconcile.includes("fn include_ui_value") || semanticRegion.includes("for value in values") || semanticRegion.includes("while let Some") || !reconcile.includes("SURFACE_RECONCILE_VALUE_DEPTH: usize = 64") || !reconcile.includes("self.semantic_census.as_mut()") || !reconcile.includes("SurfaceSemanticCensusStep::Complete") || reconcile.includes("Vec::with_capacity(limits.max_nodes)") || reconcile.includes("Vec::with_capacity(limits.max_items)")) failures.push("live reconcile semantic census is recursive, whole-container, decorative, dynamically pre-grown, or occurs after candidate mutation");
-  if (!reconcile.includes("pub struct SurfaceReconcileReservation") || !patches.includes("reservation: Option<SurfaceReconcileReservation>") || !patches.includes("SurfaceReconcileReservation::try_new(generation)") || !patches.includes("SurfaceReconcileJob::try_new_reserved") || !reconcile.includes("persistent_credit: Option<SurfaceReconcileCredit>")) failures.push("live reconcile producer/current/candidate ownership does not retain exact pre-materialization and persistent aggregate credit");
+  if (semanticAt < 0 || cloneAt < 0 || semanticAt > cloneAt || reconcile.includes("tree_node_semantic_usage") || reconcile.includes("fn include_ui_value") || semanticRegion.includes("for value in values") || semanticRegion.includes("while let Some") || semanticRegion.includes("cursor.by_ref().collect") || !reconcile.includes("SURFACE_RECONCILE_VALUE_DEPTH: usize = 64") || !reconcile.includes("self.semantic_census.as_mut()") || !reconcile.includes("SurfaceSemanticCensusStep::Complete") || reconcile.includes("Vec::with_capacity(limits.max_nodes)") || reconcile.includes("Vec::with_capacity(limits.max_items)")) failures.push("live reconcile semantic census is recursive, whole-container, decorative, dynamically pre-grown, or occurs after candidate mutation");
+  if (!reconcile.includes("struct SurfaceSemanticMapPage") || !reconcile.includes("cursor: ui_contract::UiMapCursor") || !semanticRegion.includes("page.cursor.advance()") || semanticRegion.includes("get_index(") || semanticRegion.includes("BTreeMap") || semanticRegion.includes("values.range(") || semanticRegion.includes("page.values.iter().nth(") || semanticRegion.includes("unsafe") || semanticRegion.includes("transmute") || semanticRegion.includes("*const") || semanticRegion.includes("*mut")) failures.push("live reconcile map census does not retain a sound credited page cursor or reintroduces borrowed/raw/restart traversal");
+  for (const owner of [
+    "traversal: SurfaceFixedVec<PresentationFrame",
+    "flat: SurfaceFixedVec<FlatPresentedNode",
+    "postorder: SurfaceFixedVec<usize",
+    "seen: SurfaceLinearSet<",
+    "ids: SurfaceFixedVec<ui_contract::UiNodeId",
+    "new_retained: SurfaceLinearMap<",
+    "new_key_index: SurfaceLinearMap<",
+    "removal: SurfaceFixedVec<RemovalFrame",
+    "ops: ui_contract::UiPatchOps",
+  ]) if (!reconcile.includes(owner)) failures.push(`live reconcile fixed owner disappeared: ${owner}`);
+  if (reconcile.includes("fn admit_vec_backing") || reconcile.includes("fn admit_hash_map_backing") || reconcile.includes("fn admit_hash_set_backing") || !reconcile.includes("struct RecordDiffCursor") || !reconcile.includes("fn diff_record_field") || reconcile.includes("fn diff_record(") || !reconcile.includes("struct SurfaceTreeRetireCursor") || reconcile.includes("retire_forest: Vec")) failures.push("live reconcile cursor/diff/retire backing is eager, fictional, hash-layout-estimated, or dynamically unowned");
+  if (!reconcile.includes("pub struct SurfaceReconcileReservation") || !patches.includes("reservation: SurfaceReconcileReservation") || !patches.includes("SurfaceReconcileReservation::try_new(generation)") || !patches.includes("SurfaceReconcileJob::try_new_reserved") || !reconcile.includes("persistent_credit: Option<SurfaceReconcileCredit>")) failures.push("live reconcile producer/current/candidate ownership does not retain exact pre-materialization and persistent aggregate credit");
   if (!reconcile.includes("pub struct SurfaceReconcileRejected") || !reconcile.includes("pub struct SurfaceReconcileTerminal") || !reconcile.includes("pub fn take_sources(&mut self)") || !reconcile.includes("pub fn resume(mut self") || !reconcile.includes("pub fn close_step(&mut self)") || !reconcile.includes("impl Drop for SurfaceReconcileJob") || !reconcile.includes("impl Drop for SurfaceReconcileRejected") || !reconcile.includes("impl Drop for SurfaceReconcileTerminal") || !reconcile.includes("pub fn take_surface_reconcile_terminal")) failures.push("live reconcile exact rejected/terminal owners lack public take-resume-close and Drop handback");
-  if (!patches.includes("slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("rejected: [Option<RejectedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("terminals: [Option<TerminalSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("unadmitted: [Option<UnadmittedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS + 1]") || patches.includes("HashMap") || !patches.includes("pub fn begin(&self, surface: String, tree: ComponentTree)") || !patches.includes("fn begin_generation") || !patches.includes("pub fn reserve_mounted") || !patches.includes("pub fn drive_one(&self)") || !patches.includes("pub fn begin_close_instance") || !patches.includes("pub fn close_step(&self)") || !patches.includes("pub fn take_terminal") || !patches.includes("pub fn take_rejected")) failures.push("mounted PatchTracker is not the fixed admitted public lifecycle authority");
+  if (!patches.includes("slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("rejected: [Option<RejectedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("terminals: [Option<TerminalSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("producer_terminals: [Option<MountedTreeTerminal>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("rejected_reserved: [Option<u64>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("unadmitted: [Option<UnadmittedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS + 1]") || patches.includes("HashMap") || patches.includes("pub fn begin(&self, surface: String, tree: ComponentTree)") || !patches.includes("pub fn commit_source(mut self, root: TreeNode) -> Result<(), TreeNode>") || !patches.includes("pub fn reserve_mounted") || !patches.includes("pub fn drive_one(&self)") || !patches.includes("pub fn begin_close_instance") || !patches.includes("pub fn close_step(&self)") || !patches.includes("pub fn take_terminal") || !patches.includes("pub fn take_rejected")) failures.push("mounted PatchTracker is not the fixed admitted public lifecycle authority");
+  const commitSource = patches.slice(patches.indexOf("pub fn commit_source"), patches.indexOf("#[cfg(test)]", patches.indexOf("pub fn commit_source")));
+  if ((commitSource.match(/return Err\(root\)/g) ?? []).length !== 6 || commitSource.includes("drop(root)")) failures.push("mounted source rejection does not return the exact root on every preflight or transfer refusal");
   if (!patches.includes("ready: [Option<ReadySlot>; READY_PATCH_CAPACITY]") || !patches.includes("pending < ready_generation") || !patches.includes("acknowledged_revision") || !patches.includes("closing_instances: [Option<ClosingInstance>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("surface_instance(&slot.surface) == Some(closing.instance)") || !patches.includes("slot.instance == Some(closing.instance)") || !patches.includes("state.ready.iter().all(Option::is_none)") || !patches.includes("state.deferred.iter().all(Option::is_none)") || !patches.includes("state.unadmitted.iter().all(Option::is_none)")) failures.push("mounted reconcile fixed publication/ACK/close order or terminal emptiness omits a retained owner class");
-  if (!patches.includes("Result<u64, (String, ComponentTree)>") || !patches.includes("return Err((surface, tree))") || !patches.includes("slot.tree.is_some()") || !patches.includes("self.begin_generation(surface, tree, generation, Some(reservation))") || !patches.includes("MountedReconcileGrant") || !patches.includes("slot.tree = Some(tree)")) failures.push("mounted unadmitted saturation/retry does not retain the exact tree, credit, and original generation after pre-materialization reservation");
+  const unadmittedDefinition = patches.slice(patches.indexOf("struct UnadmittedSlot"), patches.indexOf("pub struct MountedReconcileGrant"));
+  if (!patches.includes("MountedReconcileGrant") || !patches.includes("MountedReconcileOwner::Live { reconciler, reservation }") || !patches.includes("rejected_index: usize") || unadmittedDefinition.includes("tree:" ) || unadmittedDefinition.includes("reservation:") || patches.includes("tree: Option<ComponentTree>") || patches.includes("pub fn take_unadmitted")) failures.push("mounted producer can retain or publicly escape a whole unadmitted source tree instead of a reservation-only marker plus exact grant owner");
   const closeStart = patches.indexOf("pub fn close_step(&self)");
   const closeEnd = patches.indexOf("pub fn take_terminal", closeStart);
   const close = patches.slice(closeStart, closeEnd);
   const producingTerminal = close.indexOf("if terminal_target.is_none()");
   for (const blocked of ["state.unadmitted.iter().position", "state.rejected.iter().position", "state.slots.iter().position"]) if (producingTerminal < 0 || producingTerminal > close.indexOf(blocked)) failures.push(`mounted saturation close checks blocked ${blocked} before a capacity-producing terminal`);
-  if (!patches.includes("fn issue_generation(state: &mut PatchTrackerState) -> Option<u64>") || !patches.includes("state.next_generation.checked_add(1)?") || !patches.includes("state.generation_exhausted = generation == u64::MAX") || patches.includes("unwrap_or(u64::MAX)")) failures.push("mounted generation authority saturates, wraps, or reissues exhausted maximum");
-  if (!reconcile.includes("handback_next: Option<Box<SurfaceReconcileRetained>>") || !reconcile.includes("state.handback_next = terminals.take()") || reconcile.includes("terminals.iter_mut().find(|slot| slot.is_none())")) failures.push("public reconcile Drop handback remains best-effort or loses the cap-plus-one owner");
-  if ((reactor.match(/patches\.drive_one\(\)/g) ?? []).length !== 1 || !reactor.includes("patches.reserve_mounted(surface)") || !reactor.includes("Ok(tree) => grant.commit(tree)") || !reactor.includes("Err(_) => grant.cancel()") || !reactor.includes("patches.defer(surface)") || !reactor.includes("patches.begin_close_instance(*numeric_instance)") || !reactor.includes("patches.close_step()") || !reactor.includes("reconcile_work")) failures.push("production reactor does not mount one pre-reserved reconcile opportunity with deferred-storm and instance-close rearm");
+  if (!patches.includes("fn next_generation(state: &PatchTrackerState) -> Option<u64>") || !patches.includes("state.next_generation.checked_add(1)") || !patches.includes("fn commit_generation(state: &mut PatchTrackerState, generation: u64)") || !patches.includes("state.generation_exhausted = generation == u64::MAX") || patches.includes("unwrap_or(u64::MAX)") || patches.includes("or(Some(u64::MAX))")) failures.push("mounted generation authority saturates, wraps, or reissues exhausted maximum");
+  const mountedStart = patches.indexOf("pub fn reserve_mounted");
+  const mounted = patches.slice(mountedStart, patches.indexOf("pub fn drive_one", mountedStart));
+  if (mounted.indexOf("SurfaceReconcileReservation::try_new(generation)") < 0 || mounted.indexOf("state.rejected_reserved[rejected_index] = Some(generation)") < 0 || mounted.indexOf("commit_generation(&mut state, generation)") < mounted.indexOf("SurfaceReconcileReservation::try_new(generation)")) failures.push("mounted generation commits before exact aggregate/public-terminal reservation succeeds");
+  const rejectedStart = patches.indexOf("pub fn mark_rejected");
+  const rejectedEnd = patches.indexOf("pub fn mark_published_ack", rejectedStart);
+  const rejected = patches.slice(rejectedStart, rejectedEnd);
+  if (rejected.indexOf("state.terminals.iter().position(Option::is_none)") < 0 || rejected.indexOf("state.terminals.iter().position(Option::is_none)") > rejected.indexOf("next_generation(&state)") || rejected.indexOf("SurfaceReconcileTerminal::try_from_reconciler") > rejected.indexOf("commit_generation(&mut state, generation)")) failures.push("rejection consumes a generation or mutates its owner before exact terminal capacity succeeds");
+  if (!reconcile.includes("SURFACE_RECONCILE_HANDBACK_SLOTS: usize = SURFACE_RECONCILE_ADMISSION_SLOTS * 6") || !reconcile.includes("slots: [SurfaceReconcileHandbackSlot; SURFACE_RECONCILE_HANDBACK_SLOTS]") || !reconcile.includes("pub struct SurfaceReconcileHandbackKey") || !reconcile.includes("registry.slots.get_mut(key.slot)") || !reconcile.includes("pub fn close_surface_reconcile_handback_one()") || reconcile.includes("handback_next: Option<Box") || reconcile.includes("static SURFACE_RECONCILE_TERMINALS") || reconcile.includes("else { drop(state); }") || reconcile.includes("pub fn from_reconciler") || reconcile.includes("pub fn from_patch")) failures.push("public reconciliation handback is dynamic, linear, uncredited, or lacks fixed scheduled one-owner close");
+  const ackEvent = reactor.slice(reactor.indexOf("Event::PatchAck"), reactor.indexOf("Event::PatchRejected"));
+  const pendingAuthority = reactor.slice(reactor.indexOf("struct PendingPatchAuthority"), reactor.indexOf("thread_local!", reactor.indexOf("struct PendingPatchAuthority")));
+  if (!reconcile.includes("pub struct SurfaceReconcileReadyPatch") || !reconcile.includes("pub struct SurfaceReconcilePublishedPatch") || !reconcile.includes("pub struct SurfaceReconcilePublishedAck") || !patches.includes("authority: SurfaceReconcileReadyPatch") || !reactor.includes("slots: [Option<PendingPatchSlot>; PENDING_PATCH_CAPACITY]") || reactor.includes("RefCell<Vec<UiPatch>>") || !reactor.includes("PendingPatchOwner::Published") || !reactor.includes("apply_published_ack") || !ackEvent.includes("pending.borrow_mut().apply_published_ack") || ackEvent.indexOf("apply_published_ack") > ackEvent.indexOf("mark_published_ack") || !reactor.includes("ack.into_published()") || pendingAuthority.includes('expect("matching published patch authority")') || pendingAuthority.includes("unreachable!(\"published ACK lookup") || !reactor.includes("close_instance_one") || !reactor.includes("close_surface_reconcile_handback_one")) failures.push("published owner is not consumed nonpanically before generation-qualified tracker ACK or restored exactly on stale/duplicate/ABA refusal");
+  const reconcilerDrop = reconcile.slice(reconcile.indexOf("impl Drop for SurfaceReconciler"), reconcile.indexOf("impl<K, V> SurfaceLinearMap", reconcile.indexOf("impl Drop for SurfaceReconciler")));
+  const readyDrop = reconcile.slice(reconcile.indexOf("impl Drop for SurfaceReconcileReadyPatch"), reconcile.indexOf("pub struct SurfaceReconcilePublishedPatch"));
+  if (!reconcilerDrop.includes("handback_surface_reconcile(state)") || reconcilerDrop.includes("self.retained.clear()") || !readyDrop.includes("handback_surface_reconcile") || readyDrop.includes("release_surface_reconcile(credit)") || !reconcile.includes("SURFACE_RECONCILE_TREE_RETIRE_DEPTH: usize = 4_097") || !reconcile.includes("if self.depth == self.frames.len()")) failures.push("populated ordinary Drop or deep-tree retirement can bulk destroy ownership, release credit, or overflow its fixed frames");
+  if ((reactor.match(/patches\.drive_one\(\)/g) ?? []).length !== 1 || !reactor.includes("patches.reserve_mounted(surface)") || !reactor.includes("Ok(tree) => grant.commit_source(tree.root)") || !reactor.includes("Err(_) => grant.cancel()") || !reactor.includes("patches.defer(surface)") || !reactor.includes("patches.begin_close_instance(*numeric_instance)") || !reactor.includes("patches.close_step()") || !reactor.includes("reconcile_work")) failures.push("production reactor does not mount one pre-reserved reconcile opportunity with deferred-storm and instance-close rearm");
+  if (
+    !reactor.includes("fn advance_command_cursor") ||
+    !reactor.includes("cursor.page_index.checked_add(1)") ||
+    reactor.includes("cursor.page_index.saturating_add(1)") ||
+    reactor.includes("terminal.page_index = terminal.page_index.saturating_add(1)") ||
+    !reactor.includes("static COMMAND_INGRESS: RefCell<[Option<CommandIngressOwner>; 2]>") ||
+    !reactor.includes("(ingress[0].take(), 0)") ||
+    reactor.includes('assert!(previous.is_none(), "command ingress has one exact owner")') ||
+    reactor.includes('expect("host-validated generic pages preserve their fixed shape")') ||
+    reactor.includes('expect("fixed timer tail authority")') ||
+    reactor.includes('expect("fixed pending-patch close instance")')
+  ) failures.push("reactor mounted owner/cursor transitions still saturate or panic instead of returning a fault or preserving the fixed owner");
   for (const fixture of [
     "mounted_path_advances_one_reconcile_opportunity_per_grant",
     "cap_plus_one_returns_the_exact_tree_owner",
@@ -6343,15 +6975,28 @@ function interactivityLiveReconcileFailures(reconcileSource: string, patchesSour
     "terminal_full_plus_matching_rejected_advances_capacity_before_conversion",
     "terminal_full_plus_matching_surface_advances_capacity_before_conversion",
     "generation_max_is_issued_once_and_repeated_exhaustion_returns_exact_owners_without_mutation",
+    "terminal_saturation_does_not_consume_maximum_generation_before_exact_owner_reservation",
   ]) if (!patchesSource.includes(`fn ${fixture}`)) failures.push(`live reconcile fixture missing ${fixture}`);
-  for (const fixture of ["identifier_cap_plus_one_returns_the_exact_tree_owner_before_cursor_mutation", "stale_cancel_and_drop_handoff_preserve_public_terminal_ownership", "semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_unchanged", "semantic_census_low_fuel_wide_container_and_deep_value_advance_one_unit_without_recursion", "persistent_credit_transfers_through_ready_and_returns_only_after_incremental_retirement", "public_drop_handback_is_lossless_at_terminal_cap_and_plus_one"]) if (!reconcileSource.includes(`fn ${fixture}`)) failures.push(`live reconcile fixture missing ${fixture}`);
+  for (const fixture of ["identifier_cap_plus_one_returns_the_exact_tree_owner_before_cursor_mutation", "stale_cancel_and_drop_handoff_preserve_public_terminal_ownership", "semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_unchanged", "semantic_census_low_fuel_wide_container_and_deep_value_advance_one_unit_without_recursion", "retained_map_page_advances_each_key_once_without_rewalking_prior_entries", "allocate_inspect_admit_retains_exact_vector_backing_on_cap_plus_one_without_partial_item_mutation", "persistent_credit_transfers_through_ready_and_returns_only_after_incremental_retirement", "public_drop_handback_is_lossless_at_terminal_cap_and_plus_one"]) if (!reconcileSource.includes(`fn ${fixture}`)) failures.push(`live reconcile fixture missing ${fixture}`);
   return failures;
 }
 
-function interactivityLiveReconcileSelfTests(repoRoot: string): void {
+export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
   const reconcile = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
+  const value = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_VALUE_FILE);
+  const kernel = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_KERNEL_FILE);
+  const kernelTurn = kernel.slice(kernel.indexOf("//#region 🔖️TurnResult"), kernel.indexOf("//#endregion 🔖️TurnResult"));
+  const schema = [
+    INTERACTIVITY_AUDIT_UI_BUILDER_FILE,
+    INTERACTIVITY_AUDIT_UI_COMPONENT_FILE,
+    INTERACTIVITY_AUDIT_UI_ACCESSIBILITY_FILE,
+    INTERACTIVITY_AUDIT_UI_SURFACE_FILE,
+    INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE,
+    INTERACTIVITY_AUDIT_UI_LIMITS_FILE,
+    INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
+  ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn;
   const patches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
-  const reactor = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_FILE);
+  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
   const mutations: [string, string, string, string][] = [
     ["slot-cap", reconcile.replace("SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 64", "SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 65"), patches, reactor],
     ["page-cap", reconcile.replace("SURFACE_RECONCILE_PAGE_BYTES: usize = 16 * 1_024", "SURFACE_RECONCILE_PAGE_BYTES: usize = 32 * 1_024"), patches, reactor],
@@ -6364,31 +7009,121 @@ function interactivityLiveReconcileSelfTests(repoRoot: string): void {
     ["dynamic-tracker", reconcile, patches.replace("slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]", "slots: Vec<Option<SurfaceSlot>>"), reactor],
     ["effect-reorder", reconcile, patches.replace("pending < ready_generation", "false"), reactor],
     ["instance-close-erasure", reconcile, patches.replaceAll("surface_instance(&slot.surface) == Some(closing.instance)", "false"), reactor],
-    ["tree-clone", reconcile, patches, reactor.replace("Ok(tree) => grant.commit(tree)", "Ok(tree) => grant.commit(tree.clone())")],
+    ["tree-clone", reconcile, patches, reactor.replace("Ok(tree) => grant.commit_source(tree.root)", "Ok(tree) => { let alias = unsafe { std::ptr::read(&tree.root) }; grant.commit_source(alias) }")],
     ["missing-drive", reconcile, patches, reactor.replace("let more = patches.drive_one();", "let more = false;")],
     ["missing-close", reconcile, patches, reactor.replace("patches.begin_close_instance(*numeric_instance)", "patches.defer(numeric_instance.to_string())")],
-    ["old-diff", reconcile, patches.replace("pub fn begin(&self, surface: String, tree: ComponentTree)", "pub fn diff(&self, surface: String, tree: ComponentTree)"), reactor],
+    ["old-diff", reconcile, patches.replace("pub fn reserve_mounted(&self, surface: String)", "pub fn diff_mounted(&self, surface: String)"), reactor],
     ["missing-cap-fixture", reconcile, patches.replace("cap_plus_one_returns_the_exact_tree_owner", "cap_smoke"), reactor],
     ["recursive-semantic-helper", reconcile.replace("struct SurfaceSemanticCensusCursor", "fn tree_node_semantic_usage(_node: &crate::TreeNode) {}\nstruct SurfaceSemanticCensusCursor"), patches, reactor],
     ["missing-fixed-value-stack", reconcile.replace("value_stack: [Option<SurfaceSemanticValueFrame>; SURFACE_RECONCILE_VALUE_DEPTH]", "value_stack: Vec<SurfaceSemanticValueFrame>"), patches, reactor],
-    ["whole-list-one-grant", reconcile.replace("let Some(value) = values.get(entry) else", "for value in values { let _ = value; }\n                let Some(value) = values.get(entry) else"), patches, reactor],
-    ["missing-zero-fuel-guard", reconcile.replace("if cx.should_yield()", "if false"), patches, reactor],
-    ["release-credit-in-take-ready", reconcile.replace("reconciler.persistent_credit = state.credit.take();", "if let Some(credit) = state.credit.take() { release_surface_reconcile(credit); }"), patches, reactor],
+    ["whole-list-one-grant", reconcile.replace("let Some(value) = cursor.next() else", "let _whole: Vec<_> = cursor.by_ref().collect();\n                let Some(value) = cursor.next() else"), patches, reactor],
+    ["missing-zero-fuel-guard", reconcile.replaceAll("if cx.should_yield()", "if false"), patches, reactor],
+    ["release-credit-in-take-ready", reconcile.replace("let (candidate_credit, patch_credit) = match split_surface_reconcile(credit) {", "release_surface_reconcile(credit); let replacement_credit = reserve_surface_reconcile(SurfaceReconcileLimits::default()).unwrap(); let (candidate_credit, patch_credit) = match split_surface_reconcile(replacement_credit) {"), patches, reactor],
     ["missing-pre-materialization-credit", reconcile, patches.replaceAll("SurfaceReconcileReservation::try_new(generation)", "None"), reactor],
     ["dynamic-ready-owner", reconcile, patches.replace("ready: [Option<ReadySlot>; READY_PATCH_CAPACITY]", "ready: Vec<ReadySlot>"), reactor],
-    ["unadmitted-owner-drop", reconcile, patches.replace("return Err((surface, tree))", "return Err((surface, tree.clone()))"), reactor],
-    ["retry-new-generation", reconcile, patches.replaceAll("self.begin_generation(surface, tree, generation, Some(reservation))", "self.begin(surface, tree).map(|_| ())"), reactor],
+    ["unadmitted-owner-drop", reconcile, patches.replace("return Err(root);", "drop(root); return Ok(());"), reactor],
+    ["mounted-source-retention", reconcile, patches.replace("reservation: SurfaceReconcileReservation", "tree: Option<ComponentTree>"), reactor],
     ["unmounted-render", reconcile, patches, reactor.replace("patches.reserve_mounted(surface)", "patches.begin(surface, tree)")],
     ["blocked-before-producing-terminal", reconcile, patches.replace("if terminal_target.is_none()", "if false"), reactor],
-    ["saturating-generation", reconcile, patches.replace("let generation = state.next_generation.checked_add(1)?;", "let generation = state.next_generation.checked_add(1).unwrap_or(u64::MAX);"), reactor],
-    ["lossy-public-handback", reconcile.replace("state.handback_next = terminals.take();\n    *terminals = Some(state);", "if terminals.is_none() { *terminals = Some(state); }"), patches, reactor],
+    ["saturating-generation", reconcile, patches.replace("state.next_generation.checked_add(1)", "state.next_generation.checked_add(1).or(Some(u64::MAX))"), reactor],
+    ["lossy-public-handback", reconcile.replace("slot.state = Some(state);", "if slot.state.is_none() { slot.state = Some(state); } else { drop(state); }"), patches, reactor],
     ["close-ready-omission", reconcile, patches.replaceAll("state.ready.iter().all(Option::is_none)", "true"), reactor],
     ["missing-terminal-saturation-fixture", reconcile, patches.replace("terminal_full_plus_matching_unadmitted_advances_capacity_before_conversion", "terminal_unadmitted_smoke"), reactor],
     ["missing-exhaustion-fixture", reconcile, patches.replace("generation_max_is_issued_once_and_repeated_exhaustion_returns_exact_owners_without_mutation", "generation_smoke"), reactor],
     ["missing-public-drop-fixture", reconcile.replace("public_drop_handback_is_lossless_at_terminal_cap_and_plus_one", "public_drop_smoke"), patches, reactor],
+    ["page-index-rewalk", reconcile.replace("cursor: ui_contract::UiMapCursor", "values: ui_contract::UiMap, entry: usize").replace("page.cursor.advance()", "page.values.iter().nth(page.entry)"), patches, reactor],
+    ["raw-map-pointer", reconcile.replace("cursor: ui_contract::UiMapCursor", "values: *const ui_contract::UiMap, entry: usize").replace("page.cursor.advance()", "unsafe { (&*page.values).iter().nth(page.entry) }"), patches, reactor],
+    ["dynamic-reconcile-ops", reconcile.replace("ops: ui_contract::UiPatchOps", "ops: Vec<ui_contract::UiPatchOp>"), patches, reactor],
+    ["dynamic-retire-forest", reconcile.replace("retire_tree: SurfaceTreeRetireCursor", "retire_forest: Vec<std::vec::IntoIter<crate::TreeNode>>"), patches, reactor],
+    ["eager-variable-diff", reconcile.replace("fn diff_record_field", "fn diff_record"), patches, reactor],
+    ["dynamic-reactor-pending", reconcile, patches, reactor.replace("slots: [Option<PendingPatchSlot>; PENDING_PATCH_CAPACITY]", "slots: Vec<PendingPatchSlot>")],
+    ["missing-published-ack", reconcile, patches, reactor.replace("pending.borrow_mut().apply_published_ack(&surface, revision, |ack| PATCHES.with(|patches| patches.mark_published_ack(ack)))", "drop((&surface, revision))")],
+    ["missing-unforgeable-ack", reconcile.replace("pub struct SurfaceReconcilePublishedAck", "struct SurfaceReconcilePublishedAck"), patches, reactor],
+    ["panic-after-published-transfer", reconcile, patches, reactor.replace("let Some(slot) = self.slots[index].take() else { return false };", 'let slot = self.slots[index].take().expect("matching published patch authority");')],
+    ["drop-ready-credit", reconcile.replace("handback_surface_reconcile(Box::new(SurfaceReconcileRetained", "if let Some(credit) = self.credit.take() { release_surface_reconcile(credit); } handback_surface_reconcile(Box::new(SurfaceReconcileRetained"), patches, reactor],
+    ["deep-retire-overflow", reconcile.replace("if self.depth == self.frames.len()", "if false"), patches, reactor],
+    ["generation-commit-before-reservation", reconcile, patches.replace("        let Some(reservation) = SurfaceReconcileReservation::try_new(generation)", "        commit_generation(&mut state, generation);\n        let Some(reservation) = SurfaceReconcileReservation::try_new(generation)").replace("        commit_generation(&mut state, generation);\n        state.rejected_reserved", "        state.rejected_reserved"), reactor],
+    ["rejection-generation-before-terminal", reconcile, patches.replace("let Some(target_index) = state.terminals.iter().position(Option::is_none) else { return };", "let target_index = 0;").replace("let Some(generation) = next_generation(&state) else { return };", "let Some(generation) = next_generation(&state) else { return }; let Some(target_index) = state.terminals.iter().position(Option::is_none) else { return };"), reactor],
+    ["linear-public-take", reconcile.replace("let slot = registry.slots.get_mut(key.slot)?;", "let slot = registry.slots.iter_mut().find(|slot| slot.generation == key.generation)?;"), patches, reactor],
+    ["uncredited-terminal-constructor", reconcile.replace("pub fn try_from_reconciler", "pub fn from_reconciler"), patches, reactor],
+    ["missing-map-page-fixture", reconcile.replace("retained_map_page_advances_each_key_once_without_rewalking_prior_entries", "map_page_smoke"), patches, reactor],
+    ["missing-transactional-generation-fixture", reconcile, patches.replace("terminal_saturation_does_not_consume_maximum_generation_before_exact_owner_reservation", "generation_reservation_smoke"), reactor],
+    ["saturating-command-cursor", reconcile, patches, reactor.replace("cursor.page_index.checked_add(1)", "cursor.page_index.saturating_add(1)")],
+    ["panicking-command-page", reconcile, patches, reactor.replace("match semio_framework::kernel::PagedCommand::try_from_pages(pages) {", "match Ok::<_, (semio_framework::Fault, semio_framework::kernel::CommandPageSet)>(semio_framework::kernel::PagedCommand::try_from_pages(pages).expect(\"host-validated generic pages preserve their fixed shape\")) {")],
+    ["panicking-command-ingress", reconcile, patches, reactor.replace("ingress.borrow_mut()[retained_slot] = Some(retained);", 'let previous = ingress.borrow_mut()[retained_slot].replace(retained); assert!(previous.is_none(), "command ingress has one exact owner");')],
+    ["panicking-timer-owner", reconcile, patches, reactor.replace("let Some(tail) = self.slots.get_mut(previous) else {\n                let _ = self.slots.take(index);\n                return Err(id);\n            };", "let tail = self.slots.get_mut(previous).expect(\"fixed timer tail authority\");")],
   ];
-  for (const [name, mutatedReconcile, mutatedPatches, mutatedReactor] of mutations) if (interactivityLiveReconcileFailures(mutatedReconcile, mutatedPatches, mutatedReactor).length === 0) throw new Error(`[verify interactivity] live reconcile self-test ${name} was falsely accepted.`);
-  const failures = interactivityLiveReconcileFailures(reconcile, patches, reactor);
+  for (const [name, mutatedReconcile, mutatedPatches, mutatedReactor] of mutations) if (interactivityLiveReconcileFailures(mutatedReconcile, mutatedPatches, mutatedReactor, value, schema).length === 0) throw new Error(`[verify interactivity] live reconcile self-test ${name} was falsely accepted.`);
+  const schemaMutations: [string, string][] = [
+    ["btree-schema", value.replace("Map(UiMap)", "Map(std::collections::BTreeMap<String, UiValue>)")],
+    ["dynamic-list-schema", value.replace("List(UiList)", "List(Vec<UiValue>)")],
+    ["dynamic-page-backing", value.replace("pages: [UiPageSlot; UI_VALUE_AGGREGATE_ITEMS]", "pages: Vec<UiPageSlot>")],
+    ["dynamic-fixed-list-taxonomy", value.replace("items: [Option<T>; N]", "items: Box<[Option<T>; N]>").replace("Self { items: std::array::from_fn(|_| None), len: 0 }", "Self { items: Box::new(std::array::from_fn(|_| None)), len: 0 }")],
+    ["dynamic-fixed-map-taxonomy", value.replace("entries: UiFixedList<(UiText, V)>", "entries: Box<UiFixedList<(UiText, V)>>").replace("Self { entries: UiFixedList::default() }", "Self { entries: Box::new(UiFixedList::default()) }")],
+    ["dynamic-fixed-bytes-taxonomy", value.replace("bytes: [u8; UI_FIXED_BYTES]", "bytes: Box<[u8; UI_FIXED_BYTES]>").replace("Self { bytes: [0; UI_FIXED_BYTES], len: 0 }", "Self { bytes: Box::new([0; UI_FIXED_BYTES]), len: 0 }")],
+    ["arc-page-alias", value.replace("handle: Option<UiCollectionHandle>", "backing: Option<Arc<UiPageSlot>>")],
+    ["missing-map-max-refusal", value.replace("if entries.is_empty() { Ok(Self::default()) } else { Err(entries) }", "Ok(Self::default())")],
+    ["whole-list-constructor", value.replace("if values.is_empty() { Ok(Self::default()) } else { Err(values) }", "for value in values { builder.push(value).unwrap(); } Ok(builder.finish())")],
+    ["whole-map-sort", value.replace("if entries.is_empty() { Ok(Self::default()) } else { Err(entries) }", "entries.sort_by(|a, b| a.0.cmp(&b.0)); Ok(Self::default())")],
+    ["ordinary-list-drop", value.replace("impl Drop for UiList {", "impl UiList {")],
+    ["ordinary-map-drop", value.replace("impl Drop for UiMap {", "impl UiMap {")],
+    ["missing-value-credit", value.replace("aliases: u64", "aliases: ()")],
+    ["clone-abort", value.replace("pub fn credited_clone(&self) -> Option<Self> {", "pub fn credited_clone(&self) -> Option<Self> { if false { std::process::abort(); }")],
+    ["whole-serde-list", value.replace("serializer.serialize_seq(Some(0))?.end()", "serializer.collect_seq(self.iter())")],
+    ["whole-serde-source", value.replace("if access.next_element::<UiValue>()?.is_some()", "while let Some(value) = access.next_element::<UiValue>()? { builder.push(value).map_err(|_| serde::de::Error::custom(\"admission failed\"))?; } if false")],
+    ["missing-value-retirement-driver", value.replace("pub fn close_ui_value_page_one()", "fn close_ui_value_page_one()")],
+    ["semantic-byte-fiction", value.replace("let bytes = std::mem::size_of::<UiPageSlot>();", "let bytes = self.pages.len().saturating_mul(std::mem::size_of::<UiPageSlot>());")],
+    ["missing-arena-max-fixture", value.replace("fixed_page_max_plus_one_returns_the_exact_untransferred_owner", "fixed_page_max_smoke")],
+    ["missing-arena-poison-fixture", value.replace("poisoned_arena_lock_recovers_without_losing_fixed_authority", "arena_poison_smoke")],
+  ];
+  for (const [name, mutatedValue] of schemaMutations) if (interactivityLiveReconcileFailures(reconcile, patches, reactor, mutatedValue, schema).length === 0) throw new Error(`[verify interactivity] live reconcile self-test ${name} was falsely accepted.`);
+  const documentMutations: [string, string, string][] = [
+    ["dynamic-document-slots", schema.replace("slots: [UiDocumentSlot; UI_DOCUMENT_LEASE_SLOTS]", "slots: Vec<UiDocumentSlot>"), reactor],
+    ["missing-document-generation", schema.replace("impl UiDocumentLease {\n    pub fn generation(&self) -> u64", "impl UiDocumentLease {\n    fn generation(&self) -> u64"), reactor],
+    ["whole-document-read", schema.replace("pub fn read_node_page", "pub fn read_whole_document"), reactor],
+    ["missing-document-close-driver", schema, reactor.replace("ui_contract::close_ui_document_page_one()", "true")],
+    ["sync-whole-patch-apply", schema.replace("#[cfg(test)]\npub fn apply_patch(state: &mut crate::UiSnapshotState", "pub fn apply_patch(state: &mut crate::UiSnapshotState"), reactor],
+    ["sync-whole-snapshot-validation", schema.replace("#[cfg(test)]\npub fn validate_snapshot", "pub fn validate_snapshot"), reactor],
+    ["missing-retained-patch-census", schema.replace("fn census_patch_one(&mut self)", "fn census_patch_all(&mut self)"), reactor],
+    ["missing-exact-patch-rejection", schema.replace("pub fn take_rejected(mut self) -> Result<UiPatchApplyRejected, Self>", "fn take_rejected(mut self) -> Result<UiPatchApplyRejected, Self>"), reactor],
+    ["bulk-patch-retirement", schema.replace("fn retire_patch_one", "fn retire_all_patch_ops"), reactor],
+    ["bulk-remove-subtree", schema.replace("fn remove_subtree_one(&mut self)", "fn remove_subtree_all(&mut self)"), reactor],
+    ["whole-patch-validation", schema.replace("fn validate_candidate_one(&mut self)", "fn validate_candidate_all(&mut self)"), reactor],
+    ["dynamic-patch-validation-stack", schema.replace("validation_stack: crate::UiFixedList<UiPatchValidateFrame", "validation_stack: Vec<UiPatchValidateFrame"), reactor],
+    ["missing-patch-max-fixture", schema.replace("retained_patch_max_plus_one_returns_exact_state_and_patch", "retained_patch_max_smoke"), reactor],
+    ["missing-patch-stale-fixture", schema.replace("retained_patch_cancel_stale_and_deadline_preserve_owner", "retained_patch_stale_smoke"), reactor],
+    ["missing-patch-remove-fixture", schema.replace("retained_patch_remove_advances_one_node_or_child_per_opportunity", "retained_patch_remove_smoke"), reactor],
+    ["dynamic-patch-handback-slots", schema.replace("slots: [UiPatchApplySlot; UI_PATCH_APPLY_SLOTS]", "slots: Vec<UiPatchApplySlot>"), reactor],
+    ["missing-patch-drop-handback", schema.replace("impl Drop for UiPatchApplyProducer", "impl UiPatchApplyProducer"), reactor],
+    ["missing-rejected-remove-owner", schema.replaceAll("remove_record: Option<crate::UiNodeRecord>", "remove_record: ()"), reactor],
+    ["missing-patch-handback-driver", schema, reactor.replace("ui_contract::close_ui_patch_owner_one()", "true")],
+    ["missing-patch-handback-max-fixture", schema.replace("patch_handback_arena_max_plus_one_refuses_without_reusing_a_live_generation", "patch_handback_arena_smoke"), reactor],
+    ["missing-patch-abandon-fixture", schema.replace("abandoned_patch_owner_moves_to_incremental_handback_and_reopens_capacity", "abandoned_patch_owner_smoke"), reactor],
+    ["panicking-built-child-owner", schema.replace("let Some(backing) = self.backing.as_mut() else { return Err(node) };", 'let backing = self.backing.as_mut().expect("fixed child backing follows its reservation");'), reactor],
+    ["panicking-image-typestate", schema.replace("let HasAlt(alt) = alt;", 'let alt = Some(alt).expect("🚫️ ImageBuilder<HasAlt> invariant").0;'), reactor],
+    ["panicking-built-child-cursor", schema.replace("let Some(next) = owner.cursor.checked_add(1) else { return None };", "owner.cursor += 1; let next = owner.cursor;"), reactor],
+    ["panicking-document-retire-cursor", schema.replace("let Some(next) = self.slots[index].retire_scalar.checked_add(1) else { return None };", "self.slots[index].retire_scalar += 1; let next = self.slots[index].retire_scalar;"), reactor],
+    ["dynamic-turn-patch-owner", schema.replace("pub ui_patches: UiTurnPatches", "pub ui_patches: Vec<UiPatch>"), reactor],
+    ["missing-turn-patch-exact-push", schema.replace("pub fn try_push_ui_patch(&mut self, patch: UiPatch) -> Result<(), UiPatch>", "pub fn push_ui_patch(&mut self, patch: UiPatch)"), reactor],
+    ["missing-turn-patch-handback", schema.replace("impl Drop for UiTurnPatches", "impl UiTurnPatches"), reactor],
+    ["dynamic-turn-patch-retirement", schema.replace("slots: [UiTurnPatchRetireSlot; UI_TURN_PATCH_RETIRE_SLOTS]", "slots: Vec<UiTurnPatchRetireSlot>"), reactor],
+    ["missing-turn-patch-close-driver", schema, reactor.replace("close_ui_turn_patch_owner_one()", "false")],
+    ["borrowed-shard-turn-patch-owner", schema, reactor.replace("mut result: TurnResult", "result: &TurnResult").replace("let owner = std::mem::take(&mut result.ui_patches);", "let owner = UiTurnPatches::default();")],
+    ["missing-shard-turn-patch-producer", schema, reactor.replace("UiTurnPatchTransportProducer::try_new(session, owner)", "Err(owner)")],
+    ["whole-shard-turn-patch-serde", schema, reactor.replace("let owner = std::mem::take(&mut result.ui_patches);", "let _whole = serde_json::to_vec(&result.ui_patches); let owner = std::mem::take(&mut result.ui_patches);")],
+    ["missing-turn-patch-token-publication", schema, reactor.replace("patch_transport.take_ready()", "None")],
+    ["missing-turn-patch-max-fixture", schema.replace("ui_turn_patches_max_plus_one_returns_the_exact_patch_owner", "ui_turn_patches_max_smoke"), reactor],
+  ];
+  for (const [name, mutatedSchema, mutatedReactor] of documentMutations) if (interactivityLiveReconcileFailures(reconcile, patches, mutatedReactor, value, mutatedSchema).length === 0) throw new Error(`[verify interactivity] live reconcile self-test ${name} was falsely accepted.`);
+  const producerMutations: [string, string][] = [
+    ["missing-document-producer", reconcile.replace("pub struct SurfaceDocumentProducer", "struct SurfaceDocumentProducer")],
+    ["missing-document-stale-generation", reconcile.replace("cx.generation().0 != self.generation", "false")],
+    ["missing-document-stale-revision", reconcile.replace("current.revision != self.revision", "false")],
+    ["whole-document-producer", reconcile.replace("current.retained.get_index(self.next_node)", "current.retained.values().cloned().collect::<Vec<_>>().get(self.next_node)")],
+    ["missing-document-outcome", reconcile.replace("pub struct SurfaceDocumentOutcome", "struct SurfaceDocumentOutcome")],
+  ];
+  for (const [name, mutatedReconcile] of producerMutations) if (interactivityLiveReconcileFailures(mutatedReconcile, patches, reactor, value, schema).length === 0) throw new Error(`[verify interactivity] live reconcile self-test ${name} was falsely accepted.`);
+  const failures = interactivityLiveReconcileFailures(reconcile, patches, reactor, value, schema);
   if (failures.length !== 0) throw new Error(`[verify interactivity] live reconcile baseline was falsely rejected: ${failures.join("; ")}`);
 }
 
@@ -6640,6 +7375,8 @@ function interactivityDbIoFailures(storageSource: string, sqliteSource: string, 
   const failures: string[] = [];
   for (const forbidden of ["run_blocking_op", "DbIoRequest", "DbIoAdmission", "DbIoState<", "DbIoOperationKind", "DbIoPages::try_new", "DbIoPages::try_range", "into_owner(self) -> Vec<u8>", "into_vec(self)", "Option<Arc<WorkerPool>>", "open_inline", "runtime.block_on", "tokio::spawn", "thread::spawn"])
     if (storage.includes(forbidden) || sqlite.includes(forbidden)) failures.push(`live DB I/O source retains forbidden raw/generic authority: ${forbidden}`);
+  for (const forbidden of ["struct MemWalSegment { bytes: Vec<u8>", "segment.bytes.extend_from_slice(fragment)"])
+    if (storage.includes(forbidden)) failures.push(`memory DB I/O retains a whole raw WAL byte owner: ${forbidden}`);
   if (/async fn (?:append|write_generation|put|cas_root|write_run)\([^)]*(?:&\[u8\]|Vec<u8>)/.test(storage) || /async fn (?:append|write_generation|put|cas_root|write_run)\([^)]*(?:&\[u8\]|Vec<u8>)/.test(sqlite)) failures.push("DB write facade accepts caller-thread byte copies instead of exact pages");
   for (const required of [
     "static DB_IO_PAGE_BACKINGS",
@@ -6651,6 +7388,9 @@ function interactivityDbIoFailures(storageSource: string, sqliteSource: string, 
     "pub fn advance(&mut self, len: usize)",
     "pub struct DbIoPlatformBuffer",
     "pub fn db_io_prepare_platform",
+    "pub struct DbIoPageHash",
+    "pub fn db_io_hash_pages",
+    "owner.hasher.update(fragment)",
   ]) if (!storage.includes(required)) failures.push(`DB fixed page/range/prepared authority missing: ${required}`);
   for (const required of [
     "pub const DB_IO_PAGE_BYTES: usize = 16 * 1024",
@@ -6679,20 +7419,21 @@ function interactivityDbIoFailures(storageSource: string, sqliteSource: string, 
   for (const required of [
     "pool.try_submit(Lane::Io, job)",
     "error.into_job()",
-    "pool.callback_at",
     "retry_generation",
+    "retry_attempt",
     "DB_IO_RETRY_LIMIT",
     "DbIoTaskHandle { slot, generation, operation }",
     "db_io_slot_matches",
-    "db_io_schedule_close",
+    "pub fn db_io_maintenance_step()",
     "db_io_task_close_step",
     "backend_cleanup_done",
     "backend_to_close",
     "pub fn resume(&self) -> Result<bool, DbError>",
-    "pub fn take(&mut self) -> Result<Option<Result<DbIoResult, DbIoFault>>, DbError>",
+    "pub fn take(&mut self) -> Result<Option<Result<DbIoResultLease, DbIoFault>>, DbError>",
     "db_io_platform_maintenance_step",
     "retired: [Option<(u8, u64)>; DB_IO_PLATFORM_BUFFERS]",
   ]) if (!storage.includes(required)) failures.push(`DB lane/ABA/retry/close ownership missing: ${required}`);
+  if (storage.includes("callback_at(") || storage.includes("db_io_schedule_close")) failures.push("DB close/retry retains recursive timer scheduling instead of mounted maintenance");
   for (const required of [
     "struct FsDbIoExecutor",
     "impl DbIoTaskExecutor for FsDbIoExecutor",
@@ -6701,6 +7442,8 @@ function interactivityDbIoFailures(storageSource: string, sqliteSource: string, 
     "readers:",
     "fn list_step",
   ]) if (!storage.includes(required)) failures.push(`filesystem typed cursor missing: ${required}`);
+  for (const required of ["struct MemoryDbIoExecutor", "impl DbIoTaskExecutor for MemoryDbIoExecutor", "enum MemoryDbIoCursor", "MemoryDbIoCursor::WalRead", "MemoryDbIoCursor::PageCopy", "MemoryDbIoCursor::List", "MemoryDbIoCursor::PayloadHash", "pub struct MemoryStorage", "memory_execute(self.pool.as_ref(), DbIoTask::", "register_db_io_backend(DbIoBackendKind::Memory", "pool.try_submit(Lane::Io, job)"])
+    if (!storage.includes(required)) failures.push(`memory typed page cursor missing: ${required}`);
   for (const required of [
     "struct SqliteDbIoExecutor",
     "impl DbIoTaskExecutor for SqliteDbIoExecutor",
@@ -6725,12 +7468,305 @@ function interactivityDbIoFailures(storageSource: string, sqliteSource: string, 
     "db_io_process_page_max_plus_one_preflight_is_atomic",
     "db_io_result_page_reservation_plus_one_returns_the_writer",
     "db_io_interrupted_close_retires_one_page_or_owner_per_grant",
-    "db_io_retry_generation_and_operation_reject_stale_aba_handles",
+    "db_io_real_queued_callback_rejects_a_reused_task_slot_aba",
     "db_io_lost_page_handle_resumes_the_same_retirement_cursor",
   ]) if (!storageSource.includes(fixture)) failures.push(`DB retained-page fixture missing: ${fixture}`);
   for (const fixture of ["typed_lane_is_lossless_at_page_boundary_and_zero", "typed_list_and_catalog_cas_are_stable"])
     if (!sqliteSource.includes(fixture)) failures.push(`SQLite typed-I/O fixture missing: ${fixture}`);
   return failures;
+}
+
+function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: string, postgresSource: string, neo4jSource: string, hubSource: string): string[] {
+  const storage = interactivityProductionSource(storageSource);
+  const sqlite = interactivityProductionSource(sqliteSource);
+  const postgres = interactivityProductionSource(postgresSource);
+  const neo4j = interactivityProductionSource(neo4jSource);
+  const hub = interactivityProductionSource(hubSource);
+  const failures: string[] = [];
+  const ordered = (source: string, tokens: readonly string[]): boolean => {
+    let cursor = 0;
+    for (const token of tokens) {
+      const next = source.indexOf(token, cursor);
+      if (next < 0) return false;
+      cursor = next + token.length;
+    }
+    return true;
+  };
+  const rustItem = (source: string, marker: string): string => {
+    const start = source.lastIndexOf(marker);
+    const open = start < 0 ? -1 : source.indexOf("{", start);
+    if (open < 0) return "";
+    let depth = 0;
+    for (let cursor = open; cursor < source.length; cursor += 1) {
+      if (source[cursor] === "{") depth += 1;
+      else if (source[cursor] === "}" && --depth === 0) return source.slice(start, cursor + 1);
+    }
+    return "";
+  };
+  for (const required of [
+    "struct DbIoOperationLedger",
+    "fn db_io_operation_reserve",
+    "fn db_io_backend_owner_reserve",
+    "fn db_io_operation_attach_task",
+    "fn db_io_operation_add_result_lease",
+    "fn db_io_operation_return_result_lease",
+    "fn db_io_operation_transfer_to_backend",
+    "fn db_io_operation_detach_task",
+    "fn db_io_operation_terminal_is_empty",
+    "backend_owner: bool",
+    "pub struct DbIoResultLease",
+    "result_handback: Option<DbIoTaskHandle>",
+    "Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok())",
+    "pub struct DbIoAsyncTaskLease",
+    "credit_returned: bool",
+    "fn db_io_result_lease_credit()",
+    "fn db_io_async_lease_credit()",
+    "pub async fn take_async_native",
+    "pub fn enter_lane_io_driver_turn",
+    "pub fn leave_lane_io_driver_turn",
+    "pub fn db_io_maintenance_step()",
+    "fn db_io_backend_close_step",
+    "executor: Option<Box<dyn DbIoTaskExecutor>>",
+    "fn close_backend_step(&mut self) -> Result<bool, DbError>",
+    "fn backend_terminal_is_empty(&self) -> bool",
+    "pub struct DbIoDriverReservation",
+    "pub fn try_reserve(operation: u64, maximum_capacity: usize)",
+    "pub fn observe_capacity(&mut self, capacity: usize)",
+    "pub async fn db_io_write_observed_bytes",
+    "pub fn db_io_copy_observed_text",
+    "pub async fn db_io_transfer_list",
+    "pub async fn close_db_io_backend",
+    "pub fn retire_db_io_backend",
+    "fn db_io_backend_maintenance_step",
+    "pub fn close_backend_step(&self) -> Result<bool, DbError>",
+    "pub fn backend_terminal_is_empty(&self) -> bool",
+    "const DB_IO_LOST_OWNER_SLOTS",
+    "static DB_IO_PERMANENT_RETAINED_FAULT",
+    "fn db_io_park_lost_owner",
+    "fn db_io_try_park_lost_owner",
+    "DbIoLostOwner::PageWriter",
+    "DbIoLostOwner::Pages",
+    "DbIoLostOwner::List",
+    "DbIoLostOwner::Lease",
+    "DbIoLostOwner::Fault",
+    "DbIoLostOwner::DriverReservation",
+    "DbIoLostOwner::Backend",
+    "DbIoLostOwner::ResultLease",
+  ]) if (!storage.includes(required)) failures.push(`DB aggregate/result/backend authority missing: ${required}`);
+  for (const forbidden of ["callback_at(", "db_io_schedule_close", "Arc<dyn DbIoTaskExecutor>", "retry_job: Option<(Job", "terminal_job: Option<", "process_worker_pool("])
+    if (storage.includes(forbidden)) failures.push(`DB mounted close/retry retains forbidden opaque authority: ${forbidden}`);
+
+  const memoryStart = storage.indexOf("struct MemoryDbIoExecutor");
+  const memoryEnd = storage.indexOf("//#region 🔖️Fs", memoryStart);
+  const memory = storage.slice(memoryStart, memoryEnd < 0 ? undefined : memoryEnd);
+  for (const required of [
+    "wal: std::sync::Mutex<Box<[Option<MemoryWalOwner>]>>",
+    "payloads: std::sync::Mutex<[Option<MemoryPayloadOwner>; DB_IO_MEMORY_OWNERS]>",
+    "leases: std::sync::Mutex<[Option<MemoryLeaseOwner>; DB_IO_MEMORY_OWNERS]>",
+    "fn bind_owner_operation",
+    "fn owner_backing_bytes",
+    "pages.transfer_to_backend(backend_operation)?",
+    "impl DbIoTaskExecutor for MemoryDbIoExecutor",
+    "MemoryDbIoCursor::LeaseRelease",
+  ]) if (!memory.includes(required)) failures.push(`memory fixed backing/task authority missing: ${required}`);
+  for (const forbidden of ["HashMap<", "BTreeMap<", "collect::<HashMap", "process_worker_pool("])
+    if (memory.includes(forbidden)) failures.push(`memory typed operation retains uncensused dynamic owner: ${forbidden}`);
+  const memoryFacade = storage.slice(storage.indexOf("pub struct MemoryStorage"), storage.indexOf("//#region 🔖️Fs"));
+  if (!memoryFacade.includes("pub async fn new(pool: Arc<WorkerPool>)") || !memoryFacade.includes("memory_execute(self.pool.as_ref(), DbIoTask::")) failures.push("MemoryStorage does not inject and use the shared typed WorkerPool");
+
+  for (const owner of ["DbIoPageWriter", "DbIoPages", "DbIoU64List", "DbIoLeaseResult", "DbIoFault", "DbIoResultLease"] as const) {
+    const dropBody = rustItem(storage, `impl Drop for ${owner}`);
+    if (!dropBody.includes("db_io_park_lost_owner(")) failures.push(`${owner} Drop does not durably park its populated exact owner`);
+    if (dropBody.includes("db_io_operation_return(") || dropBody.includes("db_io_result_handback(")) failures.push(`${owner} Drop directly returns aggregate credit or result handback`);
+  }
+  const cancelStart = storage.lastIndexOf("pub fn cancel(&self)");
+  const cancel = storage.slice(cancelStart, storage.indexOf("pub async fn take_async_native", cancelStart));
+  if (!ordered(cancel, ["owner.cancelled = true", "drop(owner)", "db_io_enqueue_close(self.handle)?"])) failures.push("cancel does not retain the exact task before mounted close enrollment");
+  const completeStart = storage.lastIndexOf("pub fn complete(mut self");
+  const complete = storage.slice(completeStart, storage.indexOf("impl Drop for DbIoAsyncTaskLease", completeStart));
+  if (!ordered(complete, ["owner.async_detached = false", "DbIoTerminal::Cancelled(terminal.ok())", "drop(owner)", "db_io_operation_return(self.handle.operation, db_io_async_lease_credit())?"])) failures.push("async completion does not retain cancelled output before returning lease credit");
+  const taskCloseStart = storage.lastIndexOf("pub fn db_io_task_close_step");
+  const taskClose = storage.slice(taskCloseStart, storage.indexOf("fn db_io_rotate_close_head", taskCloseStart));
+  if (!ordered(taskClose, ["owner.phase == DbIoTaskPhase::Executing", "db_io_rotate_close_head(handle)?"])) failures.push("mounted close does not rotate a detached/executing exact owner");
+
+  for (const required of ["backend_close_cursor", "backend_terminal", "fn close_backend_step(&mut self)", "fn backend_terminal_is_empty(&self)", "close_db_io_backend(self.control).await"])
+    if (!sqlite.includes(required)) failures.push(`SQLite backend close witness missing: ${required}`);
+  for (const [name, source, executor] of [
+    ["PostgreSQL", postgres, "PostgresDbIoExecutor"],
+    ["Neo4j", neo4j, "Neo4jDbIoExecutor"],
+  ] as const) {
+    for (const required of [
+      `struct ${executor}`,
+      `impl DbIoTaskExecutor for ${executor}`,
+      "DbIoExecutorMode::AsyncNative",
+      "register_db_io_backend",
+      "submit_db_io_task",
+      "take_async_native().await",
+      "driver.enter_lane_io_driver_turn()?",
+      `driver.parts_mut::<${executor}>()?`,
+      "driver.leave_lane_io_driver_turn()?",
+      "driver.complete(terminal)",
+      "db_io_transfer_list",
+      "fn close_backend_step(&mut self)",
+      "fn backend_terminal_is_empty(&self)",
+      "DbIoDriverReservation",
+      "close_db_io_backend(self.control).await",
+    ]) if (!source.includes(required)) failures.push(`${name} typed async-native authority missing: ${required}`);
+    if (source.includes("db_io_copy_pages")) failures.push(`${name} retains unobserved raw driver byte conversion`);
+    const facadeStart = source.indexOf(name === "PostgreSQL" ? "pub struct PostgresStorage" : "pub struct Neo4jStorage");
+    const facade = source.slice(facadeStart, source.indexOf("//#region 🔖️DbBackend", facadeStart));
+    if (!facade.includes("worker_pool: Arc<WorkerPool>") || !facade.includes("self.execute(DbIoTask::")) failures.push(`${name} public facade bypasses typed shared-pool submission`);
+    if (/\.execute\(&self\.(?:pool|graph)\)|\.fetch_(?:one|optional)\(&self\.(?:pool|graph)\)/.test(facade)) failures.push(`${name} public facade directly calls its external driver`);
+    if (!ordered(facade, ["submit_db_io_task(self.worker_pool.as_ref(), task)", "operation.take_async_native().await?", "driver.enter_lane_io_driver_turn()?", `driver.parts_mut::<${executor}>()?`, "drive_task(aggregate_operation, task).await", "driver.leave_lane_io_driver_turn()?", "driver.complete(terminal)?"])) failures.push(`${name} external driver execution escapes the generation-qualified Lane::Io lease order`);
+  }
+  for (const required of ["reserve_driver_output", "DbIoDriverReservation::try_reserve(self.active_operation", "db_io_write_observed_bytes(reservation, bytes, output).await", "db_io_copy_observed_text(reservation, holder)"])
+    if (!postgres.includes(required)) failures.push(`PostgreSQL pre-driver capacity admission missing: ${required}`);
+  for (const forbidden of ["reserve_driver_output(len as u64)", "reserve_driver_output(range.len)"])
+    if (postgres.includes(forbidden)) failures.push(`PostgreSQL external Vec allocation is not precharged to its maximum observed capacity: ${forbidden}`);
+  for (const required of ["reserve_driver_read", "BoltBytes", "reservation.observe_capacity(bytes.len())?", "current_reservation.observe_capacity(current.len())?", "write_driver_bytes(reservation, bytes", "self.graph = Some(Graph::connect(config).await", "Neo4jDbIoExecutor::new(config"])
+    if (!neo4j.includes(required)) failures.push(`Neo4j retained codec/connect authority missing: ${required}`);
+  for (const forbidden of ["fn encode_bytes(", "let updated = apply_append", "let updated = apply_truncate", "connect_with_config_and_uri(config, uri.clone()).await", "BASE64", "base64::", "decode_bytes(&row.get::<String>"])
+    if (neo4j.includes(forbidden)) failures.push(`Neo4j production retains a whole-buffer or pre-registration path: ${forbidden}`);
+  for (const fixture of [
+    "db_io_one_byte_high_capacity_candidate_is_rejected_with_exact_owner",
+    "db_io_process_and_operation_ledger_return_to_exact_prior_witness",
+    "db_io_platform_fixed_ring_max_plus_one_returns_exact_capacity",
+    "db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate",
+    "db_io_real_queued_callback_rejects_a_reused_task_slot_aba",
+    "db_io_retry_generation_max_publishes_a_lossless_terminal_fault",
+    "db_io_postgres_and_neo4j_mock_drivers_use_supplied_writer_and_observed_capacity",
+    "db_io_all_five_backend_controls_require_explicit_terminal_close_witness",
+    "db_io_memory_backend_uses_actual_typed_submit_take_result_and_terminal_close",
+    "db_io_async_native_lost_backend_uses_typed_lane_lease_and_mounted_terminal_witness",
+    "db_io_cancellation_before_during_and_receiver_drop_retain_exact_terminal_owners",
+    "db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness",
+  ]) if (!storageSource.includes(fixture)) failures.push(`DB hostile B1-B6 fixture missing: ${fixture}`);
+  if (!postgresSource.includes("lost_postgres_facade_drives_the_real_lazy_pool_to_closed") || !postgres.includes("self.pool.is_closed()") || !postgres.includes("pool.close().await")) failures.push("PostgreSQL lost-facade path lacks a real async pool-close terminal witness");
+  if (!neo4jSource.includes("lost_neo4j_facade_retires_the_real_owned_config_without_a_service")) failures.push("Neo4j lost-facade path lacks its real owned-control retirement law");
+  if (!hub.includes("PostgresStorage::connect(pool.clone()") || !hub.includes("Neo4jStorage::connect(pool.clone()")) failures.push("Hub async-native storage callers bypass the shared WorkerPool");
+  return failures;
+}
+
+function interactivityDbIoB1B6SelfTests(): void {
+  const storage =
+    "struct DbIoOperationLedger fn db_io_operation_reserve fn db_io_backend_owner_reserve fn db_io_operation_attach_task fn db_io_operation_add_result_lease fn db_io_operation_return_result_lease fn db_io_operation_transfer_to_backend fn db_io_operation_detach_task fn db_io_operation_terminal_is_empty backend_owner: bool pub struct DbIoResultLease result_handback: Option<DbIoTaskHandle> Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()) pub struct DbIoAsyncTaskLease credit_returned: bool fn db_io_result_lease_credit() fn db_io_async_lease_credit() pub async fn take_async_native pub fn enter_lane_io_driver_turn pub fn leave_lane_io_driver_turn pub fn db_io_maintenance_step() fn db_io_backend_close_step executor: Option<Box<dyn DbIoTaskExecutor>> fn close_backend_step(&mut self) -> Result<bool, DbError> fn backend_terminal_is_empty(&self) -> bool pub struct DbIoDriverReservation pub fn try_reserve(operation: u64, maximum_capacity: usize) pub fn observe_capacity(&mut self, capacity: usize) pub async fn db_io_write_observed_bytes pub fn db_io_copy_observed_text pub async fn db_io_transfer_list pub async fn close_db_io_backend pub fn retire_db_io_backend fn db_io_backend_maintenance_step pub fn close_backend_step(&self) -> Result<bool, DbError> pub fn backend_terminal_is_empty(&self) -> bool const DB_IO_LOST_OWNER_SLOTS static DB_IO_PERMANENT_RETAINED_FAULT fn db_io_park_lost_owner fn db_io_try_park_lost_owner DbIoLostOwner::PageWriter DbIoLostOwner::Pages DbIoLostOwner::List DbIoLostOwner::Lease DbIoLostOwner::Fault DbIoLostOwner::DriverReservation DbIoLostOwner::Backend DbIoLostOwner::ResultLease struct MemoryDbIoExecutor { wal: std::sync::Mutex<Box<[Option<MemoryWalOwner>]>>, payloads: std::sync::Mutex<[Option<MemoryPayloadOwner>; DB_IO_MEMORY_OWNERS]>, leases: std::sync::Mutex<[Option<MemoryLeaseOwner>; DB_IO_MEMORY_OWNERS]> } fn bind_owner_operation fn owner_backing_bytes pages.transfer_to_backend(backend_operation)? impl DbIoTaskExecutor for MemoryDbIoExecutor MemoryDbIoCursor::LeaseRelease pub struct MemoryStorage pub async fn new(pool: Arc<WorkerPool>) memory_execute(self.pool.as_ref(), DbIoTask:: //#region 🔖️Fs impl Drop for DbIoPageWriter { db_io_park_lost_owner( } impl Drop for DbIoPages { db_io_park_lost_owner( } impl Drop for DbIoU64List { db_io_park_lost_owner( } impl Drop for DbIoLeaseResult { db_io_park_lost_owner( } impl Drop for DbIoFault { db_io_park_lost_owner( } impl Drop for DbIoResultLease { db_io_park_lost_owner( } pub fn cancel(&self) { owner.cancelled = true; drop(owner); db_io_enqueue_close(self.handle)?; } pub async fn take_async_native pub fn complete(mut self { owner.async_detached = false; Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()); drop(owner); db_io_operation_return(self.handle.operation, db_io_async_lease_credit())?; } impl Drop for DbIoAsyncTaskLease pub fn db_io_task_close_step { owner.phase == DbIoTaskPhase::Executing; db_io_rotate_close_head(handle)?; } fn db_io_rotate_close_head db_io_one_byte_high_capacity_candidate_is_rejected_with_exact_owner db_io_process_and_operation_ledger_return_to_exact_prior_witness db_io_platform_fixed_ring_max_plus_one_returns_exact_capacity db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate db_io_real_queued_callback_rejects_a_reused_task_slot_aba db_io_retry_generation_max_publishes_a_lossless_terminal_fault db_io_postgres_and_neo4j_mock_drivers_use_supplied_writer_and_observed_capacity db_io_all_five_backend_controls_require_explicit_terminal_close_witness db_io_memory_backend_uses_actual_typed_submit_take_result_and_terminal_close db_io_async_native_lost_backend_uses_typed_lane_lease_and_mounted_terminal_witness db_io_cancellation_before_during_and_receiver_drop_retain_exact_terminal_owners db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness";
+  const sqlite = "backend_close_cursor backend_terminal fn close_backend_step(&mut self) fn backend_terminal_is_empty(&self) close_db_io_backend(self.control).await";
+  const postgres =
+    "struct PostgresDbIoExecutor impl DbIoTaskExecutor for PostgresDbIoExecutor DbIoExecutorMode::AsyncNative register_db_io_backend db_io_transfer_list fn close_backend_step(&mut self) pool.close().await fn backend_terminal_is_empty(&self) self.pool.is_closed() DbIoDriverReservation reserve_driver_output DbIoDriverReservation::try_reserve(self.active_operation db_io_write_observed_bytes(reservation, bytes, output).await db_io_copy_observed_text(reservation, holder) pub struct PostgresStorage worker_pool: Arc<WorkerPool> async fn execute { submit_db_io_task(self.worker_pool.as_ref(), task); operation.take_async_native().await?; driver.enter_lane_io_driver_turn()?; driver.parts_mut::<PostgresDbIoExecutor>()?; drive_task(aggregate_operation, task).await; driver.leave_lane_io_driver_turn()?; driver.complete(terminal)?; } self.execute(DbIoTask:: close_db_io_backend(self.control).await //#region 🔖️DbBackend lost_postgres_facade_drives_the_real_lazy_pool_to_closed";
+  const neo4j =
+    "struct Neo4jDbIoExecutor impl DbIoTaskExecutor for Neo4jDbIoExecutor DbIoExecutorMode::AsyncNative register_db_io_backend db_io_transfer_list fn close_backend_step(&mut self) fn backend_terminal_is_empty(&self) DbIoDriverReservation reserve_driver_read BoltBytes reservation.observe_capacity(bytes.len())? current_reservation.observe_capacity(current.len())? write_driver_bytes(reservation, bytes self.graph = Some(Graph::connect(config).await Neo4jDbIoExecutor::new(config pub struct Neo4jStorage worker_pool: Arc<WorkerPool> async fn execute { submit_db_io_task(self.worker_pool.as_ref(), task); operation.take_async_native().await?; driver.enter_lane_io_driver_turn()?; driver.parts_mut::<Neo4jDbIoExecutor>()?; drive_task(aggregate_operation, task).await; driver.leave_lane_io_driver_turn()?; driver.complete(terminal)?; } self.execute(DbIoTask:: close_db_io_backend(self.control).await //#region 🔖️DbBackend lost_neo4j_facade_retires_the_real_owned_config_without_a_service";
+  const hub = "PostgresStorage::connect(pool.clone() Neo4jStorage::connect(pool.clone()";
+  const mutations = [
+    ["aggregate-ledger", storage.replace("struct DbIoOperationLedger", "struct EstimatedRequest"), postgres, neo4j],
+    ["result-lease", storage.replace("pub struct DbIoResultLease", "pub enum DbIoResult"), postgres, neo4j],
+    ["cancelled-result-retention", storage.replaceAll("DbIoTerminal::Cancelled(terminal.ok())", "DbIoTerminal::Cancelled(None)"), postgres, neo4j],
+    ["shared-memory-pool", `${storage} process_worker_pool(ProcessKind::HeadlessBatch, 2)`, postgres, neo4j],
+    ["drop-credit-handback", storage.replace("impl Drop for DbIoPages { db_io_park_lost_owner(", "impl Drop for DbIoPages { db_io_operation_return(operation, credit);"), postgres, neo4j],
+    ["cancel-close-order", storage.replace("drop(owner); db_io_enqueue_close(self.handle)?;", "db_io_enqueue_close(self.handle)?; drop(owner);"), postgres, neo4j],
+    ["async-lease-credit", storage.replace("fn db_io_async_lease_credit()", "fn estimated_async_lease()"), postgres, neo4j],
+    ["recursive-close", `${storage} callback_at(`, postgres, neo4j],
+    ["arc-executor", storage.replace("Option<Box<dyn DbIoTaskExecutor>>", "Arc<dyn DbIoTaskExecutor>"), postgres, neo4j],
+    ["observed-capacity", storage.replace("pub async fn db_io_write_observed_bytes", "pub async fn db_io_copy_pages"), postgres, neo4j],
+    ["observed-driver-text", storage.replace("pub fn db_io_copy_observed_text", "pub fn driver_string"), postgres, neo4j],
+    ["postgres-predriver-reservation", storage, postgres.replace("reserve_driver_output", "reserve_driver_output(len as u64) // unchecked_driver_output"), neo4j],
+    ["postgres-driver-turn-bypass", storage, postgres.replace("driver.enter_lane_io_driver_turn()?; driver.parts_mut", "driver.parts_mut"), neo4j],
+    ["postgres-fake-close", storage, postgres.replace("pool.close().await", "backend_terminal.store(true, Ordering::Release)"), neo4j],
+    ["postgres-driver-text", storage, postgres.replace("db_io_copy_observed_text(reservation, holder)", "DbIoText::try_from_str(&holder)"), neo4j],
+    ["neo4j-observed-owner", storage, postgres, neo4j.replace("reservation.observe_capacity(bytes.len())?", "let decoded: Vec<u8> = BASE64.decode(text)?")],
+    ["neo4j-driver-turn-bypass", storage, postgres, neo4j.replace("driver.enter_lane_io_driver_turn()?; driver.parts_mut", "driver.parts_mut")],
+    ["memory-mounted-law", storage.replace("db_io_memory_backend_uses_actual_typed_submit_take_result_and_terminal_close", "memory_direct_map_law"), postgres, neo4j],
+    ["async-native-mounted-law", storage.replace("db_io_async_native_lost_backend_uses_typed_lane_lease_and_mounted_terminal_witness", "direct_driver_law"), postgres, neo4j],
+    ["queued-aba-law", storage.replace("db_io_real_queued_callback_rejects_a_reused_task_slot_aba", "db_io_slot_struct_smoke"), postgres, neo4j],
+    ["retry-exhaustion-law", storage.replace("db_io_retry_generation_max_publishes_a_lossless_terminal_fault", "retry_smoke"), postgres, neo4j],
+    ["lost-ring-max-law", storage.replace("db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate", "lost_ring_smoke"), postgres, neo4j],
+    ["cancellation-lifecycle-law", storage.replace("db_io_cancellation_before_during_and_receiver_drop_retain_exact_terminal_owners", "cancel_smoke"), postgres, neo4j],
+    ["panic-fault-shutdown-law", storage.replace("db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness", "panic_smoke"), postgres, neo4j],
+    ["postgres-real-close-law", storage, postgres.replace("lost_postgres_facade_drives_the_real_lazy_pool_to_closed", "postgres_close_flag_smoke"), neo4j],
+    ["neo4j-real-close-law", storage, postgres, neo4j.replace("lost_neo4j_facade_retires_the_real_owned_config_without_a_service", "neo_close_smoke")],
+    ["backend-close-witness", storage.replaceAll("fn backend_terminal_is_empty(&self) -> bool", "fn dropped_backend(&self) -> bool"), postgres, neo4j],
+  ] as const;
+  for (const [name, mutatedStorage, mutatedPostgres, mutatedNeo4j] of mutations)
+    if (interactivityDbIoB1B6Failures(mutatedStorage, sqlite, mutatedPostgres, mutatedNeo4j, hub).length === 0) throw new Error(`[verify interactivity] DB I/O B1-B6 self-test ${name} was falsely accepted.`);
+  const baselineFailures = interactivityDbIoB1B6Failures(storage, sqlite, postgres, neo4j, hub);
+  if (baselineFailures.length !== 0) throw new Error(`[verify interactivity] DB I/O B1-B6 typed authority was falsely rejected: ${baselineFailures.join("; ")}`);
+}
+
+function interactivityDbIoCallerMigrationFailures(sources: readonly (readonly [string, string])[]): string[] {
+  const failures: string[] = [];
+  for (const [file, raw] of sources) {
+    const source = interactivityProductionSource(raw);
+    for (const forbidden of ["run_blocking_op", "DbIoRequest", "DbIoPages::try_new", "DbIoPages::try_range", ".into_vec()", "MemoryStorage::default()"])
+      if (source.includes(forbidden)) failures.push(`DB caller ${file} retains removed raw/generic I/O boundary: ${forbidden}`);
+  }
+  return failures;
+}
+
+function interactivityDbIoCallerMigrationSelfTests(): void {
+  const good = [["caller.rs", "submit_db_io_task pool.try_submit(Lane::Io, job) DbIoPageWriter DbIoPages"]] as const;
+  if (interactivityDbIoCallerMigrationFailures(good).length !== 0) throw new Error("[verify interactivity] DB caller migration self-test rejected a typed caller.");
+  for (const forbidden of ["run_blocking_op", "DbIoRequest", "DbIoPages::try_new", "DbIoPages::try_range", ".into_vec()", "MemoryStorage::default()"])
+    if (interactivityDbIoCallerMigrationFailures([["mutated.rs", `${good[0][1]} ${forbidden}`]]).length === 0) throw new Error(`[verify interactivity] DB caller migration self-test missed ${forbidden}.`);
+}
+
+function interactivityDbIoDirectWriterFailures(engineSource: string, snapshotSource: string, indexSource: string, walSource: string, sprSource: string, packSource: string): string[] {
+  const engine = interactivityProductionSource(engineSource);
+  const snapshot = interactivityProductionSource(snapshotSource);
+  const index = interactivityProductionSource(indexSource);
+  const wal = interactivityProductionSource(walSource);
+  const spr = interactivityProductionSource(sprSource);
+  const pack = interactivityProductionSource(packSource);
+  const failures: string[] = [];
+  for (const required of ["async fn encode_catalog_pages", "DbIoPageWriter::try_reserve", "catalog_write_json_string", "writer.seal_retained().await"])
+    if (!engine.includes(required)) failures.push(`catalog direct retained writer missing: ${required}`);
+  for (const forbidden of ["serde_json::to_vec", "db_io_copy_pages(&encoded", "db_io_copy_pages(&empty"])
+    if (engine.includes(forbidden)) failures.push(`catalog production retains encode-then-copy path: ${forbidden}`);
+  for (const required of ["struct SnapshotPageSink", "SnapshotPageSink::try_new()?", "pub async fn build_generation_pages", "writer.seal_retained().await", "descriptor.write_retained(&mut descriptor_segment).await?", "begin_identity_segment(pack::KIND_SNAPSHOT"])
+    if (!snapshot.includes(required)) failures.push(`snapshot direct retained sink missing: ${required}`);
+  for (const forbidden of ["PackWriter::begin(Vec", "db_io_copy_pages(&encoded", "db_io_copy_pages(&bytes", "let descriptor_bytes = descriptor.encode().await"])
+    if (snapshot.includes(forbidden)) failures.push(`snapshot production retains encode-then-copy path: ${forbidden}`);
+  for (const required of ["async fn encode_run_pages", "DbIoPageWriter::try_reserve", "Crc32cCursor", "run_write", "writer.seal_retained().await"])
+    if (!index.includes(required)) failures.push(`index direct retained writer missing: ${required}`);
+  for (const forbidden of ["db_io_copy_pages(&encoded", "db_io_copy_pages(&bytes"])
+    if (index.includes(forbidden)) failures.push(`index production retains encode-then-copy path: ${forbidden}`);
+  for (const required of ["struct SharedBuf(std::sync::Arc<std::sync::Mutex<db_storage::DbIoPageWriter>>)", "fn try_new() -> Result<Self, DbError>", "async fn copy_range", "async fn read_exact", "write_fragment(&bytes[cursor..])", "record.write_retained(&mut self.writer).await?"])
+    if (!wal.includes(required)) failures.push(`WAL direct retained page sink missing: ${required}`);
+  for (const forbidden of ["Mutex<Vec<u8>>", ".snapshot()", "db_io_copy_pages(&snapshot", "SharedBuf::new()"])
+    if (wal.includes(forbidden)) failures.push(`WAL production retains whole-buffer path: ${forbidden}`);
+  for (const required of ["async fn write_frame_retained", "Crc32cCursor::new()", "pending_chain_hasher: blake3::Hasher", "write_frame_retained(&mut self.sink"])
+    if (!spr.includes(required)) failures.push(`WAL frame codec retained cursor missing: ${required}`);
+  for (const forbidden of ["scratch: Vec<u8>", "pending_digests: Vec", "encode_frame_into(&mut self.scratch", "let mut concat = Vec::with_capacity"])
+    if (spr.includes(forbidden)) failures.push(`WAL frame codec retains whole-frame/list allocation: ${forbidden}`);
+  for (const required of ["pub struct PackIdentitySegment", "pub async fn begin_identity_segment", "let chunks = std::mem::take(&mut self.chunks)", "segment.write_fragment(retained_varint", "self.begin_identity_segment(crate::KIND_CHUNK"])
+    if (!pack.includes(required)) failures.push(`snapshot pack codec retained cursor missing: ${required}`);
+  for (const forbidden of ["let table_bytes = encode_chunk_table", "encode_segment(crate::KIND_CHUNK_TABLE", "encode_segment(crate::KIND_MANIFEST"])
+    if (pack.includes(forbidden)) failures.push(`snapshot pack codec retains whole-table/segment copy: ${forbidden}`);
+  return failures;
+}
+
+function interactivityDbIoDirectWriterSelfTests(): void {
+  const engine = "async fn encode_catalog_pages DbIoPageWriter::try_reserve catalog_write_json_string writer.seal_retained().await";
+  const snapshot = "struct SnapshotPageSink SnapshotPageSink::try_new()? pub async fn build_generation_pages writer.seal_retained().await descriptor.write_retained(&mut descriptor_segment).await? begin_identity_segment(pack::KIND_SNAPSHOT";
+  const index = "async fn encode_run_pages DbIoPageWriter::try_reserve Crc32cCursor run_write writer.seal_retained().await";
+  const wal = "struct SharedBuf(std::sync::Arc<std::sync::Mutex<db_storage::DbIoPageWriter>>) fn try_new() -> Result<Self, DbError> async fn copy_range async fn read_exact write_fragment(&bytes[cursor..]) record.write_retained(&mut self.writer).await?";
+  const spr = "async fn write_frame_retained Crc32cCursor::new() pending_chain_hasher: blake3::Hasher write_frame_retained(&mut self.sink";
+  const pack = "pub struct PackIdentitySegment pub async fn begin_identity_segment let chunks = std::mem::take(&mut self.chunks) segment.write_fragment(retained_varint self.begin_identity_segment(crate::KIND_CHUNK";
+  if (interactivityDbIoDirectWriterFailures(engine, snapshot, index, wal, spr, pack).length !== 0) throw new Error("[verify interactivity] DB direct-writer self-test rejected retained writers.");
+  const mutations = [
+    ["catalog-encode-then-copy", `${engine} serde_json::to_vec`, snapshot, index, wal, spr, pack],
+    ["catalog-missing-writer", engine.replace("catalog_write_json_string", "serde_json_escape"), snapshot, index, wal, spr, pack],
+    ["snapshot-vec-sink", engine, `${snapshot} PackWriter::begin(Vec`, index, wal, spr, pack],
+    ["snapshot-missing-page-sink", engine, snapshot.replace("struct SnapshotPageSink", "struct SnapshotBuffer"), index, wal, spr, pack],
+    ["index-copy", engine, snapshot, `${index} db_io_copy_pages(&encoded`, wal, spr, pack],
+    ["index-missing-crc-cursor", engine, snapshot, index.replace("Crc32cCursor", "crc32c"), wal, spr, pack],
+    ["wal-vec", engine, snapshot, index, wal.replace("Mutex<db_storage::DbIoPageWriter>", "Mutex<Vec<u8>>"), spr, pack],
+    ["wal-snapshot", engine, snapshot, index, `${wal} .snapshot()`, spr, pack],
+    ["wal-frame-scratch", engine, snapshot, index, wal, `${spr} scratch: Vec<u8>`, pack],
+    ["wal-digest-list", engine, snapshot, index, wal, `${spr} pending_digests: Vec`, pack],
+    ["snapshot-pack-table-copy", engine, snapshot, index, wal, spr, `${pack} let table_bytes = encode_chunk_table`],
+    ["snapshot-pack-missing-cursor", engine, snapshot, index, wal, spr, pack.replace("pub struct PackIdentitySegment", "pub struct PackSegmentBytes")],
+  ] as const;
+  for (const [name, mutatedEngine, mutatedSnapshot, mutatedIndex, mutatedWal, mutatedSpr, mutatedPack] of mutations)
+    if (interactivityDbIoDirectWriterFailures(mutatedEngine, mutatedSnapshot, mutatedIndex, mutatedWal, mutatedSpr, mutatedPack).length === 0) throw new Error(`[verify interactivity] DB direct-writer self-test ${name} was falsely accepted.`);
 }
 
 function interactivityDbIoCursorCallerFailures(syncSource: string): string[] {
@@ -6748,11 +7784,12 @@ function interactivityDbIoCursorCallerFailures(syncSource: string): string[] {
     "chunks > db_storage::DB_IO_OPERATION_ITEMS",
     "bootstrap_page_range_copy(pages, start, len)?.await?",
   ]) if (!lower.includes(required)) failures.push(`DB bootstrap retained page cursor missing: ${required}`);
+  if (!sync.includes("db_storage::db_io_hash_pages(&pages).await")) failures.push("DB bootstrap retained page hash cursor missing");
   return failures;
 }
 
 function interactivityDbIoSelfTests(): void {
-  const goodStorage = `static DB_IO_PAGE_BACKINGS pub struct DbIoPageWriter pub fn try_reserve(reserved_pages: usize) pub struct DbIoPages pub fn page(&self, index: u8) pub fn try_range(mut self, start: usize) -> Result<Self, Self> pub fn advance(&mut self, len: usize) pub struct DbIoPlatformBuffer pub fn db_io_prepare_platform pub const DB_IO_PAGE_BYTES: usize = 16 * 1024 const DB_IO_OPERATION_PAGES: usize = 64 const DB_IO_TOTAL_PAGES: usize = 1024 const DB_IO_OPERATION_ITEMS: usize = 64 DbIoPagePhase::Queued DbIoPagePhase::Executing DbIoPagePhase::TerminalResult pub enum DbIoTask BackendOpen WalAppend SnapshotWrite PayloadPut CatalogCas IndexWrite LeaseAcquire BackendClose pub enum DbIoResult pub trait DbIoTaskExecutor fn execute_step(&self, operation: u64, task: &mut DbIoTask) fn close_operation_step(&self, operation: u64, task: &DbIoTask) pool.try_submit(Lane::Io, job) error.into_job() pool.callback_at retry_generation DB_IO_RETRY_LIMIT DbIoTaskHandle { slot, generation, operation } db_io_slot_matches db_io_schedule_close db_io_task_close_step backend_cleanup_done backend_to_close pub fn resume(&self) -> Result<bool, DbError> pub fn take(&mut self) -> Result<Option<Result<DbIoResult, DbIoFault>>, DbError> db_io_platform_maintenance_step retired: [Option<(u8, u64)>; DB_IO_PLATFORM_BUFFERS] struct FsDbIoExecutor impl DbIoTaskExecutor for FsDbIoExecutor struct FsReadState payload_hashes readers: fn list_step async fn append(bytes: DbIoPages) db_io_fixed_page_max_plus_one_and_zero_are_exact db_io_range_moves_the_same_page_leases_without_suffix_copy db_io_list_capacity_plus_one_does_not_mutate_the_fixed_owner db_io_process_page_max_plus_one_preflight_is_atomic db_io_result_page_reservation_plus_one_returns_the_writer db_io_interrupted_close_retires_one_page_or_owner_per_grant db_io_retry_generation_and_operation_reject_stale_aba_handles db_io_lost_page_handle_resumes_the_same_retirement_cursor`;
+  const goodStorage = `static DB_IO_PAGE_BACKINGS pub struct DbIoPageWriter pub fn try_reserve(reserved_pages: usize) pub struct DbIoPages pub fn page(&self, index: u8) pub fn try_range(mut self, start: usize) -> Result<Self, Self> pub fn advance(&mut self, len: usize) pub struct DbIoPlatformBuffer pub fn db_io_prepare_platform pub struct DbIoPageHash pub fn db_io_hash_pages owner.hasher.update(fragment) pub const DB_IO_PAGE_BYTES: usize = 16 * 1024 const DB_IO_OPERATION_PAGES: usize = 64 const DB_IO_TOTAL_PAGES: usize = 1024 const DB_IO_OPERATION_ITEMS: usize = 64 DbIoPagePhase::Queued DbIoPagePhase::Executing DbIoPagePhase::TerminalResult pub enum DbIoTask BackendOpen WalAppend SnapshotWrite PayloadPut CatalogCas IndexWrite LeaseAcquire BackendClose pub enum DbIoResult pub trait DbIoTaskExecutor fn execute_step(&self, operation: u64, task: &mut DbIoTask) fn close_operation_step(&self, operation: u64, task: &DbIoTask) pool.try_submit(Lane::Io, job) error.into_job() retry_generation retry_attempt DB_IO_RETRY_LIMIT DbIoTaskHandle { slot, generation, operation } db_io_slot_matches pub fn db_io_maintenance_step() db_io_task_close_step backend_cleanup_done backend_to_close pub fn resume(&self) -> Result<bool, DbError> pub fn take(&mut self) -> Result<Option<Result<DbIoResultLease, DbIoFault>>, DbError> db_io_platform_maintenance_step retired: [Option<(u8, u64)>; DB_IO_PLATFORM_BUFFERS] struct FsDbIoExecutor impl DbIoTaskExecutor for FsDbIoExecutor struct FsReadState payload_hashes readers: fn list_step chunks: [Option<DbIoPages>; DB_IO_OPERATION_ITEMS] struct MemWalRangeCopy impl Future for MemWalRangeCopy mem_wal_range_copy(segment, range)?.await struct MemoryDbIoExecutor impl DbIoTaskExecutor for MemoryDbIoExecutor enum MemoryDbIoCursor MemoryDbIoCursor::WalRead MemoryDbIoCursor::PageCopy MemoryDbIoCursor::List MemoryDbIoCursor::PayloadHash pub struct MemoryStorage memory_execute(self.pool.as_ref(), DbIoTask:: register_db_io_backend(DbIoBackendKind::Memory async fn append(bytes: DbIoPages) db_io_fixed_page_max_plus_one_and_zero_are_exact db_io_range_moves_the_same_page_leases_without_suffix_copy db_io_list_capacity_plus_one_does_not_mutate_the_fixed_owner db_io_process_page_max_plus_one_preflight_is_atomic db_io_result_page_reservation_plus_one_returns_the_writer db_io_interrupted_close_retires_one_page_or_owner_per_grant db_io_real_queued_callback_rejects_a_reused_task_slot_aba db_io_lost_page_handle_resumes_the_same_retirement_cursor`;
   const goodSqlite = `struct SqliteDbIoExecutor impl DbIoTaskExecutor for SqliteDbIoExecutor CREATE TABLE IF NOT EXISTS db_io_stage fn write_stage_step fn read_stage_step fn payload_stage_step DELETE FROM db_io_stage WHERE operation typed_lane_is_lossless_at_page_boundary_and_zero typed_list_and_catalog_cas_are_stable`;
   const goodEngine = `pool: Arc<WorkerPool>`;
   const goodHub = `async fn connect_db { "fs" | "" => { Database::open_at(pool, &root, profile).await } "sqlite" => { let path = root.join("db.sqlite3"); SqliteStorage::open(pool.clone(), &path).await } } async fn connect_directory async fn main { let data_dir = root; let db = connect_db(&data_dir).await;`;
@@ -6762,15 +7799,17 @@ function interactivityDbIoSelfTests(): void {
     ["slice-write-api", goodStorage.replace("async fn append(bytes: DbIoPages)", "async fn append(bytes: &[u8])"), goodSqlite, goodEngine, "", goodHub],
     ["page-backing", goodStorage.replace("static DB_IO_PAGE_BACKINGS", "fn allocate_vec_pages"), goodSqlite, goodEngine, "", goodHub],
     ["range-copy", goodStorage.replace("pub fn try_range(mut self, start: usize) -> Result<Self, Self>", "pub fn into_vec(self)"), goodSqlite, goodEngine, "", goodHub],
+    ["whole-hash", goodStorage.replace("owner.hasher.update(fragment)", "for fragment in pages.fragments() { hasher.update(fragment); }"), goodSqlite, goodEngine, "", goodHub],
     ["gib-operation", goodStorage.replace("const DB_IO_OPERATION_PAGES: usize = 64", "const DB_IO_OPERATION_PAGES: usize = 65536"), goodSqlite, goodEngine, "", goodHub],
     ["untyped-task", goodStorage.replace("pub enum DbIoTask", "pub struct GenericRequest<T>"), goodSqlite, goodEngine, "", goodHub],
     ["missing-operation-tag", goodStorage.replace("DbIoTaskHandle { slot, generation, operation }", "DbIoTaskHandle { slot, generation }"), goodSqlite, goodEngine, "", goodHub],
-    ["missing-terminal-take", goodStorage.replace("pub fn take(&mut self) -> Result<Option<Result<DbIoResult, DbIoFault>>, DbError>", "fn drop_terminal"), goodSqlite, goodEngine, "", goodHub],
+    ["missing-terminal-take", goodStorage.replace("pub fn take(&mut self) -> Result<Option<Result<DbIoResultLease, DbIoFault>>, DbError>", "fn drop_terminal"), goodSqlite, goodEngine, "", goodHub],
     ["missing-retry-resume", goodStorage.replace("pub fn resume(&self) -> Result<bool, DbError>", "fn drop_retry"), goodSqlite, goodEngine, "", goodHub],
     ["platform-lost-handle", goodStorage.replace("retired: [Option<(u8, u64)>; DB_IO_PLATFORM_BUFFERS]", "drop_platform_slot"), goodSqlite, goodEngine, "", goodHub],
-    ["quiet-saturation-strand", goodStorage.replace("pool.callback_at", "drop"), goodSqlite, goodEngine, "", goodHub],
+    ["quiet-saturation-strand", goodStorage.replace("retry_attempt", "drop"), goodSqlite, goodEngine, "", goodHub],
     ["bulk-close", goodStorage.replace("db_io_task_close_step", "close_all_tasks"), goodSqlite, goodEngine, "", goodHub],
     ["filesystem-read-reopen", goodStorage.replace("struct FsReadState", "fn read_to_end"), goodSqlite, goodEngine, "", goodHub],
+    ["memory-whole-wal", goodStorage.replace("chunks: [Option<DbIoPages>; DB_IO_OPERATION_ITEMS]", "struct MemWalSegment { bytes: Vec<u8>"), goodSqlite, goodEngine, "", goodHub],
     ["sqlite-no-stage", goodStorage, goodSqlite.replace("CREATE TABLE IF NOT EXISTS db_io_stage", "let bytes: Vec<u8>"), goodEngine, "", goodHub],
     ["sqlite-whole-read", goodStorage, goodSqlite.replace("fn read_stage_step", "fn query_whole_blob"), goodEngine, "", goodHub],
     ["missing-max-fixture", goodStorage.replace("db_io_fixed_page_max_plus_one_and_zero_are_exact", "db_io_only_happy_path"), goodSqlite, goodEngine, "", goodHub],
@@ -6781,12 +7820,13 @@ function interactivityDbIoSelfTests(): void {
   for (const [name, storage, sqlite, engine, testkit, hub] of mutations)
     if (interactivityDbIoFailures(storage, sqlite, engine, testkit, hub).length === 0) throw new Error(`[verify interactivity] DB I/O self-test ${name} was falsely accepted.`);
   if (interactivityDbIoFailures(goodStorage, goodSqlite, goodEngine, "", goodHub).length !== 0) throw new Error("[verify interactivity] DB I/O self-test typed retained authority was falsely rejected.");
-  const goodSync = `struct BootstrapPageRangeCopy impl std::future::Future for BootstrapPageRangeCopy owner.pages.page(owner.page) context.waker().wake_by_ref() output.try_reserve_exact(len) chunks > db_storage::DB_IO_OPERATION_ITEMS bootstrap_page_range_copy(pages, start, len)?.await? //#endregion 🔖️Hello`;
+  const goodSync = `struct BootstrapPageRangeCopy impl std::future::Future for BootstrapPageRangeCopy owner.pages.page(owner.page) context.waker().wake_by_ref() output.try_reserve_exact(len) chunks > db_storage::DB_IO_OPERATION_ITEMS bootstrap_page_range_copy(pages, start, len)?.await? db_storage::db_io_hash_pages(&pages).await //#endregion 🔖️Hello`;
   for (const [name, source] of [
     ["whole-platform-flatten", goodSync.replace("struct BootstrapPageRangeCopy", "db_io_prepare_platform(pages)")],
     ["suffix-copy", goodSync.replace("owner.pages.page(owner.page)", "chunk.to_vec()")],
     ["unbounded-items", goodSync.replace("chunks > db_storage::DB_IO_OPERATION_ITEMS", "let chunks: Vec<&[u8]>")],
     ["single-turn-copy", goodSync.replace("context.waker().wake_by_ref()", "copy_from_slice(pages)")],
+    ["single-turn-hash", goodSync.replace("db_storage::db_io_hash_pages(&pages).await", "for fragment in pages.fragments() { hasher.update(fragment); }")],
   ] as const) if (interactivityDbIoCursorCallerFailures(source).length === 0) throw new Error(`[verify interactivity] DB I/O cursor-caller self-test ${name} was falsely accepted.`);
   if (interactivityDbIoCursorCallerFailures(goodSync).length !== 0) throw new Error("[verify interactivity] DB I/O cursor-caller self-test retained cursor was falsely rejected.");
 }

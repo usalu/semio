@@ -27,16 +27,16 @@ pub async fn definition() -> PanelTabDefinition {
 /// `handleKind:{id}`/`handle:{id}` targets `Block2dPlayApp::interaction_topology` declares for the
 /// `handle` domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology.
-pub async fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiNode {
-    let builder = PanelTreeBuilder::new("block2d-play-document");
+pub async fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let builder = PanelTreeBuilder::new("block2d-play-document")?;
     let handle_kind_items: Vec<UiTreeItemNode> =
-        definition.handle_kinds.iter().map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), ..tree_item_desc(format!("handleKind:{}", kind.id), Label::data(kind.label.clone()), Some(kind.color.clone())) }).collect();
+        definition.handle_kinds.iter().map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), ..tree_item_desc(format!("handleKind:{}", kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()))? }).collect();
     let handle_items: Vec<UiTreeItemNode> =
-        definition.handles.iter().map(|handle| UiTreeItemNode { icon_id: Some("circle-dot".into()), ..tree_item_desc(format!("handle:{}", handle.id), Label::data(handle.handle_kind.clone()), Some(format!("{:.2}", handle.angle))) }).collect();
+        definition.handles.iter().map(|handle| UiTreeItemNode { icon_id: Some("circle-dot".into()), ..tree_item_desc(format!("handle:{}", handle.id), Label::data(handle.handle_kind.clone()), Some(format!("{:.2}", handle.angle)))? }).collect();
     builder
-        .section_or_placeholder("block2d-play-document.handle-kinds", Some(labels.handle_kinds.into()), true, handle_kind_items, labels.no_handle_kinds)
-        .section_or_placeholder("block2d-play-document.handles", Some(labels.handles.into()), true, handle_items, labels.no_handles)
-        .interaction_domain(BLOCK2D_INTERACTION_HANDLE)
+        .section_or_placeholder("block2d-play-document.handle-kinds", Some(labels.handle_kinds.into()), true, handle_kind_items, labels.no_handle_kinds)?
+        .section_or_placeholder("block2d-play-document.handles", Some(labels.handles.into()), true, handle_items, labels.no_handles)?
+        .interaction_domain(BLOCK2D_INTERACTION_HANDLE)?
         .build()
 }
 //#endregion 🔖️Render

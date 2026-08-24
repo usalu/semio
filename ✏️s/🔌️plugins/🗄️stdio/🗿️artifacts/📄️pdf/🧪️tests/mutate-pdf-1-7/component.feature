@@ -14,6 +14,14 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   oracle's and the subject's results are read back by the SAME independent `lopdf`-backed projection
   before comparison, never against each other's own writing.
 
+  THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because `lopdf` did not
+  error. `inverse-<kind>` applies the mutation, applies its own independently computed inverse, and
+  fails with the first diverging field unless the result projects onto exactly what the original
+  document projects onto. `identity-round-trip` fails unless the re-serialized bytes differ from the
+  input AND their projection is identical to the input's. Neither law is scoped down: the whole
+  `semantic-pdf-v1` projection — declared version, page count, and every page's media box, content
+  operators, shown text and rotation — has to come back.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

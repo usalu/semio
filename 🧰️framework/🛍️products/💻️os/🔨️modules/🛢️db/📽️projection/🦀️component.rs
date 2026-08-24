@@ -453,15 +453,54 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         ProjectionIndex::new(self.storage, self.document.clone()).await
     }
 
+    async fn admit_index_bytes(&self, source: Vec<u8>) -> Result<db_index::IndexBytes, DbError> {
+        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut control = db_index::IndexCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        match db_index::IndexBytes::try_admit(source, 256 * 1024 * 1024, &mut control).await {
+            Ok(bytes) => Ok(bytes),
+            Err(mut rejected) => {
+                while rejected.close_step()? {
+                    control.grant()?;
+                }
+                Err(DbError::Unavailable(rejected.error().to_string()))
+            }
+        }
+    }
+
     /// @emoji 🔓️ Decodes a raw `ProjectionIndex` value (version prefix + state bytes), rejecting a
     /// stale schema version with `DbError::Conflict` rather than misinterpreting incompatible
     /// bytes — the shared guard behind both `load_checkpoint` and `state_at`.
-    async fn decode_checkpoint(&self, projection: &E, versioned_bytes: &[u8]) -> Result<Vec<u8>, DbError> {
-        let (stored_version, state_bytes) = decode_versioned(versioned_bytes).await?;
+    async fn decode_checkpoint(&self, projection: &E, versioned_bytes: &db_index::IndexBytes, control: &mut db_index::IndexCursorControl) -> Result<Vec<u8>, DbError> {
+        if versioned_bytes.len() < VERSION_PREFIX_LEN {
+            return Err(DbError::Corrupt("projection checkpoint is shorter than its version prefix".to_string()));
+        }
+        let mut version = [0u8; VERSION_PREFIX_LEN];
+        let mut offset = 0;
+        while offset < version.len() {
+            control.grant()?;
+            let read = versioned_bytes.read_fragment(offset, &mut version[offset..]);
+            if read == 0 {
+                return Err(DbError::Corrupt("projection checkpoint version ended early".to_string()));
+            }
+            offset += read;
+        }
+        let stored_version = u32::from_le_bytes(version);
         if stored_version != projection.schema_version().await {
             return Err(DbError::Conflict(format!("projection {:?} checkpoint schema version {stored_version} does not match registered version {} — rebuild required", projection.id().await, projection.schema_version().await)));
         }
-        Ok(state_bytes.to_vec())
+        let mut state = Vec::with_capacity(versioned_bytes.len() - VERSION_PREFIX_LEN);
+        offset = VERSION_PREFIX_LEN;
+        while offset < versioned_bytes.len() {
+            control.grant()?;
+            let mut fragment = [0u8; db_storage::DB_IO_PAGE_BYTES];
+            let read = versioned_bytes.read_fragment(offset, &mut fragment);
+            if read == 0 {
+                return Err(DbError::Corrupt("projection checkpoint state ended early".to_string()));
+            }
+            state.extend_from_slice(&fragment[..read]);
+            offset += read;
+        }
+        Ok(state)
     }
 
     /// @emoji 📥️ `projection`'s persisted state at or before `at_or_before`, or its `initial()`
@@ -469,7 +508,12 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     async fn load_checkpoint(&self, projection: &E, at_or_before: u64) -> Result<Vec<u8>, DbError> {
         let index = self.index_for(projection.id().await).await;
         match index.latest_at_or_before(projection.id().await, at_or_before).await? {
-            Some((_, versioned_bytes)) => self.decode_checkpoint(projection, &versioned_bytes).await,
+            Some((_, mut versioned_bytes)) => {
+                let mut control = db_index::IndexCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+                let decoded = self.decode_checkpoint(projection, &versioned_bytes, &mut control).await;
+                while versioned_bytes.close_step()?.is_some() {}
+                decoded
+            }
             None => Ok(projection.initial_bytes().await),
         }
     }
@@ -502,7 +546,8 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
             let new_state = if should_run(projection, touched, &changed_this_step).await {
                 let computed = projection.apply_bytes(&prior, envelope, &deps).await?;
                 let index_handle = self.index_for(projection.id().await).await;
-                index_handle.record(projection.id().await, command_seq, encode_versioned(projection.schema_version().await, &computed).await).await?;
+                let versioned = self.admit_index_bytes(encode_versioned(projection.schema_version().await, &computed).await).await?;
+                index_handle.record(projection.id().await, command_seq, versioned).await?;
                 changed_this_step.insert(projection.id().await);
                 computed
             } else {
@@ -563,7 +608,8 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
             let id = projection.id().await.to_string();
             let bytes = final_states.get(&id).expect("rebuild_in_memory populates every registered projection id");
             let index_handle = self.index_for(projection.id().await).await;
-            index_handle.record(projection.id().await, final_command_seq, encode_versioned(projection.schema_version().await, bytes).await).await?;
+            let versioned = self.admit_index_bytes(encode_versioned(projection.schema_version().await, bytes).await).await?;
+            index_handle.record(projection.id().await, final_command_seq, versioned).await?;
         }
         Ok(final_states)
     }
@@ -576,7 +622,12 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         let index_handle = self.index_for(projection_id).await;
         match index_handle.latest_at_or_before(projection_id, frontier_seq).await? {
             None => Ok(None),
-            Some((_, versioned_bytes)) => Ok(Some(self.decode_checkpoint(projection, &versioned_bytes).await?)),
+            Some((_, mut versioned_bytes)) => {
+                let mut control = db_index::IndexCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+                let decoded = self.decode_checkpoint(projection, &versioned_bytes, &mut control).await?;
+                while versioned_bytes.close_step()?.is_some() {}
+                Ok(Some(decoded))
+            }
         }
     }
 
@@ -819,7 +870,7 @@ mod tests {
             erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }),
             erase(CounterProjection { id: "c", schema_version: 1, dependencies: &["a", "b"], reads: &[] }),
         ];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
         let order = engine.topological_order().await;
         let position = |id: &str| order.iter().position(|candidate| *candidate == id).unwrap();
@@ -831,21 +882,21 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn build_rejects_duplicate_ids() {
         let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }), erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] })];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections).await, Err(DbError::AlreadyExists(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn build_rejects_unknown_dependency() {
         let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["ghost"], reads: &[] })];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections).await, Err(DbError::NotFound(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn build_rejects_a_dependency_cycle() {
         let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["b"], reads: &[] }), erase(CounterProjection { id: "b", schema_version: 1, dependencies: &["a"], reads: &[] })];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections).await, Err(DbError::InvalidArgument(_))));
     }
     //#endregion 🔖️Graph
@@ -854,7 +905,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn apply_envelope_advances_and_persists_incrementally() {
         let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
         for seq in 1..=3u64 {
@@ -871,7 +922,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn apply_envelope_rejects_a_mismatched_document() {
         let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
         assert!(matches!(db_actor::block_on(engine.apply_envelope(1, &envelope("doc-OTHER", "op-1", 1).await, &touch(&["doc"]).await)), Err(DbError::InvalidArgument(_))));
     }
@@ -880,7 +931,7 @@ mod tests {
     async fn dependent_projection_sees_its_dependencys_state_from_the_same_step() {
         let projections: Vec<AnyTestProjection> =
             vec![erase(SumWithDependencyProjection { id: "sum", dependency_id: "count", dependencies: &["count"], reads: &[] }).into(), erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }).into()];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
         // Step 1: count -> 1, sum sees count's *this-step* value (1): sum = 1 + 1 = 2.
@@ -896,7 +947,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn stale_schema_version_checkpoint_is_reported_as_conflict_not_misread() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         {
             let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
             let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
@@ -917,7 +968,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn preview_augmented_never_persists_and_does_not_affect_canonical_state() {
         let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
         db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["doc"]).await)).unwrap();
 
@@ -935,7 +986,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touched_set() {
         let projections = vec![erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] })];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
         // Untouched: the projection must not run, and nothing must be persisted for it.
@@ -957,7 +1008,7 @@ mod tests {
             // "not directly triggered by anything"; it must only ever run via the dependency cascade.
             erase(SumWithDependencyProjection { id: "cascade", dependency_id: "counter", dependencies: &["counter"], reads: &[] }).into(),
         ];
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
         // "counter" is untouched -> "cascade" has nothing to cascade from -> neither runs.
@@ -983,7 +1034,7 @@ mod tests {
     /// steps and cascaded-to on others.
     #[semio_framework_async_macros::async_test]
     async fn rebuild_equals_incremental_after_checkpoint_resume() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let make_projections = || -> Vec<AnyTestProjection> {
             vec![
                 erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }).into(),

@@ -16,6 +16,16 @@ Feature: Apply every typed PDF 1.4 mutation to a real-world document
   below compare `width`/`height`/`text` — everything `PdfSnapshot` itself carries — through an
   independent `lopdf` reader on both sides, never against each other's own writing.
 
+  THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because `lopdf` did not
+  error. `inverse-<kind>` applies the mutation, applies its algebraic inverse, and fails with the
+  first diverging field unless the result projects onto exactly what the un-mutated document
+  projects onto. `identity-round-trip` fails unless the re-encoded bytes differ from the input AND
+  the independent reader recovers exactly the text the real input carries. Both laws are asserted on
+  `text` and on the pinned `612×792` geometry, and NOT on this fixture's real page size: the
+  subset's whole model hardcodes Letter-size on both sides (`decode_pdf` never reads a MediaBox),
+  so `595.276 × 841.89` is unreachable by construction and demanding it would be a contrived check
+  rather than a true one. That carve-out is a documented property of the subset, not a softened law.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

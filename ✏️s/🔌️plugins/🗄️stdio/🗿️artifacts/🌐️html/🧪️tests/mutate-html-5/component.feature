@@ -48,6 +48,16 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
   this subset's own `HtmlSnapshot`/`HtmlMutation`/`parse_html_document`/`write_html_document`, and both
   results are read back through the SAME independent `html5ever` projection before comparison.
 
+  Both non-differential laws are asserted IN ROLE, by the handler that plays the role, and are not
+  deferred to the oracle-vs-subject comparison: every `inverse-<kind>` row requires apply-then-undo
+  to restore that side's OWN reading of the original document's projection, and
+  `identity-round-trip` requires that side's own decode → re-encode both to preserve its own
+  projection and to move the bytes. HTML 5 is not a byte-preserving carrier — the tree builder
+  inserts the implied `html`/`head`/`body` elements and the serializer re-derives every tag and
+  character reference from the tree — so the byte half of the law applies in full on both sides. A
+  scenario that only proved the reference library did not error would be vacuous — it is checkable
+  without a second producer, so it is checked without one.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

@@ -184,7 +184,7 @@ impl Fem2dMountedVisualLease {
 
     pub(crate) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         for owner in [&mut self.region_order, &mut self.assembly_order, &mut self.field_order] {
-            if owner.pop().is_some() {
+            if owner.pop()?.is_some() {
                 return (false, 1, 0);
             }
             let bytes = owner.capacity() * std::mem::size_of::<usize>();
@@ -322,8 +322,8 @@ impl Fem2dMountedVisualBuild {
             Fem2dMountedVisualStage::ReserveOrderIndexes => {
                 self.region_order.try_reserve_exact(doc.regions.len()).map_err(|_| b"fem2d.visual-region-order-backing".to_vec())?;
                 self.assembly_order.try_reserve_exact(visual.assembling_element_ids.len()).map_err(|_| b"fem2d.visual-assembly-order-backing".to_vec())?;
-                self.field_order.try_reserve_exact(visual.fields.len()).map_err(|_| b"fem2d.visual-field-order-backing".to_vec())?;
-                if [&self.region_order, &self.assembly_order, &self.field_order].into_iter().any(|owner| owner.capacity().checked_mul(std::mem::size_of::<usize>()).is_none_or(|bytes| bytes > FEM2D_MOUNTED_VISUAL_PAGE_BYTES)) {
+                self.field_order.try_reserve_exact(visual.fields.len())?.map_err(|_| b"fem2d.visual-field-order-backing".to_vec())?;
+                if [&self.region_order, &self.assembly_order, &self.field_order].into_iter()?.any(|owner| owner.capacity().checked_mul(std::mem::size_of::<usize>()).is_none_or(|bytes| bytes > FEM2D_MOUNTED_VISUAL_PAGE_BYTES)) {
                     return Err(b"fem2d.visual-order-observed-capacity".to_vec());
                 }
                 self.cursor = 0;
@@ -350,13 +350,13 @@ impl Fem2dMountedVisualBuild {
                 self.cursor += 1;
             }
             Fem2dMountedVisualStage::OrderFieldKey => {
-                let Some(field) = visual.fields.get(self.cursor) else {
+                let Some(field) = visual.fields.get(self.cursor)? else {
                     self.cursor = 0;
                     self.stage = Fem2dMountedVisualStage::Begin;
                     return Ok(false);
                 };
-                let index = self.field_order.binary_search_by(|current| visual.fields[*current].node_id.cmp(&field.node_id).then_with(|| current.cmp(&self.cursor))).unwrap_or_else(|index| index);
-                self.field_order.insert(index, self.cursor);
+                let index = self.field_order.binary_search_by(|current| visual.fields[*current].node_id.cmp(&field.node_id).then_with(|| current.cmp(&self.cursor)))?.unwrap_or_else(|index| index);
+                self.field_order.insert(index, self.cursor)?;
                 self.cursor += 1;
             }
             Fem2dMountedVisualStage::Begin => {
@@ -524,7 +524,7 @@ impl Fem2dMountedVisualBuild {
                 self.cursor += 1;
             }
             Fem2dMountedVisualStage::Displacement | Fem2dMountedVisualStage::Residual => {
-                let Some(index) = self.field_order.get(self.cursor).copied() else {
+                let Some(index) = self.field_order.get(self.cursor)?.copied() else {
                     self.finish_stage(if self.stage == Fem2dMountedVisualStage::Displacement { Fem2dMountedVisualStage::Residual } else { Fem2dMountedVisualStage::Status });
                     return Ok(false);
                 };
@@ -570,7 +570,7 @@ impl Fem2dMountedVisualBuild {
                 });
                 self.stage = Fem2dMountedVisualStage::Complete;
             }
-            Fem2dMountedVisualStage::Complete => return Ok(true),
+            Fem2dMountedVisualStage::Complete => return Ok(true)?,
         }
         Ok(self.stage == Fem2dMountedVisualStage::Complete)
     }
@@ -589,7 +589,7 @@ impl Fem2dMountedVisualBuild {
             return (false, 1, 0);
         }
         for owner in [&mut self.region_order, &mut self.assembly_order, &mut self.field_order] {
-            if owner.pop().is_some() {
+            if owner.pop()?.is_some() {
                 return (false, 1, 0);
             }
             let bytes = owner.capacity() * std::mem::size_of::<usize>();
@@ -660,7 +660,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
         let (x1, y1) = screen_2d(b.x, b.y);
         layers.push(json!({ "kind": "line", "id": format!("assembling-{id}"), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": "#a855f7" }));
     }
-    let mut fields = visual.fields.clone();
+    let mut fields = visual.fields.clone()?;
     fields.sort_by(|a, b| a.node_id.cmp(&b.node_id));
     for field in fields {
         let Some(node) = find_node_2d(&doc.nodes, &field.node_id) else { continue };
@@ -842,7 +842,7 @@ pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMa
 //#endregion 🔖️SharedDrawHelpers
 
 //#region 🔖️Render
-pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> BuiltNode {
+pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
@@ -858,7 +858,7 @@ pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> BuiltNode {
 }
 
 /// 👁️ Renders the model plus an optional replaceable worker-job progress snapshot.
-pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &FemCamera, progress: Option<&Fem2dMountedVisualLease>) -> BuiltNode {
+pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &FemCamera, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let layers_json = progress.map(Fem2dMountedVisualLease::layers_json).unwrap_or("[]").to_owned();
     crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }

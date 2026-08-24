@@ -703,9 +703,72 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     Ok(write_tiff(&doc))
 }
 
+/// ↩️ Applies the INDEPENDENTLY computed inverse of `spec` on top of `mutated`, so that
+/// `inverse(m) . m` must be the identity on the semantic projection. The inverse is reasoned from
+/// the PRE-mutation document (`original_input`) exactly the way `TiffMutation::inverse`
+/// (`../🧬️schema/🧬️mutations/🦀️component.rs`) reasons over `TiffSnapshot` — "restore `base`'s own
+/// value for the facet this kind touched" — reimplemented here over [`OracleDoc`] rather than
+/// called through that trait. `set-pixels` restores IFD 0 wholesale because this oracle's own
+/// forward `set-pixels` rewrites IFD 0's strip AND the five layout tags that describe it, so
+/// restoring only the raster would not be its inverse.
+#[cfg(feature = "oracles")]
+pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+    let kind = spec.str("kind");
+    if kind.is_empty() {
+        return Err("mutation spec carries no `kind`".to_string());
+    }
+    let params = spec.get("params");
+    let p_num = |key: &str| -> Option<f64> { params.and_then(|p| j_get(p, key)).and_then(j_num) };
+    let original = read_tiff(original_input)?;
+    if kind == "set-snapshot" {
+        return Ok(write_tiff(&original));
+    }
+    let mut doc = read_tiff(mutated)?;
+    match kind.as_str() {
+        "no-mutation" => {}
+        "set-byte-order" => doc.little_endian = original.little_endian,
+        "insert-ifd" => {
+            let index = (p_num("index").ok_or("tiff oracle: insert-ifd needs `index`")? as usize).min(original.ifds.len());
+            if index < doc.ifds.len() {
+                doc.ifds.remove(index);
+            }
+        }
+        "remove-ifd" => {
+            let index = p_num("index").ok_or("tiff oracle: remove-ifd needs `index`")? as usize;
+            if let Some(ifd) = original.ifds.get(index) {
+                let at = index.min(doc.ifds.len());
+                doc.ifds.insert(at, ifd.clone());
+            }
+        }
+        "set-tag" | "remove-tag" => {
+            let ifd_index = p_num("ifdIndex").ok_or("tiff oracle: set-tag/remove-tag inverse needs `ifdIndex`")? as usize;
+            let tag = p_num("tag").ok_or("tiff oracle: set-tag/remove-tag inverse needs `tag`")? as u16;
+            let restored = original.ifds.get(ifd_index).and_then(|ifd| ifd.get(tag)).cloned();
+            if let Some(ifd) = doc.ifds.get_mut(ifd_index) {
+                match restored {
+                    Some(existing) => ifd.set(tag, existing.value),
+                    None => ifd.entries.retain(|entry| entry.tag != tag),
+                }
+            }
+        }
+        "set-pixels" => {
+            let source = original.ifds.first().ok_or("tiff oracle: set-pixels inverse needs an original IFD 0")?.clone();
+            let target = doc.ifds.first_mut().ok_or("tiff oracle: set-pixels inverse needs a mutated IFD 0")?;
+            *target = source;
+        }
+        other => return Err(format!("mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),
+    }
+    Ok(write_tiff(&doc))
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 #[cfg(not(feature = "oracles"))]

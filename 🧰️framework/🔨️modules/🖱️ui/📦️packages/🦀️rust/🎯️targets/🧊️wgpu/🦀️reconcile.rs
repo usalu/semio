@@ -23,8 +23,35 @@ use std::collections::{HashMap, HashSet};
 use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{ui_control_to_node, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
+use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
 use crate::wgpu::IconName;
+use ui_contract::UiDocumentNodePage;
+
+//#region 📄️DocumentPageReconcile
+impl UiDocumentTree {
+    pub fn try_push_page(&mut self, page: UiDocumentNodePage, expected_index: usize) -> Result<(), UiDocumentPageRejection> {
+        let generation = page.generation();
+        let revision = page.revision();
+        let index = page.index();
+        let fault = if generation != self.generation {
+            Some(UiDocumentTreeFault::Generation)
+        } else if revision != self.revision {
+            Some(UiDocumentTreeFault::Revision)
+        } else if index != expected_index {
+            Some(UiDocumentTreeFault::PageOrder)
+        } else if self.nodes.get(&page.record().id).is_some() {
+            Some(UiDocumentTreeFault::DuplicateNode)
+        } else {
+            None
+        };
+        let record = page.into_record();
+        if let Some(fault) = fault {
+            return Err(UiDocumentPageRejection { fault, generation, revision, index, record });
+        }
+        self.nodes.try_insert(record).map(|_| ()).map_err(|record| UiDocumentPageRejection { fault: UiDocumentTreeFault::NodeCapacity, generation, revision, index, record })
+    }
+}
+//#endregion 📄️DocumentPageReconcile
 
 fn variant_discriminant(node: &UiNode) -> u32 {
     match node {
@@ -219,6 +246,7 @@ fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool {
     }
 }
 
+#[cfg(test)]
 impl UiTree {
     /// 🔁️ Applies an incoming declarative `UiNode` tree to this retained tree: keyed single-pass
     /// child matching, minimal-dirty-flag diffing of matched nodes, insertion of unmatched incoming

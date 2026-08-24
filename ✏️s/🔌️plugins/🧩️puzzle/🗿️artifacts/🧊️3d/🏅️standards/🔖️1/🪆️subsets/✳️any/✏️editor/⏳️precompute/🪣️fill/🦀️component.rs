@@ -3128,7 +3128,10 @@ impl FillBuilder {
                 if self.stage == FillJobStage::Complete {
                     return self.complete();
                 }
-                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: Vec::new(), applied_progress: self.applied_count as u64 })
+                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState),
+                    applied_progress: self.applied_count as u64,
+                })
             }
         }
     }
@@ -3225,7 +3228,10 @@ impl FillBuilder {
     }
 
     fn publish_preview(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        self.preview.sequence = context.next_preview_sequence();
+        self.preview.sequence = match context.next_preview_sequence() {
+            Ok(sequence) => sequence,
+            Err(_) => return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+        };
         self.preview.operation = self.operation.operation.0;
         self.preview.base_revision = self.operation.base_revision.0;
         self.preview.generation = self.operation.generation.0;
@@ -3238,7 +3244,10 @@ impl FillBuilder {
     }
 
     fn complete(&self) -> StepOutcome {
-        StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() })
+        StepOutcome::Complete(CommitCandidate {
+            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+        })
     }
 
     fn stage_label(&self) -> &'static str {

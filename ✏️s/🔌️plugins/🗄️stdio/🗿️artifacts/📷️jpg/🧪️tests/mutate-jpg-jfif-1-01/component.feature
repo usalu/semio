@@ -9,6 +9,18 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   artifact's own 🧫️fixtures/. Every scenario copies it into the case work directory before touching
   it; the committed fixture is never written to.
 
+  The @id-inverse and @id-identity-round-trip scenarios are laws the reference asserts on its own,
+  before any oracle/subject comparison: the reference applies the row's kind, applies its own
+  computed inverse on top of that real forward result, and requires the projection back within
+  semantic-jpg-mutate-v1's OWN declared per-number slack; the round trip additionally requires the
+  re-encoded bytes not to be bit-identical to the input. The slack is the profile's, not the
+  handler's, and it exists because JPEG is lossy: measured on this fixture (2275x2560 = 5 824 000
+  pixels), one reference decode/re-encode at quality 90 moves 413 pixels out of the darkest luma
+  bucket, the inverse round trip's second re-encode raises that to 805, and set-re-encode-quality's
+  pass through quality 50 moves 8841 out of the brightest — all far inside the slack, while the
+  set-pixels and set-snapshot rows displace ~5.6 million pixels, three orders of magnitude past it.
+  Exact per-bucket equality is a law JPEG does not have and is deliberately not asserted.
+
   This subset's own codec (../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs) is a
   complete from-scratch baseline JPEG codec, not a wrapper over the `image` reference crate, and it
   deliberately regenerates fresh Annex K DQT/DHT tables scaled by `re_encode_quality` on every encode

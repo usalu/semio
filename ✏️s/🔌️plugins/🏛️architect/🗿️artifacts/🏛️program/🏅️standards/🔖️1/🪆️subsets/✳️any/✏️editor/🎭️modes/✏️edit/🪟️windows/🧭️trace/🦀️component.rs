@@ -41,10 +41,10 @@ pub async fn definition() -> WindowKindDefinition {
 /// longer scope trace chain/impact to a selected entity — both sections needed a root id and are
 /// gone with it; the audit trail degrades to the document-wide feed (`audit_trail(program, None)`)
 /// instead of one scoped to a selection.
-pub async fn render(program: &ProgramSnapshot) -> UiNode {
+pub async fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let trail = audit_trail(program, None);
-    let audit_items: Vec<UiTreeItemNode> = trail.events.iter().take(12).enumerate().map(|(index, event)| tree_item(format!("architect-trace.audit.{index}"), format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name))).collect();
-    tree_node(vec![tree_section("architect-trace.audit", Some(format!("Audit Trail ({})", trail.events.len())), if audit_items.is_empty() { vec![tree_item("architect-trace.audit.empty", "(no events)")] } else { audit_items })])
+    let audit_items: Vec<UiTreeItemNode> = trail.events.iter().take(12).enumerate().map(|(index, event)| tree_item(format!("architect-trace.audit.{index}"), format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name))?).collect();
+    tree_node(vec![tree_section("architect-trace.audit", Some(format!("Audit Trail ({})", trail.events.len())), if audit_items.is_empty() { vec![tree_item("architect-trace.audit.empty", "(no events)")?] } else { audit_items })])
 }
 //#endregion 🔖️Render
 

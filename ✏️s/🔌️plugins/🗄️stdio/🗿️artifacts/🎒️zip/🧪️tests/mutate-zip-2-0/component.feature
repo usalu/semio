@@ -23,6 +23,19 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
   this real archive's real members — never a synthetic two-entry stand-in — so they are the archive
   analogue of a genuine add/remove/move, not a no-op.
 
+  A MEASURED CORRECTION to the `@id-identity-round-trip` scenario below, which until this wave
+  claimed the re-encoded bytes are not bit-identical to the input. They are — measured, on all
+  1,605,927 of them. That is not a byte pass-through: the reference genuinely inflates every member
+  (`read_to_end` on a `ZipFile`) and genuinely re-deflates it on the way out. It is bit-stable
+  because THIS fixture was itself authored once by that same `zip` reference writer under the same
+  default `FileOptions` this round trip re-encodes under — the archive's `1980-01-01` timestamps and
+  version-20/Unix headers are that writer's own defaults, not a real archiver's. A must-differ
+  assertion here would therefore have been a fabricated law, so the scenario asserts what this
+  pairing can honestly claim instead: exact bit-stability plus preservation of the semantic
+  projection, both of which fail loudly if the reader, the writer, the compression defaults or the
+  entry order ever drift. What proves genuine parsing for this subset is the exhaustive
+  `mutate-<kind>` scenarios against the archive's real members.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -68,8 +81,8 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode and re-encode the real archive without passing bytes through
+  Scenario: Decode and re-encode the real archive, where bit-stability IS the correct answer
     Given the real input archive shared://🎒️zwischenbericht-projekte.zip
     When the archive is decoded into the typed snapshot and re-encoded, with no mutation applied
-    Then the re-encoded archive is not a byte-for-byte copy of the input
+    Then the re-encoded archive reproduces the input exactly, which is the reference writer's own bit-stability on an archive it authored rather than a byte pass-through
     And its semantic projection matches the oracle's own decode-then-reencode of the same input

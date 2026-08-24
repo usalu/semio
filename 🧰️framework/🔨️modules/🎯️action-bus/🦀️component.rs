@@ -496,12 +496,53 @@ mod tests {
     use semio_framework_job::{allocate_operation_id, CommitCandidate, Generation, RevisionId};
 
     struct ImmediateJob {
-        output: Vec<u8>,
+        output: Option<Vec<u8>>,
+        writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
+        cursor: usize,
+        closing: bool,
     }
 
     impl InteractiveJob for ImmediateJob {
-        fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome {
-            StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: self.output.clone() })
+        fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+            let writer = self.writer.get_or_insert_with(|| semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput));
+            if !writer.write_slice_page(cx, self.output.as_deref().unwrap_or_default(), &mut self.cursor).unwrap_or(false) {
+                return StepOutcome::Yield;
+            }
+            self.output = None;
+            let output = self.writer.take().expect("immediate output writer").finish().unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput));
+            StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output })
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+            if let Some(writer) = self.writer.as_mut() {
+                writer.begin_close();
+            }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.begin_close();
+            if let Some(writer) = self.writer.as_mut() {
+                return match writer.close_step(maximum_items, maximum_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::JobPayloadCloseStep::Complete => {
+                        self.writer = None;
+                        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                    }
+                };
+            }
+            if self.output.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                self.output = None;
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.output.is_none() && self.writer.is_none()
         }
     }
 
@@ -531,7 +572,7 @@ mod tests {
         }
 
         fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-            Ok(ImmediateJob { output: format!("{payload}:ok").into_bytes() })
+            Ok(ImmediateJob { output: Some(format!("{payload}:ok").into_bytes()), writer: None, cursor: 0, closing: false })
         }
     }
 
@@ -624,14 +665,14 @@ mod tests {
         }
 
         fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-            Ok(ImmediateJob { output: payload.to_le_bytes().to_vec() })
+            Ok(ImmediateJob { output: Some(payload.to_le_bytes().to_vec()), writer: None, cursor: 0, closing: false })
         }
 
         fn create_job_from_wire(&mut self, _operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<Self::Job, ToolJobFactoryError> {
             let value = u64::from_le_bytes(payload.try_into().map_err(|_| ToolJobFactoryError::new("number wire payload must contain exactly eight bytes"))?);
             let mut output = value.to_le_bytes().to_vec();
             output.extend(checkpoint.unwrap_or_default());
-            Ok(ImmediateJob { output })
+            Ok(ImmediateJob { output: Some(output), writer: None, cursor: 0, closing: false })
         }
     }
 
@@ -673,7 +714,14 @@ mod tests {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
         let mut expected = 42u64.to_le_bytes().to_vec();
         expected.extend([7, 8]);
-        assert!(matches!(dispatch.job.step(&mut context), StepOutcome::Complete(candidate) if candidate.output == expected));
+        let StepOutcome::Complete(mut candidate) = dispatch.job.step(&mut context) else { panic!("wire job did not complete") };
+        assert_eq!(candidate.output.page(0), Some(expected.as_slice()));
+        assert_eq!(candidate.output.page_count(), 1);
+        assert_eq!(candidate.output.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete);
+        dispatch.job.begin_close();
+        while !dispatch.job.terminal_is_empty() {
+            let _ = dispatch.job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
         assert!(matches!(bus.dispatch_wire("number", "decode-wire", "wrong.schema", &42u64.to_le_bytes(), None, operation), Err(ToolDispatchError::Factory { .. })));
         assert!(matches!(bus.dispatch_wire("number", "decode-wire", "test.number.v1", &[0; 9], None, operation), Err(ToolDispatchError::RawWireLimit { actual: 9, maximum: 8, .. })));
     }

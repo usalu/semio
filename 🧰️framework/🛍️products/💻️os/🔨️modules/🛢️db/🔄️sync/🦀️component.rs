@@ -46,11 +46,53 @@ pub async fn encode_command_envelope(envelope: &protocol::MutationEnvelope) -> V
 /// `DbLimits::default().max_command_bytes` BEFORE decoding anything sized by it (mirrors
 /// `pack_core`'s stated invariant), then maps a decode failure to `DbError::Corrupt` rather than
 /// leaking `protocol::ProtocolError`.
-pub async fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::MutationEnvelope, DbError> {
+#[cfg(test)]
+async fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::MutationEnvelope, DbError> {
     check_len(bytes.len() as u64, DbLimits::default().max_command_bytes, "wal_command_envelope")?;
     let mut pos = 0usize;
     let envelope = protocol::decode_envelope(bytes, &mut pos).map_err(|error| DbError::Corrupt(format!("malformed wal command envelope: {error}")))?;
     Ok(envelope)
+}
+
+fn decode_retained_command_envelope(bytes: &db_wal::WalBytes, control: &mut db_wal::WalCursorControl) -> Result<protocol::MutationEnvelope, DbError> {
+    let mut cursor = bytes.cursor();
+    let mutation_id = protocol::MutationId(cursor.text(4_096, control)?);
+    let document_id = protocol::ArtifactId(cursor.text(4_096, control)?);
+    let actor = protocol::ActorId(cursor.text(4_096, control)?);
+    let count = cursor.varint(control)?;
+    check_len(count, 65_536, "sync wal envelope dependencies")?;
+    let mut dependencies = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        dependencies.push(protocol::MutationId(cursor.text(4_096, control)?));
+    }
+    let diff_schema = protocol::SchemaId(cursor.text(4_096, control)?);
+    let diff_payload = decode_protocol_field(&mut cursor, 256 * 1024 * 1024, control)?;
+    let inverse_schema = protocol::SchemaId(cursor.text(4_096, control)?);
+    let inverse_payload = decode_protocol_field(&mut cursor, 256 * 1024 * 1024, control)?;
+    let timestamp = protocol::HybridLogicalTimestamp { actor: cursor.varint(control)?, physical_ms: cursor.varint(control)?, logical: cursor.varint(control)? };
+    if cursor.remaining() != 0 {
+        return Err(DbError::Corrupt("sync wal command has trailing bytes".to_string()));
+    }
+    Ok(protocol::MutationEnvelope {
+        mutation_id,
+        document_id,
+        actor,
+        dependencies,
+        diff: protocol::ArtifactDiff { schema: diff_schema, payload: diff_payload },
+        inverse: protocol::InverseMutation { schema: inverse_schema, payload: inverse_payload },
+        timestamp,
+    })
+}
+
+fn decode_protocol_field(cursor: &mut db_wal::WalBytesCursor<'_>, maximum: u64, control: &mut db_wal::WalCursorControl) -> Result<Vec<u8>, DbError> {
+    let mut remaining = cursor.begin_field(maximum, control)?;
+    let mut output = Vec::with_capacity(remaining);
+    let mut fragment = [0u8; 4096];
+    while remaining != 0 {
+        let copied = cursor.read_field_fragment(&mut remaining, &mut fragment, control)?;
+        output.extend_from_slice(&fragment[..copied]);
+    }
+    Ok(output)
 }
 //#endregion 🔖️Codec
 
@@ -81,16 +123,19 @@ pub struct ArtifactSyncState {
 /// @emoji 🔁️ Replays `document`'s entire currently-retained WAL via `db_wal::replay_document` and
 /// derives its `ArtifactSyncState` — see the struct's doc for exactly how each field is derived.
 pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: ArtifactId) -> Result<ArtifactSyncState, DbError> {
-    let records = db_wal::replay_document(storage, &document).await?;
+    let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+    let mut records = db_wal::replay_document(storage, &document, control).await?;
+    let mut decode_control = db_wal::WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
     let mut commands = Vec::new();
     let mut command_digests: Vec<[u8; 32]> = Vec::new();
     let mut commit_seq = 0u64;
     let mut floor_head_seq = 0u64;
-    for record in &records {
-        match record {
+    while let Some(mut record) = records.next().await? {
+        match &mut record {
             db_wal::WalRecord::Command(bytes) => {
-                commands.push(decode_command_envelope(bytes).await?);
-                command_digests.push(*blake3::hash(bytes).as_bytes());
+                commands.push(decode_retained_command_envelope(bytes, &mut decode_control)?);
+                command_digests.push(bytes.hash());
             }
             db_wal::WalRecord::TxCommit { .. } => commit_seq += 1,
             // 🎯️ Overwritten on every occurrence rather than max()'d: `WalRecord`s replay in
@@ -98,7 +143,9 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
             db_wal::WalRecord::SnapshotPub { frontier, .. } => floor_head_seq = frontier.head_seq,
             _ => {}
         }
+        while record.close_step()? {}
     }
+    while records.close_step().await? {}
     let head_seq = commands.len() as u64;
     let chain_hash = fold_content_chain(&command_digests);
     let frontier = Frontier { document, head_seq, commit_seq, chain_hash, epoch: 0 };
@@ -227,11 +274,7 @@ pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl db_sto
         .await?
         .ok_or_else(|| DbError::Unavailable(format!("replica head_seq {replica_head_seq} is behind the retained WAL floor {} and no snapshot generation is available", state.floor_head_seq)))?;
     let pages = snapshots.read_generation(&state.frontier.document, generation).await?;
-    let mut hasher = blake3::Hasher::new();
-    for fragment in pages.fragments() {
-        hasher.update(fragment);
-    }
-    let pack_hash = *hasher.finalize().as_bytes();
+    let pack_hash = db_storage::db_io_hash_pages(&pages).await.0;
     Ok(BootstrapPlan::Snapshot { generation, pages, pack_hash })
 }
 //#endregion 🔖️Bootstrap
@@ -377,7 +420,6 @@ pub async fn handle_frontier_advertise(storage: &impl db_storage::WalStorage, do
     Ok(if missing.is_empty() { None } else { Some(commands_server_frame(&state, missing, origin).await) })
 }
 //#endregion 🔖️Hello
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -399,21 +441,33 @@ mod tests {
         }
     }
 
+    async fn submit_record(storage: &MemoryStorage, wal: &mut ArtifactWal, record: WalRecord, now_ms: u64) {
+        let mut records = db_wal::WalRecordBatch::new();
+        assert!(records.push(record).is_ok());
+        wal.submit(storage, &records, DurabilityClass::Fsync, now_ms).await.unwrap();
+        while records.close_step().unwrap() {}
+    }
+
+    async fn command_record(envelope: &protocol::MutationEnvelope) -> WalRecord {
+        let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+        let bytes = db_wal::WalBytes::try_admit(encode_command_envelope(envelope).await, 1024 * 1024, &mut control).await.unwrap();
+        WalRecord::Command(bytes)
+    }
+
     /// @emoji 🧸️ Creates `document`'s WAL in `storage` and submits `count` sample commands
     /// (ids `"op-0".."op-{count-1}"`), each `Fsync`-durable so replay sees them immediately.
     async fn seed_wal(storage: &MemoryStorage, document: &ArtifactId, count: u64) {
         let mut wal = db_actor::block_on(ArtifactWal::create(storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
         for i in 0..count {
             let envelope = sample_envelope(&format!("op-{i}"), i).await;
-            let bytes = encode_command_envelope(&envelope).await;
-            db_actor::block_on(wal.submit(storage, &[WalRecord::Command(bytes)], DurabilityClass::Fsync, i)).unwrap();
+            submit_record(storage, &mut wal, command_record(&envelope).await, i).await;
         }
     }
 
     /// @emoji 🧸️ Reopens `document`'s WAL and appends one `SnapshotPub` marker covering `frontier`.
     async fn publish_snapshot_marker(storage: &MemoryStorage, document: &ArtifactId, generation: u64, frontier: Frontier) {
         let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(storage, document.clone(), GroupCommitPolicy::default(), 1000)).unwrap();
-        db_actor::block_on(wal.submit(storage, &[WalRecord::SnapshotPub { generation, frontier }], DurabilityClass::Fsync, 1000)).unwrap();
+        submit_record(storage, &mut wal, WalRecord::SnapshotPub { generation, frontier }, 1000).await;
     }
     //#endregion 🧸️Fixtures
 
@@ -434,7 +488,7 @@ mod tests {
     //#region 🔖️ReplicaState
     #[semio_framework_async_macros::async_test]
     async fn replay_sync_state_derives_frontier_and_ordered_commands() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
 
@@ -449,7 +503,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn replay_sync_state_on_empty_document_is_genesis() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 0).await;
 
@@ -461,7 +515,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn replay_sync_state_tracks_the_latest_snapshot_pub_as_the_floor() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [1u8; 32], epoch: 0 };
@@ -488,7 +542,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn frontier_summary_bridges_round_trip() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -510,7 +564,7 @@ mod tests {
     //#region 🔖️MissingCommands
     #[semio_framework_async_macros::async_test]
     async fn missing_commands_transfer_round_trip_from_genesis() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 4).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -526,7 +580,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn missing_commands_transfer_round_trip_for_a_partially_caught_up_replica() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
         let first_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -537,7 +591,7 @@ mod tests {
             let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100)).unwrap();
             for i in 3..6u64 {
                 let envelope = sample_envelope(&format!("op-{i}"), i).await;
-                db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope).await)], DurabilityClass::Fsync, i)).unwrap();
+                submit_record(&storage, &mut wal, command_record(&envelope).await, i).await;
             }
         }
 
@@ -550,7 +604,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn missing_commands_rejects_document_mismatch_and_a_replica_ahead_of_server() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -564,7 +618,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn missing_commands_rejects_a_replica_behind_the_retained_floor() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 3, commit_seq: 3, chain_hash: [2u8; 32], epoch: 0 };
@@ -579,7 +633,7 @@ mod tests {
     //#region 🔖️Bootstrap
     #[semio_framework_async_macros::async_test]
     async fn decide_bootstrap_serves_tail_for_a_fresh_replica_within_the_floor() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -590,7 +644,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decide_bootstrap_reports_none_for_an_already_caught_up_replica() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -601,7 +655,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decide_bootstrap_serves_snapshot_when_a_generation_is_available_below_the_floor() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
@@ -623,7 +677,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decide_bootstrap_reports_unavailable_when_below_floor_with_no_snapshot() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
@@ -648,7 +702,7 @@ mod tests {
     //#region 🔖️Hello
     #[semio_framework_async_macros::async_test]
     async fn handle_hello_bootstraps_a_fresh_replica_via_tail_and_issues_a_resume_token() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
         let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
@@ -669,7 +723,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn handle_hello_reports_no_follow_up_for_an_already_caught_up_replica() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -686,7 +740,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn handle_hello_chunks_a_snapshot_larger_than_the_requested_chunk_size() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 4).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
@@ -709,7 +763,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn handle_hello_rejects_zero_snapshot_chunk_bytes() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 1).await;
         let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
@@ -718,7 +772,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn handle_frontier_advertise_relays_missing_commands_and_none_when_caught_up() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 2).await;
         let first_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -727,7 +781,7 @@ mod tests {
         {
             let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100)).unwrap();
             let envelope = sample_envelope("op-2", 2).await;
-            db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope).await)], DurabilityClass::Fsync, 100)).unwrap();
+            submit_record(&storage, &mut wal, command_record(&envelope).await, 100).await;
         }
 
         let frame = db_actor::block_on(handle_frontier_advertise(&storage, document.clone(), &replica_summary, protocol::ActorId("semio_hub".to_string()))).unwrap();

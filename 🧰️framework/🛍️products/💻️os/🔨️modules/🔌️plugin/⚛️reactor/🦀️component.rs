@@ -47,7 +47,7 @@ use semio_framework_ui_contract as ui_contract;
 /// `pub mod patches;` at this file's top.
 use semio_framework_ui_runtime::PresenceHub;
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-use semio_framework_ui_runtime::{is_stale_intent, DEFAULT_REVISION_TOLERANCE};
+use semio_framework_ui_runtime::{is_stale_intent, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch, DEFAULT_REVISION_TOLERANCE};
 use std::cell::{Cell, RefCell};
 // 🧵️ Turn-local command/intent grouping and the pre-admitted task-resume ring use these
 // collections; all identity and close authority is held by fixed direct registries below.
@@ -427,15 +427,20 @@ impl FixedTimerRegistry {
         if !self.allocation_admitted || self.slots.get(index).is_some() {
             return Err(id);
         }
+        let Some(live) = self.live.checked_add(1).filter(|live| *live <= REACTOR_TIMER_SLOTS) else { return Err(id) };
         let previous = self.tail;
         self.slots.insert(index, TimerEntry { id, instance, previous, next: None }).map_err(|entry| entry.id)?;
         if let Some(previous) = previous {
-            self.slots.get_mut(previous).expect("fixed timer tail authority").next = Some(index);
+            let Some(tail) = self.slots.get_mut(previous) else {
+                let _ = self.slots.take(index);
+                return Err(id);
+            };
+            tail.next = Some(index);
         } else {
             self.head = Some(index);
         }
         self.tail = Some(index);
-        self.live += 1;
+        self.live = live;
         Ok(())
     }
 
@@ -444,18 +449,25 @@ impl FixedTimerRegistry {
         if !self.slots.get(index).is_some_and(|entry| entry.id == id) {
             return false;
         }
-        let entry = self.slots.take(index).expect("checked exact fixed timer authority");
+        let Some(live) = self.live.checked_sub(1) else { return false };
+        let Some(entry_ref) = self.slots.get(index) else { return false };
+        if entry_ref.previous.is_some_and(|previous| self.slots.get(previous).is_none()) || entry_ref.next.is_some_and(|next| self.slots.get(next).is_none()) {
+            return false;
+        }
+        let Some(entry) = self.slots.take(index) else { return false };
         if let Some(previous) = entry.previous {
-            self.slots.get_mut(previous).expect("fixed timer predecessor authority").next = entry.next;
+            let Some(predecessor) = self.slots.get_mut(previous) else { return false };
+            predecessor.next = entry.next;
         } else {
             self.head = entry.next;
         }
         if let Some(next) = entry.next {
-            self.slots.get_mut(next).expect("fixed timer successor authority").previous = entry.previous;
+            let Some(successor) = self.slots.get_mut(next) else { return false };
+            successor.previous = entry.previous;
         } else {
             self.tail = entry.previous;
         }
-        self.live = self.live.saturating_sub(1);
+        self.live = live;
         true
     }
 
@@ -967,7 +979,7 @@ mod wit_bridge {
     }
 
     thread_local! {
-        static COMMAND_INGRESS: RefCell<Option<CommandIngressOwner>> = const { RefCell::new(None) };
+        static COMMAND_INGRESS: RefCell<[Option<CommandIngressOwner>; 2]> = const { RefCell::new([None, None]) };
     }
 
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: the raw WIT event, aliased for `poll`'s
@@ -1031,6 +1043,7 @@ mod wit_bridge {
             JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().close_instance(*numeric_instance));
             begin_reactor_close(*numeric_instance)?;
             PATCHES.with(|patches| patches.begin_close_instance(*numeric_instance));
+            PENDING_PATCHES.with(|pending| pending.borrow_mut().begin_close_instance(*numeric_instance));
             if let Err(error) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_destroy_app(runtime, *numeric_instance)) {
                 abort_reactor_close(*numeric_instance);
                 return Err(error);
@@ -1039,6 +1052,14 @@ mod wit_bridge {
         let _ = step_reactor_close()?;
         PATCHES.with(|patches| {
             patches.close_step();
+        });
+        let _ = semio_framework_ui_runtime::close_surface_reconcile_handback_one();
+        let _ = ui_contract::close_ui_document_page_one();
+        let _ = ui_contract::close_ui_patch_owner_one();
+        let _ = ui_contract::close_ui_value_page_one();
+        let _ = semio_framework::kernel::close_ui_turn_patch_owner_one();
+        PENDING_PATCHES.with(|pending| {
+            pending.borrow_mut().close_step();
         });
         let _ = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
         let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
@@ -1098,7 +1119,9 @@ mod wit_bridge {
                 }
                 Event::SurfaceHidden { .. } | Event::SurfaceResized { .. } => {}
                 Event::PatchAck { surface, revision } => {
-                    PATCHES.with(|patches| patches.mark_ack(&surface, revision));
+                    PENDING_PATCHES.with(|pending| {
+                        pending.borrow_mut().apply_published_ack(&surface, revision, |ack| PATCHES.with(|patches| patches.mark_published_ack(ack)));
+                    });
                 }
                 Event::PatchRejected { surface, .. } => {
                     PATCHES.with(|patches| patches.mark_rejected(&surface));
@@ -1153,7 +1176,14 @@ mod wit_bridge {
 
         let mut effects: Vec<Effect> = Vec::new();
         let mut command_ingress = semio_framework::kernel::CommandIngressStatus::Idle;
-        let mut retained = COMMAND_INGRESS.with(|ingress| ingress.borrow_mut().take());
+        let (mut retained, retained_slot) = COMMAND_INGRESS.with(|ingress| {
+            let mut ingress = ingress.borrow_mut();
+            if ingress[0].is_some() {
+                (ingress[0].take(), 0)
+            } else {
+                (ingress[1].take(), 1)
+            }
+        });
         retained = match retained.take() {
             Some(CommandIngressOwner::ReservedPresence { cursor, .. }) | Some(CommandIngressOwner::PendingPresencePage { cursor, .. }) if close_instances.contains(&cursor.instance) => {
                 command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-cancelled-by-close".to_vec() };
@@ -1241,16 +1271,18 @@ mod wit_bridge {
                             let instance = cursor.instance;
                             if output.presence_terminal == Some(cursor.seq) {
                                 retained = None;
-                                let mut terminal = cursor;
-                                terminal.page_index = terminal.page_index.saturating_add(1);
-                                command_ingress = match output.presence_terminal_fault.as_ref() {
-                                    Some(fault) => semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault: fault.clone() },
-                                    None => semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal),
+                                command_ingress = match advance_command_cursor(cursor) {
+                                    Ok(terminal) => match output.presence_terminal_fault.as_ref() {
+                                        Some(fault) => semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault: fault.clone() },
+                                        None => semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal),
+                                    },
+                                    Err(cursor) => semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-index-exhausted".to_vec() },
                                 };
-                            } else if cursor.page_index + 1 == cursor.page_count {
-                                let mut pending = cursor.clone();
-                                pending.page_index = pending.page_index.saturating_add(1);
-                                command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(pending);
+                            } else if cursor.page_index.checked_add(1) == Some(cursor.page_count) {
+                                command_ingress = match advance_command_cursor(cursor.clone()) {
+                                    Ok(pending) => semio_framework::kernel::CommandIngressStatus::CommandPending(pending),
+                                    Err(cursor) => semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-index-exhausted".to_vec() },
+                                };
                             }
                             route_exchange_output(instance, output, &mut effects);
                         }
@@ -1263,28 +1295,35 @@ mod wit_bridge {
             }
         }
         if let Some(CommandIngressOwner::Terminal { cursor }) = retained.take() {
-            let mut terminal = cursor;
-            terminal.page_index = terminal.page_index.saturating_add(1);
-            command_ingress = semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal);
+            command_ingress = match advance_command_cursor(cursor) {
+                Ok(terminal) => semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal),
+                Err(cursor) => semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-index-exhausted".to_vec() },
+            };
         }
-        if let Some(CommandIngressOwner::Generic { cursor, .. }) = retained.as_ref() {
-            let cursor = cursor.clone();
-            let Some(CommandIngressOwner::Generic { command, .. }) = retained.take() else { unreachable!() };
-            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command)))) {
-                Ok(mut output) => {
-                    let mut terminal = cursor.clone();
-                    terminal.page_index = terminal.page_index.saturating_add(1);
-                    if let Some((_, command)) = output.retry_command.take() {
-                        retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
-                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(terminal);
-                    } else if let Some(fault) = output.command_terminal_fault.as_ref() {
-                        command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault: fault.clone() };
-                    } else {
-                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal);
+        if let Some(owner) = retained.take() {
+            match owner {
+                CommandIngressOwner::Generic { cursor, command } => {
+                    match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command)))) {
+                        Ok(mut output) => {
+                            match advance_command_cursor(cursor.clone()) {
+                                Ok(terminal) => {
+                                    if let Some((_, command)) = output.retry_command.take() {
+                                        retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
+                                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(terminal);
+                                    } else if let Some(fault) = output.command_terminal_fault.as_ref() {
+                                        command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault: fault.clone() };
+                                    } else {
+                                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal);
+                                    }
+                                }
+                                Err(cursor) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-index-exhausted".to_vec() },
+                            }
+                            route_exchange_output(cursor.instance, output, &mut effects);
+                        }
+                        Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
                     }
-                    route_exchange_output(cursor.instance, output, &mut effects);
                 }
-                Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                owner => retained = Some(owner),
             }
         }
         if let Some((cursor, page)) = command_page {
@@ -1304,7 +1343,7 @@ mod wit_bridge {
                         || cursor.item_count != 0
                         || cursor.metadata != 0
                         || (cursor.page_index == 0 && cursor.kind != page.as_slice()[0])
-                        || (cursor.page_index + 1 < cursor.page_count && page.len() != semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)))
+                        || (cursor.page_index.checked_add(1).is_some_and(|next| next < cursor.page_count) && page.len() != semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)))
             {
                 command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-invalid".to_vec() };
             } else if retained.as_ref().is_some_and(|owner| match owner {
@@ -1367,10 +1406,39 @@ mod wit_bridge {
             } else if cursor.page_index == 0 && retained.is_none() {
                 match semio_framework::kernel::CommandPageSet::try_new() {
                     Ok(mut pages) => {
-                        pages.try_push(page).expect("one host-validated command page fits the fixed page set");
-                        if cursor.page_count == 1 {
-                            let command = semio_framework::kernel::PagedCommand::try_from_pages(pages).expect("host-validated generic pages preserve their fixed shape");
-                            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
+                        match pages.try_push(page) {
+                            Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                            Ok(()) if cursor.page_count == 1 => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
+                                Ok(command) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
+                                    Ok(mut output) => {
+                                        if let Some((_, command)) = output.retry_command.take() {
+                                            retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
+                                        } else {
+                                            retained = Some(CommandIngressOwner::Terminal { cursor: cursor.clone() });
+                                        }
+                                        command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
+                                        route_exchange_output(cursor.instance, output, &mut effects);
+                                    }
+                                    Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                                },
+                                Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                            },
+                            Ok(()) => {
+                                retained = Some(CommandIngressOwner::GenericAssembly { cursor: cursor.clone(), pages });
+                                command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
+                            }
+                        }
+                    }
+                    Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                }
+            } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = retained.take() {
+                if cursor.page_index as usize != pages.len() {
+                    command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-order".to_vec() };
+                } else {
+                    match pages.try_push(page) {
+                        Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                        Ok(()) if cursor.page_index.checked_add(1) == Some(cursor.page_count) => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
+                            Ok(command) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
                                 Ok(mut output) => {
                                     if let Some((_, command)) = output.retry_command.take() {
                                         retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -1381,47 +1449,23 @@ mod wit_bridge {
                                     route_exchange_output(cursor.instance, output, &mut effects);
                                 }
                                 Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                            },
+                            Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                        },
+                        Ok(()) => {
+                            retained = Some(CommandIngressOwner::GenericAssembly { cursor: active, pages });
+                            if let Some(CommandIngressOwner::GenericAssembly { cursor: active, .. }) = retained.as_mut() {
+                                active.page_index = cursor.page_index;
                             }
-                        } else {
-                            retained = Some(CommandIngressOwner::GenericAssembly { cursor: cursor.clone(), pages });
                             command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
                         }
-                    }
-                    Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
-                }
-            } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = retained.take() {
-                if cursor.page_index as usize != pages.len() {
-                    command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-order".to_vec() };
-                } else {
-                    pages.try_push(page).expect("host-validated generic page count fits its fixed page set");
-                    if cursor.page_index + 1 == cursor.page_count {
-                        let command = semio_framework::kernel::PagedCommand::try_from_pages(pages).expect("host-validated generic pages preserve their fixed shape");
-                        match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
-                            Ok(mut output) => {
-                                if let Some((_, command)) = output.retry_command.take() {
-                                    retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
-                                } else {
-                                    retained = Some(CommandIngressOwner::Terminal { cursor: cursor.clone() });
-                                }
-                                command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
-                                route_exchange_output(cursor.instance, output, &mut effects);
-                            }
-                            Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
-                        }
-                    } else {
-                        retained = Some(CommandIngressOwner::GenericAssembly { cursor: active, pages });
-                        if let Some(CommandIngressOwner::GenericAssembly { cursor: active, .. }) = retained.as_mut() {
-                            active.page_index = cursor.page_index;
-                        }
-                        command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
                     }
                 }
             }
         }
         if let Some(retained) = retained {
             COMMAND_INGRESS.with(|ingress| {
-                let previous = ingress.borrow_mut().replace(retained);
-                assert!(previous.is_none(), "command ingress has one exact owner");
+                ingress.borrow_mut()[retained_slot] = Some(retained);
             });
         }
 
@@ -1456,12 +1500,25 @@ mod wit_bridge {
             // 🌳️ Deduped per instance — several intents on the same surface this turn must not queue a
             // redundant re-render (the second `diff()` would return `None` anyway, but there is no reason
             // to pay for it).
-            let mut surfaces: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+            let mut surfaces: semio_framework_ui_contract::UiFixedList<semio_framework_ui_contract::UiText> = semio_framework_ui_contract::UiFixedList::default();
             for intent in &intents {
-                surfaces.insert(intent.surface.0.clone());
+                if surfaces.iter().any(|surface| surface == &intent.surface.0) {
+                    continue;
+                }
+                if surfaces.try_push(intent.surface.0.clone()).is_err() {
+                    effects.push(Effect::SendMessage {
+                        target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
+                        payload: dsl::encode_fault_bytes(&semio_framework::Fault::new(
+                            semio_framework::FaultOrigin::Os,
+                            semio_framework::FaultCode::new("ui.surface-capacity"),
+                            "dirty render surface capacity exceeded",
+                        )),
+                    });
+                    break;
+                }
             }
             for surface in surfaces {
-                dirty_render.push((instance, surface));
+                dirty_render.push((instance, surface.to_string()));
             }
         }
 
@@ -1473,7 +1530,7 @@ mod wit_bridge {
         for (instance, surface) in dirty_render {
             PATCHES.with(|patches| match patches.reserve_mounted(surface) {
                 Ok(grant) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(runtime, instance, "window", "{}")) {
-                    Ok(tree) => grant.commit(tree),
+                    Ok(tree) => grant.commit_source(tree.root),
                     Err(_) => grant.cancel(),
                 },
                 Err(surface) => {
@@ -1485,22 +1542,32 @@ mod wit_bridge {
             // into `PRESENCE` right after its render — the SAME turn that presented the tree also records
             // its presence. NEVER touches `PENDING_PATCHES`/the document store — the whole point of this
             // separate channel (see `PresenceHub`'s own doc: a mouse-move must never bump a revision).
-            for update in semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_take_presence(runtime, instance)) {
-                PRESENCE.with(|hub| {
-                    let mut hub = hub.borrow_mut();
-                    hub.record_own(update.surface.clone(), update.node_key.clone(), update.own, update.ttl_ms);
-                    for peer in update.peers {
-                        hub.record_peer(update.surface.clone(), update.node_key.clone(), peer, update.ttl_ms, now_ms);
+            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_take_presence(runtime, instance)) {
+                Ok(updates) => {
+                    for update in updates {
+                        PRESENCE.with(|hub| {
+                            let mut hub = hub.borrow_mut();
+                            hub.record_own(update.surface.clone(), update.node_key.clone(), update.own, update.ttl_ms);
+                            for peer in update.peers {
+                                hub.record_peer(update.surface.clone(), update.node_key.clone(), peer, update.ttl_ms, now_ms);
+                            }
+                        });
                     }
-                });
+                }
+                Err(fault) => effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) }),
             }
         }
         let reconcile_work = PATCHES.with(|patches| {
             let more = patches.drive_one();
-            if let Some(patch) = patches.take_ready_patch() {
-                PENDING_PATCHES.with(|pending| pending.borrow_mut().push(patch));
+            let can_publish = PENDING_PATCHES.with(|pending| pending.borrow().has_capacity());
+            if can_publish {
+                if let Some(patch) = patches.take_ready_patch() {
+                    if let Err(patch) = PENDING_PATCHES.with(|pending| pending.borrow_mut().push_reconcile(patch)) {
+                        let _ = patches.return_ready_patch(patch);
+                    }
+                }
             }
-            more || patches.has_work()
+            more || patches.has_work() || PENDING_PATCHES.with(|pending| pending.borrow().has_unpublished())
         });
 
         // 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
@@ -1518,9 +1585,18 @@ mod wit_bridge {
         // executor may have fresh ready work by the time this returns — folded into `more_work` below
         // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
         let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
-        let more_work = more_work || reconcile_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || COMMAND_INGRESS.with(|ingress| ingress.borrow().is_some());
+        let more_work = more_work
+            || reconcile_work
+            || resumes_remain
+            || REACTOR_EXECUTOR.with(|executor| executor.has_pending())
+            || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
 
-        let ui_patches: Vec<UiPatch> = PENDING_PATCHES.with(|pending| std::mem::take(&mut *pending.borrow_mut()));
+        let mut ui_patches = semio_framework::kernel::UiTurnPatches::default();
+        if let Some(patch) = PENDING_PATCHES.with(|pending| pending.borrow_mut().take_one()) {
+            if let Err(patch) = ui_patches.try_push_ui_patch(patch) {
+                PENDING_PATCHES.with(|pending| pending.borrow_mut().hand_back_turn(patch));
+            }
+        }
         // 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
         // the last flush into one coalesced `PresenceUpdate` each (free burst coalescing: a hover storm
         // between polls still costs exactly one update per `(surface, node_key)`).
@@ -1563,8 +1639,194 @@ mod wit_bridge {
             && left.metadata == right.metadata
     }
 
+    fn advance_command_cursor(mut cursor: semio_framework::kernel::CommandPageCursor) -> Result<semio_framework::kernel::CommandPageCursor, semio_framework::kernel::CommandPageCursor> {
+        let Some(page_index) = cursor.page_index.checked_add(1) else { return Err(cursor) };
+        cursor.page_index = page_index;
+        Ok(cursor)
+    }
+
+    const PENDING_PATCH_CAPACITY: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_ADMISSION_SLOTS;
+
+    enum PendingPatchOwner {
+        Reconcile(SurfaceReconcileReadyPatch),
+        External(Option<UiPatch>),
+        Published(SurfaceReconcilePublishedPatch),
+    }
+
+    struct PendingPatchSlot {
+        sequence: u64,
+        owner: PendingPatchOwner,
+    }
+
+    struct PendingPatchAuthority {
+        slots: [Option<PendingPatchSlot>; PENDING_PATCH_CAPACITY],
+        closing_instances: [Option<u32>; PENDING_PATCH_CAPACITY],
+        turn_handback: Option<UiPatch>,
+        next_sequence: u64,
+        exhausted: bool,
+    }
+
+    impl PendingPatchAuthority {
+        fn new() -> Self {
+            Self { slots: std::array::from_fn(|_| None), closing_instances: [None; PENDING_PATCH_CAPACITY], turn_handback: None, next_sequence: 0, exhausted: false }
+        }
+
+        fn reserve_sequence(&mut self) -> Option<u64> {
+            if self.exhausted || self.slots.iter().all(Option::is_some) {
+                return None;
+            }
+            let sequence = self.next_sequence.checked_add(1)?;
+            self.next_sequence = sequence;
+            self.exhausted = sequence == u64::MAX;
+            Some(sequence)
+        }
+
+        fn has_capacity(&self) -> bool {
+            !self.exhausted && self.slots.iter().any(Option::is_none)
+        }
+
+        fn push_reconcile(&mut self, owner: SurfaceReconcileReadyPatch) -> Result<(), SurfaceReconcileReadyPatch> {
+            let Some(index) = self.slots.iter().position(Option::is_none) else { return Err(owner) };
+            let Some(sequence) = self.reserve_sequence() else { return Err(owner) };
+            self.slots[index] = Some(PendingPatchSlot { sequence, owner: PendingPatchOwner::Reconcile(owner) });
+            Ok(())
+        }
+
+        fn push_external(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
+            let Some(index) = self.slots.iter().position(Option::is_none) else { return Err(patch) };
+            let Some(sequence) = self.reserve_sequence() else { return Err(patch) };
+            self.slots[index] = Some(PendingPatchSlot { sequence, owner: PendingPatchOwner::External(Some(patch)) });
+            Ok(())
+        }
+
+        fn take_one(&mut self) -> Option<UiPatch> {
+            if let Some(patch) = self.turn_handback.take() {
+                return Some(patch);
+            }
+            let index = self
+                .slots
+                .iter()
+                .enumerate()
+                .filter(|(_, slot)| slot.as_ref().is_some_and(|slot| !matches!(&slot.owner, PendingPatchOwner::Published(_))))
+                .min_by_key(|(_, slot)| slot.as_ref().map(|slot| slot.sequence))
+                .map(|(index, _)| index)?;
+            let slot = self.slots[index].take()?;
+            match slot.owner {
+                PendingPatchOwner::Reconcile(owner) => {
+                    let (patch, published) = owner.publish()?;
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner: PendingPatchOwner::Published(published) });
+                    Some(patch)
+                }
+                PendingPatchOwner::External(mut patch) => patch.take(),
+                PendingPatchOwner::Published(published) => {
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner: PendingPatchOwner::Published(published) });
+                    None
+                }
+            }
+        }
+
+        fn hand_back_turn(&mut self, patch: UiPatch) {
+            self.turn_handback = Some(patch);
+        }
+
+        fn apply_published_ack(
+            &mut self,
+            surface: &str,
+            revision: u64,
+            advance: impl FnOnce(semio_framework_ui_runtime::SurfaceReconcilePublishedAck) -> Result<(), semio_framework_ui_runtime::SurfaceReconcilePublishedAck>,
+        ) -> bool {
+            let Some(index) = self.slots.iter().position(|slot| {
+                slot.as_ref().is_some_and(|slot| matches!(&slot.owner, PendingPatchOwner::Published(owner) if owner.matches(surface, revision)))
+            }) else {
+                return false;
+            };
+            let Some(slot) = self.slots[index].take() else { return false };
+            let published = match slot.owner {
+                PendingPatchOwner::Published(owner) => owner,
+                owner => {
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner });
+                    return false;
+                }
+            };
+            let ack = match published.acknowledge(surface, revision) {
+                Ok(ack) => ack,
+                Err(published) => {
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner: PendingPatchOwner::Published(published) });
+                    return false;
+                }
+            };
+            match advance(ack) {
+                Ok(()) => true,
+                Err(ack) => {
+                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, owner: PendingPatchOwner::Published(ack.into_published()) });
+                    false
+                }
+            }
+        }
+
+        fn close_instance_one(&mut self, instance: u32) -> bool {
+            if self.turn_handback.as_ref().and_then(|patch| parse_surface_instance(&patch.surface.0)) == Some(instance) {
+                if self.turn_handback.as_mut().is_some_and(|patch| patch.ops.pop().is_some()) {
+                    return false;
+                }
+                self.turn_handback.take();
+                return false;
+            }
+            let Some(index) = self.slots.iter().position(|slot| {
+                slot.as_ref().is_some_and(|slot| match &slot.owner {
+                    PendingPatchOwner::Reconcile(owner) => owner.surface().and_then(|surface| parse_surface_instance(&surface.0)) == Some(instance),
+                    PendingPatchOwner::External(patch) => patch.as_ref().and_then(|patch| parse_surface_instance(&patch.surface.0)) == Some(instance),
+                    PendingPatchOwner::Published(owner) => parse_surface_instance(&owner.surface().0) == Some(instance),
+                })
+            }) else {
+                return true;
+            };
+            let complete = match self.slots[index].as_mut().map(|slot| &mut slot.owner) {
+                Some(PendingPatchOwner::Reconcile(owner)) => owner.close_step(),
+                Some(PendingPatchOwner::External(patch)) => {
+                    if patch.as_mut().is_some_and(|patch| patch.ops.pop().is_some()) {
+                        false
+                    } else {
+                        patch.take();
+                        true
+                    }
+                }
+                Some(PendingPatchOwner::Published(_)) => true,
+                None => true,
+            };
+            if complete {
+                self.slots[index] = None;
+            }
+            false
+        }
+
+        fn begin_close_instance(&mut self, instance: u32) {
+            if self.closing_instances.iter().flatten().any(|closing| *closing == instance) {
+                return;
+            }
+            if let Some(slot) = self.closing_instances.iter_mut().find(|slot| slot.is_none()) {
+                *slot = Some(instance);
+            }
+        }
+
+        fn close_step(&mut self) -> bool {
+            let Some(index) = self.closing_instances.iter().position(Option::is_some) else { return true };
+            let Some(instance) = self.closing_instances[index] else { return false };
+            if self.close_instance_one(instance) {
+                self.closing_instances[index] = None;
+            }
+            false
+        }
+
+        fn has_unpublished(&self) -> bool {
+            self.turn_handback.is_some()
+                || self.slots.iter().flatten().any(|slot| !matches!(&slot.owner, PendingPatchOwner::Published(_)))
+                || self.closing_instances.iter().any(Option::is_some)
+        }
+    }
+
     thread_local! {
-        static PENDING_PATCHES: RefCell<Vec<UiPatch>> = const { RefCell::new(Vec::new()) };
+        static PENDING_PATCHES: RefCell<PendingPatchAuthority> = RefCell::new(PendingPatchAuthority::new());
     }
 
     /// 🪪️ Surfaces are named `"<instance>:<body-key>"` in this wave (no dedicated `surface-ref`
@@ -1599,7 +1861,13 @@ mod wit_bridge {
             protocol::AppFrame::UiPatch { surface, kind: _, revision, base_revision, ops, .. } => {
                 let Ok(ops_value) = store::pack_rt::decode_wire_value(&ops) else { return };
                 let Ok(ops) = dsl::from_dsl_value::<Vec<UiPatchOp>>(ops_value) else { return };
-                PENDING_PATCHES.with(|pending| pending.borrow_mut().push(UiPatch { surface: surface.into(), base_revision: ui_contract::UiRevision(base_revision), revision: ui_contract::UiRevision(revision), ops }));
+                let patch = UiPatch { surface: surface.into(), base_revision: ui_contract::UiRevision(base_revision), revision: ui_contract::UiRevision(revision), ops };
+                if let Err(patch) = PENDING_PATCHES.with(|pending| pending.borrow_mut().push_external(patch)) {
+                    effects.push(Effect::SendMessage {
+                        target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
+                        payload: format!("patch-capacity-refused:{}:{}", patch.surface.0, patch.revision.0).into_bytes(),
+                    });
+                }
             }
             protocol::AppFrame::UiSnapshotEnd { .. } => {}
             other => {

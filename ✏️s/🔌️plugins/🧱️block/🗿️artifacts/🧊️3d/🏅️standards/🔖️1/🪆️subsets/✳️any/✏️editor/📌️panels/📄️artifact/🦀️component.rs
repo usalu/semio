@@ -27,19 +27,19 @@ pub async fn definition() -> PanelTabDefinition {
 /// `surface:{id}`/`vortex:{id}` targets `Block3dPlayApp::interaction_topology` declares for the
 /// `vortex` domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item click
-/// action is declared here anymore (clicks are translated into `interactionSelect` generically).
-pub async fn render(definition: &Block3dSnapshot, labels: &Block3dLabels) -> UiNode {
-    let builder = PanelTreeBuilder::new("block3d-play-document");
+/// action is declared here anymore (clicks are translated into `interactionSelect` generically)?.
+pub async fn render(definition: &Block3dSnapshot, labels: &Block3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let builder = PanelTreeBuilder::new("block3d-play-document")?;
     let representation_items: Vec<UiTreeItemNode> = definition
         .representations
         .iter()
-        .map(|representation| UiTreeItemNode { icon_id: Some("box".into()), ..tree_item_desc(format!("surface:{}", representation.id), Label::data(representation.name.clone()), representation.mesh_url.clone()) })
+        .map(|representation| UiTreeItemNode { icon_id: Some("box".into()), ..tree_item_desc(format!("surface:{}", representation.id), Label::data(representation.name.clone()), representation.mesh_url.clone())? })
         .collect();
-    let vortex_items: Vec<UiTreeItemNode> = definition.vortices.iter().map(|vortex| UiTreeItemNode { icon_id: Some("circle-dot".into()), ..tree_item_desc(format!("vortex:{}", vortex.id), Label::data(vortex.vortex_kind.clone()), None) }).collect();
+    let vortex_items: Vec<UiTreeItemNode> = definition.vortices.iter().map(|vortex| UiTreeItemNode { icon_id: Some("circle-dot".into()), ..tree_item_desc(format!("vortex:{}", vortex.id), Label::data(vortex.vortex_kind.clone()), None)? }).collect();
     builder
-        .section_or_placeholder("block3d-play-document.representations", Some(labels.representations.into()), true, representation_items, labels.no_representations)
-        .section_or_placeholder("block3d-play-document.vortices", Some(labels.vortices.into()), true, vortex_items, labels.no_vortices)
-        .interaction_domain(BLOCK3D_INTERACTION_VORTEX)
+        .section_or_placeholder("block3d-play-document.representations", Some(labels.representations.into()), true, representation_items, labels.no_representations)?
+        .section_or_placeholder("block3d-play-document.vortices", Some(labels.vortices.into()), true, vortex_items, labels.no_vortices)?
+        .interaction_domain(BLOCK3D_INTERACTION_VORTEX)?
         .build()
 }
 //#endregion 🔖️Render

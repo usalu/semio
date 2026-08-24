@@ -119,7 +119,7 @@ mod oracles {
 
     /// 🔁️ Decodes and re-encodes unchanged — the correct oracle answer for every kind whose
     /// forward effect never touches pixels/dimensions (every ancillary/text/unknown-chunk kind
-    /// here), and for `undo_mutation` universally (see that function's own doc comment).
+    /// here), and the inverse of exactly those kinds (see `undo_mutation`'s own doc comment).
     fn reencode_unchanged(input: &[u8]) -> Result<Vec<u8>, String> {
         let (width, height, rgba) = decode_rgba(input)?;
         encode_with(width, height, &rgba, |_encoder| Ok(()), |_writer| Ok(()))
@@ -344,21 +344,33 @@ mod oracles {
         }
     }
 
-    /// ↩️ The `inverse-<kind>` scenarios' oracle: independently reasoned, not derived from the
-    /// subject's own code. `PngMutation::inverse` (the vocabulary's own algebraic law) is defined,
-    /// per variant, as "restore `base`'s own value for the field this kind touches" — never a
-    /// derived/computed value — so forward-then-inverse provably nets to the UNTOUCHED original
-    /// document for every one of the 17 kinds: the ancillary/text/unknown-chunk kinds never touch
-    /// pixels or dimensions in either direction, and the two that do (`SetSnapshot`, `SetPixels`)
-    /// have inverses that explicitly restore `base.clone()`/`base.pixels.clone()`. The independent
-    /// expected answer is therefore always "decode the pristine input, re-encode unchanged" — this
-    /// function is what a correct forward+inverse round trip must equal, not a shortcut around
-    /// computing it.
-    pub fn undo_mutation(original_input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-        if spec.str("kind").is_empty() {
-            return Err("mutation spec carries no `kind`".to_string());
+    /// ↩️ The `inverse-<kind>` scenarios' oracle: the reference's own inverse, APPLIED to the
+    /// forward mutation's real output rather than short-circuited to the pristine original.
+    /// `PngMutation::inverse` (the vocabulary's own algebraic law) is defined, per variant, as
+    /// "restore `base`'s own value for the field this kind touches", so:
+    ///
+    /// * `set-snapshot` replaced the whole document, and its inverse is the whole original;
+    /// * `set-pixels` replaced the sample buffer, and its inverse re-encodes the MUTATED document's
+    ///   own geometry carrying the ORIGINAL's samples;
+    /// * every remaining kind touches only an ancillary/text/unknown chunk, and this reference
+    ///   encoder carries none of those across a decode — so re-encoding the MUTATED document is
+    ///   exactly "the mutated document with that chunk gone", the inverse of having added it.
+    ///
+    /// The point of routing through `mutated` is that the forward result now has to survive a real
+    /// independent re-parse: the previous version never looked at it, so a forward mutation that
+    /// emitted an undecodable PNG still reported the `inverse-<kind>` scenario as passing.
+    pub fn undo_mutation(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+        let kind = spec.str("kind");
+        match kind.as_str() {
+            "" => Err("mutation spec carries no `kind`".to_string()),
+            "set-snapshot" => reencode_unchanged(original_input),
+            "set-pixels" => {
+                let (_, _, original_rgba) = decode_rgba(original_input)?;
+                let (width, height, _) = decode_rgba(mutated)?;
+                encode_with(width, height, &original_rgba, |_encoder| Ok(()), |_writer| Ok(()))
+            }
+            _ => reencode_unchanged(mutated),
         }
-        reencode_unchanged(original_input)
     }
     //#endregion 🔖️Dispatch
 
@@ -408,8 +420,8 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 }
 
 #[cfg(feature = "oracles")]
-pub fn oracle_undo_mutation(original_input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
-    oracles::undo_mutation(original_input, spec)
+pub fn oracle_undo_mutation(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+    oracles::undo_mutation(original_input, spec, mutated)
 }
 
 /// 👁️ Projects mutation-case bytes (oracle or subject, either role) onto the shape every
@@ -428,7 +440,7 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 }
 
 #[cfg(not(feature = "oracles"))]
-pub fn oracle_undo_mutation(_original_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+pub fn oracle_undo_mutation(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

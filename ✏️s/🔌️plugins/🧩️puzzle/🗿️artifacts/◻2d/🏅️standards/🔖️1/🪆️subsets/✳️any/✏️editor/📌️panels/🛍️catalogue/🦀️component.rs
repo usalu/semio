@@ -13,7 +13,7 @@ use std::collections::HashMap;
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_BODY_CATALOGUE: &str = "puzzle2d.play.catalogue";
 
-/// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx) reads to auto-wire catalogue drag sources.
+/// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx)? reads to auto-wire catalogue drag sources.
 const PUZZLE2D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 //#endregion 🔖️Constants
 
@@ -56,7 +56,7 @@ fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) ->
     HashMap::from([(PUZZLE2D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
 }
 
-fn kind_catalog_items(section_id: &str, slice: &str, entries: &[Value]) -> Vec<BuiltNode> {
+fn kind_catalog_items(section_id: &str, slice: &str, entries: &[Value]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     let actions = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID);
     entries
         .iter()
@@ -67,25 +67,25 @@ fn kind_catalog_items(section_id: &str, slice: &str, entries: &[Value]) -> Vec<B
             let id = format!("{section_id}.{index}.{kind_id}");
             let action = actions.action("addNode", Some(json!({ "kind": kind_id })));
             if draggable {
-                tree_item_with_action_draggable(id, catalog_kind_label(entry), Some(kind_id.into()), action, &json!(puzzle2d_catalog_item_drag_data(slice, kind_id, entry)))
+                tree_item_with_action_draggable(id, catalog_kind_label(entry), Some(kind_id.into()), action, &json!(puzzle2d_catalog_item_drag_data(slice, kind_id, entry)))?
             } else {
-                tree_item_with_action(id, catalog_kind_label(entry), Some(kind_id.into()), action)
+                tree_item_with_action(id, catalog_kind_label(entry), Some(kind_id.into()), action)?
             }
         })
         .collect()
 }
 
-pub fn render(fixture: &Value, labels: &Puzzle2dLabels) -> BuiltNode {
+pub fn render(fixture: &Value, labels: &Puzzle2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let inferred_nodes = inferred_kind_entries(fixture, "nodes");
     let inferred_handles = inferred_kind_entries(fixture, "handles");
     let inferred_edges = inferred_kind_entries(fixture, "edges");
     let node_entries = kind_catalog_entries(fixture, "nodes").unwrap_or(inferred_nodes.as_slice());
     let handle_entries = kind_catalog_entries(fixture, "handles").unwrap_or(inferred_handles.as_slice());
     let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
-    PanelTreeBuilder::new("puzzle2d-play-kinds")
-        .section_or_placeholder("puzzle2d-play-kinds.nodes", Some(labels.nodes.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.nodes", "nodes", node_entries), labels.none.as_str())
-        .section_or_placeholder("puzzle2d-play-kinds.handles", Some(labels.handles.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.handles", "handles", handle_entries), labels.none.as_str())
-        .section_or_placeholder("puzzle2d-play-kinds.edges", Some(labels.edges.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.edges", "edges", edge_entries), labels.none.as_str())
+    PanelTreeBuilder::new("puzzle2d-play-kinds")?
+        .section_or_placeholder("puzzle2d-play-kinds.nodes", Some(labels.nodes.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.nodes", "nodes", node_entries), labels.none.as_str())?
+        .section_or_placeholder("puzzle2d-play-kinds.handles", Some(labels.handles.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.handles", "handles", handle_entries), labels.none.as_str())?
+        .section_or_placeholder("puzzle2d-play-kinds.edges", Some(labels.edges.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.edges", "edges", edge_entries), labels.none.as_str())?
         .build()
 }
 //#endregion 🔖️Render

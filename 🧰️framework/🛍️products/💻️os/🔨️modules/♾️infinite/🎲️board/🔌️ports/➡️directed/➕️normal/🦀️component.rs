@@ -4807,7 +4807,10 @@ pub mod board_host {
             }
             self.state.placements.push(placement);
             self.state.stage = BoardFillStage::PublishPlanPrefix;
-            semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: Vec::new(), applied_progress: self.state.placements.len() as u64 })
+            semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
+                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState),
+                applied_progress: self.state.placements.len() as u64,
+            })
         }
 
         fn publish_prefix(&mut self) -> semio_framework_job::StepOutcome {
@@ -4941,7 +4944,10 @@ pub mod board_host {
             if context.is_cancelled() {
                 return semio_framework_job::StepOutcome::Cancelled;
             }
-            let preview_sequence = context.next_preview_sequence();
+            let preview_sequence = match context.next_preview_sequence() {
+                Ok(sequence) => sequence,
+                Err(_) => return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+            };
             self.operation.preview_sequence = preview_sequence.saturating_add(1);
             self.state.preview_sequence = self.operation.preview_sequence;
             match outcome {

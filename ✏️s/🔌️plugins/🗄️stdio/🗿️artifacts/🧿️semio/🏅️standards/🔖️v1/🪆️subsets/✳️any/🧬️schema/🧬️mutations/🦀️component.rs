@@ -72,6 +72,35 @@ pub enum SemioMutation {
     Kit(SemioKitMutation),
 }
 
+/// 🏷️ Kebab-case spelling of every `SemioMutation` variant, in declaration order — the vocabulary
+/// the `semio-v1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-semio-any`'s exhaustive test case measures itself against. The eighteen wrapper variants
+/// are spelled by their SUBSET name (`brep`, `mesh`, …), which is what the envelope actually routes
+/// on; `kinds_match_the_enum_and_the_catalog` below pins the list with a WILDCARD-FREE match, so a
+/// nineteenth subset cannot be added without extending both it and `KINDS`.
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "brep",
+    "mesh",
+    "model",
+    "value",
+    "document",
+    "cad",
+    "drawing",
+    "image",
+    "video",
+    "audio",
+    "animation",
+    "presentation",
+    "flow",
+    "text",
+    "table",
+    "graph",
+    "object",
+    "kit",
+];
+
 impl Mutation<SemioSnapshot> for SemioMutation {
     type Diff = SemioDiff;
 
@@ -137,6 +166,25 @@ impl Mutation<SemioSnapshot> for SemioMutation {
 pub fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &SemioMutation) -> protocol::MutationOutcome<SemioDiff> {
     let outcome = <SemioMutation as Mutation<SemioSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ Free-function face of [`Mutation::inverse`], named only in this subset's own reachable types.
+/// `protocol` is a private `extern crate semio_framework_os_kernel as protocol;` alias that nothing
+/// re-exports, so an owner-root test adapter compiled as an external crate cannot bring the
+/// `Mutation` trait into scope to call the method form — the structural gap wave 7 recorded for
+/// `kit`/`object`/`text`/`table`, and the same thin-wrapper remedy `kit` adopted. Used by
+/// `mutate-semio-any`'s `inverse-*` scenarios.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) -> Vec<SemioMutation> {
+    <SemioMutation as Mutation<SemioSnapshot>>::inverse(mutation, base)
+}
+
+/// 🏷️ Free-function face of the envelope's own subset discriminator — the tag `KINDS` spells for
+/// each wrapper variant and the only observable an owner-root test can read back out of a routed
+/// envelope without naming any of the eighteen arms' snapshot types.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
+    crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::subset_tag(&snapshot.subset)
 }
 //#endregion 🔖️Mutation
 
@@ -740,6 +788,80 @@ mod tests {
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
+
+    //#region 🔖️CatalogLaw
+    /// 🏷️ The wildcard-free spelling map that makes [`KINDS`] compiler-checked: a nineteenth arm has
+    /// no case here, so the crate stops building until both this match and `KINDS` name it.
+    fn kind_of(mutation: &SemioMutation) -> &'static str {
+        match mutation {
+            SemioMutation::NoMutation => "no-mutation",
+            SemioMutation::SetSnapshot { .. } => "set-snapshot",
+            SemioMutation::Brep(_) => "brep",
+            SemioMutation::Mesh(_) => "mesh",
+            SemioMutation::Model(_) => "model",
+            SemioMutation::Value(_) => "value",
+            SemioMutation::Document(_) => "document",
+            SemioMutation::Cad(_) => "cad",
+            SemioMutation::Drawing(_) => "drawing",
+            SemioMutation::Image(_) => "image",
+            SemioMutation::Video(_) => "video",
+            SemioMutation::Audio(_) => "audio",
+            SemioMutation::Animation(_) => "animation",
+            SemioMutation::Presentation(_) => "presentation",
+            SemioMutation::Flow(_) => "flow",
+            SemioMutation::Text(_) => "text",
+            SemioMutation::Table(_) => "table",
+            SemioMutation::Graph(_) => "graph",
+            SemioMutation::Object(_) => "object",
+            SemioMutation::Kit(_) => "kit",
+        }
+    }
+
+    fn enveloped(subset: SemioSubsetSnapshot) -> SemioSnapshot {
+        SemioSnapshot { schema: crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset }
+    }
+
+    /// 🏷️ `KINDS` must name every declared variant, in declaration order and in the exact spelling
+    /// the committed `semio-v1-any` catalog carries — the framework never parses Rust, so this is
+    /// the only thing that keeps the catalog honest against the enum. The eighteen wrapper spellings
+    /// are checked against `semio_subset_tag`, the envelope's OWN runtime discriminator, rather than
+    /// against a second hand-written list: a routed mutation that reported under a name the catalog
+    /// does not know would otherwise pass unnoticed. The two envelope-owned verbs are nullary and
+    /// full-replace, so they are checked directly.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let arms = [
+            SemioSubsetSnapshot::Brep(Default::default()),
+            SemioSubsetSnapshot::Mesh(Default::default()),
+            SemioSubsetSnapshot::Model(Default::default()),
+            SemioSubsetSnapshot::Value(Default::default()),
+            SemioSubsetSnapshot::Document(Default::default()),
+            SemioSubsetSnapshot::Cad(Default::default()),
+            SemioSubsetSnapshot::Drawing(Default::default()),
+            SemioSubsetSnapshot::Image(Default::default()),
+            SemioSubsetSnapshot::Video(Default::default()),
+            SemioSubsetSnapshot::Audio(Default::default()),
+            SemioSubsetSnapshot::Animation(Default::default()),
+            SemioSubsetSnapshot::Presentation(Default::default()),
+            SemioSubsetSnapshot::Flow(Default::default()),
+            SemioSubsetSnapshot::Text(Default::default()),
+            SemioSubsetSnapshot::Table(Default::default()),
+            SemioSubsetSnapshot::Graph(Default::default()),
+            SemioSubsetSnapshot::Object(Default::default()),
+            SemioSubsetSnapshot::Kit(Default::default()),
+        ];
+        assert_eq!(KINDS.len(), arms.len() + 2, "KINDS must name the two envelope-owned verbs plus exactly one entry per subset arm");
+        assert_eq!(KINDS[0], kind_of(&SemioMutation::NoMutation), "the nullary verb comes first");
+        assert_eq!(KINDS[1], kind_of(&SemioMutation::SetSnapshot { snapshot: SemioSnapshot::default() }), "the full-replace verb comes second");
+        for (kind, arm) in KINDS[2..].iter().zip(arms) {
+            assert_eq!(*kind, semio_subset_tag(&enveloped(arm)), "KINDS must follow SemioSubsetSnapshot's own declaration order and the envelope's own runtime subset tag");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🔖️CatalogLaw
 }
 //#endregion 🔖️Tests
 

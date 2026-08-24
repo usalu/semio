@@ -151,7 +151,7 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
 }
 
 /// 🖼️ The board-2d surface node for one pane — bound by each window's own `render()`.
-pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> BuiltNode {
+pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let scene = puzzle2d_board_scene(document_json, envelope, pane);
     semio_framework_ui_contract::surface(semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::Board2d, &scene)).id(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}")).build()
 }

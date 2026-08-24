@@ -690,6 +690,7 @@ impl ComputePool {
     /// closure on the context lane. The admission permit spans the whole job. Cancellation is checked
     /// before admission and inside every step, while an absolute deadline cancels the job and returns
     /// [`ComputeError::DeadlineExceeded`].
+    #[cfg(test)]
     pub async fn run_job<J: InteractiveJob + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, job: J) -> Result<StepOutcome, ComputeError> {
         let lane = Lane::from_context_lane(ctx.lane);
         let Some(permit) = self.acquire_job_permit(runtime, &ctx).await? else { return Ok(StepOutcome::Cancelled) };
@@ -2239,17 +2240,18 @@ mod tests {
 
     //#region 🧮️ComputePoolTests
     struct CountingComputeJob {
-        current: Arc<AtomicU32>,
-        observed_max: Arc<AtomicU32>,
+        current: Option<Arc<AtomicU32>>,
+        observed_max: Option<Arc<AtomicU32>>,
         remaining_steps: u8,
         entered: bool,
+        closing: bool,
     }
 
     impl InteractiveJob for CountingComputeJob {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> StepOutcome {
             if cx.is_cancelled() {
                 if self.entered {
-                    self.current.fetch_sub(1, Ordering::SeqCst);
+                    self.current.as_ref().expect("compute current counter").fetch_sub(1, Ordering::SeqCst);
                     self.entered = false;
                 }
                 return StepOutcome::Cancelled;
@@ -2258,8 +2260,8 @@ mod tests {
                 return StepOutcome::Yield;
             }
             if !self.entered {
-                let now = self.current.fetch_add(1, Ordering::SeqCst) + 1;
-                self.observed_max.fetch_max(now, Ordering::SeqCst);
+                let now = self.current.as_ref().expect("compute current counter").fetch_add(1, Ordering::SeqCst) + 1;
+                self.observed_max.as_ref().expect("compute observed counter").fetch_max(now, Ordering::SeqCst);
                 self.entered = true;
             }
             cx.consume_fuel(1);
@@ -2267,13 +2269,42 @@ mod tests {
                 self.remaining_steps -= 1;
                 return StepOutcome::Yield;
             }
-            self.current.fetch_sub(1, Ordering::SeqCst);
+            self.current.as_ref().expect("compute current counter").fetch_sub(1, Ordering::SeqCst);
             self.entered = false;
-            StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() })
+            StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+            })
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.begin_close();
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if self.entered {
+                self.current.as_ref().expect("compute current counter").fetch_sub(1, Ordering::SeqCst);
+                self.entered = false;
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.current.take().is_some() || self.observed_max.take().is_some() {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && !self.entered && self.current.is_none() && self.observed_max.is_none()
         }
     }
 
-    struct NeverCompleteComputeJob;
+    struct NeverCompleteComputeJob {
+        closing: bool,
+    }
 
     impl InteractiveJob for NeverCompleteComputeJob {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> StepOutcome {
@@ -2282,6 +2313,18 @@ mod tests {
             }
             cx.consume_fuel(1);
             StepOutcome::Yield
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing
         }
     }
 
@@ -2302,7 +2345,7 @@ mod tests {
             let observed_max = observed_max.clone();
             let ctx = test_ctx(i as u64, scope.cancel.clone()).await;
             handles.push(async move {
-                let job = CountingComputeJob { current, observed_max, remaining_steps: 8, entered: false };
+                let job = CountingComputeJob { current: Some(current), observed_max: Some(observed_max), remaining_steps: 8, entered: false, closing: false };
                 pool.run_job(runtime, scope, ctx, job).await.expect("interactive job without a deadline must not fail");
             });
         }
@@ -2320,7 +2363,7 @@ mod tests {
         let mut ctx = test_ctx(0, scope.cancel.clone()).await;
         ctx.deadline_ms = Some(now + 40);
         let cancel = ctx.cancel.clone();
-        let outcome = pool.run_job(&runtime, &scope, ctx, NeverCompleteComputeJob).await;
+        let outcome = pool.run_job(&runtime, &scope, ctx, NeverCompleteComputeJob { closing: false }).await;
         assert_eq!(outcome, Err(ComputeError::DeadlineExceeded), "a non-terminal job must stop at its absolute deadline");
         assert!(cancel.is_cancelled().await, "deadline propagation must cancel the running job");
     }

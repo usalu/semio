@@ -24,8 +24,8 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 /// 🌳️ `tree_item` plus an icon id — this app's document tree carries icons per item.
-fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>) -> BuiltNode {
-    let mut node = tree_item(id, label.into());
+fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut node = tree_item(id, label.into())?;
     if let (Some(icon), Component::TreeItem(props)) = (icon_id, &mut node.component) {
         props.icon = Some(icon.into());
     }
@@ -33,13 +33,13 @@ fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id:
 }
 
 /// 🕹️ Item ids are the RAW widget id (no namespace prefix) — they must equal the `graph` interaction
-/// domain's target ids one-for-one so `.interaction_domain("graph")`'s post-render presence stamping
+/// domain's target ids one-for-one so `.interaction_domain("graph")?`'s post-render presence stamping
 /// (`ui_tree_stamp_presence`) can match them by plain string membership (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). Clicks/selection are the framework's now — no
 /// per-item action needed.
-pub fn render(fixture: &FlowFixture, labels: &Procedural3dLabels) -> BuiltNode {
-    let items: Vec<BuiltNode> = fixture.widgets.iter().map(|widget| tree_item_with_icon(widget_id(widget).to_string(), widget_id(widget).to_string(), Some("cpu"))).collect();
-    PanelTreeBuilder::new("procedural-play-document").section("procedural-play-document.widgets", Some(labels.widgets.as_str().into()), true, items).interaction_domain("graph").build()
+pub fn render(fixture: &FlowFixture, labels: &Procedural3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let items: Vec<BuiltNode> = fixture.widgets.iter().map(|widget| tree_item_with_icon(widget_id(widget).to_string(), widget_id(widget).to_string(), Some("cpu"))?).collect();
+    PanelTreeBuilder::new("procedural-play-document")?.section("procedural-play-document.widgets", Some(labels.widgets.as_str().into()), true, items)?.interaction_domain("graph")?.build()
 }
 //#endregion 🔖️Render
 

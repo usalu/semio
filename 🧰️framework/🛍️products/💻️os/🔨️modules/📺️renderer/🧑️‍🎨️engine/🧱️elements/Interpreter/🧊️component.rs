@@ -10,7 +10,9 @@
 use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard, OnceLock};
+use ui_contract::UiDocumentLease;
 #[cfg(test)]
 use ui_wgpu::wgpu::UiPresence;
 #[cfg(any(target_arch = "wasm32", test))]
@@ -183,10 +185,12 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
     Ok(())
 }
 
+#[cfg(test)]
 struct RenderPlanWalkState {
     node_count: usize,
 }
 
+#[cfg(test)]
 fn walk_ui_node(node: &UiNode, depth: usize, limits: &RenderPlanLimits, state: &mut RenderPlanWalkState) -> Result<(), String> {
     state.node_count += 1;
     if state.node_count > limits.max_node_count {
@@ -212,11 +216,13 @@ fn walk_ui_node(node: &UiNode, depth: usize, limits: &RenderPlanLimits, state: &
     Ok(())
 }
 
+#[cfg(test)]
 pub fn validate_ui_node(node: &UiNode, limits: &RenderPlanLimits) -> Result<(), String> {
     let mut state = RenderPlanWalkState { node_count: 0 };
     walk_ui_node(node, 1, limits, &mut state)
 }
 
+#[cfg(test)]
 pub fn validate_window_body_surface(kind: &semio_framework::WindowKindDefinition, node: &UiNode) -> Result<(), String> {
     match node {
         UiNode::ComponentScene(scene) if scene.component_kind != kind.surface_kind => Err(format!("window {} declared {} but program returned {}", kind.id, kind.surface_kind.as_str(), scene.component_kind.as_str())),
@@ -224,6 +230,7 @@ pub fn validate_window_body_surface(kind: &semio_framework::WindowKindDefinition
     }
 }
 
+#[cfg(test)]
 fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     render_widget(&WidgetNode::Text { value: format!("Render plan rejected: {message}"), emphasize: true }, bounds, ctx);
 }
@@ -558,7 +565,8 @@ fn write_os_clipboard(text: &str) {
 
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
 struct MountedClipboardIo {
-    session: semio_framework_job::WorkerJobSession<ui_wgpu::wgpu::ClipboardIoJob>,
+    session: Option<semio_framework_job::WorkerJobSession<ui_wgpu::wgpu::ClipboardIoJob>>,
+    rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::ClipboardIoJob>>,
     ticket: Option<semio_framework_job::WorkerJobTicket>,
     complete: Option<Box<dyn FnOnce(Result<Option<String>, String>)>>,
 }
@@ -598,8 +606,11 @@ fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce
             now_ms: semio_framework_job::default_now_ms,
         };
         match semio_framework_job::WorkerJobSession::try_new(job.take().expect("clipboard job owner"), params) {
-            Ok(session) => slot.mounted = Some(MountedClipboardIo { session, ticket: None, complete: complete.take() }),
-            Err(_) => complete.take().expect("clipboard completion owner")(Err("universal retained session registry is full".into())),
+            Ok(session) => slot.mounted = Some(MountedClipboardIo { session: Some(session), rejected: None, ticket: None, complete: complete.take() }),
+            Err(mut rejected) => {
+                rejected.begin_close();
+                slot.mounted = Some(MountedClipboardIo { session: None, rejected: Some(rejected), ticket: None, complete: complete.take() });
+            }
         }
     });
 }
@@ -611,22 +622,32 @@ fn pump_clipboard_io_one() {
         let mut registry = registry.borrow_mut();
         let Some(slot) = registry.iter_mut().find(|slot| slot.mounted.is_some()) else { return };
         let mounted = slot.mounted.as_mut().expect("mounted clipboard slot");
-        match mounted.session.poll() {
-            semio_framework_job::WorkerJobPoll::Idle => match mounted.session.try_submit_step(&crate::renderer_worker_pool(), semio_framework_async::Lane::Io) {
+        if let Some(rejected) = mounted.rejected.as_mut() {
+            callback = mounted.complete.take().map(|complete| (complete, Err("universal retained session registry is full".into())));
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                mounted.rejected = None;
+                slot.mounted = None;
+            }
+            return;
+        }
+        let session = mounted.session.as_ref().expect("mounted clipboard owns worker or rejected batch session");
+        match session.poll() {
+            semio_framework_job::WorkerJobPoll::Idle => match session.try_submit_step(&crate::renderer_worker_pool(), semio_framework_async::Lane::Io) {
                 Ok(ticket) => mounted.ticket = Some(ticket),
                 Err(semio_framework_job::WorkerJobSubmitFault::Pool(_)) => {
-                    if let Ok(rejected) = mounted.session.take_rejected() {
+                    if let Ok(rejected) = session.take_rejected() {
                         rejected.resume();
                     }
                 }
                 Err(error) => {
-                    let _ = mounted.session.begin_close();
+                    let _ = session.begin_close();
                     callback = mounted.complete.take().map(|complete| (complete, Err(format!("clipboard worker submission failed: {error:?}"))));
                 }
             },
             semio_framework_job::WorkerJobPoll::Outcome => {
                 if let Some(ticket) = mounted.ticket.take() {
-                    if let Ok(mut owner) = mounted.session.take_outcome(ticket) {
+                    if let Ok(mut owner) = session.take_outcome(ticket) {
                         if matches!(owner.take_outcome(), semio_framework_job::StepOutcome::Yield) {
                             let _ = owner.resume();
                         } else {
@@ -637,19 +658,24 @@ fn pump_clipboard_io_one() {
                 }
             }
             semio_framework_job::WorkerJobPoll::Terminal => {
-                if let Ok(owner) = mounted.session.take_terminal() {
-                    let result = Ok(ui_wgpu::wgpu::ClipboardIoJob::read_candidate(owner.outcome()));
+                if let Ok(owner) = session.take_terminal() {
+                    let result = match owner.outcome() {
+                        semio_framework_job::StepOutcome::Complete(_) => Ok(ui_wgpu::wgpu::ClipboardIoJob::read_candidate(owner.outcome())),
+                        semio_framework_job::StepOutcome::Cancelled => Err("clipboard job cancelled".into()),
+                        semio_framework_job::StepOutcome::Fault(_) => Err("clipboard job faulted".into()),
+                        _ => Err("clipboard job published a nonterminal terminal owner".into()),
+                    };
                     owner.begin_close();
                     callback = mounted.complete.take().map(|complete| (complete, result));
                 }
             }
             semio_framework_job::WorkerJobPoll::Rejected => {
-                if let Ok(rejected) = mounted.session.take_rejected() {
+                if let Ok(rejected) = session.take_rejected() {
                     rejected.resume();
                 }
             }
             semio_framework_job::WorkerJobPoll::Closing => {
-                let _ = mounted.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             }
             semio_framework_job::WorkerJobPoll::TerminalEmpty => slot.mounted = None,
             semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::CheckedOut => {}
@@ -1122,6 +1148,7 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
  * `collect_scene_slots` resolves bounds from the SAME retained taffy layout the rest of the tree
  * already painted with, for every container kind (including `Group`/`Tree`, which the shadow walk's
  * hard-coded `Stack`/`Section`/`Field` recursion never covered). */
+#[cfg(test)]
 pub fn render_ui_node(
     node: &UiNode,
     bounds: Rect,
@@ -1170,6 +1197,92 @@ pub fn render_ui_node(
     });
     apply_ui_commands(&commands, ctx.input);
 }
+
+//#region 📄️RetainedDocumentConsumer
+static DOCUMENT_PAGE_OPPORTUNITY_CONSUMED: AtomicBool = AtomicBool::new(false);
+
+pub fn begin_ui_document_opportunity(consumed: bool) {
+    DOCUMENT_PAGE_OPPORTUNITY_CONSUMED.store(consumed, Ordering::Release);
+}
+
+pub fn render_ui_document(
+    document: &UiDocumentLease,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    window_id: &str,
+    engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+    world_resources: &mut infinite_world::world::World3dBuildContext,
+    world3d_states: &mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
+    node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
+    tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
+    icon_render_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
+    board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
+) {
+    #[cfg(all(not(target_arch = "wasm32"), not(test)))]
+    pump_clipboard_io_one();
+    let Ok(header) = document.header() else { return };
+    let generation = header.generation;
+    let mut preview_sequence = 0;
+    let now = semio_framework_job::default_now_ms();
+    let mut step = semio_framework_job::StepContext::new(
+        semio_framework_job::OperationId(generation),
+        semio_framework_job::Generation(generation),
+        semio_framework_job::StepBudget::new(1, now.saturating_add(2)),
+        semio_framework_job::CancelToken::root_now(),
+        semio_framework_job::default_now_ms,
+        &mut preview_sequence,
+    );
+    let theme = *ctx.theme;
+    let viewport_w = bounds.w.max(1.0);
+    let viewport_h = bounds.h.max(1.0);
+    let advance_document = !DOCUMENT_PAGE_OPPORTUNITY_CONSUMED.swap(true, Ordering::AcqRel);
+    let commands = UI_ENGINE.with(|cell| {
+        let mut engine = cell.borrow_mut();
+        engine.set_theme(theme);
+        if advance_document {
+            let status = engine.document_status(window_id, generation);
+            let status = match status {
+                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant => {
+                    if engine.begin_document(window_id, header, &mut step).is_err() {
+                        ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant
+                    } else {
+                        engine.document_status(window_id, generation)
+                    }
+                }
+                status => status,
+            };
+            if let ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Pending { next_page, node_count } = status {
+                if next_page == node_count {
+                    let _ = engine.finish_document(window_id, generation, &mut step);
+                } else if let Ok(Some(page)) = document.read_node_page(next_page) {
+                    let _ = engine.apply_document_page(window_id, page, &mut step);
+                }
+            }
+        }
+        engine.set_viewport(window_id, viewport_w, viewport_h);
+        let commands = dispatch_pointer_events(&mut engine, window_id, bounds, ctx.input);
+        let mut scene_host = FrameworkSceneHost {
+            engine_resources,
+            world_resources,
+            input: ctx.input,
+            theme: ctx.theme,
+            scroll_offsets: ctx.scroll_offsets,
+            collapsed_sections: ctx.collapsed_sections,
+            open_selects: ctx.open_selects,
+            world3d_states,
+            node_graph_states,
+            tiled_map_states,
+            icon_render_states,
+            board2d_states,
+        };
+        if let Some(retained_draw) = engine.frame(window_id, viewport_w, viewport_h, ctx.atlas, ctx.icons, Some(&mut scene_host)) {
+            composite_retained_draw_list(ctx.draw, retained_draw, bounds.x, bounds.y);
+        }
+        commands
+    });
+    apply_ui_commands(&commands, ctx.input);
+}
+//#endregion 📄️RetainedDocumentConsumer
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod ui_command_wiring_tests {

@@ -18,7 +18,7 @@ mod native {
     use std::sync::Mutex;
 
     use crate::format::{Manifest, PackWriter, RecoveryReport, WriteOptions};
-    use crate::{ChunkId, PackError, PackLimits, PackSink, PackSource};
+    use crate::{PackError, PackLimits, PackSink, PackSource};
 
     /// @emoji 🚨️ Wraps a `std::io::Error` into the crate-wide `PackError::Io` variant — the only
     /// place `std::io::Error` is allowed to appear, per the contract's no-`std::io::Error`-in-
@@ -161,9 +161,8 @@ mod native {
             self.inner.write_segment(kind, payload).await
         }
 
-        /// @emoji 🧱️ Writes and flushes one chunk segment, returning its `ChunkId`.
-        pub async fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, PackError> {
-            self.inner.write_chunk(payload).await
+        pub async fn begin_identity_chunk(&mut self, payload_len: usize) -> Result<crate::format::PackIdentityChunk<'_, FilePackSink>, PackError> {
+            self.inner.begin_identity_chunk(payload_len).await
         }
 
         /// @emoji 🏁️ Writes the chunk table, manifest, end marker, and footer, `fsync`s (via
@@ -316,7 +315,11 @@ mod native {
 
             let mut writer = StreamingPackWriter::create(&path, &no_compression_options()).await.unwrap();
             writer.write_segment(KIND_DOCUMENT, doc_payload).await.unwrap();
-            let chunk_id = writer.write_chunk(chunk_payload).await.unwrap();
+            let mut chunk = writer.begin_identity_chunk(chunk_payload.len()).await.unwrap();
+            for fragment in chunk_payload.chunks(7) {
+                chunk.write_fragment(fragment).await.unwrap();
+            }
+            let chunk_id = chunk.finish().await.unwrap();
             writer.write_segment(KIND_SCHEMA, schema_payload).await.unwrap();
 
             let manifest = Manifest {
@@ -367,7 +370,11 @@ mod native {
 
             let mut writer = StreamingPackWriter::create(&path, &no_compression_options()).await.unwrap();
             writer.write_segment(KIND_DOCUMENT, doc_payload).await.unwrap();
-            writer.write_chunk(chunk_payload).await.unwrap();
+            let mut chunk = writer.begin_identity_chunk(chunk_payload.len()).await.unwrap();
+            for fragment in chunk_payload.chunks(5) {
+                chunk.write_fragment(fragment).await.unwrap();
+            }
+            chunk.finish().await.unwrap();
 
             let manifest = Manifest {
                 schema_name: String::new(),

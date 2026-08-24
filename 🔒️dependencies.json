@@ -18,8 +18,8 @@
     },
     {
       "ecosystem": "go",
-      "name": "github.com/bits-and-blooms/bitset",
-      "version": "v1.24.2",
+      "name": "github.com/Masterminds/goutils",
+      "version": "v1.1.1",
       "kinds": [
         "production-build"
       ],
@@ -31,8 +31,48 @@
     },
     {
       "ecosystem": "go",
-      "name": "github.com/blevesearch/bleve_index_api",
-      "version": "v1.3.11",
+      "name": "github.com/Masterminds/semver/v3",
+      "version": "v3.4.0",
+      "kinds": [
+        "production-build"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/Masterminds/sprig/v3",
+      "version": "v3.3.0",
+      "kinds": [
+        "production-build",
+        "production-runtime"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/RoaringBitmap/roaring/v2",
+      "version": "v2.14.5",
+      "kinds": [
+        "production-build"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/bits-and-blooms/bitset",
+      "version": "v1.24.2",
       "kinds": [
         "production-build"
       ],
@@ -49,6 +89,19 @@
       "kinds": [
         "production-build",
         "production-runtime"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/blevesearch/bleve_index_api",
+      "version": "v1.3.11",
+      "kinds": [
+        "production-build"
       ],
       "users": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
@@ -416,46 +469,6 @@
     },
     {
       "ecosystem": "go",
-      "name": "github.com/Masterminds/goutils",
-      "version": "v1.1.1",
-      "kinds": [
-        "production-build"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "go",
-      "name": "github.com/Masterminds/semver/v3",
-      "version": "v3.4.0",
-      "kinds": [
-        "production-build"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "go",
-      "name": "github.com/Masterminds/sprig/v3",
-      "version": "v3.3.0",
-      "kinds": [
-        "production-build",
-        "production-runtime"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "go",
       "name": "github.com/mattn/go-isatty",
       "version": "v0.0.20",
       "kinds": [
@@ -532,19 +545,6 @@
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/go.mod"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "go",
-      "name": "github.com/RoaringBitmap/roaring/v2",
-      "version": "v2.14.5",
-      "kinds": [
-        "production-build"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
       ],
       "productionReachable": true
     },
@@ -1945,6 +1945,25 @@
     },
     {
       "ecosystem": "python",
+      "name": "pypdf",
+      "version": "6.14.2",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "pypdf-pdf-1-4-text"
+      ],
+      "capabilities": [
+        "pdf-1-4-text-extraction"
+      ]
+    },
+    {
+      "ecosystem": "python",
       "name": "pytest",
       "version": ">=9.1.1",
       "kinds": [
@@ -2026,6 +2045,25 @@
         "pyproject.toml"
       ],
       "productionReachable": false
+    },
+    {
+      "ecosystem": "python",
+      "name": "simplejson",
+      "version": "4.1.1",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle",
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "simplejson-json-rfc8259-i-json-mutate"
+      ],
+      "capabilities": [
+        "json-rfc8259-i-json-mutate"
+      ]
     },
     {
       "ecosystem": "rust",
@@ -2188,9 +2226,15 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "csv",
+        "csv-epw-energyplus-mutate",
+        "csv-rfc4180-mutate",
         "tsv-iana-mutate"
       ],
       "capabilities": [
+        "csv-rfc4180-mutate",
+        "epw-energyplus-mutate",
+        "tabular-csv",
         "tsv-iana-mutate"
       ]
     },
@@ -2224,10 +2268,12 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "flate2",
         "flate2-deflate-rfc1950-mutate"
       ],
       "capabilities": [
-        "deflate-rfc1950-mutate"
+        "deflate-rfc1950-mutate",
+        "zlib-compression"
       ]
     },
     {
@@ -2271,10 +2317,14 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "gif",
+        "gif-87a-mutate",
         "gif-89a-any-mutate"
       ],
       "capabilities": [
-        "gif-89a-mutate"
+        "gif-87a-mutate",
+        "gif-89a-mutate",
+        "gif-raster"
       ]
     },
     {
@@ -2302,10 +2352,12 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "hound",
         "hound-wav-riff-pcm-mutate"
       ],
       "capabilities": [
-        "wav-riff-pcm-mutate"
+        "wav-riff-pcm-mutate",
+        "wave-audio"
       ]
     },
     {
@@ -2328,6 +2380,24 @@
     },
     {
       "ecosystem": "rust",
+      "name": "id3",
+      "version": "1.17",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "id3-mpeg1-layer3-mutate"
+      ],
+      "capabilities": [
+        "mp3-mpeg1-layer3-mutate"
+      ]
+    },
+    {
+      "ecosystem": "rust",
       "name": "image",
       "version": "0.25",
       "kinds": [
@@ -2343,10 +2413,20 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "image-bmp",
+        "image-bmp-3-mutate",
+        "image-jpeg",
+        "image-jpeg-jfif-1-01-mutate",
+        "image-tiff",
         "image-tiff-6-0-mutate"
       ],
       "capabilities": [
-        "tiff-6-0-mutate"
+        "bmp-3-mutate",
+        "bmp-raster",
+        "jpg-jfif-1-01-mutate",
+        "jpg-raster",
+        "tiff-6-0-mutate",
+        "tiff-raster"
       ]
     },
     {
@@ -2387,9 +2467,11 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "json-rust-gltf-2-0-mutate",
         "json-rust-rfc8259-mutate"
       ],
       "capabilities": [
+        "gltf-2-0-mutate",
         "json-rfc8259-mutate"
       ]
     },
@@ -2448,10 +2530,33 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "lopdf",
+        "lopdf-pdf-1-4-mutate",
         "lopdf-pdf-1-7-mutate"
       ],
       "capabilities": [
-        "pdf-1-7-mutate"
+        "pdf-1-4-mutate",
+        "pdf-1-7-mutate",
+        "pdf-edit",
+        "pdf-parse"
+      ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "markup5ever_rcdom",
+      "version": "0.39",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "html5ever-html-5-mutate"
+      ],
+      "capabilities": [
+        "html-5-mutate"
       ]
     },
     {
@@ -2647,10 +2752,12 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "png",
         "png-png-1-2-mutate"
       ],
       "capabilities": [
-        "png-1-2-mutate"
+        "png-1-2-mutate",
+        "png-raster"
       ]
     },
     {
@@ -2682,9 +2789,33 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "quick-xml-1-0-mutate"
+        "docx-ecma-376-strict-mutate",
+        "docx-ecma-376-transitional-mutate",
+        "pptx-ecma-376-mutate",
+        "pptx-ecma-376-strict-mutate",
+        "pptx-ecma-376-transitional-mutate",
+        "quick-xml-1-0-mutate",
+        "quick-xml-svg-1-1-basic-mutate",
+        "quick-xml-svg-1-1-mutate",
+        "quick-xml-svg-1-1-tiny-mutate",
+        "xlsx-ecma-376-strict-mutate",
+        "xlsx-ecma-376-transitional-mutate",
+        "zip-quick-xml-bcf-2-1-mutate",
+        "zip-quick-xml-docx-ecma-376-mutate"
       ],
       "capabilities": [
+        "bcf-2-1-mutate",
+        "docx-ecma-376-mutate",
+        "docx-ecma-376-strict-mutate",
+        "docx-ecma-376-transitional-mutate",
+        "pptx-ecma-376-mutate",
+        "pptx-ecma-376-strict-mutate",
+        "pptx-ecma-376-transitional-mutate",
+        "svg-1-1-basic-mutate",
+        "svg-1-1-mutate",
+        "svg-1-1-tiny-mutate",
+        "xlsx-ecma-376-strict-mutate",
+        "xlsx-ecma-376-transitional-mutate",
         "xml-1-0-mutate"
       ]
     },
@@ -2778,6 +2909,24 @@
     },
     {
       "ecosystem": "rust",
+      "name": "rust_xlsxwriter",
+      "version": "0.96",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "xlsx-ecma-376-mutate"
+      ],
+      "capabilities": [
+        "xlsx-ecma-376-mutate"
+      ]
+    },
+    {
+      "ecosystem": "rust",
       "name": "ruststep",
       "version": "0.4",
       "kinds": [
@@ -2788,9 +2937,19 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "ruststep-ifc-2x3-any-mutate",
+        "ruststep-ifc-2x3-cobie-mutate",
+        "ruststep-ifc-2x3-cv20-mutate",
+        "ruststep-ifc-2x3-sav-mutate",
+        "ruststep-ifc-4-any-mutate",
         "ruststep-step-ap214-any-mutate"
       ],
       "capabilities": [
+        "ifc-2x3-any-mutate",
+        "ifc-2x3-cobie-mutate",
+        "ifc-2x3-cv20-mutate",
+        "ifc-2x3-sav-mutate",
+        "ifc-4-any-mutate",
         "step-ap214-any-mutate"
       ]
     },
@@ -2916,6 +3075,22 @@
     },
     {
       "ecosystem": "rust",
+      "name": "serde-wasm-bindgen",
+      "version": "0.6.5",
+      "kinds": [
+        "production-runtime"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "rust",
       "name": "serde_json",
       "version": "1.0.149",
       "kinds": [
@@ -3024,22 +3199,6 @@
     },
     {
       "ecosystem": "rust",
-      "name": "serde-wasm-bindgen",
-      "version": "0.6.5",
-      "kinds": [
-        "production-runtime"
-      ],
-      "users": [
-        "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "rust",
       "name": "sqlx",
       "version": "0.8",
       "kinds": [
@@ -3086,10 +3245,12 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "stl-io",
         "stl-io-ascii-mutate"
       ],
       "capabilities": [
-        "stl-ascii-mutate"
+        "stl-ascii-mutate",
+        "stl-mesh"
       ]
     },
     {
@@ -3161,10 +3322,12 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "tobj",
         "tobj-obj-3-0-mutate"
       ],
       "capabilities": [
-        "obj-3-0-mutate"
+        "obj-3-0-mutate",
+        "obj-mesh"
       ]
     },
     {
@@ -3514,10 +3677,20 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "pptx-ecma-376-mutate",
+        "zip",
+        "zip-2-0-iso21320-mutate",
+        "zip-2-0-mutate",
+        "zip-quick-xml-bcf-2-1-mutate",
         "zip-quick-xml-docx-ecma-376-mutate"
       ],
       "capabilities": [
-        "docx-ecma-376-mutate"
+        "bcf-2-1-mutate",
+        "docx-ecma-376-mutate",
+        "pptx-ecma-376-mutate",
+        "zip-2-0-iso21320-mutate",
+        "zip-2-0-mutate",
+        "zip-archive"
       ]
     }
   ]

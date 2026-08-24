@@ -380,6 +380,7 @@ pub async fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64,
 
 //#region 📤️Export
 #[cfg(test)]
+#[cfg(test)]
 pub use crate::editor::layout::engine::export::{export_document_pdf_headless_batch, export_document_png_headless_batch, export_document_svg_headless_batch, export_package_zip_headless_batch};
 //#endregion 📤️Export
 

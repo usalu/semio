@@ -22,20 +22,20 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &Procedural2dLabels) -> BuiltNode {
+pub fn render(labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let sources = [("inputSlider", labels.source_slider), ("inputNote", labels.source_note)];
     let components = [("math.add", labels.component_add), ("logic.and", labels.component_and), ("text.concat", labels.component_concat)];
     let sinks = [("outputPreview", labels.sink_preview), ("outputExport", labels.sink_export)];
-    PanelTreeBuilder::new("procedural2d-play-catalogue")
+    PanelTreeBuilder::new("procedural2d-play-catalogue")?
         .section(
             "procedural2d-play-catalogue.sources",
             Some(labels.sources.as_str().into()),
             true,
             sources
                 .iter()
-                .map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.source.{kind}"), label.as_str(), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": kind })))))
+                .map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.source.{kind}"), label.as_str(), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": kind })))?)?)
                 .collect(),
-        )
+        )?
         .section(
             "procedural2d-play-catalogue.components",
             Some(labels.components.as_str().into()),
@@ -43,16 +43,16 @@ pub fn render(labels: &Procedural2dLabels) -> BuiltNode {
             components
                 .iter()
                 .map(|(kind, label)| {
-                    tree_item_with_action(format!("procedural2d-play-catalogue.component.{kind}"), label.as_str(), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind }))))
+                    tree_item_with_action(format!("procedural2d-play-catalogue.component.{kind}"), label.as_str(), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind })))?)?
                 })
                 .collect(),
-        )
+        )?
         .section(
             "procedural2d-play-catalogue.sinks",
             Some(labels.sinks.as_str().into()),
             true,
-            sinks.iter().map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.sink.{kind}"), label.as_str(), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": kind }))))).collect(),
-        )
+            sinks.iter().map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.sink.{kind}"), label.as_str(), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": kind })))?)?).collect(),
+        )?
         .section(
             "procedural2d-play-catalogue.modes",
             Some(labels.show_mode_section.as_str().into()),
@@ -60,10 +60,10 @@ pub fn render(labels: &Procedural2dLabels) -> BuiltNode {
             ["preview", "generate", "wire"]
                 .iter()
                 .map(|mode| {
-                    tree_item_with_action(format!("procedural2d-play-catalogue.mode.{mode}"), format!("{} {mode}", labels.show_prefix.as_str()), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("setShowMode", Some(json!({ "value": mode }))))
+                    tree_item_with_action(format!("procedural2d-play-catalogue.mode.{mode}"), format!("{} {mode}", labels.show_prefix.as_str()), None, ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action("setShowMode", Some(json!({ "value": mode })))?)?
                 })
                 .collect(),
-        )
+        )?
         .build()
 }
 //#endregion 🔖️Render

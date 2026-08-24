@@ -14,7 +14,7 @@ pub const FEM3D_BODY_MODEL: &str = "fem3d.play.model";
 /// 🧱️ Renders the undeformed structure: the same node/member/solid instances every results view
 /// deforms, at deformation scale `doc.analysis.deformation_scale` with no displacement offset applied
 /// (`None` displacements) and no stress coloring.
-pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin::BuiltNode {
+pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
 
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);

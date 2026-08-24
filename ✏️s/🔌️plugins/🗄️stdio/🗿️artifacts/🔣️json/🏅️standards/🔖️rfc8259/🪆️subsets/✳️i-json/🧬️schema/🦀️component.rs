@@ -11,54 +11,63 @@ pub use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::*;
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::diff::JsonDiff;
-    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::JsonMutation;
     use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::JsonSnapshot;
-    use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::JsonBuilder as JsonAnyBuilder;
     use crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance;
+    use crate::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, JsonIJsonMutation};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
+    /// 🏗️ Holds the snapshot directly rather than wrapping the ✳️any builder, because this subset's
+    /// `Mutation` is its OWN `JsonIJsonMutation` (see `mutations/🦀️component.rs`) and not the ✳️any
+    /// sibling's -- the same shape `ZipIso21320BuilderConstruction` already uses for the same reason.
+    /// `from_text`/`from_binary` stay exactly the ✳️any codec (`ArtifactDsl`/`ArtifactPack` on the
+    /// SHARED `JsonSnapshot`); only the mutation vocabulary and the RFC 7493 build gate are this
+    /// subset's own.
     #[derive(Clone, Debug, Default)]
-    pub struct JsonIJsonBuilderConstruction(JsonAnyBuilder);
+    pub struct JsonIJsonBuilderConstruction {
+        snapshot: JsonSnapshot,
+    }
 
     impl ArtifactBuilder for JsonIJsonBuilderConstruction {
         type Snapshot = JsonSnapshot;
-        type Mutation = JsonMutation;
+        type Mutation = JsonIJsonMutation;
         type Diff = JsonDiff;
 
         async fn empty() -> Self {
-            Self(JsonAnyBuilder::empty().await)
+            Self { snapshot: JsonSnapshot::default() }
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self(JsonAnyBuilder::from_snapshot(snapshot).await)
+            Self { snapshot }
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self(JsonAnyBuilder::from_text(text).await?))
+            Ok(Self { snapshot: <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)? })
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self(JsonAnyBuilder::from_binary(bytes).await?))
+            Ok(Self { snapshot: <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes)? })
         }
 
-        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.0.mutate(mutation).await;
-            (Self(inner), diff)
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = apply_json_i_json_mutation(&mut self.snapshot, &mutation);
+            (self, outcome)
         }
 
-        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(Self(self.0.absorb(diff).await?))
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
-        /// 🛡️ The real construction gate: however `self.0`'s inner snapshot got here, a hard RFC 7493
-        /// violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`.
+        /// 🛡️ The real construction gate: however the inner snapshot got here, a hard RFC 7493
+        /// violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`. Two doors now
+        /// lead to the same clauses: this gate rejects a violating STATE, and `JsonIJsonMutation`'s
+        /// own `diff()` rejects a violating EDIT before it can produce one.
         async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let snapshot = self.0.build().await?;
-            let hard: Vec<Diagnostic> = check_i_json_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
+            let hard: Vec<Diagnostic> = check_i_json_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
-                Ok(snapshot)
+                Ok(self.snapshot)
             } else {
                 Err(hard)
             }
@@ -86,7 +95,7 @@ pub mod derived_construction {
         async fn unsafe_integer_injected_via_raw_mutate_still_fails_build() {
             use crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{JsonMember, JsonValue};
             let violating = JsonSnapshot { value: JsonValue::Object { members: vec![JsonMember { key: "n".into(), value: JsonValue::Number { lexeme: "9007199254740993".into() } }] }, ..JsonSnapshot::default() };
-            let (mutated, _diff) = JsonIJsonBuilderConstruction::from_snapshot(JsonSnapshot::default()).mutate(JsonMutation::SetSnapshot { snapshot: violating });
+            let (mutated, _diff) = JsonIJsonBuilderConstruction::from_snapshot(JsonSnapshot::default()).mutate(JsonIJsonMutation::SetSnapshot { snapshot: violating });
             let err = mutated.build().expect_err("an unsafe integer must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.json.i-json.unsafe-integer"));
         }

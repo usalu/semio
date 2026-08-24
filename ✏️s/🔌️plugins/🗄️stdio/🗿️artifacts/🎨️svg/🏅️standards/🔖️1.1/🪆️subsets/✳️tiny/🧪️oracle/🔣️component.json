@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🎨️ SVG 1.1/✳️tiny's own contribution to the repository test platform: `quick-xml` 0.42 registered as the independent reference reader/writer for THIS subset's own 10-kind `SvgTinyMutation` vocabulary, and the comparison profile that vocabulary is measured under. A distinct id and capability from the sibling `✳️any` and `✳️basic` registrations: a mutation vocabulary belongs to the subset that declares it, and reusing an approved oracle outside its surveyed capability fails the contract's oracle-capability-mismatch check.",
+  "oracles": [
+    {
+      "id": "quick-xml-svg-1-1-tiny-mutate",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42",
+      "capabilities": ["svg-1-1-tiny-mutate"],
+      "comparisonProfiles": ["semantic-svg-tiny-1-1-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/tafia/quick-xml",
+      "rationale": "quick-xml is a general streaming XML reader AND writer, not an SVG library and not a profile validator, which is what makes it usable as the independent producer here: this subset's oracle (../🧪️oracle/🦀️component.rs) builds its own element tree from quick-xml's event stream through the shared 📰markup family module, applies each declared SvgTinyMutation kind to that tree with independently written viewBox/transform grammars and its own transcription of REC-SVGMobile-20030114's excluded-element and excluded-attribute lists, and re-serializes with quick-xml's Writer. It never imports this repository's own xml_document_from_text/write_svg_xml codec, nor its check_svg_tiny_conformance. Both blocklists encode the same normative W3C list; neither is derived from the other, which is the point.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "svg-1-1-tiny",
+      "capability": "svg-1-1-tiny-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "stamp-base-profile",
+        "insert-tiny-element",
+        "remove-element",
+        "set-tiny-attribute",
+        "set-text",
+        "set-view-box",
+        "set-transform",
+        "strip-non-tiny"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-svg-tiny-1-1-v1",
+      "description": "SVG Tiny 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (attribute order is real writer freedom), and the viewBox/transform attribute values decomposed into typed numeric geometry rather than compared as raw strings, with a small absolute tolerance for cross-implementation float formatting. Self-closing versus explicit empty open/close tags are equivalent by construction — both parse to zero children — and are never distinguished by either side. Nothing about the PROFILE is narrowed away: the presence or absence of an excluded element or a forbidden presentation attribute is exactly what the tree comparison sees, so strip-non-tiny and the gated authoring kinds are compared on the ground the profile is defined on.",
+      "tolerance": 1e-9,
+      "ignoreKeys": []
+    }
+  ]
+}

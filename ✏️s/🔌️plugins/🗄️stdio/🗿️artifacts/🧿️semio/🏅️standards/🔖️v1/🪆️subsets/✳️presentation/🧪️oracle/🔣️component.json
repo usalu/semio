@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.presentation` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-presentation-mutation-semantics",
+      "capabilities": ["semio-v1-presentation-mutate"],
+      "rationale": "No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over this subset's `SemioPresentationMutation` vocabulary — fifteen verbs over an INDEX-addressed slide and shape tree and two id-keyed master/layout collections. `python-pptx` was surveyed as the obvious candidate, because this subset is deliberately modelled on pptx (`p:sld`/`p:sldMaster`/`p:sldLayout`/`p:spTree`/`a:tbl`/`p:ph`), the cross-language oracle hosts have landed (a Python venv is provisioned and version-checked per declared package; `extract-text-pdf-1-4` executes its `pypdf` scenarios today), and a real `.pptx` fixture is committed in this repository. It was rejected on three findings. First, reaching a `SemioPresentationSnapshot` from pptx bytes requires THIS repository's own `🚪️io/📥️import`/`📤️export` pptx bridge, so a differential would run our importer against our exporter with a third party merely re-reading the result — the self-comparison this platform exists to prevent. Second, `python-pptx` cannot create slide masters or slide layouts at all, so `insert-master`, `insert-layout`, `remove-master`, `remove-layout` and `set-layout-master` — a third of the vocabulary — have no reference counterpart. Third, `set-snapshot`'s semantics are `SemioPresentationDiff::between`, a whole-state structural comparison that no presentation library models. Confidence instead comes from specification vectors whose BEFORE state is the real committed example artifact `🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio` (asserted byte-identical to `demo_semio_presentation_snapshot()`, so the fixture can never silently drift into a synthetic one), plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation state, including slide and shape ORDER, which is what an index-addressed vocabulary makes load-bearing.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-presentation",
+      "capability": "semio-v1-presentation-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "insert-slide",
+        "remove-slide",
+        "set-slide-layout",
+        "set-slide-notes",
+        "insert-shape",
+        "remove-shape",
+        "set-shape-frame",
+        "set-textbox-blocks",
+        "insert-master",
+        "remove-master",
+        "insert-layout",
+        "remove-layout",
+        "set-layout-master"
+      ]
+    }
+  ]
+}

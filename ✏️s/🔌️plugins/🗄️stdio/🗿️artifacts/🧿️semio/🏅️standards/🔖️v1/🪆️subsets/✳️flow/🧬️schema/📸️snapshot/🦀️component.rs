@@ -359,6 +359,60 @@ impl store::ArtifactPack for SemioFlowSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioFlowSnapshot`] — a thin
+/// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// crate's private `store` extern-crate item (the `mutate-semio-flow` test adapter, which reads the
+/// REAL committed example artifact rather than a hand-transcribed Rust literal of it) can still
+/// drive the same codec production does. Same rationale as `✳️kit`'s `decode_kit_snapshot_json`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_flow_dsl(text: &str) -> Result<SemioFlowSnapshot, String> {
+    <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_flow_dsl`] — same rationale.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_flow_dsl(snapshot: &SemioFlowSnapshot) -> String {
+    <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+}
+
+/// 📥️ Decodes this subset's own committed `.pack.semio` bytes into a real [`SemioFlowSnapshot`] — the
+/// binary half of the same bridge, so a caller outside this crate can check the two codecs against
+/// each other on the two real committed artifacts instead of against itself.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_flow_pack(bytes: &[u8]) -> Result<SemioFlowSnapshot, String> {
+    <SemioFlowSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactPack::encode_pack` inverse of [`decode_semio_flow_pack`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_flow_pack(snapshot: &SemioFlowSnapshot) -> Vec<u8> {
+    <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(snapshot)
+}
+
+/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// `s.stdio.semio.flow` — the shape the `mutate-semio-flow` case compares under `ordered-json-v1`. A thin
+/// `serde_json` wrapper (already a direct dependency of this crate, used behind this interface per
+/// CLAUDE.md's "external libraries behind an interface" rule, never a new one), so a projection is
+/// derived from the snapshot type itself rather than hand-written a second time in the adapter,
+/// where it could drift.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_flow_snapshot_json(snapshot: &SemioFlowSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioFlowSnapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_semio_flow_snapshot_json`] — decodes the
+/// `before`/`after` halves of `mutate-semio-flow`'s committed specification vectors
+/// (`../../../../../🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️<kind>.json`) into real [`SemioFlowSnapshot`]
+/// values, so the adapter never hand-transcribes a fixture into a Rust literal that could silently
+/// drift away from the JSON it claims to mirror.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_flow_snapshot_json(text: &str) -> Result<SemioFlowSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.flow` document — 2 nodes (one with 2 params, one with none, incl.
 /// a negative coordinate) + 1 edge, exercising every collection/leaf shape at least once. Single

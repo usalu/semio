@@ -1630,7 +1630,7 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
         #[cfg(feature = "postgres")]
         "postgres" => {
             let database_url = std::env::var("OS_HUB_DATABASE_URL").map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
-            let storage = db::storage_postgres::PostgresStorage::connect(&database_url).await?;
+            let storage = db::storage_postgres::PostgresStorage::connect(pool.clone(), &database_url).await?;
             Ok(db::Database::open(pool, db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Postgres(storage))).await?)
         }
         #[cfg(feature = "neo4j")]
@@ -1638,7 +1638,7 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
             let uri = std::env::var("OS_HUB_NEO4J_URI").map_err(|_| HubError::UnknownStorageBackend("neo4j requires OS_HUB_NEO4J_URI".into()))?;
             let user = std::env::var("OS_HUB_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
             let password = std::env::var("OS_HUB_NEO4J_PASSWORD").unwrap_or_default();
-            let storage = db::storage_neo4j::Neo4jStorage::connect(&uri, &user, &password).await?;
+            let storage = db::storage_neo4j::Neo4jStorage::connect(pool.clone(), &uri, &user, &password).await?;
             Ok(db::Database::open(pool, db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Neo4j(storage))).await?)
         }
         other => Err(HubError::UnknownStorageBackend(other.to_string())),

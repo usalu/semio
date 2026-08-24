@@ -1,0 +1,9 @@
+{
+  "mutation": "setRelation",
+  "id": "rel-1",
+  "kind": {
+    "kind": "connectsTo"
+  },
+  "from": null,
+  "to": null
+}

@@ -37,7 +37,7 @@ pub struct AccessibilitySpec {
     #[serde(default, skip_serializing_if = "is_default")]
     pub live: Liveness,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub shortcut: Option<String>,
+    pub shortcut: Option<crate::UiText>,
     #[serde(default, skip_serializing_if = "is_default")]
     pub hidden: bool,
 }

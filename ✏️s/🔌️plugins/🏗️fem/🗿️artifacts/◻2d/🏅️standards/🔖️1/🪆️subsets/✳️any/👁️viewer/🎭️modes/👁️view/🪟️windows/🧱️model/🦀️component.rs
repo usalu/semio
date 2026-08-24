@@ -94,7 +94,7 @@ fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])>
 /// overlay, hardcoded `FemCamera::default()` (a viewer has no persisted per-session camera —
 /// `Config = NoConfig`). No results overlay, no selection, no gumball — a viewer has no utilities
 /// that edit and emits no mutations by construction (`ViewEmit`).
-pub fn render(doc: &Fem2dSnapshot) -> BuiltNode {
+pub fn render(doc: &Fem2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let camera = FemCamera::default();
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {

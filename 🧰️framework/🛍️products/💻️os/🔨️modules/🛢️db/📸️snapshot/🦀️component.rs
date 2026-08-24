@@ -14,7 +14,7 @@
 //! that trait's own doc). So `prev_footer_offset`/`REQUIRED_FOOTER_CHAIN` cannot literally address
 //! "the other stored blob" — instead this crate defines their meaning precisely: if every
 //! generation from the chain's root up to and including this one were concatenated, in
-//! generation order, into one byte buffer (`materialize_chain` does exactly this), then
+//! generation order, into one retained page authority (`SnapshotChainCursor::materialize_pages`), then
 //! `prev_footer_offset` is the absolute offset *within that concatenation* of the parent
 //! generation's own footer (`parent_base + parent_len - FOOTER_SIZE`), and `REQUIRED_FOOTER_CHAIN`
 //! marks that the field is meaningful at all (distinguishing a legitimate `prev_footer_offset == 0`
@@ -94,6 +94,7 @@ impl SnapshotDescriptor {
     /// @emoji ✍️ Serializes this descriptor to the exact bytes written into the `KIND_SNAPSHOT`
     /// segment — a flat, versioned, varint-framed encoding (this crate's own choice; the contract
     /// fixes only the segment kind, not the payload layout).
+    #[cfg(test)]
     pub async fn encode(&self) -> Vec<u8> {
         let mut w = pack::ByteWriter::new();
         w.write_u8(DESCRIPTOR_FORMAT_VERSION);
@@ -125,9 +126,64 @@ impl SnapshotDescriptor {
         w.into_bytes()
     }
 
+    fn retained_len(&self) -> Result<usize, DbError> {
+        let mut len = 1usize;
+        for field in [
+            snapshot_field_len(self.document.0.as_bytes()),
+            snapshot_varint_len(self.generation),
+            1 + self.parent_generation.map_or(0, snapshot_varint_len),
+            snapshot_varint_len(self.head_seq),
+            snapshot_varint_len(self.commit_seq),
+            snapshot_varint_len(self.epoch),
+            32,
+            snapshot_varint_len(self.protocol_version as u64),
+            1 + self.vcs_head.as_ref().map_or(0, |value| snapshot_field_len(value.as_bytes())),
+            1 + self.base_pack_hash.map_or(0, |_| 32),
+            snapshot_varint_len(self.roots.len() as u64) + self.roots.len().checked_mul(32).ok_or(DbError::LimitExceeded("snapshot roots bytes"))?,
+            snapshot_varint_len(self.new_pages.len() as u64) + self.new_pages.len().checked_mul(32).ok_or(DbError::LimitExceeded("snapshot new pages bytes"))?,
+            snapshot_varint_len(self.created_at_ms),
+        ] {
+            len = len.checked_add(field).ok_or(DbError::LimitExceeded("snapshot descriptor bytes"))?;
+        }
+        Ok(len)
+    }
+
+    async fn write_retained(&self, segment: &mut pack::PackIdentitySegment<'_, SnapshotPageSink>) -> Result<(), DbError> {
+        snapshot_segment_write(segment, &[DESCRIPTOR_FORMAT_VERSION]).await?;
+        snapshot_segment_write_field(segment, self.document.0.as_bytes()).await?;
+        snapshot_segment_write_varint(segment, self.generation).await?;
+        snapshot_segment_write(segment, &[u8::from(self.parent_generation.is_some())]).await?;
+        if let Some(parent) = self.parent_generation {
+            snapshot_segment_write_varint(segment, parent).await?;
+        }
+        snapshot_segment_write_varint(segment, self.head_seq).await?;
+        snapshot_segment_write_varint(segment, self.commit_seq).await?;
+        snapshot_segment_write_varint(segment, self.epoch).await?;
+        snapshot_segment_write(segment, &self.chain_hash).await?;
+        snapshot_segment_write_varint(segment, self.protocol_version as u64).await?;
+        snapshot_segment_write(segment, &[u8::from(self.vcs_head.is_some())]).await?;
+        if let Some(head) = &self.vcs_head {
+            snapshot_segment_write_field(segment, head.as_bytes()).await?;
+        }
+        snapshot_segment_write(segment, &[u8::from(self.base_pack_hash.is_some())]).await?;
+        if let Some(hash) = self.base_pack_hash {
+            snapshot_segment_write(segment, &hash.0).await?;
+        }
+        snapshot_segment_write_varint(segment, self.roots.len() as u64).await?;
+        for hash in &self.roots {
+            snapshot_segment_write(segment, &hash.0).await?;
+        }
+        snapshot_segment_write_varint(segment, self.new_pages.len() as u64).await?;
+        for hash in &self.new_pages {
+            snapshot_segment_write(segment, &hash.0).await?;
+        }
+        snapshot_segment_write_varint(segment, self.created_at_ms).await
+    }
+
     /// @emoji 📖️ Inverse of `encode`. Never panics on malformed input — every field read is
     /// bounds-checked by `pack::ByteReader` and every count is checked against
     /// `MAX_HASH_LIST_LEN`/`MAX_STRING_BYTES` before the corresponding `Vec`/`String` is allocated.
+    #[cfg(test)]
     pub async fn decode(bytes: &[u8]) -> Result<SnapshotDescriptor, DbError> {
         let mut r = pack::ByteReader::new(bytes);
         let version = r.read_u8()?;
@@ -159,11 +215,52 @@ impl SnapshotDescriptor {
     }
 }
 
+fn snapshot_varint(mut value: u64, output: &mut [u8; 10]) -> &[u8] {
+    let mut len = 0;
+    loop {
+        let mut byte = (value & 0x7f) as u8;
+        value >>= 7;
+        if value != 0 {
+            byte |= 0x80;
+        }
+        output[len] = byte;
+        len += 1;
+        if value == 0 {
+            return &output[..len];
+        }
+    }
+}
+
+fn snapshot_varint_len(value: u64) -> usize {
+    let mut output = [0u8; 10];
+    snapshot_varint(value, &mut output).len()
+}
+
+fn snapshot_field_len(bytes: &[u8]) -> usize {
+    snapshot_varint_len(bytes.len() as u64) + bytes.len()
+}
+
+async fn snapshot_segment_write(segment: &mut pack::PackIdentitySegment<'_, SnapshotPageSink>, bytes: &[u8]) -> Result<(), DbError> {
+    segment.write_fragment(bytes).await.map_err(DbError::from)
+}
+
+async fn snapshot_segment_write_varint(segment: &mut pack::PackIdentitySegment<'_, SnapshotPageSink>, value: u64) -> Result<(), DbError> {
+    let mut output = [0u8; 10];
+    snapshot_segment_write(segment, snapshot_varint(value, &mut output)).await
+}
+
+async fn snapshot_segment_write_field(segment: &mut pack::PackIdentitySegment<'_, SnapshotPageSink>, bytes: &[u8]) -> Result<(), DbError> {
+    snapshot_segment_write_varint(segment, bytes.len() as u64).await?;
+    snapshot_segment_write(segment, bytes).await
+}
+
+#[cfg(test)]
 async fn write_string(w: &mut pack::ByteWriter, s: &str) {
     w.write_varint_u64(s.len() as u64);
     w.write_bytes(s.as_bytes());
 }
 
+#[cfg(test)]
 async fn read_string(r: &mut pack::ByteReader<'_>) -> Result<String, DbError> {
     let len = r.read_varint_u64()?;
     check_len(len, MAX_STRING_BYTES, "snapshot descriptor string")?;
@@ -171,6 +268,7 @@ async fn read_string(r: &mut pack::ByteReader<'_>) -> Result<String, DbError> {
     String::from_utf8(bytes.to_vec()).map_err(|_| DbError::Corrupt("invalid utf8 in snapshot descriptor".to_string()))
 }
 
+#[cfg(test)]
 async fn write_option_u64(w: &mut pack::ByteWriter, value: Option<u64>) {
     match value {
         Some(v) => {
@@ -181,6 +279,7 @@ async fn write_option_u64(w: &mut pack::ByteWriter, value: Option<u64>) {
     }
 }
 
+#[cfg(test)]
 async fn read_option_u64(r: &mut pack::ByteReader<'_>) -> Result<Option<u64>, DbError> {
     match r.read_u8()? {
         0 => Ok(None),
@@ -189,6 +288,7 @@ async fn read_option_u64(r: &mut pack::ByteReader<'_>) -> Result<Option<u64>, Db
     }
 }
 
+#[cfg(test)]
 async fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[ContentHash]) {
     w.write_varint_u64(hashes.len() as u64);
     for hash in hashes {
@@ -196,6 +296,7 @@ async fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[ContentHash]) {
     }
 }
 
+#[cfg(test)]
 async fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>, DbError> {
     let count = r.read_varint_u64()?;
     check_len(count, MAX_HASH_LIST_LEN, "snapshot descriptor hash list")?;
@@ -212,12 +313,14 @@ async fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>
 /// `pack::PackSource` — the mechanism this crate uses to open one generation's own pack structure
 /// (`PackFile::open_manifest`, `read_footer_only`) at an arbitrary offset inside a larger
 /// multi-generation concatenation, without touching any `pack_format` private internals.
+#[cfg(test)]
 struct SubSource<'a> {
     inner: &'a [u8],
     base: u64,
     len: u64,
 }
 
+#[cfg(test)]
 impl<'a> pack::PackSource for SubSource<'a> {
     async fn len(&self) -> u64 {
         self.len
@@ -232,52 +335,265 @@ impl<'a> pack::PackSource for SubSource<'a> {
     }
 }
 
-/// @emoji 🔎️ Reads the `KIND_SNAPSHOT` segment this crate always writes as the very first segment
-/// (fixed local offset `pack::HEADER_SIZE`, right after the header) of one generation's own
-/// coordinate space. Only understands identity-codec framing (`flags == 0`) since this crate never
-/// compresses that segment; CRC-validates before returning the payload.
-async fn decode_snapshot_segment(source: &SubSource<'_>) -> Result<Vec<u8>, DbError> {
+#[derive(Clone, Copy)]
+struct PageSubSource<'pages> {
+    inner: &'pages db_storage::DbIoPages,
+    base: u64,
+    len: u64,
+}
+
+impl pack::PackSource for PageSubSource<'_> {
+    async fn len(&self) -> u64 {
+        self.len
+    }
+
+    async fn read_at(&self, offset: u64, output: &mut [u8]) -> Result<usize, pack::PackError> {
+        if offset > self.len {
+            return Err(pack::PackError::Truncated(offset));
+        }
+        let absolute = self.base.checked_add(offset).ok_or(pack::PackError::Truncated(offset))? as usize;
+        let available = ((self.len - offset) as usize).min(output.len());
+        let mut base = 0usize;
+        let mut written = 0usize;
+        for fragment in self.inner.fragments() {
+            let end = base + fragment.len();
+            if end <= absolute {
+                base = end;
+                continue;
+            }
+            let start = absolute.saturating_sub(base);
+            let count = (available - written).min(fragment.len() - start);
+            output[written..written + count].copy_from_slice(&fragment[start..start + count]);
+            written += count;
+            base = end;
+            if written == available {
+                break;
+            }
+        }
+        Ok(written)
+    }
+}
+
+struct SnapshotDescriptorReader<'source, 'control, S: pack::PackSource> {
+    source: &'source S,
+    cursor: u64,
+    end: u64,
+    crc: pack::codec::Crc32cCursor,
+    control: &'control mut SnapshotCursorControl,
+}
+
+impl<S: pack::PackSource> SnapshotDescriptorReader<'_, '_, S> {
+    async fn fixed<const N: usize>(&mut self) -> Result<[u8; N], DbError> {
+        if self.cursor.checked_add(N as u64).is_none_or(|end| end > self.end) {
+            return Err(DbError::Corrupt("snapshot descriptor ended early".to_string()));
+        }
+        self.control.grant()?;
+        let mut output = [0u8; N];
+        self.source.read_exact_at(self.cursor, &mut output).await?;
+        self.cursor += N as u64;
+        self.crc.update_page(&output);
+        Ok(output)
+    }
+
+    async fn byte(&mut self) -> Result<u8, DbError> {
+        Ok(self.fixed::<1>().await?[0])
+    }
+
+    async fn varint(&mut self) -> Result<u64, DbError> {
+        let mut value = 0u64;
+        for shift in (0..70).step_by(7) {
+            let byte = self.byte().await?;
+            value |= u64::from(byte & 0x7f) << shift;
+            if byte & 0x80 == 0 {
+                return Ok(value);
+            }
+        }
+        Err(DbError::Corrupt("snapshot descriptor varint overflow".to_string()))
+    }
+
+    async fn option_u64(&mut self) -> Result<Option<u64>, DbError> {
+        match self.byte().await? {
+            0 => Ok(None),
+            1 => Ok(Some(self.varint().await?)),
+            tag => Err(DbError::Corrupt(format!("bad snapshot option tag {tag}"))),
+        }
+    }
+
+    async fn text(&mut self) -> Result<String, DbError> {
+        let len = self.varint().await?;
+        check_len(len, MAX_STRING_BYTES, "snapshot descriptor string")?;
+        if self.cursor.checked_add(len).is_none_or(|end| end > self.end) {
+            return Err(DbError::Corrupt("snapshot descriptor string ended early".to_string()));
+        }
+        let mut remaining = len as usize;
+        let mut output = Vec::with_capacity(remaining);
+        let mut fragment = [0u8; 4096];
+        while remaining != 0 {
+            self.control.grant()?;
+            let count = remaining.min(fragment.len());
+            self.source.read_exact_at(self.cursor, &mut fragment[..count]).await?;
+            self.cursor += count as u64;
+            remaining -= count;
+            self.crc.update_page(&fragment[..count]);
+            output.extend_from_slice(&fragment[..count]);
+        }
+        String::from_utf8(output).map_err(|_| DbError::Corrupt("invalid utf8 in snapshot descriptor".to_string()))
+    }
+
+    async fn hashes(&mut self) -> Result<Vec<ContentHash>, DbError> {
+        let count = self.varint().await?;
+        check_len(count, MAX_HASH_LIST_LEN, "snapshot descriptor hash list")?;
+        if count.checked_mul(32).and_then(|bytes| self.cursor.checked_add(bytes)).is_none_or(|end| end > self.end) {
+            return Err(DbError::Corrupt("snapshot descriptor hash list ended early".to_string()));
+        }
+        let mut output = Vec::with_capacity(count as usize);
+        for _ in 0..count {
+            output.push(ContentHash(self.fixed::<32>().await?));
+        }
+        Ok(output)
+    }
+}
+
+async fn decode_snapshot_descriptor(source: &impl pack::PackSource, control: &mut SnapshotCursorControl) -> Result<SnapshotDescriptor, DbError> {
     use pack::PackSource as _;
     let offset = pack::HEADER_SIZE as u64;
-    const PREFIX_CAP: usize = 16;
-    let mut prefix = [0u8; PREFIX_CAP];
-    let read = source.read_at(offset, &mut prefix).await?;
-    if read < 2 {
-        return Err(DbError::Corrupt("truncated snapshot descriptor segment header".to_string()));
-    }
+    let mut prefix = [0u8; 12];
+    control.grant()?;
+    source.read_exact_at(offset, &mut prefix).await?;
     let kind = prefix[0];
     let flags = prefix[1];
     if flags != 0 {
         return Err(DbError::Corrupt("snapshot descriptor segment must use the identity codec".to_string()));
     }
-    let mut pos = 2usize;
-    let seg_len = pack::os_pack::read_varint_u64(&prefix[..read], &mut pos)?;
-    check_len(seg_len, 64 * 1024 * 1024, "snapshot descriptor segment length")?;
-    let header_len = pos as u64;
-    let mut frame = vec![0u8; (header_len + seg_len) as usize];
-    source.read_exact_at(offset, &mut frame).await?;
+    let mut position = 2usize;
+    let segment_len = pack::os_pack::read_varint_u64(&prefix, &mut position)?;
+    check_len(segment_len, 64 * 1024 * 1024, "snapshot descriptor segment length")?;
+    let header_len = position as u64;
+    let end = offset.checked_add(header_len).and_then(|cursor| cursor.checked_add(segment_len)).ok_or(DbError::LimitExceeded("snapshot descriptor segment range"))?;
+    let mut crc = pack::codec::Crc32cCursor::new();
+    crc.update_page(&prefix[..position]);
+    let mut reader = SnapshotDescriptorReader { source, cursor: offset + header_len, end, crc, control };
+    let version = reader.byte().await?;
+    if version != DESCRIPTOR_FORMAT_VERSION {
+        return Err(DbError::Corrupt(format!("unsupported snapshot descriptor format version {version}")));
+    }
+    let document = ArtifactId(reader.text().await?);
+    let generation = reader.varint().await?;
+    let parent_generation = reader.option_u64().await?;
+    let head_seq = reader.varint().await?;
+    let commit_seq = reader.varint().await?;
+    let epoch = reader.varint().await?;
+    let chain_hash = reader.fixed::<32>().await?;
+    let protocol_version = u32::try_from(reader.varint().await?).map_err(|_| DbError::Corrupt("snapshot protocol version exceeds u32".to_string()))?;
+    let vcs_head = match reader.byte().await? {
+        0 => None,
+        1 => Some(reader.text().await?),
+        tag => return Err(DbError::Corrupt(format!("bad snapshot option tag {tag}"))),
+    };
+    let base_pack_hash = match reader.byte().await? {
+        0 => None,
+        1 => Some(ContentHash(reader.fixed::<32>().await?)),
+        tag => return Err(DbError::Corrupt(format!("bad snapshot option tag {tag}"))),
+    };
+    let roots = reader.hashes().await?;
+    let new_pages = reader.hashes().await?;
+    let created_at_ms = reader.varint().await?;
+    if reader.cursor != reader.end {
+        return Err(DbError::Corrupt("snapshot descriptor segment has trailing bytes".to_string()));
+    }
     let mut crc_bytes = [0u8; 4];
-    source.read_exact_at(offset + header_len + seg_len, &mut crc_bytes).await?;
-    let stored_crc = u32::from_le_bytes(crc_bytes);
-    let computed_crc = pack::crc32c(&frame);
-    if stored_crc != computed_crc {
+    reader.control.grant()?;
+    source.read_exact_at(end, &mut crc_bytes).await?;
+    if u32::from_le_bytes(crc_bytes) != reader.crc.finish() {
         return Err(DbError::Corrupt("snapshot descriptor segment checksum mismatch".to_string()));
     }
     if kind != pack::KIND_SNAPSHOT {
         return Err(DbError::Corrupt(format!("expected KIND_SNAPSHOT segment (0x{:02x}), found 0x{kind:02x}", pack::KIND_SNAPSHOT)));
     }
-    Ok(frame[header_len as usize..].to_vec())
+    Ok(SnapshotDescriptor { document, generation, parent_generation, head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, new_pages, created_at_ms })
 }
 //#endregion 🔖️SegmentIo
 
 //#region 🔖️Generation
+struct SnapshotPageSink {
+    writer: db_storage::DbIoPageWriter,
+}
+
+impl pack::PackSink for SnapshotPageSink {
+    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
+        let mut cursor = 0;
+        while cursor < bytes.len() {
+            cursor += self.writer.write_fragment(&bytes[cursor..]).map_err(|error| pack::PackError::Io(error.to_string()))?;
+            std::future::poll_fn(|context| {
+                context.waker().wake_by_ref();
+                std::task::Poll::Ready(())
+            })
+            .await;
+        }
+        Ok(())
+    }
+
+    async fn position(&self) -> u64 {
+        self.writer.len() as u64
+    }
+}
+
+impl SnapshotPageSink {
+    fn try_new() -> Result<Self, DbError> {
+        let writer = db_storage::DbIoPageWriter::try_reserve(db_storage::DB_IO_OPERATION_PAGES).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+        Ok(Self { writer })
+    }
+
+    async fn patch_parent_footer(&mut self, parent_footer_offset: u64) -> Result<(), DbError> {
+        if self.writer.len() < pack::FOOTER_SIZE {
+            return Err(DbError::Corrupt("pack pages shorter than one footer".to_string()));
+        }
+        let footer_start = self.writer.len() - pack::FOOTER_SIZE;
+        let mut footer_prefix = [0u8; 80];
+        let mut copied = 0;
+        while copied < footer_prefix.len() {
+            copied += self.writer.read_fragment(footer_start + copied, &mut footer_prefix[copied..])?;
+            std::future::poll_fn(|context| {
+                context.waker().wake_by_ref();
+                std::task::Poll::Ready(())
+            })
+            .await;
+        }
+        footer_prefix[72..80].copy_from_slice(&parent_footer_offset.to_le_bytes());
+        let mut patched = 0;
+        while patched < 8 {
+            patched += self.writer.patch_fragment(footer_start + 72 + patched, &footer_prefix[72 + patched..80])?;
+            std::future::poll_fn(|context| {
+                context.waker().wake_by_ref();
+                std::task::Poll::Ready(())
+            })
+            .await;
+        }
+        let crc = pack::crc32c(&footer_prefix).to_le_bytes();
+        let mut patched_crc = 0;
+        while patched_crc < crc.len() {
+            patched_crc += self.writer.patch_fragment(footer_start + 80 + patched_crc, &crc[patched_crc..])?;
+            std::future::poll_fn(|context| {
+                context.waker().wake_by_ref();
+                std::task::Poll::Ready(())
+            })
+            .await;
+        }
+        Ok(())
+    }
+
+    async fn into_pages(self) -> Result<db_storage::DbIoPages, DbError> {
+        self.writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+    }
+}
+
 /// @emoji 🏗️ Builds one generation's complete, self-contained `.spk` pack bytes: the descriptor
 /// as the first (`KIND_SNAPSHOT`) segment, `new_pages` as `KIND_CHUNK` segments in order (so
 /// `descriptor.new_pages[i]` is `pack::ChunkId(i)`), then the standard `pack::PackWriter::finish`
 /// trailer. If `parent_footer_position` is `Some`, the trailing footer's `prev_footer_offset` is
 /// patched in place afterward (see module doc) and `REQUIRED_FOOTER_CHAIN` is set in both the
 /// header and the footer's `required_flags`.
-pub async fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>) -> Result<Vec<u8>, DbError> {
+pub async fn build_generation_pages(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>, control: &mut SnapshotCursorControl) -> Result<db_storage::DbIoPages, DbError> {
     if new_pages.len() != descriptor.new_pages.len() {
         return Err(DbError::InvalidArgument("new_pages count does not match descriptor.new_pages".to_string()));
     }
@@ -295,12 +611,25 @@ pub async fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page
         required_flags |= pack::REQUIRED_CHUNKED;
     }
     let options = pack::os_pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
-    let mut writer = pack::PackWriter::begin(Vec::<u8>::new(), &options).await?;
+    let mut writer = pack::PackWriter::begin(SnapshotPageSink::try_new()?, &options).await?;
 
-    let descriptor_bytes = descriptor.encode().await;
-    writer.write_segment(pack::KIND_SNAPSHOT, &descriptor_bytes).await?;
+    let mut descriptor_segment = writer.begin_identity_segment(pack::KIND_SNAPSHOT, descriptor.retained_len()?).await?;
+    descriptor.write_retained(&mut descriptor_segment).await?;
+    descriptor_segment.finish().await?;
     for page in new_pages {
-        writer.write_chunk(&page.bytes).await?;
+        control.grant()?;
+        let mut chunk = writer.begin_identity_chunk(page.len()).await?;
+        for fragment in page.fragments() {
+            if let Err(error) = control.grant() {
+                chunk.close();
+                return Err(error);
+            }
+            if let Err(error) = chunk.write_fragment(fragment).await {
+                chunk.close();
+                return Err(error.into());
+            }
+        }
+        chunk.finish().await?;
     }
 
     let manifest = pack::Manifest {
@@ -316,12 +645,23 @@ pub async fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page
         chunk_count: 0,
         symbol_count: 0,
     };
-    let mut bytes = writer.finish(&manifest).await?;
+    let mut sink = writer.finish(&manifest).await?;
 
     if let Some(parent_offset) = parent_footer_position {
-        patch_prev_footer_offset(&mut bytes, parent_offset).await?;
+        sink.patch_parent_footer(parent_offset).await?;
     }
-    Ok(bytes)
+    sink.into_pages().await
+}
+
+#[cfg(test)]
+async fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>) -> Result<Vec<u8>, DbError> {
+    let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+    let mut pages = build_generation_pages(descriptor, new_pages, parent_footer_position, &mut control).await?;
+    let mut prepared = db_storage::db_io_prepare_platform(&pages)?.await?;
+    let output = prepared.as_slice().to_vec();
+    while prepared.close_step()? {}
+    while pages.close_step()?.is_some() {}
+    Ok(output)
 }
 
 /// @emoji 🩹️ `pack::PackWriter::finish` always writes `prev_footer_offset = 0` (there is no public
@@ -330,6 +670,7 @@ pub async fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page
 /// `pack_format::Footer`'s own layout, verified byte-for-byte against `pack`'s own tests) in
 /// place, then recomputes the footer's CRC-32C (over the preceding 80 bytes) so the result still
 /// parses cleanly through `pack::read_footer_only`/`PackFile::open_superblock`.
+#[cfg(test)]
 async fn patch_prev_footer_offset(bytes: &mut [u8], parent_footer_offset: u64) -> Result<(), DbError> {
     if bytes.len() < pack::FOOTER_SIZE {
         return Err(DbError::Corrupt("pack bytes shorter than one footer".to_string()));
@@ -370,16 +711,35 @@ impl GenerationHandle {
     }
 }
 
+#[cfg(test)]
 async fn open_generation_at(combined: &[u8], base: u64, len: u64, footer: &pack::Footer) -> Result<GenerationHandle, DbError> {
     let sub = SubSource { inner: combined, base, len };
-    let descriptor_bytes = decode_snapshot_segment(&sub).await?;
-    let descriptor = SnapshotDescriptor::decode(&descriptor_bytes).await?;
+    let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+    let descriptor = decode_snapshot_descriptor(&sub, &mut control).await?;
     Ok(GenerationHandle { descriptor, base, len, footer_required_flags: footer.required_flags, footer_prev_offset: footer.prev_footer_offset })
+}
+
+async fn open_generation_pages_at(combined: &db_storage::DbIoPages, base: u64, len: u64, footer: &pack::Footer, control: &mut SnapshotCursorControl) -> Result<GenerationHandle, DbError> {
+    let sub = PageSubSource { inner: combined, base, len };
+    let descriptor = decode_snapshot_descriptor(&sub, control).await?;
+    Ok(GenerationHandle { descriptor, base, len, footer_required_flags: footer.required_flags, footer_prev_offset: footer.prev_footer_offset })
+}
+
+async fn open_latest_pages(combined: &db_storage::DbIoPages, control: &mut SnapshotCursorControl) -> Result<GenerationHandle, DbError> {
+    control.grant()?;
+    let whole = PageSubSource { inner: combined, base: 0, len: combined.len() as u64 };
+    let footer = pack::read_footer_only(&whole).await?;
+    if footer.file_len > combined.len() as u64 {
+        return Err(DbError::Corrupt("snapshot generation footer.file_len exceeds retained pages".to_string()));
+    }
+    let base = combined.len() as u64 - footer.file_len;
+    open_generation_pages_at(combined, base, footer.file_len, &footer, control).await
 }
 
 /// @emoji 🔚️ Opens the LAST generation physically present in `combined` (the one whose footer sits
 /// at `combined.len() - FOOTER_SIZE`) — the entry point for reading a freshly-fetched or
-/// freshly-`materialize_chain`d buffer.
+/// freshly-materialized retained chain.
+#[cfg(test)]
 pub async fn open_latest(combined: &[u8]) -> Result<GenerationHandle, DbError> {
     let whole = SubSource { inner: combined, base: 0, len: combined.len() as u64 };
     let footer = pack::read_footer_only(&whole).await?;
@@ -395,6 +755,7 @@ pub async fn open_latest(combined: &[u8]) -> Result<GenerationHandle, DbError> {
 /// Uses only `pack::read_footer_only` (via a length-bounded `SubSource`) to find that footer's own
 /// `file_len`, from which its base offset is derived (`footer_offset + FOOTER_SIZE - file_len`) —
 /// no `pack_format` private footer-parsing internals needed.
+#[cfg(test)]
 pub async fn open_ancestor(combined: &[u8], footer_offset: u64) -> Result<GenerationHandle, DbError> {
     let footer_end = footer_offset.checked_add(pack::FOOTER_SIZE as u64).ok_or_else(|| DbError::Corrupt("snapshot chain footer offset overflow".to_string()))?;
     if footer_end > combined.len() as u64 {
@@ -412,6 +773,7 @@ pub async fn open_ancestor(combined: &[u8], footer_offset: u64) -> Result<Genera
 /// @emoji 📄️ Reads one page's raw bytes by content hash, starting at `handle` and walking to
 /// ancestors (via `open_ancestor`) until a generation whose `new_pages` lists it is found.
 /// Errors `NotFound` once the chain is exhausted without a match.
+#[cfg(test)]
 pub async fn read_page(combined: &[u8], handle: &GenerationHandle, hash: ContentHash) -> Result<Vec<u8>, DbError> {
     if let Some(index) = handle.descriptor.new_pages.iter().position(|candidate| *candidate == hash) {
         let sub = SubSource { inner: combined, base: handle.base, len: handle.len };
@@ -475,9 +837,188 @@ pub struct SnapshotManager<'storage, S: SnapshotStorage> {
     storage: &'storage S,
 }
 
+//#region 🔖️ChainCursor
+/// @emoji ⏳️ One resumable snapshot-chain grant authority.
+pub struct SnapshotCursorControl {
+    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    deadline: std::time::Instant,
+    fuel: usize,
+}
+
+impl SnapshotCursorControl {
+    pub fn new(cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
+        if fuel == 0 {
+            return Err(DbError::LimitExceeded("snapshot cursor fuel"));
+        }
+        Ok(Self { cancelled, deadline, fuel })
+    }
+
+    pub fn replenish(&mut self, fuel: usize, deadline: std::time::Instant) -> Result<(), DbError> {
+        if fuel == 0 {
+            return Err(DbError::LimitExceeded("snapshot cursor fuel"));
+        }
+        self.fuel = fuel;
+        self.deadline = deadline;
+        Ok(())
+    }
+
+    fn grant(&mut self) -> Result<(), DbError> {
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(DbError::Unavailable("snapshot cursor cancelled".to_string()));
+        }
+        if std::time::Instant::now() >= self.deadline {
+            return Err(DbError::Unavailable("snapshot cursor deadline reached".to_string()));
+        }
+        self.fuel = self.fuel.checked_sub(1).ok_or(DbError::LimitExceeded("snapshot cursor fuel"))?;
+        Ok(())
+    }
+}
+
+/// @emoji ⛓️ Incremental snapshot-chain reader retaining at most one generation owner and one
+/// prepared platform slot per grant.
+#[must_use]
+pub struct SnapshotChainCursor<'manager, 'storage, S: SnapshotStorage> {
+    manager: &'manager SnapshotManager<'storage, S>,
+    document: &'manager ArtifactId,
+    through_generation: u64,
+    control: SnapshotCursorControl,
+    operation: Option<u64>,
+    closed: bool,
+}
+
+impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'storage, S> {
+    pub fn operation(&self) -> Option<u64> {
+        self.operation
+    }
+
+    async fn descriptor_at(&mut self, generation: u64) -> Result<(SnapshotDescriptor, usize), DbError> {
+        self.control.grant()?;
+        let mut pages = self.manager.storage.read_generation(self.document, generation).await?;
+        self.operation = Some(pages.operation());
+        let len = pages.len();
+        self.control.grant()?;
+        let descriptor = open_latest_pages(&pages, &mut self.control).await?.descriptor;
+        while pages.close_step()?.is_some() {
+            self.control.grant()?;
+        }
+        Ok((descriptor, len))
+    }
+
+    pub async fn latest_descriptor(&mut self) -> Result<SnapshotDescriptor, DbError> {
+        self.descriptor_at(self.through_generation).await.map(|(descriptor, _)| descriptor)
+    }
+
+    pub async fn descriptor(&mut self, generation: u64) -> Result<SnapshotDescriptor, DbError> {
+        self.descriptor_at(generation).await.map(|(descriptor, _)| descriptor)
+    }
+
+    pub async fn read_page(&mut self, hash: ContentHash) -> Result<db_storage::DbIoPages, DbError> {
+        let mut generation = Some(self.through_generation);
+        while let Some(current) = generation {
+            self.control.grant()?;
+            let mut source = self.manager.storage.read_generation(self.document, current).await?;
+            self.operation = Some(source.operation());
+            self.control.grant()?;
+            let handle = open_latest_pages(&source, &mut self.control).await?;
+            if let Some(index) = handle.descriptor.new_pages.iter().position(|candidate| *candidate == hash) {
+                let sub = PageSubSource { inner: &source, base: handle.base, len: handle.len };
+                let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Standard).await?;
+                let mut reservation = db_storage::DbIoDriverReservation::try_reserve(source.operation(), db_storage::DB_IO_OPERATION_PAGES * db_storage::DB_IO_PAGE_BYTES)?;
+                self.control.grant()?;
+                let bytes = file.read_chunk(pack::ChunkId(index as u32), pack::os_pack::VerificationLevel::Standard).await?;
+                reservation.observe_capacity(bytes.capacity())?;
+                let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(source.operation(), bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+                let mut offset = 0;
+                while offset < bytes.len() {
+                    self.control.grant()?;
+                    offset += writer.write_fragment(&bytes[offset..])?;
+                }
+                drop(bytes);
+                reservation.close_step()?;
+                while source.close_step()?.is_some() {
+                    self.control.grant()?;
+                }
+                return writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error);
+            }
+            generation = handle.descriptor.parent_generation;
+            while source.close_step()?.is_some() {
+                self.control.grant()?;
+            }
+        }
+        Err(DbError::NotFound(format!("page {hash} not found anywhere in the snapshot chain")))
+    }
+
+    pub async fn materialize_pages(&mut self) -> Result<db_storage::DbIoPages, DbError> {
+        let mut root = self.through_generation;
+        let mut current = Some(self.through_generation);
+        let mut total = 0usize;
+        while let Some(generation) = current {
+            let (descriptor, len) = self.descriptor_at(generation).await?;
+            root = generation;
+            total = total.checked_add(len).ok_or(DbError::LimitExceeded("snapshot chain bytes"))?;
+            current = descriptor.parent_generation;
+        }
+        let page_count = total.div_ceil(db_storage::DB_IO_PAGE_BYTES);
+        if page_count > db_storage::DB_IO_OPERATION_PAGES {
+            return Err(DbError::LimitExceeded("snapshot chain page reservation"));
+        }
+        let mut writer = db_storage::DbIoPageWriter::try_reserve(page_count).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+        self.operation = Some(writer.operation());
+        let mut expected_parent = None;
+        for generation in root..=self.through_generation {
+            self.control.grant()?;
+            let mut source = self.manager.storage.read_generation(self.document, generation).await?;
+            self.control.grant()?;
+            let descriptor = open_latest_pages(&source, &mut self.control).await?.descriptor;
+            if descriptor.parent_generation != expected_parent {
+                return Err(DbError::Corrupt("snapshot generation lineage is not contiguous".to_string()));
+            }
+            expected_parent = Some(generation);
+            for fragment in source.fragments() {
+                let mut offset = 0;
+                while offset < fragment.len() {
+                    self.control.grant()?;
+                    offset += writer.write_fragment(&fragment[offset..])?;
+                }
+            }
+            while source.close_step()?.is_some() {
+                self.control.grant()?;
+            }
+        }
+        writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        self.control.grant()?;
+        if self.closed {
+            return Ok(false);
+        }
+        self.closed = true;
+        self.operation = None;
+        Ok(true)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.closed && self.operation.is_none()
+    }
+}
+
+impl<S: SnapshotStorage> Drop for SnapshotChainCursor<'_, '_, S> {
+    fn drop(&mut self) {
+        self.control.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.operation = None;
+        self.closed = true;
+    }
+}
+//#endregion 🔖️ChainCursor
+
 impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     pub async fn new(storage: &'storage S) -> SnapshotManager<'storage, S> {
         SnapshotManager { storage }
+    }
+
+    pub fn chain_cursor<'manager>(&'manager self, document: &'manager ArtifactId, through_generation: u64, control: SnapshotCursorControl) -> SnapshotChainCursor<'manager, 'storage, S> {
+        SnapshotChainCursor { manager: self, document, through_generation, control, operation: None, closed: false }
     }
 
     /// @emoji ✍️ Builds and durably writes the next generation. `origin == Incremental` chains to
@@ -489,8 +1030,15 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             SnapshotOrigin::FullBaseline => (latest.map_or(0, |g| g + 1), None, None),
             SnapshotOrigin::Incremental => {
                 let parent_generation = latest.ok_or_else(|| DbError::InvalidArgument("cannot publish an incremental snapshot with no prior generation".to_string()))?;
-                let combined = self.materialize_chain(document, parent_generation).await?;
+                let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+                let control = SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), db_storage::DB_IO_OPERATION_PAGES * 8)?;
+                let mut cursor = self.chain_cursor(document, parent_generation, control);
+                let mut combined = cursor.materialize_pages().await?;
                 let parent_footer_position = combined.len() as u64 - pack::FOOTER_SIZE as u64;
+                while combined.close_step()?.is_some() {
+                    cursor.control.grant()?;
+                }
+                while cursor.close_step()? {}
                 (parent_generation + 1, Some(parent_generation), Some(parent_footer_position))
             }
         };
@@ -510,36 +1058,10 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             new_pages: new_pages.iter().map(|page| page.hash).collect(),
             created_at_ms: body.created_at_ms,
         };
-        let bytes = build_generation(&descriptor, new_pages, parent_footer_position).await?;
-        let pages = db_storage::db_io_copy_pages(&bytes)?.await?;
+        let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        let pages = build_generation_pages(&descriptor, new_pages, parent_footer_position, &mut control).await?;
         self.storage.write_generation(document, generation, pages).await?;
         Ok(generation)
-    }
-
-    /// @emoji 🔗️ Fetches every generation from the chain's root through `through_generation`
-    /// (walking `SnapshotDescriptor::parent_generation` backward, then concatenating forward) into
-    /// one buffer — the "virtual combined space" `Footer.prev_footer_offset` addresses (see module
-    /// doc). Used internally by `publish` and exposed for callers (`db_cli`, `db_compact`) that
-    /// need the full lineage as one archive.
-    pub async fn materialize_chain(&self, document: &ArtifactId, through_generation: u64) -> Result<Vec<u8>, DbError> {
-        let mut chain: Vec<db_storage::DbIoPages> = Vec::new();
-        let mut current = Some(through_generation);
-        while let Some(generation) = current {
-            let bytes = self.storage.read_generation(document, generation).await?;
-            let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
-            let handle = open_latest(prepared.as_slice()).await?;
-            current = handle.descriptor.parent_generation;
-            chain.push(bytes);
-        }
-        chain.reverse();
-        let total: usize = chain.iter().map(db_storage::DbIoPages::len).sum();
-        let mut combined = Vec::with_capacity(total);
-        for bytes in chain {
-            for fragment in bytes.fragments() {
-                combined.extend_from_slice(fragment);
-            }
-        }
-        Ok(combined)
     }
 
     /// @emoji 🥇️ The document's latest generation number and descriptor, or `None` if it has no
@@ -548,10 +1070,12 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         match self.storage.latest_generation(document).await? {
             None => Ok(None),
             Some(generation) => {
-                let bytes = self.storage.read_generation(document, generation).await?;
-                let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
-                let handle = open_latest(prepared.as_slice()).await?;
-                Ok(Some((generation, handle.descriptor)))
+                let mut bytes = self.storage.read_generation(document, generation).await?;
+                let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+                let handle = open_latest_pages(&bytes, &mut control).await?;
+                let descriptor = handle.descriptor;
+                while bytes.close_step()?.is_some() {}
+                Ok(Some((generation, descriptor)))
             }
         }
     }
@@ -561,17 +1085,20 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// should start replaying the WAL suffix from for a point-in-time read.
     pub async fn select_generation(&self, document: &ArtifactId, at_most_head_seq: u64) -> Result<Option<u64>, DbError> {
         let mut best: Option<(u64, u64)> = None;
-        for generation in self.storage.list_generations(document).await? {
-            let bytes = self.storage.read_generation(document, generation).await?;
-            let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
-            let handle = open_latest(prepared.as_slice()).await?;
+        let mut generations = self.storage.list_generations(document).await?;
+        let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        for generation in generations.as_slice() {
+            let mut bytes = self.storage.read_generation(document, *generation).await?;
+            let handle = open_latest_pages(&bytes, &mut control).await?;
             if handle.descriptor.head_seq <= at_most_head_seq {
                 let better = best.is_none_or(|(_, best_head_seq)| handle.descriptor.head_seq > best_head_seq);
                 if better {
-                    best = Some((generation, handle.descriptor.head_seq));
+                    best = Some((*generation, handle.descriptor.head_seq));
                 }
             }
+            while bytes.close_step()?.is_some() {}
         }
+        while generations.close_step() {}
         Ok(best.map(|(generation, _)| generation))
     }
 
@@ -579,17 +1106,21 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// must itself be a full baseline (`parent_generation.is_none()`) — see module doc's scope
     /// boundary on why an incremental floor is rejected rather than silently breaking its chain.
     pub async fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
-        let floor_bytes = self.storage.read_generation(document, floor_generation).await?;
-        let floor_prepared = db_storage::db_io_prepare_platform(&floor_bytes)?.await?;
-        let floor_handle = open_latest(floor_prepared.as_slice()).await?;
-        if floor_handle.descriptor.parent_generation.is_some() {
+        let mut floor_bytes = self.storage.read_generation(document, floor_generation).await?;
+        let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        let floor_handle = open_latest_pages(&floor_bytes, &mut control).await?;
+        let incremental = floor_handle.descriptor.parent_generation.is_some();
+        while floor_bytes.close_step()?.is_some() {}
+        if incremental {
             return Err(DbError::InvalidArgument("retention floor must be a full-baseline generation (no parent)".to_string()));
         }
-        for generation in self.storage.list_generations(document).await? {
-            if generation < floor_generation {
-                self.storage.delete_generation(document, generation).await?;
+        let mut generations = self.storage.list_generations(document).await?;
+        for generation in generations.as_slice() {
+            if *generation < floor_generation {
+                self.storage.delete_generation(document, *generation).await?;
             }
         }
+        while generations.close_step() {}
         Ok(())
     }
 
@@ -600,14 +1131,15 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// against the chunk table `pack::PackWriter::write_chunk` built from these same page bytes;
     /// no separate hash recomputation needed here.
     pub async fn verify(&self, document: &ArtifactId, generation: u64, level: pack::os_pack::VerificationLevel) -> Result<(), DbError> {
-        let bytes = self.storage.read_generation(document, generation).await?;
-        let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
-        let handle = open_latest(prepared.as_slice()).await?;
-        let sub = SubSource { inner: prepared.as_slice(), base: 0, len: bytes.len() as u64 };
+        let mut bytes = self.storage.read_generation(document, generation).await?;
+        let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        let handle = open_latest_pages(&bytes, &mut control).await?;
+        let sub = PageSubSource { inner: &bytes, base: 0, len: bytes.len() as u64 };
         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), level).await?;
         for index in 0..handle.descriptor.new_pages.len() {
             file.read_chunk(pack::ChunkId(index as u32), level).await?;
         }
+        while bytes.close_step()?.is_some() {}
         Ok(())
     }
 }
@@ -636,7 +1168,7 @@ impl SnapshotLease {
     }
 
     /// @emoji ♻️ Extends `holder`'s existing lease for `document` — e.g. around a long
-    /// `materialize_chain` + `publish` sequence for a deep incremental chain.
+    /// retained chain cursor + `publish` sequence for a deep incremental chain.
     pub async fn renew(storage: &impl LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms).await
     }
@@ -726,7 +1258,7 @@ mod tests {
 
     //#region 🔖️Generation
     async fn page(bytes: &[u8]) -> Page {
-        Page::new(bytes.to_vec())
+        Page::try_from_pages(pages(bytes)).await.unwrap()
     }
 
     #[semio_framework_async_macros::async_test]
@@ -844,7 +1376,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_publishes_full_baseline_then_loads_it_back() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-a".into();
         let pages = vec![page(b"p0").await];
@@ -860,7 +1392,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_incremental_publish_without_prior_generation_errors() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-b".into();
         let result = db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(0).await));
@@ -869,7 +1401,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_incremental_chain_materializes_and_resolves_inherited_pages() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-c".into();
 
@@ -884,17 +1416,21 @@ mod tests {
         assert_eq!(latest_generation, 1);
         assert_eq!(descriptor.parent_generation, Some(0));
 
-        let combined = db_actor::block_on(manager.materialize_chain(&document, 1)).unwrap();
-        let handle = open_latest(&combined).await.unwrap();
-        let inherited = read_page(&combined, &handle, gen0_pages[1].hash).await.unwrap();
+        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let control = SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 8_192).unwrap();
+        let mut cursor = manager.chain_cursor(&document, 1, control);
+        let mut inherited = cursor.read_page(gen0_pages[1].hash).await.unwrap();
         assert_eq!(inherited, b"base-b");
-        let local = read_page(&combined, &handle, gen1_pages[0].hash).await.unwrap();
+        while inherited.close_step().unwrap().is_some() {}
+        let mut local = cursor.read_page(gen1_pages[0].hash).await.unwrap();
         assert_eq!(local, b"delta-a");
+        while local.close_step().unwrap().is_some() {}
+        while cursor.close_step().unwrap() {}
     }
 
     #[semio_framework_async_macros::async_test]
     async fn manager_retain_from_requires_full_baseline_floor() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-d".into();
         db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
@@ -905,7 +1441,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_retain_from_deletes_generations_below_a_valid_baseline_floor() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-e".into();
         db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
@@ -918,7 +1454,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_select_generation_picks_highest_head_seq_at_most_target() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-f".into();
         db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
@@ -935,7 +1471,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn manager_verify_accepts_intact_and_rejects_corrupted_generation() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-g".into();
         let pages = vec![page(b"verify-me").await];
@@ -943,7 +1479,11 @@ mod tests {
 
         db_actor::block_on(manager.verify(&document, 0, pack::os_pack::VerificationLevel::Full)).unwrap();
 
-        let mut corrupted = db_actor::block_on(storage.read_generation(&document, 0)).unwrap();
+        let mut retained = db_actor::block_on(storage.read_generation(&document, 0)).unwrap();
+        let mut prepared = db_storage::db_io_prepare_platform(&retained).unwrap().await.unwrap();
+        let mut corrupted = prepared.as_slice().to_vec();
+        while prepared.close_step().unwrap() {}
+        while retained.close_step().unwrap().is_some() {}
         let last = corrupted.len() - 1;
         corrupted[last] ^= 0xFF;
         db_actor::block_on(storage.write_generation(&document, 0, pages(&corrupted))).unwrap();
@@ -965,7 +1505,7 @@ mod tests {
     //#region 🔖️Lease
     #[semio_framework_async_macros::async_test]
     async fn snapshot_lease_round_trips_acquire_renew_release_via_memory_storage() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
 
         let fence = db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-a", 1_000, 0)).unwrap();
@@ -1000,3 +1540,31 @@ mod tests {
     //#endregion 🔖️Lease
 }
 //#endregion 🧪️Tests
+//#region 🧪️RetainedTests
+#[cfg(test)]
+mod retained_tests {
+    use super::*;
+    use db_storage::MemoryStorage;
+
+    #[semio_framework_async_macros::async_test]
+    async fn snapshot_cursor_cancel_fuel_interrupted_close_and_terminal_empty_are_exact() {
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let manager = SnapshotManager::new(&storage).await;
+        let document = ArtifactId::from("retained-snapshot");
+        let body = SnapshotBody { head_seq: 0, commit_seq: 0, epoch: 0, chain_hash: [0; 32], protocol_version: 1, vcs_head: None, base_pack_hash: None, roots: Vec::new(), created_at_ms: 0 };
+        manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body).await.unwrap();
+
+        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let control = SnapshotCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 1).unwrap();
+        let mut cursor = manager.chain_cursor(&document, 0, control);
+        assert!(cursor.latest_descriptor().await.is_err());
+        cursor.control.replenish(64, std::time::Instant::now() + std::time::Duration::from_secs(30)).unwrap();
+        cancelled.store(true, std::sync::atomic::Ordering::Release);
+        assert!(matches!(cursor.latest_descriptor().await, Err(DbError::Unavailable(_))));
+        cancelled.store(false, std::sync::atomic::Ordering::Release);
+        assert!(cursor.close_step().unwrap());
+        assert!(cursor.terminal_is_empty());
+        assert!(!cursor.close_step().unwrap());
+    }
+}
+//#endregion 🧪️RetainedTests

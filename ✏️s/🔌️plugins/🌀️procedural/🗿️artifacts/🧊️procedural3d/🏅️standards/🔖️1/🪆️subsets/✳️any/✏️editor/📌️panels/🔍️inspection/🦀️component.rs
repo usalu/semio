@@ -24,53 +24,53 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> BuiltNode {
+pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(selected_id) = selected_node_ids.first() else {
-        return PanelTreeBuilder::new("procedural-play-inspector")
+        return PanelTreeBuilder::new("procedural-play-inspector")?
             .section(
                 "procedural-play-inspector.empty",
                 Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 true,
                 vec![
-                    tree_item("procedural-play-inspector.schema", format!("{} {}", labels.schema_prefix.as_str(), fixture.schema)),
-                    tree_item("procedural-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), fixture.widgets.len())),
+                    tree_item("procedural-play-inspector.schema", format!("{} {}", labels.schema_prefix.as_str(), fixture.schema))?,
+                    tree_item("procedural-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), fixture.widgets.len()))?,
                 ],
-            )
+            )?
             .build();
     };
     let Some(widget) = fixture.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
-        return PanelTreeBuilder::new("procedural-play-inspector")
-            .section("procedural-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, vec![tree_item("procedural-play-inspector.none", labels.no_selection.as_str())])
+        return PanelTreeBuilder::new("procedural-play-inspector")?
+            .section("procedural-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, vec![tree_item("procedural-play-inspector.none", labels.no_selection.as_str())?])?
             .build();
     };
-    let mut fields = vec![tree_item("procedural-play-inspector.id", format!("{}: {}", labels.id_field.as_str(), widget_id(widget)))];
+    let mut fields = vec![tree_item("procedural-play-inspector.id", format!("{}: {}", labels.id_field.as_str(), widget_id(widget)))?];
     if let Widget::InputSlider { value, min, max, .. } = widget {
-        let (action, args) = ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("patchFlowWidgets", Some(serde_json::json!({ "widgetIds": [selected_id], "field": "value" })));
+        let (action, args) = ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("patchFlowWidgets", Some(serde_json::json!({ "widgetIds": [selected_id], "field": "value" })))?;
         let control = input(InputKind::Number).value(value.to_string()).id("procedural-play-inspector.value.input");
         let control = match args {
             Some(args) => control.on_with(Trigger::Change, action, args),
             None => control.on(Trigger::Change, action),
         };
         fields.push(field(labels.value_field.as_str()).id("procedural-play-inspector.value").child(control).build());
-        fields.push(tree_item("procedural-play-inspector.range", format!("{}: {min}..{max}", labels.range_field.as_str())));
+        fields.push(tree_item("procedural-play-inspector.range", format!("{}: {min}..{max}", labels.range_field.as_str()))?);
     }
     if let Widget::InputNote { text, .. } = widget {
-        fields.push(tree_item("procedural-play-inspector.note", format!("{}: {text}", labels.value_field.as_str())));
+        fields.push(tree_item("procedural-play-inspector.note", format!("{}: {text}", labels.value_field.as_str()))?);
     }
     if let Widget::Neuron { neuron_kind, .. } = widget {
-        fields.push(tree_item("procedural-play-inspector.neuron-kind", format!("{}: {neuron_kind}", labels.id_field.as_str())));
+        fields.push(tree_item("procedural-play-inspector.neuron-kind", format!("{}: {neuron_kind}", labels.id_field.as_str()))?);
     }
     if let Widget::Variable { name, schema, .. } = widget {
-        fields.push(tree_item("procedural-play-inspector.variable-name", format!("{}: {name}", labels.value_field.as_str())));
-        fields.push(tree_item("procedural-play-inspector.variable-schema", format!("{}: {schema}", labels.range_field.as_str())));
+        fields.push(tree_item("procedural-play-inspector.variable-name", format!("{}: {name}", labels.value_field.as_str()))?);
+        fields.push(tree_item("procedural-play-inspector.variable-schema", format!("{}: {schema}", labels.range_field.as_str()))?);
     }
     if let Widget::OutputAction { action, .. } = widget {
-        fields.push(tree_item("procedural-play-inspector.action", format!("{}: {action}", labels.value_field.as_str())));
+        fields.push(tree_item("procedural-play-inspector.action", format!("{}: {action}", labels.value_field.as_str()))?);
     }
     if let Widget::OutputExport { format, .. } = widget {
-        fields.push(tree_item("procedural-play-inspector.export-format", format!("{}: {format}", labels.value_field.as_str())));
+        fields.push(tree_item("procedural-play-inspector.export-format", format!("{}: {format}", labels.value_field.as_str()))?);
     }
-    PanelTreeBuilder::new("procedural-play-inspector").section("procedural-play-inspector.widget", Some(labels.widget_group.as_str().into()), true, fields).build()
+    PanelTreeBuilder::new("procedural-play-inspector")?.section("procedural-play-inspector.widget", Some(labels.widget_group.as_str().into()), true, fields)?.build()
 }
 //#endregion 🔖️Render
 

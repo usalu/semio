@@ -2303,9 +2303,101 @@ pub enum Query {
 
 /// @emoji 📬️ One resolved `query`: every requested path paired with its current value bytes (`None`
 /// if unset/tombstoned).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug)]
+pub struct QueryResultEntry {
+    path: db_storage::DbIoText,
+    value: Option<db_query::QueryBytes>,
+}
+
+impl QueryResultEntry {
+    pub fn path(&self) -> &str {
+        self.path.as_str()
+    }
+
+    pub fn value(&self) -> Option<&db_query::QueryBytes> {
+        self.value.as_ref()
+    }
+
+    pub fn into_parts(self) -> (db_storage::DbIoText, Option<db_query::QueryBytes>) {
+        (self.path, self.value)
+    }
+
+    fn close_step(&mut self) -> Result<bool, DbError> {
+        if let Some(value) = self.value.as_mut() {
+            if value.close_step()?.is_some() {
+                return Ok(true);
+            }
+        }
+        self.value = None;
+        Ok(self.path.close_step())
+    }
+}
+
 pub struct QueryStream {
-    pub results: Vec<(String, Option<Vec<u8>>)>,
+    results: [Option<QueryResultEntry>; 64],
+    len: u8,
+}
+
+impl QueryStream {
+    fn new() -> Self {
+        Self { results: std::array::from_fn(|_| None), len: 0 }
+    }
+
+    fn push(&mut self, entry: QueryResultEntry) -> Result<(), QueryResultEntry> {
+        if self.len() == self.results.len() {
+            return Err(entry);
+        }
+        let index = self.len();
+        self.results[index] = Some(entry);
+        self.len += 1;
+        Ok(())
+    }
+
+    pub fn len(&self) -> usize {
+        self.len as usize
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &QueryResultEntry> {
+        self.results[..self.len()].iter().flatten()
+    }
+
+    pub fn get(&self, index: usize) -> Option<&QueryResultEntry> {
+        self.results.get(index).and_then(Option::as_ref)
+    }
+
+    pub fn take(&mut self) -> Option<QueryResultEntry> {
+        if self.len == 0 {
+            return None;
+        }
+        let entry = self.results[0].take();
+        for index in 1..self.len() {
+            self.results[index - 1] = self.results[index].take();
+        }
+        self.len -= 1;
+        entry
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        if self.len == 0 {
+            return Ok(false);
+        }
+        let index = self.len() - 1;
+        let entry = self.results[index].as_mut().ok_or_else(|| DbError::Internal("engine query close lost entry".to_string()))?;
+        if entry.close_step()? {
+            return Ok(true);
+        }
+        self.results[index] = None;
+        self.len -= 1;
+        Ok(true)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.results.iter().all(Option::is_none)
+    }
 }
 //#endregion 🔖️Query
 
@@ -3281,9 +3373,101 @@ struct CatalogRootEntry {
     created_at_ms: u64,
 }
 
-async fn encode_catalog(entries: &[CatalogEntry]) -> Result<Vec<u8>, DbError> {
-    let raw: Vec<CatalogRootEntry> = entries.iter().map(|entry| CatalogRootEntry { document: entry.document.0.clone(), created_at_ms: entry.created_at_ms }).collect();
-    serde_json::to_vec(&raw).map_err(|err| DbError::Internal(format!("catalog encode: {err}")))
+fn json_string_len(value: &str) -> usize {
+    value
+        .as_bytes()
+        .iter()
+        .map(|byte| match byte {
+            b'"' | b'\\' | 0x08 | 0x0c | b'\n' | b'\r' | b'\t' => 2,
+            0x00..=0x1f => 6,
+            _ => 1,
+        })
+        .sum::<usize>()
+        + 2
+}
+
+fn decimal_u64<'a>(value: u64, buffer: &'a mut [u8; 20]) -> &'a [u8] {
+    let mut cursor = buffer.len();
+    let mut remaining = value;
+    loop {
+        cursor -= 1;
+        buffer[cursor] = b'0' + (remaining % 10) as u8;
+        remaining /= 10;
+        if remaining == 0 {
+            return &buffer[cursor..];
+        }
+    }
+}
+
+async fn catalog_write(writer: &mut db_storage::DbIoPageWriter, bytes: &[u8]) -> Result<(), DbError> {
+    let mut cursor = 0;
+    while cursor < bytes.len() {
+        cursor += writer.write_fragment(&bytes[cursor..])?;
+        std::future::poll_fn(|context| {
+            context.waker().wake_by_ref();
+            std::task::Poll::Ready(())
+        })
+        .await;
+    }
+    Ok(())
+}
+
+async fn catalog_write_json_string(writer: &mut db_storage::DbIoPageWriter, value: &str) -> Result<(), DbError> {
+    catalog_write(writer, b"\"").await?;
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    for byte in value.as_bytes() {
+        let mut escape = [0u8; 6];
+        let encoded: &[u8] = match *byte {
+            b'"' => b"\\\"",
+            b'\\' => b"\\\\",
+            0x08 => b"\\b",
+            0x0c => b"\\f",
+            b'\n' => b"\\n",
+            b'\r' => b"\\r",
+            b'\t' => b"\\t",
+            value @ 0x00..=0x1f => {
+                escape.copy_from_slice(&[b'\\', b'u', b'0', b'0', HEX[(value >> 4) as usize], HEX[(value & 0x0f) as usize]]);
+                &escape
+            }
+            _ => std::slice::from_ref(byte),
+        };
+        catalog_write(writer, encoded).await?;
+    }
+    catalog_write(writer, b"\"").await
+}
+
+async fn encode_catalog_pages(entries: &[CatalogEntry]) -> Result<db_storage::DbIoPages, DbError> {
+    let mut encoded_len = 2usize;
+    for (index, entry) in entries.iter().enumerate() {
+        let mut decimal = [0u8; 20];
+        encoded_len = encoded_len
+            .checked_add(index.signum())
+            .and_then(|length| length.checked_add(b"{\"document\":".len()))
+            .and_then(|length| length.checked_add(json_string_len(&entry.document.0)))
+            .and_then(|length| length.checked_add(b",\"created_at_ms\":".len()))
+            .and_then(|length| length.checked_add(decimal_u64(entry.created_at_ms, &mut decimal).len() + 1))
+            .ok_or(DbError::LimitExceeded("catalog encoded bytes"))?;
+        std::future::poll_fn(|context| {
+            context.waker().wake_by_ref();
+            std::task::Poll::Ready(())
+        })
+        .await;
+    }
+    let mut writer = db_storage::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    catalog_write(&mut writer, b"[").await?;
+    for (index, entry) in entries.iter().enumerate() {
+        if index != 0 {
+            catalog_write(&mut writer, b",").await?;
+        }
+        catalog_write(&mut writer, b"{\"document\":").await?;
+        catalog_write_json_string(&mut writer, &entry.document.0).await?;
+        catalog_write(&mut writer, b",\"created_at_ms\":").await?;
+        let mut decimal = [0u8; 20];
+        catalog_write(&mut writer, decimal_u64(entry.created_at_ms, &mut decimal)).await?;
+        catalog_write(&mut writer, b"}").await?;
+    }
+    catalog_write(&mut writer, b"]").await?;
+    writer.seal().map_err(db_storage::DbIoPageWriterRejected::into_error)
 }
 
 async fn decode_catalog(bytes: &[u8]) -> Result<Vec<CatalogEntry>, DbError> {
@@ -3460,8 +3644,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 (epoch, decode_catalog(prepared.as_slice()).await?)
             }
             None => {
-                let empty = encode_catalog(&[]).await?;
-                let pages = db_storage::db_io_copy_pages(&empty)?.await?;
+                let pages = encode_catalog_pages(&[]).await?;
                 let epoch = db_actor::block_on(async { storage.catalog().await.cas_root(EpochFence::INITIAL, pages).await })?;
                 (epoch, Vec::new())
             }
@@ -3551,8 +3734,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             // captured by reference, not moved, so this costs nothing beyond the `#[cfg]` split.
             let commit = async {
                 entries.push(CatalogEntry { document: document.clone(), created_at_ms: now_ms().await });
-                let bytes = encode_catalog(&entries).await?;
-                let pages = db_storage::db_io_copy_pages(&bytes)?.await?;
+                let pages = encode_catalog_pages(&entries).await?;
                 self.storage.catalog().await.cas_root(epoch, pages).await
             };
             #[cfg(not(target_arch = "wasm32"))]
@@ -3935,9 +4117,25 @@ impl ArtifactSubmitState {
         if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
         }
-        let generation = self.retry_generation.fetch_add(1, Ordering::AcqRel).checked_add(1).expect("artifact submit retry generation exhausted");
+        let generation = match self.retry_generation.fetch_update(Ordering::AcqRel, Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
+            Ok(previous) => match previous.checked_add(1) {
+                Some(generation) => generation,
+                None => {
+                    self.terminalize_retry_authority("artifact submit retry generation exhausted");
+                    return;
+                }
+            },
+            Err(_) => {
+                self.terminalize_retry_authority("artifact submit retry generation exhausted");
+                return;
+            }
+        };
+        let Some(deadline) = self.pool.now_ms().checked_add(ARTIFACT_SUBMIT_RETRY_MS) else {
+            self.terminalize_retry_authority("artifact submit retry deadline exhausted");
+            return;
+        };
         let state = self.clone();
-        self.pool.callback_at(self.pool.now_ms().saturating_add(ARTIFACT_SUBMIT_RETRY_MS), move || {
+        self.pool.callback_at(deadline, move || {
             if generation != state.retry_generation.load(Ordering::Acquire) {
                 return;
             }
@@ -3953,6 +4151,21 @@ impl ArtifactSubmitState {
                 }
             }
         });
+    }
+
+    fn terminalize_retry_authority(&self, detail: &'static str) {
+        self.retry_armed.store(false, std::sync::atomic::Ordering::Release);
+        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+        if let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            let mut terminal = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if terminal.is_none() {
+                *terminal = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
+            } else {
+                drop(terminal);
+                *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
+            }
+        }
+        self.terminalize_work(Err(DbError::Unavailable(detail.to_string())), SubmitProgress::Fault);
     }
 
     fn drive_one(self: Arc<Self>, generation: u64) {
@@ -4621,9 +4834,25 @@ impl ArtifactHistoryState {
         if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
         }
-        let generation = self.retry_generation.fetch_add(1, Ordering::AcqRel).checked_add(1).expect("artifact history retry generation exhausted");
+        let generation = match self.retry_generation.fetch_update(Ordering::AcqRel, Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
+            Ok(previous) => match previous.checked_add(1) {
+                Some(generation) => generation,
+                None => {
+                    self.terminalize_retry_authority("artifact history retry generation exhausted");
+                    return;
+                }
+            },
+            Err(_) => {
+                self.terminalize_retry_authority("artifact history retry generation exhausted");
+                return;
+            }
+        };
+        let Some(deadline) = self.pool.now_ms().checked_add(ARTIFACT_SUBMIT_RETRY_MS) else {
+            self.terminalize_retry_authority("artifact history retry deadline exhausted");
+            return;
+        };
         let state = self.clone();
-        self.pool.callback_at(self.pool.now_ms().saturating_add(ARTIFACT_SUBMIT_RETRY_MS), move || {
+        self.pool.callback_at(deadline, move || {
             if generation != state.retry_generation.load(Ordering::Acquire) {
                 return;
             }
@@ -4639,6 +4868,21 @@ impl ArtifactHistoryState {
                 }
             }
         });
+    }
+
+    fn terminalize_retry_authority(&self, detail: &'static str) {
+        self.retry_armed.store(false, std::sync::atomic::Ordering::Release);
+        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+        if let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            let mut terminal = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if terminal.is_none() {
+                *terminal = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
+            } else {
+                drop(terminal);
+                *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
+            }
+        }
+        self.terminalize_work(Err(DbError::Unavailable(detail.to_string())), HistoryProgress::Fault);
     }
 
     fn drive_one(self: Arc<Self>, generation: u64) {
@@ -5186,23 +5430,54 @@ impl ArtifactHandle {
             Query::Get { path } => vec![path],
             Query::GetMany { paths } => paths,
         };
-        let mut results = Vec::with_capacity(paths.len());
+        if paths.len() > 64 {
+            return Err(DbError::LimitExceeded("engine query result entries"));
+        }
+        let mut results = QueryStream::new();
         for path in paths {
-            let value = self.authority.query(&path).await?;
-            results.push((path, value));
+            let value = match self.authority.query(&path).await {
+                Ok(value) => value,
+                Err(error) => {
+                    while results.close_step()? {}
+                    return Err(error);
+                }
+            };
+            let path = match db_storage::DbIoText::try_from_str(&path) {
+                Ok(path) => path,
+                Err(error) => {
+                    if let Some(mut value) = value {
+                        while value.close_step()?.is_some() {}
+                    }
+                    while results.close_step()? {}
+                    return Err(error);
+                }
+            };
+            if let Err(mut rejected) = results.push(QueryResultEntry { path, value }) {
+                while rejected.close_step()? {}
+                while results.close_step()? {}
+                return Err(DbError::LimitExceeded("engine query result entries"));
+            }
         }
 
-        let frontier = self.frontier().await?;
+        let frontier = match self.frontier().await {
+            Ok(frontier) => frontier,
+            Err(error) => {
+                while results.close_step()? {}
+                return Err(error);
+            }
+        };
         match &consistency {
             Consistency::AtLeast(requested) if !frontier.dominates(requested)? => {
+                while results.close_step()? {}
                 return Err(DbError::Unavailable("document has not yet reached the requested frontier".to_string()));
             }
             Consistency::Exact(requested) if &frontier != requested => {
+                while results.close_step()? {}
                 return Err(DbError::Unavailable("document frontier does not exactly match the requested frontier".to_string()));
             }
             _ => {}
         }
-        Ok(QueryStream { results })
+        Ok(results)
     }
 
     /// @emoji 📡️ The frozen `subscribe` — see module doc's `//🎯️ Design choice`: always
@@ -5255,6 +5530,17 @@ mod tests {
     use crate::vcs_integration::{HashMutation, HashProjection};
     use protocol::{OpBinary, OpText};
     use store::ArtifactPack;
+
+    async fn decode_query_json(mut stream: QueryStream) -> serde_json::Value {
+        let mut bytes = Vec::new();
+        for fragment in stream.get(0).and_then(QueryResultEntry::value).expect("retained query value").fragments() {
+            bytes.extend_from_slice(fragment);
+        }
+        let value = db_artifact::decode_pathmap_json(&bytes).await.unwrap();
+        while stream.close_step().unwrap() {}
+        assert!(stream.terminal_is_empty());
+        value
+    }
 
     #[derive(Clone, Copy)]
     enum ControlledCapabilityPoll {
@@ -5345,7 +5631,7 @@ mod tests {
         mode: ControlledCapabilityPoll,
         boundary: Option<Arc<(std::sync::Mutex<(bool, bool)>, std::sync::Condvar)>>,
     ) -> (DatabaseCapabilityOpenFuture, Arc<std::sync::atomic::AtomicUsize>, Arc<std::sync::Mutex<Option<std::task::Waker>>>, usize) {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage.clone(), false).expect("controlled capability-open preparation");
         let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -5393,7 +5679,7 @@ mod tests {
     }
 
     async fn controlled_catalog_read_probe(mode: ControlledCatalogReadPoll) -> (DatabaseCatalogReadFuture, Arc<std::sync::atomic::AtomicUsize>, Arc<std::sync::Mutex<Option<std::task::Waker>>>, usize) {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCatalogReadFuture::try_prepare(test_worker_pool(), storage.clone(), DatabaseCatalogRootKey::root(), false).expect("controlled catalog-read preparation");
         let polls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -5433,7 +5719,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_success_returns_exact_storage_owner_and_scalar() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let probe = match DatabaseCapabilityOpenFuture::try_submit(test_worker_pool(), storage) {
             Ok(probe) => probe,
@@ -5448,7 +5734,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_cancel_and_stale_generation_retain_exact_owner_for_public_close() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).expect("fixed capability-open preparation");
         let generation = probe.generation();
@@ -5473,7 +5759,7 @@ mod tests {
         }
         assert!(terminal.terminal_is_empty());
 
-        let stale_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let stale_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let stale_pointer = Arc::as_ptr(&stale_storage) as usize;
         let stale = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), stale_storage, false).expect("fixed stale capability-open preparation");
         let stale_generation = stale.generation();
@@ -5524,7 +5810,7 @@ mod tests {
                 }
             }
         }
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCapabilityOpenFuture::try_submit(pool.clone(), storage).expect("capability operation admission remains independent of queue saturation");
         assert_eq!(probe.retained_storage_identity(), Some(pointer));
@@ -5654,7 +5940,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_rejection_take_retry_and_close_preserve_exact_storage() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let rejected = DatabaseCapabilityOpenRejected { error: Some(DbError::Closed), storage: Some(storage) };
         let mut resumed = rejected.retry(test_worker_pool()).expect("rejected storage retry");
@@ -5667,7 +5953,7 @@ mod tests {
             let _ = terminal.close_step();
         }
 
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let mut rejected = DatabaseCapabilityOpenRejected { error: Some(DbError::Closed), storage: Some(storage) };
         let returned = rejected.take_storage().expect("exact rejected storage take");
@@ -5680,7 +5966,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_terminal_result_take_resume_and_checked_out_drop_handback() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let mut probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage.clone(), false).expect("terminal-result preparation");
         probe.resolved = true;
@@ -5704,7 +5990,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_retry_contention_is_one_compare_exchange_per_callback() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let mut probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).expect("retry-contention preparation");
         probe.resolved = true;
         let state = probe.state.clone();
@@ -5739,7 +6025,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_read_success_returns_exact_storage_key_and_root() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let result = DatabaseCatalogReadFuture::try_submit(test_worker_pool(), storage, DatabaseCatalogRootKey::root()).expect("catalog-read success admission").await.expect("catalog-read success completion");
         let (returned_storage, returned_key, root) = result.into_parts();
@@ -5790,7 +6076,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_read_publication_between_check_and_waker_registration_is_observed() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let mut probe = DatabaseCatalogReadFuture::try_prepare(test_worker_pool(), storage, DatabaseCatalogRootKey::root(), false).expect("public lost-wake preparation");
         let state = probe.state.clone();
         let mut work = state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().expect("public lost-wake retained work");
@@ -5798,7 +6084,7 @@ mod tests {
         assert!(work.terminal_is_empty());
         drop(work);
 
-        let result_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let result_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let result_pointer = Arc::as_ptr(&result_storage) as usize;
         let publish_state = state.clone();
         *state.controlled_publication_before_waker_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Box::new(move || {
@@ -5816,7 +6102,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_read_rejected_mount_retires_storage_and_key_on_distinct_grants() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let storage_weak = Arc::downgrade(&storage);
         let rejected = DatabaseCatalogReadRejected { error: Some(DbError::Closed), storage: Some(storage), key: Some(DatabaseCatalogRootKey::root()) };
         let (error, close) = rejected.mount_close_and_take_error(test_worker_pool(), false);
@@ -5845,7 +6131,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn database_catalog_read_cancel_stale_and_rejection_preserve_exact_storage_key() {
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage);
         let mut rejected = DatabaseCatalogReadRejected { error: Some(DbError::Closed), storage: Some(storage), key: Some(DatabaseCatalogRootKey::root()) };
         assert_eq!(Arc::as_ptr(rejected.storage.as_ref().expect("rejected storage")), pointer);
@@ -5888,7 +6174,7 @@ mod tests {
         let (mut probe, _, _, _) = controlled_catalog_read_probe(ControlledCatalogReadPoll::Ready).await;
         probe.resolved = true;
         probe.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let result_pointer = Arc::as_ptr(&storage) as usize;
         *probe.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Ok(DatabaseCatalogReadResult { storage, key: DatabaseCatalogRootKey::root(), root: Ok(None) }));
         let terminal = DatabaseCatalogReadTerminalHandle { state: probe.state.clone() };
@@ -6011,14 +6297,16 @@ mod tests {
         assert!(receipt.state_hash.is_some());
 
         let queried = handle.query(Query::Get { path: "name".to_string() }, Consistency::Canonical).await.unwrap();
-        let value: serde_json::Value = db_artifact::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).await.unwrap();
+        let value = decode_query_json(queried).await;
         assert_eq!(value, serde_json::json!("hello"));
 
         let frontier = handle.frontier().await.unwrap();
         assert_eq!(frontier.head_seq, 1);
 
-        let at_least = handle.query(Query::Get { path: "name".to_string() }, Consistency::AtLeast(frontier)).await.unwrap();
-        assert_eq!(at_least.results.len(), 1);
+        let mut at_least = handle.query(Query::Get { path: "name".to_string() }, Consistency::AtLeast(frontier)).await.unwrap();
+        assert_eq!(at_least.len(), 1);
+        while at_least.close_step().unwrap() {}
+        assert!(at_least.terminal_is_empty());
 
         let mut history = handle.history().await.unwrap();
         assert_eq!(history.entries().len(), 1);
@@ -6067,7 +6355,7 @@ mod tests {
 
         let handle = reopened.document(&document).await.unwrap();
         let queried = handle.query(Query::Get { path: "count".to_string() }, Consistency::Canonical).await.unwrap();
-        let value: serde_json::Value = db_artifact::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).await.unwrap();
+        let value = decode_query_json(queried).await;
         assert_eq!(value, serde_json::json!(1), "the document's committed state must have survived the reopen via WAL replay");
         assert_eq!(handle.frontier().await.unwrap().head_seq, 1);
     }
@@ -6085,6 +6373,20 @@ mod tests {
 
         let result = handle.query(Query::Get { path: "x".to_string() }, Consistency::Exact(stale));
         assert!(matches!(result.await, Err(DbError::Unavailable(_))));
+    }
+
+    #[test]
+    fn query_stream_max_plus_one_hands_back_exact_owner_and_close_is_terminal() {
+        let mut stream = QueryStream::new();
+        for index in 0..64 {
+            stream.push(QueryResultEntry { path: db_storage::DbIoText::try_from_str(&format!("path-{index:02}")).unwrap(), value: None }).unwrap();
+        }
+        let rejected = stream.push(QueryResultEntry { path: db_storage::DbIoText::try_from_str("overflow-owner").unwrap(), value: None }).unwrap_err();
+        assert_eq!(rejected.path(), "overflow-owner");
+        let mut rejected = rejected;
+        while rejected.close_step().unwrap() {}
+        while stream.close_step().unwrap() {}
+        assert!(stream.terminal_is_empty());
     }
     //#endregion 🔖️Round trip
 

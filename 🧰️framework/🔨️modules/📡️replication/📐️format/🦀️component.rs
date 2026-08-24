@@ -112,45 +112,54 @@ async fn varint_width(value: u64) -> u64 {
     buf.len() as u64
 }
 
+fn fixed_varint(mut value: u64, output: &mut [u8; 10]) -> &[u8] {
+    let mut len = 0;
+    loop {
+        let mut byte = (value & 0x7f) as u8;
+        value >>= 7;
+        if value != 0 {
+            byte |= 0x80;
+        }
+        output[len] = byte;
+        len += 1;
+        if value == 0 {
+            return &output[..len];
+        }
+    }
+}
+
+async fn write_frame_retained<S: PackSink>(sink: &mut S, kind: u8, flags: u8, raw_len: Option<u64>, stored_payload: &[u8]) -> Result<(u64, [u8; 32]), ProtocolError> {
+    let mut raw_len_bytes = [0u8; 10];
+    let raw_len_count = match raw_len {
+        Some(value) => fixed_varint(value, &mut raw_len_bytes).len(),
+        None => 0,
+    };
+    let raw_len_bytes = &raw_len_bytes[..raw_len_count];
+    let body_len = 2u64.checked_add(raw_len_bytes.len() as u64).and_then(|len| len.checked_add(stored_payload.len() as u64)).ok_or(ProtocolError::LimitExceeded("frame body length overflow"))?;
+    let mut body_len_bytes = [0u8; 10];
+    let body_len_bytes = fixed_varint(body_len, &mut body_len_bytes);
+    let frame_len = body_len_bytes.len().checked_add(body_len as usize).and_then(|len| len.checked_add(8)).ok_or(ProtocolError::LimitExceeded("frame length overflow"))?;
+    let back_len = u32::try_from(frame_len).map_err(|_| ProtocolError::LimitExceeded("frame exceeds u32 back_len (4 GiB cap)"))?;
+    let fixed = [kind, flags];
+    let mut crc = crate::codec::Crc32cCursor::new();
+    crc.update_page(&fixed);
+    crc.update_page(raw_len_bytes);
+    crc.update_page(stored_payload);
+    let crc = crc.finish().to_le_bytes();
+    let back_len = back_len.to_le_bytes();
+    let mut digest = blake3::Hasher::new();
+    for fragment in [body_len_bytes, fixed.as_slice(), raw_len_bytes, stored_payload, crc.as_slice(), back_len.as_slice()] {
+        digest.update(fragment);
+        sink.write_all(fragment).await?;
+    }
+    Ok((frame_len as u64, *digest.finalize().as_bytes()))
+}
+
 /// @emoji 🚨️ Builds a `crate::ProtocolError::Malformed` for this crate's own structural
 /// checks (distinct from `crate::codec::PackError`-wrapped errors, which cover pack-primitive-level
 /// failures like truncation/varint overflow).
 async fn malformed(what: &'static str, offset: u64, detail: impl Into<String>) -> ProtocolError {
     ProtocolError::Malformed { what, offset, detail: detail.into() }
-}
-
-/// @emoji 🖇️ Frames one record into `scratch` (cleared first, capacity reused across calls — the
-/// writer's hot-path scratch buffer): `body_len varint, kind, flags, [raw_len varint], payload,
-/// crc32c, back_len`. `crc32c` covers `kind..payload` inclusive; `back_len` covers the WHOLE frame
-/// including the leading `body_len` varint and its own 4 bytes.
-///
-/// 🎯️ Design choice: builds one contiguous buffer and issues a single `PackSink::write_all` at the
-/// call site, mirroring `os_pack::format::encode_segment`'s proven pattern (the contract's own cited
-/// living example) — `crate::codec::crc32c` only accepts one contiguous slice, and this crate has no
-/// incremental CRC-32C primitive to stream a crc across a caller-owned payload slice without a
-/// buffer of its own. The scratch buffer is still reused call-to-call, avoiding the reallocation
-/// pack_format's segment encoder pays every time.
-async fn encode_frame_into(scratch: &mut Vec<u8>, kind: u8, flags: u8, raw_len: Option<u64>, stored_payload: &[u8]) -> Result<(), ProtocolError> {
-    scratch.clear();
-    let raw_len_width = match raw_len {
-        Some(v) => varint_width(v).await,
-        None => 0,
-    };
-    let body_len = 2 + raw_len_width + stored_payload.len() as u64;
-    crate::codec::write_varint_u64(scratch, body_len);
-    let body_start = scratch.len();
-    scratch.push(kind);
-    scratch.push(flags);
-    if let Some(rl) = raw_len {
-        crate::codec::write_varint_u64(scratch, rl);
-    }
-    scratch.extend_from_slice(stored_payload);
-    let crc = crate::codec::crc32c(&scratch[body_start..]);
-    scratch.extend_from_slice(&crc.to_le_bytes());
-    let back_len_u64 = scratch.len() as u64 + 4;
-    let back_len: u32 = back_len_u64.try_into().map_err(|_| ProtocolError::LimitExceeded("frame exceeds u32 back_len (4 GiB cap)"))?;
-    scratch.extend_from_slice(&back_len.to_le_bytes());
-    Ok(())
 }
 
 /// @emoji 📦️ One parsed, CRC-verified record frame borrowed zero-copy from the buffer it was read
@@ -387,16 +396,54 @@ async fn prepare_payload(codec: crate::codec::ids::CodecId, payload: &[u8]) -> R
 /// @emoji ✒️ Streaming `.spr` builder: writes the header, then any number of records via
 /// `write_record`, periodically closed off with `commit` — which hash-chains everything written
 /// since the previous commit (or the header, for the first).await. The hot path (`write_record`) is
-/// allocation-light: one reusable scratch buffer per writer, no payload re-copy for identity codec.
+/// allocation-light: identity payloads and frame metadata stream directly into the retained sink.
 pub struct SprWriter<S: PackSink> {
     sink: S,
     running_chain_hash: [u8; 32],
-    pending_digests: Vec<[u8; 32]>,
+    pending_chain_hasher: blake3::Hasher,
     pending_records_len: u64,
     pending_record_count: u32,
     next_commit_seq: u64,
     last_commit_offset: Option<u64>,
-    scratch: Vec<u8>,
+}
+
+pub struct SprIdentityRecord<'a, S: PackSink> {
+    owner: &'a mut SprWriter<S>,
+    start_offset: u64,
+    payload_len: usize,
+    written: usize,
+    frame_len: u64,
+    crc: crate::codec::Crc32cCursor,
+    digest: blake3::Hasher,
+}
+
+impl<'a, S: PackSink> SprIdentityRecord<'a, S> {
+    pub async fn write_fragment(&mut self, fragment: &[u8]) -> Result<(), ProtocolError> {
+        self.written = self.written.checked_add(fragment.len()).ok_or(ProtocolError::LimitExceeded("record payload length overflow"))?;
+        if self.written > self.payload_len {
+            return Err(ProtocolError::LimitExceeded("record payload exceeded retained frame reservation"));
+        }
+        self.crc.update_page(fragment);
+        self.digest.update(fragment);
+        self.owner.sink.write_all(fragment).await?;
+        Ok(())
+    }
+
+    pub async fn finish(mut self) -> Result<u64, ProtocolError> {
+        if self.written != self.payload_len {
+            return Err(ProtocolError::LimitExceeded("record payload ended before retained frame reservation"));
+        }
+        let crc = self.crc.finish().to_le_bytes();
+        let back_len = u32::try_from(self.frame_len).map_err(|_| ProtocolError::LimitExceeded("frame exceeds u32 back_len (4 GiB cap)"))?.to_le_bytes();
+        for fragment in [crc.as_slice(), back_len.as_slice()] {
+            self.digest.update(fragment);
+            self.owner.sink.write_all(fragment).await?;
+        }
+        self.owner.pending_chain_hasher.update(self.digest.finalize().as_bytes());
+        self.owner.pending_records_len = self.owner.pending_records_len.checked_add(self.frame_len).ok_or(ProtocolError::LimitExceeded("records length overflow"))?;
+        self.owner.pending_record_count = self.owner.pending_record_count.checked_add(1).ok_or(ProtocolError::LimitExceeded("record_count exceeds u32 per commit generation"))?;
+        Ok(self.start_offset)
+    }
 }
 
 impl<S: PackSink> SprWriter<S> {
@@ -409,7 +456,9 @@ impl<S: PackSink> SprWriter<S> {
         let header = build_header_bytes(options.required_flags, options.optional_flags).await;
         sink.write_all(&header).await?;
         let chain_0 = *blake3::hash(&header).as_bytes();
-        Ok(Self { sink, running_chain_hash: chain_0, pending_digests: Vec::new(), pending_records_len: 0, pending_record_count: 0, next_commit_seq: 1, last_commit_offset: None, scratch: Vec::new() })
+        let mut pending_chain_hasher = blake3::Hasher::new();
+        pending_chain_hasher.update(&chain_0);
+        Ok(Self { sink, running_chain_hash: chain_0, pending_chain_hasher, pending_records_len: 0, pending_record_count: 0, next_commit_seq: 1, last_commit_offset: None })
     }
 
     /// @emoji 📍️ Current absolute write position — the offset the next record/commit will start at.
@@ -417,19 +466,40 @@ impl<S: PackSink> SprWriter<S> {
         self.sink.position().await
     }
 
+    pub async fn begin_identity_record(&mut self, kind: u8, critical: bool, payload_len: usize) -> Result<SprIdentityRecord<'_, S>, ProtocolError> {
+        let start_offset = self.sink.position().await;
+        let flags = frame_flags(false, critical, 0);
+        let body_len = 2u64.checked_add(payload_len as u64).ok_or(ProtocolError::LimitExceeded("record body length overflow"))?;
+        let mut body_len_bytes = [0u8; 10];
+        let body_len_bytes = fixed_varint(body_len, &mut body_len_bytes);
+        let frame_len = body_len_bytes.len().checked_add(body_len as usize).and_then(|len| len.checked_add(8)).ok_or(ProtocolError::LimitExceeded("record frame length overflow"))? as u64;
+        let fixed = [kind, flags];
+        let mut crc = crate::codec::Crc32cCursor::new();
+        crc.update_page(&fixed);
+        let mut digest = blake3::Hasher::new();
+        for fragment in [body_len_bytes, fixed.as_slice()] {
+            digest.update(fragment);
+            self.sink.write_all(fragment).await?;
+        }
+        Ok(SprIdentityRecord { owner: self, start_offset, payload_len, written: 0, frame_len, crc, digest })
+    }
+
     /// @emoji 🖇️ Frames (compressing per `codec`), CRCs, and writes one record. Returns its start
     /// offset. Folds the frame's `blake3` digest into the pending commit-chain accumulator — the
     /// digest covers the WHOLE on-disk frame (length-prefix through `back_len`), matching the
     /// contract's `digest_i = blake3(full frame bytes of record i)`.
     pub async fn write_record(&mut self, kind: u8, critical: bool, payload: &[u8], codec: crate::codec::ids::CodecId) -> Result<u64, ProtocolError> {
+        if codec.0 == 0 {
+            let mut record = self.begin_identity_record(kind, critical, payload.len()).await?;
+            record.write_fragment(payload).await?;
+            return record.finish().await;
+        }
         let start_offset = self.sink.position().await;
         let (compressed, raw_len, stored) = prepare_payload(codec, payload).await?;
         let flags = frame_flags(compressed, critical, codec.0);
-        encode_frame_into(&mut self.scratch, kind, flags, raw_len, stored.as_ref()).await?;
-        self.sink.write_all(&self.scratch).await?;
-        let digest = *blake3::hash(&self.scratch).as_bytes();
-        self.pending_digests.push(digest);
-        self.pending_records_len += self.scratch.len() as u64;
+        let (frame_len, digest) = write_frame_retained(&mut self.sink, kind, flags, raw_len, stored.as_ref()).await?;
+        self.pending_chain_hasher.update(&digest);
+        self.pending_records_len += frame_len;
         self.pending_record_count = self.pending_record_count.checked_add(1).ok_or(ProtocolError::LimitExceeded("record_count exceeds u32 per commit generation"))?;
         Ok(start_offset)
     }
@@ -439,22 +509,17 @@ impl<S: PackSink> SprWriter<S> {
     /// Returns the commit frame's start offset.
     pub async fn commit(&mut self) -> Result<u64, ProtocolError> {
         let offset = self.sink.position().await;
-        let mut concat = Vec::with_capacity(32 + self.pending_digests.len() * 32);
-        concat.extend_from_slice(&self.running_chain_hash);
-        for digest in &self.pending_digests {
-            concat.extend_from_slice(digest);
-        }
-        let chain_hash = *blake3::hash(&concat).as_bytes();
+        let chain_hash = *self.pending_chain_hasher.finalize().as_bytes();
 
         let commit_seq = self.next_commit_seq;
         let prev_commit_offset = self.last_commit_offset.unwrap_or(0);
         let payload = write_commit_payload(commit_seq, prev_commit_offset, self.pending_records_len, self.pending_record_count, &chain_hash).await;
         let flags = frame_flags(false, true, 0);
-        encode_frame_into(&mut self.scratch, crate::REC_COMMIT, flags, None, &payload).await?;
-        self.sink.write_all(&self.scratch).await?;
+        write_frame_retained(&mut self.sink, crate::REC_COMMIT, flags, None, &payload).await?;
 
         self.running_chain_hash = chain_hash;
-        self.pending_digests.clear();
+        self.pending_chain_hasher = blake3::Hasher::new();
+        self.pending_chain_hasher.update(&chain_hash);
         self.pending_records_len = 0;
         self.pending_record_count = 0;
         self.next_commit_seq += 1;

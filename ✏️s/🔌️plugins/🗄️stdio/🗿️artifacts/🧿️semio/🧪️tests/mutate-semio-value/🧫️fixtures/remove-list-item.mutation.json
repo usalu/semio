@@ -1,0 +1,10 @@
+{
+  "mutation": "removeListItem",
+  "path": [
+    {
+      "kind": "key",
+      "key": "tags"
+    }
+  ],
+  "index": 0
+}

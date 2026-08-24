@@ -30,10 +30,10 @@ pub async fn definition() -> PanelTabDefinition {
 /// `note-play-block:{id}` targets `NotePlayApp::interaction_topology` declares for the "blocks"
 /// domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item click
-/// action is declared here anymore (clicks are translated into `interactionSelect` generically).
-async fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
+/// action is declared here anymore (clicks are translated into `interactionSelect` generically)?.
+async fn block_tree_item(block: &NoteBlockNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let nested = match block {
-        NoteBlockNode::Group { children, .. } if !children.is_empty() => Some(children.iter().map(block_tree_item).collect()),
+        NoteBlockNode::Group { children, .. } if !children.is_empty() => Some(children.iter().map(block_tree_item).collect()?),
         _ => None,
     };
     UiTreeItemNode {
@@ -42,18 +42,18 @@ async fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
         draggable: Some(true),
         items: nested,
         dimmed: if block_visible(block) { None } else { Some(true) },
-        ..tree_item_desc(block_tree_row_id(block), Label::data(block_name(block)), Some(block_kind(block).into()))
+        ..tree_item_desc(block_tree_row_id(block), Label::data(block_name(block)), Some(block_kind(block).into()))?
     }
 }
 
-pub async fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> UiNode {
+pub async fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let action_rows: Vec<UiTreeItemNode> = [("text", labels.add_text, "type"), ("table", labels.add_table, "table-2"), ("math", labels.add_math, "note-math"), ("image", labels.add_image, "image"), ("group", labels.add_group, "folder-plus")]
         .into_iter()
-        .map(|(kind, label, icon)| UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(format!("note-play-blocks.add.{kind}"), label, None, crate::editor::note::note_action("addBlock", Some(json!({ "kind": kind })))) })
+        .map(|(kind, label, icon)| UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(format!("note-play-blocks.add.{kind}"), label, None, crate::editor::note::note_action("addBlock", Some(json!({ "kind": kind }))))? })
         .collect();
     let block_items: Vec<UiTreeItemNode> =
-        if document.blocks.is_empty() { vec![UiTreeItemNode { icon_id: Some("sticky-note".into()), ..tree_item("note-play-blocks.empty", labels.document_empty) }] } else { document.blocks.iter().map(block_tree_item).collect() };
-    PanelTreeBuilder::new("note-play-blocks").section("note-play-blocks", Some(labels.document.into()), true, [action_rows, block_items].concat()).interaction_domain(NOTE_INTERACTION_BLOCKS).build()
+        if document.blocks.is_empty() { vec![UiTreeItemNode { icon_id: Some("sticky-note".into()), ..tree_item("note-play-blocks.empty", labels.document_empty)? }] } else { document.blocks.iter().map(block_tree_item).collect()? };
+    PanelTreeBuilder::new("note-play-blocks")?.section("note-play-blocks", Some(labels.document.into()), true, [action_rows, block_items].concat())?.interaction_domain(NOTE_INTERACTION_BLOCKS)?.build()
 }
 //#endregion 🔖️Render
 

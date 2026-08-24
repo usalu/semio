@@ -1,0 +1,42 @@
+syntax = "proto3";
+package semio.s_stdio_json.i_json.mutation;
+
+import "s_stdio_json_snapshot.proto"; // JsonValue, JsonMember, JsonSnapshot
+import "s_stdio_json_mutation.proto"; // JsonPathSegment
+
+// 🌳️ RFC 7493 §2.1 made structural — an I-JSON document root is an object or an array.
+message JsonIJsonRoot {
+  enum Kind {
+    OBJECT = 0;
+    ARRAY = 1;
+  }
+  Kind kind = 1;
+  repeated semio.s_stdio_json.snapshot.JsonMember members = 2;
+  repeated semio.s_stdio_json.snapshot.JsonValue items = 3;
+}
+
+message JsonIJsonMutation {
+  enum Kind {
+    NO_MUTATION = 0;
+    SET_SNAPSHOT = 1;
+    SET_TOP_LEVEL = 2;
+    UPSERT_MEMBER = 3;
+    REMOVE_MEMBER = 4;
+    RENAME_MEMBER = 5;
+    SET_SAFE_NUMBER = 6;
+    SET_STRING = 7;
+    INSERT_ARRAY_ELEMENT = 8;
+    REMOVE_ARRAY_ELEMENT = 9;
+  }
+  Kind mutation = 1;
+  semio.s_stdio_json.snapshot.JsonSnapshot snapshot = 2;
+  JsonIJsonRoot root = 3;
+  repeated semio.s_stdio_json.mutation.JsonPathSegment path = 4;
+  string key = 5;
+  string from = 6;
+  string to = 7;
+  string lexeme = 8;
+  uint64 index = 9;
+  semio.s_stdio_json.snapshot.JsonValue value = 10;
+  string text = 11;
+}

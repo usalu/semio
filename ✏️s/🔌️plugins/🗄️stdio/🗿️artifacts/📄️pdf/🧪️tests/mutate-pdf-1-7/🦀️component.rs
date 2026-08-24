@@ -34,6 +34,50 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 }
 //#endregion 🔖️Input
 
+//#region 🔖️Law
+/// 🔬️ First structural divergence between two projections — a dotted field path plus both values,
+/// so a law that fails names WHICH field moved instead of only "not equal". Kept local to this
+/// adapter for the same reason `KINDS` is duplicated here: a case adapter is a leaf that links the
+/// test host and this subset's own oracle module, nothing else.
+fn first_divergence(path: &str, expected: &Json, actual: &Json) -> Option<String> {
+    let here = if path.is_empty() { "the projection".to_string() } else { path.to_string() };
+    let child = |key: &str| if path.is_empty() { key.to_string() } else { format!("{path}.{key}") };
+    match (expected, actual) {
+        (Json::Object(left), Json::Object(right)) => {
+            for (key, value) in left {
+                match right.iter().find(|(name, _)| name == key) {
+                    Some((_, other)) => {
+                        if let Some(found) = first_divergence(&child(key), value, other) {
+                            return Some(found);
+                        }
+                    }
+                    None => return Some(format!("{} is gone (the original carried {})", child(key), brief(value))),
+                }
+            }
+            right.iter().find(|(name, _)| !left.iter().any(|(other, _)| other == name)).map(|(name, value)| format!("{} appeared (absent in the original, now {})", child(name), brief(value)))
+        }
+        (Json::Array(left), Json::Array(right)) => {
+            if left.len() != right.len() {
+                return Some(format!("{here} has {} entries, the original had {}", right.len(), left.len()));
+            }
+            left.iter().zip(right.iter()).enumerate().find_map(|(index, (value, other))| first_divergence(&child(&index.to_string()), value, other))
+        }
+        (left, right) if left == right => None,
+        (left, right) => Some(format!("{here} is {} — the original had {}", brief(right), brief(left))),
+    }
+}
+
+/// ✂️ A projection value, truncated: a divergence message must stay readable, and this projection
+/// carries all 65 pages of a real thesis.
+fn brief(value: &Json) -> String {
+    let text = value.to_string();
+    match text.char_indices().nth(160) {
+        Some((cut, _)) => format!("{}…", &text[..cut]),
+        None => text,
+    }
+}
+//#endregion 🔖️Law
+
 //#region 🔖️Oracle
 /// 🔮️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
 /// spec is carried in its doc string, not in the function it dispatches to.
@@ -45,24 +89,40 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔮️ One handler shared by every `inverse-<kind>` scenario id.
+/// 🔮️ One handler shared by every `inverse-<kind>` scenario id -- and the place the inverse LAW is
+/// asserted, in-role, without needing the subject: `apply(inverse(m), apply(m, base))` must land
+/// back on the ORIGINAL document's own projection, read through the same independent reader.
+/// Producing that projection and returning it uncompared is what made every one of these scenarios
+/// pass whenever `lopdf` merely did not error.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let original = project_pdf_1_7(&input)?;
     let bytes = oracle_apply_mutation_inverse(&input, &spec)?;
     let projection = project_pdf_1_7(&bytes)?;
+    if let Some(divergence) = first_divergence("", &original, &projection) {
+        return Err(format!("inverse-{}: the mutation followed by its own computed inverse did not restore the original document — {}", spec.str("kind"), divergence));
+    }
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔒️ The ORACLE side of the no-byte-pass-through law: `lopdf` fully parses the real document and
-/// re-serializes it from its own object graph alone (the same "no-mutation" routing
-/// `oracle_apply_mutation` already gives every other kind), independent evidence that a full
-/// parse/re-serialize is possible before the SUBJECT is held to the same standard below.
+/// 🔒️ The ORACLE side of the no-byte-pass-through law, asserted rather than merely claimed in
+/// prose: `lopdf` fully parses the real document and re-serializes it from its own object graph
+/// alone (the same "no-mutation" routing `oracle_apply_mutation` already gives every other kind),
+/// and BOTH halves of the law are checked here — the re-serialized bytes must differ from the input
+/// (nothing was copied) and their projection must be identical to the input's (nothing was lost).
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
     let bytes = oracle_apply_mutation(&input, &no_mutation)?;
+    if bytes == input {
+        return Err("byte pass-through: the re-serialized document is bit-identical to the input".to_string());
+    }
     let projection = project_pdf_1_7(&bytes)?;
+    let original = project_pdf_1_7(&input)?;
+    if let Some(divergence) = first_divergence("", &original, &projection) {
+        return Err(format!("identity round trip: parsing and re-serializing the real document did not preserve its semantic projection — {divergence}"));
+    }
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

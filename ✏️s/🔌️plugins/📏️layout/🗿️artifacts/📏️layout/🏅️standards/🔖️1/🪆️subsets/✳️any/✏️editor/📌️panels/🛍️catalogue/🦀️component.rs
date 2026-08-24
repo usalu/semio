@@ -6,7 +6,7 @@ use semio_framework_plugin::{tree_item_with_action_draggable, Label, LocalizedLa
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
-pub const LAYOUT_PLAY_BODY_CATALOGUE: &str = "layout.play.catalogue";
+pub(crate) const LAYOUT_PLAY_BODY_CATALOGUE: &str = "layout.play.catalogue";
 
 const LAYOUT_CATALOGUE_KINDS: &[(&str, &str)] = &[("rect", "square"), ("text", "type"), ("image", "image")];
 const LAYOUT_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
@@ -14,7 +14,7 @@ const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-k
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub(crate) async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -26,21 +26,21 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> UiTreeItemNode {
+async fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let action = if kind == "page" { layout_action("addPage", None) } else { layout_action("addFrame", Some(json!({ "kind": kind }))) };
     let mut drag_data_entries = serde_json::Map::new();
     drag_data_entries.insert(LAYOUT_CATALOGUE_DRAG_MIME.to_string(), json!(json!({ "kind": kind }).to_string()));
     drag_data_entries.insert(format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}{kind}"), json!(""));
     let drag_data = Value::Object(drag_data_entries);
-    let mut item = tree_item_with_action_draggable(format!("layout-catalogue.{kind}"), label, Some(kind.into()), action, &drag_data);
+    let mut item = tree_item_with_action_draggable(format!("layout-catalogue.{kind}"), label, Some(kind.into()), action, &drag_data)?;
     item.icon_id = Some(icon.into());
     item
 }
 
-pub async fn render(labels: &LayoutLabels) -> UiNode {
-    let mut items = vec![catalogue_tree_item("page", labels.catalogue_page, "file")];
-    items.extend(LAYOUT_CATALOGUE_KINDS.iter().map(|(kind, icon)| catalogue_tree_item(kind, catalogue_kind_label(kind, labels), icon)));
-    PanelTreeBuilder::new("layout-catalogue").section("layout-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).build()
+pub(crate) async fn render(labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut items = vec![catalogue_tree_item("page", labels.catalogue_page, "file")?(&str, &str, &str)(&str, &str)];
+    items.extend(LAYOUT_CATALOGUE_KINDS.iter().map(|(kind, icon)| catalogue_tree_item(kind, catalogue_kind_label(kind, labels), icon)?));
+    PanelTreeBuilder::new("layout-catalogue")?.section("layout-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)?.build()
 }
 //#endregion 🔖️Render
 

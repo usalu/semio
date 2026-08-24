@@ -42,7 +42,7 @@ pub async fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// @emoji 🔺️ Signature adjacency matrix — triangle glyph strip plus lower-triangle pair rows.
-pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let matrix = adjacency_matrix(program);
     let n = matrix.element_ids.len();
     if n == 0 {
@@ -53,7 +53,7 @@ pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode 
     let mut pair_sections = Vec::new();
 
     glyph_rows.push(ui_text(Label::data(" ")));
-    pair_sections.push(tree_section("architect-adjacency.headers", Some("Columns".into()), matrix.element_ids.iter().enumerate().map(|(index, id)| tree_item(format!("architect-adjacency.col.{index}"), element_label(program, id))).collect()));
+    pair_sections.push(tree_section("architect-adjacency.headers", Some("Columns".into()), matrix.element_ids.iter().enumerate().map(|(index, id)| tree_item(format!("architect-adjacency.col.{index}"), element_label(program, id))?).collect()));
 
     for row in 1..n {
         let row_id = &matrix.element_ids[row];
@@ -85,7 +85,7 @@ pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode 
                         "cycle": true
                     })),
                 ),
-            ));
+            )?);
         }
 
         pair_sections.push(tree_section(format!("architect-adjacency.row.{row}"), Some(element_label(program, row_id)), items));
@@ -96,7 +96,7 @@ pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode 
         pair_sections.push(tree_section(
             "architect-adjacency.conflicts",
             Some(format!("Conflicts ({})", conflicts.len())),
-            conflicts.iter().map(|conflict| tree_item(format!("architect-adjacency.conflict.{}", conflict.adjacency_a_id), &conflict.message)).collect(),
+            conflicts.iter().map(|conflict| tree_item(format!("architect-adjacency.conflict.{}", conflict.adjacency_a_id), &conflict.message)?).collect(),
         ));
     }
 

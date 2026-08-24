@@ -37,13 +37,13 @@ async fn layer_icon(layer: &DrawLayerNode) -> &str {
 }
 
 /// 🕹️ No per-row selection `action`: the tree is bound to the `strokes` interaction domain via
-/// `.interaction_domain(...)` below, so the framework auto-injects `interactionSelect` for row
+/// `.interaction_domain(...)?` below, so the framework auto-injects `interactionSelect` for row
 /// clicks — never declare that yourself (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-async fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> UiTreeItemNode {
+async fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let row_id = draw_play_layers_tree_row_id(layer);
     let base = layer_base(layer);
     let nested_items = match layer {
-        DrawLayerNode::Group(group) => Some(group.children.iter().map(|child| layer_tree_item(doc, child)).collect()),
+        DrawLayerNode::Group(group) => Some(group.children.iter().map(|child| layer_tree_item(doc, child)?).collect()),
         DrawLayerNode::Boolean(boolean) => Some(boolean.children.iter().map(|child_id| boolean_child_item(doc, &boolean.base.id, child_id)).collect()),
         _ => None,
     };
@@ -61,23 +61,23 @@ async fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> UiTreeIte
         draggable: Some(true),
         drag_data: Some(drag_data),
         menu: None,
-        ..tree_item(row_id, Label::data(base.name.clone()))
+        ..tree_item(row_id, Label::data(base.name.clone()))?
     }
 }
 
-async fn boolean_child_item(doc: &DrawSnapshot, boolean_id: &str, child_id: &str) -> UiTreeItemNode {
+async fn boolean_child_item(doc: &DrawSnapshot, boolean_id: &str, child_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let row_id = draw_play_boolean_child_row_id(boolean_id, child_id);
     match find_draw_layer(doc, child_id) {
-        Some(child) => UiTreeItemNode { description: Some(crate::artifacts::draw::schema::layer_kind_label(child)), draggable: Some(false), menu: None, ..tree_item(row_id, Label::data(layer_base(child).name.clone())) },
-        None => UiTreeItemNode { icon_id: Some("alert-circle".into()), draggable: Some(false), ..tree_item(row_id, Label::data(format!("{child_id} (missing)"))) },
+        Some(child) => UiTreeItemNode { description: Some(crate::artifacts::draw::schema::layer_kind_label(child)), draggable: Some(false), menu: None, ..tree_item(row_id, Label::data(layer_base(child).name.clone()))? },
+        None => UiTreeItemNode { icon_id: Some("alert-circle".into()), draggable: Some(false), ..tree_item(row_id, Label::data(format!("{child_id} (missing)")))? },
     }
 }
 
-async fn tree_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args: serde_json::Value) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args))) }
+async fn tree_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args: serde_json::Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args)))? }
 }
 
-pub async fn render(document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode {
+pub async fn render(document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let action_items = vec![
         tree_button("draw-play-layers.add.path", labels.add_path, "pen-tool", "addLayer", json!({ "kind": "path" })),
         tree_button("draw-play-layers.add.rect", labels.add_rectangle, "square", "addLayer", json!({ "kind": "shape:rect" })),
@@ -86,13 +86,13 @@ pub async fn render(document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode 
         tree_button("draw-play-layers.add.boolean", labels.add_boolean, "combine", "addLayer", json!({ "kind": "boolean" })),
     ];
     let layer_items = if document.layers.is_empty() {
-        vec![UiTreeItemNode { icon_id: Some("pen-tool".into()), menu: None, ..tree_item("draw-play-layers.empty", labels.empty_state) }]
+        vec![UiTreeItemNode { icon_id: Some("pen-tool".into()), menu: None, ..tree_item("draw-play-layers.empty", labels.empty_state)? }]
     } else {
-        document.layers.iter().map(|layer| layer_tree_item(document, layer)).collect()
+        document.layers.iter().map(|layer| layer_tree_item(document, layer)?).collect()
     };
-    // 🕹️ `.interaction_domain(...)` replaces the deleted `.selected()`/`.highlighted()`/
+    // 🕹️ `.interaction_domain(...)?` replaces the deleted `.selected()?`/`.highlighted()?`/
     // `.selection_change(...)` calls — the framework stamps presence from `InteractionState` and
     // would overwrite them anyway (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-    PanelTreeBuilder::new("draw-play-layers").section("draw-play-layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, action_items.into_iter().chain(layer_items).collect()).interaction_domain(DRAW_INTERACTION_DOMAIN).build()
+    PanelTreeBuilder::new("draw-play-layers")?.section("draw-play-layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, action_items.into_iter().chain(layer_items).collect())?.interaction_domain(DRAW_INTERACTION_DOMAIN)?.build()
 }
 //#endregion 🔖️Render

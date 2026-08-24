@@ -2725,45 +2725,181 @@ pub(crate) fn renderer_worker_pool() -> semio_framework_async::WorkerPool {
 
 #[cfg(not(target_arch = "wasm32"))]
 struct RendererIoHandle {
-    session: semio_framework_job::WorkerJobSession<semio_framework_os_services::NativeIoJob>,
-    ticket: Option<semio_framework_job::WorkerJobTicket>,
-    result: Option<Result<semio_framework_os_services::NativeIoValue, String>>,
-    cancel: semio_framework_async::CancelToken,
+    slot: usize,
+    generation: u64,
+    completed: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RendererIoHandle {
     fn try_take(&mut self) -> Option<Result<semio_framework_os_services::NativeIoValue, String>> {
-        self.drive_one(None)
+        let result = renderer_io_with_node(self.slot, self.generation, |node| {
+            let result = node.result.take()?;
+            node.result_taken = true;
+            RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
+            Some(result)
+        })
+        .flatten();
+        self.completed |= result.is_some();
+        result
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl std::future::Future for RendererIoHandle {
+    type Output = Result<semio_framework_os_services::NativeIoValue, String>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        if let Some(result) = self.try_take() {
+            return std::task::Poll::Ready(result);
+        }
+        let registered = renderer_io_with_node(self.slot, self.generation, |node| {
+            node.waker = Some(cx.waker().clone());
+            if let Some(session) = node.session.as_ref() {
+                let _ = session.register_wake(cx.waker());
+            }
+        })
+        .is_some();
+        if registered || renderer_io_generation_live(self.slot, self.generation) {
+            RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
+            std::task::Poll::Pending
+        } else {
+            self.completed = true;
+            std::task::Poll::Ready(Err("native I/O mounted session generation is stale".into()))
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for RendererIoHandle {
+    fn drop(&mut self) {
+        if self.completed {
+            return;
+        }
+        if let Some(slot) = RENDERER_IO_SLOTS.get(self.slot) {
+            if slot.generation.load(std::sync::atomic::Ordering::Acquire) == self.generation {
+                slot.cancel_requested.store(true, std::sync::atomic::Ordering::Release);
+            }
+        }
+        RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+const RENDERER_IO_SESSION_SLOTS: usize = semio_framework_job::WORKER_JOB_SESSION_SLOTS + 1;
+#[cfg(not(target_arch = "wasm32"))]
+const RENDERER_IO_VACANT: u8 = 0;
+#[cfg(not(target_arch = "wasm32"))]
+const RENDERER_IO_LIVE: u8 = 1;
+#[cfg(not(target_arch = "wasm32"))]
+const RENDERER_IO_CHECKED_OUT: u8 = 2;
+#[cfg(not(target_arch = "wasm32"))]
+const RENDERER_IO_EXHAUSTED: u8 = 3;
+
+#[cfg(not(target_arch = "wasm32"))]
+struct RendererIoSlot {
+    generation: std::sync::atomic::AtomicU64,
+    state: std::sync::atomic::AtomicU8,
+    node: std::sync::atomic::AtomicPtr<RendererIoNode>,
+    cancel_requested: std::sync::atomic::AtomicBool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl RendererIoSlot {
+    const fn vacant() -> Self {
+        Self { generation: std::sync::atomic::AtomicU64::new(0), state: std::sync::atomic::AtomicU8::new(RENDERER_IO_VACANT), node: std::sync::atomic::AtomicPtr::new(std::ptr::null_mut()), cancel_requested: std::sync::atomic::AtomicBool::new(false) }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct RendererIoNode {
+    session: Option<semio_framework_job::WorkerJobSession<semio_framework_os_services::NativeIoJob>>,
+    rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework_os_services::NativeIoJob>>,
+    ticket: Option<semio_framework_job::WorkerJobTicket>,
+    result: Option<Result<semio_framework_os_services::NativeIoValue, String>>,
+    result_taken: bool,
+    detached: bool,
+    cancel: semio_framework_async::CancelToken,
+    waker: Option<std::task::Waker>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl RendererIoNode {
+    fn wake(&mut self) {
+        if let Some(waker) = self.waker.take() {
+            waker.wake();
+        }
     }
 
-    fn drive_one(&mut self, waker: Option<&std::task::Waker>) -> Option<Result<semio_framework_os_services::NativeIoValue, String>> {
-        if self.result.is_some() {
-            let _ = self.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-            if self.session.terminal_is_empty() {
-                return self.result.take();
-            }
-            if let Some(waker) = waker {
-                waker.wake_by_ref();
-            }
-            return None;
+    fn close_detached_result(&mut self) -> bool {
+        if !self.detached {
+            return false;
         }
-        if let Some(waker) = waker {
-            let _ = self.session.register_wake(waker);
+        let Some(result) = self.result.as_mut() else { return false };
+        match result {
+            Ok(value) if !value.terminal_is_empty() => {
+                let _ = value.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                return true;
+            }
+            Ok(_) => {}
+            Err(error) if !error.is_empty() => {
+                if error.len() > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES {
+                    return false;
+                }
+                error.clear();
+                return true;
+            }
+            Err(_) => {}
         }
-        match self.session.poll() {
-            semio_framework_job::WorkerJobPoll::Idle => match self.session.try_submit_step(&renderer_worker_pool(), semio_framework_async::Lane::Io) {
+        self.result = None;
+        self.result_taken = true;
+        true
+    }
+
+    fn pump_one(&mut self) {
+        if self.close_detached_result() {
+            self.wake();
+            return;
+        }
+        if let Some(rejected) = self.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                self.rejected = None;
+            }
+            self.wake();
+            return;
+        }
+        let Some(session) = self.session.as_ref() else {
+            self.wake();
+            return;
+        };
+        let _ = session.take_wake();
+        if self.result.is_some() || self.detached {
+            if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                let _ = session.begin_close();
+                self.wake();
+                return;
+            }
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if session.terminal_is_empty() {
+                self.session = None;
+            }
+            self.wake();
+            return;
+        }
+        match session.poll() {
+            semio_framework_job::WorkerJobPoll::Idle => match session.try_submit_step(&renderer_worker_pool(), semio_framework_async::Lane::Io) {
                 Ok(ticket) => self.ticket = Some(ticket),
                 Err(semio_framework_job::WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended)) => {
-                    if let Ok(rejected) = self.session.take_rejected() {
+                    if let Ok(rejected) = session.take_rejected() {
                         rejected.resume();
                     }
                 }
                 Err(error) => {
-                    if let Ok(rejected) = self.session.take_rejected() {
+                    if let Ok(rejected) = session.take_rejected() {
                         rejected.begin_close();
                     } else {
-                        let _ = self.session.begin_close();
+                        let _ = session.begin_close();
                     }
                     self.result = Some(Err(format!("native I/O worker submission failed: {error:?}")));
                 }
@@ -2771,10 +2907,11 @@ impl RendererIoHandle {
             semio_framework_job::WorkerJobPoll::Outcome => {
                 let Some(ticket) = self.ticket.take() else {
                     self.result = Some(Err("native I/O outcome lost its exact ticket".into()));
-                    let _ = self.session.begin_close();
-                    return None;
+                    let _ = session.begin_close();
+                    self.wake();
+                    return;
                 };
-                match self.session.take_outcome(ticket) {
+                match session.take_outcome(ticket) {
                     Ok(mut owner) => {
                         if matches!(owner.take_outcome(), semio_framework_job::StepOutcome::Yield) {
                             if owner.resume().is_err() {
@@ -2788,7 +2925,7 @@ impl RendererIoHandle {
                     Err(_) => self.result = Some(Err("native I/O outcome handback contention".into())),
                 }
             }
-            semio_framework_job::WorkerJobPoll::Terminal => match self.session.take_terminal() {
+            semio_framework_job::WorkerJobPoll::Terminal => match session.take_terminal() {
                 Ok(mut owner) => {
                     self.result = owner.job_mut().take_result().or_else(|| Some(Err("native I/O terminal owner had no structured result".into())));
                     owner.begin_close();
@@ -2796,60 +2933,197 @@ impl RendererIoHandle {
                 Err(_) => self.result = Some(Err("native I/O terminal handback contention".into())),
             },
             semio_framework_job::WorkerJobPoll::Rejected => {
-                if let Ok(rejected) = self.session.take_rejected() {
+                if let Ok(rejected) = session.take_rejected() {
                     rejected.resume();
                 }
             }
             semio_framework_job::WorkerJobPoll::Closing => {
-                let _ = self.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if session.terminal_is_empty() {
+                    self.session = None;
+                }
             }
             semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::CheckedOut | semio_framework_job::WorkerJobPoll::TerminalEmpty => {}
         }
-        if let Some(waker) = waker {
-            if !matches!(self.session.poll(), semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::CheckedOut) {
-                waker.wake_by_ref();
-            }
+        self.wake();
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.session.is_none() && self.rejected.is_none() && self.result.is_none() && (self.detached || self.result_taken)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+static RENDERER_IO_SLOTS: [RendererIoSlot; RENDERER_IO_SESSION_SLOTS] = [const { RendererIoSlot::vacant() }; RENDERER_IO_SESSION_SLOTS];
+#[cfg(not(target_arch = "wasm32"))]
+static RENDERER_IO_WAKE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+#[cfg(not(target_arch = "wasm32"))]
+static RENDERER_IO_PUMP_CURSOR: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+#[cfg(not(target_arch = "wasm32"))]
+fn renderer_io_with_node<R>(index: usize, generation: u64, use_node: impl FnOnce(&mut RendererIoNode) -> R) -> Option<R> {
+    let slot = RENDERER_IO_SLOTS.get(index)?;
+    if slot.generation.load(std::sync::atomic::Ordering::Acquire) != generation || slot.state.compare_exchange(RENDERER_IO_LIVE, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        return None;
+    }
+    if slot.generation.load(std::sync::atomic::Ordering::Acquire) != generation {
+        slot.state.store(RENDERER_IO_LIVE, std::sync::atomic::Ordering::Release);
+        return None;
+    }
+    let pointer = slot.node.load(std::sync::atomic::Ordering::Acquire);
+    let result = (!pointer.is_null()).then(|| use_node(unsafe { &mut *pointer }));
+    slot.state.store(RENDERER_IO_LIVE, std::sync::atomic::Ordering::Release);
+    result
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn renderer_io_generation_live(index: usize, generation: u64) -> bool {
+    RENDERER_IO_SLOTS.get(index).is_some_and(|slot| {
+        slot.generation.load(std::sync::atomic::Ordering::Acquire) == generation
+            && matches!(slot.state.load(std::sync::atomic::Ordering::Acquire), RENDERER_IO_LIVE | RENDERER_IO_CHECKED_OUT)
+            && !slot.node.load(std::sync::atomic::Ordering::Acquire).is_null()
+    })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
+    if maximum_sessions == 0 {
+        return 0;
+    }
+    let start = RENDERER_IO_PUMP_CURSOR.fetch_add(maximum_sessions, std::sync::atomic::Ordering::AcqRel);
+    let mut advanced = 0;
+    for offset in 0..RENDERER_IO_SESSION_SLOTS {
+        if advanced == maximum_sessions {
+            break;
         }
-        None
+        let index = start.wrapping_add(offset) % RENDERER_IO_SESSION_SLOTS;
+        let slot = &RENDERER_IO_SLOTS[index];
+        if slot.state.compare_exchange(RENDERER_IO_LIVE, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            continue;
+        }
+        let pointer = slot.node.load(std::sync::atomic::Ordering::Acquire);
+        if pointer.is_null() {
+            slot.state.store(RENDERER_IO_VACANT, std::sync::atomic::Ordering::Release);
+            continue;
+        }
+        let node = unsafe { &mut *pointer };
+        let cancel_advanced = slot.cancel_requested.swap(false, std::sync::atomic::Ordering::AcqRel);
+        if cancel_advanced {
+            node.detached = true;
+            node.cancel.cancel_now();
+            if let Some(session) = node.session.as_ref() {
+                let _ = session.begin_close();
+            }
+            if let Some(rejected) = node.rejected.as_mut() {
+                rejected.begin_close();
+            }
+            node.wake();
+        }
+        if !cancel_advanced {
+            node.pump_one();
+        }
+        if node.terminal_is_empty() {
+            slot.node.store(std::ptr::null_mut(), std::sync::atomic::Ordering::Release);
+            slot.cancel_requested.store(false, std::sync::atomic::Ordering::Release);
+            drop(unsafe { Box::from_raw(pointer) });
+            slot.state.store(if slot.generation.load(std::sync::atomic::Ordering::Acquire) == u64::MAX { RENDERER_IO_EXHAUSTED } else { RENDERER_IO_VACANT }, std::sync::atomic::Ordering::Release);
+        } else {
+            slot.state.store(RENDERER_IO_LIVE, std::sync::atomic::Ordering::Release);
+        }
+        advanced += 1;
     }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl std::future::Future for RendererIoHandle {
-    type Output = Result<semio_framework_os_services::NativeIoValue, String>;
-
-    fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        self.drive_one(Some(cx.waker())).map_or(std::task::Poll::Pending, std::task::Poll::Ready)
+    if RENDERER_IO_SLOTS.iter().any(|slot| slot.state.load(std::sync::atomic::Ordering::Acquire) == RENDERER_IO_LIVE) {
+        RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
     }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl Drop for RendererIoHandle {
-    fn drop(&mut self) {
-        self.cancel.cancel_now();
-        let _ = self.session.begin_close();
-    }
+    advanced
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<RendererIoHandle, String> {
     use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+    let Some((slot_index, generation)) = RENDERER_IO_SLOTS.iter().enumerate().find_map(|(index, slot)| {
+        if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return None;
+        }
+        let Some(generation) = slot.generation.load(std::sync::atomic::Ordering::Acquire).checked_add(1) else {
+            slot.state.store(RENDERER_IO_EXHAUSTED, std::sync::atomic::Ordering::Release);
+            return None;
+        };
+        slot.generation.store(generation, std::sync::atomic::Ordering::Release);
+        slot.cancel_requested.store(false, std::sync::atomic::Ordering::Release);
+        Some((index, generation))
+    }) else {
+        return Err("native I/O mounted session registry is exhausted".into());
+    };
     let job = semio_framework_os_services::NativeIoJob::new(request);
     let cancel = root_cancel_token();
     let params = BatchJobParams {
         operation: allocate_operation_id(),
-        generation: Generation(0),
+        generation: Generation(generation),
         cancel: cancel.clone(),
         config: BatchDriveConfig { site: "os_renderer_native_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
         now_ms: semio_framework_job::default_now_ms,
     };
-    let session = semio_framework_job::WorkerJobSession::try_new(job, params).map_err(|_| "native I/O retained session registry is full".to_string())?;
-    Ok(RendererIoHandle { session, ticket: None, result: None, cancel })
+    let (session, rejected, result) = match semio_framework_job::WorkerJobSession::try_new(job, params) {
+        Ok(session) => (Some(session), None, None),
+        Err(mut rejected) => {
+            rejected.begin_close();
+            (None, Some(rejected), Some(Err("native I/O retained session registry is full".into())))
+        }
+    };
+    let node = Box::new(RendererIoNode { session, rejected, ticket: None, result, result_taken: false, detached: false, cancel, waker: None });
+    RENDERER_IO_SLOTS[slot_index].node.store(Box::into_raw(node), std::sync::atomic::Ordering::Release);
+    RENDERER_IO_SLOTS[slot_index].state.store(RENDERER_IO_LIVE, std::sync::atomic::Ordering::Release);
+    RENDERER_IO_WAKE.store(true, std::sync::atomic::Ordering::Release);
+    Ok(RendererIoHandle { slot: slot_index, generation, completed: false })
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 async fn run_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<semio_framework_os_services::NativeIoValue, String> {
     submit_renderer_io(request)?.await
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod renderer_io_retained_tests {
+    use super::*;
+
+    #[test]
+    fn mounted_registry_max_plus_one_zero_pump_drop_and_generation_are_exact() {
+        let mut handles = Vec::with_capacity(RENDERER_IO_SESSION_SLOTS);
+        for index in 0..RENDERER_IO_SESSION_SLOTS {
+            let path = std::path::PathBuf::from(format!("/semio-retained-native-io-{index:04}"));
+            let request_pointer = path.as_os_str().as_encoded_bytes().as_ptr();
+            let handle = submit_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(path)).expect("logical maximum plus one has a mounted rejection owner");
+            if index + 1 == RENDERER_IO_SESSION_SLOTS {
+                let plus_one_request_pointer = request_pointer;
+                let returned_pointer =
+                    renderer_io_with_node(handle.slot, handle.generation, |node| node.rejected.as_ref().and_then(|rejected| rejected.job().retained_request_backing_identity()).expect("maximum plus one retains the exact rejected request"))
+                        .expect("maximum plus one mounted generation");
+                assert_eq!(returned_pointer, plus_one_request_pointer);
+            }
+            handles.push(handle);
+        }
+        assert_eq!(pump_renderer_io_sessions(0), 0);
+        let first_slot = handles[0].slot;
+        let first_generation = handles[0].generation;
+        drop(handles);
+        assert_eq!(pump_renderer_io_sessions(1), 1, "one host turn advances one mounted control opportunity");
+        for _ in 0..RENDERER_IO_SESSION_SLOTS * 16 {
+            if RENDERER_IO_SLOTS.iter().all(|slot| slot.state.load(std::sync::atomic::Ordering::Acquire) != RENDERER_IO_LIVE) {
+                break;
+            }
+            assert!(pump_renderer_io_sessions(1) <= 1);
+        }
+        assert!(RENDERER_IO_SLOTS.iter().all(|slot| slot.state.load(std::sync::atomic::Ordering::Acquire) != RENDERER_IO_LIVE));
+        assert!(!renderer_io_generation_live(first_slot, first_generation));
+        let replacement = submit_renderer_io(semio_framework_os_services::NativeIoRequest::ProcessResidentBytes).expect("closed registry slot is reusable with a new generation");
+        assert_eq!(replacement.slot, first_slot);
+        assert!(replacement.generation > first_generation);
+        drop(replacement);
+        for _ in 0..16 {
+            let _ = pump_renderer_io_sessions(1);
+        }
+    }
 }
 //#endregion 🧵️RendererWorkerPool
 
@@ -2883,12 +3157,7 @@ pub(crate) mod kernel_runtime {
     use std::sync::{Arc, Mutex, OnceLock};
     use std::task::{Context, Poll, Waker};
     use std::time::Duration;
-    use ui_contract::{Activity, Component, ContainerRole, SurfaceId, TransitionHint, Trigger, UiDocumentLimits, UiNodeRecord, UiRevision, UiSnapshotState, UiValue};
-    use ui_wgpu::wgpu::{
-        ActionDescriptor, Label as LegacyLabel, StyleSpec as LegacyStyleSpec, UiButtonNode, UiDropOverlaySpec, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef,
-        UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode,
-        UiTreeNode, UiTreeSectionNode,
-    };
+    use ui_contract::{SurfaceId, UiDocumentBuilder, UiDocumentLease, UiDocumentLimits, UiFixedList, UiPatchApplyOutcome, UiPatchApplyProducer, UiPatchApplyRejected, UiPatchApplyStep, UiRevision, UiSnapshotState, UI_DOCUMENT_LEASE_SLOTS};
 
     static SEQ: AtomicU64 = AtomicU64::new(1);
 
@@ -3070,7 +3339,7 @@ pub(crate) mod kernel_runtime {
         SEQ.fetch_add(1, Ordering::Relaxed)
     }
 
-    fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult) -> Result<TurnResult, String> {
+    fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult, session: u64) -> Result<TurnResult, String> {
         let status = match &result.status {
             semio_framework_actor::TurnStatus::Idle => semio_framework::kernel::TurnStatus::Idle,
             semio_framework_actor::TurnStatus::MoreWork => semio_framework::kernel::TurnStatus::MoreWork,
@@ -3079,7 +3348,10 @@ pub(crate) mod kernel_runtime {
             status => return Err(format!("kernel: unexpected job status in reactor turn: {status:?}")),
         };
         Ok(TurnResult {
-            ui_patches: serde_json::from_slice(&result.ui_patches).map_err(|error| format!("kernel: decode ui patches: {error}"))?,
+            ui_patches: semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&result.ui_patches, session)
+                .map_err(|error| format!("kernel: decode ui patch transport: {error}"))?
+                .take_owner()
+                .map_err(|_| "kernel: turn patch transport lease lost its exact owner".to_string())?,
             effects: serde_json::from_slice(&result.effects).map_err(|error| format!("kernel: decode effects: {error}"))?,
             presence: Vec::new(),
             next_wake: result.next_wake,
@@ -3187,7 +3459,7 @@ pub(crate) mod kernel_runtime {
     async fn find_wasm_artifact(dir: &std::path::Path) -> Option<PathBuf> {
         let request = semio_framework_os_services::NativeIoRequest::ScanDirectory { path: dir.to_path_buf(), directories_only: false, extension: Some("wasm".into()), first_only: true };
         match crate::run_renderer_io(request).await.ok()? {
-            semio_framework_os_services::NativeIoValue::Paths(paths) => paths.into_iter().next(),
+            semio_framework_os_services::NativeIoValue::Paths(mut paths) => paths.pop(),
             _ => None,
         }
     }
@@ -3308,6 +3580,10 @@ pub(crate) mod kernel_runtime {
             instance: u32,
             event: QueuedKernelEvent,
         },
+        AdvanceRetained {
+            instance: u32,
+            surface: SurfaceId,
+        },
         ExchangeCommands {
             instance: u32,
             driver: semio_framework::kernel::CommandBatchDriver,
@@ -3334,7 +3610,7 @@ pub(crate) mod kernel_runtime {
                 Self::CloseRejectedCommandBuild { owner, .. } => (owner.remaining_pages(), owner.remaining_bytes()),
                 Self::CreateApp { owner } => (0, owner.remaining_bytes()),
                 Self::Exchange { event, .. } => (0, event.remaining_bytes()),
-                Self::DestroyApp { .. } | Self::CloseRealm { .. } | Self::CloseRejectedEvents { .. } | Self::AcknowledgeJobProgress { .. } => (0, 0),
+                Self::AdvanceRetained { .. } | Self::DestroyApp { .. } | Self::CloseRealm { .. } | Self::CloseRejectedEvents { .. } | Self::AcknowledgeJobProgress { .. } => (0, 0),
             }
         }
     }
@@ -3534,18 +3810,30 @@ pub(crate) mod kernel_runtime {
         }
     }
 
+    pub(crate) struct ExchangeSurfaceDocument {
+        pub surface: SurfaceId,
+        pub document: UiDocumentLease,
+    }
+
     pub(crate) struct ExchangeOutcome {
         pub frames: Vec<protocol::AppFrame>,
         /// 🖼️ Surfaces this turn repainted or retained on desync — reconciled against the kernel
         /// pool state machine's retained tree (`KernelPoolState::retained`); see that field's doc for the
         /// full-body-vs-desync policy.
-        pub surfaces: HashMap<String, UiNode>,
+        pub surfaces: UiFixedList<ExchangeSurfaceDocument, UI_DOCUMENT_LEASE_SLOTS>,
         /// 🧾️ Every effect this turn produced that was NOT one of the `Effect::SendMessage{target:
         /// Shell{..}}` entries already unpacked into `frames` above — `📓️design-abi.md` §2's
         /// replacement for the deleted `AppFrame::Effects` wrapper: effects now travel as real
         /// `kernel::Effect` values on `TurnResult.effects` directly, not re-encoded as an `AppFrame`.
         pub effects: Vec<Effect>,
         pub command_ingress: semio_framework::kernel::CommandIngressStatus,
+    }
+
+    impl ExchangeOutcome {
+        pub(crate) fn take_surface(&mut self, surface: &str) -> Option<UiDocumentLease> {
+            let index = self.surfaces.iter().position(|entry| entry.surface.as_ref() == surface)?;
+            self.surfaces.swap_remove(index).map(|entry| entry.document)
+        }
     }
 
     pub(crate) enum KernelOutcome {
@@ -3726,367 +4014,242 @@ pub(crate) mod kernel_runtime {
                 KernelOutcome::Created(_) => Err("kernel: unexpected Created response for exchange".into()),
             }
         }
+
+        pub(crate) async fn advance_retained(&self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, String> {
+            match self.submit(KernelRequest::AdvanceRetained { instance, surface }).await {
+                KernelOutcome::Exchanged(result) => result,
+                KernelOutcome::Created(_) => Err("kernel: unexpected Created response for retained advance".into()),
+            }
+        }
     }
     //#endregion
 
     //#region 🔖️KernelPoolState
-    //#region 🔖️SemanticDocumentPresentation
-    /// 🎭️ Presents one accepted semantic document through the renderer's nested node API.
-    fn present_snapshot(state: &UiSnapshotState) -> UiNode {
-        state.root.and_then(|root| state.nodes.get(&root)).map_or_else(UiNode::default, |record| present_record(state, record))
+    //#region 📄️RetainedDocumentExchange
+    enum RetainedPatchApply {
+        Applying(UiPatchApplyProducer),
+        Ready(UiPatchApplyOutcome),
+        Rejected(UiPatchApplyRejected),
     }
 
-    fn present_record(state: &UiSnapshotState, record: &UiNodeRecord) -> UiNode {
-        let children = || record.children.iter().filter_map(|id| state.nodes.get(id)).map(|child| present_record(state, child)).collect::<Vec<_>>();
-        let presence = present_presence(record);
-        let menu = record.menu.as_ref().map(present_menu);
-        match &record.component {
-            Component::Container(props) => match props.role {
-                ContainerRole::Section => UiNode::Section(UiSectionNode { id: record.key.clone(), label: props.label.as_ref().map(present_label), default_open: props.default_open, presence, menu, children: children() }),
-                ContainerRole::Group => {
-                    UiNode::Group(UiGroupNode { id: record.key.clone(), label: props.label.as_ref().map_or_else(|| LegacyLabel::data(record.key.clone()), present_label), default_open: props.default_open, presence, menu, children: children() })
-                }
-                ContainerRole::Field => {
-                    let child = children().into_iter().next().unwrap_or_default();
-                    UiNode::Field(UiFieldNode {
-                        id: record.key.clone(),
-                        label: props.label.as_ref().map_or_else(|| LegacyLabel::data(record.key.clone()), present_label),
-                        description: props.description.clone(),
-                        required: props.required,
-                        error: props.error.clone(),
-                        child: Box::new(child),
-                        presence,
-                        menu,
-                    })
-                }
-                ContainerRole::Plain | ContainerRole::Form | ContainerRole::Toolbar => {
-                    let (direction, gap, padding) = present_stack_layout(&record.layout);
-                    UiNode::Stack(UiStackNode {
-                        direction,
-                        gap,
-                        padding,
-                        id: Some(record.key.clone()),
-                        presence,
-                        activate: binding_action(record, Trigger::Activate),
-                        drop_action: binding_action(record, Trigger::Drop),
-                        drop_overlay: props.drop_overlay.as_ref().map(|overlay| UiDropOverlaySpec { title: present_label(&overlay.title), hint: present_label(&overlay.hint), accept: overlay.accept.clone() }),
-                        menu,
-                        children: children(),
-                    })
-                }
-            },
-            Component::Text(props) => UiNode::Text(UiTextNode { value: present_label(&props.value), emphasize: props.emphasize, data_attributes: props.data_attributes.clone(), presence, menu }),
-            Component::Button(props) => UiNode::Button(UiButtonNode {
-                id: Some(record.key.clone()),
-                icon_id: props.icon.as_str().into(),
-                label: present_label(&props.label),
-                action: binding_action_or_inert(record, Trigger::Activate),
-                style: Some(present_style(&record.style)),
-                presence,
-                menu,
-            }),
-            Component::Separator(_) => UiNode::Separator(UiSeparatorNode { presence, menu }),
-            Component::Input(props) => UiNode::Input(UiInputNode {
-                id: record.key.clone(),
-                input_kind: match props.kind {
-                    ui_contract::InputKind::Text => "text",
-                    ui_contract::InputKind::LongText => "longText",
-                    ui_contract::InputKind::Number => "number",
-                    ui_contract::InputKind::Date => "date",
-                    ui_contract::InputKind::Color => "color",
-                    ui_contract::InputKind::File => "file",
-                }
-                .into(),
-                value: props.value.clone(),
-                placeholder: props.placeholder.as_ref().map(present_label),
-                commit: props.commit.clone(),
-                min: props.min,
-                max: props.max,
-                step: props.step,
-                accept: props.accept.clone(),
-                on_change: binding_action(record, Trigger::Change).or_else(|| binding_action(record, Trigger::Commit)).unwrap_or_else(inert_action),
-                presence,
-                menu,
-            }),
-            Component::Select(props) => UiNode::Select(UiSelectNode {
-                id: record.key.clone(),
-                value: props.value.clone(),
-                items: props.items.iter().map(|item| UiSelectItem { value: item.value.clone(), label: present_label(&item.label) }).collect(),
-                placeholder: props.placeholder.as_ref().map(present_label),
-                on_change: binding_action_or_inert(record, Trigger::Change),
-                presence,
-                menu,
-            }),
-            Component::Toggle(props) => UiNode::Toggle(UiToggleNode {
-                id: record.key.clone(),
-                icon_id: props.icon.as_str().into(),
-                text: props.text.as_ref().map(present_label),
-                on_change: binding_action_or_inert(record, Trigger::Change),
-                presence: UiPresence { selected: props.on, ..presence },
-                menu,
-            }),
-            Component::KeyValueList(props) => UiNode::KeyValue(UiKeyValueNode { entries: props.entries.iter().map(|entry| UiKeyValueEntry { label: present_label(&entry.label), value: entry.value.clone() }).collect(), presence, menu }),
-            Component::Slider(props) => {
-                UiNode::Slider(UiSliderNode { id: record.key.clone(), value: props.value, min: props.min, max: props.max, step: props.step, unit: props.unit.clone(), on_change: binding_action_or_inert(record, Trigger::Change), presence, menu })
-            }
-            Component::NumberStepper(props) => UiNode::NumberStepper(UiNumberStepperNode {
-                id: record.key.clone(),
-                value: props.value,
-                step: props.step,
-                uniform: props.uniform,
-                on_absolute: binding_action(record, Trigger::Change).or_else(|| binding_action(record, Trigger::Commit)).unwrap_or_else(inert_action),
-                on_delta: binding_action_or_inert(record, Trigger::Delta),
-                presence,
-                menu,
-            }),
-            Component::Ring(props) => UiNode::Ring(UiRingNode { id: record.key.clone(), orb_id: props.orb_id.clone(), t: props.t, on_change: binding_action_or_inert(record, Trigger::Change), presence, menu }),
-            Component::IconSelect(props) => UiNode::IconSelect(UiIconSelectNode {
-                id: record.key.clone(),
-                value: props.value.clone(),
-                uniform: props.uniform,
-                classifier_kind: props.classifier_kind.clone(),
-                on_change: binding_action_or_inert(record, Trigger::Change),
-                presence,
-                menu,
-            }),
-            Component::Tree(props) => UiNode::Tree(present_tree(state, record, props.interaction_domain.clone(), presence, menu)),
-            Component::TreeSection(props) => UiNode::Section(UiSectionNode { id: record.key.clone(), label: props.label.as_ref().map(present_label), default_open: props.default_open, presence, menu, children: children() }),
-            Component::TreeItem(_) => UiNode::Stack(UiStackNode {
-                direction: "vertical".into(),
-                gap: None,
-                padding: None,
-                id: Some(record.key.clone()),
-                presence,
-                activate: binding_action(record, Trigger::Activate),
-                drop_action: binding_action(record, Trigger::Drop),
-                drop_overlay: None,
-                menu,
-                children: children(),
-            }),
-            Component::Image(props) => UiNode::Image(UiImageNode { id: record.key.clone(), src: props.src.clone(), alt: props.alt.as_ref().map(present_label), presence, menu }),
-            Component::Surface(props) => present_surface(state, record, props, presence, menu),
-            Component::Extension(props) => {
-                UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: props.extension.clone(), app_id: String::new(), body_key: record.key.clone(), params_json: serde_json::to_string(&props.props).unwrap_or_else(|_| "null".into()), presence, menu })
-            }
-        }
+    struct RetainedDocumentBuild {
+        generation: u64,
+        revision: UiRevision,
+        cursor: usize,
+        builder: Option<UiDocumentBuilder>,
     }
-
-    fn present_tree(state: &UiSnapshotState, record: &UiNodeRecord, interaction_domain: Option<String>, presence: UiPresence, menu: Option<UiMenuRef>) -> UiTreeNode {
-        let mut sections = Vec::new();
-        let mut loose = Vec::new();
-        for child_id in &record.children {
-            let Some(child) = state.nodes.get(child_id) else { continue };
-            match &child.component {
-                Component::TreeSection(props) => sections.push(UiTreeSectionNode {
-                    id: child.key.clone(),
-                    label: props.label.as_ref().map(present_label),
-                    default_open: props.default_open,
-                    presence: present_presence(child),
-                    items: child.children.iter().filter_map(|id| state.nodes.get(id)).filter_map(|item| present_tree_item(state, item)).collect(),
-                }),
-                Component::TreeItem(_) => {
-                    if let Some(item) = present_tree_item(state, child) {
-                        loose.push(item);
-                    }
-                }
-                _ => {}
-            }
-        }
-        if !loose.is_empty() {
-            sections.insert(0, UiTreeSectionNode { id: format!("{}-root", record.key), label: None, default_open: Some(true), presence: UiPresence::default(), items: loose });
-        }
-        UiTreeNode { sections, presence, drop_action: binding_action(record, Trigger::Drop), menu, interaction_domain }
-    }
-
-    fn present_surface(state: &UiSnapshotState, record: &UiNodeRecord, props: &ui_contract::SurfaceProps, presence: UiPresence, menu: Option<UiMenuRef>) -> UiNode {
-        let controller = record.bindings.first().map(|binding| binding.action.scope.clone()).unwrap_or_else(|| record.key.clone());
-        macro_rules! decode_scene {
-            ($scene:ty, $builder:path) => {
-                ui_wgpu::wgpu::decode_surface_doc::<$scene>(props).map(|scene| $builder(state.surface.0.clone(), controller.clone(), scene))
-            };
-        }
-        let decoded = match props.kind {
-            ui_contract::SurfaceKind::Canvas2d => decode_scene!(ui_wgpu::wgpu::Canvas2dScene, ui_wgpu::wgpu::build_canvas_2d_scene),
-            ui_contract::SurfaceKind::World3d => decode_scene!(ui_wgpu::wgpu::World3dScene, ui_wgpu::wgpu::build_world_3d_scene),
-            ui_contract::SurfaceKind::NodeGraph => decode_scene!(ui_wgpu::wgpu::NodeGraphScene, ui_wgpu::wgpu::build_node_graph_scene),
-            ui_contract::SurfaceKind::TextEditor => decode_scene!(ui_wgpu::wgpu::TextEditorScene, ui_wgpu::wgpu::build_text_editor_scene),
-            ui_contract::SurfaceKind::Table => decode_scene!(ui_wgpu::wgpu::TableScene, ui_wgpu::wgpu::build_table_scene),
-            ui_contract::SurfaceKind::Paint2d => decode_scene!(ui_wgpu::wgpu::Paint2dScene, ui_wgpu::wgpu::build_paint_2d_scene),
-            ui_contract::SurfaceKind::VirtualFileSystem => {
-                ui_wgpu::wgpu::decode_surface_doc::<ui_wgpu::wgpu::VirtualFileSystemScene>(props).map(|scene| ui_wgpu::wgpu::build_virtual_file_system_scene(state.surface.0.clone(), controller.clone(), scene, None, None))
-            }
-            ui_contract::SurfaceKind::TiledMap => decode_scene!(ui_wgpu::wgpu::TiledMapScene, ui_wgpu::wgpu::build_tiled_map_scene),
-            ui_contract::SurfaceKind::Board2d => decode_scene!(ui_wgpu::wgpu::Board2dScene, ui_wgpu::wgpu::build_board2d_scene),
-            ui_contract::SurfaceKind::IconRender => decode_scene!(ui_wgpu::wgpu::IconRenderScene, ui_wgpu::wgpu::build_icon_render_scene),
-            ui_contract::SurfaceKind::InkCanvas => decode_scene!(ui_wgpu::wgpu::InkCanvasScene, ui_wgpu::wgpu::build_ink_canvas_scene),
-            ui_contract::SurfaceKind::GraphTimeline => decode_scene!(ui_wgpu::wgpu::GraphTimelineScene, ui_wgpu::wgpu::build_graph_timeline_scene),
-            ui_contract::SurfaceKind::BlockList => decode_scene!(ui_wgpu::wgpu::BlockListScene, ui_wgpu::wgpu::build_block_list_scene),
-            ui_contract::SurfaceKind::DiffView => decode_scene!(ui_wgpu::wgpu::DiffViewScene, ui_wgpu::wgpu::build_diff_view_scene),
-            ui_contract::SurfaceKind::EventFeed => decode_scene!(ui_wgpu::wgpu::EventFeedScene, ui_wgpu::wgpu::build_event_feed_scene),
-        };
-        match decoded {
-            Ok(mut node) => {
-                *node.presence_mut() = presence;
-                *node.menu_mut() = menu;
-                node
-            }
-            Err(error) => {
-                crate::log_debug(&format!("semantic surface {} could not be decoded: {error:?}", props.doc_schema));
-                UiNode::Text(UiTextNode { value: LegacyLabel::data(format!("Unsupported surface {}", props.doc_schema)), emphasize: None, data_attributes: None, presence, menu })
-            }
-        }
-    }
-
-    fn present_tree_item(state: &UiSnapshotState, record: &UiNodeRecord) -> Option<UiTreeItemNode> {
-        let Component::TreeItem(props) = &record.component else { return None };
-        let mut items = Vec::new();
-        let mut control = None;
-        for child_id in &record.children {
-            let Some(child) = state.nodes.get(child_id) else { continue };
-            if let Some(item) = present_tree_item(state, child) {
-                items.push(item);
-            } else if control.is_none() {
-                control = ui_wgpu::wgpu::ui_node_to_control(&present_record(state, child));
-            }
-        }
-        Some(UiTreeItemNode {
-            id: record.key.clone(),
-            label: present_label(&props.label),
-            description: props.description.clone(),
-            icon_id: props.icon.as_deref().map(Into::into),
-            presence: present_presence(record),
-            default_open: props.default_open,
-            action: binding_action(record, Trigger::Activate),
-            actions: (!props.row_actions.is_empty()).then(|| {
-                props
-                    .row_actions
-                    .iter()
-                    .map(|item| UiTreeItemAction {
-                        icon_id: item.icon.as_str().into(),
-                        label: item.label.as_ref().map(present_label),
-                        action: present_action(&item.action),
-                        placement: Some(match item.placement {
-                            ui_contract::RowActionPlacement::Row => UiTreeActionPlacement::Row,
-                            ui_contract::RowActionPlacement::Menu => UiTreeActionPlacement::Menu,
-                        }),
-                    })
-                    .collect()
-            }),
-            draggable: props.draggable,
-            drag_data: props.drag_data.clone(),
-            items: (!items.is_empty()).then_some(items),
-            control,
-            dimmed: props.dimmed,
-            menu: record.menu.as_ref().map(present_menu),
-        })
-    }
-
-    fn present_label(label: &ui_contract::Label) -> LegacyLabel {
-        LegacyLabel::data(label.0.clone())
-    }
-
-    fn binding_action(record: &UiNodeRecord, trigger: Trigger) -> Option<ActionDescriptor> {
-        record.bindings.iter().find(|binding| binding.trigger == trigger).map(present_action)
-    }
-
-    fn binding_action_or_inert(record: &UiNodeRecord, trigger: Trigger) -> ActionDescriptor {
-        binding_action(record, trigger).unwrap_or_else(inert_action)
-    }
-
-    fn present_action(binding: &ui_contract::ActionBinding) -> ActionDescriptor {
-        ActionDescriptor { controller_id: binding.action.scope.clone(), action: binding.action.name.clone(), args: binding.args.as_ref().map(present_value) }
-    }
-
-    fn inert_action() -> ActionDescriptor {
-        ActionDescriptor { controller_id: String::new(), action: String::new(), args: None }
-    }
-
-    fn present_value(value: &UiValue) -> dsl::DslValue {
-        match value {
-            UiValue::Null => dsl::DslValue::Null,
-            UiValue::Bool(value) => dsl::DslValue::Bool(*value),
-            UiValue::Number(value) => dsl::DslValue::Number(*value),
-            UiValue::Text(value) => dsl::DslValue::String(value.clone()),
-            UiValue::List(values) => dsl::DslValue::Array(values.iter().map(present_value).collect()),
-            UiValue::Map(values) => dsl::DslValue::Object(values.iter().map(|(key, value)| (key.clone(), present_value(value))).collect()),
-        }
-    }
-
-    fn present_menu(menu: &ui_contract::MenuRef) -> UiMenuRef {
-        UiMenuRef { id: menu.id.clone(), args: menu.args.as_ref().map(present_value) }
-    }
-
-    fn present_presence(record: &UiNodeRecord) -> UiPresence {
-        let state = if record.disabled {
-            UiState::Disabled
-        } else {
-            match record.transition {
-                Some(TransitionHint::Introducing) => UiState::Introducing,
-                Some(TransitionHint::Celebrating) => UiState::Celebrating,
-                None => UiState::Normal,
-            }
-        };
-        let status = match record.activity {
-            Activity::Waiting => UiStatus::Waiting,
-            Activity::Loading => UiStatus::Loading,
-            Activity::Idle => UiStatus::Idle,
-            Activity::Finished => UiStatus::Finished,
-        };
-        UiPresence { state, status, ..UiPresence::default() }
-    }
-
-    fn present_style(style: &ui_contract::StyleSpec) -> LegacyStyleSpec {
-        let variant = match style.variant {
-            ui_contract::Variant::Solid => "solid",
-            ui_contract::Variant::Outline => "outline",
-            ui_contract::Variant::Ghost => "ghost",
-            ui_contract::Variant::Plain => "plain",
-        };
-        let size = match style.size {
-            ui_contract::SizeToken::Xs => "xs",
-            ui_contract::SizeToken::Sm => "sm",
-            ui_contract::SizeToken::Md => "md",
-            ui_contract::SizeToken::Lg => "lg",
-            ui_contract::SizeToken::Xl => "xl",
-        };
-        let density = match style.density {
-            ui_contract::Density::Compact => "compact",
-            ui_contract::Density::Standard => "standard",
-            ui_contract::Density::Touch => "touch",
-        };
-        LegacyStyleSpec { variant: Some(variant.into()), size: Some(size.into()), density: Some(density.into()) }
-    }
-
-    fn present_stack_layout(layout: &ui_contract::LayoutSpec) -> (String, Option<String>, Option<String>) {
-        let ui_contract::LayoutSpec::Stack(stack) = layout else { return ("vertical".into(), None, None) };
-        let direction = match stack.axis {
-            ui_contract::Axis::Horizontal => "horizontal",
-            ui_contract::Axis::Vertical => "vertical",
-        };
-        let gap = present_space(stack.gap);
-        let padding = match stack.padding {
-            ui_contract::EdgeSpace::All(space) => present_space(space),
-            _ => None,
-        };
-        (direction.into(), gap, padding)
-    }
-
-    fn present_space(space: ui_contract::SpaceToken) -> Option<String> {
-        match space {
-            ui_contract::SpaceToken::None => None,
-            ui_contract::SpaceToken::Xs => Some("xs".into()),
-            ui_contract::SpaceToken::Sm => Some("small".into()),
-            ui_contract::SpaceToken::Md => Some("standard".into()),
-            ui_contract::SpaceToken::Lg => Some("large".into()),
-            ui_contract::SpaceToken::Xl => Some("xl".into()),
-            ui_contract::SpaceToken::Xxl => Some("xxl".into()),
-        }
-    }
-    //#endregion 🔖️SemanticDocumentPresentation
+    //#endregion 📄️RetainedDocumentExchange
 
     struct RetainedSurface {
-        state: UiSnapshotState,
-        node: UiNode,
+        state: Option<UiSnapshotState>,
+        patch: Option<RetainedPatchApply>,
+        queued_patches: UiFixedList<KernelUiPatch, UI_DOCUMENT_LEASE_SLOTS>,
+        build: Option<RetainedDocumentBuild>,
+        build_pending: bool,
+        published: Option<UiDocumentLease>,
+        closing: Option<UiDocumentLease>,
+        patch_close_complete: bool,
+    }
+
+    impl RetainedSurface {
+        fn new(surface: SurfaceId) -> Self {
+            Self { state: Some(UiSnapshotState::new(surface)), patch: None, queued_patches: UiFixedList::default(), build: None, build_pending: false, published: None, closing: None, patch_close_complete: false }
+        }
+
+        fn admit_patch(&mut self, patch: KernelUiPatch) -> Result<(), KernelUiPatch> {
+            if self.patch.is_some() || self.state.is_none() {
+                return self.queued_patches.try_push(patch);
+            }
+            let state = self.state.take().expect("retained surface state is admitted once");
+            let generation = next_seq();
+            self.patch = Some(match UiPatchApplyProducer::try_new(state, patch, UiDocumentLimits::default(), generation) {
+                Ok(producer) => RetainedPatchApply::Applying(producer),
+                Err(rejected) => RetainedPatchApply::Rejected(rejected),
+            });
+            Ok(())
+        }
+
+        fn advance_patch_one(&mut self) -> Option<(UiRevision, String)> {
+            if self.patch.is_none() {
+                if let Some(patch) = self.queued_patches.swap_remove(0) {
+                    if let Err(patch) = self.admit_patch(patch) {
+                        let _ = self.queued_patches.try_push(patch);
+                    }
+                }
+            }
+            let current = self.patch.take()?;
+            match current {
+                RetainedPatchApply::Applying(mut producer) => match producer.drive_one(producer.generation(), false, false) {
+                    UiPatchApplyStep::MoreWork => self.patch = Some(RetainedPatchApply::Applying(producer)),
+                    UiPatchApplyStep::Ready => match producer.take_ready() {
+                        Ok(outcome) => self.patch = Some(RetainedPatchApply::Ready(outcome)),
+                        Err(producer) => self.patch = Some(RetainedPatchApply::Applying(producer)),
+                    },
+                    UiPatchApplyStep::Rejected => match producer.take_rejected() {
+                        Ok(rejected) => self.patch = Some(RetainedPatchApply::Rejected(rejected)),
+                        Err(producer) => self.patch = Some(RetainedPatchApply::Applying(producer)),
+                    },
+                },
+                RetainedPatchApply::Ready(mut outcome) => {
+                    if !outcome.close_step() {
+                        self.patch = Some(RetainedPatchApply::Ready(outcome));
+                    } else {
+                        match outcome.take_state() {
+                            Ok(state) => {
+                                self.state = Some(state);
+                                self.build_pending = true;
+                            }
+                            Err(outcome) => self.patch = Some(RetainedPatchApply::Ready(outcome)),
+                        }
+                    }
+                }
+                RetainedPatchApply::Rejected(mut rejected) => {
+                    let revision = rejected.state().map_or(UiRevision::default(), UiSnapshotState::revision);
+                    let reason = format!("{:?}", rejected.rejection());
+                    if !rejected.close_step() {
+                        self.patch = Some(RetainedPatchApply::Rejected(rejected));
+                    } else {
+                        match rejected.take_state() {
+                            Ok(state) => self.state = Some(state),
+                            Err(rejected) => self.patch = Some(RetainedPatchApply::Rejected(rejected)),
+                        }
+                    }
+                    return Some((revision, reason));
+                }
+            }
+            None
+        }
+
+        fn begin_document_build(&mut self) {
+            if self.build.is_some() || !self.build_pending {
+                return;
+            }
+            let Some(state) = self.state.as_ref() else { return };
+            let generation = next_seq();
+            let builder = match UiDocumentBuilder::try_new(generation, state.surface.clone(), state.revision, state.root, state.revision.0) {
+                Ok(builder) => builder,
+                Err((_fault, _surface)) => {
+                    let _ = ui_contract::close_ui_document_page_one();
+                    return;
+                }
+            };
+            self.build_pending = false;
+            self.build = Some(RetainedDocumentBuild { generation, revision: state.revision, cursor: 0, builder: Some(builder) });
+        }
+
+        fn advance_document_one(&mut self) {
+            if let Some(closing) = self.closing.as_mut() {
+                let _ = closing.close_step();
+                self.closing = None;
+                return;
+            }
+            self.begin_document_build();
+            let Some(build) = self.build.as_mut() else { return };
+            let Some(state) = self.state.as_ref() else { return };
+            if state.revision != build.revision || build.generation == 0 {
+                self.build = None;
+                return;
+            }
+            if let Some(record) = state.nodes.get_index(build.cursor) {
+                let Some(record) = record.credited_clone() else {
+                    self.build = None;
+                    return;
+                };
+                let Some(builder) = build.builder.as_mut() else {
+                    self.build = None;
+                    return;
+                };
+                if builder.try_push(record).is_err() {
+                    self.build = None;
+                    return;
+                }
+                build.cursor += 1;
+                return;
+            }
+            let Some(builder) = build.builder.take() else { return };
+            match builder.finish() {
+                Ok(document) => {
+                    self.closing = self.published.replace(document);
+                    self.build = None;
+                }
+                Err((_fault, builder)) => build.builder = Some(builder),
+            }
+        }
+
+        fn try_alias(&self) -> Option<UiDocumentLease> {
+            self.published.as_ref()?.try_alias().ok()
+        }
+
+        fn close_step(&mut self) -> bool {
+            if let Some(current) = self.patch.take() {
+                match current {
+                    RetainedPatchApply::Applying(mut producer) => {
+                        let _ = producer.drive_one(producer.generation(), true, false);
+                        self.patch = Some(match producer.take_rejected() {
+                            Ok(rejected) => RetainedPatchApply::Rejected(rejected),
+                            Err(producer) => RetainedPatchApply::Applying(producer),
+                        });
+                    }
+                    RetainedPatchApply::Ready(mut outcome) => {
+                        if outcome.close_step() {
+                            match outcome.take_state() {
+                                Ok(state) => self.state = Some(state),
+                                Err(outcome) => self.patch = Some(RetainedPatchApply::Ready(outcome)),
+                            }
+                        } else {
+                            self.patch = Some(RetainedPatchApply::Ready(outcome));
+                        }
+                    }
+                    RetainedPatchApply::Rejected(mut rejected) => {
+                        if rejected.close_step() {
+                            match rejected.take_state() {
+                                Ok(state) => self.state = Some(state),
+                                Err(rejected) => self.patch = Some(RetainedPatchApply::Rejected(rejected)),
+                            }
+                        } else {
+                            self.patch = Some(RetainedPatchApply::Rejected(rejected));
+                        }
+                    }
+                }
+                return false;
+            }
+            if let Some(patch) = self.queued_patches.swap_remove(0) {
+                if let Err(patch) = self.admit_patch(patch) {
+                    let _ = self.queued_patches.try_push(patch);
+                }
+                return false;
+            }
+            if self.build.take().is_some() {
+                return false;
+            }
+            if self.build_pending {
+                self.build_pending = false;
+                return false;
+            }
+            if let Some(document) = self.published.as_mut() {
+                let _ = document.close_step();
+                self.published = None;
+                return false;
+            }
+            if let Some(document) = self.closing.as_mut() {
+                let _ = document.close_step();
+                self.closing = None;
+                return false;
+            }
+            if let Some(state) = self.state.as_mut() {
+                if let Some(id) = state.nodes.keys().next().copied() {
+                    drop(state.nodes.remove(&id));
+                    return false;
+                }
+                self.state = None;
+                return false;
+            }
+            if !self.patch_close_complete {
+                self.patch_close_complete = ui_contract::close_ui_patch_owner_one();
+                return false;
+            }
+            ui_contract::close_ui_document_page_one()
+        }
     }
 
     struct PendingJobProgressPresentation {
@@ -4127,10 +4290,10 @@ pub(crate) mod kernel_runtime {
         /// by) → the kernel's own bit-packed `ActorId`, minted by `Kernel::activate`.
         instances: HashMap<u32, ActorId>,
         next_instance_id: u32,
-        /// 🖼️ One retained semantic [`UiSnapshotState`] plus its last successfully presented
-        /// nested renderer node per `(instance, surface)`. Every [`UiPatchOp`] is applied through the
-        /// contract's transactional, quota-bounded [`ui_contract::apply_patch`]; a rejection preserves
-        /// both the document revision and the previously presented tree.
+        /// 🖼️ One retained semantic [`UiSnapshotState`] plus its last published generation-qualified
+        /// document lease per `(instance, surface)`. Every [`UiPatchOp`] is applied through the
+        /// contract's retained, quota-bounded [`UiPatchApplyProducer`]; a rejection preserves both
+        /// the document revision and the previously published document.
         retained: HashMap<(u32, SurfaceId), RetainedSurface>,
         /// 🔁️ Surfaces whose next turn must carry an `Event::PatchRejected`, retaining both
         /// the receiver revision and the contract rejection reason.
@@ -4145,6 +4308,7 @@ pub(crate) mod kernel_runtime {
         closing_apps: [Option<ClosingKernelApp>; JOB_PROGRESS_ACTIVE_CAPACITY],
         fault_closing_actors: [Option<ActorId>; JOB_PROGRESS_ACTIVE_CAPACITY],
         realm_progress_close_started: bool,
+        semantic_close_document_lane: bool,
     }
 
     impl KernelPoolState {
@@ -4177,6 +4341,7 @@ pub(crate) mod kernel_runtime {
                 closing_apps: std::array::from_fn(|_| None),
                 fault_closing_actors: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
                 realm_progress_close_started: false,
+                semantic_close_document_lane: false,
             }
         }
 
@@ -4392,16 +4557,19 @@ pub(crate) mod kernel_runtime {
         }
 
         async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
-            let bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await? {
+            let mut bytes_owner = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await? {
                 semio_framework_os_services::NativeIoValue::Bytes(bytes) => bytes,
                 _ => return Err("kernel: native I/O returned the wrong value for wasm read".into()),
             };
-            let hash = PackageHash(*blake3::hash(&bytes).as_bytes());
+            let bytes = bytes_owner.single_page().ok_or_else(|| "kernel: populated Wasm exceeds the mounted single-page retained compiler authority".to_string())?;
+            let hash = PackageHash(*blake3::hash(bytes).as_bytes());
             let package_id = PackageId(plugin_id.clone());
             let package_ref = PackageRef { package: package_id.clone(), hash };
             // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): compile
             // remains a genuine suspension point on the worker-pool-owned request state machine.
-            let compiled = self.guest_runtime.compile(&package_ref, &bytes).await.map_err(|error| error.to_string())?;
+            let compiled = self.guest_runtime.compile(&package_ref, bytes).await.map_err(|error| error.to_string());
+            let _ = bytes_owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let compiled = compiled?;
             let instance_id = self.next_instance_id;
             self.next_instance_id += 1;
             let plugin_ordinal = self.plugin_ordinal(&plugin_id);
@@ -4478,7 +4646,7 @@ pub(crate) mod kernel_runtime {
                     crate::log_debug(&format!("kernel: extension {} of {plugin_id} has no compiled wasm under {}, skipping", extension.extension_id, extension_dir.display()));
                     continue;
                 };
-                let extension_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(extension_wasm_path.clone())).await {
+                let mut extension_bytes_owner = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(extension_wasm_path.clone())).await {
                     Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
                     Ok(_) => {
                         crate::log_debug(&format!("kernel: native I/O returned the wrong value for extension {}", extension.extension_id));
@@ -4489,9 +4657,15 @@ pub(crate) mod kernel_runtime {
                         continue;
                     }
                 };
-                let extension_hash = PackageHash(*blake3::hash(&extension_bytes).as_bytes());
+                let Some(extension_bytes) = extension_bytes_owner.single_page() else {
+                    crate::log_debug(&format!("kernel: extension {} exceeds the mounted single-page retained compiler authority", extension.extension_id));
+                    continue;
+                };
+                let extension_hash = PackageHash(*blake3::hash(extension_bytes).as_bytes());
                 let extension_package_ref = PackageRef { package: extension.package.clone(), hash: extension_hash };
-                let extension_compiled = match self.guest_runtime.compile(&extension_package_ref, &extension_bytes).await {
+                let extension_compiled = self.guest_runtime.compile(&extension_package_ref, extension_bytes).await;
+                let _ = extension_bytes_owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let extension_compiled = match extension_compiled {
                     Ok(handle) => handle,
                     Err(error) => {
                         crate::log_debug(&format!("kernel: compile failed for extension {}: {error}", extension.extension_id));
@@ -4580,8 +4754,18 @@ pub(crate) mod kernel_runtime {
                 self.closing_apps[close_index] = Some(closing);
                 return false;
             }
-            self.retained.retain(|(inst, _), _| *inst != instance);
-            self.pending_rejections.retain(|(inst, _), _| *inst != instance);
+            if let Some(key) = self.retained.keys().find(|(retained_instance, _)| *retained_instance == instance).cloned() {
+                let terminal = self.retained.get_mut(&key).is_some_and(RetainedSurface::close_step);
+                if !terminal {
+                    return false;
+                }
+                self.retained.remove(&key);
+                return false;
+            }
+            if let Some(key) = self.pending_rejections.keys().find(|(retained_instance, _)| *retained_instance == instance).cloned() {
+                self.pending_rejections.remove(&key);
+                return false;
+            }
             true
         }
 
@@ -4605,6 +4789,17 @@ pub(crate) mod kernel_runtime {
             }
             if !self.job_progress.terminal_is_empty() || self.rejected_job_progress.iter().any(Option::is_some) || !job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").terminal_is_empty() {
                 let _ = self.command_maintenance_step();
+                return false;
+            }
+            if let Some(key) = self.retained.keys().next().cloned() {
+                let terminal = self.retained.get_mut(&key).is_some_and(RetainedSurface::close_step);
+                if terminal {
+                    self.retained.remove(&key);
+                }
+                return false;
+            }
+            if let Some(key) = self.pending_rejections.keys().next().cloned() {
+                self.pending_rejections.remove(&key);
                 return false;
             }
             self.realm_progress_close_started = false;
@@ -4645,7 +4840,7 @@ pub(crate) mod kernel_runtime {
                 let _ = self.command_maintenance_step();
                 return Err(format!("kernel: instance {instance} is not registered; exact command owner entered bounded close"));
             };
-            let mut combined = ExchangeOutcome { frames: Vec::new(), surfaces: HashMap::new(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
+            let mut combined = ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
             loop {
                 let events = match self.retained_command_closes.with_driver_mut(key, generation, |driver| driver.next_page()).map_err(|fault| fault.to_string())?.map_err(|fault| fault.to_string())? {
                     Some((cursor, bytes)) => vec![Event::CommandIngressPage { cursor, bytes }],
@@ -4660,7 +4855,11 @@ pub(crate) mod kernel_runtime {
                     .map_err(|fault| fault.to_string())?
                     .map_err(|fault| fault.to_string())?;
                 combined.frames.extend(outcome.frames);
-                combined.surfaces.extend(outcome.surfaces);
+                for surface in outcome.surfaces {
+                    if let Err(mut rejected) = combined.surfaces.try_push(surface) {
+                        let _ = rejected.document.close_step();
+                    }
+                }
                 combined.effects.extend(outcome.effects);
                 combined.command_ingress = outcome.command_ingress;
                 match progress {
@@ -4756,10 +4955,12 @@ pub(crate) mod kernel_runtime {
                 for outcome in outcomes {
                     match outcome {
                         ShardOutcome::Turn { actor: reported, result } => {
-                            let decoded = decode_actor_turn_result(&result)?;
                             let _ = self.runtime.complete_actor(ActorId(reported), &result, self.now_ms).await;
                             if reported == actor.0 {
-                                turn_result = Some(decoded);
+                                turn_result = Some(decode_actor_turn_result(&result, reported)?);
+                            } else {
+                                let _ = semio_framework::kernel::close_ui_turn_patch_transport_session_one(reported);
+                                let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
                             }
                         }
                         ShardOutcome::Job { actor: reported, authority, publication } => self.publish_job_progress(ActorId(reported), authority, publication),
@@ -4827,29 +5028,89 @@ pub(crate) mod kernel_runtime {
                 }
                 effects.push(effect);
             }
-            let mut surfaces = HashMap::new();
-            for patch in &result.ui_patches {
-                self.apply_ui_patch(instance, patch, &mut surfaces);
+            let mut surfaces = UiFixedList::default();
+            for patch in result.ui_patches {
+                self.apply_ui_patch(instance, patch);
             }
+            let _ = self.advance_retained_one(instance, None, &mut surfaces);
             Ok(ExchangeOutcome { frames, surfaces, effects, command_ingress: result.command_ingress })
         }
 
-        fn apply_ui_patch(&mut self, instance: u32, patch: &KernelUiPatch, out: &mut HashMap<String, UiNode>) {
+        fn apply_ui_patch(&mut self, instance: u32, patch: KernelUiPatch) {
             let key = (instance, patch.surface.clone());
-            let retained = self.retained.entry(key.clone()).or_insert_with(|| RetainedSurface { state: UiSnapshotState::new(patch.surface.clone()), node: UiNode::default() });
-            let local_revision = retained.state.revision;
-            match ui_contract::apply_patch(&mut retained.state, patch, &UiDocumentLimits::default()) {
-                Ok(()) => {
-                    let node = present_snapshot(&retained.state);
-                    retained.node = node.clone();
-                    self.pending_rejections.remove(&key);
-                    out.insert(patch.surface.0.clone(), node);
+            let retained = self.retained.entry(key.clone()).or_insert_with(|| RetainedSurface::new(patch.surface.clone()));
+            if let Err(rejected) = retained.admit_patch(patch) {
+                let generation = next_seq();
+                let state = UiSnapshotState::new(rejected.surface.clone());
+                match UiPatchApplyProducer::try_new(state, rejected, UiDocumentLimits::default(), generation) {
+                    Ok(producer) => drop(producer),
+                    Err(rejected) => drop(rejected),
                 }
-                Err(rejection) => {
-                    self.pending_rejections.insert(key, (local_revision, format!("{rejection:?}")));
-                    out.insert(patch.surface.0.clone(), retained.node.clone());
+                self.pending_rejections.insert(key, (UiRevision::default(), "retained patch admission capacity exhausted".to_string()));
+            }
+        }
+
+        fn advance_retained_surface_one(&mut self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, String> {
+            let mut surfaces = UiFixedList::default();
+            self.advance_retained_one(instance, Some(&surface), &mut surfaces)?;
+            Ok(ExchangeOutcome { frames: Vec::new(), surfaces, effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle })
+        }
+
+        fn advance_retained_one(&mut self, instance: u32, requested: Option<&SurfaceId>, out: &mut UiFixedList<ExchangeSurfaceDocument, UI_DOCUMENT_LEASE_SLOTS>) -> Result<(), String> {
+            let requested_key = requested.map(|surface| (instance, surface.clone()));
+            let key = requested_key.or_else(|| {
+                self.retained
+                    .iter()
+                    .find(|((retained_instance, _), retained)| *retained_instance == instance && (retained.patch.is_some() || !retained.queued_patches.is_empty() || retained.build.is_some() || retained.build_pending || retained.closing.is_some()))
+                    .map(|(key, _)| key.clone())
+            });
+            let Some(key) = key else {
+                if let Some(surface) = requested {
+                    return Err(format!("retained surface '{}' is not admitted", surface.as_ref()));
+                }
+                if self.semantic_close_document_lane {
+                    let _ = ui_contract::close_ui_document_page_one();
+                } else {
+                    let _ = ui_contract::close_ui_patch_owner_one();
+                }
+                self.semantic_close_document_lane = !self.semantic_close_document_lane;
+                return Ok(());
+            };
+            let Some(retained) = self.retained.get_mut(&key) else {
+                return Err(format!("retained surface '{}' is not admitted", key.1.as_ref()));
+            };
+            let active = retained.patch.is_some() || !retained.queued_patches.is_empty() || retained.build.is_some() || retained.build_pending || retained.closing.is_some();
+            if !active {
+                if let Some((_, reason)) = self.pending_rejections.get(&key) {
+                    if retained.published.is_none() {
+                        return Err(reason.clone());
+                    }
                 }
             }
+            if active {
+                if retained.patch.is_some() || !retained.queued_patches.is_empty() {
+                    if let Some(rejection) = retained.advance_patch_one() {
+                        let reason = rejection.1.clone();
+                        self.pending_rejections.insert(key.clone(), rejection);
+                        if requested.is_some() && retained.published.is_none() {
+                            return Err(reason);
+                        }
+                    } else if retained.patch.is_none() {
+                        self.pending_rejections.remove(&key);
+                    }
+                } else {
+                    retained.advance_document_one();
+                }
+            }
+            if let Some(document) = retained.try_alias() {
+                if let Err(mut rejected) = out.try_push(ExchangeSurfaceDocument { surface: key.1.clone(), document }) {
+                    let _ = rejected.document.close_step();
+                    if requested.is_some() {
+                        return Err("retained surface exchange capacity exhausted".to_string());
+                    }
+                }
+            }
+            Ok(())
         }
     }
 
@@ -4994,6 +5255,7 @@ pub(crate) mod kernel_runtime {
                     let (terminal, processed, released) = event.close_step(maximum_bytes);
                     (terminal, processed, released, 0)
                 }
+                KernelRequest::AdvanceRetained { .. } => (true, 1, 0, 0),
                 KernelRequest::CloseRejectedEvents { owner } => {
                     let (terminal, processed) = owner.close_step();
                     (terminal, processed, 0, 0)
@@ -5118,6 +5380,7 @@ pub(crate) mod kernel_runtime {
                     continue;
                 }
                 KernelRequest::Exchange { instance, event } => KernelOutcome::Exchanged(state.exchange(instance, vec![event.into_event()]).await),
+                KernelRequest::AdvanceRetained { instance, surface } => KernelOutcome::Exchanged(state.advance_retained_surface_one(instance, surface)),
                 KernelRequest::ExchangeCommands { instance, driver } => KernelOutcome::Exchanged(state.exchange_commands(instance, driver).await),
                 KernelRequest::CloseRejectedCommandBuild { key, owner } => {
                     assert!(state.rejected_command_builds.can_insert(key), "worker drains the prior rejected command build before dequeuing another request");
@@ -5137,6 +5400,54 @@ pub(crate) mod kernel_runtime {
     #[cfg(test)]
     mod semantic_document_tests {
         use super::*;
+
+        fn retained_patch(surface: SurfaceId, base: u64, revision: u64) -> KernelUiPatch {
+            let id = ui_contract::UiNodeId(1);
+            let record = ui_contract::UiNodeRecord {
+                id,
+                key: ui_contract::UiText::try_from("root").expect("bounded hostile key"),
+                component: ui_contract::Component::Separator(ui_contract::SeparatorProps {}),
+                layout: Default::default(),
+                style: Default::default(),
+                activity: Default::default(),
+                disabled: false,
+                transition: None,
+                accessibility: Default::default(),
+                bindings: Default::default(),
+                menu: None,
+                children: Default::default(),
+            };
+            let mut ops = ui_contract::UiPatchOps::default();
+            ops.try_push(ui_contract::UiPatchOp::Upsert(record)).expect("hostile upsert owner");
+            ops.try_push(ui_contract::UiPatchOp::SetRoot { id }).expect("hostile root owner");
+            KernelUiPatch { surface, base_revision: UiRevision(base), revision: UiRevision(revision), ops }
+        }
+
+        #[test]
+        fn first_render_requires_multiple_fixed_opportunities_stale_patch_keeps_last_valid_and_close_reaches_terminal() {
+            let surface_id = SurfaceId::try_from("hostile.first-render").expect("bounded hostile surface");
+            let mut retained = RetainedSurface::new(surface_id.clone());
+            retained.admit_patch(retained_patch(surface_id.clone(), 0, 1)).expect("first retained patch");
+            assert!(retained.try_alias().is_none());
+            let mut opportunities = 0;
+            while retained.try_alias().is_none() {
+                assert!(retained.advance_patch_one().is_none());
+                if retained.patch.is_none() {
+                    retained.advance_document_one();
+                }
+                opportunities += 1;
+                assert!(opportunities <= ui_contract::UI_DOCUMENT_PATCH_OPS + ui_contract::UI_DOCUMENT_NODES * ui_contract::UI_DOCUMENT_NODES);
+            }
+            assert!(opportunities > 1);
+            let mut last_valid = retained.try_alias().expect("published first document");
+            let generation = last_valid.generation();
+            retained.admit_patch(retained_patch(surface_id, 0, 2)).expect("stale patch owner retained");
+            while retained.advance_patch_one().is_none() {}
+            assert_eq!(retained.try_alias().expect("last valid survives stale patch").generation(), generation);
+            let _ = last_valid.close_step();
+            drop(last_valid);
+            while !retained.close_step() {}
+        }
 
         #[test]
         fn mounted_job_progress_presentation_bridge_is_fixed_fifo_and_generation_checked() {
@@ -5343,57 +5654,6 @@ pub(crate) mod kernel_runtime {
             assert_eq!(queue.shutdown_step(7), (false, 1, 7));
             assert_eq!(queue.shutdown_step(0), (false, 1, 0));
             assert_eq!(queue.shutdown_step(0), (true, 1, 0));
-        }
-
-        fn record(id: u64, component: Component) -> UiNodeRecord {
-            UiNodeRecord {
-                id: ui_contract::UiNodeId(id),
-                key: format!("node-{id}"),
-                component,
-                layout: ui_contract::LayoutSpec::default(),
-                style: ui_contract::StyleSpec::default(),
-                activity: Activity::Idle,
-                disabled: false,
-                transition: None,
-                accessibility: ui_contract::AccessibilitySpec::default(),
-                bindings: Vec::new(),
-                menu: None,
-                children: Vec::new(),
-            }
-        }
-
-        #[test]
-        fn semantic_patch_is_transactional_and_presented() {
-            let mut state = UiSnapshotState::new(SurfaceId::from("surface"));
-            let initial = ui_contract::UiPatch {
-                surface: state.surface.clone(),
-                base_revision: UiRevision(0),
-                revision: UiRevision(1),
-                ops: vec![
-                    ui_contract::UiPatchOp::Upsert(record(1, Component::Text(ui_contract::TextProps { value: ui_contract::Label::from("ready"), emphasize: None, data_attributes: None }))),
-                    ui_contract::UiPatchOp::SetRoot { id: ui_contract::UiNodeId(1) },
-                ],
-            };
-            ui_contract::apply_patch(&mut state, &initial, &UiDocumentLimits::default()).expect("initial semantic document");
-            let UiNode::Text(node) = present_snapshot(&state) else { panic!("text presentation") };
-            assert_eq!(node.value.as_str(), "ready");
-
-            let before = state.clone();
-            let stale = ui_contract::UiPatch { surface: state.surface.clone(), base_revision: UiRevision(0), revision: UiRevision(2), ops: Vec::new() };
-            assert!(ui_contract::apply_patch(&mut state, &stale, &UiDocumentLimits::default()).is_err());
-            assert_eq!(state, before);
-        }
-
-        #[test]
-        fn known_surface_doc_decodes_into_component_scene() {
-            let scene = ui_wgpu::wgpu::Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 3.0, layers_json: "[]".into() };
-            let props = ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Canvas2d, &scene);
-            let mut state = UiSnapshotState::new(SurfaceId::from("canvas"));
-            state.root = Some(ui_contract::UiNodeId(1));
-            state.nodes.insert(ui_contract::UiNodeId(1), record(1, Component::Surface(props)));
-            let UiNode::ComponentScene(node) = present_snapshot(&state) else { panic!("component-scene presentation") };
-            assert_eq!(node.surface_id, "canvas");
-            assert_eq!(node.canvas_2d, Some(scene));
         }
     }
     //#endregion
@@ -6235,7 +6495,7 @@ pub mod scale_bench {
     /// not set up (bad registry/wasm/report path).
     pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf) -> i32 {
         let process_start = Instant::now();
-        let registry_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(registry_path.clone())).await {
+        let mut registry_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(registry_path.clone())).await {
             Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
             Ok(_) => {
                 eprintln!("scale-bench: native I/O returned the wrong value for {}", registry_path.display());
@@ -6246,14 +6506,20 @@ pub mod scale_bench {
                 return 1;
             }
         };
-        let registry: RegistryFile = match serde_json::from_slice(&registry_bytes) {
+        let Some(registry_page) = registry_bytes.single_page() else {
+            eprintln!("scale-bench: registry exceeds the mounted single-page retained parser authority");
+            return 1;
+        };
+        let registry = serde_json::from_slice(registry_page);
+        let _ = registry_bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let registry: RegistryFile = match registry {
             Ok(value) => value,
             Err(error) => {
                 eprintln!("scale-bench: failed to parse {}: {error}", registry_path.display());
                 return 1;
             }
         };
-        let wasm_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await {
+        let mut wasm_bytes_owner = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await {
             Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
             Ok(_) => {
                 eprintln!("scale-bench: native I/O returned the wrong value for {}", wasm_path.display());
@@ -6264,9 +6530,15 @@ pub mod scale_bench {
                 return 1;
             }
         };
+        let Some(wasm_bytes) = wasm_bytes_owner.single_page() else {
+            eprintln!("scale-bench: Wasm exceeds the mounted single-page retained compiler authority");
+            return 1;
+        };
         let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
-        let package_ref = PackageRef { package: PackageId("scale-fixture".to_string()), hash: PackageHash(*blake3::hash(&wasm_bytes).as_bytes()) };
-        let compiled = match runtime.compile(&package_ref, &wasm_bytes).await {
+        let package_ref = PackageRef { package: PackageId("scale-fixture".to_string()), hash: PackageHash(*blake3::hash(wasm_bytes).as_bytes()) };
+        let compiled = runtime.compile(&package_ref, wasm_bytes).await;
+        let _ = wasm_bytes_owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let compiled = match compiled {
             Ok(handle) => handle,
             Err(error) => {
                 eprintln!("scale-bench: compile failed: {error}");
@@ -6281,27 +6553,9 @@ pub mod scale_bench {
         let row_7 = budget_7_stateful(&runtime, &compiled, &registry.records).await;
         let row_8 = budget_8_capability_revoke(&runtime, &compiled, &registry.records).await;
 
-        let report = json!({
-            "renderer": "native",
-            "shardCount": shard_count,
-            "recordCount": registry.records.len(),
-            "wasmPath": wasm_path.display().to_string(),
-            "budgets": [row_2, row_3, row_4, row_5, row_6, row_7, row_8],
-        });
-        match serde_json::to_string_pretty(&report) {
-            Ok(text) => {
-                if let Err(error) = crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::WriteBytes { path: report_path.clone(), bytes: text.into_bytes(), create_parent: true }).await {
-                    eprintln!("scale-bench: failed to write {}: {error}", report_path.display());
-                    return 1;
-                }
-            }
-            Err(error) => {
-                eprintln!("scale-bench: report encode failed: {error}");
-                return 1;
-            }
-        }
-        println!("scale-bench: wrote {}", report_path.display());
-        0
+        drop((row_2, row_3, row_4, row_5, row_6, row_7, row_8));
+        eprintln!("scale-bench: refusing to write populated report {} until its retained page encoder is mounted (renderer=native, shards={shard_count}, records={}, wasm={})", report_path.display(), registry.records.len(), wasm_path.display());
+        1
     }
 }
 //#endregion 🔖️ScaleBench
@@ -8159,6 +8413,10 @@ struct AppRuntime {
     #[cfg(not(target_arch = "wasm32"))]
     native_hot_swap_scan: Option<RendererIoHandle>,
     #[cfg(not(target_arch = "wasm32"))]
+    native_hot_swap_modified: Option<semio_framework_os_services::NativeModifiedSet>,
+    #[cfg(not(target_arch = "wasm32"))]
+    native_hot_swap_cursor: usize,
+    #[cfg(not(target_arch = "wasm32"))]
     native_reload_pending: bool,
 }
 
@@ -8904,7 +9162,9 @@ pub(crate) struct AppFramePresentation {
 impl AppFrameBuild {
     pub(crate) fn into_preparation(self) -> AppFramePreparation {
         AppFramePreparation {
-            job: ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 64),
+            job: Some(ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 64)),
+            session: None,
+            rejected: None,
             engine_packets: Some(self.engine_packets),
             cursor: self.cursor,
             theme_dark: self.theme_dark,
@@ -8918,7 +9178,9 @@ impl AppFrameBuild {
 }
 
 pub(crate) struct AppFramePreparation {
-    job: ui_wgpu::wgpu::PreparedRenderJob,
+    job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
+    session: Option<semio_framework_job::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>,
+    rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>>,
     engine_packets: Option<Vec<engine_canvas::EngineCanvasPacket>>,
     cursor: SemioCursor,
     theme_dark: bool,
@@ -8930,28 +9192,70 @@ pub(crate) struct AppFramePreparation {
 }
 
 impl AppFramePreparation {
-    pub(crate) fn drive_step(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, cancel: semio_framework_job::CancelToken, preview_sequence: &mut u64) -> semio_framework_job::StepOutcome {
-        let now = semio_framework_job::default_now_ms();
-        let outcome = semio_framework_job::drive_step(
-            &mut self.job,
-            "os_renderer.prepare.worker",
-            operation,
-            generation,
-            semio_framework_job::InteractiveStage::BackgroundStep,
-            semio_framework_job::StepBudget::new(64, now.saturating_add(1)),
-            cancel,
-            semio_framework_job::default_now_ms,
-            preview_sequence,
-        );
-        self.terminal = outcome.is_terminal();
-        outcome
+    pub(crate) fn drive_step(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, cancel: semio_framework_job::CancelToken, _preview_sequence: &mut u64) -> semio_framework_job::StepOutcome {
+        if let Some(job) = self.job.take() {
+            let params = semio_framework_job::BatchJobParams {
+                operation,
+                generation,
+                cancel,
+                config: semio_framework_job::BatchDriveConfig { site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 64, step_budget_ms: 1 },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            match semio_framework_job::BatchJobSession::try_new(job, params) {
+                Ok(session) => self.session = Some(session),
+                Err(mut rejected) => {
+                    rejected.begin_close();
+                    self.rejected = Some(rejected);
+                }
+            }
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        if let Some(rejected) = self.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                self.rejected = None;
+                self.terminal = true;
+                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+            }
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        let Some(session) = self.session.as_mut() else {
+            self.terminal = true;
+            return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+        };
+        if !matches!(session.step(), Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome() {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        match session.checked_out_outcome() {
+            Some(semio_framework_job::StepOutcome::Yield) => {
+                let _ = session.resume();
+                semio_framework_job::StepOutcome::Yield
+            }
+            Some(semio_framework_job::StepOutcome::Complete(_)) => {
+                self.terminal = true;
+                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                })
+            }
+            Some(semio_framework_job::StepOutcome::Cancelled) => {
+                self.terminal = true;
+                semio_framework_job::StepOutcome::Cancelled
+            }
+            Some(semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) | semio_framework_job::StepOutcome::Fault(_)) | None => {
+                session.begin_close();
+                self.terminal = true;
+                semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
+            }
+        }
     }
 
     pub(crate) fn take_presentation(&mut self) -> Option<AppFramePresentation> {
         if !self.terminal {
             return None;
         }
-        let packet = self.job.take_packet()?;
+        let packet = self.session.as_mut()?.checked_out_job_mut()?.take_packet()?;
+        self.session.as_mut()?.begin_close();
         Some(AppFramePresentation {
             packet: Some(packet),
             engine_packets: self.engine_packets.take()?,
@@ -8965,8 +9269,30 @@ impl AppFramePreparation {
     }
 
     pub(crate) fn close_step(&mut self) -> bool {
-        if !self.job.terminal_is_empty() {
-            self.job.close_step();
+        if let Some(job) = self.job.as_mut() {
+            semio_framework_job::InteractiveJob::begin_close(job);
+            match semio_framework_job::InteractiveJob::close_step(job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                semio_framework_job::InteractiveJobCloseStep::Complete if semio_framework_job::InteractiveJob::terminal_is_empty(job) => self.job = None,
+                _ => return false,
+            }
+            return false;
+        }
+        if let Some(rejected) = self.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                self.rejected = None;
+            }
+            return false;
+        }
+        if let Some(session) = self.session.as_mut() {
+            if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                session.begin_close();
+                return false;
+            }
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if session.terminal_is_empty() {
+                self.session = None;
+            }
             return false;
         }
         if self.cursor_wake.take().is_some() {
@@ -8989,7 +9315,7 @@ impl AppFramePreparation {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.job.terminal_is_empty() && self.engine_packets.is_none() && self.cursor_wake.is_none() && {
+        self.job.is_none() && self.session.is_none() && self.rejected.is_none() && self.engine_packets.is_none() && self.cursor_wake.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 self.job_progress.is_none()
@@ -9304,6 +9630,11 @@ impl AppPresenter {
     }
 
     pub(crate) fn present_step(&mut self) -> Result<AppPresentStep, String> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = RENDERER_IO_WAKE.swap(false, std::sync::atomic::Ordering::AcqRel);
+            let _ = pump_renderer_io_sessions(1);
+        }
         let _ = semio_framework_job::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         if self.pending.is_none() {
             let Some(retirement) = self.retirement.as_mut() else { return Ok(AppPresentStep::Idle) };
@@ -9605,9 +9936,14 @@ async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut Rend
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn push_renderer_asset_page(fetch: &mut RendererAssetFetchOwner, bytes: Vec<u8>) -> Result<(), String> {
-    let page = WorldAssetResponsePage::try_from_owned(bytes).map_err(|_| "native renderer asset page exceeded fixed credits".to_string())?;
-    fetch.owner_mut().push_page(page).map_err(|_| "native renderer asset exceeded admitted response credits".to_string())
+fn push_renderer_asset_page(_fetch: &mut RendererAssetFetchOwner, mut bytes: semio_framework_job::RetainedJobPayload) -> Result<(), String> {
+    let populated = !bytes.is_empty();
+    let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    if populated {
+        Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into())
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -9653,25 +9989,35 @@ async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut
 impl AppRuntime {
     #[cfg(not(target_arch = "wasm32"))]
     fn poll_native_plugin_hot_swap(&mut self) {
+        if let Some(entries) = self.native_hot_swap_modified.as_mut() {
+            if let Some((path, mtime)) = entries.pop() {
+                let previous = self.native_plugin_mtimes.get(&path);
+                if previous.is_some_and(|previous| *previous != mtime) {
+                    self.native_reload_pending = true;
+                }
+                self.native_plugin_mtimes.insert(path, mtime);
+                return;
+            }
+            self.native_hot_swap_modified = None;
+            return;
+        }
         if let Some(scan) = self.native_hot_swap_scan.as_mut() {
             let Some(result) = scan.try_take() else { return };
             self.native_hot_swap_scan = None;
             match result {
-                Ok(semio_framework_os_services::NativeIoValue::Modified(entries)) => {
-                    for (path, mtime) in entries {
-                        let previous = self.native_plugin_mtimes.get(&path);
-                        if previous.is_some_and(|previous| *previous != mtime) {
-                            self.native_reload_pending = true;
-                        }
-                        self.native_plugin_mtimes.insert(path, mtime);
-                    }
-                }
+                Ok(semio_framework_os_services::NativeIoValue::Modified(entries)) => self.native_hot_swap_modified = Some(entries),
                 Ok(_) => log_debug("plugin hot-swap scan returned the wrong native I/O value"),
                 Err(error) => log_debug(&format!("plugin hot-swap scan failed: {error}")),
             }
             return;
         }
-        let paths = self.shell.plugins.iter().filter_map(|program| program.wasm_artifact_path().map(std::path::Path::to_path_buf)).collect();
+        let Some(program) = self.shell.plugins.get(self.native_hot_swap_cursor % self.shell.plugins.len().max(1)) else { return };
+        self.native_hot_swap_cursor = self.native_hot_swap_cursor.wrapping_add(1);
+        let Some(path) = program.wasm_artifact_path().map(std::path::Path::to_path_buf) else { return };
+        let mut paths = semio_framework_os_services::NativePathSet::new();
+        if paths.try_push(path).is_err() {
+            return;
+        }
         self.native_hot_swap_scan = submit_renderer_io(semio_framework_os_services::NativeIoRequest::Modified(paths)).ok();
     }
 
@@ -10225,6 +10571,10 @@ async fn boot_runtime(
         #[cfg(not(target_arch = "wasm32"))]
         native_hot_swap_scan: None,
         #[cfg(not(target_arch = "wasm32"))]
+        native_hot_swap_modified: None,
+        #[cfg(not(target_arch = "wasm32"))]
+        native_hot_swap_cursor: 0,
+        #[cfg(not(target_arch = "wasm32"))]
         native_reload_pending: false,
     });
     let presenter = AppPresenter {
@@ -10302,13 +10652,14 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
     }
     let _ = shell.refresh_ui().await;
     let identity_summary = shell.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
+    let window_documents: Vec<_> = shell.window_ui.iter().map(|(window, document)| serde_json::json!({ "window": window, "generation": document.generation() })).collect();
     let report = serde_json::json!({
         "booted": true,
         "identity": identity_summary,
         "identityOffline": shell.identity_offline,
         "openSpaceId": shell.open_space_id,
         "session": shell.session.as_ref().map(|session| serde_json::json!({ "pluginId": session.plugin_id, "appId": session.app.id, "role": format!("{:?}", session.app.role) })),
-        "windowUi": &shell.window_ui,
+        "windowDocuments": window_documents,
     });
     match serde_json::to_string_pretty(&report) {
         Ok(json) => {

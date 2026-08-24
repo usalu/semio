@@ -566,7 +566,7 @@ impl CrashHarness {
 /// [`DbBackend::Fault`] variant — `MemoryStorage` does no genuinely-blocking I/O, so
 /// `CrashHarness`'s workloads never enter the shared typed I/O lane.
 async fn new_fault_backend() -> Arc<DbBackend> {
-    Arc::new(DbBackend::Fault(Box::new(FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new().await))).await)))
+    Arc::new(DbBackend::Fault(Box::new(FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))).await)))
 }
 
 /// @emoji 🔍️ Recovers the `&FaultStorage` a [`new_fault_backend`] produced, so `CrashHarness` can
@@ -690,7 +690,7 @@ pub async fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapsho
     let document = protocol::ArtifactId(format!("testkit-snap-{seed:x}"));
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, before_snapshot + after_snapshot.max(1)).await;
 
-    let storage_snapshotting: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new().await));
+    let storage_snapshotting: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
     {
         let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_snapshotting.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine a");
         for (i, envelope) in ops.iter().enumerate() {
@@ -703,7 +703,7 @@ pub async fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapsho
     let (materialized_from_snapshot, report_a) = db_artifact::ArtifactEngine::open(document.clone(), &storage_snapshotting, db_artifact::ArtifactEngineConfig::default(), 0).expect("open engine a");
     assert!(before_snapshot == 0 || report_a.from_snapshot, "replica a must have materialized from a real snapshot when one was published");
 
-    let storage_full_replay: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new().await));
+    let storage_full_replay: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
     {
         let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_full_replay.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine b");
         for (i, envelope) in ops.iter().enumerate() {
@@ -759,7 +759,7 @@ pub async fn assert_projection_rebuild_equals_incremental(seed: u64, op_count: u
     let document = protocol::ArtifactId(document_core.0.clone());
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(1)).await;
 
-    let storage = db_storage::MemoryStorage::new().await;
+    let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
     let build_projections = || vec![db_projection::erase(CountingProjection)];
 
     let incremental_engine = db_projection::ProjectionEngine::new(&storage, document_core.clone(), build_projections()).await.expect("projection engine (incremental)");
@@ -804,7 +804,7 @@ async fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &s
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_inverse_undo_roundtrip(seed: u64) {
     let document = protocol::ArtifactId(format!("testkit-undo-{seed:x}"));
-    let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new())));
+    let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool())).unwrap()));
     let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine");
 
     let path = CommandGen::new(seed).random_path();
@@ -834,7 +834,7 @@ pub async fn assert_sync_convergence(seed: u64, op_count: usize) {
     let document_core = ArtifactId(document.0.clone());
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(2)).await;
 
-    let server_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new().await));
+    let server_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
     let mut server = db_artifact::ArtifactEngine::create(document.clone(), server_storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create server");
     for (i, envelope) in ops.iter().enumerate() {
         server.submit(single_envelope_batch(envelope.clone()).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("server submit");
@@ -842,14 +842,14 @@ pub async fn assert_sync_convergence(seed: u64, op_count: usize) {
     let server_frontier = server.frontier().await;
     let sync_state = db_actor::block_on(async { db_sync::replay_sync_state(&server_storage.wal().await, document_core.clone()).await }).expect("replay_sync_state");
 
-    let replica1_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new().await));
+    let replica1_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
     let mut replica1 = db_artifact::ArtifactEngine::create(document.clone(), replica1_storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create replica1");
     let missing1 = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core.clone())).await.expect("missing_commands one-shot");
     for (i, envelope) in missing1.into_iter().enumerate() {
         replica1.submit(single_envelope_batch(envelope).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("replica1 submit");
     }
 
-    let replica2_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new().await));
+    let replica2_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
     let mut replica2 = db_artifact::ArtifactEngine::create(document, replica2_storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create replica2");
     let half = ops.len() / 2;
     let missing2_first = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core)).await.expect("missing_commands first half");
@@ -893,7 +893,7 @@ pub async fn assert_fencing_excludes_stale_writer(storage: &impl CatalogStorage)
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_preview_never_durable(seed: u64) {
     let document = protocol::ArtifactId(format!("testkit-preview-{seed:x}"));
-    let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new())));
+    let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool())).unwrap()));
     let core_document = ArtifactId(document.0.clone());
     let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine");
 
@@ -1052,7 +1052,7 @@ mod tests {
         let ops = WorkloadGen::new(55).disjoint_batch(&document, 5).await;
         let hashes = explore_interleavings(4242, 12, |seed| {
             let ops = ops.clone();
-            let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new())));
+            let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool())).unwrap()));
             let engine = Rc::new(RefCell::new(db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine")));
             let mut runtime = SimRuntime::new(seed);
             for (i, envelope) in ops.into_iter().enumerate() {
@@ -1079,7 +1079,7 @@ mod tests {
     //#region 🔖️FaultStorage
     #[semio_framework_async_macros::async_test]
     async fn fault_storage_passes_through_untouched_when_no_fault_is_scripted() {
-        let inner = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let inner = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let faulted = FaultStorage::new(inner).await;
         let document = ArtifactId("doc-1".to_string());
         db_actor::block_on(faulted.create_segment(&document, 0)).unwrap();
@@ -1090,7 +1090,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fault_storage_fail_nth_write_fails_exactly_once_at_the_scripted_call() {
-        let faulted = FaultStorage::new(Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await))).await;
+        let faulted = FaultStorage::new(Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))).await;
         faulted.set_script(FaultScript { fail_nth_write: Some(2), ..FaultScript::default() }).await;
         let document = ArtifactId("doc-1".to_string());
         db_actor::block_on(faulted.create_segment(&document, 0)).unwrap();
@@ -1101,7 +1101,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fault_storage_torn_write_forwards_only_the_kept_prefix() {
-        let faulted = FaultStorage::new(Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await))).await;
+        let faulted = FaultStorage::new(Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))).await;
         faulted.set_script(FaultScript { torn_write_at: Some((1, 3)), ..FaultScript::default() }).await;
         let document = ArtifactId("doc-1".to_string());
         db_actor::block_on(faulted.create_segment(&document, 0)).unwrap();
@@ -1112,7 +1112,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fault_storage_fsync_lies_never_delegates_to_the_inner_backend() {
-        let faulted = FaultStorage::new(Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await))).await;
+        let faulted = FaultStorage::new(Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))).await;
         let document = ArtifactId("doc-1".to_string());
         db_actor::block_on(faulted.create_segment(&document, 0)).unwrap();
         assert!(db_actor::block_on(faulted.sync(&document, 0, DurabilityClass::Fsync)).is_ok());
@@ -1125,7 +1125,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fault_storage_cas_conflict_injection_rejects_without_touching_the_inner_root() {
-        let faulted = FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new().await))).await;
+        let faulted = FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))).await;
         faulted.set_script(FaultScript { cas_conflict_nth: Some(1), ..FaultScript::default() }).await;
         let result = db_actor::block_on(faulted.cas_root(EpochFence::INITIAL, pages(b"attempt")));
         assert!(matches!(result, Err(DbError::Fenced { .. })), "the scripted call must be rejected as fenced");
@@ -1188,7 +1188,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn law_fencing_excludes_stale_writer_memory() {
-        assert_fencing_excludes_stale_writer(&db_storage::MemoryStorage::new().await).await;
+        assert_fencing_excludes_stale_writer(&db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1222,7 +1222,7 @@ mod tests {
         // ours to change from this test module), and every suspension point inside is already
         // bridged synchronously via `db_actor::block_on` — see R9.
         fn decode_wal_bytes(bytes: &[u8]) -> Result<(), String> {
-            let storage = db_actor::block_on(db_storage::MemoryStorage::new());
+            let storage = db_actor::block_on(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool())).unwrap();
             let document = ArtifactId("fuzz-doc".to_string());
             db_actor::block_on(storage.create_segment(&document, 0)).map_err(|err| err.to_string())?;
             db_actor::block_on(storage.append(&document, 0, pages(bytes))).map_err(|err| err.to_string())?;
@@ -1233,7 +1233,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn wal_recovery_never_panics_under_truncation_or_bit_flip_corruption() {
             let document = protocol::ArtifactId("fuzz-doc".to_string());
-            let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new())));
+            let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool())).unwrap()));
             {
                 let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).unwrap();
                 for i in 0..2 {

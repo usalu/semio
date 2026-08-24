@@ -141,16 +141,29 @@ pub struct StackLayout {
 }
 
 /// 🔲️ A two-dimensional track arrangement — expressible by CSS grid or a taffy grid tree.
+pub const UI_GRID_TRACKS: usize = 32;
+pub type UiGridTracks = crate::UiFixedList<GridTrack, UI_GRID_TRACKS>;
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GridLayout {
-    pub columns: Vec<GridTrack>,
-    pub rows: Vec<GridTrack>,
+    pub columns: UiGridTracks,
+    pub rows: UiGridTracks,
     pub column_gap: SpaceToken,
     pub row_gap: SpaceToken,
     pub padding: EdgeSpace,
     pub align: Align,
     pub justify: Justify,
+}
+
+impl GridLayout {
+    pub fn try_push_column(&mut self, track: GridTrack) -> Result<(), GridTrack> {
+        self.columns.try_push(track)
+    }
+
+    pub fn try_push_row(&mut self, track: GridTrack) -> Result<(), GridTrack> {
+        self.rows.try_push(track)
+    }
 }
 
 /// 🪟️ A positioning context whose children stack on top of one another anchored to the box —
@@ -290,14 +303,23 @@ mod tests {
     #[test]
     fn layout_spec_grid_roundtrips() {
         roundtrip(&LayoutSpec::Grid(GridLayout {
-            columns: vec![GridTrack::Fraction(1), GridTrack::Fixed(SpaceToken::Lg)],
-            rows: vec![GridTrack::Auto],
             column_gap: SpaceToken::Sm,
             row_gap: SpaceToken::None,
             padding: EdgeSpace::Each { top: SpaceToken::Xs, right: SpaceToken::Sm, bottom: SpaceToken::Xs, left: SpaceToken::Sm },
             align: Align::Stretch,
             justify: Justify::Start,
+            ..GridLayout::default()
         }));
+    }
+
+    #[test]
+    fn grid_tracks_max_plus_one_returns_the_exact_track() {
+        let mut grid = GridLayout::default();
+        for _ in 0..UI_GRID_TRACKS {
+            assert!(grid.try_push_column(GridTrack::Fraction(1)).is_ok());
+        }
+        assert_eq!(grid.try_push_column(GridTrack::Fixed(SpaceToken::Lg)), Err(GridTrack::Fixed(SpaceToken::Lg)));
+        assert_eq!(grid.columns.len(), UI_GRID_TRACKS);
     }
 
     #[test]

@@ -461,6 +461,42 @@
         "version": {
           "type": "string"
         },
+        "packages": {
+          "type": "array",
+          "description": "🧩️ The FURTHER third-party packages this one reference implementation links, beyond `package`. A composed reference names several because some formats have no single credible library — an OOXML container needs an archive reader AND an XML reader, and a spreadsheet needs a reader AND a writer. Every linked package is named here so the dependency ratchet and the oracle-purity probe classify all of them; a package linked into the host but absent from every manifest is invisible to both.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "package",
+              "version",
+              "license",
+              "role"
+            ],
+            "properties": {
+              "package": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "license": {
+                "type": "string",
+                "minLength": 1
+              },
+              "homepage": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "minLength": 1,
+                "description": "🧭️ What this package contributes to the composition (`archive reader/writer`, `independent writer`, `DOM`), so a reader can tell why the reference needs more than one library."
+              }
+            }
+          }
+        },
         "capabilities": {
           "type": "array",
           "items": {
@@ -556,6 +592,44 @@
         }
       }
     },
+    "OracleHostPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "🧩️ A package an owner contributes so its adapters can reach their reference libraries. With `path` the entry names LOCAL in-repo source linked by path; without it the entry names an EXTERNAL distribution the generated host must provision from that ecosystem's registry, and which the dependency ratchet classifies as a test-oracle dependency.",
+      "required": [
+        "implementation",
+        "package"
+      ],
+      "properties": {
+        "implementation": {
+          "$ref": "#/$defs/Implementation"
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "📁️ Repo-relative directory of the local package. Required for a Rust host, which links contributed crates by path."
+        },
+        "version": {
+          "type": "string",
+          "description": "📌️ Distribution version an external package is pinned to."
+        },
+        "module": {
+          "type": "string",
+          "description": "🧭️ Import name when it differs from the distribution name (Pillow → PIL)."
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "🎚️ Cargo features of a local crate."
+        }
+      }
+    },
     "OracleRegistry": {
       "type": "object",
       "additionalProperties": false,
@@ -585,6 +659,30 @@
           "items": {
             "$ref": "#/$defs/MutationCatalog"
           }
+        },
+        "comparisonProfiles": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "oracleHostPackages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OracleHostPackage"
+          }
+        },
+        "migrationStatus": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "_comment": {
+          "type": "string"
+        },
+        "$schema": {
+          "type": "string"
         }
       }
     },

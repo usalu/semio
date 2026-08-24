@@ -1,0 +1,22 @@
+{
+  "mutation": "insertMaster",
+  "master": {
+    "id": "m-2",
+    "shapes": [
+      {
+        "shapeKind": "placeholder",
+        "frame": {
+          "origin": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "width": 100.0,
+          "height": 24.0
+        },
+        "kind": {
+          "kind": "footer"
+        }
+      }
+    ]
+  }
+}

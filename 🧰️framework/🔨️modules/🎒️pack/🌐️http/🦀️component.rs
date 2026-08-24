@@ -308,9 +308,8 @@ mod ureq_transport {
     /// still runs off the calling task's own thread, but through the SAME governed, sized-to-cores
     /// substrate every other blocking call in the process now uses, and the caller genuinely
     /// `.await`s rather than blocking. `pool: None` (the zero-touch [`UreqRangeTransport::new`])
-    /// runs the call inline instead — correct for a caller with no shared pool to offer (mirrors
-    /// `db_storage::run_blocking_op`'s identical `pool: None` fallback), just without
-    /// backgrounding.
+    /// runs the call inline instead — correct only for this transport's explicitly separate
+    /// public contract; database I/O has no analogous pool-less route.
     pub struct UreqRangeTransport {
         agent: ureq::Agent,
         pool: Option<Arc<WorkerPool>>,

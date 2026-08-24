@@ -23,8 +23,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str) -> BuiltNode {
-    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, None);
+fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, None)?;
     let control = BuiltNode {
         key: format!("{id}.control"),
         component: Component::NumberStepper(NumberStepperProps { value, step, uniform: false }),
@@ -40,7 +40,7 @@ fn stepper_field(id: &str, label: &str, value: f64, step: f64, action: &str) -> 
     ui::field(label).id(id).child(control).build()
 }
 
-pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> BuiltNode {
+pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let runtime = &envelope.runtime;
     ui::section(labels.settings.as_str())
         .id("puzzle3d-play-settings")

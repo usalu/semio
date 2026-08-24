@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.audio`'s (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.audio` is a semio-NATIVE format — no third party in any ecosystem reads or writes `.dsl.semio`/`.pack.semio` — so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-audio-mutation-semantics",
+      "capabilities": ["semio-v1-audio-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over this subset's `SemioAudioMutation` vocabulary — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. The nearest candidates were surveyed and rejected on the merits rather than for absence: `hound` 3 is already registered here for `wav-audio` and does read and write RIFF PCM, so it could judge the four kinds that survive a round trip through a WAV container (`set-sample-rate`, `set-format`, `insert-channel`/`remove-channel` as a channel-count change, `set-channel-samples`), but it models no `LIST INFO` chunk at all, so `insert-tag`, `remove-tag` and `set-tag-value` would have nothing to compare against and would silently degrade into comparing our output with our own output — the one failure this platform exists to prevent. It is also the wrong altitude: `SemioAudioFormat` here records the ORIGINAL encoding the always-`f32` samples were decoded FROM, which a WAV writer cannot represent independently of its own storage. The cross-language hosts have landed (a cache-local Python venv and an npm-resolving TypeScript host, see 📓️cross-language-oracle-hosts-2026-08-24.md), so a Python or JavaScript reference was checked too and fails for the same reason, one level earlier: `soundfile`/`wavefile`/`node-wav` read audio containers, and nothing in any registry reads a semio envelope. Confidence comes instead from specification vectors — the committed `(before, mutation, after)` triple per kind under `../../../../🧪️tests/mutate-semio-audio/🧫️fixtures/`, whose BEFORE snapshot is the exact decoded content of this standard's own committed real artifact `✳️any/📚️examples/🎵️tone/🖼️assets/🗣️example.dsl.semio` — plus the metamorphic inverse law: applying a mutation and then its own computed inverse must restore the pre-mutation snapshot exactly.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-audio",
+      "capability": "semio-v1-audio-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"]
+    }
+  ]
+}

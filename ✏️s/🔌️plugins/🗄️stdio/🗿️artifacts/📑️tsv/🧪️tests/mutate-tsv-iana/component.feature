@@ -29,6 +29,19 @@ Feature: Apply every typed IANA TSV mutation to a real-world table
   Every scenario copies the fixture into the case work directory before touching it; the committed
   file is never written to.
 
+  A note on the `@id-identity-round-trip` scenario below, which in most OTHER cases this wave
+  asserts the re-encoded bytes are NOT bit-identical to the input (proof that real parsing, not a
+  byte-copy shortcut, produced them): for IANA TSV that assertion would be dishonest. The format has
+  no quoting and no escaping mechanism at all, so a writer has nothing to choose; the only two
+  choices it does leave — which line terminator the file uses and whether the last record is
+  terminated — are exactly the two fields this subset's `TsvBody`/`TsvSnapshot` carry and reproduce
+  verbatim. Decode→encode reproducing the input byte-for-byte is therefore the CORRECT outcome here,
+  and the oracle module's own `no_mutation_is_a_true_byte_identity` test states the same property
+  independently. The scenario asserts that exact-byte law instead of a fabricated must-differ one,
+  and what proves genuine parsing for this subset is the exhaustive `mutate-<kind>` scenarios: you
+  cannot insert, remove or replace row 25 of a real 51-record table without actually having parsed
+  it.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -73,8 +86,8 @@ Feature: Apply every typed IANA TSV mutation to a real-world table
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode and re-encode the real table without passing bytes through
+  Scenario: Decode and re-encode the real table, where byte identity IS the correct answer
     Given the real input table shared://reuse-marketplaces.tsv
     When the table is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
-    And the re-encoded bytes are not bit-identical to the input
+    And the re-encoded bytes are bit-identical to the input, which is this format's total absence of writer freedom working correctly rather than a byte pass-through

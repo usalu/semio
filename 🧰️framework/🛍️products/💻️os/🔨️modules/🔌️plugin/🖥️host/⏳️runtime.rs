@@ -280,7 +280,7 @@ async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Ef
         // 🚧️ Same open gap `component.rs`'s own `execute_turn` and `imports.rs`'s own `patch_sink`
         // doc already carry: WIT `patch-op`'s `path: list<u32>` + `node: pack` vs kernel `PatchOp`'s
         // `path: String` + `node: UiNode` has no agreed conversion yet.
-        ui_patches: Vec::new(),
+        ui_patches: semio_framework::kernel::UiTurnPatches::default(),
         effects,
         // 👥️ terra-shard-lane: same wire-shape mismatch as `component.rs`'s `execute_turn` —
         // `turn.presence` is real guest-emitted data (WIT `presence-update{peer: pack}`, a

@@ -18,7 +18,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(view: LowpolyView<'_>, labels: &LowpolyLabels) -> UiNode {
+pub async fn render(view: LowpolyView<'_>, labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let object = active_object(view);
     let layers = object.map_or(&[][..], |entry| entry.paint_layers.as_slice());
     let active_layer = view.config.active_paint_layer;
@@ -27,10 +27,10 @@ pub async fn render(view: LowpolyView<'_>, labels: &LowpolyLabels) -> UiNode {
         .enumerate()
         .map(|(index, layer)| UiTreeItemNode {
             icon_id: Some("layers".into()),
-            ..tree_item_with_action(format!("lowpoly-layer:{index}"), Label::data(layer.name.clone()), Some(format!("{} · {}", layer.opacity, layer.blend_mode)), lowpoly_action("setActivePaintLayer", Some(json!({ "layerIndex": index }))))
+            ..tree_item_with_action(format!("lowpoly-layer:{index}"), Label::data(layer.name.clone()), Some(format!("{} · {}", layer.opacity, layer.blend_mode)), lowpoly_action("setActivePaintLayer", Some(json!({ "layerIndex": index }))))?
         })
         .collect();
-    PanelTreeBuilder::new("lowpoly-play-layers").section("lowpoly-play-layers.paint", Some(labels.paint_layers.into()), true, items).selected(vec![format!("lowpoly-layer:{active_layer}")]).build()
+    PanelTreeBuilder::new("lowpoly-play-layers")?.section("lowpoly-play-layers.paint", Some(labels.paint_layers.into()), true, items)?.selected(vec![format!("lowpoly-layer:{active_layer}")])?.build()
 }
 //#endregion 🔖️Render
 

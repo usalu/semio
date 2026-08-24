@@ -176,20 +176,20 @@ pub async fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -
 //#endregion 🔖️Preflight
 
 //#region 🔖️Render
-async fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<semio_framework_plugin::ActionDescriptor>) -> UiTreeItemNode {
+async fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<semio_framework_plugin::ActionDescriptor>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut item = match action {
-        Some(action) => tree_item_with_action(id, label, description, action),
-        None => tree_item_desc(id, label, description),
+        Some(action) => tree_item_with_action(id, label, description, action)?,
+        None => tree_item_desc(id, label, description)?,
     };
     item.icon_id = icon_id.and_then(|id| IconName::from_str(&id));
     item
 }
 
-pub async fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::LayoutConfig) -> UiNode {
+pub async fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::LayoutConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let labels = layout_labels(cfg);
     let issues = run_layout_preflight(doc, labels);
     let items: Vec<UiTreeItemNode> = if issues.is_empty() {
-        vec![layout_tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)]
+        vec![layout_tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)?]
     } else {
         issues
             .iter()
@@ -200,11 +200,11 @@ pub async fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::L
                     Some(format!("{} · {}", issue.severity, issue.code)),
                     Some(if issue.severity == "error" { "alert-circle" } else { "alert-triangle" }.into()),
                     Some(layout_action("focusPreflightIssue", Some(json!({ "issue": issue })))),
-                )
+                )?
             })
             .collect()
     };
-    PanelTreeBuilder::new("layout-preflight").section("layout-preflight.issues", Some(labels.preflight.into()), true, items).build()
+    PanelTreeBuilder::new("layout-preflight")?.section("layout-preflight.issues", Some(labels.preflight.into()), true, items)?.build()
 }
 //#endregion 🔖️Render
 

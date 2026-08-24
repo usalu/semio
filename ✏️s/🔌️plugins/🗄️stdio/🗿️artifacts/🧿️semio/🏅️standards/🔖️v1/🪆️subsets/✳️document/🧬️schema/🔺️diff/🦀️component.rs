@@ -1290,7 +1290,7 @@ pub(crate) fn enc_block(b: &DocBlock) -> String {
         DocBlock::List { ordered, items } => format!("L[{},{}]", enc_bool(ordered), enc_list(items, enc_list_item)),
         DocBlock::Table { rows } => format!("T[{}]", enc_list(rows, enc_row)),
         DocBlock::Code { language, text } => format!("C[{},{}]", encode_option(language, |v| enc_str(v)), enc_str(text)),
-        DocBlock::Quote { blocks } => format!("Q[{}.await]", enc_list(blocks, enc_block)),
+        DocBlock::Quote { blocks } => format!("Q[{}]", enc_list(blocks, enc_block)),
         DocBlock::Image { image_id, alt, width, height } => format!("I[{},{},{},{}]", enc_str(image_id), enc_str(alt), encode_option(width, enc_f64), encode_option(height, enc_f64)),
         DocBlock::PageBreak => "B[]".to_string(),
     }

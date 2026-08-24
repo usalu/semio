@@ -11,6 +11,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::deflate::standards::v_rfc1950::subsets::any::{independent_payload, inverse_mutation_spec, oracle_apply_mutation, project_deflate};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🗂️ Mirrors `DeflateMutation`'s kebab-case `KINDS` (schema/mutations/component.rs). Duplicated
@@ -53,9 +54,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let inverse_spec = inverse_mutation_spec(&spec.str("kind"), original_header.0, original_header.1, original_header.2, original_header.3, &original_payload)?;
     let restored = oracle_apply_mutation(&mutated, &inverse_spec)?;
     let projection = project_deflate(&restored)?;
-    if projection != original_projection {
-        return Err(format!("inverse of {} did not restore the oracle's original semantic projection", spec.str("kind")));
-    }
+    inverse_restores(&spec.str("kind"), &projection, &original_projection)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
@@ -87,11 +86,18 @@ fn original_fields(input: &[u8]) -> Result<((u8, u8, u8, Option<u32>), Vec<u8>),
     Ok(((method, window_bits, level_hint_bits, dict_id), payload))
 }
 
+/// 🔁️ The identity law, both halves asserted in role. The semantic half: inflating and
+/// re-deflating must leave the typed header fields and the payload digest exactly where they were.
+/// The no-byte-pass-through half: this scenario deliberately reads the LEVEL-1 fixture while the
+/// reference re-compresses at `flate2`'s own default level, so an output equal to the input would
+/// mean the DEFLATE stream was copied rather than genuinely inflated and re-coded.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx, IDENTITY_INPUT, "input.zz")?;
     let spec = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(Vec::new()))]);
     let bytes = oracle_apply_mutation(&input, &spec)?;
+    reparsed_not_copied(&bytes, &input)?;
     let projection = project_deflate(&bytes)?;
+    round_trip_preserves(&projection, &project_deflate(&input)?)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

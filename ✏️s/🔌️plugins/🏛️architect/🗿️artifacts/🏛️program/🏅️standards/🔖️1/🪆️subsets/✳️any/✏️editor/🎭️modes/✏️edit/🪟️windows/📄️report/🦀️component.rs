@@ -5,13 +5,13 @@ use crate::editor::architect::config::{parse_active_report, ArchitectConfig};
 use semio_framework_plugin::{ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, UiTreeSectionNode, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
-pub const ARCHITECT_WINDOW_REPORT: &str = "architect-report";
-pub const ARCHITECT_BODY_REPORT: &str = "architect.report";
+pub(crate) const ARCHITECT_WINDOW_REPORT: &str = "architect-report";
+pub(crate) const ARCHITECT_BODY_REPORT: &str = "architect.report";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub(crate) async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: ARCHITECT_WINDOW_REPORT.into(),
         label: LocalizedLabel::native("Report", "Bericht"),
@@ -34,28 +34,28 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(cfg: &ArchitectConfig) -> UiNode {
+pub(crate) async fn render(cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(report) = parse_active_report(cfg) else {
         return ui_text(Label::data("Run validation, analysis, or report to populate this panel."));
     };
     let report = &report;
     let sections: Vec<UiTreeSectionNode> = report
         .sections
-        .iter()
+        .iter()?
         .enumerate()
         .map(|(index, section)| {
             let mut items = Vec::new();
             if !section.body.is_empty() {
-                items.push(tree_item(format!("architect-report.section.{index}.body"), &section.body));
+                items.push(tree_item(format!("architect-report.section.{index}.body"), &section.body)?);
             }
             for (bullet_index, bullet) in section.bullets.iter().enumerate() {
-                items.push(tree_item(format!("architect-report.section.{index}.bullet.{bullet_index}"), format!("• {bullet}")));
+                items.push(tree_item(format!("architect-report.section.{index}.bullet.{bullet_index}"), format!("• {bullet}"))?);
             }
-            tree_section(format!("architect-report.section.{index}"), Some(section.heading.clone()), items)
+            tree_section(format!("architect-report.section.{index}"), Some(section.heading.clone())?, items)
         })
         .collect();
     tree_node(
-        vec![tree_section("architect-report.meta", Some(report.title.clone()), vec![tree_item("architect-report.kind", format!("Kind: {:?}", report.kind)), tree_item("architect-report.generated", format!("Generated: {}", report.generated_at))])]
+        vec![tree_section("architect-report.meta", Some(report.title.clone()), vec![tree_item("architect-report.kind", format!("Kind: {:?}", report.kind))?, tree_item("architect-report.generated", format!("Generated: {}", report.generated_at))?(&str, &str, &str)(&str, &str)])(&str, &str, &str)(&str, &str)]
             .into_iter()
             .chain(sections)
             .collect(),

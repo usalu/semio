@@ -34,27 +34,48 @@ impl std::fmt::Display for SurfaceDocError {
 impl std::error::Error for SurfaceDocError {}
 //#endregion 🔖️SurfaceDocError
 
+//#region 🔖️SurfaceEncodeError
+#[derive(Debug)]
+pub enum SurfaceEncodeError {
+    Pack(PackError),
+    Payload(Vec<u8>),
+    Schema(&'static str),
+}
+
+impl std::fmt::Display for SurfaceEncodeError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Pack(error) => write!(formatter, "surface payload encode failed: {error}"),
+            Self::Payload(bytes) => write!(formatter, "surface payload exceeds fixed capacity with {} bytes", bytes.len()),
+            Self::Schema(schema) => write!(formatter, "surface schema exceeds fixed capacity: {schema}"),
+        }
+    }
+}
+
+impl std::error::Error for SurfaceEncodeError {}
+//#endregion 🔖️SurfaceEncodeError
+
 //#region 🔖️EncodeDecode
 /// 📦️ Packs `doc` and stamps `doc_schema = T::SCHEMA`, leaving every other `SurfaceProps` field
 /// (`surface_id`, `controller_id`, `pane_id`, `binding_id`, `domain_id`, `domain_granularity_id`) at
 /// its default — the caller (the surface's own owner, which knows those identities) fills them in.
-/// Infallible in practice: every `SceneDoc` struct in `🦀️scenes.rs` is plain data this crate's own
-/// codec fully covers (`serialize_map`/enum-variant payloads are the only unsupported shapes, and no
-/// `SceneDoc` struct uses either) — the `expect` documents that invariant rather than silently
-/// swallowing a codec bug a future `SceneDoc` impl might introduce.
-pub fn encode<T: SceneDoc>(kind: SurfaceKind, doc: &T) -> SurfaceProps {
-    let bytes = doc.encode_pack().expect("SceneDoc payloads are plain data this crate's pack codec fully covers");
-    SurfaceProps { kind, doc_schema: T::SCHEMA.into(), doc: SurfaceDoc { bytes }, ..Default::default() }
+/// Admission is fallible: codec failures and fixed schema/payload capacity failures return their
+/// rejected owner instead of aborting or truncating.
+pub fn encode<T: SceneDoc>(kind: SurfaceKind, doc: &T) -> Result<SurfaceProps, SurfaceEncodeError> {
+    let bytes = doc.encode_pack().map_err(SurfaceEncodeError::Pack)?;
+    let doc_schema = ui_contract::UiText::try_from_str(T::SCHEMA).ok_or(SurfaceEncodeError::Schema(T::SCHEMA))?;
+    let bytes = ui_contract::UiFixedBytes::try_from_vec(bytes).map_err(SurfaceEncodeError::Payload)?;
+    Ok(SurfaceProps { kind, doc_schema, doc: SurfaceDoc { bytes }, ..Default::default() })
 }
 
 /// 📦️ Verifies `props.doc_schema == T::SCHEMA` before attempting to decode — a stale/foreign schema
 /// returns [`SurfaceDocError::SchemaMismatch`] rather than feeding mismatched bytes to `T`'s decoder
 /// (which could otherwise misparse rather than cleanly fail).
 pub fn decode<T: SceneDoc>(props: &SurfaceProps) -> Result<T, SurfaceDocError> {
-    if props.doc_schema != T::SCHEMA {
-        return Err(SurfaceDocError::SchemaMismatch { expected: T::SCHEMA, actual: props.doc_schema.clone() });
+    if props.doc_schema.as_str() != T::SCHEMA {
+        return Err(SurfaceDocError::SchemaMismatch { expected: T::SCHEMA, actual: props.doc_schema.to_string() });
     }
-    T::decode_pack(&props.doc.bytes).map_err(SurfaceDocError::Decode)
+    T::decode_pack(props.doc.bytes.as_slice()).map_err(SurfaceDocError::Decode)
 }
 //#endregion 🔖️EncodeDecode
 
@@ -66,8 +87,8 @@ mod tests {
     #[test]
     fn table_scene_round_trips_byte_identical() {
         let scene = TableScene::base("[{\"id\":\"name\"}]", "[]");
-        let props = encode(SurfaceKind::Table, &scene);
-        assert_eq!(props.doc_schema, "table@1");
+        let props = encode(SurfaceKind::Table, &scene).expect("bounded fixture");
+        assert_eq!(props.doc_schema.as_str(), "table@1");
         let back: TableScene = decode(&props).expect("decode");
         assert_eq!(scene, back);
     }
@@ -75,7 +96,7 @@ mod tests {
     #[test]
     fn board_scene_round_trips_with_absent_optional_fields() {
         let scene = Board2dScene::base("{}".into(), "{}".into(), true);
-        let props = encode(SurfaceKind::Board2d, &scene);
+        let props = encode(SurfaceKind::Board2d, &scene).expect("bounded fixture");
         let back: Board2dScene = decode(&props).expect("decode");
         assert_eq!(scene, back);
     }
@@ -83,7 +104,7 @@ mod tests {
     #[test]
     fn world_scene_round_trips_with_absent_optional_fields() {
         let scene = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
-        let props = encode(SurfaceKind::World3d, &scene);
+        let props = encode(SurfaceKind::World3d, &scene).expect("bounded fixture");
         let back: World3dScene = decode(&props).expect("decode");
         assert_eq!(scene, back);
     }
@@ -91,8 +112,8 @@ mod tests {
     #[test]
     fn wrong_schema_errs_never_panics() {
         let scene = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
-        let mut props = encode(SurfaceKind::World3d, &scene);
-        props.doc_schema = "world3d@99".into();
+        let mut props = encode(SurfaceKind::World3d, &scene).expect("bounded fixture");
+        props.doc_schema = ui_contract::UiText::try_from_str("world3d@99").expect("bounded fixture");
         let result = decode::<World3dScene>(&props);
         assert!(matches!(result, Err(SurfaceDocError::SchemaMismatch { .. })));
     }

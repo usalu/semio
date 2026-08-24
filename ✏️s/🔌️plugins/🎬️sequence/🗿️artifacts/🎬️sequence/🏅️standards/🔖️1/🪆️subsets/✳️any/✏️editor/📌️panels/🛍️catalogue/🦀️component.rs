@@ -25,9 +25,9 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNode {
+pub async fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let actions = [("state.set", labels.action_set_state), ("log.print", labels.action_log_print), ("control.if", labels.action_if), ("control.while", labels.action_while), ("math.add", labels.action_add)];
-    let mut items: Vec<UiTreeItemNode> = actions.iter().map(|(kind, label)| tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), *label, Some((*kind).into()), sequence_action("addStep", Some(json!({ "kind": kind }))))).collect();
+    let mut items: Vec<UiTreeItemNode> = actions.iter().map(|(kind, label)| tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), *label, Some((*kind).into()), sequence_action("addStep", Some(json!({ "kind": kind }))))?).collect();
     for owner in fixture.steps.iter().filter(|step| is_control_kind(&step.kind)) {
         for slot_name in control_slots(&owner.kind) {
             items.push(tree_item_with_action(
@@ -42,10 +42,10 @@ pub async fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> UiNod
                         "slotName": slot_name,
                     })),
                 ),
-            ));
+            )?);
         }
     }
-    PanelTreeBuilder::new("sequence-play-catalogue").section("sequence-play-catalogue.actions", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).selected(vec![]).build()
+    PanelTreeBuilder::new("sequence-play-catalogue")?.section("sequence-play-catalogue.actions", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)?.selected(vec![])?.build()
 }
 //#endregion 🔖️Render
 

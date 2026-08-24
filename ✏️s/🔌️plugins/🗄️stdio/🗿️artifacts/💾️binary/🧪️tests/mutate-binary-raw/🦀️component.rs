@@ -16,6 +16,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
+use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors this subset's own `BinaryMutation::KINDS` (`../../🏅️standards/🔖️raw/🪆️subsets/✳️any/
@@ -74,11 +75,14 @@ fn projection_of(bytes: &[u8]) -> Json {
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair, computed
 /// directly from the REAL pristine `input` bytes at run time rather than a hardcoded literal — the
 /// `truncate-at` example alone removes a 283 KB real tail no literal could carry legibly.
-/// `set-snapshot` is handled by its caller directly (restoring the pristine original bytes),
-/// mirroring `BinaryMutation::inverse`'s own `SetSnapshot` arm (`../../🏅️standards/🔖️raw/
-/// 🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`), never routed through this function.
+/// `set-snapshot` inverts through a REAL `set-snapshot` carrying the pristine buffer as its own
+/// payload — mirroring `BinaryMutation::inverse`'s own `SetSnapshot` arm (`../../🏅️standards/
+/// 🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`) — rather than the caller handing
+/// the untouched input straight back, which would let the scenario pass without the independent
+/// implementation performing the undo at all.
 fn inverse_spec(kind: &str, input: &[u8], params: &Json) -> Json {
     match kind {
+        "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", json_obj(vec![("bytes", bytes_json(input))]))])),
         "splice" => {
             let offset = usize_field(params, "offset").unwrap_or(0).min(input.len());
             let remove_len = usize_field(params, "removeLen").unwrap_or(0);
@@ -114,29 +118,39 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     apply_and_project(&input, &spec)
 }
 
+/// ↩️ The inverse law, asserted HERE by the independent specification implementation against the
+/// pristine buffer rather than deferred to a comparison: every kind — INCLUDING `set-snapshot`,
+/// which now inverts through a real `set-snapshot` of the original bytes instead of a hand-back —
+/// is applied forward and then undone, and the restored buffer must be the original buffer. For a
+/// raw carrier the projection IS the byte array, so this is a literal exact-bytes claim. This
+/// subset carries a recorded no-oracle decision, so nothing else will ever check it.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
     let empty = Json::Object(Vec::new());
     let params = spec.get("params").unwrap_or(&empty).clone();
-    let restored = if kind == "set-snapshot" {
-        input.clone()
-    } else {
-        let mutated = oracle_apply_mutation(&input, &spec)?;
-        let inverse = inverse_spec(&kind, &input, &params);
-        oracle_apply_mutation(&mutated, &inverse)?
-    };
-    Ok(Outcome::with_raw(restored.clone(), projection_of(&restored)))
+    let mutated = oracle_apply_mutation(&input, &spec)?;
+    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&kind, &input, &params))?;
+    let projection = projection_of(&restored);
+    inverse_restores(&kind, &projection, &projection_of(&input))?;
+    Ok(Outcome::with_raw(restored, projection))
 }
 
 /// 🔮️ For a raw buffer `decode`/`encode` really is the identity (`carrier_native_is_raw`,
 /// `../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs`), so the trusted reference result
 /// is simply the pristine original bytes — byte equality IS correct here, honestly, not a
-/// contrived pass.
+/// contrived pass. The no-byte-pass-through tripwire every parsed format in this wave asserts is
+/// therefore genuinely inapplicable, and inverting it would be a fabricated law; the reference
+/// states the carrier law it can honestly satisfy instead, by running the declared `no-mutation`
+/// kind through the independent implementation and requiring the result to be the input exactly.
+/// That is a real check, not a tautology: `apply` reaching the wrong arm, or clamping, or dropping
+/// a byte, all fail it.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    Ok(Outcome::with_raw(input.clone(), projection_of(&input)))
+    let output = oracle_apply_mutation(&input, &json_spec("no-mutation", json_obj(vec![])))?;
+    carrier_is_exact(&output, &input)?;
+    Ok(Outcome::with_raw(output.clone(), projection_of(&output)))
 }
 
 /// 🔮️ The specification-vector scenarios share the SAME forward-apply shape as `mutate_oracle`,
@@ -172,6 +186,7 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::{apply_binary_mutation, BinaryMutation};
     use semio_s_plugin_stdio::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
     use semio_s_plugin_stdio_test_oracle::artifacts::binary::standards::v_raw::subsets::any::oracle_apply_mutation;
+use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores};
 
     //#region 🔖️MutationFromSpec
     /// 🦠️ The same `(kind, params)` wire shape the oracle dispatcher reads, translated into a real
@@ -248,19 +263,17 @@ mod subject {
         Ok(Outcome::with_raw(bytes.clone(), projection_of(&bytes)))
     }
 
+    /// ↩️ Every kind, INCLUDING `set-snapshot`, is genuinely applied forward and then undone through
+    /// this repository's own `BinaryMutation` pipeline — `set-snapshot` inverts through a real
+    /// `set-snapshot` carrying the pristine buffer, never through a hand-back of the input bytes.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty).clone();
-        let restored = if kind == "set-snapshot" {
-            input.clone()
-        } else {
-            let mutated = apply_and_encode(&input, &spec)?;
-            let inverse = inverse_spec(&kind, &input, &params);
-            apply_and_encode(&mutated, &inverse)?
-        };
+        let mutated = apply_and_encode(&input, &spec)?;
+        let restored = apply_and_encode(&mutated, &inverse_spec(&kind, &input, &params))?;
         Ok(Outcome::with_raw(restored.clone(), projection_of(&restored)))
     }
 

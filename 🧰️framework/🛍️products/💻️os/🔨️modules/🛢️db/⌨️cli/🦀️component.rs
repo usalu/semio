@@ -120,10 +120,49 @@ async fn now_ms() -> u64 {
 /// 🧾️ A best-effort human display of a query result's raw value bytes — UTF-8 text verbatim (the
 /// common case: `db_artifact`'s path-value convention stores JSON-encoded scalars, which decode as
 /// text), or a byte count for anything that doesn't decode, never a panic.
-fn describe_value_bytes(bytes: &[u8]) -> String {
-    match std::str::from_utf8(bytes) {
-        Ok(text) => text.to_string(),
-        Err(_) => format!("<{} bytes, non-utf8>", bytes.len()),
+fn describe_value_bytes(bytes: &db::query::QueryBytes) -> String {
+    let mut text = String::with_capacity(bytes.len());
+    let (mut scalar, mut minimum, mut remaining) = (0_u32, 0_u32, 0_u8);
+    for fragment in bytes.fragments() {
+        for byte in fragment {
+            if remaining == 0 {
+                match *byte {
+                    0x00..=0x7f => text.push(char::from(*byte)),
+                    0xc2..=0xdf => {
+                        scalar = u32::from(*byte & 0x1f);
+                        minimum = 0x80;
+                        remaining = 1;
+                    }
+                    0xe0..=0xef => {
+                        scalar = u32::from(*byte & 0x0f);
+                        minimum = 0x800;
+                        remaining = 2;
+                    }
+                    0xf0..=0xf4 => {
+                        scalar = u32::from(*byte & 0x07);
+                        minimum = 0x1_0000;
+                        remaining = 3;
+                    }
+                    _ => return format!("<{} bytes, non-utf8>", bytes.len()),
+                }
+            } else if byte & 0xc0 != 0x80 {
+                return format!("<{} bytes, non-utf8>", bytes.len());
+            } else {
+                scalar = (scalar << 6) | u32::from(*byte & 0x3f);
+                remaining -= 1;
+                if remaining == 0 {
+                    if scalar < minimum || scalar > 0x10_ffff || (0xd800..=0xdfff).contains(&scalar) {
+                        return format!("<{} bytes, non-utf8>", bytes.len());
+                    }
+                    text.push(char::from_u32(scalar).expect("validated unicode scalar"));
+                }
+            }
+        }
+    }
+    if remaining == 0 {
+        text
+    } else {
+        format!("<{} bytes, non-utf8>", bytes.len())
     }
 }
 
@@ -272,6 +311,22 @@ async fn cmd_doc(rest: &[String]) -> i32 {
 //#endregion 🔖️Doc
 
 //#region 🔖️WalInspect
+fn wal_cursor_control() -> Result<db::wal::WalCursorControl, db::DbError> {
+    db::wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)
+}
+
+async fn admit_cli_wal_bytes(source: Vec<u8>, maximum: u64, control: &mut db::wal::WalCursorControl) -> Result<db::wal::WalBytes, db::DbError> {
+    match db::wal::WalBytes::try_admit(source, maximum, control).await {
+        Ok(bytes) => Ok(bytes),
+        Err(mut rejected) => {
+            while rejected.close_step()? {
+                control.grant()?;
+            }
+            Err(rejected.into_error())
+        }
+    }
+}
+
 fn wal_record_kind_name(record: &db::wal::WalRecord) -> &'static str {
     match record {
         db::wal::WalRecord::SegmentHeader { .. } => "segment_header",
@@ -312,10 +367,10 @@ fn describe_wal_record(record: &db::wal::WalRecord) -> String {
         db::wal::WalRecord::Frontier(frontier) => {
             format!("{kind} head_seq={} commit_seq={} epoch={} chain_hash={}", frontier.head_seq, frontier.commit_seq, frontier.epoch, hex32(&frontier.chain_hash))
         }
-        db::wal::WalRecord::VcsRef(id) => format!("{kind} id={id}"),
+        db::wal::WalRecord::VcsRef(id) => format!("{kind} id={}", id.as_str()),
         db::wal::WalRecord::SnapshotPub { generation, frontier } => format!("{kind} generation={generation} head_seq={}", frontier.head_seq),
         db::wal::WalRecord::IndexCkpt { run_ids } => format!("{kind} run_ids={}", run_ids.len()),
-        db::wal::WalRecord::Lease { resource, holder, fence, expires_at_ms } => format!("{kind} resource={resource} holder={holder} fence={fence} expires_at_ms={expires_at_ms}"),
+        db::wal::WalRecord::Lease { resource, holder, fence, expires_at_ms } => format!("{kind} resource={} holder={} fence={fence} expires_at_ms={expires_at_ms}", resource.as_str(), holder.as_str()),
         db::wal::WalRecord::Migration(bytes) => format!("{kind} bytes={}", bytes.len()),
     }
 }
@@ -343,7 +398,7 @@ async fn cmd_wal_inspect(rest: &[String]) -> i32 {
     };
     let document = db::db_ids::ArtifactId(id.clone());
 
-    let segments = match db::actor::block_on(storage.list_segments(&document)) {
+    let mut segments = match db::actor::block_on(storage.list_segments(&document)) {
         Ok(segments) => segments,
         Err(err) => return fail("list_segments", err).await,
     };
@@ -354,16 +409,46 @@ async fn cmd_wal_inspect(rest: &[String]) -> i32 {
             Err(err) => println!("  segment {index}: <error reading length: {err}>"),
         }
     }
+    while segments.close_step() {}
 
-    match db::actor::block_on(db::wal::replay_document(&storage, &document)) {
-        Ok(records) => {
-            println!("== wal records: {} ==", records.len());
-            let shown = limit.unwrap_or(records.len()).min(records.len());
-            for (index, record) in records.iter().take(shown).enumerate() {
-                println!("  [{index}] {}", describe_wal_record(record));
+    let control = match wal_cursor_control() {
+        Ok(control) => control,
+        Err(err) => return fail("wal cursor", err).await,
+    };
+    match db::wal::replay_document(&storage, &document, control).await {
+        Ok(mut records) => {
+            println!("== wal records ==");
+            let mut count = 0usize;
+            let mut shown = 0usize;
+            loop {
+                match records.next().await {
+                    Ok(Some(mut record)) => {
+                        if limit.is_none_or(|limit| shown < limit) {
+                            println!("  [{count}] {}", describe_wal_record(&record));
+                            shown += 1;
+                        }
+                        count += 1;
+                        loop {
+                            match record.close_step() {
+                                Ok(true) => {}
+                                Ok(false) => break,
+                                Err(err) => return fail("record close", err).await,
+                            }
+                        }
+                    }
+                    Ok(None) => break,
+                    Err(err) => return fail("replay", err).await,
+                }
             }
-            if shown < records.len() {
-                println!("  ... {} more (pass --limit to see more)", records.len() - shown);
+            loop {
+                match records.close_step().await {
+                    Ok(true) => {}
+                    Ok(false) => break,
+                    Err(err) => return fail("replay close", err).await,
+                }
+            }
+            if shown < count {
+                println!("  ... {} more (pass --limit to see more)", count - shown);
             }
             0
         }
@@ -380,7 +465,7 @@ async fn cmd_wal_inspect(rest: &[String]) -> i32 {
 //#region 🔖️SnapshotInspect
 /// 📸️ `db snapshot-inspect <root> <document-id> [--generation N] [--verify]` — lists every stored
 /// generation, then decodes one (the latest, or `--generation N`) via `db::snapshot::open_latest`
-/// over `SnapshotManager::materialize_chain`'s combined lineage buffer, printing its descriptor.
+/// over `SnapshotManager`'s retained lineage cursor, printing its descriptor.
 /// `--verify` additionally runs `SnapshotManager::verify` at `VerificationLevel::Full`.
 async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     let (rest, verify) = strip_flag(rest, "verify").await;
@@ -397,7 +482,7 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     };
     let document = db::db_ids::ArtifactId(id.clone());
 
-    let generations = match db::actor::block_on(storage.list_generations(&document)) {
+    let mut generations = match db::actor::block_on(storage.list_generations(&document)) {
         Ok(generations) => generations,
         Err(err) => return fail("list_generations", err).await,
     };
@@ -405,7 +490,9 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     for generation in &generations {
         println!("  - {generation}");
     }
-    let Some(&latest) = generations.last() else {
+    let latest = generations.last().copied();
+    while generations.close_step() {}
+    let Some(latest) = latest else {
         return 0;
     };
 
@@ -416,15 +503,16 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     };
 
     let manager = db::snapshot::SnapshotManager::new(&storage).await;
-    let combined = match db::actor::block_on(manager.materialize_chain(&document, generation)) {
-        Ok(combined) => combined,
-        Err(err) => return fail("materialize_chain", err).await,
+    let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let control = match db::snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 8_192) {
+        Ok(control) => control,
+        Err(err) => return fail("snapshot_cursor", err).await,
     };
-    let handle = match db::snapshot::open_latest(&combined).await {
-        Ok(handle) => handle,
-        Err(err) => return fail("open_latest", err).await,
+    let mut cursor = manager.chain_cursor(&document, generation, control);
+    let descriptor = match db::actor::block_on(cursor.latest_descriptor()) {
+        Ok(descriptor) => descriptor,
+        Err(err) => return fail("snapshot_cursor", err).await,
     };
-    let descriptor = &handle.descriptor;
     println!("== generation {generation} descriptor ==");
     println!("  parent_generation: {}", descriptor.parent_generation.map_or_else(|| "-".to_string(), |generation| generation.to_string()));
     println!("  head_seq: {}", descriptor.head_seq);
@@ -437,6 +525,13 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     println!("  roots: {}", descriptor.roots.len());
     println!("  new_pages: {}", descriptor.new_pages.len());
     println!("  created_at_ms: {}", descriptor.created_at_ms);
+    loop {
+        match cursor.close_step() {
+            Ok(true) => {}
+            Ok(false) => break,
+            Err(err) => return fail("snapshot cursor close", err).await,
+        }
+    }
 
     if verify {
         match db::actor::block_on(manager.verify(&document, generation, pack::os_pack::VerificationLevel::Full)) {
@@ -456,14 +551,20 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
 /// 🔬️ The shared per-document check `verify` runs: a full WAL replay (rejects a torn tail) plus,
 /// if a snapshot exists, a full-level `SnapshotManager::verify` of its latest generation.
 async fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids::ArtifactId) -> Result<String, db::DbError> {
-    let records = db::actor::block_on(db::wal::replay_document(storage, document))?;
+    let mut records = db::wal::replay_document(storage, document, wal_cursor_control()?).await?;
+    let mut record_count = 0usize;
+    while let Some(mut record) = records.next().await? {
+        record_count += 1;
+        while record.close_step()? {}
+    }
+    while records.close_step().await? {}
     let manager = db::snapshot::SnapshotManager::new(storage).await;
     match db::actor::block_on(manager.load_latest(document))? {
         Some((generation, _descriptor)) => {
             db::actor::block_on(manager.verify(document, generation, pack::os_pack::VerificationLevel::Full))?;
-            Ok(format!("wal records={} snapshot generation={generation} (verified)", records.len()))
+            Ok(format!("wal records={record_count} snapshot generation={generation} (verified)"))
         }
-        None => Ok(format!("wal records={} snapshot=none", records.len())),
+        None => Ok(format!("wal records={record_count} snapshot=none")),
     }
 }
 
@@ -553,14 +654,20 @@ async fn cmd_query(rest: &[String]) -> i32 {
         _ => db::Query::GetMany { paths },
     };
     let outcome = match handle.query(query, db::Consistency::Canonical).await {
-        Ok(stream) => {
-            for (path, value) in &stream.results {
-                match value {
-                    Some(bytes) => println!("{path} = {}", describe_value_bytes(bytes)),
-                    None => println!("{path} = <unset>"),
+        Ok(mut stream) => {
+            for entry in stream.iter() {
+                match entry.value() {
+                    Some(bytes) => println!("{} = {}", entry.path(), describe_value_bytes(bytes)),
+                    None => println!("{} = <unset>", entry.path()),
                 }
             }
-            0
+            match (|| -> Result<(), db::DbError> {
+                while stream.close_step()? {}
+                Ok(())
+            })() {
+                Ok(()) => 0,
+                Err(error) => fail("query close", error).await,
+            }
         }
         Err(err) => fail("query", err).await,
     };
@@ -589,22 +696,47 @@ async fn cmd_replay(rest: &[String]) -> i32 {
         Err(err) => return fail("open", err).await,
     };
     let document = db::db_ids::ArtifactId(id.clone());
-    let records = match db::actor::block_on(db::wal::replay_document(&storage, &document)) {
+    let control = match wal_cursor_control() {
+        Ok(control) => control,
+        Err(err) => return fail("wal cursor", err).await,
+    };
+    let mut records = match db::wal::replay_document(&storage, &document, control).await {
         Ok(records) => records,
         Err(err) => return fail("replay", err).await,
     };
 
     let mut kind_counts: std::collections::BTreeMap<&'static str, usize> = std::collections::BTreeMap::new();
     let mut last_frontier: Option<db::db_durability::Frontier> = None;
-    for record in &records {
-        *kind_counts.entry(wal_record_kind_name(record)).or_insert(0) += 1;
-        if let db::wal::WalRecord::Frontier(frontier) = record {
+    let mut record_count = 0usize;
+    loop {
+        let mut record = match records.next().await {
+            Ok(Some(record)) => record,
+            Ok(None) => break,
+            Err(err) => return fail("replay", err).await,
+        };
+        record_count += 1;
+        *kind_counts.entry(wal_record_kind_name(&record)).or_insert(0) += 1;
+        if let db::wal::WalRecord::Frontier(frontier) = &record {
             last_frontier = Some(frontier.clone());
+        }
+        loop {
+            match record.close_step() {
+                Ok(true) => {}
+                Ok(false) => break,
+                Err(err) => return fail("record close", err).await,
+            }
+        }
+    }
+    loop {
+        match records.close_step().await {
+            Ok(true) => {}
+            Ok(false) => break,
+            Err(err) => return fail("replay close", err).await,
         }
     }
 
     println!("== replay: {id} ==");
-    println!("  records: {}", records.len());
+    println!("  records: {record_count}");
     for (kind, count) in &kind_counts {
         println!("  - {kind}: {count}");
     }
@@ -847,8 +979,27 @@ async fn cmd_migrate(rest: &[String]) -> i32 {
         Err(err) => return fail("open wal", err).await,
     };
     let bytes = format!("{name}\n{payload}").into_bytes();
-    match db::actor::block_on(wal.submit(&storage, &[db::wal::WalRecord::Migration(bytes)], db::DurabilityClass::Fsync, now)) {
+    let mut control = match wal_cursor_control() {
+        Ok(control) => control,
+        Err(err) => return fail("wal cursor", err).await,
+    };
+    let bytes = match admit_cli_wal_bytes(bytes, 1024 * 1024, &mut control).await {
+        Ok(bytes) => bytes,
+        Err(err) => return fail("wal migration admission", err).await,
+    };
+    let mut records = db::wal::WalRecordBatch::new();
+    if records.push(db::wal::WalRecord::Migration(bytes)).is_err() {
+        return fail("wal migration", db::DbError::LimitExceeded("cli wal record batch")).await;
+    }
+    match wal.submit(&storage, &records, db::DurabilityClass::Fsync, now).await {
         Ok(receipt) => {
+            loop {
+                match records.close_step() {
+                    Ok(true) => {}
+                    Ok(false) => break,
+                    Err(err) => return fail("wal migration close", err).await,
+                }
+            }
             if let Err(err) = db::actor::block_on(wal.force_flush(&storage)) {
                 return fail("flush", err).await;
             }

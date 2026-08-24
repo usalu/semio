@@ -4,6 +4,15 @@
 //! marker, never a fork of the snapshot type (see `🪆️subsets/✳️any/🧬️schema`).
 
 pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::*;
+
+//#region 🧬️Mutations
+/// 🧬️ This subset's OWN mutation vocabulary — one kind per Coordination View 2.0 conformance rule,
+/// not a copy of the `✳️any` subset's generic Part-21 graph editing. The module re-exports `✳️any`'s
+/// `Ifc2x3Mutation`/`apply_ifc2x3_mutation` as well, since this explicit declaration shadows the
+/// glob re-export those names used to arrive through.
+#[path = "🧬️mutations/🦀️component.rs"]
+pub mod mutations;
+//#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::Ifc2x3Diff;
@@ -188,12 +197,15 @@ pub mod derived_analysis {
     //#endregion 🔖️Codes
 
     //#region 🔖️Shared
-    /// 🚫️ Entity types explicitly forbidden by CV2.0's architectural/coordination scope.
-    const FORBIDDEN_STRUCTURAL_TYPES: &[&str] = &["IFCSTRUCTURALANALYSISMODEL", "IFCSTRUCTURALCURVEMEMBER", "IFCSTRUCTURALLOADGROUP"];
+    /// 🚫️ Entity types explicitly forbidden by CV2.0's architectural/coordination scope. `pub`
+    /// because `../🧬️mutations/🦀️component.rs`'s `SetStructuralEntity` is guarded by exactly this
+    /// list -- the mutation vocabulary and the conformance check must never disagree about which
+    /// types the MVD excludes.
+    pub const FORBIDDEN_STRUCTURAL_TYPES: &[&str] = &["IFCSTRUCTURALANALYSISMODEL", "IFCSTRUCTURALCURVEMEMBER", "IFCSTRUCTURALLOADGROUP"];
 
     /// 🏗️ Curated common `IfcProduct` subtypes this honestly-scoped placement check applies to (see
     /// module doc comment for why this is a proxy list, not the full `IfcProduct` hierarchy).
-    const GEOMETRY_BEARING_PRODUCT_TYPES: &[&str] = &["IFCWALL", "IFCWALLSTANDARDCASE", "IFCDOOR", "IFCWINDOW", "IFCSLAB", "IFCBEAM", "IFCCOLUMN", "IFCROOF", "IFCSTAIR", "IFCBUILDINGELEMENTPROXY"];
+    pub const GEOMETRY_BEARING_PRODUCT_TYPES: &[&str] = &["IFCWALL", "IFCWALLSTANDARDCASE", "IFCDOOR", "IFCWINDOW", "IFCSLAB", "IFCBEAM", "IFCCOLUMN", "IFCROOF", "IFCSTAIR", "IFCBUILDINGELEMENTPROXY"];
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn hard(code: &'static str, message: String) -> Diagnostic {

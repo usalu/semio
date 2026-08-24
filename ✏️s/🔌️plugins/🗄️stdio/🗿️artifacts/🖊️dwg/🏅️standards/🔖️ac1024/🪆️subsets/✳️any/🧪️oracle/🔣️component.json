@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json manifest. ⚠️ The `dwg-ac1018-any` and `dwg-ac1024-any` catalogs declare the SAME three kinds, and that is correct rather than a copy-paste: `🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` is a one-line `pub use` of `🔖️ac1024`'s, as are its `🧬️schema` and `📸️snapshot` facets, so `DwgMutation` is ONE Rust enum shared by both standards. They are identical BY CONSTRUCTION, not by agreement, and the AC1024 oracle module's `every_ac1018_facet_is_a_re_export_of_this_one` test reads the committed sources and fails the moment that stops being true. Two catalogs and two capabilities exist anyway because the contract gate counts coverage per subset and a catalog claimed by no feature is itself a breach.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "dwg-ac1024-proprietary-container",
+      "capabilities": [
+        "dwg-ac1024-mutate"
+      ],
+      "rationale": "DWG is a proprietary, undocumented format. The only independent implementation of any weight is LibreDWG, which is GPL-3.0 C: linking it would put a copyleft C library on this repository's test host, and no owner ruling permits that. No permissively licensed Rust DWG reader exists at all — `dxf` 0.6, the crate registered for the sibling 🖊️dxf artifact, reads DXF (the PUBLISHED interchange format Autodesk documents) and explicitly not DWG. Confidence instead comes from specification vectors and the metamorphic laws, exercised against a real 148,638-byte committed architectural drawing by an independently hand-written reader/writer of the one part of DWG that IS publicly specified: the plain preamble every file since R13 begins with — six ASCII version characters at 0x00-0x05, the `maint_version` byte at 0x12, and the little-endian `codepage` u16 at 0x13-0x14, the offsets LibreDWG's own `header.spec` documents and this subset's `DwgSnapshot` doc comments already cite (and which the real fixture confirms: 0x02 and 30/ANSI_1252). That reader never calls this repository's own 12,000-line R2004+ decoder. The narrowness is real and is stated rather than hidden: everything after the preamble is the R2004+ section map — compressed, checksummed and section-encrypted — which nothing in this repository or in the permissively licensed Rust ecosystem can regenerate, so it is carried through unchanged and the projection covers the preamble triple plus the document length only. `byteLength` is what keeps `set-snapshot` (a whole-document replacement) distinguishable from `set-version-info` (a field set in place) rather than the two collapsing into one indistinguishable edit.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-dwg-preamble-v1",
+      "description": "DWG documents compared by the publicly specified preamble — the six-character version string, the maintenance-version byte and the codepage — plus the document's own byte length. `byteLength` is NORMATIVE here, not writer freedom: the rest of an R2004+ container is a proprietary section map that neither side can rebuild, so the length is the only way a whole-document replacement is observable at all, and neither side has any latitude over it. Nothing beyond the preamble is projected, because nothing beyond the preamble can be read independently of this repository's own decoder; a profile that claimed more would be claiming evidence that does not exist.",
+      "tolerance": 0.0,
+      "ignoreKeys": []
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "dwg-ac1024-any",
+      "capability": "dwg-ac1024-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-version-info"
+      ]
+    }
+  ]
+}

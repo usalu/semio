@@ -22,7 +22,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode {
+pub async fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let catalogue_kinds = [
         ("path", labels.kind_path, "pen-tool"),
         ("shape:rect", labels.kind_rectangle, "square"),
@@ -40,7 +40,7 @@ pub async fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode
         .map(|(kind, label, icon)| {
             let mut drag_data = HashMap::new();
             drag_data.insert(crate::editor::draw::panels::layers::DRAW_LAYER_KIND_DRAG_MIME.into(), serde_json::json!({ "kind": kind }).to_string());
-            UiTreeItemNode { icon_id: Some(icon.into()), draggable: Some(true), drag_data: Some(drag_data), ..tree_item(format!("draw-play-catalogue.{kind}"), label) }
+            UiTreeItemNode { icon_id: Some(icon.into()), draggable: Some(true), drag_data: Some(drag_data), ..tree_item(format!("draw-play-catalogue.{kind}"), label)? }
         })
         .collect();
     for operation in DRAW_BOOLEAN_OPERATIONS {
@@ -54,9 +54,9 @@ pub async fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> UiNode
                 Label::data(format!("{} {operation}", labels.kind_boolean.as_str())),
                 None,
                 draw_play_action("combineBoolean", Some(serde_json::json!({ "operation": operation, "ids": Vec::<String>::new() }))),
-            )
+            )?
         });
     }
-    PanelTreeBuilder::new("draw-play-catalogue").section("draw-play-catalogue", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).build()
+    PanelTreeBuilder::new("draw-play-catalogue")?.section("draw-play-catalogue", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)?.build()
 }
 //#endregion 🔖️Render

@@ -519,16 +519,32 @@ export function discoverTestCases(repoRoot: string): DiscoveredCase[] {
 
 //#region 📇️Registry
 /** 📇️ One approved third-party reference implementation, test-only by construction. */
-export type OracleEntry = Readonly<{ id: string; ecosystem: string; package: string; packages?: readonly string[]; version?: string; capabilities: readonly string[]; comparisonProfiles: readonly ComparisonProfile[]; license: string; testOnly: true; homepage?: string; rationale?: string; hostPath?: string; productionDebt?: { reachableFrom: readonly string[]; owner: string; plan: string } }>;
+export type OracleEntry = Readonly<{ id: string; ecosystem: string; package: string; packages?: readonly OracleLinkedPackage[]; version?: string; capabilities: readonly string[]; comparisonProfiles: readonly ComparisonProfile[]; license: string; testOnly: true; homepage?: string; rationale?: string; hostPath?: string; productionDebt?: { reachableFrom: readonly string[]; owner: string; plan: string } }>;
 
 /**
- * 🧩️ Every third-party package one registered oracle actually links. Most name a single package; a
- * composed reference names several, because some formats have no single credible crate — an OOXML
- * container needs an archive reader AND an XML reader. Declaring only one of them would leave the
- * other unclassified, which is precisely what the dependency ratchet exists to prevent.
+ * 🧩️ One further third-party package a composed reference links beyond its primary one, pinned and
+ * licensed in its own right. A secondary package that inherited the entry's version would be
+ * recorded under a version it is not at, which is a worse record than none.
  */
+export type OracleLinkedPackage = Readonly<{ package: string; version: string; license: string; homepage?: string; role: string }>;
+
+/**
+ * 🧩️ Every third-party package one registered oracle actually links, each with its own pin. Most name
+ * a single package; a composed reference names several, because some formats have no single credible
+ * crate — an OOXML container needs an archive reader AND an XML reader, and a spreadsheet needs a
+ * reader AND a writer. Declaring only one of them would leave the other unclassified, which is
+ * precisely what the dependency ratchet exists to prevent.
+ */
+export function oracleLinkedPackages(entry: OracleEntry): OracleLinkedPackage[] {
+  const primary: OracleLinkedPackage = { package: entry.package, version: entry.version ?? "*", license: entry.license, homepage: entry.homepage, role: "primary reference" };
+  const byName = new Map<string, OracleLinkedPackage>();
+  for (const linked of [primary, ...(entry.packages ?? [])]) if (linked.package.length > 0 && !byName.has(linked.package)) byName.set(linked.package, linked);
+  return [...byName.values()];
+}
+
+/** 🧩️ The names alone of every package one registered oracle links — what the import probe scans for. */
 export function oraclePackages(entry: OracleEntry): string[] {
-  return [...new Set([entry.package, ...(entry.packages ?? [])])].filter((name) => name.length > 0);
+  return oracleLinkedPackages(entry).map((linked) => linked.package);
 }
 
 /** 📇️ A recorded decision that a capability legitimately has no credible reference implementation. */
@@ -545,8 +561,25 @@ export type NoOracleDecision = Readonly<{ id: string; capabilities: readonly str
  */
 export type MutationCatalog = Readonly<{ id: string; capability: string; kinds: readonly string[]; deferredKinds?: readonly string[] }>;
 
-/** 🧩️ A native crate/package an owner contributes so its adapters can reach their reference libraries. */
-export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path: string; features?: readonly string[] }>;
+/**
+ * 🧩️ A package an owner contributes so its adapters can reach their reference libraries.
+ *
+ * `path` is what separates the two kinds. WITH a path the entry names LOCAL source linked by path —
+ * an in-repo crate, module or workspace package — which is not an external dependency and is
+ * provisioned by generating a manifest that points at it. WITHOUT a path the entry names an EXTERNAL
+ * distribution the generated host must obtain from that ecosystem's own registry, which is exactly
+ * what `externalOracleHostPackages` hands to the dependency classification so a reference library
+ * can never reach a host through a side door.
+ *
+ * `module` is the import name when it differs from the distribution name (`Pillow` → `PIL`);
+ * `version` pins the distribution; `features` are the Cargo features of a local crate.
+ */
+export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path?: string; version?: string; module?: string; features?: readonly string[] }>;
+
+/** 🧩️ The name a host imports a contributed package by — the declared module, else the package name. */
+export function oracleHostModule(entry: OracleHostPackage): string {
+  return entry.module ?? entry.package.replace(/-/g, "_");
+}
 
 /**
  * 🧩️ One owner's contribution to the test platform. This is the OPEN half of open/closed: an owner
@@ -1208,7 +1241,14 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
   const contributionRoots = registry.contributions.map((entry) => entry.manifestPath.slice(0, entry.manifestPath.lastIndexOf("/")));
   const hostRoots = [...contributionRoots, ...registry.oracles.map((entry) => entry.hostPath).filter((value): value is string => value !== undefined)];
   const caseDirs = new Set(discoverTestCases(repoRoot).map((entry) => entry.caseDir));
-  const names = registry.oracles.flatMap((entry) => oraclePackages(entry).map((name) => [entry.id, name.replace(/-/g, "_"), name] as const));
+  // 🧩️Both halves of a host's third-party surface are probed: the packages a registered oracle
+  // names, and the EXTERNAL distributions an owner puts on a generated host's import path. The
+  // second half is how a Python or npm reference library reaches an adapter, so leaving it out
+  // would make the purity rule enforceable in Rust only.
+  const probes = [
+    ...registry.oracles.flatMap((entry) => oraclePackages(entry).map((name) => ({ label: entry.id, name, ...importProbe(entry.ecosystem, name) }))),
+    ...externalOracleHostPackages(registry).map((entry) => ({ label: `host package ${entry.ecosystem}:${entry.name}`, name: entry.name, ...importProbe(entry.ecosystem, entry.name) })),
+  ];
   // 🧩️A contribution directory is test-owned because of WHAT IT IS, which the taxonomy names, not
   // because its manifest happens to parse. Deriving ownership from the discovered manifests alone
   // made a directory production source the moment its JSON was absent or malformed — so an owner
@@ -1219,13 +1259,17 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
   // 🔒️Recorded, shrink-only production debt: a package that was ALREADY production-reachable before
   // it was registered as an oracle. The path is named in the registry entry so the debt is visible
   // in the report instead of silently excused, and `dependency` prints it every run.
-  const recordedDebt = new Set(registry.oracles.flatMap((entry) => (entry.productionDebt?.reachableFrom ?? []).map((path) => `${path}::${entry.id}`)));
+  // 🔒️Debt is recorded against a PACKAGE at a path, not against an oracle id, so the same library
+  // registered twice — once as an oracle, once as a host package — is excused once rather than
+  // reported twice with only one of the two suppressible.
+  const recordedDebt = new Set(registry.oracles.flatMap((entry) => (entry.productionDebt?.reachableFrom ?? []).flatMap((path) => oraclePackages(entry).map((name) => `${path}::${name}`))));
   const hits: { path: string; oracle: string }[] = [];
+  const reported = new Set<string>();
   walkDirectories(repoRoot, (abs, rel) => {
     if (isExcludedTestPath(repoRoot, rel)) return "skip";
     if (isTestOwned(rel)) return "skip";
     for (const entry of readdirSync(abs, { withFileTypes: true })) {
-      if (!entry.isFile() || !/\.(rs|ts|tsx|go|py|cs)$/.test(entry.name)) continue;
+      if (!entry.isFile() || !/\.(rs|ts|tsx|js|jsx|mjs|cjs|go|py|cs)$/.test(entry.name)) continue;
       const filePath = `${rel}/${entry.name}`;
       let content: string;
       try {
@@ -1233,9 +1277,12 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
       } catch {
         continue;
       }
-      for (const [id, moduleName, packageName] of names) {
-        if (recordedDebt.has(`${filePath}::${id}`)) continue;
-        if (new RegExp(`(^|[^A-Za-z0-9_])(use\\s+${moduleName}\\b|extern\\s+crate\\s+${moduleName}\\b|from\\s+["']${packageName}["']|require\\(["']${packageName}["']\\))`).test(content)) hits.push({ path: filePath, oracle: id });
+      for (const probe of probes) {
+        if (recordedDebt.has(`${filePath}::${probe.name}`)) continue;
+        if (!probe.files.test(entry.name)) continue;
+        if (reported.has(`${filePath}::${probe.name}`) || !probe.pattern.test(content)) continue;
+        reported.add(`${filePath}::${probe.name}`);
+        hits.push({ path: filePath, oracle: probe.label });
       }
     }
     return "enter";
@@ -1522,6 +1569,61 @@ export function classifyLegacyKind(kind: string, oracleIds: readonly string[]): 
 /** 🔒️ Whether a class can be reached from a production target — the only thing the gate cares about. */
 export function isProductionClass(kind: DependencyClass): boolean {
   return kind === "production-runtime" || kind === "production-build";
+}
+
+/** 🔒️ The classification ecosystem an implementation's packages belong to. */
+export function dependencyEcosystemOf(implementation: Implementation): DependencyEcosystem {
+  return implementation === "typescript" ? "js" : implementation;
+}
+
+/** 🔒️ The classification ecosystem a registry `ecosystem` string names. */
+export function dependencyEcosystemOfRegistryValue(ecosystem: string): DependencyEcosystem {
+  return (ecosystem === "javascript" ? "js" : ecosystem) as DependencyEcosystem;
+}
+
+/**
+ * 🔒️ Every EXTERNAL distribution the contributed test hosts must provision — a contributed host
+ * package that carries no `path`. A Rust host reaches its reference libraries through a local crate
+ * whose own manifest is already classified, but a Python or npm host names the distribution
+ * directly, so without this the declaration would put a third-party library on a host's import path
+ * while the ratchet never saw it. Only owner contributions are walked: the framework's own core
+ * manifest is domain-neutral and contributes no host package at all.
+ */
+export function externalOracleHostPackages(registry: OracleRegistry): { ecosystem: DependencyEcosystem; name: string; version: string; users: string[] }[] {
+  const byKey = new Map<string, { ecosystem: DependencyEcosystem; name: string; version: string; users: string[] }>();
+  for (const contribution of registry.contributions) {
+    for (const entry of contribution.oracleHostPackages) {
+      if (entry.path !== undefined) continue;
+      const ecosystem = dependencyEcosystemOf(entry.implementation);
+      const existing = byKey.get(`${ecosystem}:${entry.package}`);
+      if (existing === undefined) byKey.set(`${ecosystem}:${entry.package}`, { ecosystem, name: entry.package, version: entry.version ?? "*", users: [contribution.manifestPath] });
+      else if (!existing.users.includes(contribution.manifestPath)) existing.users.push(contribution.manifestPath);
+    }
+  }
+  return [...byKey.values()].sort((a, b) => a.ecosystem.localeCompare(b.ecosystem) || a.name.localeCompare(b.name));
+}
+
+/**
+ * 🚫️ How one ecosystem spells "this source file reaches that package", and which files can spell it
+ * at all. Kept as a table because a single regular expression pretending to be five languages at
+ * once either misses a form — Python's `import x` was invisible to the purity gate — or matches a
+ * stdlib module of an unrelated language and reports a breach that does not exist.
+ */
+export function importProbe(ecosystem: string, packageName: string): { pattern: RegExp; files: RegExp } {
+  const identifier = packageName.replace(/-/g, "_").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const quoted = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  switch (dependencyEcosystemOfRegistryValue(ecosystem)) {
+    case "rust":
+      return { pattern: new RegExp(`(^|[^A-Za-z0-9_])(use\\s+${identifier}\\b|extern\\s+crate\\s+${identifier}\\b)`), files: /\.rs$/ };
+    case "python":
+      return { pattern: new RegExp(`^\\s*(import\\s+${identifier}\\b|from\\s+${identifier}[.\\s]|import\\s+[A-Za-z0-9_,\\s]*\\b${identifier}\\b\\s*$)`, "m"), files: /\.py$/ };
+    case "go":
+      return { pattern: new RegExp(`["'\`]${quoted}(/[^"'\`]*)?["'\`]`), files: /\.go$/ };
+    case "dotnet":
+      return { pattern: new RegExp(`^\\s*(global\\s+)?using\\s+(static\\s+)?${identifier}\\b`, "m"), files: /\.cs$/ };
+    default:
+      return { pattern: new RegExp(`(from\\s+["'\`]${quoted}["'\`]|require\\(["'\`]${quoted}["'\`]\\)|import\\(["'\`]${quoted}["'\`]\\))`), files: /\.(ts|tsx|js|jsx|mjs|cjs)$/ };
+  }
 }
 
 /** 🔒️ Gate verdict for a candidate baseline against the committed one. */

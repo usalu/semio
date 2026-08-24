@@ -113,7 +113,7 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
 
 //#region 🔖️Render
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> BuiltNode {
+pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     match display.mode {
         DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera),
         DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera),
@@ -126,7 +126,7 @@ pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) 
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> BuiltNode {
+fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let results = match crate::fem2d_engine::fem2d_solve_all(doc) {
         Ok(results) => results,
         Err(e) => return built_text_node(Label::data(format!("Analysis error: {e}"))),
@@ -229,7 +229,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
 /// 📊️ Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a frequency caption.
-fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> BuiltNode {
+fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let (freq_hz, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
         Err(e) => return built_text_node(Label::data(format!("Modal analysis error: {e}"))),
@@ -250,7 +250,7 @@ fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> B
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a load-factor caption. `source_id` selects the reference
 /// load case, falling back to the first load case when `None`.
-fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> BuiltNode {
+fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return built_text_node(Label::data("No load case defined"));
     };

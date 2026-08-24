@@ -44,9 +44,42 @@ pub fn project_wav_mutation(input: &[u8]) -> Result<Json, String> {
     reference::project(input)
 }
 
+/// ↩️ Applies the INDEPENDENTLY computed inverse of `spec` on top of `mutated`, so that
+/// `inverse(m) . m` must be the identity on the semantic projection. Every `WavMutation` variant's
+/// inverse is "restore `base`'s own value for the facet this kind replaced"
+/// (`../🧬️schema/🧬️mutations/🦀️component.rs`), reimplemented here over `hound`'s own decoded
+/// `fmt `/`data` pair plus the hand-walked verbatim chunk list, never by calling that trait.
+#[cfg(feature = "oracles")]
+pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+    let kind = spec.str("kind");
+    if kind.is_empty() {
+        return Err("mutation spec carries no `kind`".to_string());
+    }
+    reference::apply_inverse(original_input, &kind, mutated)
+}
+
+/// 🔁️ The `@id-identity-round-trip` scenario's own independent computation: decode the `fmt `/`data`
+/// pair with `hound`, re-walk the verbatim chunks, and write a fresh file from that model alone.
+/// Deliberately NOT `oracle_apply_mutation`'s `no-mutation` arm, which is a verbatim echo of the
+/// input bytes (the correct reference answer for "apply nothing", and no evidence of a parse).
+#[cfg(feature = "oracles")]
+pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    reference::rewrite(input)
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 
@@ -210,6 +243,37 @@ mod reference {
         Ok(append_other_chunks(bytes, &chunk_list(params, "otherChunks")))
     }
     //#endregion 🔖️Mutate
+
+    //#region 🔖️Inverse
+    /// 🔁️ Decode with `hound`, re-walk the verbatim chunks, write a fresh file from that model
+    /// alone — no byte of the input reaches the output except through the decoded model.
+    pub fn rewrite(input: &[u8]) -> Result<Vec<u8>, String> {
+        let (spec, samples) = read_fmt_and_samples(input)?;
+        let other = scan_other_chunks(input)?;
+        Ok(append_other_chunks(write_fmt_and_samples(spec, &samples)?, &other))
+    }
+
+    /// ↩️ The real inverse of `kind`, computed from the PRE-mutation recording and applied on top
+    /// of `mutated`: each variant restores exactly the one facet it replaced, leaving the other two
+    /// as the forward mutation left them.
+    pub fn apply_inverse(original_input: &[u8], kind: &str, mutated: &[u8]) -> Result<Vec<u8>, String> {
+        let (original_spec, original_samples) = read_fmt_and_samples(original_input)?;
+        let original_other = scan_other_chunks(original_input)?;
+        if kind == "set-snapshot" {
+            return Ok(append_other_chunks(write_fmt_and_samples(original_spec, &original_samples)?, &original_other));
+        }
+        let (mutated_spec, mutated_samples) = read_fmt_and_samples(mutated)?;
+        let mutated_other = scan_other_chunks(mutated)?;
+        let (spec, samples, other) = match kind {
+            "no-mutation" => (mutated_spec, mutated_samples, mutated_other),
+            "set-fmt" => (original_spec, mutated_samples, mutated_other),
+            "set-data" => (mutated_spec, original_samples, mutated_other),
+            "set-other-chunks" => (mutated_spec, mutated_samples, original_other),
+            other => return Err(format!("mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),
+        };
+        Ok(append_other_chunks(write_fmt_and_samples(spec, &samples)?, &other))
+    }
+    //#endregion 🔖️Inverse
 
     //#region 🔖️Project
     /// 👁️ The INDEPENDENT projection: format block (re-derived, not trusted from the header),

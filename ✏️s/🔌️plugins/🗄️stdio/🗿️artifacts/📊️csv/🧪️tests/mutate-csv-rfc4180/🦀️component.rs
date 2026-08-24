@@ -10,6 +10,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::csv::standards::v_rfc4180::subsets::any::{oracle_apply_mutation, project_csv_grid, read_grid, write_grid};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `csv-rfc4180-any` catalog. Duplicated, not imported, from
@@ -109,6 +110,10 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(output, projection))
 }
 
+/// ↩️ The inverse law, asserted HERE by the reference against its own pre-mutation reading rather
+/// than deferred to the parity phase: `apply(m)` followed by `apply(inverse(m))` has to land back
+/// on the ORIGINAL document's semantic projection. Without the check the scenario passes for any
+/// inverse the `csv` crate merely tolerated, which is not what `@mode-property` claims.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -116,16 +121,23 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let undo = inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &undo)?;
     let projection = project_csv_grid(&restored, BASELINE_HAS_HEADER)?;
+    inverse_restores(&spec.str("kind"), &projection, &project_csv_grid(&input, BASELINE_HAS_HEADER)?)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
 /// 🔁️ The oracle's own decode/re-encode, through the SAME independent `csv` reader/writer this
 /// subset's mutations use — proves the reference library itself is stable on the real fixture before
-/// the subject's own codec is asked to be.
+/// the subject's own codec is asked to be. Both halves of the identity law are asserted in role:
+/// the record grid must survive unchanged, and the output must not be the input bytes back again.
+/// The second half is genuinely checkable here rather than contrived — the committed fixture is
+/// CRLF-terminated and the `csv` writer terminates with its own default LF, so a byte-identical
+/// result could only come from a copy that never parsed anything.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = write_grid(&read_grid(&input)?)?;
+    reparsed_not_copied(&output, &input)?;
     let projection = project_csv_grid(&output, BASELINE_HAS_HEADER)?;
+    round_trip_preserves(&projection, &project_csv_grid(&input, BASELINE_HAS_HEADER)?)?;
     Ok(Outcome::with_raw(output, projection))
 }
 //#endregion 🔖️Oracle

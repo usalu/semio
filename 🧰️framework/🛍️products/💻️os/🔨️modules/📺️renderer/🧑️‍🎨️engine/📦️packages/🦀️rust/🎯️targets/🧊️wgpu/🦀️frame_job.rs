@@ -10,14 +10,14 @@
 //! renderer has booted inside its dedicated Worker isolate; calls from a browser UI isolate fail
 //! closed and never execute the transaction inline.
 
-use semio_framework_job::{root_cancel_token, BatchDriveConfig, BatchJobParams, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+use semio_framework_job::{
+    root_cancel_token, BatchDriveConfig, BatchJobParams, BatchJobSession, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, WorkerJobSessionAdmissionRejected, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS,
+};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::sync::Arc;
 
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::Lane;
-#[cfg(not(target_arch = "wasm32"))]
-use std::sync::mpsc::{Receiver, TryRecvError};
 
 //#region 📥️FrameBuildInputs
 /// 📥️ The fixed scalar `Send`-safe slice of `AppRuntime` this job needs.
@@ -134,27 +134,30 @@ fn batch_params(operation: OperationId, generation: Generation, cancel: CancelTo
 /// successfully computed ones. One job is in flight at a time; a still-running job is left alone (not
 /// cancelled) and re-checked next call rather than submitting a second overlapping one.
 pub(crate) struct FrameBuildHandle {
-    #[cfg(not(target_arch = "wasm32"))]
-    runtime_in_flight: Option<Receiver<RuntimeFrameResult>>,
+    session: Option<semio_framework_job::WorkerJobSession<ActiveFrameBuild>>,
+    rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ActiveFrameBuild>>,
+    ticket: Option<semio_framework_job::WorkerJobTicket>,
     #[cfg(not(target_arch = "wasm32"))]
     completion_waker: Option<Arc<dyn Fn() + Send + Sync>>,
     latest_requested_generation: Generation,
     last_submitted_generation: Option<Generation>,
     cancel: CancelToken,
     closing: bool,
-    #[cfg(target_arch = "wasm32")]
-    active: Option<ActiveFrameBuild>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct RuntimeFrameResult {
-    generation: Generation,
-    active: Option<ActiveFrameBuild>,
-    frame: Option<crate::AppFramePresentation>,
+struct FrameCompletionWake(Arc<dyn Fn() + Send + Sync>);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl std::task::Wake for FrameCompletionWake {
+    fn wake(self: Arc<Self>) {
+        (self.0)();
+    }
 }
 
 enum ActiveFramePhase {
-    Deadlines(FrameBuildJob),
+    Deadlines(BatchJobSession<FrameBuildJob>),
+    DeadlineAdmissionRejected(WorkerJobSessionAdmissionRejected<FrameBuildJob>),
     ApplyPending(FrameDirectives),
     Build(crate::AppFrameTransaction),
     Prepare(crate::AppFramePreparation),
@@ -170,6 +173,8 @@ struct ActiveFrameBuild {
     cancel: CancelToken,
     preview_sequence: u64,
     phase: ActiveFramePhase,
+    completed: Option<crate::AppFramePresentation>,
+    closing: bool,
 }
 
 enum ActiveFrameStep {
@@ -179,7 +184,18 @@ enum ActiveFrameStep {
 
 fn retire_active_phase(phase: &mut ActiveFramePhase) -> bool {
     match phase {
-        ActiveFramePhase::Deadlines(job) => job.close_step(),
+        ActiveFramePhase::Deadlines(session) => {
+            if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                session.begin_close();
+                return false;
+            }
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            session.terminal_is_empty()
+        }
+        ActiveFramePhase::DeadlineAdmissionRejected(rejected) => {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            rejected.terminal_is_empty()
+        }
         ActiveFramePhase::ApplyPending(directives) => directives.close_step(),
         ActiveFramePhase::Build(transaction) => transaction.close_step(),
         ActiveFramePhase::Prepare(preparation) => preparation.close_step() && preparation.terminal_is_empty(),
@@ -194,7 +210,14 @@ fn frame_phase_overran(before: u64, site: &'static str, operation: OperationId, 
 impl ActiveFrameBuild {
     fn new(runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, dpr: f32, cancel: CancelToken) -> Self {
         let handle = runtime.downgrade();
-        Self { runtime, handle, operation, generation, dpr, cancel, preview_sequence: 0, phase: ActiveFramePhase::Deadlines(FrameBuildJob::new(inputs)) }
+        let phase = match BatchJobSession::try_new(FrameBuildJob::new(inputs), batch_params(operation, generation, cancel.clone())) {
+            Ok(session) => ActiveFramePhase::Deadlines(session),
+            Err(mut rejected) => {
+                rejected.begin_close();
+                ActiveFramePhase::DeadlineAdmissionRejected(rejected)
+            }
+        };
+        Self { runtime, handle, operation, generation, dpr, cancel, preview_sequence: 0, phase, completed: None, closing: false }
     }
 
     fn cancel(&self) {
@@ -210,7 +233,7 @@ impl ActiveFrameBuild {
         self.cancel.cancel_now();
     }
 
-    fn step(&mut self) -> ActiveFrameStep {
+    fn advance(&mut self) -> ActiveFrameStep {
         if self.cancel.is_cancelled_now() {
             if self.retire_cancelled_phase() {
                 self.phase = ActiveFramePhase::Terminal;
@@ -219,35 +242,42 @@ impl ActiveFrameBuild {
             return ActiveFrameStep::Pending;
         }
         match &mut self.phase {
-            ActiveFramePhase::Deadlines(job) => {
-                let now = now_ms_u64();
+            ActiveFramePhase::Deadlines(session) => {
                 let violations = semio_framework_trace::Watchdog::violation_count();
-                let outcome = semio_framework_job::drive_step(
-                    job,
-                    "os_renderer.frame.deadlines",
-                    self.operation,
-                    self.generation,
-                    InteractiveStage::InteractiveStep,
-                    semio_framework_job::StepBudget::new(16, now.saturating_add(INTERACTIVE_LANE_WALL_MS)),
-                    self.cancel.clone(),
-                    now_ms_u64,
-                    &mut self.preview_sequence,
-                );
+                let poll = session.step();
                 if frame_phase_overran(violations, "os_renderer.frame.deadlines", self.operation, self.generation) {
                     self.quarantine_overrun("os_renderer.frame.deadlines overran the interactive ceiling");
                     return ActiveFrameStep::Pending;
                 }
-                match outcome {
-                    StepOutcome::Complete(_) => {
-                        let directives = job.take_directives().unwrap_or_default();
+                if !matches!(poll, Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) || !session.checkout_outcome() {
+                    return ActiveFrameStep::Pending;
+                }
+                match session.checked_out_outcome() {
+                    Some(StepOutcome::Complete(_)) => {
+                        let directives = session.checked_out_job_mut().and_then(FrameBuildJob::take_directives).unwrap_or_default();
+                        session.begin_close();
                         self.phase = ActiveFramePhase::ApplyPending(directives);
                         ActiveFrameStep::Pending
                     }
-                    StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => ActiveFrameStep::Pending,
-                    StepOutcome::Cancelled | StepOutcome::Fault(_) => {
+                    Some(StepOutcome::Yield) => {
+                        let _ = session.resume();
+                        ActiveFrameStep::Pending
+                    }
+                    Some(StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) | StepOutcome::Cancelled | StepOutcome::Fault(_)) => {
+                        session.begin_close();
                         self.cancel.cancel_now();
                         ActiveFrameStep::Pending
                     }
+                    None => ActiveFrameStep::Pending,
+                }
+            }
+            ActiveFramePhase::DeadlineAdmissionRejected(rejected) => {
+                let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if rejected.terminal_is_empty() {
+                    self.phase = ActiveFramePhase::Terminal;
+                    ActiveFrameStep::Complete(None)
+                } else {
+                    ActiveFrameStep::Pending
                 }
             }
             ActiveFramePhase::ApplyPending(directives) => {
@@ -319,22 +349,73 @@ impl ActiveFrameBuild {
     }
 }
 
+impl InteractiveJob for ActiveFrameBuild {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            self.cancel();
+        }
+        if cx.should_yield() {
+            return StepOutcome::Yield;
+        }
+        cx.consume_fuel(1);
+        match self.advance() {
+            ActiveFrameStep::Pending => StepOutcome::Yield,
+            ActiveFrameStep::Complete(frame) => {
+                self.completed = frame;
+                StepOutcome::Complete(CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                })
+            }
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        self.cancel();
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.begin_close();
+        if maximum_items == 0 {
+            return if self.terminal_is_empty() { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 } };
+        }
+        if let Some(frame) = self.completed.as_mut() {
+            if !frame.close_step() || !frame.terminal_is_empty() {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            self.completed = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if !retire_active_phase(&mut self.phase) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        self.phase = ActiveFramePhase::Terminal;
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.completed.is_none() && matches!(self.phase, ActiveFramePhase::Terminal)
+    }
+}
+
 fn generation_is_fresh(requested: Generation, completed: Generation) -> bool {
     requested == completed
 }
 
 impl FrameBuildHandle {
-    // 🚧️ Two cfg-gated bodies (matching `os_host.rs`'s own `OsClock::new` precedent) rather than one
-    // literal with a cfg-gated field inline — the same struct-literal shape, less doubt about a
-    // pattern this file cannot itself compile-check today (see module doc §7 of the report).
-    #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn new() -> Self {
-        Self { runtime_in_flight: None, completion_waker: None, latest_requested_generation: Generation(0), last_submitted_generation: None, cancel: root_cancel_token(), closing: false }
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    pub(crate) fn new() -> Self {
-        Self { latest_requested_generation: Generation(0), last_submitted_generation: None, cancel: root_cancel_token(), closing: false, active: None }
+        Self {
+            session: None,
+            rejected: None,
+            ticket: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            completion_waker: None,
+            latest_requested_generation: Generation(0),
+            last_submitted_generation: None,
+            cancel: root_cancel_token(),
+            closing: false,
+        }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -347,25 +428,15 @@ impl FrameBuildHandle {
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn set_completion_waker(&mut self, _waker: Arc<dyn Fn() + Send + Sync>) {}
 
-    #[cfg(not(target_arch = "wasm32"))]
-    fn submit_active(&mut self, mut active: ActiveFrameBuild) {
-        let generation = active.generation;
-        let (sender, receiver) = std::sync::mpsc::channel();
-        let waker = self.completion_waker.clone();
-        crate::renderer_worker_pool().submit(
-            Lane::Interactive,
-            Box::new(move || {
-                let (active, frame) = match active.step() {
-                    ActiveFrameStep::Pending => (Some(active), None),
-                    ActiveFrameStep::Complete(frame) => (None, frame),
-                };
-                let _ = sender.send(RuntimeFrameResult { generation, active, frame });
-                if let Some(waker) = waker {
-                    waker();
-                }
-            }),
-        );
-        self.runtime_in_flight = Some(receiver);
+    fn admit_active(&mut self, active: ActiveFrameBuild) {
+        let params = batch_params(active.operation, active.generation, active.cancel.clone());
+        match semio_framework_job::WorkerJobSession::try_new(active, params) {
+            Ok(session) => self.session = Some(session),
+            Err(mut rejected) => {
+                rejected.begin_close();
+                self.rejected = Some(rejected);
+            }
+        }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -374,38 +445,87 @@ impl FrameBuildHandle {
             return None;
         }
         self.latest_requested_generation = generation;
-        let mut completed = None;
-        let mut returned_active = None;
-        if let Some(receiver) = &self.runtime_in_flight {
-            match receiver.try_recv() {
-                Ok(result) => {
-                    if generation_is_fresh(self.latest_requested_generation, result.generation) {
-                        completed = result.frame;
+        if let Some(rejected) = self.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                self.rejected = None;
+            }
+            return None;
+        }
+        if let Some(session) = self.session.as_ref() {
+            if session.generation() != generation {
+                self.cancel.cancel_now();
+                if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                    let _ = session.begin_close();
+                } else {
+                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    if session.terminal_is_empty() {
+                        self.session = None;
                     }
-                    returned_active = result.active;
-                    self.runtime_in_flight = None;
                 }
-                Err(TryRecvError::Disconnected) => {
-                    self.runtime_in_flight = None;
+                return None;
+            }
+            if let Some(callback) = self.completion_waker.as_ref() {
+                let waker = std::task::Waker::from(Arc::new(FrameCompletionWake(Arc::clone(callback))));
+                let _ = session.register_wake(&waker);
+            }
+            match session.poll() {
+                semio_framework_job::WorkerJobPoll::Idle => match session.try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive) {
+                    Ok(ticket) => self.ticket = Some(ticket),
+                    Err(semio_framework_job::WorkerJobSubmitFault::Pool(kind)) => {
+                        if let Ok(rejected) = session.take_rejected() {
+                            if matches!(kind, semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended) {
+                                rejected.resume();
+                            } else {
+                                rejected.begin_close();
+                            }
+                        }
+                    }
+                    Err(_) => {
+                        let _ = session.begin_close();
+                    }
+                },
+                semio_framework_job::WorkerJobPoll::Outcome => {
+                    if let Some(ticket) = self.ticket.take() {
+                        if let Ok(mut owner) = session.take_outcome(ticket) {
+                            if matches!(owner.outcome(), StepOutcome::Yield) {
+                                let _ = owner.take_outcome();
+                                let _ = owner.resume();
+                            } else {
+                                owner.begin_close();
+                            }
+                        }
+                    }
                 }
-                Err(TryRecvError::Empty) => {}
+                semio_framework_job::WorkerJobPoll::Terminal => {
+                    if let Ok(mut owner) = session.take_terminal() {
+                        let frame_generation = owner.job().generation;
+                        let frame = owner.job_mut().completed.take();
+                        owner.begin_close();
+                        return generation_is_fresh(generation, frame_generation).then_some(frame).flatten();
+                    }
+                }
+                semio_framework_job::WorkerJobPoll::Rejected => {
+                    if let Ok(rejected) = session.take_rejected() {
+                        rejected.resume();
+                    }
+                }
+                semio_framework_job::WorkerJobPoll::Closing => {
+                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    if session.terminal_is_empty() {
+                        self.session = None;
+                    }
+                }
+                semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::CheckedOut | semio_framework_job::WorkerJobPoll::TerminalEmpty => {}
             }
+            return None;
         }
-        if let Some(active) = returned_active.as_ref() {
-            if !generation_is_fresh(self.latest_requested_generation, active.generation) {
-                active.cancel();
-            }
-        }
-        if let Some(active) = returned_active {
-            self.submit_active(active);
-            return completed;
-        }
-        if self.runtime_in_flight.is_none() && self.last_submitted_generation != Some(generation) {
+        if self.last_submitted_generation != Some(generation) {
             self.cancel = root_cancel_token();
-            self.submit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, dpr, self.cancel.clone()));
+            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, dpr, self.cancel.clone()));
             self.last_submitted_generation = Some(generation);
         }
-        completed
+        None
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -414,23 +534,61 @@ impl FrameBuildHandle {
             return None;
         }
         self.latest_requested_generation = generation;
-        if let Some(active) = self.active.as_ref() {
-            if !generation_is_fresh(generation, active.generation) {
-                active.cancel();
+        if let Some(rejected) = self.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                self.rejected = None;
             }
+            return None;
         }
-        if let Some(active) = self.active.as_mut() {
-            let active_generation = active.generation;
-            let result = active.step();
-            if let ActiveFrameStep::Complete(frame) = result {
-                self.active = None;
-                return generation_is_fresh(generation, active_generation).then_some(frame).flatten();
+        if let Some(session) = self.session.as_ref() {
+            if session.generation() != generation {
+                self.cancel.cancel_now();
+                if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                    let _ = session.begin_close();
+                } else {
+                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    if session.terminal_is_empty() {
+                        self.session = None;
+                    }
+                }
+                return None;
+            }
+            match session.poll() {
+                semio_framework_job::WorkerJobPoll::Idle => {
+                    if let Ok((ticket, _)) = session.try_step_on_caller() {
+                        self.ticket = Some(ticket);
+                    }
+                }
+                semio_framework_job::WorkerJobPoll::Outcome => {
+                    if let Some(ticket) = self.ticket.take() {
+                        if let Ok(mut owner) = session.take_outcome(ticket) {
+                            let _ = owner.take_outcome();
+                            let _ = owner.resume();
+                        }
+                    }
+                }
+                semio_framework_job::WorkerJobPoll::Terminal => {
+                    if let Ok(mut owner) = session.take_terminal() {
+                        let frame_generation = owner.job().generation;
+                        let frame = owner.job_mut().completed.take();
+                        owner.begin_close();
+                        return generation_is_fresh(generation, frame_generation).then_some(frame).flatten();
+                    }
+                }
+                semio_framework_job::WorkerJobPoll::Closing => {
+                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    if session.terminal_is_empty() {
+                        self.session = None;
+                    }
+                }
+                _ => {}
             }
             return None;
         }
         if self.last_submitted_generation != Some(generation) {
             self.cancel = root_cancel_token();
-            self.active = Some(ActiveFrameBuild::new(runtime, inputs, operation, generation, dpr, self.cancel.clone()));
+            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, dpr, self.cancel.clone()));
             self.last_submitted_generation = Some(generation);
         }
         None
@@ -442,27 +600,21 @@ impl FrameBuildHandle {
             self.cancel.cancel_now();
             return false;
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        if let Some(receiver) = &self.runtime_in_flight {
-            match receiver.try_recv() {
-                Ok(mut result) => {
-                    self.runtime_in_flight = None;
-                    if let Some(active) = result.active.take() {
-                        active.cancel();
-                        self.submit_active(active);
-                        return false;
-                    }
-                }
-                Err(TryRecvError::Disconnected) => self.runtime_in_flight = None,
-                Err(TryRecvError::Empty) => return false,
+        if let Some(rejected) = self.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                self.rejected = None;
             }
             return false;
         }
-        #[cfg(target_arch = "wasm32")]
-        if let Some(active) = self.active.as_mut() {
-            active.cancel();
-            if matches!(active.step(), ActiveFrameStep::Complete(_)) {
-                self.active = None;
+        if let Some(session) = self.session.as_ref() {
+            if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                let _ = session.begin_close();
+                return false;
+            }
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if session.terminal_is_empty() {
+                self.session = None;
             }
             return false;
         }
@@ -474,14 +626,14 @@ impl FrameBuildHandle {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.closing && {
+        self.closing && self.session.is_none() && self.rejected.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
-                self.runtime_in_flight.is_none() && self.completion_waker.is_none()
+                self.completion_waker.is_none()
             }
             #[cfg(target_arch = "wasm32")]
             {
-                self.active.is_none()
+                true
             }
         }
     }
@@ -498,7 +650,19 @@ mod tests {
 
     fn compute(inputs: FrameBuildInputs) -> FrameDirectives {
         let mut job = FrameBuildJob::new(inputs);
-        let outcome = semio_framework_job::run_to_completion(&mut job, &batch_params(OperationId(1), Generation(1), root_cancel_token()));
+        let params = batch_params(OperationId(1), Generation(1), root_cancel_token());
+        let mut preview_sequence = 0;
+        let outcome = semio_framework_job::drive_step(
+            &mut job,
+            params.config.site,
+            params.operation,
+            params.generation,
+            params.config.stage,
+            semio_framework_job::StepBudget::new(params.config.fuel_per_step, u64::MAX),
+            params.cancel,
+            params.now_ms,
+            &mut preview_sequence,
+        );
         assert!(matches!(outcome, StepOutcome::Complete(_)));
         job.take_directives().expect("completed directives")
     }
@@ -527,7 +691,9 @@ mod tests {
 
     #[test]
     fn cancellation_retires_deadline_apply_and_build_phases_to_terminal_empty() {
-        let mut phases = [ActiveFramePhase::Deadlines(FrameBuildJob::new(FrameBuildInputs { wheel_zoom_deadline_ms: 0.0, now_ms: 2.0 })), ActiveFramePhase::ApplyPending(FrameDirectives { wheel_zoom_deadline_cleared: false })];
+        let deadline = BatchJobSession::try_new(FrameBuildJob::new(FrameBuildInputs { wheel_zoom_deadline_ms: 0.0, now_ms: 2.0 }), batch_params(OperationId(20), Generation(20), root_cancel_token()))
+            .unwrap_or_else(|_| panic!("frame deadline test session admission"));
+        let mut phases = [ActiveFramePhase::Deadlines(deadline), ActiveFramePhase::ApplyPending(FrameDirectives { wheel_zoom_deadline_cleared: false })];
         for phase in &mut phases {
             for _ in 0..2_000 {
                 if retire_active_phase(phase) {

@@ -13,8 +13,17 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/servo/html5ever",
-      "rationale": "The WHATWG-conformant HTML5 tokenizer/tree-builder of the Rust ecosystem, paired with the reference-counted DOM `markup5ever_rcdom` 0.39 (MIT OR Apache-2.0, a companion crate from the same project, also test-only, https://github.com/servo/html5ever/tree/main/rcdom) — `html5ever` only tokenizes and builds a tree via a caller-supplied `TreeSink`, so it is not usable as a mutation oracle without it. Registered under `html5ever` because every scenario's comparison runs through `html5ever::parse_document` as the independent reader on BOTH sides (oracle output and subject output alike), matching how this catalog's `@oracle-` tag names a single id per feature; `markup5ever_rcdom` supplies the `RcDom`/`SerializableHandle` every one of those parses and re-serializes builds on, and is exercised by every green scenario even though it is not the package name on this entry. Together the only registered pair that both PARSES real, error-recovering HTML5 and WRITES it back out, so it can independently produce a second result for every one of this subset's 10 `HtmlMutation` kinds rather than merely reading.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "rationale": "The WHATWG-conformant HTML5 tokenizer/tree-builder of the Rust ecosystem, paired with the reference-counted DOM `markup5ever_rcdom` 0.39 (MIT OR Apache-2.0, a companion crate from the same project, also test-only, https://github.com/servo/html5ever/tree/main/rcdom) — `html5ever` only tokenizes and builds a tree via a caller-supplied `TreeSink`, so it is not usable as a mutation oracle without it. Registered under `html5ever` because every scenario's comparison runs through `html5ever::parse_document` as the independent reader on BOTH sides (oracle output and subject output alike), matching how this catalog's `@oracle-` tag names a single id per feature; `markup5ever_rcdom` supplies the `RcDom`/`SerializableHandle` every one of those parses and re-serializes builds on, and is exercised by every green scenario even though it is not the package name on this entry; it is declared in this entry's `packages` list, which is what puts it inside the same test-only ratchet and oracle-purity probe as `html5ever` instead of being documented in prose alone. Together the only registered pair that both PARSES real, error-recovering HTML5 and WRITES it back out, so it can independently produce a second result for every one of this subset's 10 `HtmlMutation` kinds rather than merely reading.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "packages": [
+        {
+          "package": "markup5ever_rcdom",
+          "version": "0.39",
+          "license": "MIT OR Apache-2.0",
+          "homepage": "https://github.com/servo/html5ever/tree/main/rcdom",
+          "role": "reference-counted DOM tree sink and serializer — the tree `html5ever` only builds through a caller-supplied TreeSink"
+        }
+      ]
     }
   ],
   "noOracleDecisions": [],

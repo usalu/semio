@@ -134,7 +134,7 @@ async fn world_points_json(scene: &RemodelSnapshot, config: &RemodelConfig) -> O
     }
 }
 
-pub async fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> UiNode {
+pub async fn render(scene: &RemodelSnapshot, config: &RemodelConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     // 🕹️ The "assets" selection now lives in the framework-owned interaction domain (ticket
     // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactEditor::render` carries no
     // `InteractionView`, so this scene payload can no longer embed a live selection; every

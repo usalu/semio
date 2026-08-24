@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `stdio.semio.model` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-model-mutation-semantics",
+      "capabilities": ["semio-v1-model-mutate"],
+      "rationale": "No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over this subset's `SemioModelMutation` vocabulary (set-snapshot plus insert/remove/set over the three id-keyed collections spatial/elements/relations) — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. Two candidate references were surveyed against the landed cross-language oracle hosts (Python venv and npm resolution both work today, proven by `extract-text-pdf-1-4` executing its `pypdf` scenarios) and both were rejected on evidence rather than on convenience. IfcOpenShell (Python) is the authoritative reference for the IFC spatial-structure shape this subset models, and `ruststep` 0.4 is already registered elsewhere as a STEP reader; neither can reach a `SemioModelSnapshot` except through THIS repository's own `🚪️io/📥️import`/`📤️export` IFC bridge, which would make the comparison run our importer against our exporter with a third party merely re-reading the result — the self-comparison this platform exists to prevent — and neither can express `set-snapshot`, whose semantics are `SemioModelDiff::between`, at all. Confidence instead comes from specification vectors whose BEFORE state is the real committed example artifact `🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️example.dsl.semio` (asserted byte-identical to `demo_semio_model_snapshot()` by that subset's own `fixture_honesty_law`, so the fixture can never silently drift into a synthetic one), plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation state, vector for vector, including collection order.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-model",
+      "capability": "semio-v1-model-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "insert-spatial-node", "remove-spatial-node", "set-spatial-node", "insert-element", "remove-element", "set-element", "insert-relation", "remove-relation", "set-relation"]
+    }
+  ]
+}

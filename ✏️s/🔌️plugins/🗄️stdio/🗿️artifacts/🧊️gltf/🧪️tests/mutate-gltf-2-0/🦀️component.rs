@@ -11,6 +11,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, round_trip, undo_create_scene};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `GLTF_MUTATION_LEAF_DESCRIPTORS`'s 7 registered leaves (`../../🏅️standards/🔖️2.0/
@@ -46,6 +47,13 @@ fn json_spec(kind: &str, params: Json) -> Json {
 }
 //#endregion 🔖️JsonBuild
 
+//#region 🔖️Profile
+/// 📏️ `semantic-gltf-v1`'s own declared writer freedom (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/
+/// 🧪️oracle/🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as
+/// the profile the case is measured by — never stricter.
+const GLTF_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "generator", "copyright"];
+//#endregion 🔖️Profile
+
 //#region 🔖️Inverse
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
 /// derived fixture's own known real state (`../../🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/
@@ -77,6 +85,11 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
+/// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase: the reference applies
+/// the leaf forward and then its own inverse (for `create-scene`, the SAME descriptor's `Inverse`
+/// phase, which is why it routes through `undo_create_scene` instead of a separate kind), and the
+/// restored document's independent projection must equal the REAL original's own, within
+/// `semantic-gltf-v1`'s own declared writer freedom and no stricter.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -84,13 +97,21 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let mutated = oracle_apply_mutation(&input, &spec)?;
     let restored = if kind == "create-scene" { undo_create_scene(&mutated, 0)? } else { oracle_apply_mutation(&mutated, &inverse_spec(&kind))? };
     let projection = project_gltf(&restored)?;
+    inverse_restores_within(&kind, &projection, &project_gltf(&input)?, GLTF_WRITER_FREEDOM, 0.0)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
+/// 🔁️ The identity law, both halves asserted in role: reading the GLB container and re-writing it
+/// from the parsed JSON document plus the BIN chunk alone must preserve the scene/node/material
+/// projection, and must NOT hand back the input bytes — the writer re-serializes the JSON chunk in
+/// its own compact form and recomputes every chunk length and pad, so bit-identical output would
+/// mean the container was copied rather than parsed.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = round_trip(&input)?;
+    reparsed_not_copied(&bytes, &input)?;
     let projection = project_gltf(&bytes)?;
+    round_trip_preserves_within(&projection, &project_gltf(&input)?, GLTF_WRITER_FREEDOM, 0.0)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

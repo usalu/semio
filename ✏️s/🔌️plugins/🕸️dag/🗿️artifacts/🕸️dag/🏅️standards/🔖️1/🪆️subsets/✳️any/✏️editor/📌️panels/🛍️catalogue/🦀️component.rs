@@ -22,7 +22,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(labels: &DagPlayLabels) -> UiNode {
+pub async fn render(labels: &DagPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let kinds = [("computation", labels.kind_computation), ("slider", labels.kind_slider), ("select", labels.kind_select), ("screen", labels.kind_screen), ("note", labels.kind_note), ("preview", labels.kind_preview)];
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
@@ -30,7 +30,7 @@ pub async fn render(labels: &DagPlayLabels) -> UiNode {
             label: Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
-            items: kinds.iter().map(|(kind, label)| tree_item_with_action(format!("dag-play-catalogue.kind.{kind}"), *label, Some((*kind).into()), dag_action("addNode", Some(json!({ "kind": kind }))))).collect(),
+            items: kinds.iter().map(|(kind, label)| tree_item_with_action(format!("dag-play-catalogue.kind.{kind}"), *label, Some((*kind).into()), dag_action("addNode", Some(json!({ "kind": kind }))))?).collect(),
         }],
         presence: UiPresence::default(),
         // 🕹️ A palette, not entity selection — declares no interaction domain (ticket

@@ -26,13 +26,13 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
+async fn layer_tree_item(layer: &RasterLayerNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let nested = match layer {
         RasterLayerNode::Group { children, .. } => {
             if children.is_empty() {
                 None
             } else {
-                Some(children.iter().map(layer_tree_item).collect())
+                Some(children.iter().map(layer_tree_item).collect()?)
             }
         }
         _ => None,
@@ -53,22 +53,22 @@ async fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
         draggable: Some(true),
         items: nested,
         dimmed: if layer_visible(layer) { None } else { Some(true) },
-        ..tree_item_desc(layer_row_id(layer), Label::data(layer_name(layer)), Some(description.into()))
+        ..tree_item_desc(layer_row_id(layer), Label::data(layer_name(layer)), Some(description.into()))?
     }
 }
 
 /// 🕹️ `runtime` is unused now — layer selection/hover moved into the framework-owned `"layers"`
 /// interaction domain (granularity `"layer"`, ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
-/// MECHANISM); `.interaction_domain("layers")` below has the framework's renderer translate row
+/// MECHANISM); `.interaction_domain("layers")?` below has the framework's renderer translate row
 /// clicks into injected `interactionSelect` and stamp presence from `InteractionState`, replacing the
-/// deleted `.selected()`/`.highlighted()`/`.selection_change()` calls (row ids ARE the domain's ids —
+/// deleted `.selected()?`/`.highlighted()?`/`.selection_change()` calls (row ids ARE the domain's ids —
 /// this tree is the sole consumer of the `"layers"` domain today).
-pub async fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
+pub async fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let action_rows = vec![
-        UiTreeItemNode { icon_id: Some("image".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.pixel"), labels.add_pixel, None, raster_action("addLayer", Some(json!({ "kind": "pixel" })))) },
-        UiTreeItemNode { icon_id: Some("folder-plus".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.group"), labels.add_group, None, raster_action("addLayer", Some(json!({ "kind": "group" })))) },
+        UiTreeItemNode { icon_id: Some("image".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.pixel"), labels.add_pixel, None, raster_action("addLayer", Some(json!({ "kind": "pixel" }))))? },
+        UiTreeItemNode { icon_id: Some("folder-plus".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.group"), labels.add_group, None, raster_action("addLayer", Some(json!({ "kind": "group" }))))? },
     ];
-    let layer_items: Vec<UiTreeItemNode> = document.layers.iter().map(layer_tree_item).collect();
-    PanelTreeBuilder::new(RASTER_TREE_PREFIX).section(RASTER_TREE_PREFIX, Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, [action_rows, layer_items].concat()).interaction_domain("layers").build()
+    let layer_items: Vec<UiTreeItemNode> = document.layers.iter().map(layer_tree_item).collect()?;
+    PanelTreeBuilder::new(RASTER_TREE_PREFIX)?.section(RASTER_TREE_PREFIX, Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, [action_rows, layer_items].concat())?.interaction_domain("layers")?.build()
 }
 //#endregion 🔖️Render

@@ -23,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &Procedural3dLabels) -> BuiltNode {
+pub fn render(labels: &Procedural3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let sections = flow::flow_palette_catalogue_sections();
     let items: Vec<BuiltNode> = sections
         .iter()
@@ -35,8 +35,8 @@ pub fn render(labels: &Procedural3dLabels) -> BuiltNode {
                     format!("procedural-play-catalogue.{}", item.neuron_kind.as_deref().unwrap_or(&item.kind)),
                     item.name.clone(),
                     None,
-                    ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": action_kind }))),
-                );
+                    ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": action_kind })))?,
+                )?;
                 if let Component::TreeItem(props) = &mut node.component {
                     props.icon = Some(icon.into());
                 }
@@ -44,7 +44,7 @@ pub fn render(labels: &Procedural3dLabels) -> BuiltNode {
             })
         })
         .collect();
-    PanelTreeBuilder::new("procedural-play-catalogue").section("procedural-play-catalogue.widgets", Some(labels.widgets.as_str().into()), true, items).build()
+    PanelTreeBuilder::new("procedural-play-catalogue")?.section("procedural-play-catalogue.widgets", Some(labels.widgets.as_str().into()), true, items)?.build()
 }
 //#endregion 🔖️Render
 

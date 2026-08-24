@@ -218,7 +218,7 @@ fn fem3d_camera_json(camera: &FemCamera) -> String {
 /// 🧱️ Renders the undeformed structure with a hardcoded default camera — no persisted per-session
 /// camera (`Config = NoConfig`), no displacement offset, no stress coloring: the exact same scene the
 /// editor's own Model window renders for the same document.
-pub fn render(doc: &Fem3dSnapshot) -> BuiltNode {
+pub fn render(doc: &Fem3dSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let camera = FemCamera::default();
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
     crate::app_surface::world_3d_surface(BODY_KEY, world3d_scene(fem3d_camera_json(&camera), meshes_json, instances_json, world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default()))

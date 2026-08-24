@@ -1,0 +1,176 @@
+{
+  "kind": "set-snapshot",
+  "params": {
+    "snapshot": {
+      "schema": "s.stdio.semio.animation",
+      "timelines": [
+        {
+          "name": null,
+          "channels": [
+            {
+              "target": {
+                "node": "root",
+                "property": {
+                  "kind": "translation"
+                }
+              },
+              "interpolation": "linear",
+              "keyframes": [
+                {
+                  "t": 0,
+                  "value": {
+                    "kind": "vec3",
+                    "value": {
+                      "x": 2,
+                      "y": 2,
+                      "z": 2
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "before": {
+    "schema": "s.stdio.semio.animation",
+    "timelines": [
+      {
+        "name": "walk",
+        "channels": [
+          {
+            "target": {
+              "node": "hip",
+              "property": {
+                "kind": "translation"
+              }
+            },
+            "interpolation": "linear",
+            "keyframes": [
+              {
+                "t": 0,
+                "value": {
+                  "kind": "vec3",
+                  "value": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                  }
+                }
+              },
+              {
+                "t": 1,
+                "value": {
+                  "kind": "vec3",
+                  "value": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "target": {
+              "node": "spine",
+              "property": {
+                "kind": "rotation"
+              }
+            },
+            "interpolation": "cubicSpline",
+            "keyframes": [
+              {
+                "t": 0.5,
+                "value": {
+                  "kind": "quat",
+                  "value": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "w": 1
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "target": {
+              "node": "face",
+              "property": {
+                "kind": "weights"
+              }
+            },
+            "interpolation": "step",
+            "keyframes": [
+              {
+                "t": 0,
+                "value": {
+                  "kind": "weights",
+                  "values": [
+                    0,
+                    1,
+                    0.5
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "target": {
+              "node": "rig",
+              "property": {
+                "kind": "custom",
+                "name": "opacity"
+              }
+            },
+            "interpolation": "linear",
+            "keyframes": [
+              {
+                "t": 0,
+                "value": {
+                  "kind": "scalar",
+                  "value": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "schema": "s.stdio.semio.animation",
+    "timelines": [
+      {
+        "name": null,
+        "channels": [
+          {
+            "target": {
+              "node": "root",
+              "property": {
+                "kind": "translation"
+              }
+            },
+            "interpolation": "linear",
+            "keyframes": [
+              {
+                "t": 0,
+                "value": {
+                  "kind": "vec3",
+                  "value": {
+                    "x": 2,
+                    "y": 2,
+                    "z": 2
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

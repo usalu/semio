@@ -36,14 +36,14 @@ async fn catalog_label(contributions_json: &str, catalog_id: &str) -> String {
 /// 🏭️ Builds one catalogue tree item per workshop machine capability, grouped by the machine's source
 /// catalog (uncataloged/generic machines first, open by default), disabling (non-clickable, with a
 /// reason) any capability the current stock doesn't satisfy.
-pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> UiNode {
+pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
     // composed `s.stdio.semio.brep` CHILD HANDLE now, with no resolvable dimensions without a
     // `LinkResolver` (see `ProcessWorkingScene`'s doc comment) — every capability rule is treated
     // as satisfied (a large, effectively-unconstrained stock) rather than guessing at unknown
     // extents, matching the same documented gap `add_step::handle` accepted for this reason.
     let ctx = ValidationContext { stock_width: f64::MAX, stock_depth: f64::MAX, stock_height: f64::MAX };
-    let mut builder = PanelTreeBuilder::new("process3d-play-catalogue");
+    let mut builder = PanelTreeBuilder::new("process3d-play-catalogue")?;
     let mut sections: Vec<(Option<&str>, Vec<&WorkshopMachine>)> = Vec::new();
     for machine in &fixture.workshop.machines {
         let key = machine.catalog_id.as_deref();
@@ -62,24 +62,24 @@ pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, label
                     let id = format!("process3d-catalogue.{}.{}", machine.id, capability.id);
                     let label = Label::data(format!("{} — {}", machine.label, capability.label));
                     if failures.is_empty() {
-                        iconed_tree_item_with_action(id, label, &capability.icon_id, process3d_action("addStep", Some(json!({ "machineId": machine.id, "capabilityId": capability.id }))))
+                        iconed_tree_item_with_action(id, label, &capability.icon_id, process3d_action("addStep", Some(json!({ "machineId": machine.id, "capabilityId": capability.id }))))?
                     } else {
-                        UiTreeItemNode { icon_id: Some(capability.icon_id.as_str().into()), menu: None, ..tree_item_desc(id, label, Some(validation_reason(&failures))) }
+                        UiTreeItemNode { icon_id: Some(capability.icon_id.as_str().into()), menu: None, ..tree_item_desc(id, label, Some(validation_reason(&failures)))? }
                     }
                 })
             })
             .collect();
         let section_id = format!("process3d-play-catalogue.{}", catalog_id.unwrap_or("workshop"));
         let section_label = catalog_id.map_or_else(|| labels.workshop.into(), |id| Label::data(catalog_label(contributions_json, id)));
-        builder = builder.section(section_id, Some(section_label), catalog_id.is_none(), items);
+        builder = builder.section(section_id, Some(section_label), catalog_id.is_none(), items)?;
     }
     let stock_items = vec![
-        iconed_tree_item_with_action("process3d-catalogue.stock-box", labels.stock_kind_box, "box", process3d_action("setStock", Some(json!({ "kind": "box" })))),
-        iconed_tree_item_with_action("process3d-catalogue.stock-cylinder", labels.stock_kind_cylinder, "cylinder", process3d_action("setStock", Some(json!({ "kind": "cylinder" })))),
-        iconed_tree_item_with_action("process3d-catalogue.stock-sphere", labels.stock_kind_sphere, "circle", process3d_action("setStock", Some(json!({ "kind": "sphere" })))),
-        iconed_tree_item_with_action("process3d-catalogue.stock-import", labels.import_model, "folder-open", process3d_action("loadModelRequest", None)),
+        iconed_tree_item_with_action("process3d-catalogue.stock-box", labels.stock_kind_box, "box", process3d_action("setStock", Some(json!({ "kind": "box" }))))?,
+        iconed_tree_item_with_action("process3d-catalogue.stock-cylinder", labels.stock_kind_cylinder, "cylinder", process3d_action("setStock", Some(json!({ "kind": "cylinder" }))))?,
+        iconed_tree_item_with_action("process3d-catalogue.stock-sphere", labels.stock_kind_sphere, "circle", process3d_action("setStock", Some(json!({ "kind": "sphere" }))))?,
+        iconed_tree_item_with_action("process3d-catalogue.stock-import", labels.import_model, "folder-open", process3d_action("loadModelRequest", None))?,
     ];
-    builder.section("process3d-play-catalogue.stock", Some(labels.stock.into()), false, stock_items).build()
+    builder.section("process3d-play-catalogue.stock", Some(labels.stock.into()), false, stock_items)?.build()
 }
 //#endregion 🔖️Render
 

@@ -28,3 +28,16 @@ must preserve concurrent regions and use scoped patches.
 No broad Cargo, Nx, Wasm, browser, runtime, stress, allocation, replay, or timing run may begin while
 these Rust sources overlap. A later serialized build owner must re-read `git log`, status, and the
 exact final diff immediately before stage 1 of the final verification matrix.
+
+## 02:34 Peer Commit Boundary
+
+Commit `e7bd5ecdf7014d4422fc00e50746f2d7d6624669` landed at
+`2026-08-24T02:34:13+02:00` while the P1q, P2a1, and P5b remediation lanes were still active. It
+captured both this refactor's then-current partial source/report state and unrelated
+`END-TO-END-TESTING-REFACTOR` stdio/oracle/fixture work.
+
+The commit is a preservation boundary, not an acceptance event. P1q remains subject to a fresh
+B1–B6 audit, P2a1 remains subject to its complete mounted-caller/codec audit, and P5b remains
+subject to its B1/B2/B4/B5 audit. The active lanes may edit only their assigned incremental regions
+above this boundary and must preserve the committed stdio/oracle/fixture work. The final immutable
+tree matrix must run against the eventual post-remediation tree, not this intermediate commit.

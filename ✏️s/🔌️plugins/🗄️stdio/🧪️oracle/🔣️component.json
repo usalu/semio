@@ -262,6 +262,22 @@
       "homepage": "https://github.com/hmeyer/stl_io",
       "rationale": "The reference binary/ASCII STL reader and writer of the Rust ecosystem. STL is a triangle soup with no vertex index and a derivable per-facet normal, so the projection compares resolved corner positions per triangle — what the format actually fixes — rather than an index buffer the format never had.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    },
+    {
+      "id": "pypdf-pdf-1-4-text",
+      "ecosystem": "python",
+      "package": "pypdf",
+      "version": "6.14.2",
+      "capabilities": [
+        "pdf-1-4-text-extraction"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://github.com/py-pdf/pypdf",
+      "rationale": "Text extraction is the one PDF capability this repository has no Rust reference for. `lopdf` — the registered editing and parsing oracle — exposes the object graph and the raw content streams, but reconstructing a page's reading order means decoding the font's /Encoding and /ToUnicode CMaps, undoing ligature and glyph-index mappings and re-assembling text-showing operators into lines; it does none of that, and no other crate linked by the oracle host does either. `pypdf` implements exactly that layer and is the reference every Python PDF toolchain builds text extraction on. Deterministic for a fixed document, pure Python, no network, no system libraries, cross-platform. Scoped to the text layer only: page geometry, object structure and rendering stay with the existing oracles."
     }
   ],
   "noOracleDecisions": [],
@@ -367,6 +383,18 @@
       "features": [
         "oracles"
       ]
+    },
+    {
+      "implementation": "python",
+      "package": "pypdf",
+      "version": "6.14.2",
+      "module": "pypdf"
+    },
+    {
+      "implementation": "python",
+      "package": "simplejson",
+      "version": "4.1.1",
+      "module": "simplejson"
     }
   ],
   "migrationStatus": {

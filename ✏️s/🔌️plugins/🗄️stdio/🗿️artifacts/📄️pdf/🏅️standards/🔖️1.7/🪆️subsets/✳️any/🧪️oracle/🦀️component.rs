@@ -338,11 +338,33 @@ mod oracles {
     /// params}` -- same law `PdfMutation::inverse` proves at the Rust-model level
     /// (`apply(inverse(m, base), apply(m, base)) == base`), computed here against the reference
     /// library instead.
-    fn inverse_spec(document: &Document, kind: &str, params: &Json) -> Json {
+    ///
+    /// ⚠️ An unrecognised kind is an ERROR, never "the same mutation again": a fallback that hands
+    /// back `{kind, params}` unchanged is not an inverse, and while the case adapter merely
+    /// returned the projection it hid two declared kinds -- `set-info` and `set-snapshot`, both
+    /// routed away from [`apply_kind`] -- behind it.
+    fn inverse_spec(document: &Document, kind: &str, params: &Json) -> Result<Json, String> {
         let spec = |inverse_kind: &str, inverse_params: Json| Json::Object(vec![("kind".to_string(), Json::String(inverse_kind.to_string())), ("params".to_string(), inverse_params)]);
         let obj = |entries: Vec<(&str, Json)>| Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-        match kind {
+        Ok(match kind {
             "no-mutation" => spec("no-mutation", obj(vec![])),
+            "set-info" => {
+                let mut entries = Vec::new();
+                if let Some(title) = info_entry(document, b"Title") {
+                    entries.push(("title", Json::String(title)));
+                }
+                if let Some(author) = info_entry(document, b"Author") {
+                    entries.push(("author", Json::String(author)));
+                }
+                spec("set-info", obj(entries))
+            }
+            "set-snapshot" => {
+                let mut entries = vec![("declaredVersion", Json::String(document.version.clone()))];
+                if let Some(title) = info_entry(document, b"Title") {
+                    entries.push(("title", Json::String(title)));
+                }
+                spec("set-snapshot", obj(entries))
+            }
             "insert-page" => {
                 let clamped = usize_field(params, "index").min(document.get_pages().len());
                 spec("remove-page", obj(vec![("index", Json::Number(clamped as f64))]))
@@ -462,25 +484,30 @@ mod oracles {
                 let prior = page_id_at(document, index).and_then(|page_id| document.get_dictionary(page_id).ok()).and_then(|dict| dict.get(b"Rotate").ok()).and_then(|value| value.as_i64().ok()).unwrap_or(0);
                 spec("set-page-rotation", obj(vec![("index", Json::Number(index as f64)), ("rotation", Json::Number(prior as f64))]))
             }
-            other => spec(other, params.clone()),
-        }
+            other => return Err(format!("mutation kind {other:?} has no oracle inverse implementation")),
+        })
     }
     //#endregion 🔖️Inverse
 
     //#region 🔖️Routing
     /// 🧭️ `remove-page`/`set-info` route to the shared `document` module's own reference
-    /// implementation (per the fleet brief: reuse/extend it rather than duplicating); `set-snapshot`
-    /// EXTENDS `oracle_replace_metadata` with the one field it cannot express -- the document's own
-    /// declared `/PDF-version` header -- rather than duplicating its title/author handling.
+    /// implementation (per the fleet brief: reuse/extend it rather than duplicating).
+    /// `set-snapshot` does NOT: `PdfMutation::SetSnapshot` clones the base snapshot and overrides
+    /// `declared_version`/`info.title`, leaving every other field alone, so the oracle must edit
+    /// the `/Info` dictionary IN PLACE. `oracle_replace_metadata` replaces the whole dictionary --
+    /// correct for `set-info`, whose `PdfInfo { title, author, ..Default::default() }` really does
+    /// discard the rest, and wrong for `set-snapshot`, where it silently dropped `/Author`.
     /// Every other kind mutates a freshly loaded [`Document`] directly via [`apply_kind`].
     pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         match kind {
             "" => Err("mutation spec carries no `kind`".to_string()),
             "remove-page" => oracle_delete_page(input, usize_field(params, "index") as u32 + 1),
-            "set-info" => oracle_replace_metadata(input, non_empty(params, "title").as_deref(), non_empty(params, "author").as_deref()),
+            "set-info" => oracle_replace_metadata(input, present_string(params, "title").as_deref(), present_string(params, "author").as_deref()),
             "set-snapshot" => {
-                let staged = oracle_replace_metadata(input, non_empty(params, "title").as_deref(), None)?;
-                let mut document = Document::load_mem(&staged).map_err(|error| format!("lopdf could not parse the staged document: {error}"))?;
+                let mut document = Document::load_mem(input).map_err(|error| format!("lopdf could not parse the input: {error}"))?;
+                if let Some(title) = present_string(params, "title") {
+                    set_info_entry(&mut document, "Title", &title);
+                }
                 if let Some(version) = non_empty(params, "declaredVersion") {
                     document.version = version;
                 }
@@ -502,7 +529,7 @@ mod oracles {
     /// re-serialized result -- the caller compares its projection against the ORIGINAL input's own.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         let reader = Document::load_mem(input).map_err(|error| format!("lopdf could not parse the input: {error}"))?;
-        let inverse = inverse_spec(&reader, kind, params);
+        let inverse = inverse_spec(&reader, kind, params)?;
         let mutated = apply_mutation(input, kind, params)?;
         apply_mutation(&mutated, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))
     }
@@ -511,6 +538,50 @@ mod oracles {
         match value.get(key) {
             Some(Json::String(text)) if !text.is_empty() => Some(text.clone()),
             _ => None,
+        }
+    }
+
+    /// 🔤️ A spec field that is PRESENT as a string, empty or not. `/Title ()` and an absent
+    /// `/Title` are different documents -- this fixture's own `/Info` carries both `/Title ()` and
+    /// `/Author ()` -- so an inverse that has to restore an empty metadata value must be able to
+    /// ask for one, which [`non_empty`] cannot express.
+    fn present_string(value: &Json, key: &str) -> Option<String> {
+        match value.get(key) {
+            Some(Json::String(text)) => Some(text.clone()),
+            _ => None,
+        }
+    }
+
+    /// 🔎️ One `/Info` entry of the CURRENT document, resolving the trailer's indirect reference.
+    /// Present-and-empty is distinguished from absent, for the reason [`present_string`] gives.
+    fn info_entry(document: &Document, key: &[u8]) -> Option<String> {
+        let dictionary = match document.trailer.get(b"Info").ok()? {
+            Object::Reference(id) => document.get_dictionary(*id).ok()?,
+            Object::Dictionary(dictionary) => dictionary,
+            _ => return None,
+        };
+        dictionary.get(key).ok()?.as_str().ok().map(|bytes| String::from_utf8_lossy(bytes).into_owned())
+    }
+
+    /// ✍️ Sets ONE `/Info` entry in place, leaving every other metadata field intact -- what
+    /// `PdfMutation::SetSnapshot` models, unlike `set-info`, which replaces the whole dictionary.
+    fn set_info_entry(document: &mut Document, key: &str, value: &str) {
+        match document.trailer.get(b"Info").ok().cloned() {
+            Some(Object::Reference(id)) => {
+                if let Ok(dictionary) = document.get_object_mut(id).and_then(Object::as_dict_mut) {
+                    dictionary.set(key, Object::string_literal(value));
+                }
+            }
+            Some(Object::Dictionary(mut dictionary)) => {
+                dictionary.set(key, Object::string_literal(value));
+                document.trailer.set("Info", Object::Dictionary(dictionary));
+            }
+            _ => {
+                let mut dictionary = Dictionary::new();
+                dictionary.set(key, Object::string_literal(value));
+                let id = document.add_object(Object::Dictionary(dictionary));
+                document.trailer.set("Info", Object::Reference(id));
+            }
         }
     }
 

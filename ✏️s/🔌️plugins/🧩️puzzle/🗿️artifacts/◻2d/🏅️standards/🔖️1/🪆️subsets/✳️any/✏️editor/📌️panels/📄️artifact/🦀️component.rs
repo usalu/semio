@@ -37,27 +37,27 @@ fn edge_label(edge: &Value, fixture: &Value) -> String {
     format!("{source_label} → {target_label}")
 }
 
-pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> BuiltNode {
+pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let fixture = &envelope.fixture;
     let actions = ActionFactory::new(crate::editor::puzzle2d::PUZZLE2D_PLAY_CONTROLLER_ID);
     let node_items: Vec<BuiltNode> = fixture_nodes(fixture)
         .iter()
         .filter_map(|node| {
             let id = node.get("id")?.as_str()?;
-            Some(tree_item_with_action(id.to_string(), node_label(node), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(serde_json::json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: id.into() }]).unwrap_or_default(), "merge": "replace", "method": "pick" })))))
+            Some(tree_item_with_action(id.to_string(), node_label(node), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(serde_json::json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: id.into() }]).unwrap_or_default(), "merge": "replace", "method": "pick" }))))?)
         })
         .collect();
     let edge_items: Vec<BuiltNode> = fixture_edges(fixture)
         .iter()
         .filter_map(|edge| {
             let id = edge.get("id")?.as_str()?;
-            Some(tree_item_with_action(id.to_string(), edge_label(edge, fixture), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(serde_json::json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: id.into() }]).unwrap_or_default(), "merge": "replace", "method": "pick" })))))
+            Some(tree_item_with_action(id.to_string(), edge_label(edge, fixture), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(serde_json::json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: id.into() }]).unwrap_or_default(), "merge": "replace", "method": "pick" }))))?)
         })
         .collect();
-    PanelTreeBuilder::new("puzzle2d-play-document")
-        .section_or_placeholder("puzzle2d-play-document.nodes", Some(labels.nodes.as_str().into()), true, node_items, labels.none.as_str())
-        .section_or_placeholder("puzzle2d-play-document.edges", Some(labels.edges.as_str().into()), false, edge_items, labels.none.as_str())
-        .interaction_domain(PUZZLE2D_INTERACTION_DOMAIN)
+    PanelTreeBuilder::new("puzzle2d-play-document")?
+        .section_or_placeholder("puzzle2d-play-document.nodes", Some(labels.nodes.as_str().into()), true, node_items, labels.none.as_str())?
+        .section_or_placeholder("puzzle2d-play-document.edges", Some(labels.edges.as_str().into()), false, edge_items, labels.none.as_str())?
+        .interaction_domain(PUZZLE2D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

@@ -1,0 +1,132 @@
+{
+  "kind": "insert-node",
+  "mutation": {
+    "mutation": "insertNode",
+    "node": {
+      "id": "n3",
+      "kind": "transform",
+      "label": "Normalize",
+      "params": [
+        {
+          "key": "mode",
+          "value": "strict"
+        }
+      ],
+      "position": {
+        "x": 60.0,
+        "y": 10.0
+      }
+    }
+  },
+  "before": {
+    "schema": "stdio.semio.flow",
+    "nodes": [
+      {
+        "id": "n1",
+        "kind": "source",
+        "label": "Source",
+        "params": [
+          {
+            "key": "count",
+            "value": "3"
+          },
+          {
+            "key": "unit",
+            "value": "items"
+          }
+        ],
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "n2",
+        "kind": "sink",
+        "label": "Sink",
+        "params": [],
+        "position": {
+          "x": 120.5,
+          "y": -30.25
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": {
+          "node": "n1",
+          "port": "out"
+        },
+        "to": {
+          "node": "n2",
+          "port": "in"
+        },
+        "kind": "data"
+      }
+    ]
+  },
+  "after": {
+    "schema": "stdio.semio.flow",
+    "nodes": [
+      {
+        "id": "n1",
+        "kind": "source",
+        "label": "Source",
+        "params": [
+          {
+            "key": "count",
+            "value": "3"
+          },
+          {
+            "key": "unit",
+            "value": "items"
+          }
+        ],
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      {
+        "id": "n2",
+        "kind": "sink",
+        "label": "Sink",
+        "params": [],
+        "position": {
+          "x": 120.5,
+          "y": -30.25
+        }
+      },
+      {
+        "id": "n3",
+        "kind": "transform",
+        "label": "Normalize",
+        "params": [
+          {
+            "key": "mode",
+            "value": "strict"
+          }
+        ],
+        "position": {
+          "x": 60.0,
+          "y": 10.0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": {
+          "node": "n1",
+          "port": "out"
+        },
+        "to": {
+          "node": "n2",
+          "port": "in"
+        },
+        "kind": "data"
+      }
+    ]
+  }
+}

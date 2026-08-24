@@ -14,6 +14,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::avi::standards::v1_0::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_avi_1_0};
+use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 📇️ Kebab-case spelling of every `AviMutation` variant, mirrored from
@@ -58,25 +59,34 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔮️ One handler shared by every `inverse-<kind>` scenario id.
+/// ↩️ One handler shared by every `inverse-<kind>` scenario id. `oracle_apply_mutation_inverse`
+/// applies the kind and then its OWN independently computed inverse; this handler is what its doc
+/// comment always said the caller does -- it ASSERTS the result projects back onto the pristine
+/// original. The law needs no subject, so leaving it to the parity phase would make the scenario
+/// pass whenever the reference `riff` composition merely did not error.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let before = project_avi_1_0(&input)?;
     let bytes = oracle_apply_mutation_inverse(&input, &spec)?;
     let projection = project_avi_1_0(&bytes)?;
+    law::inverse_restores(&spec.str("kind"), &projection, &before)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔒️ The ORACLE side of the no-byte-pass-through law: the independent `riff` composition fully
-/// parses the real video container and re-serializes it from its own model alone (the same
-/// "no-mutation" routing `oracle_apply_mutation` already gives every other kind), independent
-/// evidence that a full parse/re-serialize is possible before the SUBJECT is held to the same
-/// standard below.
+/// 🔒️ The ORACLE side of the no-byte-pass-through law, ASSERTED here and not merely described: the
+/// independent `riff` composition fully parses the real video container and re-serializes it from
+/// its own model alone (the same "no-mutation" routing `oracle_apply_mutation` already gives every
+/// other kind), so its output must differ from the input byte-wise -- our writer cannot reproduce
+/// another muxer's padding and chunk layout -- while projecting onto exactly the same semantics.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
     let bytes = oracle_apply_mutation(&input, &no_mutation)?;
+    law::reparsed_not_copied(&bytes, &input)?;
+    let before = project_avi_1_0(&input)?;
     let projection = project_avi_1_0(&bytes)?;
+    law::round_trip_preserves(&projection, &before)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

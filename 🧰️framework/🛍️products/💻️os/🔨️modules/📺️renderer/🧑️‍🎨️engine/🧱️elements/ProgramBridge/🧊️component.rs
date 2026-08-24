@@ -10,7 +10,8 @@
 use semio_framework::kernel::Effect;
 use semio_framework::{PluginManifest, ViewModel};
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{UiNode, WindowEngagement, WindowMeasure};
+use ui_contract::{SurfaceId, UiDocumentLease, UI_DOCUMENT_LEASE_SLOTS, UI_DOCUMENT_NODES, UI_DOCUMENT_PATCH_OPS};
+use ui_wgpu::wgpu::{WindowEngagement, WindowMeasure};
 
 #[cfg(target_arch = "wasm32")]
 use js_sys::{Array, Function, Reflect};
@@ -257,35 +258,41 @@ mod wasm_program_exchange {
 
     /// 🖼️ H3-wgpu-native — `design-abi.md` §2: `AppFrame::UiSection` is gone; its replacement is
     /// `ui-patch`, returned in `turn-result.ui-patches` rather than as a frame at all. The kernel
-    /// thread already reconciles patches against a retained tree per `(instance, surface)`
-    /// (`KernelThreadState::retained`) and hands back the resolved `UiNode` in
-    /// `ExchangeOutcome::surfaces` — this fn asks for the surface to be (re)painted via
+    /// thread reconciles patches into one generation-qualified retained document per
+    /// `(instance, surface)` and hands the lease through `ExchangeOutcome::surfaces` — this fn asks
+    /// for the surface to be (re)painted via
     /// `Event::SurfaceVisible` (design-abi.md §4: "Surfaces render lazily: `surface-visible`/
-    /// `hidden` replace the `RefreshUi` section-probe protocol") and reads back whatever the SAME
-    /// turn produced for it. A guest that has nothing new to say for this surface this turn (no
-    /// migrated plugin exists yet to test against — W3 hasn't started) surfaces as an honest error
-    /// rather than a stale-but-silent empty tree.
-    pub async fn render_with_document(client: &KernelClient, instance_id: u32, body_key: &str, _view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiNode, String> {
-        let outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: body_key.to_string() }]).await?;
+    /// `hidden` replace the `RefreshUi` section-probe protocol") exactly once, then mounts bounded
+    /// targeted `AdvanceRetained` requests until the fixed producer publishes. Maintenance requests
+    /// never poll the guest or emit visibility twice; exhausting the exact opportunity ceiling fails
+    /// closed rather than returning an empty tree.
+    pub async fn render_with_document(client: &KernelClient, instance_id: u32, body_key: &str, _view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+        let surface = SurfaceId::try_from(body_key).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
+        let mut outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: body_key.to_string() }]).await?;
         if let Some(sink) = refresh_effects {
-            sink.extend(outcome.effects.iter().cloned());
-        }
-        if let Some(node) = outcome.surfaces.get(body_key) {
-            return Ok(node.clone());
+            sink.append(&mut outcome.effects);
         }
         for frame in &outcome.frames {
             if let AppFrame::Error { in_reply_to: None, fault, report } = frame {
                 return Err(app_frame_error_message(fault, report));
             }
         }
-        Err(format!("plugin has not yet painted surface '{body_key}' this turn"))
+        for _ in 0..(UI_DOCUMENT_PATCH_OPS + UI_DOCUMENT_NODES * UI_DOCUMENT_NODES + UI_DOCUMENT_LEASE_SLOTS) {
+            if let Some(document) = outcome.take_surface(body_key) {
+                return Ok(document);
+            }
+            outcome = client.advance_retained(instance_id, surface.clone()).await?;
+        }
+        if let Some(document) = outcome.take_surface(body_key) {
+            return Ok(document);
+        }
+        Err(format!("plugin retained document for surface '{body_key}' exceeded its bounded opportunity budget"))
     }
 
     /// 🚧️ `window_engagements`/`window_measures` rode the SAME `RefreshUi`/`SectionProbe{kind}`
-    /// channel as the window body, just with a different `kind` byte and a non-`UiNode` payload
-    /// type. `design-abi.md`'s `ui-patch`/`PatchOp::Replace` is `UiNode`-typed specifically (per
-    /// `🎠️kernel/🦀️component.rs`'s `PatchOp::Replace{path,node: UiNode}`), so this data has no
-    /// defined wire home in channel v12 yet — inventing an ad-hoc encoding here risks colliding with
+    /// channel as the window body, just with a different payload type. The retained document contract
+    /// has no engagement/measure record, so this data has no defined wire home in channel v12 — an
+    /// ad-hoc encoding here would collide with
     /// whichever packet owns that design. Matches the wasm32/JS backend's own existing fallback
     /// (`window_engagements_js`/`window_measures_js` already return an empty map when the JS side
     /// doesn't expose the function) rather than a hard error, since callers already treat "nothing
@@ -337,7 +344,6 @@ impl ProgramBridgeEntry {
         let manifest_json = manifest_fn.call0(&JsValue::NULL).map_err(|_| "manifest call failed")?.as_string().ok_or("manifest not string")?;
         let manifest: PluginManifest = serde_json::from_str(&manifest_json).map_err(|err| format!("manifest parse: {err}"))?;
         let _create_app = get_fn(&handle, "createApp")?;
-        let _render = get_fn(&handle, "render")?;
         Ok(Self { plugin_id, manifest, backend: ProgramBridgeBackend::Js(Rc::new(handle)) })
     }
 
@@ -437,11 +443,11 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewModel) -> Result<UiNode, String> {
+    pub async fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
         self.render_with_document(instance_id, body_key, view_state, None, None).await
     }
 
-    pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiNode, String> {
+    pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, body_key, view_state, document_dsl).await,
@@ -602,24 +608,8 @@ async fn context_menu_js(handle: &Rc<JsValue>, instance_id: u32, request: &serde
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn render_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, view_state: &ViewModel) -> Result<UiNode, String> {
-    render_with_document_js(handle, instance_id, body_key, view_state, None).await
-}
-
-#[cfg(target_arch = "wasm32")]
-async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>) -> Result<UiNode, String> {
-    let render = if document_dsl.is_some() { Reflect::get(handle.as_ref(), &JsValue::from_str("renderWithDocument")).ok().and_then(|v| v.dyn_into::<Function>().ok()).or_else(|| get_fn(handle, "render").ok()) } else { get_fn(handle, "render").ok() };
-    let render = render.ok_or("render failed")?;
-    let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
-    let result = if let Some(document) = document_dsl {
-        render.call4(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(body_key), &JsValue::from_str(&view_json), &JsValue::from_str(document))
-    } else {
-        render.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(body_key), &JsValue::from_str(&view_json))
-    }
-    .map_err(|_| "render failed")?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "render promise failed")? } else { result };
-    let json = resolved.as_string().ok_or("render not string")?;
-    serde_json::from_str(&json).map_err(|err| format!("render parse: {err}"))
+async fn render_with_document_js(_handle: &Rc<JsValue>, _instance_id: u32, _body_key: &str, _view_state: &ViewModel, _document_dsl: Option<&str>) -> Result<UiDocumentLease, String> {
+    Err("browser plugin render must publish a generation-qualified retained document lease".into())
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -692,22 +682,21 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 /// first point ANY wasm actually gets read/compiled, and only for the plugin the caller opens.
 pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
     let space_mode = is_space_mode(plugin_filter);
-    let plugin_ids: Vec<String> = if space_mode {
+    let mut plugin_dirs = if space_mode {
         match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ScanDirectory { path: modules_root.to_path_buf(), directories_only: true, extension: None, first_only: false }).await? {
-            semio_framework_os_services::NativeIoValue::Paths(paths) => paths.into_iter().filter_map(|path| path.file_name().and_then(|name| name.to_str()).map(str::to_string)).collect(),
+            semio_framework_os_services::NativeIoValue::Paths(paths) => paths,
             _ => return Err("plugin scan returned the wrong native I/O value".into()),
         }
     } else {
-        vec![resolve_registry_plugin_id(plugin_filter).to_string()]
+        let mut paths = semio_framework_os_services::NativePathSet::new();
+        paths.try_push(modules_root.join(resolve_registry_plugin_id(plugin_filter))).map_err(|_| "single plugin path exceeded fixed native I/O credits")?;
+        paths
     };
     let mut entries = Vec::new();
-    for plugin_id in plugin_ids {
-        let plugin_dir = modules_root.join(&plugin_id);
-        if !plugin_dir.is_dir() {
-            continue;
-        }
+    while let Some(plugin_dir) = plugin_dirs.pop() {
+        let plugin_id = plugin_dir.file_name().and_then(|name| name.to_str()).ok_or_else(|| format!("{}: plugin directory name is not UTF-8", plugin_dir.display()))?.to_string();
         let wasm_path = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ScanDirectory { path: plugin_dir.clone(), directories_only: false, extension: Some("wasm".into()), first_only: true }).await? {
-            semio_framework_os_services::NativeIoValue::Paths(paths) => paths.into_iter().next(),
+            semio_framework_os_services::NativeIoValue::Paths(mut paths) => paths.pop(),
             _ => return Err("plugin artifact scan returned the wrong native I/O value".into()),
         };
         // 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — discovered live: one stale
@@ -749,9 +738,13 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
 #[cfg(not(target_arch = "wasm32"))]
 async fn read_descriptor_manifest(plugin_dir: &std::path::Path, plugin_id: &str) -> PluginManifest {
     let descriptor_path = plugin_dir.join("🔣️descriptor.json");
-    if let Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) = crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(descriptor_path.clone())).await {
-        if let Ok(descriptor) = serde_json::from_slice::<semio_framework::manifest::PackageDescriptor>(&bytes) {
-            return descriptor.manifest;
+    if let Ok(semio_framework_os_services::NativeIoValue::Bytes(mut bytes)) = crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(descriptor_path.clone())).await {
+        if let Some(page) = bytes.single_page() {
+            let descriptor = serde_json::from_slice::<semio_framework::manifest::PackageDescriptor>(page);
+            let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if let Ok(descriptor) = descriptor {
+                return descriptor.manifest;
+            }
         }
         eprintln!("[DEBUG] load_wasm_plugins: {} exists but failed to parse as PackageDescriptor", descriptor_path.display());
     }

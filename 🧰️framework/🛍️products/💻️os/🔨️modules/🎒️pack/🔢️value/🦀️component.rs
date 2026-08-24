@@ -435,7 +435,14 @@ fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result
         let chunk_size = ctx.options.chunk_size.max(1) as usize;
         let mut ids = Vec::new();
         for piece in bytes.chunks(chunk_size) {
-            ids.push(crate::os_io::resolve_ready(ctx.writer.write_chunk(piece))?);
+            let mut chunk = crate::os_io::resolve_ready(ctx.writer.begin_identity_chunk(piece.len()))?;
+            for fragment in piece.chunks(4096) {
+                if let Err(error) = crate::os_io::resolve_ready(chunk.write_fragment(fragment)) {
+                    chunk.close();
+                    return Err(error);
+                }
+            }
+            ids.push(crate::os_io::resolve_ready(chunk.finish())?);
         }
         out.push(TAG_BYTES_CHUNKED);
         write_varint_u64(out, ids.len() as u64);

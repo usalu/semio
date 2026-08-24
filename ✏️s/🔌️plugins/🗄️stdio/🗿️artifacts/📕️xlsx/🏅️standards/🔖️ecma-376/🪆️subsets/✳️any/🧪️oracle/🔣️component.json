@@ -13,8 +13,17 @@
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/tafia/calamine",
-      "rationale": "The reference ECMA-376 SpreadsheetML reader of the Rust ecosystem, paired with the reference writer `rust_xlsxwriter` 0.96 (MIT, https://github.com/jmcnamara/rust_xlsxwriter) for the seven mutation kinds this pairing can independently reproduce end to end (read the real workbook into a per-sheet cell grid, apply the change to the grid, rebuild the whole workbook from it — the only channel available, since `rust_xlsxwriter` cannot open and patch an existing package). Registered under `calamine` because every scenario's comparison runs through `calamine` as the independent reader on BOTH sides (oracle output and subject output alike), matching how this catalog's `@oracle-` tag names a single id per feature. `rust_xlsxwriter` is the paired producer for the differential kinds and is exercised by every green `@mode-differential` scenario even though it is not the package name on this entry.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "rationale": "The reference ECMA-376 SpreadsheetML reader of the Rust ecosystem, paired with the reference writer `rust_xlsxwriter` 0.96 (MIT OR Apache-2.0, https://github.com/jmcnamara/rust_xlsxwriter), declared as this entry's linked `packages` member so the dependency ratchet and the oracle-purity probe classify it in its own right rather than only reading about it here for the seven mutation kinds this pairing can independently reproduce end to end (read the real workbook into a per-sheet cell grid, apply the change to the grid, rebuild the whole workbook from it — the only channel available, since `rust_xlsxwriter` cannot open and patch an existing package). Registered under `calamine` because every scenario's comparison runs through `calamine` as the independent reader on BOTH sides (oracle output and subject output alike), matching how this catalog's `@oracle-` tag names a single id per feature. `rust_xlsxwriter` is the paired producer for the differential kinds and is exercised by every green `@mode-differential` scenario even though it is not the package name on this entry; it is registered under this entry's `packages` list, which is what puts it inside the same test-only ratchet as `calamine`.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "packages": [
+        {
+          "package": "rust_xlsxwriter",
+          "version": "0.96",
+          "license": "MIT OR Apache-2.0",
+          "homepage": "https://github.com/jmcnamara/rust_xlsxwriter",
+          "role": "independent SpreadsheetML writer — the producing half `calamine` does not have"
+        }
+      ]
     }
   ],
   "mutationCatalogs": [

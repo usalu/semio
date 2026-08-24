@@ -10,6 +10,19 @@
 //! conformance-class subset, same shared pattern as `📜️docx`/`📕️xlsx` ecma-376 ✳️transitional.
 
 pub use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::*;
+//#region 🧬️Mutations
+// 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
+// `📦️glue.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
+// ✳️any subset already records for its own test mount — leave the shared file alone, let an artifact
+// own the subtree it owns — applies to a production leaf of this subset just as well. `#[path]` on a
+// non-inline module resolves against this file's own directory. The explicit declaration shadows the
+// glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
+// `subsets::transitional::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
+// address.
+#[path = "🧬️mutations/🦀️component.rs"]
+pub mod mutations;
+//#endregion 🧬️Mutations
+
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::pptx::standards::v_ecma_376::subsets::any::schema::PptxBuilder as PptxAnyBuilder;

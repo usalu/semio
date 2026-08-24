@@ -1,0 +1,14 @@
+[workspace]
+
+[package]
+name = "adapter-check"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "adapter-check"
+path = "src/main.rs"
+
+[dependencies]
+semio-repo-test-host = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }

@@ -1,0 +1,71 @@
+{
+  "kind": "remove-stream",
+  "params": {
+    "index": 1
+  },
+  "before": {
+    "schema": "stdio.semio.video",
+    "streams": [
+      {
+        "kind": "V",
+        "codec": "h264",
+        "width": 1920,
+        "height": 1080,
+        "rate": {
+          "num": 30,
+          "den": 1
+        },
+        "samples": [
+          {
+            "pts": 0,
+            "key": true,
+            "data": "00010203"
+          },
+          {
+            "pts": 33,
+            "key": false,
+            "data": "0405"
+          }
+        ]
+      },
+      {
+        "kind": "A",
+        "codec": "aac",
+        "width": 0,
+        "height": 0,
+        "rate": {
+          "num": 48000,
+          "den": 1000
+        },
+        "samples": []
+      }
+    ]
+  },
+  "after": {
+    "schema": "stdio.semio.video",
+    "streams": [
+      {
+        "kind": "V",
+        "codec": "h264",
+        "width": 1920,
+        "height": 1080,
+        "rate": {
+          "num": 30,
+          "den": 1
+        },
+        "samples": [
+          {
+            "pts": 0,
+            "key": true,
+            "data": "00010203"
+          },
+          {
+            "pts": 33,
+            "key": false,
+            "data": "0405"
+          }
+        ]
+      }
+    ]
+  }
+}

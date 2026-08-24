@@ -51,9 +51,43 @@ pub fn project_mp4_mutation(input: &[u8]) -> Result<Json, String> {
     reference::project(input)
 }
 
+/// ↩️ Applies the INDEPENDENTLY computed inverse of `spec` on top of `mutated`, so that
+/// `inverse(m) . m` must be the identity on the semantic projection. The inverse is reasoned from
+/// the PRE-mutation movie (`original_input`) the same way `Mp4Mutation::inverse`
+/// (`../🧬️schema/🧬️mutations/🦀️component.rs`) reasons over `Mp4Snapshot` — "restore `base`'s own
+/// value for the facet this kind touched" — reimplemented here over this module's own
+/// `DecodedMovie`, never by calling that trait.
+#[cfg(feature = "oracles")]
+pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+    let kind = spec.str("kind");
+    if kind.is_empty() {
+        return Err("mutation spec carries no `kind`".to_string());
+    }
+    reference::apply_inverse(original_input, &kind, &spec.get("params").cloned().unwrap_or(Json::Object(Vec::new())), mutated)
+}
+
+/// 🔁️ The `@id-identity-round-trip` scenario's own independent computation: parse the real movie
+/// with `Mp4Reader` and re-mux it with `Mp4Writer` from the decoded model ALONE. Deliberately NOT
+/// `oracle_apply_mutation`'s `no-mutation` arm, which is a verbatim echo of the input bytes (the
+/// correct reference answer for "apply nothing", and useless as evidence that a parse happened).
+#[cfg(feature = "oracles")]
+pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    reference::remux(input)
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 
@@ -313,6 +347,79 @@ mod reference {
         write_movie(&movie)
     }
     //#endregion 🔖️Mutate
+
+    //#region 🔖️Inverse
+    /// 🧬️ A whole track copied field by field — `DecodedTrack` cannot derive `Clone` because
+    /// `mp4::Mp4Sample` does not implement it.
+    fn clone_track(track: &DecodedTrack) -> DecodedTrack {
+        DecodedTrack { width: track.width, height: track.height, timescale: track.timescale, sps: track.sps.clone(), pps: track.pps.clone(), samples: track.samples.iter().map(clone_sample).collect() }
+    }
+
+    /// 🔁️ Parse and re-mux from the decoded model alone — no byte of the input survives except
+    /// through `DecodedMovie`.
+    pub fn remux(input: &[u8]) -> Result<Vec<u8>, String> {
+        let movie = read_movie(input)?;
+        write_movie(&movie)
+    }
+
+    /// ↩️ The real inverse of `kind`+`params`, computed from the PRE-mutation movie and applied on
+    /// top of `mutated`. `insert-sample`/`remove-sample` restore the whole movie, exactly as
+    /// `Mp4Mutation::inverse` does for them (an inserted sample shifts every later sample's
+    /// decode time, so no single-facet undo exists).
+    pub fn apply_inverse(original_input: &[u8], kind: &str, params: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
+        let original = read_movie(original_input)?;
+        match kind {
+            "set-snapshot" | "insert-sample" | "remove-sample" => return write_movie(&original),
+            _ => {}
+        }
+        let mut movie = read_movie(mutated)?;
+        match kind {
+            "no-mutation" => {}
+            "set-ftyp" => {
+                movie.major_brand = original.major_brand.clone();
+                movie.minor_version = original.minor_version;
+                movie.compatible_brands = original.compatible_brands.clone();
+            }
+            "insert-track" => {
+                let index = (number(params, "index", movie.tracks.len() as f64) as usize).min(original.tracks.len());
+                if index < movie.tracks.len() {
+                    movie.tracks.remove(index);
+                }
+            }
+            "remove-track" => {
+                let index = number(params, "index", 0.0) as usize;
+                if let Some(track) = original.tracks.get(index) {
+                    let at = index.min(movie.tracks.len());
+                    movie.tracks.insert(at, clone_track(track));
+                }
+            }
+            "set-track-dimensions" => {
+                let index = number(params, "trackIndex", 0.0) as usize;
+                if let (Some(source), Some(target)) = (original.tracks.get(index), movie.tracks.get_mut(index)) {
+                    target.width = source.width;
+                    target.height = source.height;
+                }
+            }
+            "set-track-codec" => {
+                let index = number(params, "trackIndex", 0.0) as usize;
+                if let (Some(source), Some(target)) = (original.tracks.get(index), movie.tracks.get_mut(index)) {
+                    target.sps = source.sps.clone();
+                    target.pps = source.pps.clone();
+                }
+            }
+            "set-sample-sync" => {
+                let track_index = number(params, "trackIndex", 0.0) as usize;
+                let index = number(params, "index", 0.0) as usize;
+                let restored = original.tracks.get(track_index).and_then(|track| track.samples.get(index)).map(|sample| sample.is_sync);
+                if let (Some(sync), Some(sample)) = (restored, movie.tracks.get_mut(track_index).and_then(|track| track.samples.get_mut(index))) {
+                    sample.is_sync = sync;
+                }
+            }
+            other => return Err(format!("mp4: mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),
+        }
+        write_movie(&movie)
+    }
+    //#endregion 🔖️Inverse
 
     //#region 🔖️Project
     /// 👁️ The INDEPENDENT projection: `ftyp`, every track's geometry/codec digest, and every

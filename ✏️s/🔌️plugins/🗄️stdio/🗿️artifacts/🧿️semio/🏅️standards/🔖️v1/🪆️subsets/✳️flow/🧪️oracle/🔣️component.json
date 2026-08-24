@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.flow`'s (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.flow` is a semio-NATIVE format — no third party in any ecosystem reads or writes `.dsl.semio`/`.pack.semio` — so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-flow-mutation-semantics",
+      "capabilities": [
+        "semio-v1-flow-mutate"
+      ],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over this subset's `SemioFlowMutation` vocabulary — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. The nearest candidate was surveyed and rejected DELIBERATELY rather than for absence: this subset ships a real JSON RFC8259 import/export serializer under `../🚪️io/`, and `json` 0.12 (json-rust) is already linked into this owner's oracle crate, so a json-rust-mediated differential is technically reachable. Registering it would be a weak oracle of exactly the kind the wave brief forbids: json-rust supplies a generic JSON DOM and no knowledge whatsoever of nodes, edges, ports or params, so every one of the thirteen mutation semantics — which is the entire content of this catalog — would still have to be written by hand on top of it, and calling that hand-written code a third-party reference would overstate the evidence rather than add any. A generic container parser is not a reference implementation of the vocabulary carried inside the container. The cross-language hosts have landed — the runner materializes a Rust, a Python (cache-local interpreter), a TypeScript (npm-resolving), a Go and a .NET host — so a Python or JavaScript reference was checked as well, and it fails one level earlier than a Rust one would: no package in any of those registries reads a semio envelope at all, because the `semio <envelope-id> v1` preamble, the hex/bracket value grammar and the LEB128 pack framing are defined by this repository alone. Confidence comes instead from specification vectors — the committed `(before, mutation, after)` triple per kind under this case's own `🧫️fixtures/`, derived by an INDEPENDENT Python implementation of both the committed DSL grammar and this vocabulary's specification (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/🐍️semio-pattern-a-vectors.py`), never by running this repository's own Rust — plus the metamorphic inverse law: applying a mutation and then its own computed inverse must restore the pre-mutation snapshot exactly. The `identity-round-trip` scenario ties the two together by asserting that production's own `parse_dsl` of the SAME real artifact equals the `before` snapshot every vector starts from, so a mistake in the Python decoder surfaces as a red scenario rather than as a quietly agreeable one.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-flow",
+      "capability": "semio-v1-flow-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "insert-node",
+        "remove-node",
+        "set-node-kind",
+        "set-node-label",
+        "set-node-position",
+        "set-node-param",
+        "remove-node-param",
+        "insert-edge",
+        "remove-edge",
+        "set-edge-endpoints",
+        "set-edge-kind"
+      ]
+    }
+  ]
+}

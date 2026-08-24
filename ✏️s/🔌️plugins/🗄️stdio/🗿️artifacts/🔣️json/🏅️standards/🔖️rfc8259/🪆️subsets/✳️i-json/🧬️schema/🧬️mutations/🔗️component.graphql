@@ -1,0 +1,39 @@
+# 🧬️ JsonIJsonMutation — the RFC 7493 I-JSON editing vocabulary. Four verbs carry a clause of the
+# profile (SET_TOP_LEVEL §2.1, SET_SAFE_NUMBER §2.2, RENAME_MEMBER §2.3, SET_STRING §2.4); the four
+# object/array verbs are the ✳️any subset's, inherited unchanged.
+type JsonIJsonRoot {
+  kind: JsonIJsonRootKind!
+  members: [JsonMember!]
+  items: [JsonValue!]
+}
+enum JsonIJsonRootKind {
+  OBJECT
+  ARRAY
+}
+
+type JsonIJsonMutation {
+  mutation: JsonIJsonMutationKind!
+  snapshot: JsonSnapshot
+  root: JsonIJsonRoot
+  path: [JsonPathSegment!]
+  key: String
+  from: String
+  to: String
+  lexeme: String
+  index: Int
+  value: JsonValue
+  text: String
+}
+
+enum JsonIJsonMutationKind {
+  NO_MUTATION
+  SET_SNAPSHOT
+  SET_TOP_LEVEL
+  UPSERT_MEMBER
+  REMOVE_MEMBER
+  RENAME_MEMBER
+  SET_SAFE_NUMBER
+  SET_STRING
+  INSERT_ARRAY_ELEMENT
+  REMOVE_ARRAY_ELEMENT
+}

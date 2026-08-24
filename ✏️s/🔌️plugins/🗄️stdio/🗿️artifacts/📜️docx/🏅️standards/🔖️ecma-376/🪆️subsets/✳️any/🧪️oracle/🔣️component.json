@@ -20,8 +20,13 @@
       "rationale": "A DOCX is ECMA-376 WordprocessingML: an OPC package (a real ZIP archive) of real XML parts. `zip` is the reference ZIP reader/writer, used here to unzip and rezip the container; `quick-xml` is the reference XML reader/writer, used here to parse and re-serialize word/document.xml, word/styles.xml, [Content_Types].xml and every *.rels part. Composed, they read and write a genuine DOCX end to end, independently of `crate::artifacts::docx`/`crate::artifacts::zip::opc` -- this oracle module never imports `semio-s-plugin-stdio` and reimplements the OPC/WordprocessingML layer itself against the two reference libraries directly. Registered under its own id/capability, distinct from the neighbouring `xml-1-0-mutate` (📰xml/ecma-376's own quick-xml registration) and `zip-2-0-mutate` (🎒️zip/2.0's own zip registration): reusing either would fail the contract's oracle-capability-mismatch check, and a mutation vocabulary belongs to the subset that declares it.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "packages": [
-        "zip",
-        "quick-xml"
+        {
+          "package": "quick-xml",
+          "version": "0.42",
+          "license": "MIT",
+          "homepage": "https://github.com/tafia/quick-xml",
+          "role": "independent XML reader/writer for every part inside the archive"
+        }
       ]
     }
   ],

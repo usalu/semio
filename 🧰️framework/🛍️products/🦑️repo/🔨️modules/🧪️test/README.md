@@ -64,6 +64,40 @@ case also has generated Nx targets (`test`, `test-quick`, `test-long`, `test-exh
 12. **Delete the replaced legacy test** in the same owner change, and lower this owner's count in
     `📇️registry/🔒️migration.json`. Never leave two test hierarchies alive.
 
+## Reaching a reference library — in any language
+
+An oracle runs in whichever implementation its registry `ecosystem` names, and the library it needs
+is declared by the OWNER, never by the framework. One field carries this, in the owner's
+`🧪️oracle/🔣️component.json`:
+
+```json
+"oracleHostPackages": [
+  { "implementation": "rust",       "package": "semio-s-plugin-stdio-test-oracle", "path": "…/📦️packages/🦀️rust", "features": ["oracles"] },
+  { "implementation": "python",     "package": "pypdf",  "version": "6.14.2" },
+  { "implementation": "typescript", "package": "semver", "version": "7.8.5" }
+]
+```
+
+`path` decides how the entry is provisioned, and it is the only thing that does:
+
+* **With a path** the entry is LOCAL in-repo source. The Rust host writes a `Cargo.toml` that
+  depends on it by path — a crates.io coordinate is refused, because it would be an unreviewed
+  dependency of a generated host.
+* **Without a path** the entry is an EXTERNAL distribution. The Python host builds a cache-local
+  virtual environment under `.🧬semio/🦑️repo/⚡️cache/tests/hosts/`, keyed by the declared package
+  set so it is created once and reused by every run; it is created with `--system-site-packages`, so
+  a distribution the machine already provides at the declared version is reused rather than
+  downloaded, and anything else is installed INTO the environment. The system interpreter is never
+  written to. The TypeScript host resolves the package from the repository's own `node_modules`
+  instead of installing a private copy — one lockfile, one version of every library — and reports
+  the declaration as unmet if it does not resolve.
+
+An external host package is a third-party test dependency, so it is classified in
+`🔒️dependencies.json` as `test-oracle` and held to the same purity rule as a registered oracle
+package: it must be registered, it must not be production-reachable, and the production scan looks
+for each ecosystem's own import syntax (`import x` / `from x import` for Python, `use x` for Rust,
+`from "x"` / `require("x")` for JavaScript) in that ecosystem's own files.
+
 ## Rules that are enforced, not advisory
 
 * `compose/**` is excluded in the discovery library, not by a CI path filter. No other area is

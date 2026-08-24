@@ -1565,7 +1565,10 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                                 status => return Err(RunError::Host(format!("unexpected reactor turn status: {status:?}"))),
                             };
                             turn_result = Some(semio_framework::kernel::TurnResult {
-                                ui_patches: serde_json::from_slice(&result.ui_patches).map_err(RunError::Serde)?,
+                                ui_patches: semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&result.ui_patches, *reported)
+                                    .map_err(|error| RunError::Host(format!("kernel: decode ui patch transport: {error}")))?
+                                    .take_owner()
+                                    .map_err(|_| RunError::Host("kernel: turn patch transport lease lost its exact owner".to_string()))?,
                                 effects: serde_json::from_slice(&result.effects).map_err(RunError::Serde)?,
                                 presence: Vec::new(),
                                 next_wake: result.next_wake,
@@ -1573,11 +1576,14 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                                 fuel_used: result.usage.fuel,
                                 command_ingress: serde_json::from_slice(&result.command_ingress).map_err(RunError::Serde)?,
                             });
+                        } else {
+                            let _ = semio_framework::kernel::close_ui_turn_patch_transport_session_one(*reported);
+                            let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
                         }
                     }
                     semio_framework_plugin_host::shard::ShardOutcome::Fault { actor: reported, message } => {
                         let faulted = semio_framework::kernel::TurnResult {
-                            ui_patches: Vec::new(),
+                            ui_patches: semio_framework::kernel::UiTurnPatches::default(),
                             effects: Vec::new(),
                             presence: Vec::new(),
                             next_wake: None,

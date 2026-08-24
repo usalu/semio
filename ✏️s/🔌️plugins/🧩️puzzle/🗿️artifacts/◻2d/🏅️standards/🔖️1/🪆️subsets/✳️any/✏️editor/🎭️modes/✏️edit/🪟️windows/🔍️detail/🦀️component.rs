@@ -43,7 +43,7 @@ pub fn window_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document_json: &str, envelope: &Puzzle2dScene) -> semio_framework_ui_contract::BuiltNode {
+pub fn render(document_json: &str, envelope: &Puzzle2dScene) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     edit::render_canvas(document_json, envelope, WINDOW_KIND_ID)
 }
 

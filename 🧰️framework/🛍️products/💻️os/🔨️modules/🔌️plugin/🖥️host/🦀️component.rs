@@ -895,7 +895,7 @@ impl MockGuestRuntime {
     /// 🏁️ A plain `Idle`, no-effects, no-patches turn result — convenience for tests that only
     /// care about scheduling/backpressure, not turn content.
     pub async fn idle_turn() -> TurnResult {
-        TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }
+        TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }
     }
 
     /// 📼️ Every `events` slice `execute_turn` has been called with for `actor`, flattened across
@@ -1224,9 +1224,7 @@ impl OwnedRuntime {
         let mut command_page = None;
         for event in events {
             match event {
-                Event::CommandIngressPage { cursor, bytes }
-                    if command_page.is_none() && bytes.len() <= semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES && (!bytes.is_empty() || (cursor.kind == 28 && cursor.item_count == 0)) =>
-                {
+                Event::CommandIngressPage { cursor, bytes } if command_page.is_none() && bytes.len() <= semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES && (!bytes.is_empty() || (cursor.kind == 28 && cursor.item_count == 0)) => {
                     command_page = Some((cursor.clone(), bytes.clone()));
                 }
                 Event::CommandIngressPage { .. } => return Err(TurnFault::Trapped("turn carries more than one command page or an invalid page size".to_string())),
@@ -2033,7 +2031,7 @@ impl GuestRuntime for WasmtimeRuntime {
             // `PatchOp`'s `path: String` + `node: UiNode`) is NOT implemented — a real path/node
             // encoding convention needs to be agreed with A2/A3 first (`📓️terra-B1-host-native-
             // report.md`'s `## blocked-on` — tracked there, not silently dropped).
-            ui_patches: Vec::new(),
+            ui_patches: semio_framework::kernel::UiTurnPatches::default(),
             effects,
             // 👥️ M2 render-plane presence (sol's ruling, 26/08/20): `presence-update.update` is a
             // pack-encoded `ui_contract::PresenceUpdate`, NOT the replication `PresencePeer` the
@@ -2877,10 +2875,40 @@ impl GuestRelayRequest {
 
 enum GuestRelayCompletion {
     Started(Result<(), TurnFault>),
-    Stepped(Result<JobStep, TurnFault>),
+    Stepped(Result<GuestRelayStepCompletion, TurnFault>),
     Cancelled,
-    Rejected(Vec<u8>),
-    Fault(Vec<u8>),
+    Rejected(GuestRelayOwnedBytes),
+    Fault(GuestRelayOwnedBytes),
+}
+
+enum GuestRelayStepCompletion {
+    Running { progress: Option<GuestRelayOwnedBytes> },
+    Done { output: GuestRelayOwnedBytes },
+    Failed { error: GuestRelayOwnedBytes },
+}
+
+impl GuestRelayStepCompletion {
+    fn from_guest(step: JobStep) -> Self {
+        match step {
+            JobStep::Running { progress } => Self::Running { progress: progress.map(GuestRelayOwnedBytes::new) },
+            JobStep::Done { output } => Self::Done { output: GuestRelayOwnedBytes::new(output) },
+            JobStep::Failed { error } => Self::Failed { error: GuestRelayOwnedBytes::new(error) },
+        }
+    }
+}
+
+struct GuestRelayOwnedBytes {
+    source: Vec<u8>,
+}
+
+impl GuestRelayOwnedBytes {
+    fn new(source: Vec<u8>) -> Self {
+        Self { source }
+    }
+
+    fn into_source(self) -> Vec<u8> {
+        self.source
+    }
 }
 
 #[cfg(test)]
@@ -2900,17 +2928,55 @@ async fn wait_for_scripted_guest_relay_release(runtime: &GuestRuntimes, completi
 
 #[derive(Clone)]
 struct GuestRelayCompletionSender {
-    sender: Arc<Mutex<Option<semio_framework_async::oneshot::Sender<GuestRelayCompletion>>>>,
+    slot: Arc<GuestRelayCompletionSlot>,
 }
 
 impl GuestRelayCompletionSender {
-    fn new(sender: semio_framework_async::oneshot::Sender<GuestRelayCompletion>) -> Self {
-        Self { sender: Arc::new(Mutex::new(Some(sender))) }
+    fn new(slot: Arc<GuestRelayCompletionSlot>) -> Self {
+        Self { slot }
     }
 
     fn send(&self, completion: GuestRelayCompletion) {
-        if let Some(sender) = self.sender.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            let _ = sender.send(completion);
+        let mut value = self.slot.value.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if value.is_none() {
+            *value = Some(completion);
+            self.slot.wake.store(true, std::sync::atomic::Ordering::Release);
+            if let Some(waker) = self.slot.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                waker.wake();
+            }
+        }
+    }
+}
+
+struct GuestRelayCompletionSlot {
+    value: Mutex<Option<GuestRelayCompletion>>,
+    wake: AtomicBool,
+    waker: Mutex<Option<std::task::Waker>>,
+}
+
+impl GuestRelayCompletionSlot {
+    fn new() -> Self {
+        Self { value: Mutex::new(None), wake: AtomicBool::new(false), waker: Mutex::new(None) }
+    }
+
+    fn try_take(&self) -> Option<GuestRelayCompletion> {
+        let completion = self.value.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if completion.is_some() {
+            self.wake.store(false, std::sync::atomic::Ordering::Release);
+        }
+        completion
+    }
+
+    fn register_wake(&self, waker: &std::task::Waker) {
+        if self.wake.load(std::sync::atomic::Ordering::Acquire) {
+            waker.wake_by_ref();
+            return;
+        }
+        *self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(waker.clone());
+        if self.wake.load(std::sync::atomic::Ordering::Acquire) {
+            if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                waker.wake();
+            }
         }
     }
 }
@@ -3116,12 +3182,12 @@ fn foreground_cancel_completion(result: Result<bool, TurnFault>, guest: &mut Gue
         Ok(false) => {
             let detail = b"plugin instance quarantined because cancel-job admission was already consumed".to_vec();
             guest.quarantine(detail.clone());
-            GuestRelayCompletion::Fault(detail)
+            GuestRelayCompletion::Fault(GuestRelayOwnedBytes::new(detail))
         }
         Err(error) => {
             let detail = cancel_guest_job_failure_detail(&error);
             guest.quarantine(detail.clone());
-            GuestRelayCompletion::Fault(detail)
+            GuestRelayCompletion::Fault(GuestRelayOwnedBytes::new(detail))
         }
     }
 }
@@ -3156,7 +3222,7 @@ async fn run_guest_relay_request(
     let mut guest = match GuestInstanceLease::acquire(Arc::clone(&instance), unwind_detail) {
         Ok(guest) => guest,
         Err(error) => {
-            sender.send(GuestRelayCompletion::Rejected(error));
+            sender.send(GuestRelayCompletion::Rejected(GuestRelayOwnedBytes::new(error)));
             return;
         }
     };
@@ -3180,7 +3246,7 @@ async fn run_guest_relay_request(
         GuestRelayRequest::Step => match semio_framework_async::select2(runtime.step_job(guest.guest(), job, RELAY_JOB_BUDGET), wait_for_guest_relay_cancellation(pool.clone(), cancel)).await {
             semio_framework_async::Either::Left(Ok(step)) => {
                 guest.available();
-                GuestRelayCompletion::Stepped(Ok(step))
+                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::from_guest(step)))
             }
             semio_framework_async::Either::Left(Err(error)) => {
                 guest.cleanup_pending(guest_relay_cleanup_pending_detail("step-job", &error));
@@ -3201,42 +3267,8 @@ async fn run_guest_relay_request(
     drop(permit);
     #[cfg(test)]
     wait_for_scripted_guest_relay_release(&runtime, &completion).await;
-    if cleanup_pending {
-        schedule_guest_relay_cancel(Arc::clone(&runtime), instance, instance_gate, pool, job, cancel_scheduled, cancel_admitted);
-    }
+    let _ = cleanup_pending;
     sender.send(completion);
-}
-
-fn schedule_guest_relay_cancel(
-    runtime: Arc<GuestRuntimes>,
-    instance: Arc<Mutex<GuestInstanceSlot>>,
-    instance_gate: Arc<semio_framework_async::Semaphore>,
-    pool: WorkerPool,
-    job: u64,
-    cancel_scheduled: Arc<AtomicBool>,
-    cancel_admitted: Arc<AtomicBool>,
-) {
-    if cancel_scheduled.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
-        return;
-    }
-    mark_guest_cleanup_pending(&instance, b"plugin instance cleanup pending until cancel-job resolves".to_vec());
-    let panic_instance = Arc::clone(&instance);
-    GuestRelayPoolFuture::spawn_recoverable(
-        pool,
-        Lane::UserVisible,
-        async move {
-            let _permit = instance_gate.acquire_owned().await;
-            let Ok(mut guest) = GuestInstanceLease::acquire_cleanup(instance) else {
-                return;
-            };
-            match cancel_guest_job_once(&runtime, guest.guest(), job, &cancel_admitted).await {
-                Ok(true) => guest.cleanup_resolved(),
-                Ok(false) => guest.quarantine(b"plugin instance quarantined because cancel-job admission was already consumed".to_vec()),
-                Err(error) => guest.quarantine(cancel_guest_job_failure_detail(&error)),
-            }
-        },
-        move || quarantine_guest_instance(&panic_instance, b"plugin instance quarantined after cleanup cancel-job panic".to_vec()),
-    );
 }
 
 fn recover_guest_relay_panic(
@@ -3276,10 +3308,114 @@ fn recover_guest_relay_panic(
         quarantine_guest_instance(&instance, detail.to_vec());
         detail.to_vec()
     } else {
-        schedule_guest_relay_cancel(runtime, instance, instance_gate, pool, job, cancel_scheduled, cancel_admitted);
+        let _ = (runtime, instance_gate, pool, job, cancel_scheduled, cancel_admitted);
+        mark_guest_cleanup_pending(&instance, b"plugin instance cleanup pending after guest relay panic".to_vec());
         b"plugin guest relay panicked after acquiring its instance".to_vec()
     };
-    sender.send(GuestRelayCompletion::Fault(detail));
+    sender.send(GuestRelayCompletion::Fault(GuestRelayOwnedBytes::new(detail)));
+}
+
+#[derive(Clone, Copy)]
+enum GuestRelayPublicationKind {
+    Preview,
+    Commit,
+    Fault,
+}
+
+struct GuestRelayPublication {
+    kind: GuestRelayPublicationKind,
+    source: Vec<u8>,
+    cursor: usize,
+    copied: bool,
+    retired: bool,
+    oversized: bool,
+    writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
+}
+
+impl GuestRelayPublication {
+    fn new(kind: GuestRelayPublicationKind, source: Vec<u8>) -> Self {
+        let oversized = source.len() > semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES;
+        let kind = if oversized { GuestRelayPublicationKind::Fault } else { kind };
+        let stream = match kind {
+            GuestRelayPublicationKind::Preview => semio_framework_job::JobPayloadStream::Preview,
+            GuestRelayPublicationKind::Commit => semio_framework_job::JobPayloadStream::CommitOutput,
+            GuestRelayPublicationKind::Fault => semio_framework_job::JobPayloadStream::Fault,
+        };
+        Self { kind, source, cursor: 0, copied: false, retired: false, oversized, writer: Some(semio_framework_job::RetainedJobPayloadWriter::new(stream)) }
+    }
+
+    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if !self.copied {
+            let bytes = if self.oversized { &b"plugin-guest-relay-output-limit"[..] } else { self.source.as_slice() };
+            let writer = self.writer.as_mut().expect("guest relay publication owns writer");
+            match writer.write_slice_page(context, bytes, &mut self.cursor) {
+                Ok(true) => self.copied = true,
+                Ok(false) | Err(_) => return semio_framework_job::StepOutcome::Yield,
+            }
+            context.consume_fuel(1);
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        if !self.retired {
+            if !self.source.is_empty() {
+                let keep = self.source.len().saturating_sub(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                self.source.truncate(keep);
+                context.consume_fuel(1);
+                return semio_framework_job::StepOutcome::Yield;
+            }
+            drop(std::mem::take(&mut self.source));
+            self.retired = true;
+            context.consume_fuel(1);
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        let writer = self.writer.take().expect("guest relay publication owns finished writer");
+        let payload = match writer.finish() {
+            Ok(payload) => payload,
+            Err(writer) => {
+                self.writer = Some(writer);
+                return semio_framework_job::StepOutcome::Yield;
+            }
+        };
+        match self.kind {
+            GuestRelayPublicationKind::Preview => semio_framework_job::StepOutcome::PreviewReady(payload),
+            GuestRelayPublicationKind::Commit => {
+                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output: payload })
+            }
+            GuestRelayPublicationKind::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: payload }),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        if let Some(writer) = self.writer.as_mut() {
+            writer.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if let Some(writer) = self.writer.as_mut() {
+            match writer.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => {
+                    if writer.terminal_is_empty() {
+                        self.writer = None;
+                    }
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                }
+                semio_framework_job::JobPayloadCloseStep::Complete => self.writer = None,
+            }
+        }
+        if self.source.is_empty() {
+            return semio_framework_job::InteractiveJobCloseStep::Complete;
+        }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let released_bytes = maximum_bytes.min(self.source.len());
+        self.source.truncate(self.source.len() - released_bytes);
+        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.writer.is_none() && self.source.is_empty()
+    }
 }
 
 struct GuestColdRelayJob {
@@ -3292,7 +3428,9 @@ struct GuestColdRelayJob {
     cancel_admitted: Arc<AtomicBool>,
     job: u64,
     start: Option<(String, Vec<u8>)>,
-    pending: Option<semio_framework_async::oneshot::Receiver<GuestRelayCompletion>>,
+    pending: Option<Arc<GuestRelayCompletionSlot>>,
+    publication: Option<GuestRelayPublication>,
+    closing: bool,
     start_submitted: bool,
     started: bool,
     cleanup_required: bool,
@@ -3300,9 +3438,15 @@ struct GuestColdRelayJob {
 }
 
 impl GuestColdRelayJob {
+    fn register_wake(&self, waker: &std::task::Waker) {
+        if let Some(slot) = self.pending.as_ref() {
+            slot.register_wake(waker);
+        }
+    }
+
     fn submit(&mut self, request: GuestRelayRequest) {
-        let (sender, receiver) = semio_framework_async::oneshot::channel();
-        let sender = GuestRelayCompletionSender::new(sender);
+        let slot = Arc::new(GuestRelayCompletionSlot::new());
+        let sender = GuestRelayCompletionSender::new(Arc::clone(&slot));
         let request_kind = request.kind();
         GuestRelayPoolFuture::spawn_recoverable(
             self.pool.clone(),
@@ -3330,14 +3474,7 @@ impl GuestColdRelayJob {
                 move || recover_guest_relay_panic(runtime, instance, instance_gate, pool, job, cancel_scheduled, cancel_admitted, sender, request_kind)
             },
         );
-        self.pending = Some(receiver);
-    }
-
-    fn schedule_cleanup(&self) {
-        if self.start_submitted {
-            self.cancel.cancel_now();
-            schedule_guest_relay_cancel(Arc::clone(&self.runtime), Arc::clone(&self.instance), Arc::clone(&self.instance_gate), self.pool.clone(), self.job, Arc::clone(&self.cancel_scheduled), Arc::clone(&self.cancel_admitted));
-        }
+        self.pending = Some(slot);
     }
 
     fn submit_cleanup(&mut self) {
@@ -3351,15 +3488,21 @@ impl GuestColdRelayJob {
         self.terminal_delivered = true;
         outcome
     }
-
-    fn terminal_with_cleanup(&mut self, outcome: semio_framework_job::StepOutcome) -> semio_framework_job::StepOutcome {
-        self.schedule_cleanup();
-        self.terminal(outcome)
-    }
 }
 
 impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
     fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if let Some(publication) = self.publication.as_mut() {
+            let outcome = publication.step(context);
+            if !matches!(outcome, semio_framework_job::StepOutcome::Yield) {
+                let terminal = outcome.is_terminal();
+                self.publication = None;
+                if terminal {
+                    self.terminal_delivered = true;
+                }
+            }
+            return outcome;
+        }
         if self.terminal_delivered {
             return semio_framework_job::StepOutcome::Yield;
         }
@@ -3373,37 +3516,42 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
                 return self.terminal(semio_framework_job::StepOutcome::Cancelled);
             }
         }
-        if let Some(receiver) = &mut self.pending {
-            let completion = match receiver.try_recv() {
-                Ok(completion) => completion,
-                Err(semio_framework_async::oneshot::TryRecvError::Empty) => return semio_framework_job::StepOutcome::Yield,
-                Err(semio_framework_async::oneshot::TryRecvError::Closed) => {
-                    self.pending = None;
-                    return self.terminal_with_cleanup(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin guest relay future closed without an outcome".to_vec() }));
-                }
-            };
+        if let Some(slot) = &self.pending {
+            let Some(completion) = slot.try_take() else { return semio_framework_job::StepOutcome::Yield };
             self.pending = None;
             return match completion {
                 GuestRelayCompletion::Started(Ok(())) => {
                     self.started = true;
                     semio_framework_job::StepOutcome::Yield
                 }
-                GuestRelayCompletion::Started(Err(error)) | GuestRelayCompletion::Stepped(Err(error)) => self.terminal_with_cleanup(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error.to_string().into_bytes() })),
-                GuestRelayCompletion::Stepped(Ok(JobStep::Running { progress: Some(progress) })) => semio_framework_job::StepOutcome::PreviewReady(progress),
-                GuestRelayCompletion::Stepped(Ok(JobStep::Running { progress: None })) => semio_framework_job::StepOutcome::Yield,
-                GuestRelayCompletion::Stepped(Ok(JobStep::Done { output })) => {
-                    self.cleanup_required = false;
-                    self.terminal(semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output }))
+                GuestRelayCompletion::Started(Err(error)) | GuestRelayCompletion::Stepped(Err(error)) => {
+                    self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.to_string().into_bytes()));
+                    semio_framework_job::StepOutcome::Yield
                 }
-                GuestRelayCompletion::Stepped(Ok(JobStep::Failed { error })) => {
+                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Running { progress: Some(progress) })) => {
+                    self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Preview, progress.into_source()));
+                    semio_framework_job::StepOutcome::Yield
+                }
+                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Running { progress: None })) => semio_framework_job::StepOutcome::Yield,
+                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Done { output })) => {
                     self.cleanup_required = false;
-                    self.terminal(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error }))
+                    self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Commit, output.into_source()));
+                    semio_framework_job::StepOutcome::Yield
+                }
+                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Failed { error })) => {
+                    self.cleanup_required = false;
+                    self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.into_source()));
+                    semio_framework_job::StepOutcome::Yield
                 }
                 GuestRelayCompletion::Rejected(error) => {
                     self.cleanup_required = false;
-                    self.terminal(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error }))
+                    self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.into_source()));
+                    semio_framework_job::StepOutcome::Yield
                 }
-                GuestRelayCompletion::Fault(error) => self.terminal_with_cleanup(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error })),
+                GuestRelayCompletion::Fault(error) => {
+                    self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.into_source()));
+                    semio_framework_job::StepOutcome::Yield
+                }
                 GuestRelayCompletion::Cancelled => {
                     self.cleanup_required = false;
                     self.terminal(semio_framework_job::StepOutcome::Cancelled)
@@ -3417,17 +3565,89 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
         } else if self.started {
             self.submit(GuestRelayRequest::Step);
         } else {
-            return self.terminal(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin guest relay lost its start state".to_vec() }));
+            self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, b"plugin guest relay lost its start state".to_vec()));
+            return semio_framework_job::StepOutcome::Yield;
         }
         semio_framework_job::StepOutcome::Yield
+    }
+
+    fn begin_close(&mut self) {
+        if self.closing {
+            return;
+        }
+        self.closing = true;
+        self.cancel.cancel_now();
+        if let Some(publication) = self.publication.as_mut() {
+            publication.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing {
+            self.begin_close();
+        }
+        if let Some(publication) = self.publication.as_mut() {
+            let step = publication.close_step(maximum_items, maximum_bytes);
+            if publication.terminal_is_empty() {
+                self.publication = None;
+            }
+            return step;
+        }
+        if let Some(slot) = &self.pending {
+            let Some(completion) = slot.try_take() else { return semio_framework_job::InteractiveJobCloseStep::Blocked };
+            self.pending = None;
+            self.publication = Some(match completion {
+                GuestRelayCompletion::Rejected(bytes) | GuestRelayCompletion::Fault(bytes) => GuestRelayPublication::new(GuestRelayPublicationKind::Fault, bytes.into_source()),
+                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Running { progress: Some(bytes) })) => GuestRelayPublication::new(GuestRelayPublicationKind::Preview, bytes.into_source()),
+                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Done { output })) => GuestRelayPublication::new(GuestRelayPublicationKind::Commit, output.into_source()),
+                GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Failed { error })) => GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.into_source()),
+                GuestRelayCompletion::Started(Err(error)) | GuestRelayCompletion::Stepped(Err(error)) => GuestRelayPublication::new(GuestRelayPublicationKind::Fault, error.to_string().into_bytes()),
+                GuestRelayCompletion::Cancelled => {
+                    self.cleanup_required = false;
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                GuestRelayCompletion::Started(Ok(())) | GuestRelayCompletion::Stepped(Ok(GuestRelayStepCompletion::Running { progress: None })) => {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+            });
+            self.publication.as_mut().expect("close retained relay publication").begin_close();
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some((kind, input)) = self.start.as_mut() {
+            if !input.is_empty() {
+                if maximum_items == 0 || maximum_bytes == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                let released_bytes = maximum_bytes.min(input.len());
+                input.truncate(input.len() - released_bytes);
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            if !kind.is_empty() {
+                if maximum_items == 0 || maximum_bytes < kind.len() {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                let released_bytes = kind.len();
+                kind.clear();
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            self.start = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.cleanup_required {
+            self.submit_cleanup();
+            return if self.pending.is_some() { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { semio_framework_job::InteractiveJobCloseStep::Blocked };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && !self.cleanup_required && self.start.is_none() && self.pending.is_none() && self.publication.as_ref().is_none_or(GuestRelayPublication::terminal_is_empty)
     }
 }
 
 impl Drop for GuestColdRelayJob {
     fn drop(&mut self) {
-        if self.cleanup_required {
-            self.schedule_cleanup();
-        }
+        debug_assert!(!self.cleanup_required && self.start.is_none() && self.pending.is_none() && self.publication.as_ref().is_none_or(GuestRelayPublication::terminal_is_empty));
     }
 }
 
@@ -3444,10 +3664,336 @@ impl GuestColdRelayJob {
             job,
             start: Some((kind, input)),
             pending: None,
+            publication: None,
+            closing: false,
             start_submitted: false,
             started: false,
             cleanup_required: false,
             terminal_delivered: false,
+        }
+    }
+}
+
+const GUEST_RELAY_MOUNTED_SLOTS: usize = 16;
+
+enum GuestRelayMountedOwner {
+    Session(semio_framework_job::WorkerJobSession<GuestColdRelayJob>),
+    Rejected(semio_framework_job::WorkerJobSessionAdmissionRejected<GuestColdRelayJob>),
+    Empty,
+}
+
+struct GuestRelayMountedSession {
+    generation: u64,
+    owner: GuestRelayMountedOwner,
+    checked_out: Option<semio_framework_job::WorkerJobOutcome<GuestColdRelayJob>>,
+    outcome: Option<semio_framework_job::StepOutcome>,
+    outcome_page: usize,
+    output: GuestRelayMountedOutput,
+    terminal: Option<GuestRelayMountedTerminal>,
+    close_requested: bool,
+}
+
+struct GuestRelayMountedOutput {
+    storage: Box<[std::mem::MaybeUninit<u8>; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]>,
+    length: usize,
+}
+
+impl GuestRelayMountedOutput {
+    fn new() -> Self {
+        let storage = Box::<[std::mem::MaybeUninit<u8>; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]>::new_uninit();
+        Self { storage: unsafe { storage.assume_init() }, length: 0 }
+    }
+
+    fn write_page(&mut self, page: &[u8]) -> Result<(), PluginHostError> {
+        let end = self.length.checked_add(page.len()).filter(|end| *end <= semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES).ok_or_else(|| PluginHostError::Plugin("plugin cold relay mounted output exceeds its admitted authority".into()))?;
+        for (target, byte) in self.storage[self.length..end].iter_mut().zip(page.iter().copied()) {
+            target.write(byte);
+        }
+        self.length = end;
+        Ok(())
+    }
+
+    fn bytes(&self) -> &[u8] {
+        unsafe { std::slice::from_raw_parts(self.storage.as_ptr().cast::<u8>(), self.length) }
+    }
+
+    fn into_vec(self) -> Vec<u8> {
+        self.bytes().to_vec()
+    }
+}
+
+enum GuestRelayMountedTerminal {
+    Complete,
+    Cancelled,
+    Fault,
+    HostFault(PluginHostError),
+}
+
+enum GuestRelayMountedSlot {
+    Empty,
+    Reserved { generation: u64, output: GuestRelayMountedOutput },
+    Mounted(GuestRelayMountedSession),
+}
+
+struct GuestRelayMountedRegistry {
+    slots: [Mutex<GuestRelayMountedSlot>; GUEST_RELAY_MOUNTED_SLOTS],
+    next_generation: std::sync::atomic::AtomicU64,
+}
+
+impl GuestRelayMountedRegistry {
+    fn new() -> Self {
+        Self { slots: std::array::from_fn(|_| Mutex::new(GuestRelayMountedSlot::Empty)), next_generation: std::sync::atomic::AtomicU64::new(1) }
+    }
+
+    fn reserve(&self) -> Option<(usize, u64)> {
+        for (index, slot) in self.slots.iter().enumerate() {
+            let mut slot = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if matches!(*slot, GuestRelayMountedSlot::Empty) {
+                let generation = self
+                    .next_generation
+                    .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| match generation {
+                        0 => None,
+                        u64::MAX => Some(0),
+                        generation => Some(generation + 1),
+                    })
+                    .ok()?;
+                *slot = GuestRelayMountedSlot::Reserved { generation, output: GuestRelayMountedOutput::new() };
+                return Some((index, generation));
+            }
+        }
+        None
+    }
+
+    fn mount(&self, index: usize, generation: u64, owner: GuestRelayMountedOwner) {
+        let mut slot = self.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let reserved = std::mem::replace(&mut *slot, GuestRelayMountedSlot::Empty);
+        let GuestRelayMountedSlot::Reserved { generation: reserved_generation, output } = reserved else {
+            debug_assert!(false, "mounted relay requires its exact reserved output owner");
+            return;
+        };
+        if reserved_generation != generation {
+            debug_assert!(false, "mounted relay generation must match its reserved output owner");
+            *slot = GuestRelayMountedSlot::Reserved { generation: reserved_generation, output };
+            return;
+        }
+        *slot = GuestRelayMountedSlot::Mounted(GuestRelayMountedSession { generation, owner, checked_out: None, outcome: None, outcome_page: 0, output, terminal: None, close_requested: false });
+    }
+
+    fn request_close(&self, index: usize, generation: u64) {
+        let mut slot = self.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let GuestRelayMountedSlot::Mounted(session) = &mut *slot else { return };
+        if session.generation != generation {
+            return;
+        }
+        session.close_requested = true;
+        if let Some(owner) = session.checked_out.take() {
+            owner.begin_close();
+        } else if let GuestRelayMountedOwner::Session(owner) = &session.owner {
+            let _ = owner.begin_close();
+        }
+    }
+
+    fn pump_retirement(&self, skip: usize) {
+        for (index, slot) in self.slots.iter().enumerate() {
+            if index == skip {
+                continue;
+            }
+            let mut slot = slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let GuestRelayMountedSlot::Mounted(session) = &mut *slot else { continue };
+            if !session.close_requested {
+                continue;
+            }
+            if Self::pump_close(session) {
+                *slot = GuestRelayMountedSlot::Empty;
+            }
+            break;
+        }
+    }
+
+    fn pump_close(session: &mut GuestRelayMountedSession) -> bool {
+        if let Some(outcome) = session.outcome.as_mut() {
+            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if outcome.terminal_is_empty() {
+                session.outcome = None;
+            }
+            return false;
+        }
+        if let Some(owner) = session.checked_out.take() {
+            owner.begin_close();
+            return false;
+        }
+        match &mut session.owner {
+            GuestRelayMountedOwner::Session(owner) => match owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                semio_framework_job::WorkerJobCloseStep::Complete => {
+                    session.owner = GuestRelayMountedOwner::Empty;
+                    true
+                }
+                _ => false,
+            },
+            GuestRelayMountedOwner::Rejected(owner) => {
+                owner.begin_close();
+                let _ = owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if owner.terminal_is_empty() {
+                    session.owner = GuestRelayMountedOwner::Empty;
+                    true
+                } else {
+                    false
+                }
+            }
+            GuestRelayMountedOwner::Empty => true,
+        }
+    }
+
+    fn outcome_payload(outcome: &semio_framework_job::StepOutcome) -> Option<&semio_framework_job::RetainedJobPayload> {
+        match outcome {
+            semio_framework_job::StepOutcome::PreviewReady(payload) => Some(payload),
+            semio_framework_job::StepOutcome::CheckpointReady(checkpoint) => Some(&checkpoint.state),
+            semio_framework_job::StepOutcome::Complete(candidate) if !candidate.state.terminal_is_empty() => Some(&candidate.state),
+            semio_framework_job::StepOutcome::Complete(candidate) => Some(&candidate.output),
+            semio_framework_job::StepOutcome::Fault(fault) => Some(&fault.detail),
+            semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::Cancelled => None,
+        }
+    }
+
+    fn finish_outcome(session: &mut GuestRelayMountedSession, waker: &std::task::Waker) {
+        let terminal = session.outcome.as_ref().is_some_and(semio_framework_job::StepOutcome::is_terminal);
+        if terminal {
+            let outcome = session.outcome.take().expect("terminal relay outcome remains owned");
+            session.terminal = Some(match outcome {
+                semio_framework_job::StepOutcome::Complete(_) => GuestRelayMountedTerminal::Complete,
+                semio_framework_job::StepOutcome::Cancelled => GuestRelayMountedTerminal::Cancelled,
+                semio_framework_job::StepOutcome::Fault(_) => GuestRelayMountedTerminal::Fault,
+                _ => unreachable!("terminal relay classification remains stable"),
+            });
+            session.checked_out.take().expect("terminal relay owner remains checked out").begin_close();
+            session.close_requested = true;
+        } else {
+            session.outcome = None;
+            let owner = session.checked_out.take().expect("resumable relay owner remains checked out");
+            if let Err(owner) = owner.resume() {
+                owner.begin_close();
+                session.terminal = Some(GuestRelayMountedTerminal::HostFault(PluginHostError::Plugin("plugin cold relay resume rejected".into())));
+                session.close_requested = true;
+            }
+        }
+        waker.wake_by_ref();
+    }
+
+    fn pump(&self, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
+        self.pump_retirement(index);
+        let mut slot = self.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let GuestRelayMountedSlot::Mounted(session) = &mut *slot else {
+            return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay slot is not mounted".into())));
+        };
+        if session.generation != generation {
+            return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay generation is stale".into())));
+        }
+        if session.close_requested {
+            if Self::pump_close(session) {
+                let mounted = std::mem::replace(&mut *slot, GuestRelayMountedSlot::Empty);
+                let GuestRelayMountedSlot::Mounted(mut session) = mounted else { unreachable!("mounted relay slot remains mounted through close") };
+                let result = match session.terminal.take() {
+                    Some(GuestRelayMountedTerminal::Complete) => Ok(session.output.into_vec()),
+                    Some(GuestRelayMountedTerminal::Cancelled) => Err(PluginHostError::Plugin("plugin cold relay cancelled".into())),
+                    Some(GuestRelayMountedTerminal::Fault) => Err(PluginHostError::Plugin(String::from_utf8_lossy(session.output.bytes()).into_owned())),
+                    Some(GuestRelayMountedTerminal::HostFault(error)) => Err(error),
+                    None => Err(PluginHostError::Plugin("plugin cold relay closed".into())),
+                };
+                return std::task::Poll::Ready(result);
+            }
+            return std::task::Poll::Pending;
+        }
+        if let Some(outcome) = session.outcome.as_mut() {
+            if let Some(payload) = Self::outcome_payload(outcome) {
+                if let Some(page) = payload.page(session.outcome_page) {
+                    if matches!(outcome, semio_framework_job::StepOutcome::Complete(_) | semio_framework_job::StepOutcome::Fault(_)) {
+                        if let Err(error) = session.output.write_page(page) {
+                            session.terminal = Some(GuestRelayMountedTerminal::HostFault(error));
+                            session.checked_out.take().expect("faulted relay output retains its checked-out owner").begin_close();
+                            session.close_requested = true;
+                        }
+                    }
+                    session.outcome_page += 1;
+                }
+            }
+            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if session.close_requested {
+                waker.wake_by_ref();
+                return std::task::Poll::Pending;
+            }
+            if outcome.terminal_is_empty() {
+                Self::finish_outcome(session, waker);
+            } else {
+                waker.wake_by_ref();
+            }
+            return std::task::Poll::Pending;
+        }
+        let GuestRelayMountedOwner::Session(owner) = &session.owner else {
+            if let GuestRelayMountedOwner::Rejected(rejected) = &mut session.owner {
+                rejected.begin_close();
+                let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if rejected.terminal_is_empty() {
+                    session.owner = GuestRelayMountedOwner::Empty;
+                    *slot = GuestRelayMountedSlot::Empty;
+                    return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay admission rejected".into())));
+                }
+            }
+            waker.wake_by_ref();
+            return std::task::Poll::Pending;
+        };
+        match owner.try_step_on_caller() {
+            Ok((ticket, semio_framework_job::WorkerJobPoll::Outcome)) => {
+                let checked = owner.take_outcome(ticket).map_err(|_| PluginHostError::Plugin("plugin cold relay outcome unavailable".into()));
+                match checked {
+                    Ok(mut checked) => {
+                        checked.job().register_wake(waker);
+                        session.outcome = Some(checked.take_outcome());
+                        session.checked_out = Some(checked);
+                        session.outcome_page = 0;
+                    }
+                    Err(error) => return std::task::Poll::Ready(Err(error)),
+                }
+            }
+            Ok((_, semio_framework_job::WorkerJobPoll::Terminal)) => match owner.take_terminal() {
+                Ok(mut checked) => {
+                    session.outcome = Some(checked.take_outcome());
+                    session.checked_out = Some(checked);
+                    session.outcome_page = 0;
+                }
+                Err(_) => return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay terminal unavailable".into()))),
+            },
+            Ok(_) => {}
+            Err(_) => {
+                let _ = owner.register_wake(waker);
+            }
+        };
+        std::task::Poll::Pending
+    }
+}
+
+struct GuestRelayMountedFuture {
+    registry: Arc<GuestRelayMountedRegistry>,
+    index: usize,
+    generation: u64,
+    complete: bool,
+}
+
+impl std::future::Future for GuestRelayMountedFuture {
+    type Output = Result<Vec<u8>, PluginHostError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        let poll = self.registry.pump(self.index, self.generation, context.waker());
+        if poll.is_ready() {
+            self.complete = true;
+        }
+        poll
+    }
+}
+
+impl Drop for GuestRelayMountedFuture {
+    fn drop(&mut self) {
+        if !self.complete {
+            self.registry.request_close(self.index, self.generation);
         }
     }
 }
@@ -3466,17 +4012,24 @@ pub struct PluginInstanceHandle {
     runtime: Arc<GuestRuntimes>,
     instance: Arc<Mutex<GuestInstanceSlot>>,
     instance_gate: Arc<semio_framework_async::Semaphore>,
+    relay_registry: Arc<GuestRelayMountedRegistry>,
     next_job_id: std::sync::atomic::AtomicU64,
 }
 
 impl PluginInstanceHandle {
     pub async fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, instance: GuestInstance) -> Self {
-        Self { actor, runtime, instance: Arc::new(Mutex::new(GuestInstanceSlot::Available(instance))), instance_gate: Arc::new(semio_framework_async::Semaphore::new(1)), next_job_id: std::sync::atomic::AtomicU64::new(1) }
+        Self {
+            actor,
+            runtime,
+            instance: Arc::new(Mutex::new(GuestInstanceSlot::Available(instance))),
+            instance_gate: Arc::new(semio_framework_async::Semaphore::new(1)),
+            relay_registry: Arc::new(GuestRelayMountedRegistry::new()),
+            next_job_id: std::sync::atomic::AtomicU64::new(1),
+        }
     }
 
-    /// 🧵️ Starts one cold job, then explicitly admits one persistent relay step per shared-pool
-    /// turn. A preview/yield returns control to this loop before the next admission; the pool never
-    /// owns an internal run-to-completion chain.
+    /// 🧵️ Starts one cold job in the fixed mounted registry. Each host poll admits at most one
+    /// relay or close opportunity; the pool never owns an internal run-to-completion chain.
     async fn run_job_on_worker(&self, kind: &str, input: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         if let Some(detail) = self.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).admission_fault() {
             return Err(PluginHostError::Plugin(format!("{kind} job rejected: {}", String::from_utf8_lossy(&detail))));
@@ -3499,19 +4052,13 @@ impl PluginInstanceHandle {
             now_ms: semio_framework_job::default_now_ms,
         };
         let relay = GuestColdRelayJob::new(Arc::clone(&self.runtime), Arc::clone(&self.instance), Arc::clone(&self.instance_gate), pool.clone(), cancel, job, kind.to_string(), input);
-        let session = semio_framework_job::WorkerJobSession::new(relay, params);
-        loop {
-            let outcome = session.step(&pool, semio_framework_async::Lane::UserVisible).await.map_err(|_| PluginHostError::Plugin(format!("{kind} worker result channel closed")))?;
-            if let Some(elapsed_us) = semio_framework_job::watchdog_step_overrun_us(operation, generation) {
-                return Err(PluginHostError::Plugin(format!("{kind} step exceeded the 8 ms ceiling ({elapsed_us} µs)")));
-            }
-            match outcome {
-                semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => {}
-                semio_framework_job::StepOutcome::Complete(candidate) => return Ok(candidate.output),
-                semio_framework_job::StepOutcome::Cancelled => return Err(PluginHostError::Plugin(format!("{kind} job cancelled"))),
-                semio_framework_job::StepOutcome::Fault(fault) => return Err(PluginHostError::Plugin(format!("{kind} job failed: {}", String::from_utf8_lossy(&fault.detail)))),
-            }
-        }
+        let (index, mounted_generation) = self.relay_registry.reserve().ok_or_else(|| PluginHostError::Plugin(format!("{kind} mounted relay registry is full")))?;
+        let owner = match semio_framework_job::WorkerJobSession::try_new(relay, params) {
+            Ok(session) => GuestRelayMountedOwner::Session(session),
+            Err(rejected) => GuestRelayMountedOwner::Rejected(rejected),
+        };
+        self.relay_registry.mount(index, mounted_generation, owner);
+        GuestRelayMountedFuture { registry: Arc::clone(&self.relay_registry), index, generation: mounted_generation, complete: false }.await
     }
 
     /// 🌉️ Executes ONE hop of this plugin's own local io mechanism registry — the absorbed `io-run`
@@ -3600,6 +4147,116 @@ impl std::fmt::Debug for PluginInstanceHandle {
 mod guest_cold_relay_tests {
     use super::*;
 
+    #[derive(Debug, PartialEq, Eq)]
+    enum TestRelayOutcome {
+        Yield,
+        Complete(Vec<u8>),
+        Cancelled,
+        Fault(Vec<u8>),
+    }
+
+    fn admit_test_relay(relay: GuestColdRelayJob, params: semio_framework_job::BatchJobParams) -> semio_framework_job::WorkerJobSession<GuestColdRelayJob> {
+        match semio_framework_job::WorkerJobSession::try_new(relay, params) {
+            Ok(session) => session,
+            Err(mut rejected) => {
+                rejected.begin_close();
+                while !rejected.terminal_is_empty() {
+                    let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
+                panic!("relay test session admission");
+            }
+        }
+    }
+
+    fn test_payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(payload.len());
+        for page in 0..payload.page_count() {
+            if let Some(page) = payload.page(page) {
+                bytes.extend_from_slice(page);
+            }
+        }
+        bytes
+    }
+
+    async fn test_relay_step(session: &semio_framework_job::WorkerJobSession<GuestColdRelayJob>, _pool: &WorkerPool) -> TestRelayOutcome {
+        if matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            return TestRelayOutcome::Yield;
+        }
+        let (ticket, poll) = session.try_step_on_caller().expect("relay test caller opportunity");
+        let mut owner = match poll {
+            semio_framework_job::WorkerJobPoll::Outcome => session.take_outcome(ticket).expect("relay test outcome"),
+            semio_framework_job::WorkerJobPoll::Terminal => session.take_terminal().expect("relay test terminal"),
+            _ => return TestRelayOutcome::Yield,
+        };
+        let mut outcome = owner.take_outcome();
+        let result = match &outcome {
+            semio_framework_job::StepOutcome::Complete(candidate) => TestRelayOutcome::Complete(test_payload_bytes(&candidate.output)),
+            semio_framework_job::StepOutcome::Cancelled => TestRelayOutcome::Cancelled,
+            semio_framework_job::StepOutcome::Fault(fault) => TestRelayOutcome::Fault(test_payload_bytes(&fault.detail)),
+            semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => TestRelayOutcome::Yield,
+        };
+        while !outcome.terminal_is_empty() {
+            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        if outcome.is_terminal() {
+            owner.begin_close();
+        } else if let Err(owner) = owner.resume() {
+            owner.begin_close();
+        }
+        result
+    }
+
+    #[test]
+    fn guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact() {
+        let registry = GuestRelayMountedRegistry::new();
+        let mut generations = Vec::new();
+        for _ in 0..GUEST_RELAY_MOUNTED_SLOTS {
+            let (index, generation) = registry.reserve().expect("exact mounted relay capacity");
+            let output_identity = {
+                let slot = registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                let GuestRelayMountedSlot::Reserved { output, .. } = &*slot else { panic!("reserved output owner") };
+                output.storage.as_ptr()
+            };
+            generations.push((index, generation, output_identity));
+        }
+        assert!(registry.reserve().is_none());
+        assert!(generations.windows(2).all(|pair| pair[0].1 < pair[1].1));
+        registry.pump_retirement(GUEST_RELAY_MOUNTED_SLOTS);
+        for (index, generation, output_identity) in generations {
+            let mut slot = registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let GuestRelayMountedSlot::Reserved { generation: actual, output } = &*slot else { panic!("reserved output remains mounted") };
+            assert_eq!(*actual, generation);
+            assert_eq!(output.storage.as_ptr(), output_identity);
+            *slot = GuestRelayMountedSlot::Empty;
+        }
+        let exhausted = GuestRelayMountedRegistry::new();
+        exhausted.next_generation.store(u64::MAX, std::sync::atomic::Ordering::Release);
+        let (index, generation) = exhausted.reserve().expect("last generation remains admissible");
+        assert_eq!(generation, u64::MAX);
+        *exhausted.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestRelayMountedSlot::Empty;
+        assert!(exhausted.reserve().is_none());
+    }
+
+    #[test]
+    fn guest_cold_relay_publication_max_plus_one_selects_retained_fault_without_losing_source() {
+        let mut maximum = GuestRelayPublication::new(GuestRelayPublicationKind::Commit, vec![7; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]);
+        assert!(!maximum.oversized);
+        assert_eq!(maximum.source.len(), semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES);
+        let mut plus_one = GuestRelayPublication::new(GuestRelayPublicationKind::Commit, vec![9; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1]);
+        assert!(plus_one.oversized);
+        assert_eq!(plus_one.source.len(), semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1);
+        assert!(matches!(plus_one.kind, GuestRelayPublicationKind::Fault));
+        maximum.begin_close();
+        plus_one.begin_close();
+        while !maximum.terminal_is_empty() {
+            let _ = maximum.close_step(1, semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1);
+        }
+        while !plus_one.terminal_is_empty() {
+            let _ = plus_one.close_step(1, semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1);
+        }
+    }
+
     async fn relay_session_with_tokens(
         mock: Arc<MockGuestRuntime>,
         actor: RuntimeActorId,
@@ -3625,7 +4282,7 @@ mod guest_cold_relay_tests {
             },
             now_ms: semio_framework_job::default_now_ms,
         };
-        (semio_framework_job::WorkerJobSession::new(relay, params), gate, instance)
+        (admit_test_relay(relay, params), gate, instance)
     }
 
     async fn relay_session(
@@ -3666,12 +4323,12 @@ mod guest_cold_relay_tests {
             },
             now_ms: semio_framework_job::default_now_ms,
         };
-        (semio_framework_job::WorkerJobSession::new(relay, params), gate)
+        (admit_test_relay(relay, params), gate)
     }
 
     async fn drive_until_step_admitted(session: &semio_framework_job::WorkerJobSession<GuestColdRelayJob>, pool: &WorkerPool, mock: &MockGuestRuntime) {
         for _ in 0..64 {
-            assert_eq!(session.step(pool, Lane::UserVisible).await.expect("relay caller turn"), semio_framework_job::StepOutcome::Yield);
+            assert_eq!(test_relay_step(session, pool).await, TestRelayOutcome::Yield);
             if mock.step_admissions() == 1 {
                 return;
             }
@@ -3773,7 +4430,7 @@ mod guest_cold_relay_tests {
         drive_until_step_admitted(&session, &pool, &mock).await;
 
         for _ in 0..8 {
-            assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("pending relay poll"), semio_framework_job::StepOutcome::Yield);
+            assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield);
         }
         assert_eq!(mock.start_admissions(), 1);
         assert_eq!(mock.step_admissions(), 1, "pending caller turns must only try-receive the admitted guest future");
@@ -3789,13 +4446,13 @@ mod guest_cold_relay_tests {
 
         gate.release();
         let terminal = loop {
-            let outcome = session.step(&pool, Lane::UserVisible).await.expect("relay completion turn");
-            if outcome.is_terminal() {
+            let outcome = test_relay_step(&session, &pool).await;
+            if !matches!(outcome, TestRelayOutcome::Yield) {
                 break outcome;
             }
         };
-        assert!(matches!(terminal, semio_framework_job::StepOutcome::Complete(candidate) if candidate.output == b"done"));
-        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-terminal relay turn"), semio_framework_job::StepOutcome::Yield);
+        assert_eq!(terminal, TestRelayOutcome::Complete(b"done".to_vec()));
+        assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield);
         assert_eq!(mock.step_admissions(), 1, "neither pending polls nor terminal replay may duplicate guest admission");
         pool.shutdown();
     }
@@ -3810,13 +4467,13 @@ mod guest_cold_relay_tests {
 
         cancel.cancel_now();
         let terminal = loop {
-            let outcome = session.step(&pool, Lane::UserVisible).await.expect("cancelled relay turn");
-            if outcome.is_terminal() {
+            let outcome = test_relay_step(&session, &pool).await;
+            if !matches!(outcome, TestRelayOutcome::Yield) {
                 break outcome;
             }
         };
-        assert_eq!(terminal, semio_framework_job::StepOutcome::Cancelled);
-        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-cancel relay turn"), semio_framework_job::StepOutcome::Yield, "the terminal cancellation must not be delivered twice");
+        assert_eq!(terminal, TestRelayOutcome::Cancelled);
+        assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield, "the terminal cancellation must not be delivered twice");
         drop(session);
         wait_for_cancel_admission(&pool, &mock).await;
         assert_eq!(mock.step_admissions(), 1);
@@ -3898,13 +4555,13 @@ mod guest_cold_relay_tests {
         relay_cancel.cancel_now();
 
         let terminal = loop {
-            let outcome = session.step(&pool, Lane::UserVisible).await.expect("panic receiver turn");
-            if outcome.is_terminal() {
+            let outcome = test_relay_step(&session, &pool).await;
+            if !matches!(outcome, TestRelayOutcome::Yield) {
                 break outcome;
             }
         };
-        assert!(matches!(terminal, semio_framework_job::StepOutcome::Fault(fault) if fault.detail == b"plugin instance quarantined after cancel-job panic"));
-        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-fault receiver turn"), semio_framework_job::StepOutcome::Yield);
+        assert_eq!(terminal, TestRelayOutcome::Fault(b"plugin instance quarantined after cancel-job panic".to_vec()));
+        assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield);
         wait_for_cancel_admission(&pool, &mock).await;
         assert_eq!(mock.cancel_admissions(), 1, "a panicking cancel-job admission must never be retried");
         assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_quarantined(), "cancel unwind must retain but quarantine the uncertain instance before fault delivery");
@@ -3953,17 +4610,17 @@ mod guest_cold_relay_tests {
         relay_cancel.cancel_now();
 
         let terminal = loop {
-            let outcome = session.step(&pool, Lane::UserVisible).await.expect("failed-cancel receiver turn");
-            if outcome.is_terminal() {
+            let outcome = test_relay_step(&session, &pool).await;
+            if !matches!(outcome, TestRelayOutcome::Yield) {
                 break outcome;
             }
         };
         assert!(matches!(
             terminal,
-            semio_framework_job::StepOutcome::Fault(fault)
-                if fault.detail == b"plugin instance quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"
+            TestRelayOutcome::Fault(fault)
+                if fault == b"plugin instance quarantined after cancel-job failure: guest trapped: scripted cancel-job failure"
         ));
-        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-fault receiver turn"), semio_framework_job::StepOutcome::Yield);
+        assert_eq!(test_relay_step(&session, &pool).await, TestRelayOutcome::Yield);
         wait_for_cancel_admission(&pool, &mock).await;
         wait_for_quarantine(&pool, &handle.instance).await;
         assert_eq!(mock.cancel_admissions(), 1, "ordinary cancel failure must consume the sole admission without retry");
@@ -4364,7 +5021,8 @@ mod runtime_metrics_publisher_tests {
         let crash_actor = crash_profile_actor.expect("fixture has at least one \"crash\" profile record");
         kernel.submit(&env(crash_actor, Lane::UserVisible, 1).await).await;
         kernel.tick(1).await;
-        let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
+        let faulted =
+            TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
         kernel.complete(crash_actor, &faulted, 2).await.unwrap();
 
         let mut publisher = RuntimeMetricsPublisher::new();

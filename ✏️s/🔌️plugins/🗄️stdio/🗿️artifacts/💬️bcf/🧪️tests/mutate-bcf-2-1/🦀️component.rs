@@ -48,9 +48,58 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 }
 //#endregion 🔖️Input
 
+//#region 🔖️Laws
+/// 🔍️ First point at which two projections disagree, as a `path: expected != read` sentence -- a law
+/// violation must name the field that broke it rather than dump two whole documents at the reader.
+fn first_divergence(path: &str, expected: &Json, actual: &Json) -> Option<String> {
+    match (expected, actual) {
+        (Json::Object(left), Json::Object(right)) => {
+            for (key, value) in left {
+                match right.iter().find(|(name, _)| name == key) {
+                    Some((_, other)) => {
+                        if let Some(found) = first_divergence(&format!("{path}.{key}"), value, other) {
+                            return Some(found);
+                        }
+                    }
+                    None => return Some(format!("{path}.{key} is absent from the result")),
+                }
+            }
+            right.iter().find(|(key, _)| !left.iter().any(|(name, _)| name == key)).map(|(key, _)| format!("{path}.{key} appeared in the result out of nowhere"))
+        }
+        (Json::Array(left), Json::Array(right)) => {
+            if left.len() != right.len() {
+                return Some(format!("{path} holds {} member(s), expected {}", right.len(), left.len()));
+            }
+            left.iter().zip(right.iter()).enumerate().find_map(|(index, (value, other))| first_divergence(&format!("{path}[{index}]"), value, other))
+        }
+        _ if expected == actual => None,
+        _ => Some(format!("{path}: expected {} but read {}", expected.to_string(), actual.to_string())),
+    }
+}
+
+/// ⚖️ Turns a projection law into a real verdict: `Ok` only when the two projections agree, otherwise
+/// an `Err` naming the FIRST field that diverged. Without this an oracle handler asserts nothing and
+/// its scenario passes whenever the reference library merely declined to error.
+fn assert_same_projection(law: &str, expected: &Json, actual: &Json) -> Result<(), String> {
+    match first_divergence("projection", expected, actual) {
+        Some(divergence) => Err(format!("{law}: {divergence}")),
+        None => Ok(()),
+    }
+}
+//#endregion 🔖️Laws
+
 //#region 🔖️Oracle
+/// 🧾️ The `no-mutation` spec, spelled once -- both laws below need a baseline that has been through
+/// exactly the same number of unzip/rezip cycles as the archive they judge, so that a divergence
+/// names the mutation pair and never the reference writer's own normal form.
+fn no_mutation() -> Json {
+    Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))])
+}
+
 /// 🔮️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
-/// spec is carried in its doc string, not in the function it dispatches to.
+/// spec is carried in its doc string, not in the function it dispatches to. This handler asserts
+/// nothing BY DESIGN: it produces the reference result, and the parity phase is what compares it
+/// against the subject.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -59,25 +108,37 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔮️ One handler shared by every `inverse-<kind>` scenario id.
+/// ↩️ One handler shared by every `inverse-<kind>` scenario id, and the ORACLE side of the inverse
+/// law -- a law that is checkable in-role, without a subject: the independent `zip`+`quick-xml`
+/// composition applies the forward mutation and then its own base-relative inverse
+/// (`oracle_apply_mutation_inverse`), and the restored archive MUST project exactly as the untouched
+/// coordination review does. The baseline is taken through one `no-mutation` cycle so both sides
+/// carry the same re-serialisation and the comparison isolates the mutation pair itself.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let baseline = project_bcf_2_1(&oracle_apply_mutation(&input, &no_mutation())?)?;
     let bytes = oracle_apply_mutation_inverse(&input, &spec)?;
     let projection = project_bcf_2_1(&bytes)?;
+    assert_same_projection(&format!("inverse law violated for {:?} -- undoing it did not restore the coordination review", spec.str("kind")), &baseline, &projection)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔒️ The ORACLE side of the no-byte-pass-through law: the independent `zip`+`quick-xml`
+/// 🔒️ The ORACLE side of the identity round trip, asserted in-role: the independent `zip`+`quick-xml`
 /// composition fully parses the real coordination review and re-serializes it from its own model
-/// alone (the same "no-mutation" routing `oracle_apply_mutation` already gives every other kind),
-/// independent evidence that a full parse/re-serialize is possible before the SUBJECT is held to the
-/// same standard below.
+/// alone, so the re-encoded archive MUST carry the same semantic projection as the input AND MUST NOT
+/// be bit-identical to it. A `.bcf` is not a byte-preserving carrier -- every markup part is re-written
+/// by the XML writer and every entry re-deflated -- so the byte tripwire is real evidence that the
+/// archive was parsed rather than copied.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
-    let bytes = oracle_apply_mutation(&input, &no_mutation)?;
+    let before = project_bcf_2_1(&input)?;
+    let bytes = oracle_apply_mutation(&input, &no_mutation())?;
+    if bytes == input {
+        return Err("byte pass-through: the re-encoded output is bit-identical to the input, so nothing here proves the archive was parsed".to_string());
+    }
     let projection = project_bcf_2_1(&bytes)?;
+    assert_same_projection("identity round trip is not semantics-preserving", &before, &projection)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

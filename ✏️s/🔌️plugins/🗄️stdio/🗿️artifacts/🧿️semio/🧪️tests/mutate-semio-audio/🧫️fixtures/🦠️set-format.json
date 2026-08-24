@@ -1,0 +1,64 @@
+{
+  "kind": "set-format",
+  "params": {
+    "format": "pcm16"
+  },
+  "before": {
+    "schema": "stdio.semio.audio",
+    "sampleRate": 44100,
+    "format": "f32",
+    "channels": [
+      {
+        "samples": [
+          0.0,
+          0.5,
+          -0.5,
+          1.0
+        ]
+      },
+      {
+        "samples": [
+          0.0,
+          -0.5,
+          0.5,
+          -1.0
+        ]
+      }
+    ],
+    "tags": [
+      {
+        "key": "title",
+        "value": "test tone"
+      }
+    ]
+  },
+  "after": {
+    "schema": "stdio.semio.audio",
+    "sampleRate": 44100,
+    "format": "pcm16",
+    "channels": [
+      {
+        "samples": [
+          0.0,
+          0.5,
+          -0.5,
+          1.0
+        ]
+      },
+      {
+        "samples": [
+          0.0,
+          -0.5,
+          0.5,
+          -1.0
+        ]
+      }
+    ],
+    "tags": [
+      {
+        "key": "title",
+        "value": "test tone"
+      }
+    ]
+  }
+}

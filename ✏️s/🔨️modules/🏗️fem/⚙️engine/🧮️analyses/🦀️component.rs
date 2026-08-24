@@ -321,6 +321,24 @@ impl InteractiveJob for FemJobGraph {
         }
         StepOutcome::PreviewReady(serde_json::to_vec(&self.progress()).expect("fem graph preview is serializable"))
     }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let (complete, released_items, released_bytes) = FemJobGraph::close_step(self, maximum_bytes);
+        if complete {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.state.plans.is_empty() && self.state.plans.capacity() == 0
+    }
 }
 // #endregion 🧩️JobGraph
 
@@ -1892,7 +1910,10 @@ impl InteractiveJob for AssemblyJob<'_> {
                 }
                 AssemblyJobStage::Complete => {
                     if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
-                        return StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() });
+                        return StepOutcome::Complete(CommitCandidate {
+                            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                        });
                     }
                     return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&self.preview()).expect("assembly result is serializable") });
                 }
@@ -1907,6 +1928,24 @@ impl InteractiveJob for AssemblyJob<'_> {
         } else {
             StepOutcome::Yield
         }
+    }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let (complete, released_items, released_bytes) = AssemblyJob::close_step(self, maximum_bytes);
+        if complete {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.close_lane > 11
     }
 }
 
@@ -2306,6 +2345,7 @@ pub fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize) 
             }
         }
     }
+
     // 🩹️ Frame/truss `geometric_stiffness` (bar/beam bending block, truss `N/L·(I−ccᵀ)` transverse
     // projector) still leaves SOME directions exactly unstressed (bending elements' own axial DOF,
     // `PlateDkt`'s entire DOF set — see its struct doc — and any drilling/rotational DOF no element's

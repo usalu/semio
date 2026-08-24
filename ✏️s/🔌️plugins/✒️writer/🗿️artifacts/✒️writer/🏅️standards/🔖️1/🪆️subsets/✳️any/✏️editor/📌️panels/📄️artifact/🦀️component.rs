@@ -17,7 +17,7 @@ const WRITER_PANEL_TAB_ARTIFACT_OUTLINE_ID: &str = "framework.panel.document.out
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🌳️ Nested children of the document tab — demonstrates the recursive panel-tab tree (stacked tab rows).
+/// 🌳️ Nested children of the document tab — demonstrates the recursive panel-tab tree (stacked tab rows)?.
 pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
@@ -47,11 +47,11 @@ pub async fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 /// 🕹️ `ast` domain items — no per-item `action` (and `UiTreeItemNode` no longer even carries
 /// `hover_action`/`unhover_action` fields): the tree is bound to the `ast` interaction domain via
-/// `.interaction_domain("ast")` below, so the framework auto-injects `interactionSelect`/
+/// `.interaction_domain("ast")?` below, so the framework auto-injects `interactionSelect`/
 /// `interactionHover` for every row (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM —
 /// never declare those actions yourself).
-async fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
-    let children: Vec<UiTreeItemNode> = node.children.iter().map(jack_ast_to_tree_item).collect();
+async fn jack_ast_to_tree_item(node: &JackAstNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let children: Vec<UiTreeItemNode> = node.children.iter().map(jack_ast_to_tree_item).collect()?;
     UiTreeItemNode {
         id: node.id.clone(),
         label: Label::data(node.label.clone()),
@@ -72,7 +72,7 @@ async fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
     }
 }
 
-pub async fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
+pub async fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if document.language_id != "jack" {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "writer-document".into(),
@@ -85,11 +85,11 @@ pub async fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &
     }
     let root = parse_jack_ast(&writer_text(document));
     let items = if root.kind == "error" {
-        vec![UiTreeItemNode { description: Some(root.kind.clone()), icon_id: jack_ast_tree_icon(&root.kind).and_then(IconName::from_str), ..tree_item(root.id.as_str(), Label::data(root.label.as_str())) }]
+        vec![UiTreeItemNode { description: Some(root.kind.clone()), icon_id: jack_ast_tree_icon(&root.kind).and_then(IconName::from_str), ..tree_item(root.id.as_str(), Label::data(root.label.as_str()))? }]
     } else {
-        vec![jack_ast_to_tree_item(&root)]
+        vec![jack_ast_to_tree_item(&root)?]
     };
-    PanelTreeBuilder::new("writer-play-document").section_or_placeholder("writer-play-document.ast", Some(labels.document.into()), true, items, labels.empty_query).interaction_domain("ast").build()
+    PanelTreeBuilder::new("writer-play-document")?.section_or_placeholder("writer-play-document.ast", Some(labels.document.into()), true, items, labels.empty_query)?.interaction_domain("ast")?.build()
 }
 //#endregion 🔖️Render
 

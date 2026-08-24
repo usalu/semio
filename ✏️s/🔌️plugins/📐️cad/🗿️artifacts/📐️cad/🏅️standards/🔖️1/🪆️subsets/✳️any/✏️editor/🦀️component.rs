@@ -38,7 +38,7 @@ use semio_framework_plugin::{
     SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
-// 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4) are not yet
+// 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
 // in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️component.rs:17858`)
 // — only reachable through the `app` submodule they're actually declared in. Not fixable here
 // (`🧰️framework/**` is outside this packet's lease); flagged for W1-A in the migration report.
@@ -206,13 +206,13 @@ impl CadPlayRuntime {
 /// `cad_document_engine` for why per-window-INSTANCE keying no longer applies.
 pub async fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
     CadPlayRuntime {
-        selected_node_ids: cfg.selected_node_ids.clone(),
+        selected_node_ids: cfg.selected_node_ids.clone()?,
         hovered_reference_id: cfg.hovered_reference_id.clone(),
         engagement_input: cfg.engagement_input.clone(),
         engagement_step: cfg.engagement_step.clone(),
         active_example_id: cfg.active_example_id.clone(),
-        selected_reference_model_definition_id: cfg.selected_reference_model_definition_id.clone(),
-        selected_reference_id: cfg.selected_reference_id.clone(),
+        selected_reference_model_definition_id: cfg.selected_reference_model_definition_id.clone()?,
+        selected_reference_id: cfg.selected_reference_id.clone()?,
         engagement_pane: cfg.engagement_pane.clone(),
         engagement_session: cfg.engagement_session_json.as_deref().and_then(|json| serde_json::from_str(json).ok()),
         engagement_preview_operation_json: cfg.engagement_preview_operation_json.clone(),
@@ -241,13 +241,13 @@ pub async fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
 async fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
     CadConfig {
         contributions_json: base.contributions_json.clone(),
-        selected_node_ids: runtime.selected_node_ids.clone(),
+        selected_node_ids: runtime.selected_node_ids.clone()?,
         hovered_reference_id: runtime.hovered_reference_id.clone(),
         engagement_input: runtime.engagement_input.clone(),
         engagement_step: runtime.engagement_step.clone(),
         active_example_id: runtime.active_example_id.clone(),
-        selected_reference_model_definition_id: runtime.selected_reference_model_definition_id.clone(),
-        selected_reference_id: runtime.selected_reference_id.clone(),
+        selected_reference_model_definition_id: runtime.selected_reference_model_definition_id.clone()?,
+        selected_reference_id: runtime.selected_reference_id.clone()?,
         engagement_pane: runtime.engagement_pane.clone(),
         engagement_session_json: runtime.engagement_session.as_ref().map(|session| serde_json::to_string(session).unwrap_or_default()),
         engagement_preview_operation_json: base.engagement_preview_operation_json.clone(),
@@ -298,7 +298,7 @@ pub struct CadPlayView {
     pub runtime: CadPlayRuntime,
 }
 
-pub async fn cad_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+pub fn cad_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(CAD_PLAY_CONTROLLER_ID).action(action, args)
 }
 
@@ -332,8 +332,8 @@ pub async fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
 /// 🌳️ Cad's tree items carry an icon rather than the SDK `tree_item_with_action`'s description slot, so
 /// this stays a thin app-specific wrapper — built on the SDK's bare `tree_item` rather than hand-rolling
 /// the full `UiTreeItemNode` struct literal.
-pub async fn cad_tree_item(id: impl Into<String>, label: impl Into<Label>, icon_id: Option<&str>, action: ActionDescriptor) -> semio_framework_plugin::UiTreeItemNode {
-    let mut item = tree_item(id, label);
+pub async fn cad_tree_item(id: impl Into<String>, label: impl Into<Label>, icon_id: Option<&str>, action: ActionDescriptor) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut item = tree_item(id, label)?;
     item.icon_id = icon_id.and_then(IconName::from_str);
     item.action = Some(action);
     item
@@ -1114,7 +1114,7 @@ impl ArtifactEditor for CadPlayApp {
         command.dispatch(doc, cfg, &mut ctx)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
         let labels = cad_labels(cfg.snapshot);
@@ -1168,7 +1168,7 @@ impl ArtifactEditor for CadPlayApp {
     /// parameter, so this can no longer gate on "is anything selected" the way it used to
     /// (`cfg.snapshot.selected_object_ids`, now framework-owned and unreachable here) — always shows
     /// the section; a bare right-click with nothing selected is a documented reduced-fidelity gap
-    /// (each action already no-ops on an empty selection at dispatch time).
+    /// (each action already no-ops on an empty selection at dispatch time)?.
     async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").group("create", |m| m.action("duplicateObject")).destructive("deleteObject").build()
     }
@@ -1422,7 +1422,7 @@ pub(crate) mod testkit {
         command.dispatch(&doc, &cfg, &mut ctx)
     }
 
-    pub async fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> UiNode {
+    pub async fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
         let cfg = ConfigView { snapshot: config };
         CadPlayApp::render(body_key, doc, &cfg)
     }
@@ -2168,7 +2168,7 @@ mod tests {
         match &emit.effects[0] {
             Effect::DownloadMediaExport { filename, data, .. } => {
                 assert_eq!(filename, "cad.selected.spatial.dsl");
-                assert!(data.contains("activeModelDefinitionId"));
+                assert!(data.contains("activeModelDefinitionId"))?;
             }
             other => panic!("expected DownloadMediaExport, got {other:?}"),
         }

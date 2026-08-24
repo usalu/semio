@@ -936,7 +936,7 @@ fn synthesize_flat_for_new_parts(document: &mut Puzzle5dDocument, new_ids: &[Str
 /// `runtime.selection.grip_ids`/`selection.part_ids`/`hovered_part_id`, all dissolved into the
 /// framework-owned `vortex` interaction domain — see `puzzle3d_brush_target_vortex`'s doc comment for
 /// the identical framework-level gap (`ArtifactApp::render` never gained an `InteractionView`).
-/// Callers holding a `Puzzle5dActionCtx` should prefer `ctx.selected_grip_ids().first()` before
+/// Callers holding a `Puzzle5dActionCtx` should prefer `ctx.selected_grip_ids()?.first()` before
 /// reaching for this.
 pub fn puzzle5d_brush_target_grip(_envelope: &Puzzle5dScene) -> Option<String> {
     None
@@ -1033,7 +1033,7 @@ pub fn puzzle5d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[Stri
 /// 📊️ `label` is always genuine runtime document content here (a part/grip/fastener/catalog name),
 /// never `app_labels!` chrome text — wrapped via `Label::data` accordingly. Shared by the document
 /// and catalogue panels.
-pub fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
+pub fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut item = UiTreeItemNode::base(id, Label::data(label));
     item.icon_id = icon_id.map(IconName::from);
     item.action = Some(action);
@@ -1041,7 +1041,7 @@ pub fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, ic
 }
 
 /// 📊️ See `tree_item_with_action`'s doc comment — same `Label::data` rationale.
-pub fn tree_info_item(id: impl Into<String>, label: impl Into<String>, description: Option<String>) -> UiTreeItemNode {
+pub fn tree_info_item(id: impl Into<String>, label: impl Into<String>, description: Option<String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut item = UiTreeItemNode::base(id, Label::data(label));
     item.description = description;
     item
@@ -2256,7 +2256,7 @@ pub struct Puzzle5dActionCtx<'a> {
     pub window_id: &'a str,
     /// 🕹️ Read-only view of the framework-owned `vortex` interaction domain (ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — retained selection-acting verbs read
-    /// `.selected_part_ids()`/etc. here instead of the deleted `Puzzle5dConfig` selection fields.
+    /// `.selected_part_ids()?`/etc. here instead of the deleted `Puzzle5dConfig` selection fields.
     pub interaction: &'a InteractionView<'a>,
     /// 🛑️ Set by an arm that must skip the whole epilogue (delta, effects, config snapshot) — the
     /// direct replacement for the pre-migration `return Emit::default()` early exits.
@@ -2269,13 +2269,13 @@ impl<'a> Puzzle5dActionCtx<'a> {
         if selection.granularity == granularity_id { selection.ids.clone() } else { Vec::new() }
     }
     pub fn selected_part_ids(&self) -> Vec<String> {
-        self.selected_ids(PUZZLE5D_GRANULARITY_PART)
+        self.selected_ids(PUZZLE5D_GRANULARITY_PART)?
     }
     pub fn selected_grip_ids(&self) -> Vec<String> {
-        self.selected_ids(PUZZLE5D_GRANULARITY_GRIP)
+        self.selected_ids(PUZZLE5D_GRANULARITY_GRIP)?
     }
     pub fn selected_fastener_ids(&self) -> Vec<String> {
-        self.selected_ids(PUZZLE5D_GRANULARITY_FASTENER)
+        self.selected_ids(PUZZLE5D_GRANULARITY_FASTENER)?
     }
 }
 
@@ -2873,7 +2873,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> semio_framework_plugin::ComponentTree {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         semio_framework_plugin::built_to_component_tree(with_puzzle5d_app(|app| {
             let config = cfg.snapshot;
             let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };

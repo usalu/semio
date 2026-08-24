@@ -12,7 +12,7 @@ const IMPERATIVE_PLAY_DOCUMENT_NAMESPACE: &str = "imperative-play-document";
 
 //#region 🔖️Interaction
 /// 🕹️ Canonical `steps` domain `InteractionTarget` id for a step — the SAME id this tree's own items
-/// use, so the framework's post-render presence stamping (`stamp_and_cache_interaction_ui`) can match
+/// use, so the framework's post-render presence stamping (`stamp_and_cache_interaction_ui`)? can match
 /// tree items to their live selection/hover state; also reused by
 /// `ImperativePlayApp::interaction_topology` so the topology walks the identical id space (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
@@ -38,13 +38,13 @@ pub fn definition() -> PanelTabDefinition {
 /// `step_row_id` targets `ImperativePlayApp::interaction_topology` declares for the `steps` domain —
 /// the framework stamps this tree's selection/hover presence from that domain (`.interaction_domain`)
 /// and prunes stale ids through that same topology, so no per-item click action is declared here
-/// anymore (clicks are translated into `interactionSelect` generically).
-pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> BuiltNode {
+/// anymore (clicks are translated into `interactionSelect` generically)?.
+pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
-    let step_items: Vec<BuiltNode> = path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()))).collect();
-    PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)
-        .section_or_placeholder("imperative-play-document.steps", Some(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL.into()), true, step_items, labels.document_empty.as_str())
-        .interaction_domain(IMPERATIVE_INTERACTION_STEPS)
+    let step_items: Vec<BuiltNode> = path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()))?).collect();
+    PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)?
+        .section_or_placeholder("imperative-play-document.steps", Some(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL.into()), true, step_items, labels.document_empty.as_str())?
+        .interaction_domain(IMPERATIVE_INTERACTION_STEPS)?
         .build()
 }
 //#endregion 🔖️Render

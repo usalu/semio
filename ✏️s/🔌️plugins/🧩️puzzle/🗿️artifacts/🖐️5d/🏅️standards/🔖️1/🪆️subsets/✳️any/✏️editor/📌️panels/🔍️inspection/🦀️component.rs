@@ -32,14 +32,14 @@ pub fn definition() -> PanelTabDefinition {
 /// render against and always falls through to the document summary below. Flagged to the coordinator
 /// as the same framework-level gap noted on `puzzle5d_brush_target_grip` — not fixed here (framework
 /// file, out of this crate's remit).
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> BuiltNode {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let rows = vec![
         ui::text(format!("{}: {}", labels.schema.as_str(), envelope.document.schema)).id("puzzle5d-play-inspector.schema").build(),
         ui::text(format!("{}: {}", labels.parts.as_str(), envelope.document.parts.len())).id("puzzle5d-play-inspector.parts").build(),
         ui::text(format!("{}: {}", labels.fasteners.as_str(), envelope.document.fasteners.len())).id("puzzle5d-play-inspector.fasteners").build(),
         ui::text(format!("{}: {}", labels.utility.as_str(), envelope.active_utility)).id("puzzle5d-play-inspector.utility").build(),
     ];
-    PanelTreeBuilder::new("puzzle5d-play-inspector").section("puzzle5d-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, rows).build()
+    PanelTreeBuilder::new("puzzle5d-play-inspector")?.section("puzzle5d-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, rows)?.build()
 }
 //#endregion 🔖️Render
 

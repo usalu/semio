@@ -6,12 +6,22 @@
 //! present per `🔣️taxonomy.json`'s `subsetChildDirs`, without duplicating the schema definition.
 
 pub use crate::artifacts::zip::standards::v2_0::subsets::any::schema::*;
+
+//#region 🧬️Mutations
+/// 🧬️ THIS subset's own mutation vocabulary — `ZipIso21320Mutation`, not the `✳️any` subset's
+/// `ZipMutation` the glob re-export above would otherwise supply. Declared here rather than in the
+/// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
+/// over the glob import, which is exactly the intent.
+#[path = "🧬️mutations/🦀️component.rs"]
+pub mod mutations;
+pub use mutations::{apply_zip_iso21320_mutation, ZipIso21320Method, ZipIso21320Mutation, KINDS as ISO21320_MUTATION_KINDS};
+//#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::diff::ZipDiff;
-    use crate::artifacts::zip::standards::v2_0::subsets::any::schema::mutations::{apply_zip_mutation, ZipMutation};
     use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::{ZipEntry, ZipSnapshot};
     use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::check_iso21320_conformance;
+    use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::mutations::{apply_zip_iso21320_mutation, ZipIso21320Mutation};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -27,17 +37,17 @@ pub mod derived_construction {
             Self { snapshot: ZipSnapshot::default() }
         }
 
-        /// ➕️ Adds a logical member; the ISO serializer owns the canonical compression and header policy.
+        /// ➕️ Adds a member this profile declares uncompressed (ISO/IEC 21320-1 §4.4 method 0).
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            apply_zip_mutation(&mut self.snapshot, &ZipMutation::AddEntry { entry: ZipEntry { name: name.into(), data } });
+            apply_zip_iso21320_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddStoredEntry { entry: ZipEntry { name: name.into(), data } });
             self
         }
 
-        /// ➕️ Adds a logical member; the ISO serializer owns the canonical compression and header policy.
+        /// ➕️ Adds a member this profile declares Deflate-compressed (ISO/IEC 21320-1 §4.4 method 8).
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            apply_zip_mutation(&mut self.snapshot, &ZipMutation::AddEntry { entry: ZipEntry { name: name.into(), data } });
+            apply_zip_iso21320_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddDeflatedEntry { entry: ZipEntry { name: name.into(), data } });
             self
         }
 
@@ -51,7 +61,7 @@ pub mod derived_construction {
 
     impl ArtifactBuilder for ZipIso21320BuilderConstruction {
         type Snapshot = ZipSnapshot;
-        type Mutation = ZipMutation;
+        type Mutation = ZipIso21320Mutation;
         type Diff = ZipDiff;
 
         async fn empty() -> Self {
@@ -71,7 +81,7 @@ pub mod derived_construction {
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_zip_mutation(&mut self.snapshot, &mutation);
+            let diff = apply_zip_iso21320_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 

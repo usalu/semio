@@ -16,7 +16,7 @@ path = "📦️lib.rs"
 [features]
 # 🔮️ Links the registered third-party reference implementations. Enabled only by a generated test
 # host, never by any production target — `bun ./📜️script.ts dependency` enforces that.
-oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:hound", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io", "dep:quick-xml", "dep:json", "dep:html5ever", "dep:markup5ever_rcdom", "dep:comrak", "dep:dxf", "dep:las", "dep:mp4", "dep:ruststep", "dep:calamine", "dep:rust_xlsxwriter", "dep:ply-rs", "dep:riff"]
+oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:hound", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io", "dep:quick-xml", "dep:json", "dep:html5ever", "dep:markup5ever_rcdom", "dep:comrak", "dep:dxf", "dep:las", "dep:mp4", "dep:ruststep", "dep:calamine", "dep:rust_xlsxwriter", "dep:ply-rs", "dep:riff", "dep:id3"]
 
 [dependencies]
 semio-repo-test-host = { path = "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
@@ -58,3 +58,8 @@ rust_xlsxwriter = { version = "0.96", optional = true }
 # credible AVI crate exists. The three that do were read and rejected (metadata-only pass-through,
 # a self-described scaffolded muxer, and a four-month-old crate with no independent validation).
 riff = { version = "2.0", optional = true }
+# 🎵️ ID3 metadata reference (MIT). Registered for 🎵️mp3 mpeg1-layer3 ✳️any, composed with a
+# hand-written ISO/IEC 11172-3 frame walker in that subset's own oracle module — no crate reads both
+# layers. `symphonia` (the pure-Rust MP3 decoder) is MPL-2.0 and deliberately NOT linked: no owner
+# ruling on that licence exists here, and decoding PCM is not needed to exercise the vocabulary.
+id3 = { version = "1.17", optional = true }

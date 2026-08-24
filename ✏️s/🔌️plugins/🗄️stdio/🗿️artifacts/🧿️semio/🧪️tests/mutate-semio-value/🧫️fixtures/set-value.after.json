@@ -1,0 +1,76 @@
+{
+  "schema": "stdio.semio.value",
+  "root": {
+    "kind": "map",
+    "entries": [
+      {
+        "key": "title",
+        "value": {
+          "kind": "str",
+          "value": "Value Fixture"
+        }
+      },
+      {
+        "key": "count",
+        "value": {
+          "kind": "float",
+          "lexeme": "41.5"
+        }
+      },
+      {
+        "key": "tags",
+        "value": {
+          "kind": "list",
+          "items": [
+            {
+              "kind": "str",
+              "value": "reuse"
+            },
+            {
+              "kind": "str",
+              "value": "bestand"
+            },
+            {
+              "kind": "str",
+              "value": "kreislauf"
+            }
+          ]
+        }
+      },
+      {
+        "key": "alias",
+        "value": {
+          "kind": "ref",
+          "id": {
+            "value": "n-1"
+          }
+        }
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": {
+        "value": "n-1"
+      },
+      "value": {
+        "kind": "str",
+        "value": "draft"
+      }
+    },
+    {
+      "id": {
+        "value": "n-2"
+      },
+      "value": {
+        "kind": "bytes",
+        "value": [
+          222,
+          173,
+          190,
+          239
+        ]
+      }
+    }
+  ]
+}

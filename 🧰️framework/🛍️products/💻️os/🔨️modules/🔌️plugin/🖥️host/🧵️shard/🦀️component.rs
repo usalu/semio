@@ -148,28 +148,65 @@ async fn job_budget_from_grant(budget: semio_framework_actor::Budget) -> JobBudg
 /// a concurrent packet series owns that file, and this ticket already absorbed several
 /// half-landed collisions of exactly this shape ("the artifact moved, its registration did not").
 ///
-/// `ui_patches`/`effects` stay OPAQUE bytes on the actor-crate side by design (that crate's own
-/// "opaque seam" doc, module header) — re-encoded here as JSON, the same convention this file's
-/// own `Payload::Event` handling already uses for every other kernel-type-crossing-the-actor-crate
-/// -seam boundary (a real `pack_encode` for `Effect`/`UiPatch` is `🎠️kernel`'s own future work,
-/// out of this packet's `path_scope`). `status` maps 1:1. `usage.fuel` comes from
-/// `result.fuel_used`; `wall_us`/`memory_bytes` are host-measured and passed in — this crate has
-/// no clock of its own (the actor crate's purity rule pushed clocks out to callers).
-pub async fn to_actor_turn_result(result: &TurnResult, wall_us: u64, memory_bytes: u64) -> semio_framework_actor::TurnResult {
+/// `ui_patches`/`effects` stay opaque bytes on the actor-crate side. The bridge consumes the kernel
+/// patch owner into a generation-qualified fixed transport lease and advances one fixed patch
+/// operation per yield before publishing the complete lease token. `status` maps 1:1.
+pub async fn to_actor_turn_result(mut result: TurnResult, session: u64, wall_us: u64, memory_bytes: u64) -> Result<semio_framework_actor::TurnResult, semio_framework::Fault> {
     let status = match &result.status {
         semio_framework::kernel::TurnStatus::Idle => semio_framework_actor::TurnStatus::Idle,
         semio_framework::kernel::TurnStatus::MoreWork => semio_framework_actor::TurnStatus::MoreWork,
         semio_framework::kernel::TurnStatus::CheckpointReady { checkpoint } => semio_framework_actor::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() },
         semio_framework::kernel::TurnStatus::Faulted(detail) => semio_framework_actor::TurnStatus::Faulted { detail: detail.clone() },
     };
-    semio_framework_actor::TurnResult {
-        ui_patches: serde_json::to_vec(&result.ui_patches).unwrap_or_default(),
-        effects: serde_json::to_vec(&result.effects).unwrap_or_default(),
-        command_ingress: serde_json::to_vec(&result.command_ingress).unwrap_or_default(),
+    let owner = std::mem::take(&mut result.ui_patches);
+    let mut patch_transport = match semio_framework::kernel::UiTurnPatchTransportProducer::try_new(session, owner) {
+        Ok(producer) => producer,
+        Err(owner) => {
+            result.ui_patches = owner;
+            while !result.ui_patches.close_step() {
+                semio_framework_async::yield_once().await;
+            }
+            return Err(semio_framework::Fault::new(
+                semio_framework::FaultOrigin::Framework,
+                semio_framework::FaultCode::new("plugin.turn-patches-admission"),
+                "fixed turn patch transport admission refused the exact owner",
+            ));
+        }
+    };
+    loop {
+        match patch_transport.drive_one(session, false, false) {
+            semio_framework::kernel::UiTurnPatchTransportStep::MoreWork => semio_framework_async::yield_once().await,
+            semio_framework::kernel::UiTurnPatchTransportStep::Ready => break,
+            semio_framework::kernel::UiTurnPatchTransportStep::Cancelled | semio_framework::kernel::UiTurnPatchTransportStep::Stale => {
+                return Err(semio_framework::Fault::new(
+                    semio_framework::FaultOrigin::Framework,
+                    semio_framework::FaultCode::new("plugin.turn-patches-transport"),
+                    "fixed turn patch transport became stale before publication",
+                ));
+            }
+        }
+    }
+    let effects = serde_json::to_vec(&result.effects).map_err(|error| {
+            semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-effects-encode"), error.to_string())
+        })?;
+    let command_ingress = serde_json::to_vec(&result.command_ingress).map_err(|error| {
+            semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-ingress-encode"), error.to_string())
+        })?;
+    let ui_patches = patch_transport.take_ready().map(|token| token.to_vec()).ok_or_else(|| {
+        semio_framework::Fault::new(
+            semio_framework::FaultOrigin::Framework,
+            semio_framework::FaultCode::new("plugin.turn-patches-publication"),
+            "fixed turn patch transport did not publish a complete token",
+        )
+    })?;
+    Ok(semio_framework_actor::TurnResult {
+        ui_patches,
+        effects,
+        command_ingress,
         next_wake: result.next_wake,
         status,
         usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes },
-    }
+    })
 }
 //#endregion 🔀️BudgetBridge
 
@@ -893,7 +930,10 @@ impl ShardLoop {
                         _ => {}
                     }
                 }
-                ShardOutcome::Turn { actor: actor_id, result: to_actor_turn_result(&result, 0, 0).await }
+                match to_actor_turn_result(result, actor_id, 0, 0).await {
+                    Ok(result) => ShardOutcome::Turn { actor: actor_id, result },
+                    Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.to_string() },
+                }
             }
             // 🛑️ terra-shard-lane piece 2: a background/maintenance turn that ran past its
             // epoch-armed `budget.wall_ms` (`turn_budget_from_grant`'s `deadline_ms`, armed in
@@ -906,28 +946,26 @@ impl ShardLoop {
             // failure-escalation path quarantine an actor purely for being preempted by the exact
             // per-turn wall budget this ticket's own DRR scheduler assigned it — see
             // `📓️terra-shard-lane-report.md`.
-            Err(TurnFault::DeadlineExceeded) => ShardOutcome::Turn {
-                actor: actor_id,
+            Err(TurnFault::DeadlineExceeded) => {
                 // 👥️ `presence: Vec::new()` — a deadline-exceeded turn never finished, so there is
                 // no guest-computed presence (or effects/ui_patches) to carry, unlike the two
                 // wire-shape-mismatch sites this packet's report flags (`🦀️component.rs`'s
                 // `execute_turn`, `⏳️runtime.rs`'s `convert_poll_success`): nothing was dropped
                 // here, there was simply nothing produced.
-                result: to_actor_turn_result(
-                    &TurnResult {
-                        ui_patches: Vec::new(),
-                        effects: Vec::new(),
-                        presence: Vec::new(),
-                        next_wake: None,
-                        status: semio_framework::kernel::TurnStatus::MoreWork,
-                        fuel_used: 0,
-                        command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
-                    },
-                    0,
-                    0,
-                )
-                .await,
-            },
+                let result = TurnResult {
+                    ui_patches: semio_framework::kernel::UiTurnPatches::default(),
+                    effects: Vec::new(),
+                    presence: Vec::new(),
+                    next_wake: None,
+                    status: semio_framework::kernel::TurnStatus::MoreWork,
+                    fuel_used: 0,
+                    command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                };
+                match to_actor_turn_result(result, actor_id, 0, 0).await {
+                    Ok(result) => ShardOutcome::Turn { actor: actor_id, result },
+                    Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.to_string() },
+                }
+            }
             Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await },
         };
         self.send_outcome(&outcome).await?;
@@ -1373,7 +1411,7 @@ impl GuestRuntime for RecordingRuntime {
     async fn drop_instance(&self, _inst: GuestInstance) {}
     async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         *self.last_turn_budget.lock().expect("lock") = Some(budget);
-        Ok(TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle })
+        Ok(TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: vec![], presence: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle })
     }
     async fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
         Ok(())
@@ -2161,7 +2199,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn to_actor_turn_result_maps_status_and_carries_host_measured_usage() {
         let kernel_result = TurnResult {
-            ui_patches: vec![],
+            ui_patches: semio_framework::kernel::UiTurnPatches::default(),
             effects: vec![],
             presence: vec![],
             next_wake: Some(42),
@@ -2169,12 +2207,17 @@ mod tests {
             fuel_used: 999,
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
         };
-        let bridged = to_actor_turn_result(&kernel_result, 1234, 5678).await;
+        let bridged = to_actor_turn_result(kernel_result, 1, 1234, 5678).await.expect("fixed turn encoding");
         assert_eq!(bridged.next_wake, Some(42));
         assert_eq!(bridged.status, semio_framework_actor::TurnStatus::Faulted { detail: b"trap".to_vec() }, "status must map 1:1, and the actor crate's struct-variant Faulted (Part A) must be what this bridge constructs");
         assert_eq!(bridged.usage.fuel, 999, "usage.fuel comes from the kernel TurnResult's own fuel_used");
         assert_eq!(bridged.usage.wall_us, 1234, "wall_us is host-measured, passed straight through");
         assert_eq!(bridged.usage.memory_bytes, 5678, "memory_bytes is host-measured, passed straight through");
+        let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1)
+            .expect("exact test transport")
+            .take_owner()
+            .expect("exact test owner");
+        while !patches.close_step() {}
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2185,8 +2228,14 @@ mod tests {
             (semio_framework::kernel::TurnStatus::MoreWork, semio_framework_actor::TurnStatus::MoreWork),
             (semio_framework::kernel::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() }, semio_framework_actor::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() }),
         ] {
-            let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: None, status: kernel_status, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
-            assert_eq!(to_actor_turn_result(&kernel_result, 0, 0).await.status, expected);
+            let kernel_result = TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: vec![], presence: vec![], next_wake: None, status: kernel_status, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
+            let bridged = to_actor_turn_result(kernel_result, 1, 0, 0).await.expect("fixed turn encoding");
+            assert_eq!(bridged.status, expected);
+            let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1)
+                .expect("exact test transport")
+                .take_owner()
+                .expect("exact test owner");
+            while !patches.close_step() {}
         }
     }
     //#endregion 🔖️BudgetBridge

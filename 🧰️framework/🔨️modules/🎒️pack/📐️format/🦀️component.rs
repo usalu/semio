@@ -179,6 +179,27 @@ struct EncodedSegment {
     stored_len: usize,
 }
 
+fn retained_varint(mut value: u64, output: &mut [u8; 10]) -> &[u8] {
+    let mut len = 0;
+    loop {
+        let mut byte = (value & 0x7f) as u8;
+        value >>= 7;
+        if value != 0 {
+            byte |= 0x80;
+        }
+        output[len] = byte;
+        len += 1;
+        if value == 0 {
+            return &output[..len];
+        }
+    }
+}
+
+fn retained_varint_len(value: u64) -> usize {
+    let mut output = [0u8; 10];
+    retained_varint(value, &mut output).len()
+}
+
 /// @emoji 🧵️ Resolves `CodecId` to this crate's codec implementations for compression.
 async fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackError> {
     match codec.0 {
@@ -358,21 +379,6 @@ struct ChunkTableEntry {
     raw_len: u64,
     crc32: u32,
     blake3: [u8; 32],
-}
-
-/// @emoji ✍️ Serializes the chunk table: `count varint, then count × (offset, stored_len,
-/// raw_len varints, crc32 u32 LE, blake3 [u8;32])`.
-async fn encode_chunk_table(entries: &[ChunkTableEntry]) -> Vec<u8> {
-    let mut buf = Vec::new();
-    write_varint_u64(&mut buf, entries.len() as u64);
-    for entry in entries {
-        write_varint_u64(&mut buf, entry.offset);
-        write_varint_u64(&mut buf, entry.stored_len);
-        write_varint_u64(&mut buf, entry.raw_len);
-        buf.extend_from_slice(&entry.crc32.to_le_bytes());
-        buf.extend_from_slice(&entry.blake3);
-    }
-    buf
 }
 
 /// @emoji 📖️ Parses the chunk table, rejecting a count over `limits.max_items` or an entry
@@ -568,6 +574,70 @@ pub struct PackWriter<S: PackSink> {
     document_hasher: blake3::Hasher,
 }
 
+pub struct PackIdentitySegment<'a, S: PackSink> {
+    owner: &'a mut PackWriter<S>,
+    kind: u8,
+    payload_len: usize,
+    written: usize,
+    crc: crate::codec::Crc32cCursor,
+}
+
+pub struct PackIdentityChunk<'a, S: PackSink> {
+    owner: &'a mut PackWriter<S>,
+    payload_offset: u64,
+    payload_len: usize,
+    written: usize,
+    segment_crc: crate::codec::Crc32cCursor,
+    payload_crc: crate::codec::Crc32cCursor,
+    hash: blake3::Hasher,
+}
+
+impl<S: PackSink> PackIdentityChunk<'_, S> {
+    pub async fn write_fragment(&mut self, fragment: &[u8]) -> Result<(), PackError> {
+        self.written = self.written.checked_add(fragment.len()).ok_or(PackError::LimitExceeded("chunk payload length overflow"))?;
+        if self.written > self.payload_len {
+            return Err(PackError::LimitExceeded("chunk exceeded retained payload reservation"));
+        }
+        self.segment_crc.update_page(fragment);
+        self.payload_crc.update_page(fragment);
+        self.hash.update(fragment);
+        self.owner.sink.write_all(fragment).await
+    }
+
+    pub async fn finish(self) -> Result<ChunkId, PackError> {
+        if self.written != self.payload_len {
+            return Err(PackError::LimitExceeded("chunk ended before retained payload reservation"));
+        }
+        self.owner.sink.write_all(&self.segment_crc.finish().to_le_bytes()).await?;
+        let id = ChunkId(self.owner.chunks.len() as u32);
+        self.owner.chunks.push(ChunkTableEntry { offset: self.payload_offset, stored_len: self.payload_len as u64, raw_len: self.payload_len as u64, crc32: self.payload_crc.finish(), blake3: *self.hash.finalize().as_bytes() });
+        Ok(id)
+    }
+
+    pub fn close(self) {}
+}
+
+impl<'a, S: PackSink> PackIdentitySegment<'a, S> {
+    pub async fn write_fragment(&mut self, fragment: &[u8]) -> Result<(), PackError> {
+        self.written = self.written.checked_add(fragment.len()).ok_or(PackError::LimitExceeded("segment payload length overflow"))?;
+        if self.written > self.payload_len {
+            return Err(PackError::LimitExceeded("segment exceeded retained payload reservation"));
+        }
+        self.crc.update_page(fragment);
+        if self.kind == crate::KIND_DOCUMENT {
+            self.owner.document_hasher.update(fragment);
+        }
+        self.owner.sink.write_all(fragment).await
+    }
+
+    pub async fn finish(self) -> Result<(), PackError> {
+        if self.written != self.payload_len {
+            return Err(PackError::LimitExceeded("segment ended before retained payload reservation"));
+        }
+        self.owner.sink.write_all(&self.crc.finish().to_le_bytes()).await
+    }
+}
+
 impl<S: PackSink> PackWriter<S> {
     /// @emoji 🚀️ Writes the 32-byte header and returns a writer positioned right after it.
     pub async fn begin(mut sink: S, options: &WriteOptions) -> Result<Self, PackError> {
@@ -592,11 +662,70 @@ impl<S: PackSink> PackWriter<S> {
         self.sink.position().await
     }
 
+    pub async fn begin_identity_segment(&mut self, kind: u8, payload_len: usize) -> Result<PackIdentitySegment<'_, S>, PackError> {
+        let mut length = [0u8; 10];
+        let mut remaining = payload_len as u64;
+        let mut count = 0;
+        loop {
+            let mut byte = (remaining & 0x7f) as u8;
+            remaining >>= 7;
+            if remaining != 0 {
+                byte |= 0x80;
+            }
+            length[count] = byte;
+            count += 1;
+            if remaining == 0 {
+                break;
+            }
+        }
+        let fixed = [kind, 0];
+        let mut crc = crate::codec::Crc32cCursor::new();
+        crc.update_page(&fixed);
+        crc.update_page(&length[..count]);
+        self.sink.write_all(&fixed).await?;
+        self.sink.write_all(&length[..count]).await?;
+        Ok(PackIdentitySegment { owner: self, kind, payload_len, written: 0, crc })
+    }
+
+    pub async fn begin_identity_chunk(&mut self, payload_len: usize) -> Result<PackIdentityChunk<'_, S>, PackError> {
+        if self.options.codec.0 != 0 {
+            return Err(PackError::UnsupportedCodec(self.options.codec.0));
+        }
+        let base = self.sink.position().await;
+        let mut length = [0u8; 10];
+        let mut remaining = payload_len as u64;
+        let mut count = 0usize;
+        loop {
+            let mut byte = (remaining & 0x7f) as u8;
+            remaining >>= 7;
+            if remaining != 0 {
+                byte |= 0x80;
+            }
+            length[count] = byte;
+            count += 1;
+            if remaining == 0 {
+                break;
+            }
+        }
+        let fixed = [crate::KIND_CHUNK, 0];
+        let mut segment_crc = crate::codec::Crc32cCursor::new();
+        segment_crc.update_page(&fixed);
+        segment_crc.update_page(&length[..count]);
+        self.sink.write_all(&fixed).await?;
+        self.sink.write_all(&length[..count]).await?;
+        Ok(PackIdentityChunk { owner: self, payload_offset: base + fixed.len() as u64 + count as u64, payload_len, written: 0, segment_crc, payload_crc: crate::codec::Crc32cCursor::new(), hash: blake3::Hasher::new() })
+    }
+
     /// @emoji 🖇️ Frames, compresses (per `options.codec`), CRCs, and writes one segment. A
     /// `KIND_SYMBOLS` segment is parsed and remembered for `schema_name` resolution in `finish`;
     /// a `KIND_DOCUMENT` segment's raw bytes are folded into the running content-hash used for
     /// the footer.
     pub async fn write_segment(&mut self, kind: u8, payload: &[u8]) -> Result<(), PackError> {
+        if self.options.codec.0 == 0 && kind != crate::KIND_SYMBOLS {
+            let mut segment = self.begin_identity_segment(kind, payload.len()).await?;
+            segment.write_fragment(payload).await?;
+            return segment.finish().await;
+        }
         let base = self.sink.position().await;
         let encoded = encode_segment(kind, self.options.codec, payload).await?;
         self.sink.write_all(&encoded.bytes).await?;
@@ -612,7 +741,13 @@ impl<S: PackSink> PackWriter<S> {
 
     /// @emoji 🧱️ Writes a `KIND_CHUNK` segment and records its offset/lengths/hashes for the
     /// chunk table `finish` will emit.
+    #[cfg(test)]
     pub async fn write_chunk(&mut self, payload: &[u8]) -> Result<ChunkId, PackError> {
+        if self.options.codec.0 == 0 {
+            let mut chunk = self.begin_identity_chunk(payload.len()).await?;
+            chunk.write_fragment(payload).await?;
+            return chunk.finish().await;
+        }
         let base = self.sink.position().await;
         let encoded = encode_segment(crate::KIND_CHUNK, self.options.codec, payload).await?;
         let payload_offset = base + encoded.header_len as u64;
@@ -628,13 +763,31 @@ impl<S: PackSink> PackWriter<S> {
     /// @emoji 🏁️ Writes the chunk table (if any chunks were written), the manifest, an `End`
     /// segment, then the footer — and returns the underlying sink.
     pub async fn finish(mut self, manifest: &Manifest) -> Result<S, PackError> {
+        let chunk_count = self.chunks.len() as u64;
         let mut chunk_table_span = ByteRange { offset: 0, len: 0 };
         if !self.chunks.is_empty() {
             let base = self.sink.position().await;
-            let table_bytes = encode_chunk_table(&self.chunks).await;
-            let encoded = encode_segment(crate::KIND_CHUNK_TABLE, self.options.codec, &table_bytes).await?;
-            self.sink.write_all(&encoded.bytes).await?;
-            chunk_table_span = ByteRange { offset: base, len: encoded.bytes.len() as u64 };
+            let chunks = std::mem::take(&mut self.chunks);
+            let payload_len = chunks.iter().try_fold(retained_varint_len(chunks.len() as u64), |length, entry| {
+                length
+                    .checked_add(retained_varint_len(entry.offset))
+                    .and_then(|length| length.checked_add(retained_varint_len(entry.stored_len)))
+                    .and_then(|length| length.checked_add(retained_varint_len(entry.raw_len)))
+                    .and_then(|length| length.checked_add(4 + 32))
+                    .ok_or(PackError::LimitExceeded("chunk table retained length overflow"))
+            })?;
+            let mut segment = self.begin_identity_segment(crate::KIND_CHUNK_TABLE, payload_len).await?;
+            let mut varint = [0u8; 10];
+            segment.write_fragment(retained_varint(chunks.len() as u64, &mut varint)).await?;
+            for entry in chunks {
+                segment.write_fragment(retained_varint(entry.offset, &mut varint)).await?;
+                segment.write_fragment(retained_varint(entry.stored_len, &mut varint)).await?;
+                segment.write_fragment(retained_varint(entry.raw_len, &mut varint)).await?;
+                segment.write_fragment(&entry.crc32.to_le_bytes()).await?;
+                segment.write_fragment(&entry.blake3).await?;
+            }
+            segment.finish().await?;
+            chunk_table_span = ByteRange { offset: base, len: self.sink.position().await - base };
         }
         let schema_symref = if manifest.schema_name.is_empty() {
             0u64
@@ -651,17 +804,17 @@ impl<S: PackSink> PackWriter<S> {
             field_index_span: manifest.field_index_span,
             uncompressed_body_len: manifest.uncompressed_body_len,
             field_count: manifest.field_count,
-            chunk_count: self.chunks.len() as u64,
+            chunk_count,
             symbol_count: self.symbols.len() as u64,
         };
         let manifest_bytes = encode_manifest_bytes(schema_symref, &final_manifest).await;
         let manifest_base = self.sink.position().await;
-        let manifest_encoded = encode_segment(crate::KIND_MANIFEST, self.options.codec, &manifest_bytes).await?;
-        self.sink.write_all(&manifest_encoded.bytes).await?;
-        let manifest_span = ByteRange { offset: manifest_base, len: manifest_encoded.bytes.len() as u64 };
+        self.write_segment(crate::KIND_MANIFEST, &manifest_bytes).await?;
+        let manifest_span = ByteRange { offset: manifest_base, len: self.sink.position().await - manifest_base };
 
-        let end_encoded = encode_segment(crate::KIND_END, CodecId(0), &[]).await?;
-        self.sink.write_all(&end_encoded.bytes).await?;
+        let mut end = self.begin_identity_segment(crate::KIND_END, 0).await?;
+        end.write_fragment(&[]).await?;
+        end.finish().await?;
 
         let content_hash = ContentHash(*self.document_hasher.finalize().as_bytes());
         let file_len = self.sink.position().await + FOOTER_SIZE as u64;
@@ -1157,6 +1310,53 @@ mod tests {
         };
         let bytes = writer.finish(&manifest).await.unwrap();
         (bytes, chunk_id, chunk_payload)
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_identity_chunk_fragment_parity_exact_boundary_and_interrupted_finish() {
+        let options = WriteOptions { required_flags: REQUIRED_CHUNKED, optional_flags: 0, codec: CodecId(0) };
+        let payload = vec![0xA5; 16_385];
+        let manifest = Manifest {
+            schema_name: String::new(),
+            schema_hash: [0; 32],
+            doc_span: ByteRange { offset: 0, len: 0 },
+            doc_frame_count: 0,
+            symbols_span: ByteRange { offset: 0, len: 0 },
+            chunk_table_span: ByteRange { offset: 0, len: 0 },
+            field_index_span: ByteRange { offset: 0, len: 0 },
+            uncompressed_body_len: 0,
+            field_count: 0,
+            chunk_count: 0,
+            symbol_count: 0,
+        };
+        let mut oracle = PackWriter::begin(Vec::new(), &options).await.unwrap();
+        oracle.write_chunk(&payload).await.unwrap();
+        let oracle = oracle.finish(&manifest).await.unwrap();
+
+        let mut retained = PackWriter::begin(Vec::new(), &options).await.unwrap();
+        let mut chunk = retained.begin_identity_chunk(payload.len()).await.unwrap();
+        chunk.write_fragment(&payload[..1]).await.unwrap();
+        chunk.write_fragment(&payload[1..16_384]).await.unwrap();
+        chunk.write_fragment(&payload[16_384..]).await.unwrap();
+        chunk.finish().await.unwrap();
+        let retained = retained.finish(&manifest).await.unwrap();
+        assert_eq!(retained, oracle);
+
+        let mut interrupted = PackWriter::begin(Vec::new(), &options).await.unwrap();
+        let mut chunk = interrupted.begin_identity_chunk(2).await.unwrap();
+        chunk.write_fragment(&payload[..1]).await.unwrap();
+        assert!(matches!(chunk.finish().await, Err(PackError::LimitExceeded(_))));
+
+        let mut maximum = PackWriter::begin(Vec::new(), &options).await.unwrap();
+        let mut chunk = maximum.begin_identity_chunk(1).await.unwrap();
+        assert!(matches!(chunk.write_fragment(&payload[..2]).await, Err(PackError::LimitExceeded(_))));
+        chunk.close();
+        assert_eq!(payload[0], 0xA5);
+
+        let mut closed = PackWriter::begin(Vec::new(), &options).await.unwrap();
+        let chunk = closed.begin_identity_chunk(1).await.unwrap();
+        chunk.close();
+        assert!(closed.chunks.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]

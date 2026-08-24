@@ -25,7 +25,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+pub async fn render(config: &FormsConfig, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let contributions = parse_contributions(config);
     let kind_items: Vec<UiTreeItemNode> = catalogue_kinds(&contributions, labels)
         .into_iter()
@@ -37,17 +37,17 @@ pub async fn render(config: &FormsConfig, labels: &FormsLabels) -> UiNode {
                 draggable: Some(true),
                 drag_data: Some(drag_data),
                 menu: None,
-                ..tree_item_with_action(format!("forms-play-catalogue.{kind}"), Label::data(label), Some(kind.clone()), forms_action("addQuestion", Some(json!({ "kind": kind }))))
+                ..tree_item_with_action(format!("forms-play-catalogue.{kind}"), Label::data(label), Some(kind.clone()), forms_action("addQuestion", Some(json!({ "kind": kind }))))?
             }
         })
         .collect();
     let action_items = vec![
-        UiTreeItemNode { icon_id: Some("plus".into()), menu: None, ..tree_item_with_action("forms-play-catalogue.add-step", labels.add_step, None, forms_action("addStep", None)) },
-        UiTreeItemNode { icon_id: Some("type".into()), menu: None, ..tree_item_with_action("forms-play-catalogue.add-question", labels.add_text_question, None, forms_action("addQuestion", Some(json!({ "kind": "text" })))) },
+        UiTreeItemNode { icon_id: Some("plus".into()), menu: None, ..tree_item_with_action("forms-play-catalogue.add-step", labels.add_step, None, forms_action("addStep", None))? },
+        UiTreeItemNode { icon_id: Some("type".into()), menu: None, ..tree_item_with_action("forms-play-catalogue.add-question", labels.add_text_question, None, forms_action("addQuestion", Some(json!({ "kind": "text" }))))? },
     ];
-    PanelTreeBuilder::new("forms-play-catalogue")
-        .section("forms-play-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, kind_items)
-        .section("forms-play-catalogue.actions", Some(labels.actions.into()), true, action_items)
+    PanelTreeBuilder::new("forms-play-catalogue")?
+        .section("forms-play-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, kind_items)?
+        .section("forms-play-catalogue.actions", Some(labels.actions.into()), true, action_items)?
         .build()
 }
 //#endregion 🔖️Render

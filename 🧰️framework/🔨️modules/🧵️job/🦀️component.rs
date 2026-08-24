@@ -37,17 +37,17 @@
 
 use std::future::Future;
 use std::mem::{ManuallyDrop, MaybeUninit};
-use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU8, AtomicU32, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU32, AtomicU64, AtomicU8, AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
 use std::task::{Context, Poll, Waker};
 use std::time::Instant;
 
 use semio_framework_async::ChannelPolicy;
-use semio_framework_trace::{TraceEvent, Watchdog, record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed};
+use semio_framework_trace::{record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed, TraceEvent, Watchdog};
 
 pub use semio_framework_async::CancelToken;
 pub use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
-pub use semio_framework_trace::{Generation, InteractiveStage, OperationId, allocate_operation_id};
+pub use semio_framework_trace::{allocate_operation_id, Generation, InteractiveStage, OperationId};
 
 //#region 🔁️SyncPoll
 /// 🔁️ Polls `fut` exactly once with a no-op waker and returns its output, panicking on `Pending` —
@@ -141,7 +141,11 @@ pub enum CommitValidation {
 /// ✅️ Checks `op`'s base revision and generation against the document's current `live_revision`/
 /// `live_generation` — the ONLY gate a [`CommitCandidate`] passes through before it may be applied.
 pub fn validate_commit(op: &Operation, live_revision: RevisionId, live_generation: Generation) -> CommitValidation {
-    if op.base_revision == live_revision && op.generation == live_generation { CommitValidation::Accepted } else { CommitValidation::Stale { live_revision, live_generation } }
+    if op.base_revision == live_revision && op.generation == live_generation {
+        CommitValidation::Accepted
+    } else {
+        CommitValidation::Stale { live_revision, live_generation }
+    }
 }
 //#endregion 🪪️Identity
 
@@ -237,7 +241,7 @@ impl Default for JobPayloadPageSource {
 
 pub struct JobPayloadRejectedPage {
     pub fault: JobPayloadAdmissionFault,
-    source: Option<JobPayloadPageSource>,
+    source: ManuallyDrop<Option<JobPayloadPageSource>>,
 }
 
 impl std::fmt::Debug for JobPayloadRejectedPage {
@@ -253,6 +257,16 @@ impl JobPayloadRejectedPage {
 
     pub fn into_source(mut self) -> JobPayloadPageSource {
         self.source.take().expect("rejected job payload page already returned")
+    }
+}
+
+impl Drop for JobPayloadRejectedPage {
+    fn drop(&mut self) {
+        if self.source.is_none() {
+            unsafe { ManuallyDrop::drop(&mut self.source) };
+        } else {
+            debug_assert!(false, "rejected job payload page requires exact source handback");
+        }
     }
 }
 
@@ -352,6 +366,10 @@ impl RetainedJobPayload {
         self.pages.get(index).and_then(Option::as_ref).map(JobPayloadPage::bytes)
     }
 
+    pub fn single_page(&self) -> Option<&[u8]> {
+        (self.page_count == 1).then(|| self.page(0)).flatten()
+    }
+
     pub fn reader(&self) -> RetainedJobPayloadReader<'_> {
         RetainedJobPayloadReader { payload: self, page: 0 }
     }
@@ -376,10 +394,8 @@ impl RetainedJobPayload {
         drop(page);
         if self.page_count == 0 {
             self.ledger = None;
-            JobPayloadCloseStep::Complete
-        } else {
-            JobPayloadCloseStep::Pending { released_items: 1, released_bytes }
         }
+        JobPayloadCloseStep::Pending { released_items: 1, released_bytes }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -440,8 +456,8 @@ pub enum JobPayloadCloseStep {
 }
 
 pub struct RetainedJobPayloadWriter {
-    payload: Option<RetainedJobPayload>,
-    rejected: Option<JobPayloadPageSource>,
+    payload: ManuallyDrop<Option<RetainedJobPayload>>,
+    rejected: ManuallyDrop<Option<JobPayloadPageSource>>,
     sealed: bool,
 }
 
@@ -453,11 +469,27 @@ impl std::fmt::Debug for RetainedJobPayloadWriter {
 
 impl RetainedJobPayloadWriter {
     pub fn new(stream: JobPayloadStream) -> Self {
-        Self { payload: Some(RetainedJobPayload::empty(stream)), rejected: None, sealed: false }
+        Self { payload: ManuallyDrop::new(Some(RetainedJobPayload::empty(stream))), rejected: ManuallyDrop::new(None), sealed: false }
     }
 
     pub fn take_rejected_source(&mut self) -> Option<JobPayloadPageSource> {
         self.rejected.take()
+    }
+
+    pub fn page_count(&self) -> usize {
+        self.payload.as_ref().map_or(0, RetainedJobPayload::page_count)
+    }
+
+    pub fn admit_page<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<JobPayloadPageGrant<'a>, JobPayloadAdmissionFault> {
+        let source = self.rejected.take().unwrap_or_default();
+        match cx.admit_payload_page(self, source) {
+            Ok(page) => Ok(page),
+            Err(rejected) => {
+                let fault = rejected.fault;
+                *self.rejected = Some(rejected.into_source());
+                Err(fault)
+            }
+        }
     }
 
     pub fn finish(mut self) -> Result<RetainedJobPayload, Self> {
@@ -503,6 +535,9 @@ impl RetainedJobPayloadWriter {
         if *cursor == bytes.len() {
             return Ok(true);
         }
+        if cx.should_yield() {
+            return Ok(false);
+        }
         let source = self.rejected.take().unwrap_or_default();
         let mut page = match cx.admit_payload_page(self, source) {
             Ok(page) => page,
@@ -521,19 +556,32 @@ impl RetainedJobPayloadWriter {
 
     fn begin_page<'a>(&'a mut self, ledger: Arc<JobPayloadOperationLedger>, source: JobPayloadPageSource) -> Result<JobPayloadPageGrant<'a>, JobPayloadRejectedPage> {
         if self.sealed {
-            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::WriterSealed, source: Some(source) });
+            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::WriterSealed, source: ManuallyDrop::new(Some(source)) });
         }
         if self.rejected.is_some() {
-            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::RejectedSourcePending, source: Some(source) });
+            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::RejectedSourcePending, source: ManuallyDrop::new(Some(source)) });
         }
         let payload = self.payload.as_mut().expect("retained payload writer owns payload before finish");
         if payload.page_count >= JOB_PAYLOAD_OPERATION_PAGES {
-            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::WriterFull, source: Some(source) });
+            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::WriterFull, source: ManuallyDrop::new(Some(source)) });
         }
         if let Err(fault) = ledger.reserve(payload.stream) {
-            return Err(JobPayloadRejectedPage { fault, source: Some(source) });
+            return Err(JobPayloadRejectedPage { fault, source: ManuallyDrop::new(Some(source)) });
         }
         Ok(JobPayloadPageGrant { writer: self, ledger: Some(ledger), source: Some(source), length: 0, committed: false })
+    }
+}
+
+impl Drop for RetainedJobPayloadWriter {
+    fn drop(&mut self) {
+        if self.payload.is_none() && self.rejected.is_none() {
+            unsafe {
+                ManuallyDrop::drop(&mut self.payload);
+                ManuallyDrop::drop(&mut self.rejected);
+            }
+        } else {
+            debug_assert!(false, "retained job payload writer requires exact finish or incremental close");
+        }
     }
 }
 
@@ -559,6 +607,22 @@ impl JobPayloadPageGrant<'_> {
             target.write(byte);
         }
         self.length += bytes.len();
+        Ok(())
+    }
+
+    pub fn initialized_remaining_mut(&mut self) -> &mut [u8] {
+        let source = self.source.as_mut().expect("uncommitted job payload grant owns page source");
+        for byte in &mut source.storage[self.length..] {
+            byte.write(0);
+        }
+        unsafe { std::slice::from_raw_parts_mut(source.storage.as_mut_ptr().cast::<u8>().add(self.length), JOB_PAYLOAD_PAGE_BYTES - self.length) }
+    }
+
+    pub fn advance_written(&mut self, bytes: usize) -> Result<(), JobPayloadAdmissionFault> {
+        if bytes > self.remaining() {
+            return Err(JobPayloadAdmissionFault::StreamBytes);
+        }
+        self.length += bytes;
         Ok(())
     }
 
@@ -686,8 +750,8 @@ impl<'a> StepContext<'a> {
     }
 
     /// 🔢️ The next preview-sequence number for this operation, advancing a cursor that survives
-    /// across every [`StepContext`] built for the same [`run_to_completion`]/[`drive_step`] run — one
-    /// call per [`StepOutcome::PreviewReady`]/[`ProgressEvent::PreviewPatch`] a job emits.
+    /// across every [`StepContext`] built for the same retained session — one call per
+    /// [`StepOutcome::PreviewReady`]/[`ProgressEvent::PreviewPatch`] a job emits.
     pub fn next_preview_sequence(&mut self) -> Result<u64, JobSequenceExhausted> {
         let sequence = *self.preview_sequence;
         *self.preview_sequence = (*self.preview_sequence).checked_add(1).ok_or(JobSequenceExhausted::Preview)?;
@@ -696,7 +760,7 @@ impl<'a> StepContext<'a> {
 
     pub fn admit_payload_page<'b>(&mut self, writer: &'b mut RetainedJobPayloadWriter, source: JobPayloadPageSource) -> Result<JobPayloadPageGrant<'b>, JobPayloadRejectedPage> {
         if self.payload_page_granted {
-            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::OpportunityExhausted, source: Some(source) });
+            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::OpportunityExhausted, source: ManuallyDrop::new(Some(source)) });
         }
         let grant = writer.begin_page(Arc::clone(&self.payload_ledger), source)?;
         self.payload_page_granted = true;
@@ -706,7 +770,7 @@ impl<'a> StepContext<'a> {
     pub fn payload_from_bytes(&mut self, stream: JobPayloadStream, bytes: &[u8]) -> Result<RetainedJobPayload, JobPayloadRejectedPage> {
         let source = JobPayloadPageSource::new();
         if bytes.len() > JOB_PAYLOAD_PAGE_BYTES {
-            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::StreamBytes, source: Some(source) });
+            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::StreamBytes, source: ManuallyDrop::new(Some(source)) });
         }
         let mut writer = RetainedJobPayloadWriter::new(stream);
         {
@@ -895,16 +959,68 @@ const CHILD_VACANT: u8 = 0;
 const CHILD_LIVE: u8 = 1;
 const CHILD_CLOSE_INTENT: u8 = 2;
 const CHILD_EXHAUSTED: u8 = 3;
+const CHILD_CHECKED_OUT: u8 = 4;
 
 struct JobChildSlot {
     generation: AtomicU64,
     state: AtomicU8,
+    node: AtomicPtr<JobChildNodeHeader>,
 }
 
 impl JobChildSlot {
     fn vacant() -> Self {
-        Self { generation: AtomicU64::new(0), state: AtomicU8::new(CHILD_VACANT) }
+        Self { generation: AtomicU64::new(0), state: AtomicU8::new(CHILD_VACANT), node: AtomicPtr::new(std::ptr::null_mut()) }
     }
+}
+
+#[repr(C)]
+struct JobChildNodeHeader {
+    pump: unsafe fn(*mut JobChildNodeHeader, usize, usize) -> InteractiveJobCloseStep,
+    destroy: unsafe fn(*mut JobChildNodeHeader),
+}
+
+#[repr(C)]
+struct JobChildNode<J> {
+    header: JobChildNodeHeader,
+    child: Option<J>,
+    close_stage: u8,
+}
+
+unsafe fn pump_job_child_node<J: InteractiveJob>(pointer: *mut JobChildNodeHeader, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+    let node = unsafe { &mut *pointer.cast::<JobChildNode<J>>() };
+    if node.close_stage == 0 {
+        if maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        node.child.as_mut().expect("live child node owns exact child").begin_close();
+        node.close_stage = 1;
+        return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    }
+    if node.close_stage == 1 {
+        let child = node.child.as_mut().expect("closing child node owns exact child");
+        match child.close_step(maximum_items, maximum_bytes) {
+            InteractiveJobCloseStep::Pending { released_items, released_bytes } => return InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            InteractiveJobCloseStep::Blocked => return InteractiveJobCloseStep::Blocked,
+            InteractiveJobCloseStep::Complete if !child.terminal_is_empty() => return InteractiveJobCloseStep::Blocked,
+            InteractiveJobCloseStep::Complete => {
+                node.close_stage = 2;
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+        }
+    }
+    if node.close_stage == 2 {
+        if maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        drop(node.child.take());
+        node.close_stage = 3;
+        return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+    }
+    InteractiveJobCloseStep::Complete
+}
+
+unsafe fn destroy_job_child_node<J>(pointer: *mut JobChildNodeHeader) {
+    drop(unsafe { Box::from_raw(pointer.cast::<JobChildNode<J>>()) });
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -920,6 +1036,70 @@ pub enum JobChildAdmissionFault {
     Capacity,
     Exhausted,
     Closing,
+}
+
+pub struct JobChildAdmissionRejected<J> {
+    pub fault: JobChildAdmissionFault,
+    child: ManuallyDrop<Option<J>>,
+    closing: bool,
+    close_stage: u8,
+}
+
+impl<J> JobChildAdmissionRejected<J> {
+    pub fn child(&self) -> &J {
+        self.child.as_ref().expect("rejected structured child owner remains exact")
+    }
+
+    pub fn into_child(mut self) -> J {
+        self.child.take().expect("rejected structured child owner remains exact")
+    }
+}
+
+impl<J: InteractiveJob> JobChildAdmissionRejected<J> {
+    pub fn begin_close(&mut self) {
+        if self.closing {
+            return;
+        }
+        self.closing = true;
+        if let Some(child) = self.child.as_mut() {
+            child.begin_close();
+        }
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        self.begin_close();
+        if self.close_stage == 0 {
+            let Some(child) = self.child.as_mut() else {
+                self.close_stage = 2;
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            };
+            match child.close_step(maximum_items, maximum_bytes) {
+                InteractiveJobCloseStep::Pending { released_items, released_bytes } => return InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                InteractiveJobCloseStep::Blocked => return InteractiveJobCloseStep::Blocked,
+                InteractiveJobCloseStep::Complete if !child.terminal_is_empty() => return InteractiveJobCloseStep::Blocked,
+                InteractiveJobCloseStep::Complete => self.close_stage = 1,
+            }
+        }
+        if self.close_stage == 1 {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            drop(self.child.take());
+            self.close_stage = 2;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.child.is_none()
+    }
+}
+
+impl<J> Drop for JobChildAdmissionRejected<J> {
+    fn drop(&mut self) {
+        debug_assert!(self.child.is_none(), "rejected structured child requires exact handback");
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -968,10 +1148,11 @@ impl JobScope {
         poll_ready_now(self.cancel.is_cancelled())
     }
 
-    pub fn spawn_child(&self) -> Result<ChildJobGuard<'_>, JobChildAdmissionFault> {
+    pub fn spawn_child<J: InteractiveJob + 'static>(&self, child: J) -> Result<ChildJobGuard<'_, J>, JobChildAdmissionRejected<J>> {
         if self.closing.load(Ordering::Acquire) || self.is_cancelled() {
-            return Err(JobChildAdmissionFault::Closing);
+            return Err(JobChildAdmissionRejected { fault: JobChildAdmissionFault::Closing, child: ManuallyDrop::new(Some(child)), closing: false, close_stage: 0 });
         }
+        let mut child = Some(child);
         for (index, slot) in self.slots.iter().enumerate() {
             if slot.state.load(Ordering::Acquire) == CHILD_EXHAUSTED {
                 continue;
@@ -984,13 +1165,19 @@ impl JobScope {
                 slot.state.store(CHILD_EXHAUSTED, Ordering::Release);
                 continue;
             };
+            let node = Box::new(JobChildNode { header: JobChildNodeHeader { pump: pump_job_child_node::<J>, destroy: destroy_job_child_node::<J> }, child: child.take(), close_stage: 0 });
             slot.generation.store(generation, Ordering::Release);
+            slot.node.store(Box::into_raw(node).cast::<JobChildNodeHeader>(), Ordering::Release);
             self.live_children.fetch_add(1, Ordering::AcqRel);
+            if self.closing.load(Ordering::Acquire) || self.is_cancelled() {
+                let _ = slot.state.compare_exchange(CHILD_LIVE, CHILD_CLOSE_INTENT, Ordering::AcqRel, Ordering::Acquire);
+                self.raise_wake();
+            }
             let token = JobChildToken { parent_operation: self.parent_operation, parent_generation: self.parent_generation, slot: index as u16, generation };
-            return Ok(ChildJobGuard { scope: self, token: Some(token) });
+            return Ok(ChildJobGuard { scope: self, token: Some(token), marker: std::marker::PhantomData });
         }
         let exhausted = self.slots.iter().all(|slot| slot.state.load(Ordering::Acquire) == CHILD_EXHAUSTED);
-        Err(if exhausted { JobChildAdmissionFault::Exhausted } else { JobChildAdmissionFault::Capacity })
+        Err(JobChildAdmissionRejected { fault: if exhausted { JobChildAdmissionFault::Exhausted } else { JobChildAdmissionFault::Capacity }, child: ManuallyDrop::new(child), closing: false, close_stage: 0 })
     }
 
     pub fn live_child_count(&self) -> u32 {
@@ -998,11 +1185,15 @@ impl JobScope {
     }
 
     pub fn has_live_children(&self) -> bool {
-        self.live_child_count() > 0
+        self.live_child_count() > 0 || self.slots.iter().any(|slot| matches!(slot.state.load(Ordering::Acquire), CHILD_LIVE | CHILD_CLOSE_INTENT | CHILD_CHECKED_OUT))
     }
 
     pub fn assert_completable(&self) -> Result<(), JobChildCompletionFault> {
-        if self.has_live_children() { Err(JobChildCompletionFault::LiveChildren) } else { Ok(()) }
+        if self.has_live_children() {
+            Err(JobChildCompletionFault::LiveChildren)
+        } else {
+            Ok(())
+        }
     }
 
     pub fn begin_close(&self) {
@@ -1014,15 +1205,31 @@ impl JobScope {
         self.raise_wake();
     }
 
-    pub fn pump_child_close(&self) -> bool {
+    pub fn pump_child_close(&self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
         for slot in &self.slots {
-            if slot.state.compare_exchange(CHILD_CLOSE_INTENT, CHILD_VACANT, Ordering::AcqRel, Ordering::Acquire).is_ok() {
-                self.live_children.fetch_sub(1, Ordering::AcqRel);
-                self.raise_wake();
-                return true;
+            if slot.state.load(Ordering::Acquire) != CHILD_CLOSE_INTENT {
+                continue;
             }
+            let pointer = slot.node.load(Ordering::Acquire);
+            if pointer.is_null() {
+                return InteractiveJobCloseStep::Blocked;
+            }
+            let step = unsafe { ((*pointer).pump)(pointer, maximum_items, maximum_bytes) };
+            if step == InteractiveJobCloseStep::Complete && slot.state.compare_exchange(CHILD_CLOSE_INTENT, CHILD_CHECKED_OUT, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                if maximum_items == 0 {
+                    slot.state.store(CHILD_CLOSE_INTENT, Ordering::Release);
+                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                let pointer = slot.node.swap(std::ptr::null_mut(), Ordering::AcqRel);
+                unsafe { ((*pointer).destroy)(pointer) };
+                self.live_children.fetch_sub(1, Ordering::AcqRel);
+                slot.state.store(if slot.generation.load(Ordering::Acquire) == u64::MAX { CHILD_EXHAUSTED } else { CHILD_VACANT }, Ordering::Release);
+                self.raise_wake();
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            return step;
         }
-        false
+        InteractiveJobCloseStep::Complete
     }
 
     pub fn take_wake(&self) -> bool {
@@ -1030,7 +1237,7 @@ impl JobScope {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.live_child_count() == 0 && self.slots.iter().all(|slot| matches!(slot.state.load(Ordering::Acquire), CHILD_VACANT | CHILD_EXHAUSTED))
+        self.live_child_count() == 0 && self.slots.iter().all(|slot| matches!(slot.state.load(Ordering::Acquire), CHILD_VACANT | CHILD_EXHAUSTED) && slot.node.load(Ordering::Acquire).is_null())
     }
 
     fn complete_child(&self, token: JobChildToken) -> Result<(), JobChildCompletionFault> {
@@ -1042,11 +1249,13 @@ impl JobScope {
             return Err(JobChildCompletionFault::Stale);
         }
         let state = slot.state.load(Ordering::Acquire);
-        if !matches!(state, CHILD_LIVE | CHILD_CLOSE_INTENT) {
+        if state == CHILD_CLOSE_INTENT {
             return Err(JobChildCompletionFault::Duplicate);
         }
-        slot.state.compare_exchange(state, CHILD_VACANT, Ordering::AcqRel, Ordering::Acquire).map_err(|_| JobChildCompletionFault::Duplicate)?;
-        self.live_children.fetch_sub(1, Ordering::AcqRel);
+        if state != CHILD_LIVE {
+            return Err(JobChildCompletionFault::Duplicate);
+        }
+        slot.state.compare_exchange(CHILD_LIVE, CHILD_CLOSE_INTENT, Ordering::AcqRel, Ordering::Acquire).map_err(|_| JobChildCompletionFault::Duplicate)?;
         self.raise_wake();
         Ok(())
     }
@@ -1056,12 +1265,13 @@ impl JobScope {
     }
 }
 
-pub struct ChildJobGuard<'a> {
+pub struct ChildJobGuard<'a, J: InteractiveJob + 'static> {
     scope: &'a JobScope,
     token: Option<JobChildToken>,
+    marker: std::marker::PhantomData<J>,
 }
 
-impl ChildJobGuard<'_> {
+impl<J: InteractiveJob + 'static> ChildJobGuard<'_, J> {
     pub fn token(&self) -> JobChildToken {
         self.token.expect("live child guard owns token")
     }
@@ -1070,9 +1280,40 @@ impl ChildJobGuard<'_> {
         let token = self.token.take().expect("live child guard owns token");
         self.scope.complete_child(token)
     }
+
+    pub fn with_child_mut<R>(&mut self, use_child: impl FnOnce(&mut J) -> R) -> Result<R, JobChildCompletionFault> {
+        let token = self.token.expect("live structured child guard owns token");
+        if token.parent_operation != self.scope.parent_operation || token.parent_generation != self.scope.parent_generation {
+            return Err(JobChildCompletionFault::Stale);
+        }
+        let slot = self.scope.slots.get(token.slot as usize).ok_or(JobChildCompletionFault::Stale)?;
+        if slot.generation.load(Ordering::Acquire) != token.generation {
+            return Err(JobChildCompletionFault::Stale);
+        }
+        slot.state.compare_exchange(CHILD_LIVE, CHILD_CHECKED_OUT, Ordering::AcqRel, Ordering::Acquire).map_err(|_| JobChildCompletionFault::Duplicate)?;
+        struct Handback<'a> {
+            scope: &'a JobScope,
+            slot: &'a JobChildSlot,
+        }
+        impl Drop for Handback<'_> {
+            fn drop(&mut self) {
+                self.slot.state.store(if self.scope.closing.load(Ordering::Acquire) { CHILD_CLOSE_INTENT } else { CHILD_LIVE }, Ordering::Release);
+                self.scope.raise_wake();
+            }
+        }
+        let handback = Handback { scope: self.scope, slot };
+        let pointer = slot.node.load(Ordering::Acquire);
+        if pointer.is_null() {
+            return Err(JobChildCompletionFault::Stale);
+        }
+        let child = unsafe { (&mut *pointer.cast::<JobChildNode<J>>()).child.as_mut().expect("checked-out structured child node owns exact child") };
+        let result = use_child(child);
+        drop(handback);
+        Ok(result)
+    }
 }
 
-impl Drop for ChildJobGuard<'_> {
+impl<J: InteractiveJob + 'static> Drop for ChildJobGuard<'_, J> {
     fn drop(&mut self) {
         if let Some(token) = self.token.take() {
             let _ = self.scope.complete_child(token);
@@ -1334,15 +1575,33 @@ struct WorkerJobAuthority<J> {
     preview_sequence: u64,
     step_sequence: u64,
     payload_ledger: Arc<JobPayloadOperationLedger>,
+    preadmitted_fault: Option<RetainedJobPayload>,
     outcome: Option<StepOutcome>,
     close_stage: u8,
 }
 
 impl<J> WorkerJobAuthority<J> {
-    fn new(job: J, params: BatchJobParams) -> Self {
+    fn try_new(job: J, params: BatchJobParams) -> Result<Self, (J, BatchJobParams, JobPayloadPageSource)> {
         let payload_ledger = Arc::new(JobPayloadOperationLedger::new(params.operation, params.generation));
-        Self { job: Some(job), params: Some(params), preview_sequence: 0, step_sequence: 0, payload_ledger, outcome: None, close_stage: 0 }
+        let fault_source = JobPayloadPageSource::new();
+        let preadmitted_fault = match preadmitted_static_payload(&payload_ledger, JobPayloadStream::Fault, b"job-session.terminal-fault", fault_source) {
+            Ok(payload) => payload,
+            Err(fault_source) => return Err((job, params, fault_source)),
+        };
+        Ok(Self { job: Some(job), params: Some(params), preview_sequence: 0, step_sequence: 0, payload_ledger, preadmitted_fault: Some(preadmitted_fault), outcome: None, close_stage: 0 })
     }
+}
+
+fn preadmitted_static_payload(ledger: &Arc<JobPayloadOperationLedger>, stream: JobPayloadStream, bytes: &'static [u8], mut source: JobPayloadPageSource) -> Result<RetainedJobPayload, JobPayloadPageSource> {
+    if bytes.len() > JOB_PAYLOAD_PAGE_BYTES || ledger.reserve(stream).is_err() {
+        return Err(source);
+    }
+    for (target, byte) in source.storage.iter_mut().zip(bytes.iter().copied()) {
+        target.write(byte);
+    }
+    let mut pages = std::array::from_fn(|_| None);
+    pages[0] = Some(JobPayloadPage { source, length: bytes.len() });
+    Ok(RetainedJobPayload { stream, pages: ManuallyDrop::new(pages), page_count: 1, length: bytes.len(), ledger: Some(Arc::clone(ledger)) })
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1359,6 +1618,7 @@ pub enum WorkerJobContention {
     Rejected(Generation),
     CheckedOut(Generation),
     Closing(Generation),
+    WakeExhausted(Generation),
     TerminalEmpty,
 }
 
@@ -1395,143 +1655,204 @@ pub enum WorkerJobCloseStep {
     Complete,
 }
 
-pub struct BatchJobSession<J> {
-    authority: Option<WorkerJobAuthority<J>>,
-    terminal: bool,
-    checked_out: bool,
-    close_requested: bool,
+pub struct BatchJobSession<J: InteractiveJob + 'static> {
+    session: WorkerJobSession<J>,
+    ticket: Option<WorkerJobTicket>,
+    checked_out: Option<WorkerJobOutcome<J>>,
 }
 
-impl<J: InteractiveJob> BatchJobSession<J> {
-    pub fn new(job: J, params: BatchJobParams) -> Self {
-        record_operation_started(params.operation, params.generation);
-        Self { authority: Some(WorkerJobAuthority::new(job, params)), terminal: false, checked_out: false, close_requested: false }
+pub enum MountedWorkerJobPumpFault {
+    Submit(WorkerJobSubmitFault),
+    Take(WorkerJobTakeFault),
+    MissingTicket,
+    CheckedOut,
+}
+
+pub struct MountedWorkerJobSession<J: InteractiveJob + 'static> {
+    session: WorkerJobSession<J>,
+    ticket: Option<WorkerJobTicket>,
+    checked_out: Option<WorkerJobOutcome<J>>,
+}
+
+impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
+    pub fn try_new(job: J, params: BatchJobParams) -> Result<Self, WorkerJobSessionAdmissionRejected<J>> {
+        WorkerJobSession::try_new(job, params).map(|session| Self { session, ticket: None, checked_out: None })
     }
 
-    pub fn step(&mut self) -> Result<WorkerJobPoll, WorkerJobContention> {
-        if self.close_requested {
-            return Ok(WorkerJobPoll::Closing);
-        }
-        if self.checked_out {
-            return Err(WorkerJobContention::CheckedOut(self.generation()));
-        }
-        let authority = self.authority.as_mut().expect("live batch session owns exact authority");
-        if authority.outcome.is_some() {
-            return Ok(if self.terminal { WorkerJobPoll::Terminal } else { WorkerJobPoll::Outcome });
-        }
-        if authority.step_sequence == u64::MAX {
-            authority.outcome = Some(StepOutcome::Fault(JobFault { detail: retained_static_payload(&authority.payload_ledger, JobPayloadStream::Fault, b"batch-job.step-sequence-exhausted") }));
-            self.terminal = true;
-            return Ok(WorkerJobPoll::Terminal);
-        }
-        let params = authority.params.as_ref().expect("live batch session owns parameters").clone();
-        let config = params.config;
-        let budget = StepBudget::new(config.fuel_per_step, (params.now_ms)().checked_add(config.step_budget_ms).unwrap_or(u64::MAX));
-        let outcome = drive_step_with_payload_ledger(
-            authority.job.as_mut().expect("live batch session owns job"),
-            config.site,
-            params.operation,
-            params.generation,
-            config.stage,
-            budget,
-            params.cancel.clone(),
-            params.now_ms,
-            &mut authority.preview_sequence,
-            Arc::clone(&authority.payload_ledger),
-        );
-        authority.step_sequence = authority.step_sequence.checked_add(1).expect("batch step sequence was preflighted");
-        self.terminal = outcome.is_terminal();
-        authority.outcome = Some(outcome);
-        Ok(if self.terminal { WorkerJobPoll::Terminal } else { WorkerJobPoll::Outcome })
+    pub fn generation(&self) -> Generation {
+        self.session.generation()
     }
 
-    pub fn outcome(&self) -> Option<&StepOutcome> {
-        self.authority.as_ref().and_then(|authority| authority.outcome.as_ref())
+    pub fn poll(&self) -> WorkerJobPoll {
+        if self.checked_out.is_some() {
+            WorkerJobPoll::CheckedOut
+        } else {
+            self.session.poll()
+        }
     }
 
-    pub fn take_outcome(&mut self) -> Option<StepOutcome> {
-        self.authority.as_mut()?.outcome.take()
+    pub fn pump_one(&mut self, pool: &WorkerPool, lane: Lane) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault> {
+        if self.checked_out.is_some() {
+            return Err(MountedWorkerJobPumpFault::CheckedOut);
+        }
+        match self.session.poll() {
+            WorkerJobPoll::Idle => {
+                let ticket = self.session.try_submit_step(pool, lane).map_err(MountedWorkerJobPumpFault::Submit)?;
+                self.ticket = Some(ticket);
+                Ok(WorkerJobPoll::Submitted)
+            }
+            WorkerJobPoll::Submitted => Ok(WorkerJobPoll::Submitted),
+            WorkerJobPoll::Outcome => {
+                let ticket = self.ticket.take().ok_or(MountedWorkerJobPumpFault::MissingTicket)?;
+                let owner = self.session.take_outcome(ticket).map_err(MountedWorkerJobPumpFault::Take)?;
+                self.checked_out = Some(owner);
+                Ok(WorkerJobPoll::Outcome)
+            }
+            WorkerJobPoll::Terminal => {
+                let owner = self.session.take_terminal().map_err(MountedWorkerJobPumpFault::Take)?;
+                self.checked_out = Some(owner);
+                Ok(WorkerJobPoll::Terminal)
+            }
+            WorkerJobPoll::Rejected => {
+                let owner = self.session.take_rejected().map_err(MountedWorkerJobPumpFault::Take)?;
+                owner.resume();
+                Ok(WorkerJobPoll::Rejected)
+            }
+            poll => Ok(poll),
+        }
+    }
+
+    pub fn checked_out_outcome(&self) -> Option<&StepOutcome> {
+        self.checked_out.as_ref().map(WorkerJobOutcome::outcome)
+    }
+
+    pub fn take_checked_out_outcome(&mut self) -> Option<StepOutcome> {
+        self.checked_out.as_mut().map(WorkerJobOutcome::take_outcome)
+    }
+
+    pub fn checked_out_job_mut(&mut self) -> Option<&mut J> {
+        self.checked_out.as_mut().map(WorkerJobOutcome::job_mut)
     }
 
     pub fn resume(&mut self) -> Result<(), WorkerJobContention> {
-        if self.terminal {
-            return Err(WorkerJobContention::Terminal(self.ticket()));
-        }
-        if self.authority.as_ref().is_some_and(|authority| authority.outcome.is_some()) {
-            return Err(WorkerJobContention::Outcome(self.ticket()));
-        }
-        Ok(())
+        let owner = self.checked_out.take().ok_or_else(|| self.session.contention())?;
+        owner.resume().map_err(|owner| {
+            self.checked_out = Some(owner);
+            self.session.contention()
+        })
     }
 
     pub fn begin_close(&mut self) {
-        self.close_requested = true;
+        if let Some(owner) = self.checked_out.take() {
+            owner.begin_close();
+        } else {
+            let _ = self.session.begin_close();
+        }
     }
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> WorkerJobCloseStep {
-        self.close_requested = true;
-        let Some(authority) = self.authority.as_mut() else { return WorkerJobCloseStep::Complete };
-        if let Some(outcome) = authority.outcome.as_mut() {
-            if !outcome.terminal_is_empty() {
-                return match outcome.close_step(maximum_items, maximum_bytes) {
-                    JobPayloadCloseStep::Pending { released_items, released_bytes } => WorkerJobCloseStep::Pending { released_items, released_bytes },
-                    JobPayloadCloseStep::Complete => WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                };
-            }
+        if let Some(owner) = self.checked_out.take() {
             if maximum_items == 0 {
+                self.checked_out = Some(owner);
                 return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
-            authority.outcome = None;
-            return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            owner.begin_close();
+            return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if authority.close_stage == 0 {
-            if maximum_items == 0 {
-                return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            authority.job.as_mut().expect("closing batch authority owns job").begin_close();
-            authority.close_stage = 1;
-            return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if authority.close_stage == 1 {
-            match authority.job.as_mut().expect("closing batch authority owns job").close_step(maximum_items, maximum_bytes) {
-                InteractiveJobCloseStep::Pending { released_items, released_bytes } => return WorkerJobCloseStep::Pending { released_items, released_bytes },
-                InteractiveJobCloseStep::Blocked => return WorkerJobCloseStep::Blocked,
-                InteractiveJobCloseStep::Complete if !authority.job.as_ref().expect("closing batch authority owns job").terminal_is_empty() => return WorkerJobCloseStep::Blocked,
-                InteractiveJobCloseStep::Complete => authority.close_stage = 2,
-            }
-        }
-        if authority.close_stage == 2 {
-            if maximum_items == 0 {
-                return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            drop(authority.job.take());
-            authority.close_stage = 3;
-            return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if authority.close_stage == 3 {
-            if maximum_items == 0 {
-                return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            drop(authority.params.take());
-            authority.close_stage = 4;
-            return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        if !authority.payload_ledger.terminal_is_empty() {
-            return WorkerJobCloseStep::Blocked;
-        }
-        self.authority = None;
-        WorkerJobCloseStep::Complete
+        self.session.close_step(maximum_items, maximum_bytes)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.authority.is_none()
+        self.checked_out.is_none() && self.session.terminal_is_empty()
+    }
+}
+
+impl<J: InteractiveJob + 'static> BatchJobSession<J> {
+    pub fn try_new(job: J, params: BatchJobParams) -> Result<Self, WorkerJobSessionAdmissionRejected<J>> {
+        WorkerJobSession::try_new(job, params).map(|session| Self { session, ticket: None, checked_out: None })
     }
 
-    fn generation(&self) -> Generation {
-        self.authority.as_ref().and_then(|authority| authority.params.as_ref()).map_or(Generation(0), |params| params.generation)
+    pub fn step(&mut self) -> Result<WorkerJobPoll, WorkerJobContention> {
+        if self.checked_out.is_some() {
+            return Err(WorkerJobContention::CheckedOut(self.session.generation()));
+        }
+        let (ticket, poll) = self.session.try_step_on_caller()?;
+        self.ticket = Some(ticket);
+        Ok(poll)
     }
 
-    fn ticket(&self) -> WorkerJobTicket {
-        WorkerJobTicket { generation: self.generation(), step_sequence: self.authority.as_ref().map_or(0, |authority| authority.step_sequence) }
+    pub fn poll(&self) -> WorkerJobPoll {
+        if self.checked_out.is_some() {
+            WorkerJobPoll::CheckedOut
+        } else {
+            self.session.poll()
+        }
+    }
+
+    pub fn take_outcome(&mut self) -> Option<StepOutcome> {
+        if !self.checkout_outcome() {
+            return None;
+        }
+        self.checked_out.as_mut()?.authority.as_mut()?.outcome.take()
+    }
+
+    pub fn checkout_outcome(&mut self) -> bool {
+        if self.checked_out.is_some() {
+            return true;
+        }
+        let owner = match self.session.poll() {
+            WorkerJobPoll::Outcome => match self.ticket.take().and_then(|ticket| self.session.take_outcome(ticket).ok()) {
+                Some(owner) => owner,
+                None => return false,
+            },
+            WorkerJobPoll::Terminal => match self.session.take_terminal().ok() {
+                Some(owner) => owner,
+                None => return false,
+            },
+            _ => return false,
+        };
+        self.checked_out = Some(owner);
+        true
+    }
+
+    pub fn checked_out_outcome(&self) -> Option<&StepOutcome> {
+        self.checked_out.as_ref()?.authority.as_ref()?.outcome.as_ref()
+    }
+
+    pub fn checked_out_job_mut(&mut self) -> Option<&mut J> {
+        self.checked_out.as_mut()?.authority.as_mut()?.job.as_mut()
+    }
+
+    pub fn resume(&mut self) -> Result<(), WorkerJobContention> {
+        let owner = self.checked_out.take().ok_or_else(|| self.session.contention())?;
+        owner.resume().map_err(|owner| {
+            self.checked_out = Some(owner);
+            self.session.contention()
+        })
+    }
+
+    pub fn begin_close(&mut self) {
+        if let Some(owner) = self.checked_out.take() {
+            owner.begin_close();
+        } else {
+            let _ = self.session.begin_close();
+        }
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> WorkerJobCloseStep {
+        if let Some(owner) = self.checked_out.take() {
+            if maximum_items == 0 {
+                self.checked_out = Some(owner);
+                return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            owner.begin_close();
+            return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        self.session.close_step(maximum_items, maximum_bytes)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.checked_out.is_none() && self.session.terminal_is_empty()
     }
 }
 
@@ -1559,9 +1880,7 @@ static WORKER_JOB_RETIREMENT_SLOTS: [AtomicPtr<WorkerJobRetirementHeader>; WORKE
 static WORKER_JOB_RETIREMENT_WAKE: AtomicBool = AtomicBool::new(false);
 
 fn reserve_worker_job_retirement_slot() -> Option<usize> {
-    WORKER_JOB_RETIREMENT_SLOTS.iter().enumerate().find_map(|(index, slot)| {
-        slot.compare_exchange(std::ptr::null_mut(), WORKER_JOB_RETIREMENT_RESERVED, Ordering::AcqRel, Ordering::Acquire).ok().map(|_| index)
-    })
+    WORKER_JOB_RETIREMENT_SLOTS.iter().enumerate().find_map(|(index, slot)| slot.compare_exchange(std::ptr::null_mut(), WORKER_JOB_RETIREMENT_RESERVED, Ordering::AcqRel, Ordering::Acquire).ok().map(|_| index))
 }
 
 pub fn take_worker_job_retirement_wake() -> bool {
@@ -1655,12 +1974,19 @@ impl<J> WorkerJobSessionInner<J> {
     }
 
     fn register_waker(&self, waker: &Waker) -> Result<(), WorkerJobContention> {
+        if self.wake_exhausted.load(Ordering::Acquire) {
+            return Err(WorkerJobContention::WakeExhausted(self.generation));
+        }
         if self.wake_guard.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return Err(WorkerJobContention::CheckedOut(self.generation));
         }
         let wake_now = unsafe {
             *self.waker.get() = Some(waker.clone());
-            if self.wake_pending.load(Ordering::Acquire) { (&mut *self.waker.get()).take() } else { None }
+            if self.wake_pending.load(Ordering::Acquire) {
+                (&mut *self.waker.get()).take()
+            } else {
+                None
+            }
         };
         self.wake_guard.store(false, Ordering::Release);
         if let Some(waker) = wake_now {
@@ -1716,8 +2042,11 @@ unsafe fn destroy_worker_job_retirement_node<J>(pointer: *mut WorkerJobRetiremen
 }
 
 pub struct WorkerJobSessionAdmissionRejected<J> {
-    job: Option<J>,
-    params: Option<BatchJobParams>,
+    job: ManuallyDrop<Option<J>>,
+    params: ManuallyDrop<Option<BatchJobParams>>,
+    fault_source: ManuallyDrop<Option<JobPayloadPageSource>>,
+    closing: bool,
+    close_stage: u8,
 }
 
 impl<J> WorkerJobSessionAdmissionRejected<J> {
@@ -1725,11 +2054,71 @@ impl<J> WorkerJobSessionAdmissionRejected<J> {
         self.job.as_ref().expect("rejected worker session admission owns exact job")
     }
 
-    pub fn into_parts(mut self) -> (J, BatchJobParams) {
-        (
-            self.job.take().expect("rejected worker session admission owns exact job"),
-            self.params.take().expect("rejected worker session admission owns exact parameters"),
-        )
+    pub fn fault_backing_identity(&self) -> Option<*const MaybeUninit<u8>> {
+        self.fault_source.as_ref().map(JobPayloadPageSource::backing_identity)
+    }
+}
+
+impl<J: InteractiveJob> WorkerJobSessionAdmissionRejected<J> {
+    pub fn begin_close(&mut self) {
+        if self.closing {
+            return;
+        }
+        self.closing = true;
+        if let Some(job) = self.job.as_mut() {
+            job.begin_close();
+        }
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        self.begin_close();
+        if self.close_stage == 0 {
+            let Some(job) = self.job.as_mut() else {
+                self.close_stage = 2;
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            };
+            match job.close_step(maximum_items, maximum_bytes) {
+                InteractiveJobCloseStep::Pending { released_items, released_bytes } => return InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                InteractiveJobCloseStep::Blocked => return InteractiveJobCloseStep::Blocked,
+                InteractiveJobCloseStep::Complete if !job.terminal_is_empty() => return InteractiveJobCloseStep::Blocked,
+                InteractiveJobCloseStep::Complete => self.close_stage = 1,
+            }
+        }
+        if self.close_stage == 1 {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            drop(self.job.take());
+            self.close_stage = 2;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.params.is_some() {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            drop(self.params.take());
+            self.close_stage = 3;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.fault_source.is_some() {
+            if maximum_items == 0 || maximum_bytes < JOB_PAYLOAD_PAGE_BYTES {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            drop(self.fault_source.take());
+            self.close_stage = 4;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.job.is_none() && self.params.is_none() && self.fault_source.is_none()
+    }
+}
+
+impl<J> Drop for WorkerJobSessionAdmissionRejected<J> {
+    fn drop(&mut self) {
+        debug_assert!(self.job.is_none() && self.params.is_none() && self.fault_source.is_none(), "rejected worker session admission requires exact incremental close");
     }
 }
 
@@ -1739,38 +2128,41 @@ struct WorkerJobSubmission<J> {
     ran: bool,
 }
 
+fn drive_worker_job_authority<J: InteractiveJob>(authority: &mut WorkerJobAuthority<J>) -> bool {
+    if authority.step_sequence == u64::MAX {
+        authority.outcome = Some(StepOutcome::Fault(JobFault { detail: authority.preadmitted_fault.take().expect("worker session pre-admitted terminal fault page") }));
+        return true;
+    }
+    let params = authority.params.as_ref().expect("submitted job authority owns parameters").clone();
+    let config = params.config;
+    let budget = StepBudget::new(config.fuel_per_step, (params.now_ms)().checked_add(config.step_budget_ms).unwrap_or(u64::MAX));
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        drive_step_with_payload_ledger(
+            authority.job.as_mut().expect("submitted authority owns job"),
+            config.site,
+            params.operation,
+            params.generation,
+            config.stage,
+            budget,
+            params.cancel.clone(),
+            params.now_ms,
+            &mut authority.preview_sequence,
+            Arc::clone(&authority.payload_ledger),
+        )
+    }));
+    authority.step_sequence = authority.step_sequence.checked_add(1).unwrap_or(u64::MAX);
+    authority.outcome = Some(match result {
+        Ok(outcome) => outcome,
+        Err(_) => StepOutcome::Fault(JobFault { detail: authority.preadmitted_fault.take().expect("worker panic retains its pre-admitted terminal fault page") }),
+    });
+    authority.outcome.as_ref().is_some_and(StepOutcome::is_terminal)
+}
+
 impl<J: InteractiveJob + 'static> WorkerJobSubmission<J> {
     fn run(mut self) {
         self.ran = true;
         let mut authority = self.authority.take().expect("submitted worker closure owns exact job authority");
-        let params = authority.params.as_ref().expect("submitted job authority owns parameters").clone();
-        let terminal = if authority.step_sequence == u64::MAX {
-            authority.outcome = Some(StepOutcome::Fault(JobFault { detail: retained_static_payload(&authority.payload_ledger, JobPayloadStream::Fault, b"worker-job.step-sequence-exhausted") }));
-            true
-        } else {
-            let config = params.config;
-            let budget = StepBudget::new(config.fuel_per_step, (params.now_ms)().checked_add(config.step_budget_ms).unwrap_or(u64::MAX));
-            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                drive_step_with_payload_ledger(
-                    authority.job.as_mut().expect("submitted authority owns job"),
-                    config.site,
-                    params.operation,
-                    params.generation,
-                    config.stage,
-                    budget,
-                    params.cancel.clone(),
-                    params.now_ms,
-                    &mut authority.preview_sequence,
-                    Arc::clone(&authority.payload_ledger),
-                )
-            }));
-            authority.step_sequence = authority.step_sequence.checked_add(1).unwrap_or(u64::MAX);
-            authority.outcome = Some(match result {
-                Ok(outcome) => outcome,
-                Err(_) => StepOutcome::Fault(JobFault { detail: retained_static_payload(&authority.payload_ledger, JobPayloadStream::Fault, b"worker-job.step-panicked") }),
-            });
-            authority.outcome.as_ref().is_some_and(StepOutcome::is_terminal)
-        };
+        let terminal = drive_worker_job_authority(&mut authority);
         if self.inner.close_requested.load(Ordering::Acquire) {
             self.inner.terminal_intent.store(1, Ordering::Release);
         }
@@ -1784,17 +2176,6 @@ impl<J> Drop for WorkerJobSubmission<J> {
         let rejected = self.inner.rejection_kind.load(Ordering::Acquire) != u8::MAX;
         unsafe { self.inner.put_authority(authority, if rejected { SESSION_REJECTED } else { SESSION_CLOSE }) };
     }
-}
-
-fn retained_static_payload(ledger: &Arc<JobPayloadOperationLedger>, stream: JobPayloadStream, bytes: &'static [u8]) -> RetainedJobPayload {
-    let source = JobPayloadPageSource::new();
-    let mut writer = RetainedJobPayloadWriter::new(stream);
-    let Ok(mut page) = writer.begin_page(Arc::clone(ledger), source) else { return RetainedJobPayload::empty(stream) };
-    if page.write(bytes).is_err() {
-        return RetainedJobPayload::empty(stream);
-    }
-    page.commit();
-    writer.finish().unwrap_or_else(|_| RetainedJobPayload::empty(stream))
 }
 
 fn worker_job_begin_close<J>(inner: &WorkerJobSessionInner<J>) -> WorkerJobCloseStep {
@@ -1843,6 +2224,23 @@ fn worker_job_close_step<J: InteractiveJob>(inner: &WorkerJobSessionInner<J>, ma
         unsafe { inner.put_authority(authority, SESSION_CLOSE) };
         return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
     }
+    if let Some(fault) = authority.preadmitted_fault.as_mut() {
+        if !fault.terminal_is_empty() {
+            let step = match fault.close_step(maximum_items, maximum_bytes) {
+                JobPayloadCloseStep::Pending { released_items, released_bytes } => WorkerJobCloseStep::Pending { released_items, released_bytes },
+                JobPayloadCloseStep::Complete => WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+            };
+            unsafe { inner.put_authority(authority, SESSION_CLOSE) };
+            return step;
+        }
+        if maximum_items == 0 {
+            unsafe { inner.put_authority(authority, SESSION_CLOSE) };
+            return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        authority.preadmitted_fault = None;
+        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
+        return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+    }
     if authority.close_stage == 0 {
         if maximum_items == 0 {
             unsafe { inner.put_authority(authority, SESSION_CLOSE) };
@@ -1851,7 +2249,7 @@ fn worker_job_close_step<J: InteractiveJob>(inner: &WorkerJobSessionInner<J>, ma
         authority.job.as_mut().expect("closing worker authority owns job").begin_close();
         authority.close_stage = 1;
         unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-        return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
     }
     if authority.close_stage == 1 {
         let step = authority.job.as_mut().expect("closing worker authority owns job").close_step(maximum_items, maximum_bytes);
@@ -1905,28 +2303,37 @@ fn worker_job_close_step<J: InteractiveJob>(inner: &WorkerJobSessionInner<J>, ma
 impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
     pub fn try_new(job: J, params: BatchJobParams) -> Result<Self, WorkerJobSessionAdmissionRejected<J>> {
         let Some(slot) = reserve_worker_job_retirement_slot() else {
-            return Err(WorkerJobSessionAdmissionRejected { job: Some(job), params: Some(params) });
+            return Err(WorkerJobSessionAdmissionRejected { job: ManuallyDrop::new(Some(job)), params: ManuallyDrop::new(Some(params)), fault_source: ManuallyDrop::new(None), closing: false, close_stage: 0 });
         };
-        record_operation_started(params.operation, params.generation);
         let generation = params.generation;
+        let operation = params.operation;
+        let authority = match WorkerJobAuthority::try_new(job, params) {
+            Ok(authority) => authority,
+            Err((job, params, fault_source)) => {
+                WORKER_JOB_RETIREMENT_SLOTS[slot].store(std::ptr::null_mut(), Ordering::Release);
+                return Err(WorkerJobSessionAdmissionRejected { job: ManuallyDrop::new(Some(job)), params: ManuallyDrop::new(Some(params)), fault_source: ManuallyDrop::new(Some(fault_source)), closing: false, close_stage: 0 });
+            }
+        };
+        record_operation_started(operation, generation);
         let inner = Arc::new(WorkerJobSessionInner {
-                generation,
-                phase: AtomicU8::new(SESSION_IDLE),
-                authority: ManuallyDrop::new(std::cell::UnsafeCell::new(Some(WorkerJobAuthority::new(job, params)))),
-                rejection_kind: AtomicU8::new(u8::MAX),
-                close_requested: AtomicBool::new(false),
-                terminal_intent: AtomicU8::new(0),
-                wake_pending: AtomicBool::new(false),
-                wake_sequence: AtomicU64::new(0),
-                wake_exhausted: AtomicBool::new(false),
-                wake_guard: AtomicBool::new(false),
-                waker: ManuallyDrop::new(std::cell::UnsafeCell::new(None)),
-            });
-        let retirement = Box::new(WorkerJobRetirementNode {
-            header: WorkerJobRetirementHeader { slot, pump: pump_worker_job_retirement_node::<J>, destroy: destroy_worker_job_retirement_node::<J> },
-            inner: None,
+            generation,
+            phase: AtomicU8::new(SESSION_IDLE),
+            authority: ManuallyDrop::new(std::cell::UnsafeCell::new(Some(authority))),
+            rejection_kind: AtomicU8::new(u8::MAX),
+            close_requested: AtomicBool::new(false),
+            terminal_intent: AtomicU8::new(0),
+            wake_pending: AtomicBool::new(false),
+            wake_sequence: AtomicU64::new(0),
+            wake_exhausted: AtomicBool::new(false),
+            wake_guard: AtomicBool::new(false),
+            waker: ManuallyDrop::new(std::cell::UnsafeCell::new(None)),
         });
+        let retirement = Box::new(WorkerJobRetirementNode { header: WorkerJobRetirementHeader { slot, pump: pump_worker_job_retirement_node::<J>, destroy: destroy_worker_job_retirement_node::<J> }, inner: None });
         Ok(Self { inner, retirement: std::cell::UnsafeCell::new(Some(retirement)), retirement_state: AtomicU8::new(0) })
+    }
+
+    pub fn generation(&self) -> Generation {
+        self.inner.generation
     }
 
     pub fn poll(&self) -> WorkerJobPoll {
@@ -1941,6 +2348,20 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
             SESSION_EMPTY => WorkerJobPoll::TerminalEmpty,
             _ => WorkerJobPoll::Closing,
         }
+    }
+
+    pub fn try_step_on_caller(&self) -> Result<(WorkerJobTicket, WorkerJobPoll), WorkerJobContention> {
+        if self.inner.phase.compare_exchange(SESSION_IDLE, SESSION_TRANSITION, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return Err(self.contention());
+        }
+        let mut authority = unsafe { self.inner.take_authority() };
+        let ticket = WorkerJobTicket { generation: self.inner.generation, step_sequence: authority.step_sequence };
+        let terminal = drive_worker_job_authority(&mut authority);
+        if self.inner.close_requested.load(Ordering::Acquire) {
+            self.inner.terminal_intent.store(1, Ordering::Release);
+        }
+        unsafe { self.inner.put_authority(authority, if terminal { SESSION_TERMINAL } else { SESSION_OUTCOME }) };
+        Ok((ticket, if terminal { WorkerJobPoll::Terminal } else { WorkerJobPoll::Outcome }))
     }
 
     pub fn register_wake(&self, waker: &Waker) -> Result<(), WorkerJobContention> {
@@ -2026,6 +2447,9 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
 
     fn contention(&self) -> WorkerJobContention {
         let generation = self.inner.generation;
+        if self.inner.wake_exhausted.load(Ordering::Acquire) {
+            return WorkerJobContention::WakeExhausted(generation);
+        }
         let sequence = unsafe { (&*self.inner.authority.get()).as_ref().map_or(0, |authority| authority.step_sequence) };
         let ticket = WorkerJobTicket { generation, step_sequence: sequence };
         match self.inner.phase() {
@@ -2102,6 +2526,9 @@ impl<J> WorkerJobOutcome<J> {
     }
 
     pub fn resume(mut self) -> Result<(), Self> {
+        if self.restore_phase == SESSION_TERMINAL {
+            return Err(self);
+        }
         let authority = self.authority.as_ref().expect("checked-out worker outcome owns authority");
         if authority.outcome.as_ref().is_some_and(|outcome| !outcome.terminal_is_empty() || outcome.is_terminal()) {
             return Err(self);
@@ -2283,7 +2710,19 @@ impl TortureJob {
         let accumulator = read_u64_le(bytes, &mut cursor);
         let checkpoint_every_units = read_u64_le(bytes, &mut cursor);
         let preview_every_units = read_u64_le(bytes, &mut cursor);
-        TortureJob { total_units, completed_units, rng_state, accumulator, checkpoint_every_units, preview_every_units, units_since_checkpoint: 0, units_since_preview: 0, terminal_state: None, scope: JobScope::child_of(parent_cancel), closing: false }
+        TortureJob {
+            total_units,
+            completed_units,
+            rng_state,
+            accumulator,
+            checkpoint_every_units,
+            preview_every_units,
+            units_since_checkpoint: 0,
+            units_since_preview: 0,
+            terminal_state: None,
+            scope: JobScope::child_of(parent_cancel),
+            closing: false,
+        }
     }
 
     fn encode_preview(&self, sequence: u64) -> [u8; 24] {
@@ -2366,8 +2805,9 @@ impl InteractiveJob for TortureJob {
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        if self.scope.pump_child_close() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        match self.scope.pump_child_close(maximum_items, maximum_bytes) {
+            InteractiveJobCloseStep::Complete => {}
+            step => return step,
         }
         if let Some(state) = self.terminal_state.as_mut() {
             if !state.terminal_is_empty() {
@@ -2382,7 +2822,11 @@ impl InteractiveJob for TortureJob {
             self.terminal_state = None;
             return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        if self.scope.terminal_is_empty() { InteractiveJobCloseStep::Complete } else { InteractiveJobCloseStep::Blocked }
+        if self.scope.terminal_is_empty() {
+            InteractiveJobCloseStep::Complete
+        } else {
+            InteractiveJobCloseStep::Blocked
+        }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -2392,449 +2836,6 @@ impl InteractiveJob for TortureJob {
 //#endregion 🔥️TortureJob
 
 //#region 🧪️Tests
-#[cfg(any())]
-mod tests {
-    use super::*;
-    use semio_framework_async::{ProcessKind, WorkerPoolConfig};
-    use std::sync::atomic::AtomicBool;
-    use std::time::Duration;
-    use std::time::Instant as StdInstant;
-
-    fn test_now_ms() -> u64 {
-        default_now_ms()
-    }
-
-    //#region 🪪️Identity
-    #[test]
-    fn commit_validation_accepts_matching_revision_and_generation() {
-        let op = Operation::new(allocate_operation_id(), RevisionId(7), Generation(3), 42);
-        assert_eq!(validate_commit(&op, RevisionId(7), Generation(3)), CommitValidation::Accepted);
-    }
-
-    #[test]
-    fn commit_validation_reports_stale_on_mismatch() {
-        let op = Operation::new(allocate_operation_id(), RevisionId(7), Generation(3), 42);
-        assert_eq!(validate_commit(&op, RevisionId(8), Generation(3)), CommitValidation::Stale { live_revision: RevisionId(8), live_generation: Generation(3) });
-        assert_eq!(validate_commit(&op, RevisionId(7), Generation(4)), CommitValidation::Stale { live_revision: RevisionId(7), live_generation: Generation(4) });
-    }
-
-    #[test]
-    fn operation_preview_sequence_advances_monotonically() {
-        let mut op = Operation::new(allocate_operation_id(), RevisionId(0), Generation(0), 0);
-        assert_eq!(op.next_preview_sequence(), 0);
-        assert_eq!(op.next_preview_sequence(), 1);
-        assert_eq!(op.next_preview_sequence(), 2);
-    }
-    //#endregion 🪪️Identity
-
-    //#region 👶️JobScope
-    #[test]
-    fn job_scope_cascades_cancellation_from_parent() {
-        let parent = root_cancel_token();
-        let scope = JobScope::child_of(&parent);
-        assert!(!scope.is_cancelled());
-        poll_ready_now(parent.cancel());
-        assert!(scope.is_cancelled(), "a child scope must observe its parent's cancellation");
-    }
-
-    #[test]
-    fn job_scope_tracks_live_children_and_releases_on_drop() {
-        let scope = JobScope::root();
-        assert!(!scope.has_live_children());
-        let guard_a = scope.spawn_child();
-        let guard_b = scope.spawn_child();
-        assert_eq!(scope.live_child_count(), 2);
-        drop(guard_a);
-        assert_eq!(scope.live_child_count(), 1);
-        drop(guard_b);
-        assert!(!scope.has_live_children());
-    }
-    //#endregion 👶️JobScope
-
-    //#region 🚰️Progress
-    #[test]
-    fn channel_policy_matrix_bounds_every_kind_in_items_and_bytes() {
-        for kind in [ProgressChannelKind::PointerHover, ProgressChannelKind::PreviewGeometry, ProgressChannelKind::CommitAndCheckpoint, ProgressChannelKind::DiagnosticRing, ProgressChannelKind::Telemetry, ProgressChannelKind::LargeGeometry] {
-            let policy = channel_policy_for(kind);
-            let max_bytes = match &policy {
-                ChannelPolicy::LatestWins { max_bytes } => *max_bytes,
-                ChannelPolicy::Coalesced { max_bytes, .. } => *max_bytes,
-                ChannelPolicy::Ring { max_bytes, .. } => *max_bytes,
-                ChannelPolicy::LosslessBounded { max_bytes, .. } => *max_bytes,
-                ChannelPolicy::ByteCredit { max_bytes, .. } => *max_bytes,
-            };
-            assert!(max_bytes > 0, "{kind:?} must bound bytes");
-        }
-    }
-
-    fn preview_patch_event(patch_bytes: usize) -> ProgressEvent {
-        ProgressEvent::PreviewPatch {
-            operation: allocate_operation_id(),
-            generation: Generation(0),
-            sequence: 0,
-            base_revision: RevisionId(0),
-            stage: "test",
-            completed_units: 1,
-            total_units: Some(10),
-            quality: 1.0,
-            tolerance: 0.1,
-            affected: vec![EntityId(1)],
-            patch: vec![0u8; patch_bytes],
-            at_ms: 0,
-        }
-    }
-
-    #[test]
-    fn large_preview_patch_routes_to_large_geometry_kind() {
-        assert_eq!(default_channel_kind_for(&preview_patch_event(16)), ProgressChannelKind::PreviewGeometry);
-        assert_eq!(default_channel_kind_for(&preview_patch_event(LARGE_PREVIEW_PATCH_BYTES)), ProgressChannelKind::LargeGeometry);
-    }
-    //#endregion 🚰️Progress
-
-    //#region 🔥️TortureConformance
-    fn small_torture(seed: u64) -> TortureJob {
-        TortureJob::new(seed, 20_000, 500, 137, &root_cancel_token())
-    }
-
-    /// ⏱️ Exit gate #1: no single `step()` call ever reaches the 8 ms hard ceiling — asserted against
-    /// `semio_framework_trace::Watchdog`'s own violation ring, never by eyeballing elapsed time.
-    #[test]
-    fn torture_job_never_trips_the_watchdog_ceiling() {
-        let operation = allocate_operation_id();
-        let generation = Generation(1);
-        let cancel = root_cancel_token();
-        let mut job = small_torture(0xC0FFEE);
-        let mut preview_sequence = 0u64;
-        record_operation_started(operation, generation);
-        loop {
-            let budget = StepBudget::new(200, test_now_ms().saturating_add(INTERACTIVE_LANE_WALL_MS));
-            let outcome = drive_step(&mut job, "test.torture.ceiling", operation, generation, InteractiveStage::InteractiveStep, budget, cancel.clone(), test_now_ms, &mut preview_sequence);
-            if outcome.is_terminal() {
-                assert!(matches!(outcome, StepOutcome::Complete(_)), "expected the torture job to finish uninterrupted");
-                break;
-            }
-        }
-        let violations: Vec<_> = Watchdog::violations().into_iter().filter(|violation| violation.operation == operation).collect();
-        assert!(violations.is_empty(), "torture job tripped the 8ms watchdog ceiling: {violations:?}");
-    }
-
-    /// 📡️ Exit gate #2: the job previews continuously, not just at the end.
-    #[test]
-    fn torture_job_previews_continuously() {
-        let operation = allocate_operation_id();
-        let generation = Generation(2);
-        let cancel = root_cancel_token();
-        let mut job = small_torture(1234);
-        let mut preview_sequence = 0u64;
-        let mut preview_count = 0u32;
-        loop {
-            let budget = StepBudget::new(200, test_now_ms().saturating_add(INTERACTIVE_LANE_WALL_MS));
-            let outcome = drive_step(&mut job, "test.torture.preview", operation, generation, InteractiveStage::InteractiveStep, budget, cancel.clone(), test_now_ms, &mut preview_sequence);
-            if let StepOutcome::PreviewReady(_) = &outcome {
-                preview_count += 1;
-            }
-            if outcome.is_terminal() {
-                break;
-            }
-        }
-        assert!(preview_count >= 5, "expected several previews across a 20_000-unit run, got {preview_count}");
-    }
-
-    /// 🛑️ Exit gate #3: cancellation is observed within 8 ms at p99.
-    #[test]
-    fn torture_job_observes_cancellation_within_8ms_at_p99() {
-        const TRIALS: usize = 40;
-        let mut latencies_us: Vec<u64> = Vec::with_capacity(TRIALS);
-        for trial in 0..TRIALS {
-            let operation = allocate_operation_id();
-            let generation = Generation(trial as u64);
-            let cancel = root_cancel_token();
-            let mut job = TortureJob::new(0xA5A5_0000 + trial as u64, 2_000_000, 5_000, 5_000, &cancel);
-            let mut preview_sequence = 0u64;
-            // ▶️ Warm the job up a little before cancelling, so cancellation lands mid-flight.
-            for _ in 0..3 {
-                let budget = StepBudget::new(400, test_now_ms().saturating_add(INTERACTIVE_LANE_WALL_MS));
-                drive_step(&mut job, "test.torture.cancel-warmup", operation, generation, InteractiveStage::InteractiveStep, budget, cancel.clone(), test_now_ms, &mut preview_sequence);
-            }
-            let cancel_start = StdInstant::now();
-            poll_ready_now(cancel.cancel());
-            loop {
-                let budget = StepBudget::new(400, test_now_ms().saturating_add(INTERACTIVE_LANE_WALL_MS));
-                let outcome = drive_step(&mut job, "test.torture.cancel", operation, generation, InteractiveStage::InteractiveStep, budget, cancel.clone(), test_now_ms, &mut preview_sequence);
-                if matches!(outcome, StepOutcome::Cancelled) {
-                    break;
-                }
-                assert!(!outcome.is_terminal(), "expected Cancelled, got a different terminal outcome: {outcome:?}");
-            }
-            latencies_us.push(cancel_start.elapsed().as_micros() as u64);
-        }
-        latencies_us.sort_unstable();
-        let p99_index = ((latencies_us.len() as f64) * 0.99).floor() as usize;
-        let p99_us = latencies_us[p99_index.min(latencies_us.len() - 1)];
-        assert!(p99_us < 8_000, "cancellation p99 latency {p99_us}us exceeded the 8ms exit-gate ceiling");
-    }
-
-    /// 🔁️ Exit gate #4: deterministic replay — byte-identical results across worker counts 1..N.
-    #[test]
-    fn torture_job_replays_deterministically_across_worker_counts() {
-        let seed = 0x5EED_1234;
-        let total_units = 50_000;
-        let mut outputs: Vec<Vec<u8>> = Vec::new();
-        for worker_count in [1usize, 2, 4] {
-            let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, worker_count));
-            let cancel = root_cancel_token();
-            let job = TortureJob::new(seed, total_units, 1_000, 1_000, &cancel);
-            let operation = allocate_operation_id();
-            let config = BatchDriveConfig { site: "test.torture.determinism", stage: InteractiveStage::BackgroundStep, fuel_per_step: 10_000, step_budget_ms: BACKGROUND_LANE_WALL_MS };
-            let params = BatchJobParams { operation, generation: Generation(1), cancel, config, now_ms: default_now_ms };
-            let receiver = run_on_worker(&pool, Lane::Background, job, params);
-            let outcome = receiver.recv().expect("torture job on worker never sent a result");
-            pool.shutdown();
-            match outcome {
-                StepOutcome::Complete(candidate) => outputs.push(candidate.output),
-                other => panic!("expected Complete for worker_count={worker_count}, got {other:?}"),
-            }
-        }
-        assert!(outputs.windows(2).all(|pair| pair[0] == pair[1]), "torture job output diverged across worker counts: {outputs:?}");
-    }
-
-    /// 💾️ Exit gate #5: checkpoint → restore → resume yields the same final result as an
-    /// uninterrupted run.
-    #[test]
-    fn torture_job_checkpoint_restore_resume_matches_uninterrupted_run() {
-        let seed = 0x900D_5EED;
-        let total_units = 30_000;
-
-        let uninterrupted_output = {
-            let cancel = root_cancel_token();
-            let mut job = TortureJob::new(seed, total_units, 700, 900, &cancel);
-            let operation = allocate_operation_id();
-            let config = BatchDriveConfig { site: "test.torture.uninterrupted", stage: InteractiveStage::InteractiveStep, fuel_per_step: 5_000, step_budget_ms: INTERACTIVE_LANE_WALL_MS };
-            let params = BatchJobParams { operation, generation: Generation(1), cancel, config, now_ms: test_now_ms };
-            match run_to_completion(&mut job, &params) {
-                StepOutcome::Complete(candidate) => candidate.output,
-                other => panic!("expected Complete, got {other:?}"),
-            }
-        };
-
-        let resumed_output = {
-            let cancel = root_cancel_token();
-            let mut job = TortureJob::new(seed, total_units, 700, 900, &cancel);
-            let operation = allocate_operation_id();
-            let generation = Generation(1);
-            let mut preview_sequence = 0u64;
-            let checkpoint_state = loop {
-                let budget = StepBudget::new(5_000, test_now_ms().saturating_add(INTERACTIVE_LANE_WALL_MS));
-                let outcome = drive_step(&mut job, "test.torture.checkpoint-phase", operation, generation, InteractiveStage::InteractiveStep, budget, cancel.clone(), test_now_ms, &mut preview_sequence);
-                if let StepOutcome::CheckpointReady(checkpoint) = outcome {
-                    break checkpoint.state;
-                }
-                assert!(!outcome.is_terminal(), "expected a checkpoint before completion, got terminal outcome {outcome:?}");
-            };
-            let mut resumed_job = TortureJob::from_checkpoint(&checkpoint_state, &cancel);
-            loop {
-                let budget = StepBudget::new(5_000, test_now_ms().saturating_add(INTERACTIVE_LANE_WALL_MS));
-                let outcome = drive_step(&mut resumed_job, "test.torture.resume-phase", operation, generation, InteractiveStage::InteractiveStep, budget, cancel.clone(), test_now_ms, &mut preview_sequence);
-                if let StepOutcome::Complete(candidate) = outcome {
-                    break candidate.output;
-                }
-                assert!(!outcome.is_terminal(), "expected the resumed job to complete, got terminal outcome {outcome:?}");
-            }
-        };
-
-        assert_eq!(uninterrupted_output, resumed_output, "checkpoint -> restore -> resume must match an uninterrupted run byte-for-byte");
-    }
-
-    #[test]
-    fn torture_job_is_deterministic_given_identical_seed_and_inputs() {
-        let run = |seed: u64| -> Vec<u8> {
-            let cancel = root_cancel_token();
-            let mut job = TortureJob::new(seed, 10_000, 400, 600, &cancel);
-            let operation = allocate_operation_id();
-            let config = BatchDriveConfig { site: "test.torture.golden", stage: InteractiveStage::InteractiveStep, fuel_per_step: 5_000, step_budget_ms: INTERACTIVE_LANE_WALL_MS };
-            let params = BatchJobParams { operation, generation: Generation(1), cancel, config, now_ms: test_now_ms };
-            match run_to_completion(&mut job, &params) {
-                StepOutcome::Complete(candidate) => candidate.output,
-                other => panic!("expected Complete, got {other:?}"),
-            }
-        };
-        assert_eq!(run(42), run(42), "identical seed and inputs must replay byte-identical");
-        assert_ne!(run(42), run(43), "different seeds must not collide for this conformance job");
-    }
-    //#endregion 🔥️TortureConformance
-
-    //#region 🏭️Batch
-    #[test]
-    fn run_on_worker_reuses_the_same_job_impl_as_the_interactive_path() {
-        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 2));
-        let cancel = root_cancel_token();
-        let job = small_torture(777);
-        let operation = allocate_operation_id();
-        let config = BatchDriveConfig { site: "test.batch.reuse", stage: InteractiveStage::BackgroundStep, fuel_per_step: 5_000, step_budget_ms: BACKGROUND_LANE_WALL_MS };
-        let params = BatchJobParams { operation, generation: Generation(1), cancel, config, now_ms: default_now_ms };
-        let receiver = run_on_worker(&pool, Lane::Background, job, params);
-        let outcome = receiver.recv().expect("worker never produced a result");
-        pool.shutdown();
-        assert!(matches!(outcome, StepOutcome::Complete(_)));
-    }
-
-    struct GatedJob {
-        release: Arc<AtomicBool>,
-        completed: Arc<AtomicBool>,
-        first_step: Option<Sender<()>>,
-    }
-
-    impl InteractiveJob for GatedJob {
-        fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome {
-            if let Some(sender) = self.first_step.take() {
-                let _ = sender.send(());
-            }
-            if !self.release.load(Ordering::SeqCst) {
-                return StepOutcome::Yield;
-            }
-            self.completed.store(true, Ordering::SeqCst);
-            StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() })
-        }
-    }
-
-    #[test]
-    fn run_on_worker_releases_a_single_worker_between_job_steps() {
-        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-        let release = Arc::new(AtomicBool::new(false));
-        let completed = Arc::new(AtomicBool::new(false));
-        let (first_tx, first_rx) = std::sync::mpsc::channel();
-        let job = GatedJob { release: Arc::clone(&release), completed: Arc::clone(&completed), first_step: Some(first_tx) };
-        let params = BatchJobParams {
-            operation: allocate_operation_id(),
-            generation: Generation(1),
-            cancel: root_cancel_token(),
-            config: BatchDriveConfig { site: "test.batch.finite-turn", stage: InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: BACKGROUND_LANE_WALL_MS },
-            now_ms: default_now_ms,
-        };
-        let terminal = run_on_worker(&pool, Lane::Background, job, params);
-        first_rx.recv_timeout(Duration::from_secs(1)).expect("first job step did not run");
-        let (competitor_tx, competitor_rx) = std::sync::mpsc::channel();
-        pool.submit(
-            Lane::Interactive,
-            Box::new(move || {
-                let completed_before_competitor = completed.load(Ordering::SeqCst);
-                release.store(true, Ordering::SeqCst);
-                competitor_tx.send(completed_before_competitor).expect("competitor receiver alive");
-            }),
-        );
-        assert!(!competitor_rx.recv_timeout(Duration::from_secs(1)).expect("competing closure never ran"));
-        assert!(matches!(terminal.recv_timeout(Duration::from_secs(1)), Ok(StepOutcome::Complete(_))));
-        pool.shutdown();
-    }
-
-    struct CountedSessionJob {
-        steps: Arc<AtomicU32>,
-    }
-
-    impl InteractiveJob for CountedSessionJob {
-        fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome {
-            let step = self.steps.fetch_add(1, Ordering::SeqCst) + 1;
-            if step < 3 { StepOutcome::Yield } else { StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: vec![step as u8] }) }
-        }
-    }
-
-    struct GatedSessionJob {
-        release: Arc<AtomicBool>,
-        steps: Arc<AtomicU32>,
-    }
-
-    impl InteractiveJob for GatedSessionJob {
-        fn step(&mut self, _context: &mut StepContext<'_>) -> StepOutcome {
-            self.steps.fetch_add(1, Ordering::SeqCst);
-            while !self.release.load(Ordering::SeqCst) {
-                std::thread::yield_now();
-            }
-            StepOutcome::Yield
-        }
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn submitted_first_step_can_be_polled_pending_without_panicking_or_double_submitting() {
-        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-        let release = Arc::new(AtomicBool::new(false));
-        let steps = Arc::new(AtomicU32::new(0));
-        let params = BatchJobParams {
-            operation: allocate_operation_id(),
-            generation: Generation(1),
-            cancel: root_cancel_token(),
-            config: BatchDriveConfig { site: "test.worker-session.pending-first-poll", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
-            now_ms: default_now_ms,
-        };
-        let session = WorkerJobSession::new(GatedSessionJob { release: Arc::clone(&release), steps: Arc::clone(&steps) }, params);
-        let mut pending = session.submit_step(&pool, Lane::Interactive);
-        assert_eq!(pending.try_recv(), Err(semio_framework_async::oneshot::TryRecvError::Empty));
-        assert!(steps.load(Ordering::SeqCst) <= 1, "one submitted receiver must never enter the job twice");
-        release.store(true, Ordering::SeqCst);
-        assert_eq!(pending.await.expect("gated worker result"), StepOutcome::Yield);
-        assert_eq!(steps.load(Ordering::SeqCst), 1);
-        pool.shutdown();
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn worker_job_session_admits_exactly_one_step_per_caller_turn() {
-        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-        let steps = Arc::new(AtomicU32::new(0));
-        let params = BatchJobParams {
-            operation: allocate_operation_id(),
-            generation: Generation(1),
-            cancel: root_cancel_token(),
-            config: BatchDriveConfig { site: "test.worker-session.single-turn", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: USER_VISIBLE_LANE_WALL_MS },
-            now_ms: default_now_ms,
-        };
-        let session = WorkerJobSession::new(CountedSessionJob { steps: Arc::clone(&steps) }, params);
-        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("first worker turn"), StepOutcome::Yield);
-        assert_eq!(steps.load(Ordering::SeqCst), 1, "session must not self-requeue after the caller receives one outcome");
-        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("second worker turn"), StepOutcome::Yield);
-        assert_eq!(steps.load(Ordering::SeqCst), 2);
-        assert!(matches!(session.step(&pool, Lane::UserVisible).await.expect("terminal worker turn"), StepOutcome::Complete(candidate) if candidate.output == vec![3]));
-        assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-terminal worker turn"), StepOutcome::Yield, "a terminal outcome must be delivered exactly once");
-        assert_eq!(steps.load(Ordering::SeqCst), 3, "the job must not be entered after its terminal outcome");
-        pool.shutdown();
-    }
-
-    #[test]
-    fn rejected_worker_step_admission_retains_the_exact_persistent_session() {
-        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-        pool.shutdown();
-        let steps = Arc::new(AtomicU32::new(0));
-        let params = BatchJobParams {
-            operation: allocate_operation_id(),
-            generation: Generation(1),
-            cancel: root_cancel_token(),
-            config: BatchDriveConfig { site: "test.worker-session.rejected-admission", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
-            now_ms: default_now_ms,
-        };
-        let session = WorkerJobSession::new(CountedSessionJob { steps: Arc::clone(&steps) }, params);
-        assert!(matches!(session.try_submit_step(&pool, Lane::Interactive), Err(semio_framework_async::WorkerSubmitErrorKind::Shutdown)));
-        assert_eq!(steps.load(Ordering::SeqCst), 0);
-        assert!(session.try_into_job().is_ok(), "rejected admission must release only its shallow scheduling closure");
-    }
-    //#endregion 🏭️Batch
-
-    //#region 🔁️SyncPoll
-    #[test]
-    fn poll_ready_now_resolves_a_root_cancel_token_synchronously() {
-        let token = root_cancel_token();
-        assert!(!poll_ready_now(token.is_cancelled()));
-    }
-    //#endregion 🔁️SyncPoll
-
-    //#region 🕰️Clock
-    #[test]
-    fn default_now_ms_is_monotonically_non_decreasing() {
-        let first = default_now_ms();
-        let second = default_now_ms();
-        assert!(second >= first);
-    }
-    //#endregion 🕰️Clock
-}
-//#endregion 🧪️Tests
-
 #[cfg(test)]
 mod retained_ownership_tests {
     use super::*;
@@ -2909,17 +2910,94 @@ mod retained_ownership_tests {
         output_page.write(b"output").expect("output bytes");
         output_page.commit();
         let mut terminal = StepOutcome::Complete(CommitCandidate { state: state_writer.finish().expect("state"), output: output_writer.finish().expect("output") });
-        assert!(matches!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Complete));
+        assert_eq!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: 5 });
         assert!(!terminal.terminal_is_empty());
-        assert!(matches!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Complete));
+        assert_eq!(terminal.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: 6 });
         assert!(terminal.terminal_is_empty());
+    }
+
+    #[test]
+    fn retained_writer_and_reader_advance_exactly_one_page_per_opportunity() {
+        let operation = OperationId(90_008);
+        let generation = Generation(14);
+        let ledger = Arc::new(JobPayloadOperationLedger::new(operation, generation));
+        let bytes = vec![19u8; JOB_PAYLOAD_PAGE_BYTES + 1];
+        let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
+        let mut cursor = 0;
+        let mut sequence = 0;
+        let mut zero = StepContext::with_payload_ledger(operation, generation, StepBudget::new(0, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        assert_eq!(writer.write_slice_page(&mut zero, &bytes, &mut cursor), Ok(false));
+        assert_eq!(cursor, 0);
+        let mut first = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        assert_eq!(writer.write_slice_page(&mut first, &bytes, &mut cursor), Ok(false));
+        assert_eq!(cursor, JOB_PAYLOAD_PAGE_BYTES);
+        let mut second = StepContext::with_payload_ledger(operation, generation, StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        assert_eq!(writer.write_slice_page(&mut second, &bytes, &mut cursor), Ok(true));
+        let mut payload = writer.finish().expect("two-page retained payload");
+        let mut reader = payload.reader();
+        assert_eq!(reader.read_page(0, JOB_PAYLOAD_PAGE_BYTES), None);
+        assert_eq!(reader.read_page(1, JOB_PAYLOAD_PAGE_BYTES).map(|page| page.len()), Some(JOB_PAYLOAD_PAGE_BYTES));
+        assert_eq!(reader.read_page(1, JOB_PAYLOAD_PAGE_BYTES).map(|page| page.len()), Some(1));
+        assert!(reader.terminal_is_empty());
+        assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES });
+        assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Pending { released_items: 1, released_bytes: 1 });
+        assert_eq!(payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES), JobPayloadCloseStep::Complete);
+        assert!(payload.terminal_is_empty());
+    }
+
+    struct StructuredChildJob {
+        backing: Option<Box<u8>>,
+        closing: bool,
+    }
+
+    impl InteractiveJob for StructuredChildJob {
+        fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome {
+            StepOutcome::Yield
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+            self.begin_close();
+            if self.backing.is_some() {
+                if maximum_items == 0 {
+                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                self.backing = None;
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.backing.is_none()
+        }
     }
 
     #[test]
     fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_are_exact() {
         let scope = JobScope::for_operation(&root_cancel_token(), OperationId(90_003), Generation(9));
-        let mut guards: [Option<ChildJobGuard<'_>>; JOB_CHILD_SLOTS] = std::array::from_fn(|_| Some(scope.spawn_child().expect("fixed child slot")));
-        assert!(matches!(scope.spawn_child(), Err(JobChildAdmissionFault::Capacity)));
+        let mut guards: [Option<ChildJobGuard<'_, StructuredChildJob>>; JOB_CHILD_SLOTS] =
+            std::array::from_fn(|index| Some(scope.spawn_child(StructuredChildJob { backing: Some(Box::new(index as u8)), closing: false }).unwrap_or_else(|_| panic!("fixed child slot"))));
+        let retained_child_pointer = guards[1].as_mut().expect("second structured child").with_child_mut(|child| child.backing.as_deref().expect("retained structured child backing") as *const u8).expect("generation-qualified child checkout");
+        assert_eq!(unsafe { *retained_child_pointer }, 1);
+        let plus_one_backing = Box::new(211u8);
+        let plus_one_pointer = plus_one_backing.as_ref() as *const u8;
+        let rejected = match scope.spawn_child(StructuredChildJob { backing: Some(plus_one_backing), closing: false }) {
+            Ok(_) => panic!("child maximum plus one must be rejected"),
+            Err(rejected) => rejected,
+        };
+        assert_eq!(rejected.fault, JobChildAdmissionFault::Capacity);
+        assert_eq!(rejected.child().backing.as_deref().expect("rejected structured child backing") as *const u8, plus_one_pointer);
+        let mut rejected_child = rejected.into_child();
+        assert_eq!(rejected_child.backing.as_deref().expect("returned structured child backing") as *const u8, plus_one_pointer);
+        rejected_child.begin_close();
+        assert_eq!(rejected_child.close_step(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        while !rejected_child.terminal_is_empty() {
+            let _ = rejected_child.close_step(1, 0);
+        }
         assert_eq!(scope.assert_completable(), Err(JobChildCompletionFault::LiveChildren));
         let token = guards[0].as_ref().expect("first child").token();
         guards[0].take().expect("first child").complete().expect("first exact completion");
@@ -2927,33 +3005,50 @@ mod retained_ownership_tests {
         let stale = JobChildToken { generation: token.generation + 1, ..token };
         assert_eq!(scope.complete_child(stale), Err(JobChildCompletionFault::Stale));
         drop(guards);
+        assert_eq!(scope.pump_child_close(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(scope.pump_child_close(1, JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }, "child begin-close transfers control without claiming an owner release");
+        while !scope.terminal_is_empty() {
+            let _ = scope.pump_child_close(1, JOB_PAYLOAD_PAGE_BYTES);
+        }
         assert!(scope.assert_completable().is_ok());
         for slot in &scope.slots {
             slot.generation.store(u64::MAX, Ordering::Release);
             slot.state.store(CHILD_VACANT, Ordering::Release);
         }
-        assert!(matches!(scope.spawn_child(), Err(JobChildAdmissionFault::Exhausted)));
+        let rejected_backing = Box::new(7);
+        let rejected_backing_pointer = rejected_backing.as_ref() as *const u8;
+        let mut rejected = match scope.spawn_child(StructuredChildJob { backing: Some(rejected_backing), closing: false }) {
+            Ok(_) => panic!("exhausted child generation must reject"),
+            Err(rejected) => rejected,
+        };
+        assert_eq!(rejected.fault, JobChildAdmissionFault::Exhausted);
+        assert_eq!(rejected.child().backing.as_deref().expect("exhausted rejected backing") as *const u8, rejected_backing_pointer);
+        rejected.begin_close();
+        assert_eq!(rejected.close_step(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        while !rejected.terminal_is_empty() {
+            let _ = rejected.close_step(1, 0);
+        }
         scope.begin_close();
         assert!(scope.terminal_is_empty());
     }
 
     struct HostileJob {
-        backing: Box<u8>,
-        steps: Arc<AtomicUsize>,
+        backing: Option<Box<u8>>,
+        steps: Option<Arc<AtomicUsize>>,
         panic: bool,
         closing: bool,
     }
 
     impl InteractiveJob for HostileJob {
         fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-            let step = self.steps.fetch_add(1, AtomicOrdering::AcqRel);
+            let step = self.steps.as_ref().expect("hostile step counter").fetch_add(1, AtomicOrdering::AcqRel);
             if self.panic {
                 panic!("hostile worker panic");
             }
             if step == 0 {
                 return StepOutcome::Yield;
             }
-            let output = cx.payload_from_bytes(JobPayloadStream::CommitOutput, &[*self.backing]).expect("hostile output page");
+            let output = cx.payload_from_bytes(JobPayloadStream::CommitOutput, &[**self.backing.as_ref().expect("hostile backing")]).expect("hostile output page");
             StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output })
         }
 
@@ -2961,12 +3056,22 @@ mod retained_ownership_tests {
             self.closing = true;
         }
 
-        fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+            self.begin_close();
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if self.backing.take().is_some() {
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.steps.take().is_some() {
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
             InteractiveJobCloseStep::Complete
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.closing
+            self.closing && self.backing.is_none() && self.steps.is_none()
         }
     }
 
@@ -2976,7 +3081,8 @@ mod retained_ownership_tests {
         let operation = OperationId(90_004);
         let generation = Generation(10);
         let steps = Arc::new(AtomicUsize::new(0));
-        let session = WorkerJobSession::try_new(HostileJob { backing: Box::new(91), steps: Arc::clone(&steps), panic: false, closing: false }, params(operation, generation, root_cancel_token())).unwrap_or_else(|_| panic!("worker session slot"));
+        let session =
+            WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(91)), steps: Some(Arc::clone(&steps)), panic: false, closing: false }, params(operation, generation, root_cancel_token())).unwrap_or_else(|_| panic!("worker session slot"));
         let first = session.try_submit_step(&pool, Lane::Interactive).expect("first opportunity submitted");
         assert!(matches!(session.try_submit_step(&pool, Lane::Interactive), Err(WorkerJobSubmitFault::Contention(WorkerJobContention::Submitted(_)))));
         wait_for(&session, WorkerJobPoll::Outcome);
@@ -2986,10 +3092,10 @@ mod retained_ownership_tests {
         let second = session.try_submit_step(&pool, Lane::Interactive).expect("second opportunity submitted");
         wait_for(&session, WorkerJobPoll::Terminal);
         let terminal = session.take_terminal().expect("terminal owner is take-only");
-        let terminal_pointer = terminal.job().backing.as_ref() as *const u8;
+        let terminal_pointer = terminal.job().backing.as_deref().expect("terminal hostile backing") as *const u8;
         drop(terminal);
         let terminal = session.take_terminal().expect("dropped checkout hands exact terminal back");
-        assert_eq!(terminal.job().backing.as_ref() as *const u8, terminal_pointer);
+        assert_eq!(terminal.job().backing.as_deref().expect("returned hostile backing") as *const u8, terminal_pointer);
         assert_eq!(second.generation, generation);
         terminal.begin_close();
         while !session.terminal_is_empty() {
@@ -3005,10 +3111,11 @@ mod retained_ownership_tests {
         pool.shutdown();
         let backing = Box::new(33u8);
         let backing_pointer = backing.as_ref() as *const u8;
-        let session = WorkerJobSession::try_new(HostileJob { backing, steps: Arc::new(AtomicUsize::new(0)), panic: false, closing: false }, params(OperationId(90_005), Generation(11), root_cancel_token())).unwrap_or_else(|_| panic!("worker session slot"));
+        let session = WorkerJobSession::try_new(HostileJob { backing: Some(backing), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_005), Generation(11), root_cancel_token()))
+            .unwrap_or_else(|_| panic!("worker session slot"));
         assert_eq!(session.try_submit_step(&pool, Lane::Interactive), Err(WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Shutdown)));
         let rejected = session.take_rejected().expect("pool rejection retained exact owner");
-        assert_eq!(rejected.job().backing.as_ref() as *const u8, backing_pointer);
+        assert_eq!(rejected.job().backing.as_deref().expect("rejected hostile backing") as *const u8, backing_pointer);
         rejected.resume();
         assert_eq!(session.poll(), WorkerJobPoll::Idle);
         session.begin_close();
@@ -3020,14 +3127,25 @@ mod retained_ownership_tests {
     #[test]
     fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
-        let session = WorkerJobSession::try_new(HostileJob { backing: Box::new(1), steps: Arc::new(AtomicUsize::new(0)), panic: true, closing: false }, params(OperationId(90_006), Generation(12), root_cancel_token())).unwrap_or_else(|_| panic!("worker session slot"));
+        let session = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(1)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: true, closing: false }, params(OperationId(90_006), Generation(12), root_cancel_token()))
+            .unwrap_or_else(|_| panic!("worker session slot"));
+        let preadmitted_fault_pointer = unsafe {
+            (&*session.inner.authority.get())
+                .as_ref()
+                .and_then(|authority| authority.preadmitted_fault.as_ref())
+                .and_then(|payload| payload.pages[0].as_ref())
+                .map(|page| page.source.backing_identity())
+                .expect("panic fault backing is admitted before submission")
+        };
         session.register_wake(Waker::noop()).expect("quiet wake registration");
         let _ = session.try_submit_step(&pool, Lane::Interactive).expect("panic opportunity submitted");
         wait_for(&session, WorkerJobPoll::Terminal);
         assert!(session.take_wake());
         assert!(!session.take_wake(), "redundant quiet poll raises no wake");
         let terminal = session.take_terminal().expect("panic becomes retained terminal");
-        assert!(matches!(terminal.outcome(), StepOutcome::Fault(_)));
+        let StepOutcome::Fault(fault) = terminal.outcome() else { panic!("panic publishes the pre-admitted fault") };
+        let returned_fault_pointer = fault.detail.pages[0].as_ref().map(|page| page.source.backing_identity()).expect("terminal fault retains exact backing");
+        assert_eq!(returned_fault_pointer, preadmitted_fault_pointer);
         terminal.begin_close();
         while !session.terminal_is_empty() {
             let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
@@ -3036,15 +3154,44 @@ mod retained_ownership_tests {
     }
 
     #[test]
+    fn worker_quiet_wake_sequence_exhaustion_is_permanent_and_typed() {
+        let session = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(2)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_009), Generation(15), root_cancel_token()))
+            .unwrap_or_else(|_| panic!("worker session slot"));
+        session.inner.wake_sequence.store(u64::MAX, Ordering::Release);
+        session.inner.wake_pending.store(false, Ordering::Release);
+        session.inner.raise_wake();
+        assert_eq!(session.register_wake(Waker::noop()), Err(WorkerJobContention::WakeExhausted(Generation(15))));
+        session.begin_close();
+        while !session.terminal_is_empty() {
+            let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        }
+    }
+
+    #[test]
     fn batch_session_advances_exactly_one_external_opportunity() {
         let steps = Arc::new(AtomicUsize::new(0));
-        let mut batch = BatchJobSession::new(HostileJob { backing: Box::new(7), steps: Arc::clone(&steps), panic: false, closing: false }, params(OperationId(90_007), Generation(13), root_cancel_token()));
+        let mut batch = BatchJobSession::try_new(HostileJob { backing: Some(Box::new(7)), steps: Some(Arc::clone(&steps)), panic: false, closing: false }, params(OperationId(90_007), Generation(13), root_cancel_token()))
+            .unwrap_or_else(|_| panic!("batch fault page is pre-admitted"));
         assert_eq!(batch.step(), Ok(WorkerJobPoll::Outcome));
         assert_eq!(steps.load(AtomicOrdering::Acquire), 1);
         assert!(matches!(batch.take_outcome(), Some(StepOutcome::Yield)));
         batch.resume().expect("caller explicitly resumes after first opportunity");
         assert_eq!(steps.load(AtomicOrdering::Acquire), 1, "batch adapter never drains itself to terminal");
         batch.begin_close();
+        assert_eq!(batch.close_step(0, 0), WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        while !batch.terminal_is_empty() {
+            let _ = batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        }
+    }
+
+    #[test]
+    fn checked_out_and_worker_begin_close_transitions_report_exact_zero_release() {
+        let mut batch = BatchJobSession::try_new(HostileJob { backing: Some(Box::new(7)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_010), Generation(16), root_cancel_token()))
+            .unwrap_or_else(|_| panic!("batch session authority"));
+        assert_eq!(batch.step(), Ok(WorkerJobPoll::Outcome));
+        assert!(batch.checkout_outcome());
+        assert_eq!(batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES), WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES), WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
         while !batch.terminal_is_empty() {
             let _ = batch.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
         }
@@ -3054,33 +3201,31 @@ mod retained_ownership_tests {
     fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
         let mut sessions = Vec::with_capacity(WORKER_JOB_SESSION_SLOTS);
         for index in 0..WORKER_JOB_SESSION_SLOTS {
-            let job = HostileJob { backing: Box::new(index as u8), steps: Arc::new(AtomicUsize::new(0)), panic: false, closing: false };
+            let job = HostileJob { backing: Some(Box::new(index as u8)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false };
             sessions.push(WorkerJobSession::try_new(job, params(OperationId(91_000 + index as u64), Generation(index as u64 + 1), root_cancel_token())).unwrap_or_else(|_| panic!("each fixed session slot admits once")));
         }
         let rejected_backing = Box::new(211u8);
         let rejected_pointer = rejected_backing.as_ref() as *const u8;
-        let rejected = match WorkerJobSession::try_new(
-            HostileJob { backing: rejected_backing, steps: Arc::new(AtomicUsize::new(0)), panic: false, closing: false },
-            params(OperationId(92_000), Generation(500), root_cancel_token()),
-        ) {
+        let mut rejected = match WorkerJobSession::try_new(HostileJob { backing: Some(rejected_backing), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(92_000), Generation(500), root_cancel_token())) {
             Ok(_) => panic!("session maximum plus one must retain exact rejected job"),
             Err(rejected) => rejected,
         };
-        assert_eq!(rejected.job().backing.as_ref() as *const u8, rejected_pointer);
-        let (rejected_job, _) = rejected.into_parts();
-        assert_eq!(rejected_job.backing.as_ref() as *const u8, rejected_pointer);
-        drop(rejected_job);
+        assert_eq!(rejected.job().backing.as_deref().expect("session max plus one backing") as *const u8, rejected_pointer);
+        assert_eq!(rejected.params.as_ref().expect("session max plus one parameters").operation, OperationId(92_000));
+        assert_eq!(rejected.params.as_ref().expect("session max plus one parameters").generation, Generation(500));
+        rejected.begin_close();
+        assert_eq!(rejected.close_step(0, 0), InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        while !rejected.terminal_is_empty() {
+            let _ = rejected.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        }
         let dropped = sessions.pop().expect("last fixed session");
         drop(dropped);
         assert!(take_worker_job_retirement_wake());
         for _ in 0..8 {
             let _ = pump_worker_job_retirements(1, 1, JOB_PAYLOAD_PAGE_BYTES);
         }
-        let replacement = WorkerJobSession::try_new(
-            HostileJob { backing: Box::new(17), steps: Arc::new(AtomicUsize::new(0)), panic: false, closing: false },
-            params(OperationId(92_001), Generation(501), root_cancel_token()),
-        )
-        .unwrap_or_else(|_| panic!("retirement pump returns exact fixed session slot"));
+        let replacement = WorkerJobSession::try_new(HostileJob { backing: Some(Box::new(17)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(92_001), Generation(501), root_cancel_token()))
+            .unwrap_or_else(|_| panic!("retirement pump returns exact fixed session slot"));
         sessions.push(replacement);
         for session in sessions {
             let _ = session.begin_close();

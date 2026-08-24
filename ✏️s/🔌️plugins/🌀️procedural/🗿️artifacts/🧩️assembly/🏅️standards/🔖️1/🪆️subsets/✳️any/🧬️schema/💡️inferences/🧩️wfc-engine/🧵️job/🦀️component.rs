@@ -1124,7 +1124,10 @@ impl<T: Topology + Clone> WfcJob<T> {
 
     fn emit_preview(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
         let now_ms = context.now_ms();
-        let sequence = context.next_preview_sequence().max(self.state.preview_sequence);
+        let sequence = match context.next_preview_sequence() {
+            Ok(sequence) => sequence.max(self.state.preview_sequence),
+            Err(_) => return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+        };
         self.state.preview_sequence = sequence + 1;
         self.operation.preview_sequence = self.state.preview_sequence;
         let preview = self.preview(sequence);
@@ -1537,7 +1540,10 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
                 return StepOutcome::Fault(JobFault { detail: error.into_bytes() });
             }
             if self.stage == RestoreStage::Complete && self.restored.is_some() {
-                return StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() });
+                return StepOutcome::Complete(CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                });
             }
             context.consume_fuel(1);
             self.preview_units = self.preview_units.saturating_add(1);
@@ -1547,7 +1553,11 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
             let now_ms = context.now_ms();
             if self.last_preview_ms.is_none() || self.preview_units >= PREVIEW_UNIT_INTERVAL || self.last_preview_ms.is_some_and(|last| now_ms.saturating_sub(last) >= PREVIEW_TIME_INTERVAL_MS) {
                 let (completed, total) = self.progress();
-                let preview = RestorePreview { sequence: context.next_preview_sequence(), stage: self.stage, completed, total };
+                let sequence = match context.next_preview_sequence() {
+                    Ok(sequence) => sequence,
+                    Err(_) => return StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+                };
+                let preview = RestorePreview { sequence, stage: self.stage, completed, total };
                 self.preview_units = 0;
                 self.last_preview_ms = Some(now_ms);
                 return StepOutcome::PreviewReady(serde_json::to_vec(&preview).expect("bounded restore preview"));

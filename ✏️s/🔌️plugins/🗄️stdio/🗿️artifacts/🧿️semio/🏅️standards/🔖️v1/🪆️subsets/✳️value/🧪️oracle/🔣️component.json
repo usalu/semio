@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.value` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-value-mutation-semantics",
+      "capabilities": ["semio-v1-value-mutate"],
+      "rationale": "There is no third-party crate that reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, nor one authoritative over this subset's `SemioValueMutation` vocabulary. The nearest genuine candidate was considered and rejected on a concrete blocker rather than on principle: `json` (json-rust 0.12) is already linked into this plugin's oracle crate and is genuinely independent of our codec, and the five tree-shaped kinds (`set-value`, `set-map-entry`, `remove-map-entry`, `insert-list-item`, `remove-list-item`) really are RFC 6902-shaped member/element surgery a JSON DOM could perform as a second producer. Reaching it, however, needs a new `artifacts::semio::…` module wired into `🧪️oracle/📦️packages/🦀️rust/📦️lib.rs`, an edit this wave's brief puts outside an executor's authority — the same position glTF took when it declined to register the `gltf` crate. It would also cover only part of the vocabulary: `SemioValue` keeps `Int`/`Float` SOURCE LEXEMES verbatim and carries `Bytes` and `Ref` variants JSON has no analogue for, and `set-node`/`remove-node` address a top-level id-keyed GRAPH that is not reachable by descending a JSON tree at all. Recorded here so the next wave can pick it up with the module edit in scope. Confidence today comes from committed specification vectors — `set-snapshot`'s under its own leaf's `🧪️tests/` directory, already unit-tested inside the production crate, and the other eight committed beside the case, each a `(before, mutation, after)` triple over one shared document that carries a map, a nested list, a `Ref` and a two-node graph so every addressing mode is genuinely exercised — plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation fixture, including the ORDER-restoring multi-step undo `remove-map-entry` needs.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-value",
+      "capability": "semio-v1-value-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"]
+    }
+  ]
+}

@@ -5386,7 +5386,10 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawSnapshot, 
                 let candidate = store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, draw_document_store_owners());
                 *self.candidate = Some(candidate);
                 self.phase = DrawStoreInitializationPhase::Complete;
-                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() })
+                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                })
             }
             DrawStoreInitializationPhase::RetireCancelled | DrawStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
@@ -5407,7 +5410,10 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawSnapshot, 
                     semio_framework_job::StepOutcome::Yield
                 }
             },
-            DrawStoreInitializationPhase::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() }),
+            DrawStoreInitializationPhase::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+            }),
             DrawStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
             DrawStoreInitializationPhase::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.clone().unwrap_or_else(|| b"draw-store.initializer-fault".to_vec()) }),
         }

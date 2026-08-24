@@ -12,7 +12,8 @@
 
 //#region 🔌️Adapters
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { basename, join, relative, sep } from "node:path";
+import { createRequire } from "node:module";
+import { basename, delimiter, join, relative, sep } from "node:path";
 import { type BreachRecord, type TestLevel, Script, ScriptRouter, TEST_LEVELS, formatBreachReport, getRepoMetaDir, resolveTestLevel, runBundleScriptMain, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import {
   type ClassifiedDependency,
@@ -22,6 +23,8 @@ import {
   type DependencyEcosystem,
   type DiscoveredCase,
   type Implementation,
+  type OracleEntry,
+  type OracleHostPackage,
   type TestResult,
   type TestRole,
   agentCacheRoot,
@@ -29,17 +32,22 @@ import {
   classifyLegacyKind,
   cleanTestOutputs,
   computeCoverageMetrics,
+  dependencyEcosystemOfRegistryValue,
+  digest,
   discoverTestCases,
   dotnetPackageReferences,
   evaluateCrossSubjectParity,
   evaluateParity,
   enforceMetricGates,
+  externalOracleHostPackages,
   formatMetrics,
   formatCleanReport,
   isProductionClass,
   isExcludedTestPath,
   loadOracleRegistry,
+  oracleHostModule,
   oracleHostPackagesFor,
+  oracleLinkedPackages,
   profileTable,
   markOutputDir,
   markRunComplete,
@@ -77,10 +85,15 @@ function reportsDir(repoRoot: string): string {
 function loadClassifiedBaseline(repoRoot: string): ClassifiedDependency[] {
   const baselineRaw = JSON.parse(readFileSync(join(repoRoot, "🔒️dependencies.json"), "utf8")) as { entries: { ecosystem: string; name: string; version: string; kinds: string[]; users: string[]; productionReachable?: boolean; oracleIds?: string[]; capabilities?: string[] }[] };
   const registry = loadOracleRegistry(repoRoot);
-  const oracleByPackage = new Map(registry.oracles.map((entry) => [entry.package, entry]));
+  // 🔒️Keyed by EVERY package an oracle links and holding EVERY oracle that links it. Keying on the
+  // primary package alone missed the composed halves; keeping only one oracle per package made the
+  // committed record depend on manifest discovery order, so the same repository could produce two
+  // different baselines. Ids are sorted, so the file is a function of the registry and nothing else.
+  const oraclesByLinkedPackage = new Map<string, OracleEntry[]>();
+  for (const oracle of registry.oracles) for (const linked of oracleLinkedPackages(oracle)) oraclesByLinkedPackage.set(linked.package, [...(oraclesByLinkedPackage.get(linked.package) ?? []), oracle]);
   const classified: ClassifiedDependency[] = baselineRaw.entries.map((entry) => {
-    const oracle = oracleByPackage.get(entry.name);
-    const oracleIds = oracle ? [oracle.id] : (entry.oracleIds ?? []);
+    const linking = oraclesByLinkedPackage.get(entry.name) ?? [];
+    const oracleIds = linking.length > 0 ? [...new Set(linking.map((oracle) => oracle.id))].sort() : (entry.oracleIds ?? []);
     const kinds = [...new Set(entry.kinds.map((kind) => (["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle"].includes(kind) ? (kind as ClassifiedDependency["kinds"][number]) : classifyLegacyKind(kind, oracleIds))))];
     return {
       ecosystem: entry.ecosystem as DependencyEcosystem,
@@ -90,12 +103,31 @@ function loadClassifiedBaseline(repoRoot: string): ClassifiedDependency[] {
       users: entry.users,
       productionReachable: entry.productionReachable ?? kinds.some(isProductionClass),
       oracleIds: oracleIds.length > 0 ? oracleIds : undefined,
-      capabilities: oracle?.capabilities ?? entry.capabilities,
+      capabilities: linking.length > 0 ? [...new Set(linking.flatMap((oracle) => oracle.capabilities))].sort() : entry.capabilities,
     };
   });
+  // 🧩️EVERY package a registered oracle links, not only the one its id is named after. A composed
+  // reference (reader + writer, archive + XML) links several, and a secondary package that never
+  // reached this list would be linked into the host while the ratchet and the report both showed it
+  // as absent — the exact blind spot registration exists to close.
   for (const oracle of registry.oracles) {
-    if (classified.some((entry) => entry.name === oracle.package)) continue;
-    classified.push({ ecosystem: oracle.ecosystem === "javascript" ? "js" : (oracle.ecosystem as DependencyEcosystem), name: oracle.package, version: oracle.version ?? "*", kinds: ["test-oracle"], users: [oracle.hostPath ?? DOMAIN_REL], productionReachable: false, oracleIds: [oracle.id], capabilities: oracle.capabilities });
+    for (const linked of oracleLinkedPackages(oracle)) {
+      if (classified.some((entry) => entry.name === linked.package)) continue;
+      const linking = oraclesByLinkedPackage.get(linked.package) ?? [oracle];
+      classified.push({ ecosystem: dependencyEcosystemOfRegistryValue(oracle.ecosystem), name: linked.package, version: linked.version, kinds: ["test-oracle"], users: [oracle.hostPath ?? DOMAIN_REL], productionReachable: false, oracleIds: [...new Set(linking.map((entry) => entry.id))].sort(), capabilities: [...new Set(linking.flatMap((entry) => entry.capabilities))].sort() });
+    }
+  }
+  // 🧩️An owner that puts an external distribution on a generated host's import path has added a
+  // third-party test dependency, exactly as registering an oracle package does. Classifying it here
+  // is what keeps the Python and npm hosts inside the same ratchet as the Rust one instead of
+  // letting a manifest field become an unwatched channel for reference libraries.
+  for (const host of externalOracleHostPackages(registry)) {
+    const existing = classified.find((entry) => entry.ecosystem === host.ecosystem && entry.name === host.name);
+    if (existing !== undefined) {
+      classified[classified.indexOf(existing)] = { ...existing, users: [...new Set([...existing.users, ...host.users])] };
+      continue;
+    }
+    classified.push({ ecosystem: host.ecosystem, name: host.name, version: host.version, kinds: ["test-oracle"], users: host.users, productionReachable: false });
   }
   return classified.sort((a, b) => a.ecosystem.localeCompare(b.ecosystem) || a.name.localeCompare(b.name));
 }
@@ -178,7 +210,7 @@ function selectImplementations(discovered: DiscoveredCase, segments: readonly st
 
 //#region 🏗️Hosts
 /** 🏗️ One materialized native entrypoint: where it lives and how it is launched. */
-type MaterializedHost = Readonly<{ command: string; args: readonly string[]; cwd: string; env: NodeJS.ProcessEnv; hostDir: string | null }>;
+type MaterializedHost = Readonly<{ command: string; args: readonly string[]; cwd: string; env: NodeJS.ProcessEnv; hostDir: string | null; problems: readonly string[] }>;
 
 function hostDirFor(repoRoot: string, discovered: DiscoveredCase, role: TestRole, implementation: Implementation): string {
   const dir = join(testCacheDir(repoRoot, "hosts"), `${discovered.projectName}-${role}-${implementation}`);
@@ -213,8 +245,8 @@ function rustSutCrate(repoRoot: string, discovered: DiscoveredCase): { name: str
  * contribution manifests. The framework links whatever an owner declares; it never names a package,
  * a plugin or a format, so a new artifact family needs no edit here.
  */
-function contributedOraclePackages(repoRoot: string, discovered: DiscoveredCase, implementation: Implementation): { package: string; path: string; features: readonly string[] }[] {
-  return oracleHostPackagesFor(loadOracleRegistry(repoRoot), discovered.owner, implementation).map((entry) => ({ package: entry.package, path: join(repoRoot, entry.path), features: entry.features ?? [] }));
+function contributedOraclePackages(repoRoot: string, discovered: DiscoveredCase, implementation: Implementation): OracleHostPackage[] {
+  return oracleHostPackagesFor(loadOracleRegistry(repoRoot), discovered.owner, implementation);
 }
 
 /** 🦀️ Materializes a standalone cache-local integration crate that links the adapter and the host support crate by path. */
@@ -222,7 +254,12 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
   const dir = hostDirFor(repoRoot, discovered, role, "rust");
   const adapterAbs = join(repoRoot, discovered.adapters.rust!);
   const sut = rustSutCrate(repoRoot, discovered);
-  const oraclePackages = contributedOraclePackages(repoRoot, discovered, "rust");
+  const declared = contributedOraclePackages(repoRoot, discovered, "rust");
+  // 🦀️A Cargo dependency is linked by path or it is not linked at all; a crates.io coordinate would
+  // be an unreviewed third-party dependency of the generated host, which is what the local-crate
+  // rule exists to prevent.
+  const oraclePackages = declared.filter((entry) => entry.path !== undefined);
+  const problems = declared.filter((entry) => entry.path === undefined).map((entry) => `${discovered.caseDir}: rust oracle host package ${entry.package} declares no path — a Rust host links contributed crates by path`);
   mkdirSync(join(dir, "src"), { recursive: true });
   writeFileSync(
     join(dir, "Cargo.toml"),
@@ -248,7 +285,7 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
       "[dependencies]",
       `semio-repo-test-host = { path = ${JSON.stringify(join(repoRoot, RUST_PACKAGE_REL))} }`,
       // 🧩️Whatever the owner contributed, exactly as the owner declared it.
-      ...oraclePackages.map((entry) => `${entry.package} = { path = ${JSON.stringify(entry.path)}${entry.features.length > 0 ? `, features = [${entry.features.map((feature) => JSON.stringify(feature)).join(", ")}]` : ""} }`),
+      ...oraclePackages.map((entry) => `${entry.package} = { path = ${JSON.stringify(join(repoRoot, entry.path!))}${(entry.features ?? []).length > 0 ? `, features = [${(entry.features ?? []).map((feature) => JSON.stringify(feature)).join(", ")}]` : ""} }`),
       ...(sut === null ? [] : [`${sut.name} = { path = ${JSON.stringify(sut.path)}, default-features = false, optional = true }`]),
       "",
     ].join("\n"),
@@ -272,6 +309,7 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
     cwd: repoRoot,
     env: { ...process.env, CARGO_TARGET_DIR: join(agentCacheRoot(repoRoot), "cargo-test-hosts") },
     hostDir: dir,
+    problems,
   };
 }
 
@@ -282,19 +320,111 @@ function materializeGoHost(repoRoot: string, discovered: DiscoveredCase, role: T
   writeFileSync(join(dir, "go.mod"), ["// 🤖️ Generated — safe to delete, never commit.", "module semio.test/host", "", "go 1.23", "", "require semio.tech/repo/test v0.0.0", "", `replace semio.tech/repo/test => ${join(repoRoot, GO_PACKAGE_REL)}`, ""].join("\n"));
   writeFileSync(join(dir, "adapter.go"), readFileSync(adapterAbs, "utf8").replace(/^package\s+\w+/m, "package main"));
   writeFileSync(join(dir, "main.go"), ["// 🤖️ Generated native entrypoint.", "package main", "", 'import host "semio.tech/repo/test"', "", "func main() {", "\thost.RunMain(Adapter())", "}", ""].join("\n"));
-  return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: { ...process.env, GOFLAGS: "-mod=mod", GOWORK: "off" }, hostDir: dir };
+  return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: { ...process.env, GOFLAGS: "-mod=mod", GOWORK: "off" }, hostDir: dir, problems: [] };
+}
+
+/**
+ * 🐍️ The cache-local interpreter the Python host runs under, carrying exactly the external
+ * distributions the owners declared.
+ *
+ * A virtual environment, never the system interpreter: a test host may not mutate the machine it
+ * runs on. It is created with `--system-site-packages` so a distribution the machine already
+ * provides is REUSED rather than downloaded, which is what keeps a zero-touch checkout working
+ * offline; anything still missing is installed INTO the environment, where it stays isolated. The
+ * environment is keyed by the declared package set, so it is built once and reused by every run and
+ * every case that declares the same set, and rebuilt the moment the declaration changes.
+ */
+function provisionPythonInterpreter(repoRoot: string, base: string, declared: readonly OracleHostPackage[]): { interpreter: string; problems: string[] } {
+  const external = declared.filter((entry) => entry.path === undefined);
+  if (external.length === 0) return { interpreter: base, problems: [] };
+  const specs = [...external].map((entry) => ({ spec: entry.version === undefined ? entry.package : `${entry.package}==${entry.version}`, module: oracleHostModule(entry), package: entry.package, version: entry.version })).sort((a, b) => a.spec.localeCompare(b.spec));
+  const signature = specs.map((entry) => entry.spec).join(" ");
+  const dir = join(testCacheDir(repoRoot, "hosts"), `python-env-${digest(`${base}\n${signature}`)}`);
+  const interpreter = join(dir, process.platform === "win32" ? "Scripts" : "bin", process.platform === "win32" ? "python.exe" : "python3");
+  const stampPath = join(dir, "🧾️packages.json");
+  const stamp = existsSync(stampPath) ? (JSON.parse(readFileSync(stampPath, "utf8")) as { signature?: string }) : null;
+  if (stamp?.signature === signature && existsSync(interpreter)) return { interpreter, problems: [] };
+
+  markOutputDir(repoRoot, dir, { testId: "hosts::python-env", cacheKey: `python-env:${signature}` });
+  const problems: string[] = [];
+  if (!existsSync(interpreter)) {
+    const created = runProbe(base, ["-m", "venv", "--system-site-packages", dir], { cwd: repoRoot, budgetMs: testLevelBudgetMs("long") });
+    if ((created.status ?? 1) !== 0 || !existsSync(interpreter)) {
+      problems.push(`python oracle host: cannot create the cache-local environment at ${relative(repoRoot, dir).split(sep).join("/")} with \`${base} -m venv\` — ${created.stderr.trim() || `exit ${created.status}`}`);
+      return { interpreter: base, problems };
+    }
+  }
+  // 🔎️Importable AND at the declared version. Checking only importability would let a declared pin
+  // be silently satisfied by whatever the machine happened to have, which is the same as not
+  // declaring one.
+  const present = (entry: { spec: string; module: string; package: string; version?: string }): boolean => {
+    const probe = runProbe(interpreter, ["-c", `import ${entry.module}, importlib.metadata as meta; print(meta.version(${JSON.stringify(entry.package)}))`], { cwd: repoRoot, budgetMs: testLevelBudgetMs("quick") });
+    return (probe.status ?? 1) === 0 && (entry.version === undefined || probe.stdout.trim() === entry.version);
+  };
+  for (const entry of specs) {
+    if (present(entry)) continue;
+    const installed = runProbe(interpreter, ["-m", "pip", "install", "--disable-pip-version-check", entry.spec], { cwd: repoRoot, budgetMs: testLevelBudgetMs("exhaustive") });
+    if ((installed.status ?? 1) !== 0) {
+      problems.push(`python oracle host: ${entry.spec} is neither importable nor installable into ${relative(repoRoot, dir).split(sep).join("/")} — ${installed.stderr.trim().split("\n").slice(-3).join(" ") || `pip exited ${installed.status}`}`);
+      continue;
+    }
+    if (!present(entry)) problems.push(`python oracle host: ${entry.spec} installed but \`import ${entry.module}\` at that version still fails — declare the import name with "module" if it differs from the distribution name`);
+  }
+  if (problems.length === 0) {
+    writeFileSync(stampPath, `${JSON.stringify({ interpreter: base, signature, packages: specs }, null, 2)}\n`);
+    markRunComplete(dir);
+  }
+  return { interpreter, problems };
 }
 
 /** 🐍️ Runs the committed adapter through the owned Python host — never through the compose-scoped root discovery config. */
 function materializePythonHost(repoRoot: string, discovered: DiscoveredCase, role: TestRole, planPath: string, outPath: string): MaterializedHost {
   const dir = hostDirFor(repoRoot, discovered, role, "python");
+  const declared = contributedOraclePackages(repoRoot, discovered, "python");
+  const { interpreter, problems } = provisionPythonInterpreter(repoRoot, process.env.SEMIO_PYTHON ?? "python3", declared);
+  // 🧩️A contributed package that DOES carry a path is in-repo source, reached the way Python reaches
+  // any source tree: on the import path, never installed.
+  const localPaths = declared.filter((entry) => entry.path !== undefined).map((entry) => join(repoRoot, entry.path!));
   return {
-    command: process.env.SEMIO_PYTHON ?? "python3",
+    command: interpreter,
     args: [join(repoRoot, PYTHON_PACKAGE_REL, "🐍️host.py"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.python!)],
     cwd: repoRoot,
-    env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1", PYTHONPYCACHEPREFIX: join(agentCacheRoot(repoRoot), "pycache") },
+    env: {
+      ...process.env,
+      PYTHONDONTWRITEBYTECODE: "1",
+      PYTHONPYCACHEPREFIX: join(agentCacheRoot(repoRoot), "pycache"),
+      ...(localPaths.length > 0 ? { PYTHONPATH: [...localPaths, process.env.PYTHONPATH ?? ""].filter((value) => value !== "").join(delimiter) } : {}),
+    },
     hostDir: dir,
+    problems,
   };
+}
+
+/**
+ * 🟦️ Runs the committed adapter through the owned TypeScript host. Nothing is generated: bun resolves
+ * a bare specifier by walking up from the repository root, so a declared npm package is RESOLVED
+ * from the checkout's existing `node_modules` rather than installed into a private tree — one
+ * install, one lockfile, one version of every library in the repository. What this does add is the
+ * check that the declaration is true: an unresolvable package is reported here instead of surfacing
+ * as an adapter import error with no mention of the manifest that promised it.
+ */
+function materializeTypescriptHost(repoRoot: string, discovered: DiscoveredCase, planPath: string, outPath: string): MaterializedHost {
+  const problems = contributedOraclePackages(repoRoot, discovered, "typescript")
+    .filter((entry) => entry.path === undefined && !resolvesFromRepoRoot(repoRoot, entry.package))
+    .map((entry) => `${discovered.caseDir}: declared typescript oracle package ${entry.package} does not resolve from the repository's node_modules — add it to the root manifest and install it`);
+  return { command: "bun", args: [join(repoRoot, TS_PACKAGE_REL, "🏃️host.ts"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.typescript!)], cwd: repoRoot, env: process.env, hostDir: null, problems };
+}
+
+/** 🟦️ Whether a bare specifier resolves from the repository root — the same lookup the host will do. */
+function resolvesFromRepoRoot(repoRoot: string, specifier: string): boolean {
+  try {
+    createRequire(join(repoRoot, "package.json")).resolve(specifier);
+    return true;
+  } catch {
+    // 🧭️A package whose manifest declares no resolvable entry point still counts as present; the
+    // adapter may be reaching a subpath export the root resolver alone cannot answer for.
+    return existsSync(join(repoRoot, "node_modules", ...specifier.split("/"), "package.json"));
+  }
 }
 
 /** 🔷️ Materializes a cache-local .NET test project that links the committed adapter and the host support project. */
@@ -332,6 +462,7 @@ function materializeDotnetHost(repoRoot: string, discovered: DiscoveredCase, rol
     cwd: dir,
     env: { ...process.env, DOTNET_CLI_TELEMETRY_OPTOUT: "1", DOTNET_NOLOGO: "1" },
     hostDir: dir,
+    problems: [],
   };
 }
 
@@ -339,7 +470,7 @@ function materializeDotnetHost(repoRoot: string, discovered: DiscoveredCase, rol
 function materializeHost(repoRoot: string, discovered: DiscoveredCase, role: TestRole, implementation: Implementation, planPath: string, outPath: string): MaterializedHost {
   switch (implementation) {
     case "typescript":
-      return { command: "bun", args: [join(repoRoot, TS_PACKAGE_REL, "🏃️host.ts"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.typescript!)], cwd: repoRoot, env: process.env, hostDir: null };
+      return materializeTypescriptHost(repoRoot, discovered, planPath, outPath);
     case "rust":
       return materializeRustHost(repoRoot, discovered, role, planPath, outPath);
     case "go":
@@ -362,6 +493,9 @@ function executeOne(repoRoot: string, discovered: DiscoveredCase, level: TestLev
   if (plan.scenarios.length === 0) return { results: [], problems };
   rmSync(plan.resultsPath, { force: true });
   const host = materializeHost(repoRoot, discovered, role, implementation, planPath, plan.resultsPath);
+  // 🧩️A host that could not be provisioned has not run, and an unprovisioned host must never look
+  // like a case with nothing to do — the declaration is reported before anything is executed.
+  if (host.problems.length > 0) return { results: [], problems: [...problems, ...host.problems] };
   const probe = runProbe(host.command, [...host.args], { cwd: host.cwd, env: host.env, budgetMs: testLevelBudgetMs(level) });
   if (probe.stdout.trim() !== "") console.log(probe.stdout.trimEnd());
   const { results, problems: readProblems } = readResults(plan.resultsPath);

@@ -5,7 +5,6 @@ use crate::editor::animate::terminology::AnimatePresentLabels;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use semio_framework_ui_contract::{button, column, field, input, section, text, ActionId, Buildable, BuiltNode, HasBase, HasChildren, InputKind, Label, Trigger, UiValue};
 use serde_json::{json, Value};
-use std::collections::BTreeMap;
 
 //#region 🔖️Constants
 pub const PRESENT_PLAY_BODY_CATALOGUE: &str = "animate.present.play.catalogue";
@@ -24,21 +23,34 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn ui_value(value: Value) -> UiValue {
-    match value {
+fn ui_value(value: Value) -> Option<UiValue> {
+    Some(match value {
         Value::Null => UiValue::Null,
         Value::Bool(value) => UiValue::Bool(value),
         Value::Number(value) => UiValue::Number(value.as_f64().unwrap_or_default()),
-        Value::String(value) => UiValue::Text(value),
-        Value::Array(values) => UiValue::List(values.into_iter().map(ui_value).collect()),
-        Value::Object(values) => UiValue::Map(values.into_iter().map(|(key, value)| (key, ui_value(value))).collect::<BTreeMap<_, _>>()),
-    }
+        Value::String(value) => UiValue::Text(semio_framework_ui_contract::UiText::try_from_string(value).ok()?),
+        Value::Array(values) => {
+            if !values.is_empty() {
+                return None;
+            }
+            UiValue::List(semio_framework_ui_contract::UiList::default())
+        }
+        Value::Object(values) => {
+            if !values.is_empty() {
+                return None;
+            }
+            UiValue::Map(semio_framework_ui_contract::UiMap::default())
+        }
+    })
 }
 
 fn catalogue_button(id: &str, label: &str, action: &str, args: Option<Value>) -> BuiltNode {
     let builder = button(Label::from(label)).id(id).icon("plus");
     match args {
-        Some(args) => builder.on_with(Trigger::Activate, ActionId::v1(crate::editor::animate::PRESENT_PLAY_APP_ID, action), ui_value(args)).build(),
+        Some(args) => match ui_value(args) {
+            Some(args) => builder.on_with(Trigger::Activate, ActionId::v1(crate::editor::animate::PRESENT_PLAY_APP_ID, action), args).build(),
+            None => builder.on(Trigger::Activate, ActionId::v1(crate::editor::animate::PRESENT_PLAY_APP_ID, action)).build(),
+        },
         None => builder.on(Trigger::Activate, ActionId::v1(crate::editor::animate::PRESENT_PLAY_APP_ID, action)).build(),
     }
 }

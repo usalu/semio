@@ -23,12 +23,12 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &ImperativeLabels) -> BuiltNode {
+pub fn render(labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let actions = [("state.set", labels.action_state_set), ("log.print", labels.action_log_print), ("control.if", labels.action_control_if), ("control.while", labels.action_control_while), ("math.add", labels.action_math_add)];
-    let builder = PanelTreeBuilder::new("imperative-play-catalogue");
+    let builder = PanelTreeBuilder::new("imperative-play-catalogue")?;
     let action_factory = ActionFactory::new(IMPERATIVE_PLAY_APP_ID);
-    let action_items: Vec<BuiltNode> = actions.iter().map(|(kind, label)| tree_item_with_action(builder.item_id("action", kind), label.as_str(), Some((*kind).into()), action_factory.action("addStep", Some(json!({ "kind": kind }))))).collect();
-    builder.section("imperative-play-catalogue.actions", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, action_items).selected(vec![]).build()
+    let action_items: Vec<BuiltNode> = actions.iter().map(|(kind, label)| tree_item_with_action(builder.item_id("action", kind)?, label.as_str(), Some((*kind).into()), action_factory.action("addStep", Some(json!({ "kind": kind }))))?).collect();
+    builder.section("imperative-play-catalogue.actions", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, action_items)?.selected(vec![])?.build()
 }
 //#endregion 🔖️Render
 

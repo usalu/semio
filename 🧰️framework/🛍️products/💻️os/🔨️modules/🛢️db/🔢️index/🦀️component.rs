@@ -32,8 +32,8 @@ const MAX_KEY_LEN: u64 = 64 * 1024;
 const MAX_VALUE_LEN: u64 = 16 * 1024 * 1024;
 
 /// @emoji 🛡️ Ceiling on the number of entries a single run may hold, checked against the header's
-/// `entry_count` field before allocating the decoded `Vec<RunEntry>`.
-const MAX_RUN_ENTRIES: u64 = 1_000_000;
+/// `entry_count` field before admitting decoded fixed entry slots.
+const MAX_RUN_ENTRIES: u64 = 64;
 //#endregion 🔖️Limits
 
 //#region 🔖️IndexKind
@@ -113,39 +113,328 @@ fn sequence_of_run_id(run_id: u64) -> u64 {
 //#region 🔖️SortedRun
 /// @emoji 📇️ One entry's value in a sorted run: either a live payload or a tombstone recording that
 /// a key was deleted (and must keep shadowing that key in any older, not-yet-merged run beneath).
-#[derive(Clone, PartialEq, Debug)]
+pub struct IndexCursorControl {
+    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    deadline: std::time::Instant,
+    fuel: usize,
+}
+
+impl IndexCursorControl {
+    pub fn new(cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
+        if fuel == 0 {
+            return Err(DbError::LimitExceeded("index cursor fuel"));
+        }
+        Ok(Self { cancelled, deadline, fuel })
+    }
+
+    pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> {
+        if fuel == 0 {
+            return Err(DbError::LimitExceeded("index cursor fuel"));
+        }
+        self.deadline = deadline;
+        self.fuel = fuel;
+        Ok(())
+    }
+
+    pub fn grant(&mut self) -> Result<(), DbError> {
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(DbError::Unavailable("index cursor cancelled".to_string()));
+        }
+        if std::time::Instant::now() >= self.deadline {
+            return Err(DbError::Unavailable("index cursor deadline reached".to_string()));
+        }
+        self.fuel = self.fuel.checked_sub(1).ok_or(DbError::LimitExceeded("index cursor fuel"))?;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct IndexBytes {
+    pages: db_storage::DbIoPages,
+}
+
+#[derive(Debug)]
+pub struct IndexBytesRejected {
+    source: Option<Vec<u8>>,
+    writer: Option<db_storage::DbIoPageWriter>,
+    error: DbError,
+}
+
+impl IndexBytes {
+    pub async fn try_admit(source: Vec<u8>, maximum: u64, control: &mut IndexCursorControl) -> Result<Self, IndexBytesRejected> {
+        if source.capacity() as u64 > maximum {
+            return Err(IndexBytesRejected { source: Some(source), writer: None, error: DbError::LimitExceeded("index source backing capacity") });
+        }
+        let pages = source.capacity().div_ceil(db_storage::DB_IO_PAGE_BYTES);
+        let mut writer = match db_storage::DbIoPageWriter::try_reserve(pages) {
+            Ok(writer) => writer,
+            Err(error) => return Err(IndexBytesRejected { source: Some(source), writer: error.into_writer(), error: DbError::Unavailable("index page admission rejected".to_string()) }),
+        };
+        let mut reservation = match db_storage::DbIoDriverReservation::try_reserve(writer.operation(), source.capacity()) {
+            Ok(reservation) => reservation,
+            Err(error) => return Err(IndexBytesRejected { source: Some(source), writer: Some(writer), error }),
+        };
+        if let Err(error) = reservation.observe_capacity(source.capacity()) {
+            return Err(IndexBytesRejected { source: Some(source), writer: Some(writer), error });
+        }
+        let mut offset = 0;
+        while offset < source.len() {
+            if let Err(error) = control.grant() {
+                return Err(IndexBytesRejected { source: Some(source), writer: Some(writer), error });
+            }
+            match writer.write_fragment(&source[offset..]) {
+                Ok(written) => offset += written,
+                Err(error) => return Err(IndexBytesRejected { source: Some(source), writer: Some(writer), error }),
+            }
+            std::future::poll_fn(|context| {
+                context.waker().wake_by_ref();
+                std::task::Poll::Ready(())
+            })
+            .await;
+        }
+        drop(source);
+        if let Err(error) = reservation.close_step() {
+            return Err(IndexBytesRejected { source: None, writer: Some(writer), error });
+        }
+        writer.finish().map(|pages| Self { pages }).map_err(|error| IndexBytesRejected { source: None, writer: Some(writer), error })
+    }
+
+    pub fn operation(&self) -> u64 {
+        self.pages.operation()
+    }
+
+    pub fn len(&self) -> usize {
+        self.pages.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.pages.is_empty()
+    }
+
+    pub fn fragments(&self) -> db_storage::DbIoPageReader<'_> {
+        self.pages.fragments()
+    }
+
+    #[cfg(test)]
+    async fn prepare_platform(&self) -> Result<db_storage::DbIoPlatformBuffer, DbError> {
+        db_storage::db_io_prepare_platform(&self.pages)?.await
+    }
+
+    pub async fn copy_for_operation(operation: u64, bytes: &[u8], control: &mut IndexCursorControl) -> Result<Self, DbError> {
+        index_bytes_from_slice_for_operation(operation, bytes, control).await
+    }
+
+    pub fn read_fragment(&self, offset: usize, output: &mut [u8]) -> usize {
+        if offset >= self.len() || output.is_empty() {
+            return 0;
+        }
+        let page = (offset / db_storage::DB_IO_PAGE_BYTES) as u8;
+        let page_offset = offset % db_storage::DB_IO_PAGE_BYTES;
+        let Some(fragment) = self.pages.page(page) else { return 0 };
+        let read = output.len().min(fragment.len().saturating_sub(page_offset));
+        output[..read].copy_from_slice(&fragment[page_offset..page_offset + read]);
+        read
+    }
+
+    pub fn starts_with(&self, prefix: &IndexBytes) -> bool {
+        index_bytes_compare_prefix(self, prefix)
+    }
+
+    pub fn close_step(&mut self) -> Result<Option<usize>, DbError> {
+        self.pages.close_step()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.pages.terminal_is_empty()
+    }
+}
+
+impl IndexBytesRejected {
+    pub fn source(&self) -> Option<&Vec<u8>> {
+        self.source.as_ref()
+    }
+
+    pub fn into_source(self) -> Option<Vec<u8>> {
+        self.source
+    }
+
+    pub fn error(&self) -> &DbError {
+        &self.error
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        if let Some(writer) = self.writer.as_mut() {
+            if writer.close_step()?.is_some() {
+                return Ok(true);
+            }
+        }
+        self.writer = None;
+        Ok(false)
+    }
+}
+
+async fn admit_generated_index_bytes(source: Vec<u8>, maximum: u64, control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
+    match IndexBytes::try_admit(source, maximum, control).await {
+        Ok(bytes) => Ok(bytes),
+        Err(mut rejected) => {
+            while rejected.close_step()? {
+                control.grant()?;
+            }
+            Err(rejected.error)
+        }
+    }
+}
+
+async fn close_index_bytes(mut bytes: IndexBytes, control: &mut IndexCursorControl) -> Result<(), DbError> {
+    while bytes.close_step()?.is_some() {
+        control.grant()?;
+    }
+    Ok(())
+}
+
+fn index_bytes_cmp(left: &IndexBytes, right: &IndexBytes) -> std::cmp::Ordering {
+    let mut left_fragments = left.fragments();
+    let mut right_fragments = right.fragments();
+    let mut left_fragment = left_fragments.next().unwrap_or_default();
+    let mut right_fragment = right_fragments.next().unwrap_or_default();
+    let (mut left_offset, mut right_offset) = (0, 0);
+    loop {
+        let compared = (left_fragment.len() - left_offset).min(right_fragment.len() - right_offset);
+        let order = left_fragment[left_offset..left_offset + compared].cmp(&right_fragment[right_offset..right_offset + compared]);
+        if order != std::cmp::Ordering::Equal {
+            return order;
+        }
+        left_offset += compared;
+        right_offset += compared;
+        if left_offset == left_fragment.len() {
+            match left_fragments.next() {
+                Some(next) => {
+                    left_fragment = next;
+                    left_offset = 0;
+                }
+                None => return if right_offset == right_fragment.len() && right_fragments.next().is_none() { std::cmp::Ordering::Equal } else { std::cmp::Ordering::Less },
+            }
+        }
+        if right_offset == right_fragment.len() {
+            match right_fragments.next() {
+                Some(next) => {
+                    right_fragment = next;
+                    right_offset = 0;
+                }
+                None => return std::cmp::Ordering::Greater,
+            }
+        }
+    }
+}
+
+fn index_bytes_compare_prefix(value: &IndexBytes, prefix: &IndexBytes) -> bool {
+    if prefix.len() > value.len() {
+        return false;
+    }
+    let mut compared = 0;
+    for fragment in value.fragments() {
+        for byte in fragment {
+            let Some(prefix_byte) = prefix.pages.page((compared / db_storage::DB_IO_PAGE_BYTES) as u8).and_then(|page| page.get(compared % db_storage::DB_IO_PAGE_BYTES)) else { return true };
+            if byte != prefix_byte {
+                return false;
+            }
+            compared += 1;
+            if compared == prefix.len() {
+                return true;
+            }
+        }
+    }
+    prefix.is_empty()
+}
+
 pub enum RunValue {
-    Put(Vec<u8>),
+    Put(IndexBytes),
     Tombstone,
 }
 
 /// @emoji 📌️ One `(key, value)` pair inside a sorted run. A well-formed run's entries are strictly
 /// ascending and unique by `key` — both `encode_run` (on the way in) and `decode_run` (on the way
 /// back out, defending against on-disk corruption) enforce this.
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Debug)]
 pub struct RunEntry {
-    pub key: Vec<u8>,
+    pub key: IndexBytes,
     pub value: RunValue,
 }
 
-/// @emoji 🧱️ Sorts an unordered batch of writes into a well-formed run's entry list: ascending by
-/// key, with same-key duplicates collapsed to the LAST one in `entries`' original order (so a
-/// caller can hand `put_batch` a batch containing both an old and a newer write for the same key
-/// and get the newer one, matching ordinary write-then-overwrite semantics within one batch).
-pub fn build_run(entries: Vec<(Vec<u8>, RunValue)>) -> Vec<RunEntry> {
-    let mut indexed: Vec<(usize, Vec<u8>, RunValue)> = entries.into_iter().enumerate().map(|(index, (key, value))| (index, key, value)).collect();
-    indexed.sort_by(|a, b| a.1.cmp(&b.1).then(a.0.cmp(&b.0)));
-    let mut out: Vec<RunEntry> = Vec::with_capacity(indexed.len());
-    for (_, key, value) in indexed {
-        if let Some(last) = out.last_mut() {
-            if last.key == key {
-                last.value = value;
-                continue;
+pub struct RunEntries {
+    entries: [Option<RunEntry>; MAX_RUN_ENTRIES as usize],
+    len: u8,
+}
+
+impl RunEntries {
+    pub fn new() -> Self {
+        Self { entries: std::array::from_fn(|_| None), len: 0 }
+    }
+
+    pub fn push(&mut self, entry: RunEntry) -> Result<(), RunEntry> {
+        let Some(slot) = self.entries.get_mut(self.len as usize) else { return Err(entry) };
+        *slot = Some(entry);
+        self.len += 1;
+        Ok(())
+    }
+
+    pub fn len(&self) -> usize {
+        self.len as usize
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn get(&self, index: usize) -> Option<&RunEntry> {
+        self.entries.get(index)?.as_ref()
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut RunEntry> {
+        self.entries.get_mut(index)?.as_mut()
+    }
+
+    pub fn take(&mut self, index: usize) -> Option<RunEntry> {
+        self.entries.get_mut(index)?.take()
+    }
+
+    pub fn pop(&mut self) -> Option<RunEntry> {
+        if self.len == 0 {
+            return None;
+        }
+        self.len -= 1;
+        self.entries[self.len as usize].take()
+    }
+
+    pub fn sort_step(&mut self, left: usize, right: usize, control: &mut IndexCursorControl) -> Result<bool, DbError> {
+        control.grant()?;
+        let swap = match (self.get(left), self.get(right)) {
+            (Some(left), Some(right)) => index_bytes_cmp(&left.key, &right.key) == std::cmp::Ordering::Greater,
+            _ => false,
+        };
+        if swap {
+            self.entries.swap(left, right);
+        }
+        Ok(swap)
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        for entry in self.entries.iter_mut().rev().flatten() {
+            if let RunValue::Put(value) = &mut entry.value {
+                if value.close_step()?.is_some() {
+                    return Ok(true);
+                }
+            }
+            if entry.key.close_step()?.is_some() {
+                return Ok(true);
             }
         }
-        out.push(RunEntry { key, value });
+        for entry in &mut self.entries {
+            *entry = None;
+        }
+        self.len = 0;
+        Ok(false)
     }
-    out
 }
 
 /// @emoji 🪧️ A run's 6-byte header: 4-byte magic, 1-byte format version, 1-byte `IndexKind` tag —
@@ -157,167 +446,354 @@ const RUN_VERSION: u8 = 1;
 /// knows where the entry stream starts.
 struct RunHeader {
     entry_count: u64,
-    header_len: usize,
 }
 
-/// @emoji 📖️ Parses `body`'s header (magic/version/kind tag/entry count) WITHOUT touching the entry
-/// stream — `decode_run` uses this before allocating the full entry vector; `peek_entry_count`
-/// (used by `stats`, which wants counts without paying for a full decode) uses only this.
-async fn read_run_header(body: &[u8], expected_kind: IndexKind) -> Result<RunHeader, DbError> {
-    if body.len() < RUN_MAGIC.len() + 2 {
-        return Err(DbError::Corrupt("index run is shorter than its header".to_string()));
+struct RunPageReader<'pages> {
+    pages: &'pages db_storage::DbIoPages,
+    position: usize,
+    limit: usize,
+}
+
+impl<'pages> RunPageReader<'pages> {
+    fn new(pages: &'pages db_storage::DbIoPages, limit: usize) -> Self {
+        Self { pages, position: 0, limit }
     }
-    if body[..RUN_MAGIC.len()] != RUN_MAGIC {
+
+    fn fragment(&self) -> Result<&'pages [u8], DbError> {
+        if self.position >= self.limit {
+            return Err(DbError::Corrupt("index run ended mid-field".to_string()));
+        }
+        let mut base = 0usize;
+        for fragment in self.pages.fragments() {
+            let end = base + fragment.len();
+            if self.position < end {
+                return Ok(&fragment[self.position - base..fragment.len().min(self.limit - base)]);
+            }
+            base = end;
+        }
+        Err(DbError::Corrupt("index run retained page cursor lost its fragment".to_string()))
+    }
+
+    fn byte(&mut self) -> Result<u8, DbError> {
+        let byte = self.fragment()?[0];
+        self.position += 1;
+        Ok(byte)
+    }
+
+    fn varint(&mut self) -> Result<u64, DbError> {
+        let mut value = 0u64;
+        for shift in (0..70).step_by(7) {
+            let byte = self.byte()?;
+            value |= u64::from(byte & 0x7f) << shift;
+            if byte & 0x80 == 0 {
+                return Ok(value);
+            }
+        }
+        Err(DbError::Corrupt("index run varint exceeds u64".to_string()))
+    }
+
+    fn array<const N: usize>(&mut self) -> Result<[u8; N], DbError> {
+        let mut output = [0u8; N];
+        let mut written = 0usize;
+        while written < N {
+            let fragment = self.fragment()?;
+            let count = (N - written).min(fragment.len());
+            output[written..written + count].copy_from_slice(&fragment[..count]);
+            self.position += count;
+            written += count;
+        }
+        Ok(output)
+    }
+}
+
+async fn read_run_header(reader: &mut RunPageReader<'_>, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunHeader, DbError> {
+    control.grant()?;
+    if reader.array::<4>()? != RUN_MAGIC {
         return Err(DbError::Corrupt("index run has a bad magic".to_string()));
     }
-    let version = body[RUN_MAGIC.len()];
+    let version = reader.byte()?;
     if version != RUN_VERSION {
         return Err(DbError::Corrupt(format!("unsupported index run version {version}")));
     }
-    let kind_tag = body[RUN_MAGIC.len() + 1];
+    let kind_tag = reader.byte()?;
     if kind_tag != expected_kind.tag() {
         return Err(DbError::Corrupt(format!("index run kind mismatch: expected {expected_kind:?} (tag {}), found tag {kind_tag}", expected_kind.tag())));
     }
-    let mut reader = ByteReader::new(&body[RUN_MAGIC.len() + 2..]);
-    let entry_count = reader.read_varint_u64()?;
+    let entry_count = reader.varint()?;
     check_len(entry_count, MAX_RUN_ENTRIES, "db_index::entries")?;
-    Ok(RunHeader { entry_count, header_len: RUN_MAGIC.len() + 2 + reader.position() })
+    Ok(RunHeader { entry_count })
 }
 
-/// @emoji 👀️ Reads just a run's `entry_count` (no checksum verification, no entry decode) — the
-/// cheap path `IndexHandle::stats` uses; `IndexHandle::verify`/`get`/`scan_prefix` go through the
-/// full, checksum-verifying `decode_run` instead.
-async fn peek_entry_count(bytes: &[u8], expected_kind: IndexKind) -> Result<u64, DbError> {
-    if bytes.len() < 4 {
+async fn peek_entry_count(pages: &db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<u64, DbError> {
+    if pages.len() < 4 {
         return Err(DbError::Corrupt("index run is shorter than its checksum trailer".to_string()));
     }
-    let body = &bytes[..bytes.len() - 4];
-    Ok(read_run_header(body, expected_kind).await?.entry_count)
+    let mut reader = RunPageReader::new(pages, pages.len() - 4);
+    Ok(read_run_header(&mut reader, expected_kind, control).await?.entry_count)
 }
 
 /// @emoji ✍️ Encodes a well-formed (strictly ascending, unique-by-key) entry list into one run's
 /// bytes: `MAGIC(4) VERSION(1) KIND(1) entry_count(varint) entries... crc32c(4, LE)`. Each entry is
 /// `key_len(varint) key value_tag(1: 0=tombstone,1=put) [value_len(varint) value]`. Errors
 /// `InvalidArgument` if `entries` isn't strictly ascending — this fn never silently re-sorts, since
-/// a caller with unsorted/duplicate entries should go through `build_run` first.
-async fn encode_run(kind: IndexKind, entries: &[RunEntry]) -> Result<Vec<u8>, DbError> {
+/// a caller with unsorted/duplicate entries must use the bounded incremental sorter first.
+fn varint_len(mut value: u64) -> usize {
+    let mut len = 1;
+    while value >= 0x80 {
+        value >>= 7;
+        len += 1;
+    }
+    len
+}
+
+fn encode_varint(mut value: u64, buffer: &mut [u8; 10]) -> &[u8] {
+    let mut cursor = 0;
+    loop {
+        let mut byte = (value & 0x7f) as u8;
+        value >>= 7;
+        if value != 0 {
+            byte |= 0x80;
+        }
+        buffer[cursor] = byte;
+        cursor += 1;
+        if value == 0 {
+            return &buffer[..cursor];
+        }
+    }
+}
+
+async fn run_write(writer: &mut db_storage::DbIoPageWriter, checksum: &mut pack::codec::Crc32cCursor, bytes: &[u8]) -> Result<(), DbError> {
+    let mut cursor = 0;
+    while cursor < bytes.len() {
+        let written = writer.write_fragment(&bytes[cursor..])?;
+        checksum.update_page(&bytes[cursor..cursor + written]);
+        cursor += written;
+        std::future::poll_fn(|context| {
+            context.waker().wake_by_ref();
+            std::task::Poll::Ready(())
+        })
+        .await;
+    }
+    Ok(())
+}
+
+async fn run_write_trailer(writer: &mut db_storage::DbIoPageWriter, bytes: &[u8]) -> Result<(), DbError> {
+    let mut cursor = 0;
+    while cursor < bytes.len() {
+        cursor += writer.write_fragment(&bytes[cursor..])?;
+        std::future::poll_fn(|context| {
+            context.waker().wake_by_ref();
+            std::task::Poll::Ready(())
+        })
+        .await;
+    }
+    Ok(())
+}
+
+async fn run_write_pages(writer: &mut db_storage::DbIoPageWriter, checksum: &mut pack::codec::Crc32cCursor, bytes: &IndexBytes, control: &mut IndexCursorControl) -> Result<(), DbError> {
+    for fragment in bytes.fragments() {
+        control.grant()?;
+        run_write(writer, checksum, fragment).await?;
+    }
+    Ok(())
+}
+
+async fn encode_run_pages(kind: IndexKind, entries: &RunEntries, control: &mut IndexCursorControl) -> Result<db_storage::DbIoPages, DbError> {
     check_len(entries.len() as u64, MAX_RUN_ENTRIES, "db_index::entries")?;
-    let mut writer = ByteWriter::new();
-    writer.write_bytes(&RUN_MAGIC);
-    writer.write_u8(RUN_VERSION);
-    writer.write_u8(kind.tag());
-    writer.write_varint_u64(entries.len() as u64);
-    let mut previous_key: Option<&[u8]> = None;
-    for entry in entries {
+    let mut encoded_len = RUN_MAGIC.len() + 2 + varint_len(entries.len() as u64) + 4;
+    let mut previous_key: Option<&IndexBytes> = None;
+    for index in 0..entries.len() {
+        control.grant()?;
+        let entry = entries.get(index).ok_or_else(|| DbError::Internal("index run entry slot lost".to_string()))?;
         if let Some(previous) = previous_key {
-            if entry.key.as_slice() <= previous {
+            if index_bytes_cmp(&entry.key, previous) != std::cmp::Ordering::Greater {
                 return Err(DbError::InvalidArgument("db_index run entries must be strictly ascending and unique by key".to_string()));
             }
         }
-        previous_key = Some(entry.key.as_slice());
+        previous_key = Some(&entry.key);
         check_len(entry.key.len() as u64, MAX_KEY_LEN, "db_index::key")?;
-        writer.write_varint_u64(entry.key.len() as u64);
-        writer.write_bytes(&entry.key);
+        encoded_len = encoded_len.checked_add(varint_len(entry.key.len() as u64)).and_then(|len| len.checked_add(entry.key.len() + 1)).ok_or(DbError::LimitExceeded("db_index encoded run bytes"))?;
         match &entry.value {
-            RunValue::Tombstone => writer.write_u8(0),
+            RunValue::Tombstone => {}
             RunValue::Put(value) => {
                 check_len(value.len() as u64, MAX_VALUE_LEN, "db_index::value")?;
-                writer.write_u8(1);
-                writer.write_varint_u64(value.len() as u64);
-                writer.write_bytes(value);
+                encoded_len = encoded_len.checked_add(varint_len(value.len() as u64)).and_then(|len| len.checked_add(value.len())).ok_or(DbError::LimitExceeded("db_index encoded run bytes"))?;
+            }
+        }
+        std::future::poll_fn(|context| {
+            context.waker().wake_by_ref();
+            std::task::Poll::Ready(())
+        })
+        .await;
+    }
+    let mut writer = db_storage::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut checksum = pack::codec::Crc32cCursor::new();
+    run_write(&mut writer, &mut checksum, &RUN_MAGIC).await?;
+    run_write(&mut writer, &mut checksum, &[RUN_VERSION, kind.tag()]).await?;
+    let mut varint = [0u8; 10];
+    run_write(&mut writer, &mut checksum, encode_varint(entries.len() as u64, &mut varint)).await?;
+    for index in 0..entries.len() {
+        control.grant()?;
+        let entry = entries.get(index).ok_or_else(|| DbError::Internal("index run entry slot lost".to_string()))?;
+        run_write(&mut writer, &mut checksum, encode_varint(entry.key.len() as u64, &mut varint)).await?;
+        run_write_pages(&mut writer, &mut checksum, &entry.key, control).await?;
+        match &entry.value {
+            RunValue::Tombstone => run_write(&mut writer, &mut checksum, &[0]).await?,
+            RunValue::Put(value) => {
+                run_write(&mut writer, &mut checksum, &[1]).await?;
+                run_write(&mut writer, &mut checksum, encode_varint(value.len() as u64, &mut varint)).await?;
+                run_write_pages(&mut writer, &mut checksum, value, control).await?;
             }
         }
     }
-    let mut bytes = writer.into_bytes();
-    let checksum = crc32c(&bytes);
-    bytes.extend_from_slice(&checksum.to_le_bytes());
-    Ok(bytes)
+    run_write_trailer(&mut writer, &checksum.finish().to_le_bytes()).await?;
+    writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
 }
 
-/// @emoji 📖️ Inverse of `encode_run`: verifies the trailing crc32c over everything before it FIRST
-/// (so a torn/corrupt run is caught before any entry is trusted), then the header, then decodes
-/// entries — re-validating strict ascending-and-unique order defensively (corruption could produce
-/// an out-of-order file even with a matching checksum on a byte flip that happens to preserve it,
-/// vanishingly unlikely but the check is nearly free). `expected_kind` guards against a `run_id`
-/// namespace bug silently handing one kind's bytes to another kind's decoder.
-async fn decode_run(bytes: &[u8], expected_kind: IndexKind) -> Result<Vec<RunEntry>, DbError> {
-    if bytes.len() < 4 {
+async fn index_bytes_from_reader(operation: u64, reader: &mut RunPageReader<'_>, len: usize, control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
+    let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(operation, len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let end = reader.position.checked_add(len).ok_or(DbError::LimitExceeded("index run field cursor"))?;
+    if end > reader.limit {
+        return Err(DbError::Corrupt("index run field exceeds retained body".to_string()));
+    }
+    while reader.position < end {
+        control.grant()?;
+        let fragment = reader.fragment()?;
+        let count = (end - reader.position).min(fragment.len());
+        let written = writer.write_fragment(&fragment[..count])?;
+        reader.position += written;
+    }
+    writer.finish().map(|pages| IndexBytes { pages })
+}
+
+async fn index_bytes_from_slice_for_operation(operation: u64, bytes: &[u8], control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
+    let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(operation, bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut offset = 0usize;
+    while offset < bytes.len() {
+        control.grant()?;
+        offset += writer.write_fragment(&bytes[offset..])?;
+    }
+    writer.finish().map(|pages| IndexBytes { pages })
+}
+
+async fn decode_run_pages_inner(pages: &db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
+    control.grant()?;
+    let operation = pages.operation();
+    if pages.len() < 4 {
         return Err(DbError::Corrupt("index run is shorter than its checksum trailer".to_string()));
     }
-    let (body, checksum_bytes) = bytes.split_at(bytes.len() - 4);
-    let mut checksum_array = [0u8; 4];
-    checksum_array.copy_from_slice(checksum_bytes);
-    if crc32c(body) != u32::from_le_bytes(checksum_array) {
+    let body_len = pages.len() - 4;
+    let mut checksum = pack::codec::Crc32cCursor::new();
+    let mut remaining = body_len;
+    for fragment in pages.fragments() {
+        control.grant()?;
+        let count = remaining.min(fragment.len());
+        checksum.update_page(&fragment[..count]);
+        remaining -= count;
+        if remaining == 0 {
+            break;
+        }
+    }
+    let mut trailer = RunPageReader::new(&pages, pages.len());
+    trailer.position = body_len;
+    if checksum.finish() != u32::from_le_bytes(trailer.array::<4>()?) {
         return Err(DbError::Corrupt("index run checksum mismatch".to_string()));
     }
-    let header = read_run_header(body, expected_kind).await?;
-    let mut reader = ByteReader::new(&body[header.header_len..]);
-    let mut entries = Vec::with_capacity(usize::try_from(header.entry_count).unwrap_or(0));
-    let mut previous_key: Option<Vec<u8>> = None;
+    let mut reader = RunPageReader::new(&pages, body_len);
+    let header = read_run_header(&mut reader, expected_kind, control).await?;
+    let mut entries = RunEntries::new();
     for _ in 0..header.entry_count {
-        let key_len = reader.read_varint_u64()?;
+        control.grant()?;
+        let key_len = reader.varint()?;
         check_len(key_len, MAX_KEY_LEN, "db_index::key")?;
-        let key = reader.read_bytes(key_len as usize)?.to_vec();
-        if let Some(previous) = &previous_key {
-            if key.as_slice() <= previous.as_slice() {
-                return Err(DbError::Corrupt("index run entries are not strictly ascending by key".to_string()));
-            }
+        let key = index_bytes_from_reader(operation, &mut reader, key_len as usize, control).await?;
+        if entries.get(entries.len().saturating_sub(1)).is_some_and(|previous| index_bytes_cmp(&key, &previous.key) != std::cmp::Ordering::Greater) {
+            return Err(DbError::Corrupt("index run entries are not strictly ascending by key".to_string()));
         }
-        let tag = reader.read_u8()?;
-        let value = match tag {
+        let value = match reader.byte()? {
             0 => RunValue::Tombstone,
             1 => {
-                let value_len = reader.read_varint_u64()?;
+                let value_len = reader.varint()?;
                 check_len(value_len, MAX_VALUE_LEN, "db_index::value")?;
-                RunValue::Put(reader.read_bytes(value_len as usize)?.to_vec())
+                RunValue::Put(index_bytes_from_reader(operation, &mut reader, value_len as usize, control).await?)
             }
             other => return Err(DbError::Corrupt(format!("index run entry has unknown value tag {other}"))),
         };
-        previous_key = Some(key.clone());
-        entries.push(RunEntry { key, value });
+        entries.push(RunEntry { key, value }).map_err(|_| DbError::LimitExceeded("index run fixed entry owner"))?;
+    }
+    if reader.position != body_len {
+        return Err(DbError::Corrupt("index run has trailing bytes before checksum".to_string()));
     }
     Ok(entries)
+}
+
+async fn decode_run_pages(mut pages: db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
+    let result = decode_run_pages_inner(&pages, expected_kind, control).await;
+    while pages.close_step()?.is_some() {}
+    result
 }
 //#endregion 🔖️SortedRun
 
 //#region 🔖️Merge
-/// @emoji 🌀️ The LSM-lite k-way merge: `runs` MUST be ordered oldest-first/newest-last (index 0 is
-/// the oldest run, `runs.len() - 1` the newest); on a key collision the newest run's value wins,
-/// matching ordinary overwrite semantics. `drop_tombstones` is the caller's choice: `false` for a
-/// *partial* merge (some older run might still exist beneath the merged result — a tombstone must
-/// keep shadowing it), `true` for a *complete* merge across every run for a kind (nothing older
-/// remains, so a tombstone has served its purpose and can be dropped).
-///
-/// 🎯️ Design choice: a straightforward multi-pointer scan (`O(total_entries * runs.len())`) rather
-/// than a binary-heap k-way merge — simple and easy to audit, and appropriate because
-/// `MergePolicy`'s automatic compaction keeps the live run count for any one kind small (a binary
-/// heap would only pay off with dozens+ of concurrently live runs, which this crate's merge policy
-/// never lets happen).
-pub fn merge_runs(runs: &[Vec<RunEntry>], drop_tombstones: bool) -> Vec<RunEntry> {
-    let mut pointers = vec![0usize; runs.len()];
-    let mut out = Vec::new();
+async fn close_run_entry(mut entry: RunEntry, control: &mut IndexCursorControl) -> Result<(), DbError> {
     loop {
-        let mut best_key: Option<Vec<u8>> = None;
-        for (i, run) in runs.iter().enumerate() {
-            if let Some(entry) = run.get(pointers[i]) {
-                if best_key.as_deref().is_none_or(|current| entry.key.as_slice() < current) {
-                    best_key = Some(entry.key.clone());
-                }
+        control.grant()?;
+        if let RunValue::Put(value) = &mut entry.value {
+            if value.close_step()?.is_some() {
+                continue;
             }
         }
-        let Some(best_key) = best_key else { break };
-        let mut chosen = RunValue::Tombstone;
-        for (i, run) in runs.iter().enumerate() {
-            if run.get(pointers[i]).is_some_and(|entry| entry.key == best_key) {
-                chosen = run[pointers[i]].value.clone();
-                pointers[i] += 1;
-            }
+        if entry.key.close_step()?.is_some() {
+            continue;
         }
-        if !(drop_tombstones && matches!(chosen, RunValue::Tombstone)) {
-            out.push(RunEntry { key: best_key, value: chosen });
-        }
+        return Ok(());
     }
-    out
+}
+
+async fn merge_run_entries(mut older: RunEntries, mut newer: RunEntries, drop_tombstones: bool, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
+    let (mut old_index, mut new_index) = (0, 0);
+    let mut output = RunEntries::new();
+    while old_index < older.len() || new_index < newer.len() {
+        control.grant()?;
+        let order = match (older.get(old_index), newer.get(new_index)) {
+            (Some(old), Some(new)) => index_bytes_cmp(&old.key, &new.key),
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            (None, None) => break,
+        };
+        let entry = match order {
+            std::cmp::Ordering::Less => {
+                let entry = older.take(old_index).ok_or_else(|| DbError::Internal("index older merge owner lost".to_string()))?;
+                old_index += 1;
+                entry
+            }
+            std::cmp::Ordering::Greater => {
+                let entry = newer.take(new_index).ok_or_else(|| DbError::Internal("index newer merge owner lost".to_string()))?;
+                new_index += 1;
+                entry
+            }
+            std::cmp::Ordering::Equal => {
+                let shadowed = older.take(old_index).ok_or_else(|| DbError::Internal("index shadowed merge owner lost".to_string()))?;
+                close_run_entry(shadowed, control).await?;
+                old_index += 1;
+                let entry = newer.take(new_index).ok_or_else(|| DbError::Internal("index winning merge owner lost".to_string()))?;
+                new_index += 1;
+                entry
+            }
+        };
+        if drop_tombstones && matches!(entry.value, RunValue::Tombstone) {
+            close_run_entry(entry, control).await?;
+        } else if let Err(entry) = output.push(entry) {
+            close_run_entry(entry, control).await?;
+            return Err(DbError::LimitExceeded("index merged fixed entry owner"));
+        }
+        std::future::poll_fn(|context| {
+            context.waker().wake_by_ref();
+            std::task::Poll::Ready(())
+        })
+        .await;
+    }
+    Ok(output)
 }
 //#endregion 🔖️Merge
 
@@ -352,12 +828,6 @@ pub struct IndexStats {
 }
 //#endregion 🔖️Stats
 
-//#region 🔖️Aliases
-/// @emoji 🏷️ `scan_prefix`'s result shape, named so its signature reads as one concept rather than
-/// tripping `clippy::type_complexity`.
-pub type KeyValuePairs = Vec<(Vec<u8>, Vec<u8>)>;
-//#endregion 🔖️Aliases
-
 //#region 🔖️IndexHandle
 /// @emoji 🔍️ One `(document, kind)`'s view onto its sorted runs — every typed wrapper below
 /// (`CommandIndex`, `FrontierIndex`, ...) is a thin codec layered on top of one of these. Never
@@ -367,6 +837,7 @@ pub struct IndexHandle<'a, S: IndexStorage> {
     document: ArtifactId,
     kind: IndexKind,
     policy: MergePolicy,
+    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl<'a, S: IndexStorage> IndexHandle<'a, S> {
@@ -378,68 +849,130 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     /// @emoji 🚀️ Opens a handle with an explicit `MergePolicy` (e.g. a tighter threshold for a
     /// hot, frequently-scanned kind, or a looser one for a write-heavy, rarely-read kind).
     pub async fn with_policy(storage: &'a S, document: ArtifactId, kind: IndexKind, policy: MergePolicy) -> Self {
-        Self { storage, document, kind, policy }
+        Self { storage, document, kind, policy, cancelled: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)) }
+    }
+
+    pub fn operation_control(&self, fuel: usize) -> Result<IndexCursorControl, DbError> {
+        IndexCursorControl::new(self.cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), fuel)
+    }
+
+    pub fn cancel(&self) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
     }
 
     /// @emoji 📋️ This handle's live run ids, ascending by sequence (oldest first) — every other id
     /// belonging to a different kind for the same document is filtered out.
-    async fn kind_run_ids(&self) -> Result<Vec<u64>, DbError> {
-        Ok(self.storage.list_runs(&self.document).await?.into_iter().filter(|id| kind_tag_of_run_id(*id) == self.kind.tag()).collect())
+    async fn kind_run_ids(&self, control: &mut IndexCursorControl) -> Result<db_storage::DbIoU64List, DbError> {
+        let mut source = self.storage.list_runs(&self.document).await?;
+        let mut output = db_storage::DbIoU64List::new();
+        for id in source.as_slice() {
+            control.grant()?;
+            if kind_tag_of_run_id(*id) == self.kind.tag() {
+                output.push(*id)?;
+            }
+        }
+        while source.close_step() {
+            control.grant()?;
+        }
+        Ok(output)
     }
 
     /// @emoji ⏭️ The sequence the next `put_batch` should claim: one past the newest live run's
     /// sequence, or `0` if this kind has no runs yet.
-    async fn next_sequence(&self) -> Result<u64, DbError> {
-        Ok(self.kind_run_ids().await?.last().map_or(0, |id| sequence_of_run_id(*id) + 1))
+    async fn next_sequence(&self, control: &mut IndexCursorControl) -> Result<u64, DbError> {
+        let mut ids = self.kind_run_ids(control).await?;
+        let next = ids.as_slice().last().map_or(0, |id| sequence_of_run_id(*id) + 1);
+        while ids.close_step() {
+            control.grant()?;
+        }
+        Ok(next)
     }
 
-    async fn load_run(&self, run_id: u64) -> Result<Vec<RunEntry>, DbError> {
+    async fn load_run(&self, run_id: u64, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
         let pages = self.storage.read_run(&self.document, run_id).await?;
-        let prepared = db_storage::db_io_prepare_platform(&pages)?.await?;
-        decode_run(prepared.as_slice(), self.kind).await
+        decode_run_pages(pages, self.kind, control).await
     }
 
-    /// @emoji ✍️ Durably appends `entries` as one new, newest run (via `build_run` + `encode_run`),
+    /// @emoji ✍️ Durably appends `entries` as one new, newest retained run,
     /// then applies `MergePolicy`. A no-op (no run written) if `entries` is empty.
-    pub async fn put_batch(&self, entries: Vec<(Vec<u8>, RunValue)>) -> Result<(), DbError> {
+    pub async fn put_batch(&self, mut entries: RunEntries, control: &mut IndexCursorControl) -> Result<(), DbError> {
         if entries.is_empty() {
             return Ok(());
         }
-        for (key, value) in &entries {
-            check_len(key.len() as u64, MAX_KEY_LEN, "db_index::key")?;
-            if let RunValue::Put(value_bytes) = value {
-                check_len(value_bytes.len() as u64, MAX_VALUE_LEN, "db_index::value")?;
+        for pass in 0..entries.len() {
+            for index in 0..entries.len().saturating_sub(pass + 1) {
+                entries.sort_step(index, index + 1, control)?;
             }
         }
-        let built = build_run(entries);
-        let encoded = encode_run(self.kind, &built).await?;
-        let run_id = make_run_id(self.kind, self.next_sequence().await?)?;
-        let pages = db_storage::db_io_copy_pages(&encoded)?.await?;
+        let mut unique = RunEntries::new();
+        for index in 0..entries.len() {
+            let entry = entries.take(index).ok_or_else(|| DbError::Internal("index sorted entry owner lost".to_string()))?;
+            if unique.get(unique.len().saturating_sub(1)).is_some_and(|previous| index_bytes_cmp(&previous.key, &entry.key) == std::cmp::Ordering::Equal) {
+                close_run_entry(unique.pop().ok_or_else(|| DbError::Internal("index duplicate owner lost".to_string()))?, control).await?;
+            }
+            if let Err(entry) = unique.push(entry) {
+                close_run_entry(entry, control).await?;
+                return Err(DbError::LimitExceeded("index unique fixed entry owner"));
+            }
+        }
+        let pages = encode_run_pages(self.kind, &unique, control).await?;
+        while unique.close_step()? {
+            control.grant()?;
+        }
+        let run_id = make_run_id(self.kind, self.next_sequence(control).await?)?;
         self.storage.write_run(&self.document, run_id, pages).await?;
-        self.maybe_auto_merge().await
+        self.maybe_auto_merge(control).await
     }
 
-    /// @emoji ➕️ Convenience over `put_batch` for a single key.
-    pub async fn put(&self, key: Vec<u8>, value: Vec<u8>) -> Result<(), DbError> {
-        self.put_batch(vec![(key, RunValue::Put(value))]).await
+    pub async fn put(&self, key: IndexBytes, value: IndexBytes, control: &mut IndexCursorControl) -> Result<(), DbError> {
+        let mut entries = RunEntries::new();
+        entries.push(RunEntry { key, value: RunValue::Put(value) }).map_err(|_| DbError::LimitExceeded("index entry owner"))?;
+        self.put_batch(entries, control).await
     }
 
-    /// @emoji 🪦️ Convenience over `put_batch` for a single tombstone.
-    pub async fn delete(&self, key: &[u8]) -> Result<(), DbError> {
-        self.put_batch(vec![(key.to_vec(), RunValue::Tombstone)]).await
+    pub async fn delete(&self, key: IndexBytes, control: &mut IndexCursorControl) -> Result<(), DbError> {
+        let mut entries = RunEntries::new();
+        entries.push(RunEntry { key, value: RunValue::Tombstone }).map_err(|_| DbError::LimitExceeded("index entry owner"))?;
+        self.put_batch(entries, control).await
     }
 
     /// @emoji 🔎️ Resolves `key` by scanning runs newest-to-oldest and returning the first match —
     /// `Ok(None)` if the first match is a tombstone, or if no run has ever held `key`.
-    pub async fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>, DbError> {
-        for run_id in self.kind_run_ids().await?.into_iter().rev() {
-            let entries = self.load_run(run_id).await?;
-            if let Ok(position) = entries.binary_search_by(|entry| entry.key.as_slice().cmp(key)) {
-                return Ok(match &entries[position].value {
-                    RunValue::Put(value) => Some(value.clone()),
-                    RunValue::Tombstone => None,
-                });
+    pub async fn get(&self, key: &IndexBytes, control: &mut IndexCursorControl) -> Result<Option<IndexBytes>, DbError> {
+        let mut ids = self.kind_run_ids(control).await?;
+        for position in (0..ids.len()).rev() {
+            control.grant()?;
+            let mut entries = self.load_run(ids.as_slice()[position], control).await?;
+            for index in 0..entries.len() {
+                match index_bytes_cmp(&entries.get(index).unwrap().key, key) {
+                    std::cmp::Ordering::Less => continue,
+                    std::cmp::Ordering::Greater => break,
+                    std::cmp::Ordering::Equal => {
+                        let entry = entries.take(index).unwrap();
+                        let result = match entry.value {
+                            RunValue::Put(value) => Some(value),
+                            RunValue::Tombstone => None,
+                        };
+                        let mut key = entry.key;
+                        while key.close_step()?.is_some() {
+                            control.grant()?;
+                        }
+                        while entries.close_step()? {
+                            control.grant()?;
+                        }
+                        while ids.close_step() {
+                            control.grant()?;
+                        }
+                        return Ok(result);
+                    }
+                }
             }
+            while entries.close_step()? {
+                control.grant()?;
+            }
+        }
+        while ids.close_step() {
+            control.grant()?;
         }
         Ok(None)
     }
@@ -447,23 +980,26 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     /// @emoji 📜️ Every live (non-tombstoned) `(key, value)` whose key starts with `prefix`,
     /// ascending by key — merges every run (newest wins on collision, tombstones dropped since this
     /// is a complete view across the whole kind) then filters.
-    pub async fn scan_prefix(&self, prefix: &[u8]) -> Result<KeyValuePairs, DbError> {
-        let run_ids = self.kind_run_ids().await?;
-        let mut runs = Vec::with_capacity(run_ids.len());
-        for run_id in run_ids {
-            runs.push(self.load_run(run_id).await?);
+    pub async fn scan_prefix(&self, prefix: &IndexBytes, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
+        let mut run_ids = self.kind_run_ids(control).await?;
+        let mut merged = RunEntries::new();
+        for index in 0..run_ids.len() {
+            let next = self.load_run(run_ids.as_slice()[index], control).await?;
+            merged = merge_run_entries(merged, next, true, control).await?;
         }
-        let merged = merge_runs(&runs, true);
-        let mut out = Vec::new();
-        for entry in merged {
-            if !entry.key.starts_with(prefix) {
-                continue;
-            }
-            if let RunValue::Put(value) = entry.value {
-                out.push((entry.key, value));
+        while run_ids.close_step() {
+            control.grant()?;
+        }
+        let mut output = RunEntries::new();
+        for index in 0..merged.len() {
+            let entry = merged.take(index).unwrap();
+            if entry.key.starts_with(prefix) && matches!(entry.value, RunValue::Put(_)) {
+                output.push(entry).map_err(|_| DbError::LimitExceeded("index scan result owner"))?;
+            } else {
+                close_run_entry(entry, control).await?;
             }
         }
-        Ok(out)
+        Ok(output)
     }
 
     /// @emoji 🌀️ `MergePolicy`'s enforcement: while this kind has more live runs than
@@ -471,16 +1007,26 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     /// older's `run_id`, preserving the oldest-first ordering invariant `kind_run_ids` relies on;
     /// the younger's `run_id` is then deleted). Tombstones are preserved (`drop_tombstones: false`)
     /// since runs even older than these two may still exist.
-    async fn maybe_auto_merge(&self) -> Result<(), DbError> {
+    async fn maybe_auto_merge(&self, control: &mut IndexCursorControl) -> Result<(), DbError> {
         loop {
-            let run_ids = self.kind_run_ids().await?;
+            let mut run_ids = self.kind_run_ids(control).await?;
             if run_ids.len() <= self.policy.max_runs_before_merge {
+                while run_ids.close_step() {
+                    control.grant()?;
+                }
                 return Ok(());
             }
-            let (oldest, second_oldest) = (run_ids[0], run_ids[1]);
-            let merged = merge_runs(&[self.load_run(oldest).await?, self.load_run(second_oldest).await?], false);
-            let encoded = encode_run(self.kind, &merged).await?;
-            let pages = db_storage::db_io_copy_pages(&encoded)?.await?;
+            let (oldest, second_oldest) = (run_ids.as_slice()[0], run_ids.as_slice()[1]);
+            let older = self.load_run(oldest, control).await?;
+            let newer = self.load_run(second_oldest, control).await?;
+            let mut merged = merge_run_entries(older, newer, false, control).await?;
+            let pages = encode_run_pages(self.kind, &merged, control).await?;
+            while merged.close_step()? {
+                control.grant()?;
+            }
+            while run_ids.close_step() {
+                control.grant()?;
+            }
             self.storage.write_run(&self.document, oldest, pages).await?;
             self.storage.delete_run(&self.document, second_oldest).await?;
         }
@@ -489,44 +1035,63 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     /// @emoji 🧹️ Merges EVERY live run for this kind into exactly one (dropping tombstones, since
     /// nothing older remains beneath a complete merge), written back under the oldest run's
     /// `run_id`. A no-op if already at zero or one runs. Returns the post-compaction `stats()`.
-    pub async fn compact(&self) -> Result<IndexStats, DbError> {
-        let run_ids = self.kind_run_ids().await?;
+    pub async fn compact(&self, control: &mut IndexCursorControl) -> Result<IndexStats, DbError> {
+        let mut run_ids = self.kind_run_ids(control).await?;
         if run_ids.len() > 1 {
-            let mut runs = Vec::with_capacity(run_ids.len());
-            for &run_id in &run_ids {
-                runs.push(self.load_run(run_id).await?);
+            let mut merged = RunEntries::new();
+            for index in 0..run_ids.len() {
+                let next = self.load_run(run_ids.as_slice()[index], control).await?;
+                merged = merge_run_entries(merged, next, index + 1 == run_ids.len(), control).await?;
             }
-            let merged = merge_runs(&runs, true);
-            let encoded = encode_run(self.kind, &merged).await?;
-            let pages = db_storage::db_io_copy_pages(&encoded)?.await?;
-            self.storage.write_run(&self.document, run_ids[0], pages).await?;
-            for &run_id in &run_ids[1..] {
-                self.storage.delete_run(&self.document, run_id).await?;
+            let pages = encode_run_pages(self.kind, &merged, control).await?;
+            while merged.close_step()? {
+                control.grant()?;
+            }
+            self.storage.write_run(&self.document, run_ids.as_slice()[0], pages).await?;
+            for index in 1..run_ids.len() {
+                self.storage.delete_run(&self.document, run_ids.as_slice()[index]).await?;
             }
         }
-        self.stats().await
+        while run_ids.close_step() {
+            control.grant()?;
+        }
+        self.stats(control).await
     }
 
     /// @emoji 📊️ Current shape of this kind's runs — see `IndexStats`'s doc for what `entry_count`
     /// does and doesn't count. Cheap: reads every run's bytes but only parses each one's header.
-    pub async fn stats(&self) -> Result<IndexStats, DbError> {
-        let run_ids = self.kind_run_ids().await?;
+    pub async fn stats(&self, control: &mut IndexCursorControl) -> Result<IndexStats, DbError> {
+        let mut run_ids = self.kind_run_ids(control).await?;
         let mut entry_count = 0u64;
         let mut total_bytes = 0u64;
-        for &run_id in &run_ids {
-            let bytes = self.storage.read_run(&self.document, run_id).await?;
+        for run_id in run_ids.as_slice() {
+            control.grant()?;
+            let mut bytes = self.storage.read_run(&self.document, *run_id).await?;
             total_bytes += bytes.len() as u64;
-            let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
-            entry_count += peek_entry_count(prepared.as_slice(), self.kind).await?;
+            entry_count += peek_entry_count(&bytes, self.kind, control).await?;
+            while bytes.close_step()?.is_some() {
+                control.grant()?;
+            }
         }
-        Ok(IndexStats { run_count: run_ids.len(), entry_count, total_bytes })
+        let run_count = run_ids.len();
+        while run_ids.close_step() {
+            control.grant()?;
+        }
+        Ok(IndexStats { run_count, entry_count, total_bytes })
     }
 
     /// @emoji ✅️ Fully decodes (checksum + structural validation) every live run for this kind,
     /// surfacing the first `DbError::Corrupt` found rather than any value — `db_cli verify`'s hook.
-    pub async fn verify(&self) -> Result<(), DbError> {
-        for run_id in self.kind_run_ids().await? {
-            self.load_run(run_id).await?;
+    pub async fn verify(&self, control: &mut IndexCursorControl) -> Result<(), DbError> {
+        let mut ids = self.kind_run_ids(control).await?;
+        for index in 0..ids.len() {
+            let mut entries = self.load_run(ids.as_slice()[index], control).await?;
+            while entries.close_step()? {
+                control.grant()?;
+            }
+        }
+        while ids.close_step() {
+            control.grant()?;
         }
         Ok(())
     }
@@ -553,12 +1118,27 @@ async fn encode_location(location: RecordLocation) -> Vec<u8> {
     writer.into_bytes()
 }
 
-async fn decode_location(bytes: &[u8]) -> Result<RecordLocation, DbError> {
-    let mut reader = ByteReader::new(bytes);
-    let segment = reader.read_varint_u64()?;
-    let offset = reader.read_varint_u64()?;
-    let len = reader.read_varint_u64()?;
+fn decode_location(reader: &mut RunPageReader<'_>) -> Result<RecordLocation, DbError> {
+    let segment = reader.varint()?;
+    let offset = reader.varint()?;
+    let len = reader.varint()?;
     Ok(RecordLocation { segment, offset, len })
+}
+
+async fn decode_index_bytes<T>(mut bytes: IndexBytes, control: &mut IndexCursorControl, decode: impl FnOnce(&mut RunPageReader<'_>) -> Result<T, DbError>) -> Result<T, DbError> {
+    control.grant()?;
+    let result = (|| {
+        let mut reader = RunPageReader::new(&bytes.pages, bytes.len());
+        let decoded = decode(&mut reader)?;
+        if reader.position != reader.limit {
+            return Err(DbError::Corrupt("typed index value has trailing bytes".to_string()));
+        }
+        Ok(decoded)
+    })();
+    while bytes.close_step()?.is_some() {
+        control.grant()?;
+    }
+    result
 }
 
 /// @emoji 🔢️ `u64 -> RecordLocation`, keyed big-endian so byte order matches numeric order — the
@@ -574,18 +1154,27 @@ impl<'a, S: IndexStorage> SeqLocationIndex<'a, S> {
     }
 
     async fn record(&self, seq: u64, location: RecordLocation) -> Result<(), DbError> {
-        self.handle.put(seq.to_be_bytes().to_vec(), encode_location(location).await).await
+        let mut control = self.handle.operation_control(8_192)?;
+        let value = admit_generated_index_bytes(encode_location(location).await, MAX_VALUE_LEN, &mut control).await?;
+        let key = IndexBytes::copy_for_operation(value.operation(), &seq.to_be_bytes(), &mut control).await?;
+        self.handle.put(key, value, &mut control).await
     }
 
     async fn lookup(&self, seq: u64) -> Result<Option<RecordLocation>, DbError> {
-        match self.handle.get(&seq.to_be_bytes()).await? {
-            Some(bytes) => Ok(Some(decode_location(&bytes).await?)),
+        let mut control = self.handle.operation_control(8_192)?;
+        let key = admit_generated_index_bytes(seq.to_be_bytes().to_vec(), MAX_KEY_LEN, &mut control).await?;
+        let result = self.handle.get(&key, &mut control).await?;
+        close_index_bytes(key, &mut control).await?;
+        match result {
+            Some(bytes) => Ok(Some(decode_index_bytes(bytes, &mut control, decode_location).await?)),
             None => Ok(None),
         }
     }
 
     async fn remove(&self, seq: u64) -> Result<(), DbError> {
-        self.handle.delete(&seq.to_be_bytes()).await
+        let mut control = self.handle.operation_control(8_192)?;
+        let key = admit_generated_index_bytes(seq.to_be_bytes().to_vec(), MAX_KEY_LEN, &mut control).await?;
+        self.handle.delete(key, &mut control).await
     }
 }
 //#endregion 🔖️RecordLocation
@@ -614,11 +1203,13 @@ impl<'a, S: IndexStorage> CommandIndex<'a, S> {
     }
 
     pub async fn stats(&self) -> Result<IndexStats, DbError> {
-        self.0.handle.stats().await
+        let mut control = self.0.handle.operation_control(8_192)?;
+        self.0.handle.stats(&mut control).await
     }
 
     pub async fn compact(&self) -> Result<IndexStats, DbError> {
-        self.0.handle.compact().await
+        let mut control = self.0.handle.operation_control(65_536)?;
+        self.0.handle.compact(&mut control).await
     }
 }
 //#endregion 🔖️CommandIndex
@@ -646,11 +1237,13 @@ impl<'a, S: IndexStorage> InverseIndex<'a, S> {
     }
 
     pub async fn stats(&self) -> Result<IndexStats, DbError> {
-        self.0.handle.stats().await
+        let mut control = self.0.handle.operation_control(8_192)?;
+        self.0.handle.stats(&mut control).await
     }
 
     pub async fn compact(&self) -> Result<IndexStats, DbError> {
-        self.0.handle.compact().await
+        let mut control = self.0.handle.operation_control(65_536)?;
+        self.0.handle.compact(&mut control).await
     }
 }
 //#endregion 🔖️InverseIndex
@@ -682,9 +1275,8 @@ async fn actor_seq_key(actor: &ActorId, actor_seq: u64) -> Result<Vec<u8>, DbErr
 }
 
 // 🚫️async: E1 pure accessor consumed by sync Option::map/closures — see R9
-fn decode_u64_le(bytes: &[u8]) -> Result<u64, DbError> {
-    let array: [u8; 8] = bytes.try_into().map_err(|_| DbError::Corrupt("expected an 8-byte little-endian u64 index value".to_string()))?;
-    Ok(u64::from_le_bytes(array))
+fn decode_u64_le(reader: &mut RunPageReader<'_>) -> Result<u64, DbError> {
+    Ok(u64::from_le_bytes(reader.array()?))
 }
 
 impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
@@ -693,11 +1285,22 @@ impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
     }
 
     pub async fn record(&self, actor: &ActorId, actor_seq: u64, command_seq: u64) -> Result<(), DbError> {
-        self.handle.put(actor_seq_key(actor, actor_seq).await?, command_seq.to_le_bytes().to_vec()).await
+        let mut control = self.handle.operation_control(8_192)?;
+        let value = admit_generated_index_bytes(command_seq.to_le_bytes().to_vec(), MAX_VALUE_LEN, &mut control).await?;
+        let key_bytes = actor_seq_key(actor, actor_seq).await?;
+        let key = IndexBytes::copy_for_operation(value.operation(), &key_bytes, &mut control).await?;
+        self.handle.put(key, value, &mut control).await
     }
 
     pub async fn lookup(&self, actor: &ActorId, actor_seq: u64) -> Result<Option<u64>, DbError> {
-        self.handle.get(&actor_seq_key(actor, actor_seq).await?).await?.map(|bytes| decode_u64_le(&bytes)).transpose()
+        let mut control = self.handle.operation_control(8_192)?;
+        let key = admit_generated_index_bytes(actor_seq_key(actor, actor_seq).await?, MAX_KEY_LEN, &mut control).await?;
+        let result = self.handle.get(&key, &mut control).await?;
+        close_index_bytes(key, &mut control).await?;
+        match result {
+            Some(bytes) => Ok(Some(decode_index_bytes(bytes, &mut control, decode_u64_le).await?)),
+            None => Ok(None),
+        }
     }
 
     /// @emoji 🥇️ The highest `(actor_seq, command_seq)` pair recorded for `actor`, or `None` if
@@ -706,15 +1309,29 @@ impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
         validate_actor_key_safe(actor).await?;
         let mut prefix = actor.0.as_bytes().to_vec();
         prefix.push(0u8);
-        let entries = self.handle.scan_prefix(&prefix).await?;
-        entries
-            .into_iter()
-            .last()
-            .map(|(key, value)| {
-                let actor_seq_bytes: [u8; 8] = key[prefix.len()..].try_into().map_err(|_| DbError::Corrupt("actor-seq index key has a malformed suffix".to_string()))?;
-                Ok((u64::from_be_bytes(actor_seq_bytes), decode_u64_le(&value)?))
-            })
-            .transpose()
+        let mut control = self.handle.operation_control(16_384)?;
+        let prefix_owner = admit_generated_index_bytes(prefix, MAX_KEY_LEN, &mut control).await?;
+        let mut entries = self.handle.scan_prefix(&prefix_owner, &mut control).await?;
+        close_index_bytes(prefix_owner, &mut control).await?;
+        let result = if entries.is_empty() {
+            None
+        } else {
+            let entry = entries.take(entries.len() - 1).unwrap();
+            let mut suffix = [0u8; 8];
+            if entry.key.read_fragment(entry.key.len().saturating_sub(8), &mut suffix) != 8 {
+                return Err(DbError::Corrupt("actor-seq index key has a malformed suffix".to_string()));
+            }
+            let command = match entry.value {
+                RunValue::Put(value) => decode_index_bytes(value, &mut control, decode_u64_le).await?,
+                RunValue::Tombstone => return Err(DbError::Corrupt("live index scan returned tombstone".to_string())),
+            };
+            close_index_bytes(entry.key, &mut control).await?;
+            Some((u64::from_be_bytes(suffix), command))
+        };
+        while entries.close_step()? {
+            control.grant()?;
+        }
+        Ok(result)
     }
 }
 //#endregion 🔖️ActorSeqIndex
@@ -739,16 +1356,23 @@ async fn encode_frontier(frontier: &Frontier) -> Vec<u8> {
     writer.into_bytes()
 }
 
-async fn decode_frontier(bytes: &[u8]) -> Result<Frontier, DbError> {
-    let mut reader = ByteReader::new(bytes);
-    let document_len = reader.read_varint_u64()?;
+fn decode_frontier(reader: &mut RunPageReader<'_>) -> Result<Frontier, DbError> {
+    let document_len = reader.varint()?;
     check_len(document_len, MAX_KEY_LEN, "db_index::frontier_document")?;
-    let document_bytes = reader.read_bytes(document_len as usize)?.to_vec();
+    let mut document_bytes = vec![0u8; document_len as usize];
+    let mut written = 0usize;
+    while written < document_bytes.len() {
+        let fragment = reader.fragment()?;
+        let count = (document_bytes.len() - written).min(fragment.len());
+        document_bytes[written..written + count].copy_from_slice(&fragment[..count]);
+        reader.position += count;
+        written += count;
+    }
     let document = ArtifactId(String::from_utf8(document_bytes).map_err(|_| DbError::Corrupt("frontier document id is not valid utf-8".to_string()))?);
-    let head_seq = reader.read_varint_u64()?;
-    let commit_seq = reader.read_varint_u64()?;
-    let chain_hash = reader.read_array32()?;
-    let epoch = reader.read_varint_u64()?;
+    let head_seq = reader.varint()?;
+    let commit_seq = reader.varint()?;
+    let chain_hash = reader.array()?;
+    let epoch = reader.varint()?;
     Ok(Frontier { document, head_seq, commit_seq, chain_hash, epoch })
 }
 
@@ -758,22 +1382,43 @@ impl<'a, S: IndexStorage> FrontierIndex<'a, S> {
     }
 
     pub async fn record(&self, frontier: &Frontier) -> Result<(), DbError> {
-        self.handle.put(frontier.commit_seq.to_be_bytes().to_vec(), encode_frontier(frontier).await).await
+        let mut control = self.handle.operation_control(8_192)?;
+        let value = admit_generated_index_bytes(encode_frontier(frontier).await, MAX_VALUE_LEN, &mut control).await?;
+        let key = IndexBytes::copy_for_operation(value.operation(), &frontier.commit_seq.to_be_bytes(), &mut control).await?;
+        self.handle.put(key, value, &mut control).await
     }
 
     pub async fn lookup(&self, commit_seq: u64) -> Result<Option<Frontier>, DbError> {
-        match self.handle.get(&commit_seq.to_be_bytes()).await? {
-            Some(bytes) => Ok(Some(decode_frontier(&bytes).await?)),
+        let mut control = self.handle.operation_control(8_192)?;
+        let key = admit_generated_index_bytes(commit_seq.to_be_bytes().to_vec(), MAX_KEY_LEN, &mut control).await?;
+        let result = self.handle.get(&key, &mut control).await?;
+        close_index_bytes(key, &mut control).await?;
+        match result {
+            Some(bytes) => Ok(Some(decode_index_bytes(bytes, &mut control, decode_frontier).await?)),
             None => Ok(None),
         }
     }
 
     /// @emoji 🥇️ The frontier recorded under the highest `commit_seq`, or `None` if none recorded.
     pub async fn latest(&self) -> Result<Option<Frontier>, DbError> {
-        match self.handle.scan_prefix(&[]).await?.into_iter().last() {
-            Some((_, value)) => Ok(Some(decode_frontier(&value).await?)),
-            None => Ok(None),
+        let mut control = self.handle.operation_control(16_384)?;
+        let prefix = admit_generated_index_bytes(Vec::new(), MAX_KEY_LEN, &mut control).await?;
+        let mut entries = self.handle.scan_prefix(&prefix, &mut control).await?;
+        close_index_bytes(prefix, &mut control).await?;
+        let result = if entries.is_empty() {
+            None
+        } else {
+            let entry = entries.take(entries.len() - 1).unwrap();
+            close_index_bytes(entry.key, &mut control).await?;
+            match entry.value {
+                RunValue::Put(value) => Some(decode_index_bytes(value, &mut control, decode_frontier).await?),
+                RunValue::Tombstone => None,
+            }
+        };
+        while entries.close_step()? {
+            control.grant()?;
         }
+        Ok(result)
     }
 }
 //#endregion 🔖️FrontierIndex
@@ -786,22 +1431,21 @@ pub struct TouchedRegionIndex<'a, S: IndexStorage> {
     handle: IndexHandle<'a, S>,
 }
 
-async fn encode_postings(postings: &[u64]) -> Vec<u8> {
+async fn encode_postings(postings: &db_storage::DbIoU64List) -> Vec<u8> {
     let mut writer = ByteWriter::new();
     writer.write_varint_u64(postings.len() as u64);
-    for posting in postings {
+    for posting in postings.as_slice() {
         writer.write_varint_u64(*posting);
     }
     writer.into_bytes()
 }
 
-async fn decode_postings(bytes: &[u8]) -> Result<Vec<u64>, DbError> {
-    let mut reader = ByteReader::new(bytes);
-    let count = reader.read_varint_u64()?;
+fn decode_postings(reader: &mut RunPageReader<'_>) -> Result<db_storage::DbIoU64List, DbError> {
+    let count = reader.varint()?;
     check_len(count, MAX_RUN_ENTRIES, "db_index::postings")?;
-    let mut postings = Vec::with_capacity(usize::try_from(count).unwrap_or(0));
+    let mut postings = db_storage::DbIoU64List::new();
     for _ in 0..count {
-        postings.push(reader.read_varint_u64()?);
+        postings.push(reader.varint()?)?;
     }
     Ok(postings)
 }
@@ -814,18 +1458,47 @@ impl<'a, S: IndexStorage> TouchedRegionIndex<'a, S> {
     /// @emoji ➕️ Records that `command_seq` touched `region` — read-modify-write over the region's
     /// current posting list, kept sorted and deduplicated.
     pub async fn record_touch(&self, region: &[u8], command_seq: u64) -> Result<(), DbError> {
-        let mut postings = self.touching(region).await?;
-        if let Err(position) = postings.binary_search(&command_seq) {
-            postings.insert(position, command_seq);
+        let mut control = self.handle.operation_control(16_384)?;
+        let mut postings = self.touching_with_control(region, &mut control).await?;
+        let mut updated = db_storage::DbIoU64List::new();
+        let mut inserted = false;
+        for posting in postings.as_slice() {
+            if !inserted && command_seq < *posting {
+                updated.push(command_seq)?;
+                inserted = true;
+            }
+            if *posting == command_seq {
+                inserted = true;
+            }
+            updated.push(*posting)?;
         }
-        self.handle.put(region.to_vec(), encode_postings(&postings).await).await
+        if !inserted {
+            updated.push(command_seq)?;
+        }
+        while postings.close_step() {
+            control.grant()?;
+        }
+        let value = admit_generated_index_bytes(encode_postings(&updated).await, MAX_VALUE_LEN, &mut control).await?;
+        while updated.close_step() {
+            control.grant()?;
+        }
+        let key = IndexBytes::copy_for_operation(value.operation(), region, &mut control).await?;
+        self.handle.put(key, value, &mut control).await
     }
 
-    pub async fn touching(&self, region: &[u8]) -> Result<Vec<u64>, DbError> {
-        match self.handle.get(region).await? {
-            Some(bytes) => decode_postings(&bytes).await,
-            None => Ok(Vec::new()),
+    async fn touching_with_control(&self, region: &[u8], control: &mut IndexCursorControl) -> Result<db_storage::DbIoU64List, DbError> {
+        let key = admit_generated_index_bytes(region.to_vec(), MAX_KEY_LEN, control).await?;
+        let result = self.handle.get(&key, control).await?;
+        close_index_bytes(key, control).await?;
+        match result {
+            Some(bytes) => decode_index_bytes(bytes, control, decode_postings).await,
+            None => Ok(db_storage::DbIoU64List::new()),
         }
+    }
+
+    pub async fn touching(&self, region: &[u8]) -> Result<db_storage::DbIoU64List, DbError> {
+        let mut control = self.handle.operation_control(16_384)?;
+        self.touching_with_control(region, &mut control).await
     }
 }
 //#endregion 🔖️TouchedRegionIndex
@@ -844,11 +1517,21 @@ impl<'a, S: IndexStorage> CommitIndex<'a, S> {
     }
 
     pub async fn record(&self, commit_id: &str, command_seq: u64) -> Result<(), DbError> {
-        self.handle.put(commit_id.as_bytes().to_vec(), command_seq.to_le_bytes().to_vec()).await
+        let mut control = self.handle.operation_control(8_192)?;
+        let value = admit_generated_index_bytes(command_seq.to_le_bytes().to_vec(), MAX_VALUE_LEN, &mut control).await?;
+        let key = IndexBytes::copy_for_operation(value.operation(), commit_id.as_bytes(), &mut control).await?;
+        self.handle.put(key, value, &mut control).await
     }
 
     pub async fn lookup(&self, commit_id: &str) -> Result<Option<u64>, DbError> {
-        self.handle.get(commit_id.as_bytes()).await?.map(|bytes| decode_u64_le(&bytes)).transpose()
+        let mut control = self.handle.operation_control(8_192)?;
+        let key = admit_generated_index_bytes(commit_id.as_bytes().to_vec(), MAX_KEY_LEN, &mut control).await?;
+        let result = self.handle.get(&key, &mut control).await?;
+        close_index_bytes(key, &mut control).await?;
+        match result {
+            Some(bytes) => Ok(Some(decode_index_bytes(bytes, &mut control, decode_u64_le).await?)),
+            None => Ok(None),
+        }
     }
 }
 //#endregion 🔖️CommitIndex
@@ -863,41 +1546,61 @@ pub struct FullTextIndex<'a, S: IndexStorage> {
     handle: IndexHandle<'a, S>,
 }
 
-async fn tokenize(text: &str) -> Vec<String> {
-    text.split(|character: char| !character.is_alphanumeric()).filter(|term| !term.is_empty()).map(str::to_lowercase).collect()
-}
-
 impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
     pub async fn new(storage: &'a S, document: ArtifactId) -> Self {
         Self { handle: IndexHandle::new(storage, document, IndexKind::FullText).await }
     }
 
-    async fn postings(&self, term_key: &[u8]) -> Result<Vec<u64>, DbError> {
-        match self.handle.get(term_key).await? {
-            Some(bytes) => decode_postings(&bytes).await,
-            None => Ok(Vec::new()),
+    async fn postings(&self, term_key: &[u8], control: &mut IndexCursorControl) -> Result<db_storage::DbIoU64List, DbError> {
+        let key = admit_generated_index_bytes(term_key.to_vec(), MAX_KEY_LEN, control).await?;
+        let result = self.handle.get(&key, control).await?;
+        close_index_bytes(key, control).await?;
+        match result {
+            Some(bytes) => decode_index_bytes(bytes, control, decode_postings).await,
+            None => Ok(db_storage::DbIoU64List::new()),
         }
     }
 
     /// @emoji ➕️ Tokenizes `text` and records `doc_ref` against every distinct term it contains.
     pub async fn index_document(&self, doc_ref: u64, text: &str) -> Result<(), DbError> {
-        let mut terms = tokenize(text).await;
-        terms.sort();
-        terms.dedup();
-        for term in terms {
-            let mut postings = self.postings(term.as_bytes()).await?;
-            if let Err(position) = postings.binary_search(&doc_ref) {
-                postings.insert(position, doc_ref);
+        let mut control = self.handle.operation_control(65_536)?;
+        for term in text.split(|character: char| !character.is_alphanumeric()).filter(|term| !term.is_empty()) {
+            control.grant()?;
+            let term = term.to_lowercase();
+            let mut postings = self.postings(term.as_bytes(), &mut control).await?;
+            if postings.as_slice().binary_search(&doc_ref).is_err() {
+                let mut updated = db_storage::DbIoU64List::new();
+                let mut inserted = false;
+                for posting in postings.as_slice() {
+                    if !inserted && doc_ref < *posting {
+                        updated.push(doc_ref)?;
+                        inserted = true;
+                    }
+                    updated.push(*posting)?;
+                }
+                if !inserted {
+                    updated.push(doc_ref)?;
+                }
+                while postings.close_step() {
+                    control.grant()?;
+                }
+                postings = updated;
             }
-            self.handle.put(term.into_bytes(), encode_postings(&postings).await).await?;
+            let value = admit_generated_index_bytes(encode_postings(&postings).await, MAX_VALUE_LEN, &mut control).await?;
+            while postings.close_step() {
+                control.grant()?;
+            }
+            let key = IndexBytes::copy_for_operation(value.operation(), term.as_bytes(), &mut control).await?;
+            self.handle.put(key, value, &mut control).await?;
         }
         Ok(())
     }
 
     /// @emoji 🔎️ The posting list for `term` (case-folded to match `index_document`'s tokenizer),
     /// or an empty list if the term has never been indexed.
-    pub async fn search(&self, term: &str) -> Result<Vec<u64>, DbError> {
-        self.postings(term.to_lowercase().as_bytes()).await
+    pub async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError> {
+        let mut control = self.handle.operation_control(16_384)?;
+        self.postings(term.to_lowercase().as_bytes(), &mut control).await
     }
 }
 //#endregion 🔖️FullTextIndex
@@ -907,27 +1610,96 @@ impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
 /// as `count(varint) [len(varint) bytes]...` — the same read-modify-write accumulation shape
 /// `TouchedRegionIndex`/`FullTextIndex` use for their posting lists, generalized to arbitrary-size
 /// values instead of `u64` postings.
-async fn encode_blob_list(blobs: &[Vec<u8>]) -> Vec<u8> {
-    let mut writer = ByteWriter::new();
-    writer.write_varint_u64(blobs.len() as u64);
-    for blob in blobs {
-        writer.write_varint_u64(blob.len() as u64);
-        writer.write_bytes(blob);
-    }
-    writer.into_bytes()
+pub struct IndexBlobList {
+    blobs: [Option<IndexBytes>; MAX_RUN_ENTRIES as usize],
+    len: u8,
 }
 
-async fn decode_blob_list(bytes: &[u8]) -> Result<Vec<Vec<u8>>, DbError> {
-    let mut reader = ByteReader::new(bytes);
-    let count = reader.read_varint_u64()?;
+impl IndexBlobList {
+    pub fn new() -> Self {
+        Self { blobs: std::array::from_fn(|_| None), len: 0 }
+    }
+
+    pub fn push(&mut self, bytes: IndexBytes) -> Result<(), IndexBytes> {
+        let Some(slot) = self.blobs.get_mut(self.len as usize) else { return Err(bytes) };
+        *slot = Some(bytes);
+        self.len += 1;
+        Ok(())
+    }
+
+    pub fn len(&self) -> usize {
+        self.len as usize
+    }
+
+    pub fn get(&self, index: usize) -> Option<&IndexBytes> {
+        self.blobs.get(index)?.as_ref()
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        for blob in self.blobs.iter_mut().rev().flatten() {
+            if blob.close_step()?.is_some() {
+                return Ok(true);
+            }
+        }
+        for blob in &mut self.blobs {
+            *blob = None;
+        }
+        self.len = 0;
+        Ok(false)
+    }
+}
+
+async fn encode_blob_list(blobs: &IndexBlobList, control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
+    let mut total = varint_len(blobs.len() as u64);
+    for index in 0..blobs.len() {
+        let blob = blobs.get(index).unwrap();
+        total = total.checked_add(varint_len(blob.len() as u64) + blob.len()).ok_or(DbError::LimitExceeded("index blob list bytes"))?;
+    }
+    let mut writer = db_storage::DbIoPageWriter::try_reserve(total.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut varint = [0u8; 10];
+    index_write_unchecked(encode_varint(blobs.len() as u64, &mut varint), &mut writer, control).await?;
+    for index in 0..blobs.len() {
+        let blob = blobs.get(index).unwrap();
+        index_write_unchecked(encode_varint(blob.len() as u64, &mut varint), &mut writer, control).await?;
+        for fragment in blob.fragments() {
+            index_write_unchecked(fragment, &mut writer, control).await?;
+        }
+    }
+    writer.finish().map(|pages| IndexBytes { pages })
+}
+
+async fn index_write_unchecked(bytes: &[u8], writer: &mut db_storage::DbIoPageWriter, control: &mut IndexCursorControl) -> Result<(), DbError> {
+    let mut offset = 0;
+    while offset < bytes.len() {
+        control.grant()?;
+        offset += writer.write_fragment(&bytes[offset..])?;
+    }
+    Ok(())
+}
+
+async fn decode_blob_list_inner(bytes: &IndexBytes, control: &mut IndexCursorControl) -> Result<IndexBlobList, DbError> {
+    let operation = bytes.operation();
+    let mut reader = RunPageReader::new(&bytes.pages, bytes.len());
+    let count = reader.varint()?;
     check_len(count, MAX_RUN_ENTRIES, "db_index::blob_list")?;
-    let mut blobs = Vec::with_capacity(usize::try_from(count).unwrap_or(0));
+    let mut blobs = IndexBlobList::new();
     for _ in 0..count {
-        let len = reader.read_varint_u64()?;
+        control.grant()?;
+        let len = reader.varint()?;
         check_len(len, MAX_VALUE_LEN, "db_index::blob_list_entry")?;
-        blobs.push(reader.read_bytes(len as usize)?.to_vec());
+        let blob = index_bytes_from_reader(operation, &mut reader, len as usize, control).await?;
+        blobs.push(blob).map_err(|_| DbError::LimitExceeded("index blob list owner"))?;
+    }
+    if reader.position != reader.limit {
+        return Err(DbError::Corrupt("index blob list has trailing bytes".to_string()));
     }
     Ok(blobs)
+}
+
+async fn decode_blob_list(bytes: IndexBytes, control: &mut IndexCursorControl) -> Result<IndexBlobList, DbError> {
+    let result = decode_blob_list_inner(&bytes, control).await;
+    close_index_bytes(bytes, control).await?;
+    result
 }
 //#endregion 🔖️BlobList
 
@@ -947,28 +1719,43 @@ impl<'a, S: IndexStorage> ConflictIndex<'a, S> {
     }
 
     /// @emoji ➕️ Appends `record` to `command_seq`'s conflict list.
-    pub async fn record_conflict(&self, command_seq: u64, record: Vec<u8>) -> Result<(), DbError> {
-        check_len(record.len() as u64, MAX_VALUE_LEN, "db_index::value")?;
-        let mut records = self.conflicts_for(command_seq).await?;
-        records.push(record);
-        self.handle.put(command_seq.to_be_bytes().to_vec(), encode_blob_list(&records).await).await
+    pub async fn record_conflict(&self, command_seq: u64, record: IndexBytes) -> Result<(), DbError> {
+        let mut control = self.handle.operation_control(32_768)?;
+        let mut records = self.conflicts_for_with_control(command_seq, &mut control).await?;
+        records.push(record).map_err(|_| DbError::LimitExceeded("index conflict list owner"))?;
+        let value = encode_blob_list(&records, &mut control).await?;
+        while records.close_step()? {
+            control.grant()?;
+        }
+        let key = IndexBytes::copy_for_operation(value.operation(), &command_seq.to_be_bytes(), &mut control).await?;
+        self.handle.put(key, value, &mut control).await
     }
 
     /// @emoji 📋️ Every conflict record recorded for `command_seq`, in the order they were
     /// recorded, or empty if none.
-    pub async fn conflicts_for(&self, command_seq: u64) -> Result<Vec<Vec<u8>>, DbError> {
-        match self.handle.get(&command_seq.to_be_bytes()).await? {
-            Some(bytes) => decode_blob_list(&bytes).await,
-            None => Ok(Vec::new()),
+    async fn conflicts_for_with_control(&self, command_seq: u64, control: &mut IndexCursorControl) -> Result<IndexBlobList, DbError> {
+        let key = admit_generated_index_bytes(command_seq.to_be_bytes().to_vec(), MAX_KEY_LEN, control).await?;
+        let result = self.handle.get(&key, control).await?;
+        close_index_bytes(key, control).await?;
+        match result {
+            Some(bytes) => decode_blob_list(bytes, control).await,
+            None => Ok(IndexBlobList::new()),
         }
     }
 
+    pub async fn conflicts_for(&self, command_seq: u64) -> Result<IndexBlobList, DbError> {
+        let mut control = self.handle.operation_control(32_768)?;
+        self.conflicts_for_with_control(command_seq, &mut control).await
+    }
+
     pub async fn stats(&self) -> Result<IndexStats, DbError> {
-        self.handle.stats().await
+        let mut control = self.handle.operation_control(8_192)?;
+        self.handle.stats(&mut control).await
     }
 
     pub async fn compact(&self) -> Result<IndexStats, DbError> {
-        self.handle.compact().await
+        let mut control = self.handle.operation_control(65_536)?;
+        self.handle.compact(&mut control).await
     }
 }
 //#endregion 🔖️ConflictIndex
@@ -1005,43 +1792,70 @@ impl<'a, S: IndexStorage> ProjectionIndex<'a, S> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Projection).await }
     }
 
-    pub async fn record(&self, projection_id: &str, frontier_seq: u64, state: Vec<u8>) -> Result<(), DbError> {
-        self.handle.put(projection_key(projection_id, frontier_seq).await?, state).await
+    pub async fn record(&self, projection_id: &str, frontier_seq: u64, state: IndexBytes) -> Result<(), DbError> {
+        let mut control = self.handle.operation_control(8_192)?;
+        let key_bytes = projection_key(projection_id, frontier_seq).await?;
+        let key = IndexBytes::copy_for_operation(state.operation(), &key_bytes, &mut control).await?;
+        self.handle.put(key, state, &mut control).await
     }
 
     /// @emoji 🎯️ The exact state recorded for `projection_id` at `frontier_seq`, or `None` if
     /// nothing was recorded at that exact sequence.
-    pub async fn at(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<Vec<u8>>, DbError> {
-        self.handle.get(&projection_key(projection_id, frontier_seq).await?).await
+    pub async fn at(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<IndexBytes>, DbError> {
+        let mut control = self.handle.operation_control(8_192)?;
+        let key = admit_generated_index_bytes(projection_key(projection_id, frontier_seq).await?, MAX_KEY_LEN, &mut control).await?;
+        let result = self.handle.get(&key, &mut control).await?;
+        close_index_bytes(key, &mut control).await?;
+        Ok(result)
     }
 
     /// @emoji 🏔️ The state recorded at the greatest `frontier_seq' <= frontier_seq` for
     /// `projection_id` specifically — scoped to `projection_id`'s own key range (via the NUL
     /// separator) before scanning, so a projection with no entry at or before `frontier_seq` never
     /// wrongly surfaces a different, lexicographically-earlier projection's entry.
-    pub async fn latest_at_or_before(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<(u64, Vec<u8>)>, DbError> {
+    pub async fn latest_at_or_before(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<(u64, IndexBytes)>, DbError> {
         validate_projection_id_key_safe(projection_id).await?;
         let mut prefix = projection_id.as_bytes().to_vec();
         prefix.push(0u8);
-        let entries = self.handle.scan_prefix(&prefix).await?;
+        let mut control = self.handle.operation_control(32_768)?;
+        let prefix_owner = admit_generated_index_bytes(prefix, MAX_KEY_LEN, &mut control).await?;
+        let mut entries = self.handle.scan_prefix(&prefix_owner, &mut control).await?;
         let mut result = None;
-        for (key, value) in entries {
-            let seq_bytes: [u8; 8] = key[prefix.len()..].try_into().map_err(|_| DbError::Corrupt("projection index key has a malformed suffix".to_string()))?;
+        for index in 0..entries.len() {
+            let entry = entries.take(index).unwrap();
+            let mut seq_bytes = [0u8; 8];
+            if entry.key.read_fragment(entry.key.len().saturating_sub(8), &mut seq_bytes) != 8 {
+                return Err(DbError::Corrupt("projection index key has a malformed suffix".to_string()));
+            }
             let seq = u64::from_be_bytes(seq_bytes);
             if seq > frontier_seq {
-                break; // entries are ascending by key, i.e. ascending by seq within this prefix
+                close_run_entry(entry, &mut control).await?;
+                break;
             }
-            result = Some((seq, value));
+            if let Some((_, previous)) = result.take() {
+                close_index_bytes(previous, &mut control).await?;
+            }
+            close_index_bytes(entry.key, &mut control).await?;
+            result = match entry.value {
+                RunValue::Put(value) => Some((seq, value)),
+                RunValue::Tombstone => None,
+            };
         }
+        while entries.close_step()? {
+            control.grant()?;
+        }
+        close_index_bytes(prefix_owner, &mut control).await?;
         Ok(result)
     }
 
     pub async fn stats(&self) -> Result<IndexStats, DbError> {
-        self.handle.stats().await
+        let mut control = self.handle.operation_control(8_192)?;
+        self.handle.stats(&mut control).await
     }
 
     pub async fn compact(&self) -> Result<IndexStats, DbError> {
-        self.handle.compact().await
+        let mut control = self.handle.operation_control(65_536)?;
+        self.handle.compact(&mut control).await
     }
 }
 //#endregion 🔖️ProjectionIndex
@@ -1072,40 +1886,47 @@ impl<'a, S: IndexStorage> PreviewIndex<'a, S> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::Preview).await }
     }
 
-    pub async fn publish(&self, actor: &ActorId, preview_key: &str, value: Vec<u8>) -> Result<(), DbError> {
-        self.handle.put(encode_preview_key(actor, preview_key).await?, value).await
+    pub async fn publish(&self, actor: &ActorId, preview_key: &str, value: IndexBytes) -> Result<(), DbError> {
+        let mut control = self.handle.operation_control(8_192)?;
+        let key_bytes = encode_preview_key(actor, preview_key).await?;
+        let key = IndexBytes::copy_for_operation(value.operation(), &key_bytes, &mut control).await?;
+        self.handle.put(key, value, &mut control).await
     }
 
     pub async fn withdraw(&self, actor: &ActorId, preview_key: &str) -> Result<(), DbError> {
-        self.handle.delete(&encode_preview_key(actor, preview_key).await?).await
+        let mut control = self.handle.operation_control(8_192)?;
+        let key = admit_generated_index_bytes(encode_preview_key(actor, preview_key).await?, MAX_KEY_LEN, &mut control).await?;
+        self.handle.delete(key, &mut control).await
     }
 
-    pub async fn latest(&self, actor: &ActorId, preview_key: &str) -> Result<Option<Vec<u8>>, DbError> {
-        self.handle.get(&encode_preview_key(actor, preview_key).await?).await
+    pub async fn latest(&self, actor: &ActorId, preview_key: &str) -> Result<Option<IndexBytes>, DbError> {
+        let mut control = self.handle.operation_control(8_192)?;
+        let key = admit_generated_index_bytes(encode_preview_key(actor, preview_key).await?, MAX_KEY_LEN, &mut control).await?;
+        let result = self.handle.get(&key, &mut control).await?;
+        close_index_bytes(key, &mut control).await?;
+        Ok(result)
     }
 
     /// @emoji 📋️ Every currently-live `(preview_key, value)` published by `actor`.
-    pub async fn for_actor(&self, actor: &ActorId) -> Result<Vec<(String, Vec<u8>)>, DbError> {
+    pub async fn for_actor(&self, actor: &ActorId) -> Result<RunEntries, DbError> {
         validate_actor_key_safe(actor).await?;
         let mut prefix = actor.0.as_bytes().to_vec();
         prefix.push(0u8);
-        self.handle
-            .scan_prefix(&prefix)
-            .await?
-            .into_iter()
-            .map(|(key, value)| {
-                let preview_key = String::from_utf8(key[prefix.len()..].to_vec()).map_err(|_| DbError::Corrupt("preview index key suffix is not valid utf-8".to_string()))?;
-                Ok((preview_key, value))
-            })
-            .collect()
+        let mut control = self.handle.operation_control(16_384)?;
+        let prefix = admit_generated_index_bytes(prefix, MAX_KEY_LEN, &mut control).await?;
+        let result = self.handle.scan_prefix(&prefix, &mut control).await?;
+        close_index_bytes(prefix, &mut control).await?;
+        Ok(result)
     }
 
     pub async fn stats(&self) -> Result<IndexStats, DbError> {
-        self.handle.stats().await
+        let mut control = self.handle.operation_control(8_192)?;
+        self.handle.stats(&mut control).await
     }
 
     pub async fn compact(&self) -> Result<IndexStats, DbError> {
-        self.handle.compact().await
+        let mut control = self.handle.operation_control(65_536)?;
+        self.handle.compact(&mut control).await
     }
 }
 //#endregion 🔖️PreviewIndex
@@ -1116,37 +1937,120 @@ mod tests {
     use super::*;
     use db_storage::MemoryStorage;
 
+    fn control() -> IndexCursorControl {
+        IndexCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap()
+    }
+
+    async fn retained(source: &[u8]) -> IndexBytes {
+        let mut control = control();
+        IndexBytes::try_admit(source.to_vec(), MAX_VALUE_LEN, &mut control).await.unwrap()
+    }
+
+    async fn retained_vec(source: Vec<u8>) -> IndexBytes {
+        let mut control = control();
+        IndexBytes::try_admit(source, MAX_VALUE_LEN, &mut control).await.unwrap()
+    }
+
+    async fn read_retained(bytes: &IndexBytes) -> Vec<u8> {
+        let mut prepared = bytes.prepare_platform().await.unwrap();
+        let output = prepared.as_slice().to_vec();
+        while prepared.close_step().unwrap() {}
+        output
+    }
+
     async fn entry(key: &[u8], value: &[u8]) -> RunEntry {
-        RunEntry { key: key.to_vec(), value: RunValue::Put(value.to_vec()) }
+        RunEntry { key: retained(key).await, value: RunValue::Put(retained(value).await) }
     }
 
     async fn tombstone(key: &[u8]) -> RunEntry {
-        RunEntry { key: key.to_vec(), value: RunValue::Tombstone }
+        RunEntry { key: retained(key).await, value: RunValue::Tombstone }
+    }
+
+    async fn run(entries: impl IntoIterator<Item = RunEntry>) -> RunEntries {
+        let mut run = RunEntries::new();
+        for entry in entries {
+            assert!(run.push(entry).is_ok());
+        }
+        run
+    }
+
+    async fn assert_entry(entry: &RunEntry, key: &[u8], value: Option<&[u8]>) {
+        assert_eq!(read_retained(&entry.key).await, key);
+        match (&entry.value, value) {
+            (RunValue::Put(actual), Some(expected)) => assert_eq!(read_retained(actual).await, expected),
+            (RunValue::Tombstone, None) => {}
+            _ => panic!("retained run value shape mismatch"),
+        }
+    }
+
+    async fn put_bytes<S: IndexStorage>(handle: &IndexHandle<'_, S>, key: &[u8], value: &[u8]) {
+        let mut control = control();
+        handle.put(retained(key).await, retained(value).await, &mut control).await.unwrap();
+    }
+
+    async fn delete_bytes<S: IndexStorage>(handle: &IndexHandle<'_, S>, key: &[u8]) {
+        let mut control = control();
+        handle.delete(retained(key).await, &mut control).await.unwrap();
+    }
+
+    async fn get_bytes<S: IndexStorage>(handle: &IndexHandle<'_, S>, key: &[u8]) -> Option<Vec<u8>> {
+        let mut control = control();
+        let mut key = retained(key).await;
+        let result = handle.get(&key, &mut control).await.unwrap();
+        while key.close_step().unwrap().is_some() {}
+        match result {
+            Some(mut bytes) => {
+                let output = read_retained(&bytes).await;
+                while bytes.close_step().unwrap().is_some() {}
+                Some(output)
+            }
+            None => None,
+        }
+    }
+
+    async fn stats<S: IndexStorage>(handle: &IndexHandle<'_, S>) -> IndexStats {
+        let mut control = control();
+        handle.stats(&mut control).await.unwrap()
     }
 
     //#region 🔖️SortedRun
     #[semio_framework_async_macros::async_test]
     async fn run_round_trips_through_encode_and_decode() {
-        let entries = vec![entry(b"a", b"1").await, entry(b"b", b"2").await, tombstone(b"c").await];
-        let encoded = encode_run(IndexKind::Command, &entries).await.expect("encode");
-        let decoded = decode_run(&encoded, IndexKind::Command).await.expect("decode");
-        assert_eq!(decoded, entries);
+        let mut entries = run([entry(b"a", b"1").await, entry(b"b", b"2").await, tombstone(b"c").await]).await;
+        let mut control = control();
+        let encoded = encode_run_pages(IndexKind::Command, &entries, &mut control).await.unwrap();
+        while entries.close_step().unwrap() {}
+        let mut decoded = decode_run_pages(encoded, IndexKind::Command, &mut control).await.unwrap();
+        assert_entry(decoded.get(0).unwrap(), b"a", Some(b"1")).await;
+        assert_entry(decoded.get(1).unwrap(), b"b", Some(b"2")).await;
+        assert_entry(decoded.get(2).unwrap(), b"c", None).await;
+        while decoded.close_step().unwrap() {}
     }
 
     #[semio_framework_async_macros::async_test]
     async fn decode_run_detects_corruption_via_checksum() {
-        let entries = vec![entry(b"a", b"1").await];
-        let mut encoded = encode_run(IndexKind::Command, &entries).await.expect("encode");
-        let last = encoded.len() - 1;
-        encoded[last] ^= 0xFF;
-        assert!(matches!(decode_run(&encoded, IndexKind::Command).await, Err(DbError::Corrupt(_))));
+        let mut entries = run([entry(b"a", b"1").await]).await;
+        let mut control = control();
+        let encoded = encode_run_pages(IndexKind::Command, &entries, &mut control).await.unwrap();
+        while entries.close_step().unwrap() {}
+        let mut prepared = db_storage::db_io_prepare_platform(&encoded).unwrap().await.unwrap();
+        let mut corrupt = prepared.as_slice().to_vec();
+        let last = corrupt.len() - 1;
+        corrupt[last] ^= 0xFF;
+        while prepared.close_step().unwrap() {}
+        let mut encoded = encoded;
+        while encoded.close_step().unwrap().is_some() {}
+        let corrupt = retained_vec(corrupt).await;
+        assert!(matches!(decode_run_pages(corrupt.pages, IndexKind::Command, &mut control).await, Err(DbError::Corrupt(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn decode_run_rejects_kind_mismatch() {
-        let entries = vec![entry(b"a", b"1").await];
-        let encoded = encode_run(IndexKind::Command, &entries).await.expect("encode");
-        assert!(matches!(decode_run(&encoded, IndexKind::Commit).await, Err(DbError::Corrupt(_))));
+        let mut entries = run([entry(b"a", b"1").await]).await;
+        let mut control = control();
+        let encoded = encode_run_pages(IndexKind::Command, &entries, &mut control).await.unwrap();
+        while entries.close_step().unwrap() {}
+        assert!(matches!(decode_run_pages(encoded, IndexKind::Commit, &mut control).await, Err(DbError::Corrupt(_))));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1168,32 +2072,40 @@ mod tests {
         let mut bytes = writer.into_bytes();
         let checksum = crc32c(&bytes);
         bytes.extend_from_slice(&checksum.to_le_bytes());
-        assert!(matches!(decode_run(&bytes, IndexKind::Command).await, Err(DbError::Corrupt(_))));
+        let mut control = control();
+        let bytes = retained_vec(bytes).await;
+        assert!(matches!(decode_run_pages(bytes.pages, IndexKind::Command, &mut control).await, Err(DbError::Corrupt(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn build_run_sorts_and_last_write_wins_on_duplicate_keys() {
-        let built = build_run(vec![(b"b".to_vec(), RunValue::Put(b"1".to_vec())), (b"a".to_vec(), RunValue::Put(b"2".to_vec())), (b"b".to_vec(), RunValue::Put(b"3".to_vec()))]);
-        assert_eq!(built, vec![entry(b"a", b"2").await, entry(b"b", b"3").await]);
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let handle = IndexHandle::new(&storage, ArtifactId::from("sort"), IndexKind::Command).await;
+        let entries = run([entry(b"b", b"1").await, entry(b"a", b"2").await, entry(b"b", b"3").await]).await;
+        let mut control = control();
+        handle.put_batch(entries, &mut control).await.unwrap();
+        assert_eq!(get_bytes(&handle, b"a").await, Some(b"2".to_vec()));
+        assert_eq!(get_bytes(&handle, b"b").await, Some(b"3".to_vec()));
     }
     //#endregion 🔖️SortedRun
 
     //#region 🔖️Merge
     #[semio_framework_async_macros::async_test]
     async fn merge_runs_prefers_newest_and_respects_drop_tombstones() {
-        let older = vec![entry(b"a", b"old-a").await, entry(b"b", b"old-b").await];
-        let newer = vec![tombstone(b"b").await, entry(b"c", b"new-c").await];
-
-        let keep_tombstones = merge_runs(&[older.clone(), newer.clone()], false);
-        assert_eq!(keep_tombstones, vec![entry(b"a", b"old-a").await, tombstone(b"b").await, entry(b"c", b"new-c").await]);
-
-        let dropped = merge_runs(&[older, newer], true);
-        assert_eq!(dropped, vec![entry(b"a", b"old-a").await, entry(b"c", b"new-c").await]);
+        let older = run([entry(b"a", b"old-a").await, entry(b"b", b"old-b").await]).await;
+        let newer = run([tombstone(b"b").await, entry(b"c", b"new-c").await]).await;
+        let mut control = control();
+        let mut merged = merge_run_entries(older, newer, false, &mut control).await.unwrap();
+        assert_entry(merged.get(0).unwrap(), b"a", Some(b"old-a")).await;
+        assert_entry(merged.get(1).unwrap(), b"b", None).await;
+        assert_entry(merged.get(2).unwrap(), b"c", Some(b"new-c")).await;
+        while merged.close_step().unwrap() {}
     }
 
     #[semio_framework_async_macros::async_test]
     async fn merge_runs_of_zero_runs_is_empty() {
-        assert!(merge_runs(&[], true).is_empty());
+        let mut control = control();
+        assert!(merge_run_entries(RunEntries::new(), RunEntries::new(), true, &mut control).await.unwrap().is_empty());
     }
     //#endregion 🔖️Merge
 
@@ -1218,104 +2130,107 @@ mod tests {
     //#region 🔖️IndexHandle
     #[semio_framework_async_macros::async_test]
     async fn index_handle_put_get_delete_round_trips() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
-        db_actor::block_on(handle.put(b"k1".to_vec(), b"v1".to_vec())).expect("put");
-        db_actor::block_on(handle.put(b"k2".to_vec(), b"v2".to_vec())).expect("put");
-        assert_eq!(db_actor::block_on(handle.get(b"k1")).expect("get"), Some(b"v1".to_vec()));
-        assert_eq!(db_actor::block_on(handle.get(b"k2")).expect("get"), Some(b"v2".to_vec()));
-        assert_eq!(db_actor::block_on(handle.get(b"missing")).expect("get"), None);
-
-        db_actor::block_on(handle.delete(b"k1")).expect("delete");
-        assert_eq!(db_actor::block_on(handle.get(b"k1")).expect("get"), None);
-        assert_eq!(db_actor::block_on(handle.get(b"k2")).expect("get"), Some(b"v2".to_vec()));
+        put_bytes(&handle, b"k1", b"v1").await;
+        put_bytes(&handle, b"k2", b"v2").await;
+        assert_eq!(get_bytes(&handle, b"k1").await, Some(b"v1".to_vec()));
+        assert_eq!(get_bytes(&handle, b"k2").await, Some(b"v2".to_vec()));
+        assert_eq!(get_bytes(&handle, b"missing").await, None);
+        delete_bytes(&handle, b"k1").await;
+        assert_eq!(get_bytes(&handle, b"k1").await, None);
+        assert_eq!(get_bytes(&handle, b"k2").await, Some(b"v2".to_vec()));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_put_overwrites_earlier_value_for_same_key() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
-        db_actor::block_on(handle.put(b"k".to_vec(), b"first".to_vec())).expect("put");
-        db_actor::block_on(handle.put(b"k".to_vec(), b"second".to_vec())).expect("put");
-        assert_eq!(db_actor::block_on(handle.get(b"k")).expect("get"), Some(b"second".to_vec()));
+        put_bytes(&handle, b"k", b"first").await;
+        put_bytes(&handle, b"k", b"second").await;
+        assert_eq!(get_bytes(&handle, b"k").await, Some(b"second".to_vec()));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_scan_prefix_returns_sorted_live_entries_only() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
-        db_actor::block_on(handle.put(b"a/1".to_vec(), b"1".to_vec())).expect("put");
-        db_actor::block_on(handle.put(b"a/2".to_vec(), b"2".to_vec())).expect("put");
-        db_actor::block_on(handle.put(b"b/1".to_vec(), b"3".to_vec())).expect("put");
-        db_actor::block_on(handle.delete(b"a/2")).expect("delete");
-
-        let scanned = db_actor::block_on(handle.scan_prefix(b"a/")).expect("scan_prefix");
-        assert_eq!(scanned, vec![(b"a/1".to_vec(), b"1".to_vec())]);
+        put_bytes(&handle, b"a/1", b"1").await;
+        put_bytes(&handle, b"a/2", b"2").await;
+        put_bytes(&handle, b"b/1", b"3").await;
+        delete_bytes(&handle, b"a/2").await;
+        let mut control = control();
+        let mut prefix = retained(b"a/").await;
+        let mut scanned = handle.scan_prefix(&prefix, &mut control).await.unwrap();
+        assert_eq!(scanned.len(), 1);
+        assert_entry(scanned.get(0).unwrap(), b"a/1", Some(b"1")).await;
+        while scanned.close_step().unwrap() {}
+        while prefix.close_step().unwrap().is_some() {}
     }
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_auto_merges_to_stay_within_policy() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let policy = MergePolicy { max_runs_before_merge: 2 };
         let handle = IndexHandle::with_policy(&storage, ArtifactId::from("doc-1"), IndexKind::Command, policy).await;
         for i in 0..6u64 {
-            db_actor::block_on(handle.put(format!("k{i:03}").into_bytes(), i.to_le_bytes().to_vec())).expect("put");
+            put_bytes(&handle, format!("k{i:03}").as_bytes(), &i.to_le_bytes()).await;
         }
-        let stats = db_actor::block_on(handle.stats()).expect("stats");
-        assert!(stats.run_count <= 2, "run_count {} should respect the merge policy", stats.run_count);
+        let shape = stats(&handle).await;
+        assert!(shape.run_count <= 2, "run_count {} should respect the merge policy", shape.run_count);
         for i in 0..6u64 {
-            let value = db_actor::block_on(handle.get(format!("k{i:03}").as_bytes())).expect("get").expect("present");
+            let value = get_bytes(&handle, format!("k{i:03}").as_bytes()).await.unwrap();
             assert_eq!(u64::from_le_bytes(value.try_into().expect("8 bytes")), i);
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_compact_collapses_to_one_run_and_drops_tombstones() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
-        db_actor::block_on(handle.put(b"a".to_vec(), b"1".to_vec())).expect("put");
-        db_actor::block_on(handle.put(b"b".to_vec(), b"2".to_vec())).expect("put");
-        db_actor::block_on(handle.delete(b"a")).expect("delete");
-
-        let stats = db_actor::block_on(handle.compact()).expect("compact");
-        assert_eq!(stats.run_count, 1);
-        assert_eq!(stats.entry_count, 1);
-        assert_eq!(db_actor::block_on(handle.get(b"a")).expect("get"), None);
-        assert_eq!(db_actor::block_on(handle.get(b"b")).expect("get"), Some(b"2".to_vec()));
-        db_actor::block_on(handle.verify()).expect("verify");
+        put_bytes(&handle, b"a", b"1").await;
+        put_bytes(&handle, b"b", b"2").await;
+        delete_bytes(&handle, b"a").await;
+        let mut control = control();
+        let shape = handle.compact(&mut control).await.unwrap();
+        assert_eq!(shape.run_count, 1);
+        assert_eq!(shape.entry_count, 1);
+        assert_eq!(get_bytes(&handle, b"a").await, None);
+        assert_eq!(get_bytes(&handle, b"b").await, Some(b"2".to_vec()));
+        handle.verify(&mut control).await.unwrap();
     }
 
     #[semio_framework_async_macros::async_test]
     async fn index_handle_compact_of_one_run_is_a_no_op() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
-        db_actor::block_on(handle.put(b"a".to_vec(), b"1".to_vec())).expect("put");
-        let before = db_actor::block_on(handle.stats()).expect("stats");
-        let after = db_actor::block_on(handle.compact()).expect("compact");
+        put_bytes(&handle, b"a", b"1").await;
+        let before = stats(&handle).await;
+        let mut control = control();
+        let after = handle.compact(&mut control).await.unwrap();
         assert_eq!(before, after);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn different_kinds_do_not_collide_for_the_same_document() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document = ArtifactId::from("doc-1");
         let commands = IndexHandle::new(&storage, document.clone(), IndexKind::Command).await;
         let regions = IndexHandle::new(&storage, document, IndexKind::TouchedRegion).await;
 
-        db_actor::block_on(commands.put(b"shared-key".to_vec(), b"command-value".to_vec())).expect("put");
-        db_actor::block_on(regions.put(b"shared-key".to_vec(), b"region-value".to_vec())).expect("put");
-
-        assert_eq!(db_actor::block_on(commands.get(b"shared-key")).expect("get"), Some(b"command-value".to_vec()));
-        assert_eq!(db_actor::block_on(regions.get(b"shared-key")).expect("get"), Some(b"region-value".to_vec()));
-        assert_eq!(db_actor::block_on(commands.stats()).expect("stats").run_count, 1);
-        assert_eq!(db_actor::block_on(regions.stats()).expect("stats").run_count, 1);
+        put_bytes(&commands, b"shared-key", b"command-value").await;
+        put_bytes(&regions, b"shared-key", b"region-value").await;
+        assert_eq!(get_bytes(&commands, b"shared-key").await, Some(b"command-value".to_vec()));
+        assert_eq!(get_bytes(&regions, b"shared-key").await, Some(b"region-value".to_vec()));
+        assert_eq!(stats(&commands).await.run_count, 1);
+        assert_eq!(stats(&regions).await.run_count, 1);
     }
     //#endregion 🔖️IndexHandle
 
     //#region 🔖️TypedIndexes
     #[semio_framework_async_macros::async_test]
     async fn command_index_records_and_looks_up_locations() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = CommandIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let location = RecordLocation { segment: 3, offset: 128, len: 64 };
         db_actor::block_on(index.record(42, location)).expect("record");
@@ -1327,7 +2242,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn inverse_index_records_and_looks_up_locations() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = InverseIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let location = RecordLocation { segment: 1, offset: 0, len: 16 };
         db_actor::block_on(index.record(7, location)).expect("record");
@@ -1336,7 +2251,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn actor_seq_index_resolves_and_tracks_latest_per_actor() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let alice = ActorId::from("alice");
         let bob = ActorId::from("bob");
@@ -1353,7 +2268,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn actor_seq_index_rejects_actor_id_with_embedded_nul() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let unsafe_actor = ActorId::from("bad\u{0}actor");
         assert!(matches!(db_actor::block_on(index.record(&unsafe_actor, 1, 1)), Err(DbError::InvalidArgument(_))));
@@ -1361,7 +2276,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn frontier_index_round_trips_and_tracks_latest() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = FrontierIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let first = Frontier { document: ArtifactId::from("doc-1"), head_seq: 1, commit_seq: 1, chain_hash: [1u8; 32], epoch: 0 };
         let second = Frontier { document: ArtifactId::from("doc-1"), head_seq: 5, commit_seq: 2, chain_hash: [2u8; 32], epoch: 1 };
@@ -1374,7 +2289,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn touched_region_index_accumulates_sorted_unique_seqs() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = TouchedRegionIndex::new(&storage, ArtifactId::from("doc-1")).await;
         db_actor::block_on(index.record_touch(b"region-a", 5)).expect("record_touch");
         db_actor::block_on(index.record_touch(b"region-a", 2)).expect("record_touch");
@@ -1385,7 +2300,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn commit_index_round_trips() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = CommitIndex::new(&storage, ArtifactId::from("doc-1")).await;
         db_actor::block_on(index.record("ck-abc123", 9)).expect("record");
         assert_eq!(db_actor::block_on(index.lookup("ck-abc123")).expect("lookup"), Some(9));
@@ -1394,7 +2309,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn full_text_index_search_finds_indexed_documents() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = FullTextIndex::new(&storage, ArtifactId::from("doc-1")).await;
         db_actor::block_on(index.index_document(1, "The Quick Brown Fox")).expect("index");
         db_actor::block_on(index.index_document(2, "quick jumps")).expect("index");
@@ -1407,28 +2322,41 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn conflict_index_accumulates_multiple_records_per_command() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = ConflictIndex::new(&storage, ArtifactId::from("doc-1")).await;
-        db_actor::block_on(index.record_conflict(5, b"region-collision".to_vec())).expect("record_conflict");
-        db_actor::block_on(index.record_conflict(5, b"constraint-violation".to_vec())).expect("record_conflict");
-        db_actor::block_on(index.record_conflict(6, b"other".to_vec())).expect("record_conflict");
-
-        assert_eq!(db_actor::block_on(index.conflicts_for(5)).expect("conflicts_for"), vec![b"region-collision".to_vec(), b"constraint-violation".to_vec()]);
-        assert_eq!(db_actor::block_on(index.conflicts_for(6)).expect("conflicts_for"), vec![b"other".to_vec()]);
-        assert_eq!(db_actor::block_on(index.conflicts_for(7)).expect("conflicts_for"), Vec::<Vec<u8>>::new());
+        index.record_conflict(5, retained(b"region-collision").await).await.unwrap();
+        index.record_conflict(5, retained(b"constraint-violation").await).await.unwrap();
+        index.record_conflict(6, retained(b"other").await).await.unwrap();
+        let mut records = index.conflicts_for(5).await.unwrap();
+        assert_eq!(read_retained(records.get(0).unwrap()).await, b"region-collision");
+        assert_eq!(read_retained(records.get(1).unwrap()).await, b"constraint-violation");
+        while records.close_step().unwrap() {}
+        let mut records = index.conflicts_for(6).await.unwrap();
+        assert_eq!(read_retained(records.get(0).unwrap()).await, b"other");
+        while records.close_step().unwrap() {}
+        let mut records = index.conflicts_for(7).await.unwrap();
+        assert_eq!(records.len(), 0);
+        while records.close_step().unwrap() {}
     }
 
     #[semio_framework_async_macros::async_test]
     async fn projection_index_resolves_exact_and_floor_lookups_scoped_to_projection_id() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1")).await;
-        db_actor::block_on(index.record("by-author", 10, b"state-10".to_vec())).expect("record");
-        db_actor::block_on(index.record("by-author", 20, b"state-20".to_vec())).expect("record");
-
-        assert_eq!(db_actor::block_on(index.at("by-author", 10)).expect("at"), Some(b"state-10".to_vec()));
-        assert_eq!(db_actor::block_on(index.at("by-author", 15)).expect("at"), None);
-        assert_eq!(db_actor::block_on(index.latest_at_or_before("by-author", 15)).expect("latest_at_or_before"), Some((10, b"state-10".to_vec())));
-        assert_eq!(db_actor::block_on(index.latest_at_or_before("by-author", 20)).expect("latest_at_or_before"), Some((20, b"state-20".to_vec())));
+        index.record("by-author", 10, retained(b"state-10").await).await.unwrap();
+        index.record("by-author", 20, retained(b"state-20").await).await.unwrap();
+        let mut exact = index.at("by-author", 10).await.unwrap().unwrap();
+        assert_eq!(read_retained(&exact).await, b"state-10");
+        while exact.close_step().unwrap().is_some() {}
+        assert!(index.at("by-author", 15).await.unwrap().is_none());
+        let (sequence, mut floor) = index.latest_at_or_before("by-author", 15).await.unwrap().unwrap();
+        assert_eq!(sequence, 10);
+        assert_eq!(read_retained(&floor).await, b"state-10");
+        while floor.close_step().unwrap().is_some() {}
+        let (sequence, mut floor) = index.latest_at_or_before("by-author", 20).await.unwrap().unwrap();
+        assert_eq!(sequence, 20);
+        assert_eq!(read_retained(&floor).await, b"state-20");
+        while floor.close_step().unwrap().is_some() {}
         assert_eq!(db_actor::block_on(index.latest_at_or_before("by-author", 5)).expect("latest_at_or_before"), None);
         // 🎯️ "by-color" sorts after "by-author" but has no entries at all — must not fall back to
         // a lexicographically-earlier projection's entry.
@@ -1437,40 +2365,81 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn projection_index_rejects_projection_id_with_embedded_nul() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1")).await;
-        assert!(matches!(db_actor::block_on(index.record("bad\u{0}id", 1, vec![1])), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(index.record("bad\u{0}id", 1, retained(&[1]).await).await, Err(DbError::InvalidArgument(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn preview_index_coalesces_latest_publish_or_withdraw_per_actor_and_key() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let alice = ActorId::from("alice");
 
-        db_actor::block_on(index.publish(&alice, "drag-ghost", vec![1])).expect("publish");
-        assert_eq!(db_actor::block_on(index.latest(&alice, "drag-ghost")).expect("latest"), Some(vec![1]));
-
-        db_actor::block_on(index.publish(&alice, "drag-ghost", vec![2])).expect("publish");
-        assert_eq!(db_actor::block_on(index.latest(&alice, "drag-ghost")).expect("latest"), Some(vec![2]));
-
-        db_actor::block_on(index.publish(&alice, "cursor", vec![9])).expect("publish");
-        let mut for_alice = db_actor::block_on(index.for_actor(&alice)).expect("for_actor");
-        for_alice.sort();
-        assert_eq!(for_alice, vec![("cursor".to_string(), vec![9]), ("drag-ghost".to_string(), vec![2])]);
+        index.publish(&alice, "drag-ghost", retained(&[1]).await).await.unwrap();
+        let mut latest = index.latest(&alice, "drag-ghost").await.unwrap().unwrap();
+        assert_eq!(read_retained(&latest).await, [1]);
+        while latest.close_step().unwrap().is_some() {}
+        index.publish(&alice, "drag-ghost", retained(&[2]).await).await.unwrap();
+        index.publish(&alice, "cursor", retained(&[9]).await).await.unwrap();
+        let mut for_alice = index.for_actor(&alice).await.unwrap();
+        assert_eq!(for_alice.len(), 2);
+        while for_alice.close_step().unwrap() {}
 
         db_actor::block_on(index.withdraw(&alice, "drag-ghost")).expect("withdraw");
-        assert_eq!(db_actor::block_on(index.latest(&alice, "drag-ghost")).expect("latest"), None);
-        assert_eq!(db_actor::block_on(index.for_actor(&alice)).expect("for_actor"), vec![("cursor".to_string(), vec![9])]);
+        assert!(index.latest(&alice, "drag-ghost").await.unwrap().is_none());
+        let mut for_alice = index.for_actor(&alice).await.unwrap();
+        assert_eq!(for_alice.len(), 1);
+        while for_alice.close_step().unwrap() {}
     }
 
     #[semio_framework_async_macros::async_test]
     async fn preview_index_rejects_actor_id_with_embedded_nul() {
-        let storage = MemoryStorage::new().await;
+        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1")).await;
         let unsafe_actor = ActorId::from("bad\u{0}actor");
-        assert!(matches!(db_actor::block_on(index.publish(&unsafe_actor, "k", vec![1])), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(index.publish(&unsafe_actor, "k", retained(&[1]).await).await, Err(DbError::InvalidArgument(_))));
     }
     //#endregion 🔖️TypedIndexes
 }
 //#endregion 🧪️Tests
+//#region 🧪️RetainedTests
+#[cfg(test)]
+mod retained_tests {
+    use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn exact_backing_handback_cancel_close_and_fragment_order_are_deterministic() {
+        let _pool = crate::db_storage::db_io_test_pool();
+        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut control = IndexCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 128).unwrap();
+        let mut one = Vec::with_capacity(db_storage::DB_IO_PAGE_BYTES + 1);
+        one.push(b'a');
+        let mut retained = IndexBytes::try_admit(one, (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut control).await.unwrap();
+        let mut second_source = Vec::with_capacity(db_storage::DB_IO_PAGE_BYTES + 1);
+        second_source.push(b'b');
+        let mut second = IndexBytes::try_admit(second_source, (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut control).await.unwrap();
+        assert_eq!(index_bytes_cmp(&retained, &second), std::cmp::Ordering::Less);
+        while retained.close_step().unwrap().is_some() {}
+        while second.close_step().unwrap().is_some() {}
+        assert!(retained.terminal_is_empty());
+        assert!(second.terminal_is_empty());
+
+        let mut source = Vec::with_capacity(65);
+        source.push(1);
+        let pointer = source.as_ptr();
+        let rejected = IndexBytes::try_admit(source, 64, &mut control).await.unwrap_err();
+        let returned = rejected.into_source().unwrap();
+        assert_eq!(returned.as_ptr(), pointer);
+        assert_eq!(returned.capacity(), 65);
+
+        cancelled.store(true, std::sync::atomic::Ordering::Release);
+        let mut source = Vec::with_capacity(8);
+        source.push(1);
+        let pointer = source.as_ptr();
+        let mut rejected = IndexBytes::try_admit(source, 8, &mut control).await.unwrap_err();
+        while rejected.close_step().unwrap() {}
+        assert_eq!(rejected.into_source().unwrap().as_ptr(), pointer);
+    }
+}
+//#endregion 🧪️RetainedTests

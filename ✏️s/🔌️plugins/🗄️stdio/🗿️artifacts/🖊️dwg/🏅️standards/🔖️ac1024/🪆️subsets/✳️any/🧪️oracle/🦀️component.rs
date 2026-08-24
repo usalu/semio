@@ -2,32 +2,356 @@
 //! independently of this repository's own codec so the subject has something real to be compared
 //! against instead of being checked against its own reading.
 //!
-//! Reference: none — recorded no-oracle decision.
+//! Reference: none — recorded no-oracle decision `dwg-ac1024-proprietary-container`
+//! (`🔣️component.json`). DWG is a proprietary, undocumented format. The only independent
+//! implementation of any weight is LibreDWG, which is GPL-3.0 C: linking it would put a copyleft C
+//! library on this repository's test host, and no owner ruling permits that. No permissively
+//! licensed Rust DWG reader exists at all (`dxf`, the crate registered for 🖊️dxf, reads DXF — the
+//! published interchange format — and explicitly not DWG).
 //!
-//! The vocabulary is per SUBSET, not per artifact: two standards of the same format declare
-//! different mutations, and a subset that shares an implementation with another reaches it through
-//! the shared family modules rather than by copying it.
+//! What CAN be read independently is the plain preamble every DWG file since R13 begins with, whose
+//! offsets are published (LibreDWG's own `header.spec`) and are already cited by this subset's
+//! `DwgSnapshot` doc comments:
+//!
+//! | bytes       | field                                                     |
+//! |-------------|-----------------------------------------------------------|
+//! | `0x00-0x05` | six ASCII version characters, e.g. `AC1024`                |
+//! | `0x12`      | `maint_version`, one byte (`RC`)                           |
+//! | `0x13-0x14` | `codepage`, little-endian `u16` (`RS`) — `30` for ANSI_1252 |
+//!
+//! Everything after that is the R2004+ section map: compressed, checksummed and section-encrypted,
+//! and nothing in this repository or in the permissively licensed Rust ecosystem can regenerate it.
+//! So this oracle is deliberately and visibly narrow: it reads and writes the preamble from the
+//! specification directly, and carries the rest of the container through untouched. That narrowness
+//! is recorded in the manifest's rationale and in the case's own feature description rather than
+//! being hidden behind a projection that looks wider than it is.
+//!
+//! ⚠️ `../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs` is a `pub use` of THIS module, for
+//! the same reason `../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️component.rs` is a `pub use` of this
+//! standard's schema: the AC1018 subset does not declare a vocabulary of its own. See that file.
 //!
 //! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
 
 use semio_repo_test_host::Json;
 
+//#region 🔖️Kinds
+/// 🏷️ The declared vocabulary of this subset, mirroring `DwgMutation`'s own variants
+/// (`../🧬️schema/🧬️mutations/🦀️component.rs`) in declaration order. Duplicated rather than
+/// imported: the oracle crate must never link the production crate.
+pub const KINDS: [&str; 3] = ["no-mutation", "set-snapshot", "set-version-info"];
+//#endregion 🔖️Kinds
+
+//#region 🔖️Preamble
+/// 📐️ Byte offsets of the three preamble fields, per LibreDWG's `header.spec`.
+const VERSION_RANGE: std::ops::Range<usize> = 0..6;
+const MAINTENANCE_OFFSET: usize = 0x12;
+const CODEPAGE_RANGE: std::ops::Range<usize> = 0x13..0x15;
+/// 📏️ The smallest prefix that carries all three fields — a document shorter than this has no
+/// readable preamble at all.
+const PREAMBLE_LEN: usize = 0x15;
+
+/// 🧱️ The DWG preamble, as far as it is publicly specified.
+struct Preamble {
+    version: String,
+    maintenance_version: u8,
+    codepage: u16,
+}
+
+/// 🔎️ Reads the preamble from the specification's own offsets. A six-character version string that
+/// is not `AC` + four digits is refused: this reader must not silently accept a file that is not a
+/// DWG at all and then report a projection about it.
+fn read_preamble(input: &[u8]) -> Result<Preamble, String> {
+    if input.len() < PREAMBLE_LEN {
+        return Err(format!("a DWG preamble needs at least {PREAMBLE_LEN} bytes; this document has {}", input.len()));
+    }
+    let version = String::from_utf8(input[VERSION_RANGE].to_vec()).map_err(|error| format!("the six version bytes are not ASCII: {error}"))?;
+    if !(version.starts_with("AC") && version.len() == 6 && version[2..].bytes().all(|byte| byte.is_ascii_digit())) {
+        return Err(format!("version string {version:?} is not the `AC` + four digits every DWG file since R13 begins with"));
+    }
+    Ok(Preamble { version, maintenance_version: input[MAINTENANCE_OFFSET], codepage: u16::from_le_bytes([input[CODEPAGE_RANGE.start], input[CODEPAGE_RANGE.start + 1]]) })
+}
+
+/// 🏷️ Writes the preamble back into `document` at the specification's own offsets.
+fn write_preamble(document: &mut [u8], preamble: &Preamble) -> Result<(), String> {
+    if document.len() < PREAMBLE_LEN {
+        return Err(format!("a DWG preamble needs at least {PREAMBLE_LEN} bytes; this document has {}", document.len()));
+    }
+    if preamble.version.len() != 6 || !preamble.version.is_ascii() {
+        return Err(format!("version string {:?} is not six ASCII characters", preamble.version));
+    }
+    document[VERSION_RANGE].copy_from_slice(preamble.version.as_bytes());
+    document[MAINTENANCE_OFFSET] = preamble.maintenance_version;
+    document[CODEPAGE_RANGE].copy_from_slice(&preamble.codepage.to_le_bytes());
+    Ok(())
+}
+
+/// 🌱 A whole DWG document that is nothing but a preamble — the shape this artifact's own
+/// `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg` already has (22 bytes: six version characters and
+/// zeros). This is what `set-snapshot` builds when it is given fields rather than a document: a
+/// genuine whole-document replacement, observable as a collapse in `byteLength`, not a
+/// field-set dressed up as one.
+fn stub_document(preamble: &Preamble) -> Result<Vec<u8>, String> {
+    let mut document = vec![0u8; 22];
+    write_preamble(&mut document, preamble)?;
+    Ok(document)
+}
+//#endregion 🔖️Preamble
+
+//#region 🔖️SpecReaders
+fn params_of(spec: &Json) -> Json {
+    spec.get("params").cloned().unwrap_or(Json::Null)
+}
+
+fn number(value: &Json, key: &str) -> Option<f64> {
+    match value.get(key) {
+        Some(Json::Number(found)) => Some(*found),
+        _ => None,
+    }
+}
+
+/// 🧭️ The preamble a spec's params describe, defaulting each field to the document's current value
+/// so a scenario states only what it changes.
+fn preamble_from(params: &Json, current: &Preamble) -> Preamble {
+    Preamble {
+        version: match params.get("version") {
+            Some(Json::String(found)) => found.clone(),
+            _ => current.version.clone(),
+        },
+        maintenance_version: number(params, "maintenanceVersion").map(|found| found as u8).unwrap_or(current.maintenance_version),
+        codepage: number(params, "codepage").map(|found| found as u16).unwrap_or(current.codepage),
+    }
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
+    if text.len() % 2 != 0 {
+        return Err(format!("hex payload has an odd length ({})", text.len()));
+    }
+    (0..text.len() / 2).map(|index| u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).map_err(|error| format!("hex payload is malformed at pair {index}: {error}"))).collect()
+}
+//#endregion 🔖️SpecReaders
+
+//#region 🔖️Projection
+/// 🎯️ The projection `semantic-dwg-preamble-v1` compares: the three publicly specified preamble
+/// fields plus the document's own length. `byteLength` is normative HERE precisely because the rest
+/// of the container is opaque — it is the only way a whole-document replacement is distinguishable
+/// from a field set, and neither side has any writer freedom over it.
+pub fn project_dwg(bytes: &[u8]) -> Result<Json, String> {
+    let preamble = read_preamble(bytes)?;
+    Ok(Json::Object(vec![
+        ("version".to_string(), Json::String(preamble.version)),
+        ("maintenanceVersion".to_string(), Json::Number(f64::from(preamble.maintenance_version))),
+        ("codepage".to_string(), Json::Number(f64::from(preamble.codepage))),
+        ("byteLength".to_string(), Json::Number(bytes.len() as f64)),
+    ]))
+}
+//#endregion 🔖️Projection
+
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
+///
+/// * `set-version-info` sets the three preamble fields IN PLACE, leaving the section map and every
+///   byte of the body exactly where it was — which is what makes it applicable to a real 148 KB
+///   R2010 container this repository can decode but nothing here can rebuild.
+/// * `set-snapshot` REPLACES the whole document: with `documentHex` when one is given (the form
+///   [`oracle_inverse_spec`] produces, since restoring a proprietary container is not expressible
+///   any other way), otherwise with a fresh preamble-only stub carrying the stated fields.
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+    let params = params_of(spec);
+    let current = read_preamble(input)?;
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        kind => Err(format!("mutation kind {:?} has no oracle implementation ({} input byte(s))", kind, input.len())),
+        "no-mutation" => Ok(input.to_vec()),
+        "set-version-info" => {
+            let mut document = input.to_vec();
+            write_preamble(&mut document, &preamble_from(&params, &current))?;
+            Ok(document)
+        }
+        "set-snapshot" => match params.get("documentHex") {
+            Some(Json::String(text)) => hex_decode(text),
+            _ => stub_document(&preamble_from(&params, &current)),
+        },
+        kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
 }
-
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
+
+//#region 🔖️Inverse
+/// ↩️ The independently computed inverse of `spec` against the UNMUTATED `base`, matching
+/// `DwgMutation::inverse()`'s own base-relative semantics: `set-version-info` inverts to the three
+/// fields `base` already carried, and `set-snapshot` inverts to `base` itself — which for a
+/// proprietary container means its whole byte image, read out of `base` here and never authored by
+/// hand.
+pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
+    let preamble = read_preamble(base)?;
+    let params = match spec.str("kind").as_str() {
+        "no-mutation" => Json::Object(vec![]),
+        "set-version-info" => Json::Object(vec![
+            ("version".to_string(), Json::String(preamble.version)),
+            ("maintenanceVersion".to_string(), Json::Number(f64::from(preamble.maintenance_version))),
+            ("codepage".to_string(), Json::Number(f64::from(preamble.codepage))),
+        ]),
+        "set-snapshot" => Json::Object(vec![("documentHex".to_string(), Json::String(hex_encode(base)))]),
+        kind => return Err(format!("mutation kind {kind:?} has no oracle inverse")),
+    };
+    Ok(Json::Object(vec![("kind".to_string(), Json::String(spec.str("kind"))), ("params".to_string(), params)]))
+}
+//#endregion 🔖️Inverse
+
+//#region 🔖️RoundTrip
+/// 🔁️ Decodes the preamble into typed fields and re-encodes it from those fields alone. The
+/// preamble region is ZEROED first, so a byte-identical result cannot come from a `memcpy` that
+/// never parsed anything: every one of those 21 bytes has to be re-derived from the parse.
+///
+/// 🔒️ This carrier is bound by [`carrier_is_exact`](semio_s_plugin_stdio_test_oracle::law::carrier_is_exact),
+/// NOT by the no-byte-pass-through law. Reproducing the input exactly is the CORRECT answer here and
+/// anything else is the defect: the preamble is fixed-width with no writer freedom whatsoever, and
+/// the R2004+ section map that follows is a compressed, checksummed, proprietary structure that
+/// neither this repository nor any permissively licensed Rust crate can regenerate, so it is carried
+/// through unchanged by construction. Demanding a byte difference would be a fabricated law.
+pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
+    let preamble = read_preamble(input)?;
+    let mut document = input.to_vec();
+    for byte in document[..PREAMBLE_LEN].iter_mut() {
+        *byte = 0;
+    }
+    write_preamble(&mut document, &preamble)?;
+    Ok(document)
+}
+//#endregion 🔖️RoundTrip
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 🖊️ The real committed drawing — 148,638 bytes of a genuine architectural DWG. ⚠️ It is
+    /// filed under the ac1018 example tree but its version string is `AC1024`: it is an R2010
+    /// container. See this subset's `🔣️component.json` and both DWG cases' feature descriptions.
+    fn fixture() -> Vec<u8> {
+        include_bytes!("../../../../🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg").to_vec()
+    }
+
+    fn spec(kind: &str, params: Json) -> Json {
+        Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
+    }
+
+    fn object(entries: Vec<(&str, Json)>) -> Json {
+        Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
+    }
+
+    #[test]
+    fn the_committed_drawing_reads_the_values_the_published_offsets_predict() {
+        let projection = project_dwg(&fixture()).unwrap();
+        assert_eq!(projection.get("version").unwrap().clone(), Json::String("AC1024".to_string()));
+        assert_eq!(projection.get("maintenanceVersion").unwrap().clone(), Json::Number(2.0), "LibreDWG's header.spec puts maint_version at 0x12; this file carries 0x02 there");
+        assert_eq!(projection.get("codepage").unwrap().clone(), Json::Number(30.0), "0x13-0x14 is the codepage RS; 30 is ANSI_1252");
+        assert_eq!(projection.get("byteLength").unwrap().clone(), Json::Number(148_638.0));
+    }
+
+    #[test]
+    fn a_document_that_is_not_a_dwg_is_refused_rather_than_projected() {
+        assert!(project_dwg(b"not a drawing at all, but long enough").is_err());
+        assert!(project_dwg(b"AC10").unwrap_err().contains("at least"));
+    }
+
+    #[test]
+    fn no_mutation_is_a_true_byte_identity() {
+        let input = fixture();
+        assert_eq!(oracle_apply_mutation(&input, &spec("no-mutation", Json::Object(vec![]))).unwrap(), input);
+    }
+
+    #[test]
+    fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
+        let input = fixture();
+        let original = project_dwg(&input).unwrap();
+        let cases = vec![
+            spec("no-mutation", Json::Object(vec![])),
+            spec("set-version-info", object(vec![("version", Json::String("AC1032".to_string())), ("maintenanceVersion", Json::Number(7.0)), ("codepage", Json::Number(29.0))])),
+            spec("set-snapshot", object(vec![("version", Json::String("AC1018".to_string())), ("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))])),
+        ];
+        for case in cases {
+            let kind = case.str("kind");
+            let mutated = oracle_apply_mutation(&input, &case).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
+            let after = project_dwg(&mutated).unwrap();
+            if kind != "no-mutation" {
+                assert_ne!(after, original, "{kind} left the projection unchanged — a mutation that is not observable proves nothing");
+            }
+            let inverse = oracle_inverse_spec(&input, &case).unwrap();
+            let restored = oracle_apply_mutation(&mutated, &inverse).unwrap_or_else(|error| panic!("{kind} inverse failed: {error}"));
+            assert_eq!(project_dwg(&restored).unwrap(), original, "applying {kind} and then its own inverse must restore the original projection");
+        }
+    }
+
+    #[test]
+    fn set_snapshot_is_a_whole_document_replacement_and_set_version_info_is_not() {
+        let input = fixture();
+        let fields = object(vec![("version", Json::String("AC1018".to_string()))]);
+        let snapshot = oracle_apply_mutation(&input, &spec("set-snapshot", fields.clone())).unwrap();
+        let version_info = oracle_apply_mutation(&input, &spec("set-version-info", fields)).unwrap();
+        assert_eq!(snapshot.len(), 22, "set-snapshot replaces the container outright");
+        assert_eq!(version_info.len(), input.len(), "set-version-info leaves the section map exactly where it was");
+        assert_ne!(project_dwg(&snapshot).unwrap(), project_dwg(&version_info).unwrap(), "the two verbs must be distinguishable in the projection, not two names for one edit");
+    }
+
+    #[test]
+    fn the_round_trip_rebuilds_the_preamble_from_the_parse_alone() {
+        let input = fixture();
+        let output = oracle_round_trip(&input).unwrap();
+        assert_eq!(output, input, "the preamble region is zeroed before it is written back, so equality here proves the parse/write pair is exact — not that the bytes were copied");
+        assert_eq!(project_dwg(&output).unwrap(), project_dwg(&input).unwrap());
+    }
+
+    #[test]
+    fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
+        assert!(oracle_apply_mutation(&fixture(), &spec("set-header-var", Json::Object(vec![]))).is_err());
+    }
+
+    /// 🏷️ `KINDS` must equal both DWG standards' committed catalogs AND the committed production
+    /// vocabulary. The framework never parses Rust, so the catalog is what the contract gate counts
+    /// against; this reads the files as text and fails the moment any of them drift apart. Both
+    /// catalogs are checked from here because the AC1018 subset re-exports THIS vocabulary — see
+    /// `every_ac1018_facet_is_a_re_export_of_this_one` below.
+    #[test]
+    fn kinds_match_both_catalogs_and_the_vocabulary() {
+        let vocabulary = include_str!("../🧬️schema/🧬️mutations/🦀️component.rs");
+        let variants = ["NoMutation", "SetSnapshot", "SetVersionInfo"];
+        assert_eq!(KINDS.len(), variants.len());
+        for manifest in [include_str!("🔣️component.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️component.json")] {
+            for kind in KINDS {
+                assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
+            }
+        }
+        for (kind, variant) in KINDS.iter().zip(variants.iter()) {
+            assert!(vocabulary.contains(&format!("{variant} ")) || vocabulary.contains(&format!("{variant},")) || vocabulary.contains(&format!("{variant} {{")), "DwgMutation is missing variant {variant:?} for kind {kind:?}");
+        }
+        for feature in [include_str!("../../../../../🧪️tests/mutate-dwg-ac1024/component.feature"), include_str!("../../../../../🧪️tests/mutate-dwg-ac1018/component.feature")] {
+            for kind in KINDS {
+                assert!(feature.contains(&format!("| {kind} ")) || feature.contains(&format!("| {kind}  ")), "a DWG case's Examples table is missing kind {kind:?}");
+            }
+        }
+    }
+
+    /// 🧬️ The claim both DWG cases rest on, checked instead of asserted in prose: AC1018 declares
+    /// no vocabulary, schema or snapshot of its own — every one of those facets is a `pub use` of
+    /// this standard's. The two catalogs are therefore identical BY CONSTRUCTION, not by a
+    /// copy-paste that could silently rot.
+    #[test]
+    fn every_ac1018_facet_is_a_re_export_of_this_one() {
+        for (facet, source) in [
+            ("mutations", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs")),
+            ("schema", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🦀️component.rs")),
+            ("snapshot", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs")),
+            ("oracle", include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs")),
+        ] {
+            assert!(source.contains("pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::"), "the ac1018 {facet} facet is no longer a re-export of ac1024's — the two catalogs can no longer claim to be identical by construction");
+        }
+    }
+}
+//#endregion 🧪️Tests

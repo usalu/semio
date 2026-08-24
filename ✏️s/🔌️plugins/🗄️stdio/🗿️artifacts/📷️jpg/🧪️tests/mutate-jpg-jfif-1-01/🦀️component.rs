@@ -8,8 +8,9 @@
 //! subject half is gated behind the generated host's `sut` feature so the oracle-only run never
 //! compiles the local implementation.
 
-use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::any::{oracle_apply_mutation, oracle_identity_round_trip};
+use semio_repo_test_host::{Adapter, Context, Outcome};
+use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip};
+use semio_s_plugin_stdio_test_oracle::law;
 use semio_s_plugin_stdio_test_oracle::raster::project_image;
 
 //#region 🔖️Kinds
@@ -29,6 +30,22 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 }
 //#endregion 🔖️Input
 
+//#region 🔖️Lossy
+/// 📏️ The absolute per-number slack `semantic-jpg-mutate-v1` itself declares
+/// (`../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`), mirrored here so an
+/// in-handler law is exactly as strict as the profile the case is measured by and never stricter.
+/// It exists because JPEG is lossy and every step of these round trips re-quantizes: measured on
+/// this fixture (2275x2560 = 5 824 000 pixels), one reference decode → re-encode at quality 90
+/// moves 413 pixels out of luma bucket 0 and 382 out of bucket 7; the inverse round trip's second
+/// re-encode raises that to 805; and `set-re-encode-quality`, which passes through quality 50,
+/// moves 8841 out of bucket 7. All of those are drift a lossy codec is entitled to. The profile's
+/// own description states what the slack is sized to still catch — wrong geometry, blank/inverted/
+/// solid output, wildly shifted tonal balance — and a mutation this case's `set-pixels`/
+/// `set-snapshot` rows perform lands ~5.6 MILLION pixels in the wrong bucket, three orders of
+/// magnitude past it, so the law below stays substantive rather than being excused by the slack.
+const JPG_TOLERANCE: f64 = 400_000.0;
+//#endregion 🔖️Lossy
+
 //#region 🔖️Oracle
 /// 🔮️ Applies the scenario's declared mutation with the reference `image` codec.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
@@ -39,23 +56,34 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// ↩️ Proves the forward mutation itself applies cleanly, then independently recomputes the
-/// undone state as a fresh decode → re-encode of the pristine original — what a mutation and its
-/// computed inverse are expected to cancel out to.
+/// ↩️ The inverse law, asserted: apply the row's kind with the reference `image` codec, apply that
+/// reference's OWN computed inverse on top of the real forward result, and require the outcome to
+/// project back onto the pristine original within `semantic-jpg-mutate-v1`'s own declared slack.
+/// The previous version applied the forward mutation, discarded it, and returned a plain
+/// decode → re-encode of the untouched original — it asserted nothing, and passed whenever `image`
+/// did not error.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let _forward = oracle_apply_mutation(&original, &spec)?;
-    let restored = oracle_identity_round_trip(&original)?;
+    let before = project_image(&original, "jpg")?;
+    let forward = oracle_apply_mutation(&original, &spec)?;
+    let restored = oracle_apply_mutation_inverse(&original, &spec, &forward)?;
     let projection = project_image(&restored, "jpg")?;
+    law::inverse_restores_within(&spec.str("kind"), &projection, &before, &[], JPG_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
-/// 🔁️ Decode → re-encode with the reference codec, no mutation at all.
+/// 🔁️ The identity round trip, asserted rather than assumed: a decode → re-encode with the
+/// reference `image` codec must move the bytes — a second encoder's Annex K tables and entropy
+/// coding are not this scan's — and must leave the semantic projection where it was, within
+/// `semantic-jpg-mutate-v1`'s own declared slack for lossy re-quantization.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let bytes = oracle_identity_round_trip(&original)?;
+    law::reparsed_not_copied(&bytes, &original)?;
+    let before = project_image(&original, "jpg")?;
     let projection = project_image(&bytes, "jpg")?;
+    law::round_trip_preserves_within(&projection, &before, &[], JPG_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

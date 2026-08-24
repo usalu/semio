@@ -81,6 +81,30 @@ pub enum SemioCadMutation {
         entity: CadEntity,
     },
 }
+
+/// 🏷️ The declared mutation vocabulary of `s.stdio.semio.cad`, in `SemioCadMutation`'s own
+/// declaration order and kebab-case spelling — the single source of truth for the binary op frame's
+/// `tag` ordinal (see [`variant_ordinal`]), for `parse_cad_mutation`'s keyword match, and for the
+/// `semio-v1-cad` catalog in `../../🧪️oracle/🔣️component.json`. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps all three honest.
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "add-layer",
+    "remove-layer",
+    "set-layer",
+    "add-block",
+    "remove-block",
+    "set-block-base-point",
+    "add-entity",
+    "remove-entity",
+    "set-entity-layer",
+    "set-entity-geometry",
+    "add-block-entity",
+    "remove-block-entity",
+    "set-block-entity-layer",
+    "set-block-entity-geometry",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -90,6 +114,27 @@ pub enum SemioCadMutation {
 pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &SemioCadMutation) -> protocol::MutationOutcome<SemioCadDiff> {
     let outcome = <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
+/// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
+/// `protocol` extern-crate item (the `mutate-semio-cad` test adapter, whose `inverse-<kind>`
+/// scenarios need a mutation's own computed inverse) can still reach the inverse law that
+/// [`apply_semio_cad_mutation`] alone cannot. Same shape as `✳️kit`'s `inverse_semio_kit_mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {
+    <SemioCadMutation as Mutation<SemioCadSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", ...}`) JSON
+/// projection — the shape `mutate-semio-cad`'s committed specification vectors carry in their
+/// `mutation` member — into a real [`SemioCadMutation`]. A thin `serde_json` wrapper (already a direct
+/// dependency of this crate, used behind this interface per CLAUDE.md's "external libraries behind
+/// an interface" rule, never a new one), so the test adapter reads the committed vector instead of
+/// re-declaring it as a Rust literal beside it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_cad_mutation_json(text: &str) -> Result<SemioCadMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -274,26 +319,6 @@ impl OpText for SemioCadMutation {
     }
 }
 
-/// 🏷️ Ordinal table, same declaration order as `SemioCadMutation`'s own enum variants and
-/// `parse_cad_mutation`'s keyword match — the real binary `tag` field's source of truth.
-const OP_KEYWORDS: [&str; 16] = [
-    "no-mutation",
-    "set-snapshot",
-    "add-layer",
-    "remove-layer",
-    "set-layer",
-    "add-block",
-    "remove-block",
-    "set-block-base-point",
-    "add-entity",
-    "remove-entity",
-    "set-entity-layer",
-    "set-entity-geometry",
-    "add-block-entity",
-    "remove-block-entity",
-    "set-block-entity-layer",
-    "set-block-entity-geometry",
-];
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn variant_ordinal(m: &SemioCadMutation) -> u8 {
     match m {
@@ -328,7 +353,7 @@ fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
 
 /// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut.
 /// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (the variant ordinal, see
-/// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own `key=value ...` argument payload
+/// [`KINDS`]) are two REAL fixed fields; the variant's own `key=value ...` argument payload
 /// follows as one opaque trailing `bytes` chain — reusing the already-real, already-tested
 /// `print_cad_mutation`/`parse_cad_mutation` text codec rather than re-deriving a second
 /// independent encoding.
@@ -348,7 +373,7 @@ impl OpBinary for SemioCadMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
         }
         let tag = bytes[1];
-        let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
+        let keyword = KINDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", KINDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
         Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
@@ -408,6 +433,29 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    //#region 🧪️KindsCatalog
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling the binary op
+    /// frame's `tag` ordinal and the text grammar's keyword both use, and every one of those
+    /// spellings must also appear in the committed oracle manifest's catalog. The framework never
+    /// parses Rust, so this is what makes the declaration honest.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        assert_eq!(KINDS.len(), 16, "KINDS must name exactly one entry per declared SemioCadMutation variant");
+        let mut seen = vec![false; KINDS.len()];
+        for m in demo_mutation_cases() {
+            let keyword = print_cad_mutation(&m).split(' ').next().expect("printed op is never empty").to_string();
+            let ordinal = variant_ordinal(&m) as usize;
+            assert_eq!(KINDS[ordinal], keyword, "KINDS must match the declaration order and spelling for {m:?}");
+            seen[ordinal] = true;
+        }
+        assert!(seen.iter().all(|hit| *hit), "demo_mutation_cases must reach every KINDS entry, missing {:?}", KINDS.iter().zip(seen.iter()).filter(|(_, hit)| !**hit).map(|(kind, _)| *kind).collect::<Vec<_>>());
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 
     //#region 🧪️Law1_MutationDiffLaw
     /// ⚖️ Law 1 — `mutation_diff_law`: for every variant, `apply_semio_cad_mutation`'s returned

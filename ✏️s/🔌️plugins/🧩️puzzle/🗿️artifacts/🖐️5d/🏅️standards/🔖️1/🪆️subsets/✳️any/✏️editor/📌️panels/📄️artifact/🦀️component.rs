@@ -50,7 +50,7 @@ fn select_action(granularity: &str, id: &str) -> (semio_framework_ui_contract::A
     ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action(
         INTERACTION_SELECT_ACTION_ID,
         Some(json!({ "domainId": PUZZLE5D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default(), "merge": "replace", "method": "pick" })),
-    )
+    )?
 }
 
 fn selectable_item(
@@ -60,14 +60,14 @@ fn selectable_item(
     action: (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>),
 ) -> semio_framework_ui_contract::TreeItemBuilder {
     let (action_id, args) = action;
-    let builder = ui::tree_item(label).id(id).icon(icon);
+    let builder = ui::tree_item(label)?.id(id).icon(icon);
     match args {
         Some(args) => builder.on_with(Trigger::Activate, action_id, args),
         None => builder.on(Trigger::Activate, action_id),
     }
 }
 
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> BuiltNode {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let part_items: Vec<BuiltNode> = envelope
         .document
         .parts
@@ -86,10 +86,10 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> BuiltNode {
         .collect();
     let fastener_items: Vec<BuiltNode> =
         envelope.document.fasteners.iter().map(|fastener| selectable_item(fastener.id.clone(), fastener_label(&envelope.document, fastener), "link", select_action(PUZZLE5D_GRANULARITY_FASTENER, &fastener.id)).build()).collect();
-    PanelTreeBuilder::new("puzzle5d-play-document")
-        .section_or_placeholder("puzzle5d-play-document.parts", Some(labels.parts.as_str().into()), true, part_items, labels.none.as_str())
-        .section_or_placeholder("puzzle5d-play-document.fasteners", Some(labels.fasteners.as_str().into()), false, fastener_items, labels.none.as_str())
-        .interaction_domain(PUZZLE5D_INTERACTION_DOMAIN)
+    PanelTreeBuilder::new("puzzle5d-play-document")?
+        .section_or_placeholder("puzzle5d-play-document.parts", Some(labels.parts.as_str().into()), true, part_items, labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-document.fasteners", Some(labels.fasteners.as_str().into()), false, fastener_items, labels.none.as_str())?
+        .interaction_domain(PUZZLE5D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

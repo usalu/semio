@@ -228,38 +228,37 @@ pub mod app {
     };
 
     //#region 🔖️TreeConvert
-    /// 🌉️ `BuiltNode` (contract crate's builder output) → `TreeNode` (runtime crate's reconciler
-    /// input) — field-for-field identical except `children`'s element type, per `📓️recipe-plugin.md`
-    /// §5: no conversion ships in either crate (the contract crate cannot depend on the runtime crate;
-    /// the dependency runs the other way — see `📦️glue.rs`). Shared once here since this packet
-    /// converts dozens of `BuiltNode`-returning SDK helpers that all cross this same boundary.
-    // 🚫️async: E1-adjacent pure recursive structural transform consumed by sync `ComponentTree::new` call sites
+    /// 🌉️ Transfers the contract builder's fixed node owner to the runtime tree without a recursive
+    /// copy or a second uncensused tree allocation.
     pub fn built_to_tree(node: BuiltNode) -> TreeNode {
-        TreeNode {
-            key: node.key,
-            component: node.component,
-            layout: node.layout,
-            style: node.style,
-            activity: node.activity,
-            disabled: node.disabled,
-            accessibility: node.accessibility,
-            bindings: node.bindings,
-            menu: node.menu,
-            children: node.children.into_iter().map(built_to_tree).collect(),
-        }
+        node
     }
 
-    /// 🌉️ `built_to_tree` + `ComponentTree::new` in one call — the standard way a `render()`/
-    /// `Present::present` body in this file turns its `BuiltNode` root into what it must actually
-    /// return.
-    // 🚫️async: E1-adjacent pure recursive structural transform consumed by sync render() bodies
+    /// 🌉️ Transfers a complete fixed root into the runtime tree owner.
     pub fn built_to_component_tree(node: BuiltNode) -> ComponentTree {
-        ComponentTree::new(built_to_tree(node))
+        ComponentTree { root: built_to_tree(node) }
     }
 
     /// 🏷️ Builds one semantic text node from the SDK's retained non-node label type.
-    pub fn built_text_node(label: ui_wgpu::wgpu::Label) -> BuiltNode {
-        ui::text(label.to_string()).build()
+    pub fn built_text_node(label: ui_wgpu::wgpu::Label) -> Result<BuiltNode, ui_wgpu::wgpu::Label> {
+        let value = label.to_string();
+        let Ok(value) = Label::try_from(value) else { return Err(label) };
+        ui::text(value).try_build().map_err(|_| label)
+    }
+
+    /// 🧩 Fallible fixed-capacity UI assembly result shared by plugin render boundaries.
+    pub type UiAssemblyResult<T> = Result<T, PluginAssemblyError>;
+
+    fn ui_assembly_error(stage: &'static str) -> PluginAssemblyError {
+        PluginAssemblyError::new("ui.fixed-capacity", format!("fixed UI admission failed at {stage}"))
+    }
+
+    fn ui_label<T: TryInto<Label>>(value: T, stage: &'static str) -> UiAssemblyResult<Label> {
+        value.try_into().map_err(|_| ui_assembly_error(stage))
+    }
+
+    fn ui_text<T: TryInto<UiText>>(value: T, stage: &'static str) -> UiAssemblyResult<UiText> {
+        value.try_into().map_err(|_| ui_assembly_error(stage))
     }
     //#endregion 🔖️TreeConvert
 
@@ -363,22 +362,28 @@ pub mod app {
     /// writer's AST, note's blocks, …) that a `UiTree`-bound domain's rendered tree is
     /// single-granularity; a domain needing per-row granularity declares `HierarchyProvider::Topology`
     /// and supplies its own `interaction_topology` instead.
-    async fn ui_tree_domain_topology(sections: &[TreeNode], granularity: &str) -> protocol::DomainTopology {
-        async fn visit_items(items: &[TreeNode], parent: Option<&str>, granularity: &str, out: &mut Vec<protocol::TopologyNode>) {
-            for item in items {
-                if matches!(item.component, Component::TreeItem(_)) {
-                    out.push(protocol::TopologyNode { id: item.key.clone(), granularity: granularity.to_string(), parent: parent.map(str::to_string) });
-                    Box::pin(visit_items(&item.children, Some(item.key.as_str()), granularity, out)).await;
-                }
-            }
+    async fn ui_tree_domain_topology(sections: &ui::BuiltChildren, granularity: &str) -> UiAssemblyResult<protocol::DomainTopology> {
+        struct Frame<'a> {
+            children: &'a ui::BuiltChildren,
+            next: usize,
+            parent: Option<UiText>,
         }
         let mut ordered = Vec::new();
-        for section in sections {
-            if matches!(section.component, Component::TreeSection(_)) {
-                visit_items(&section.children, None, granularity, &mut ordered).await;
+        let mut stack: UiFixedList<Frame<'_>, { semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH }> = UiFixedList::default();
+        stack.try_push(Frame { children: sections, next: 0, parent: None }).map_err(|_| ui_assembly_error("interaction-topology.depth"))?;
+        while let Some(mut frame) = stack.pop() {
+            let Some(node) = frame.children.get(frame.next) else { continue };
+            frame.next = frame.next.checked_add(1).ok_or_else(|| ui_assembly_error("interaction-topology.cursor"))?;
+            let inherited_parent = frame.parent.clone();
+            stack.try_push(frame).map_err(|_| ui_assembly_error("interaction-topology.depth"))?;
+            if matches!(node.component, Component::TreeSection(_)) {
+                stack.try_push(Frame { children: &node.children, next: 0, parent: inherited_parent }).map_err(|_| ui_assembly_error("interaction-topology.depth"))?;
+            } else if matches!(node.component, Component::TreeItem(_)) {
+                ordered.push(protocol::TopologyNode { id: node.key.to_string(), granularity: granularity.to_string(), parent: inherited_parent.as_ref().map(ToString::to_string) });
+                stack.try_push(Frame { children: &node.children, next: 0, parent: Some(node.key.clone()) }).map_err(|_| ui_assembly_error("interaction-topology.depth"))?;
             }
         }
-        protocol::DomainTopology { ordered }
+        Ok(protocol::DomainTopology { ordered })
     }
     //#endregion 🔖️InteractionArgs
 
@@ -5610,31 +5615,35 @@ pub mod app {
     // ~15 plugin crates (flow, procedural, layout, gis, puzzle, sequence, trinity, dag, …) into the SDK.
 
     /// 🌳️ A bare tree item — thin wrapper over [`ui::tree_item`], `id` becoming the row's own key.
-    pub fn tree_item(id: impl Into<String>, label: impl Into<Label>) -> BuiltNode {
-        ui::tree_item(label).id(id).build()
+    pub fn tree_item<I: AsRef<str>, L: TryInto<Label>>(id: I, label: L) -> UiAssemblyResult<BuiltNode> {
+        let builder = ui::tree_item(ui_label(label, "tree-item.label")?);
+        let builder = builder.try_id(id).map_err(|_| ui_assembly_error("tree-item.id"))?;
+        builder.try_build().map_err(|_| ui_assembly_error("tree-item.build"))
     }
 
     /// 🌳️ A tree item with a description line.
-    pub fn tree_item_desc(id: impl Into<String>, label: impl Into<Label>, description: Option<String>) -> BuiltNode {
-        let mut builder = ui::tree_item(label).id(id);
+    pub fn tree_item_desc<I: AsRef<str>, L: TryInto<Label>>(id: I, label: L, description: Option<String>) -> UiAssemblyResult<BuiltNode> {
+        let builder = ui::tree_item(ui_label(label, "tree-item-description.label")?);
+        let mut builder = builder.try_id(id).map_err(|_| ui_assembly_error("tree-item-description.id"))?;
         if let Some(description) = description {
-            builder = builder.description(description);
+            builder = builder.description(ui_text(description, "tree-item-description.description")?);
         }
-        builder.build()
+        builder.try_build().map_err(|_| ui_assembly_error("tree-item-description.build"))
     }
 
     /// 🌳️ A tree item that dispatches `action` on activation while preserving its typed args.
-    pub fn tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, action: (ActionId, Option<UiValue>)) -> BuiltNode {
+    pub fn tree_item_with_action<I: AsRef<str>, L: TryInto<Label>>(id: I, label: L, description: Option<String>, action: (ActionId, Option<UiValue>)) -> UiAssemblyResult<BuiltNode> {
         let (action, args) = action;
-        let mut builder = ui::tree_item(label).id(id);
+        let builder = ui::tree_item(ui_label(label, "tree-item-action.label")?);
+        let mut builder = builder.try_id(id).map_err(|_| ui_assembly_error("tree-item-action.id"))?;
         builder = match args {
-            Some(args) => builder.on_with(Trigger::Activate, action, args),
-            None => builder.on(Trigger::Activate, action),
+            Some(args) => builder.try_on_with(Trigger::Activate, action, args).map_err(|_| ui_assembly_error("tree-item-action.binding"))?,
+            None => builder.try_on(Trigger::Activate, action).map_err(|_| ui_assembly_error("tree-item-action.binding"))?,
         };
         if let Some(description) = description {
-            builder = builder.description(description);
+            builder = builder.description(ui_text(description, "tree-item-action.description")?);
         }
-        builder.build()
+        builder.try_build().map_err(|_| ui_assembly_error("tree-item-action.build"))
     }
 
     /// 🌳️ A draggable tree item: `drag_data` is a JSON object whose entries become the item's
@@ -5642,21 +5651,34 @@ pub mod app {
     /// serialized), e.g. `json!({ "application/x-my-widget": descriptor.to_string() })`. Generalizes the
     /// single-hardcoded-MIME-key pattern duplicated per app (each app previously baked its own MIME
     /// constant into this function) — the caller now supplies the key(s) explicitly.
-    pub fn tree_item_with_action_draggable(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, action: (ActionId, Option<UiValue>), drag_data: &Value) -> BuiltNode {
+    pub fn tree_item_with_action_draggable<I: AsRef<str>, L: TryInto<Label>>(id: I, label: L, description: Option<String>, action: (ActionId, Option<UiValue>), drag_data: &Value) -> UiAssemblyResult<BuiltNode> {
         let (action, args) = action;
-        let mut builder = ui::tree_item(label).id(id);
+        let builder = ui::tree_item(ui_label(label, "draggable-tree-item.label")?);
+        let mut builder = builder.try_id(id).map_err(|_| ui_assembly_error("draggable-tree-item.id"))?;
         builder = match args {
-            Some(args) => builder.on_with(Trigger::Activate, action, args),
-            None => builder.on(Trigger::Activate, action),
+            Some(args) => builder.try_on_with(Trigger::Activate, action, args).map_err(|_| ui_assembly_error("draggable-tree-item.binding"))?,
+            None => builder.try_on(Trigger::Activate, action).map_err(|_| ui_assembly_error("draggable-tree-item.binding"))?,
         }
         .draggable(true);
         if let Some(description) = description {
-            builder = builder.description(description);
+            builder = builder.description(ui_text(description, "draggable-tree-item.description")?);
         }
         if let Some(entries) = drag_data.as_object() {
-            builder = builder.drag_data(entries.iter().map(|(key, value)| (key.clone(), value.as_str().map(str::to_string).unwrap_or_else(|| value.to_string()))).collect());
+            let mut fixed = UiFixedMap::default();
+            let mut last = UiText::default();
+            while fixed.len() < entries.len() {
+                let Some((key, value)) = entries.iter().filter(|(key, _)| key.as_str() > last.as_str()).min_by_key(|(key, _)| key.as_str()) else { break };
+                let key = ui_text(key.clone(), "draggable-tree-item.drag-key")?;
+                let value = ui_text(value.as_str().map(str::to_string).unwrap_or_else(|| value.to_string()), "draggable-tree-item.drag-value")?;
+                last = key.clone();
+                fixed.try_push(key, value).map_err(|_| ui_assembly_error("draggable-tree-item.drag-data"))?;
+            }
+            if fixed.len() != entries.len() {
+                return Err(ui_assembly_error("draggable-tree-item.drag-data"));
+            }
+            builder = builder.drag_data(fixed);
         }
-        builder.build()
+        builder.try_build().map_err(|_| ui_assembly_error("draggable-tree-item.build"))
     }
 
     /// 🎯️ Parses a selection-action's `ids` array arg into a plain `Vec<String>` — the shape used by the
@@ -5687,58 +5709,73 @@ pub mod app {
     /// tree this wave. Framework-owned interaction-domain trees lose the identical capability at
     /// `stamp_and_cache_interaction_ui`, for the identical reason — see that method's own doc comment.
     pub struct PanelTreeBuilder {
-        namespace: String,
-        sections: Vec<BuiltNode>,
-        selected_ids: Option<Vec<String>>,
-        highlighted_ids: Option<Vec<String>>,
-        interaction_domain: Option<String>,
+        namespace: UiText,
+        sections: UiFixedList<BuiltNode>,
+        selected_ids: Option<UiFixedList<UiText>>,
+        highlighted_ids: Option<UiFixedList<UiText>>,
+        interaction_domain: Option<UiText>,
         drop_action: Option<ActionId>,
     }
 
     impl PanelTreeBuilder {
         /// 🌳️ `namespace` prefixes every id built via `.item_id()`, e.g. `"flow-play-document"`.
-        pub fn new(namespace: impl Into<String>) -> Self {
-            Self { namespace: namespace.into(), sections: Vec::new(), selected_ids: None, highlighted_ids: None, interaction_domain: None, drop_action: None }
+        pub fn new(namespace: impl TryInto<UiText>) -> UiAssemblyResult<Self> {
+            Ok(Self { namespace: ui_text(namespace, "panel-tree.namespace")?, sections: UiFixedList::default(), selected_ids: None, highlighted_ids: None, interaction_domain: None, drop_action: None })
         }
 
         /// 🌳️ Builds a namespaced item id: `"{namespace}.{kind}.{id}"`.
-        pub fn item_id(&self, kind: &str, id: &str) -> String {
-            format!("{}.{kind}.{id}", self.namespace)
+        pub fn item_id(&self, kind: &str, id: &str) -> UiAssemblyResult<UiText> {
+            UiText::try_format(format_args!("{}.{kind}.{id}", self.namespace)).ok_or_else(|| ui_assembly_error("panel-tree.item-id"))
         }
 
         /// 🌳️ Adds a section verbatim. ⚠️ Decision: a `None` label becomes an empty [`Label`] —
         /// [`ui::tree_section`] has no optional-label constructor; [`TreeSectionProps::label`] itself
         /// stays `Option` on the record, so only this convenience path loses the "omit entirely"
         /// spelling.
-        pub fn section(mut self, id: impl Into<String>, label: Option<Label>, default_open: bool, items: Vec<BuiltNode>) -> Self {
-            self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
-            self
+        pub fn section<I: AsRef<str>>(mut self, id: I, label: Option<Label>, default_open: bool, items: UiFixedList<BuiltNode>) -> UiAssemblyResult<Self> {
+            let builder = ui::tree_section(label.unwrap_or_default()).default_open(default_open);
+            let builder = builder.try_id(id).map_err(|_| ui_assembly_error("panel-tree.section-id"))?;
+            let builder = builder.try_children(items).map_err(|_| ui_assembly_error("panel-tree.section-items"))?;
+            let node = builder.try_build().map_err(|_| ui_assembly_error("panel-tree.section-build"))?;
+            self.sections.try_push(node).map_err(|_| ui_assembly_error("panel-tree.sections"))?;
+            Ok(self)
         }
 
         /// 🌳️ Adds a section, substituting a single "(none)"-style placeholder item when `items` is empty —
         /// the empty-state pattern duplicated in `build_document_tree`/`build_catalogue_tree` across apps.
-        pub fn section_or_placeholder(mut self, id: impl Into<String>, label: Option<Label>, default_open: bool, items: Vec<BuiltNode>, placeholder_label: impl Into<Label>) -> Self {
-            let id = id.into();
-            let items = if items.is_empty() { vec![tree_item(format!("{id}.empty"), placeholder_label)] } else { items };
-            self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
-            self
+        pub fn section_or_placeholder<I: AsRef<str>, L: TryInto<Label>>(self, id: I, label: Option<Label>, default_open: bool, mut items: UiFixedList<BuiltNode>, placeholder_label: L) -> UiAssemblyResult<Self> {
+            if items.is_empty() {
+                let empty_id = UiText::try_format(format_args!("{}.empty", id.as_ref())).ok_or_else(|| ui_assembly_error("panel-tree.placeholder-id"))?;
+                items.try_push(tree_item(empty_id, placeholder_label)?).map_err(|_| ui_assembly_error("panel-tree.placeholder"))?;
+            }
+            self.section(id, label, default_open, items)
         }
 
-        pub fn selected(mut self, ids: Vec<String>) -> Self {
-            self.selected_ids = Some(ids);
-            self
+        pub fn selected<I: IntoIterator<Item = String>>(mut self, ids: I) -> UiAssemblyResult<Self> {
+            let mut admitted = UiFixedList::default();
+            for id in ids {
+                let id = ui_text(id, "panel-tree.selected-id")?;
+                admitted.try_push(id).map_err(|_| ui_assembly_error("panel-tree.selected"))?;
+            }
+            self.selected_ids = Some(admitted);
+            Ok(self)
         }
 
-        pub fn highlighted(mut self, ids: Vec<String>) -> Self {
-            self.highlighted_ids = Some(ids);
-            self
+        pub fn highlighted<I: IntoIterator<Item = String>>(mut self, ids: I) -> UiAssemblyResult<Self> {
+            let mut admitted = UiFixedList::default();
+            for id in ids {
+                let id = ui_text(id, "panel-tree.highlighted-id")?;
+                admitted.try_push(id).map_err(|_| ui_assembly_error("panel-tree.highlighted"))?;
+            }
+            self.highlighted_ids = Some(admitted);
+            Ok(self)
         }
 
         /// 🕹️ Binds the built tree to an app-declared `InteractionDefinition` domain id — the framework
         /// then owns this domain's selection/hover, replacing the deleted per-app `selection_change` action.
-        pub fn interaction_domain(mut self, id: impl Into<String>) -> Self {
-            self.interaction_domain = Some(id.into());
-            self
+        pub fn interaction_domain(mut self, id: impl TryInto<UiText>) -> UiAssemblyResult<Self> {
+            self.interaction_domain = Some(ui_text(id, "panel-tree.interaction-domain")?);
+            Ok(self)
         }
 
         pub fn drop_action(mut self, action: ActionId) -> Self {
@@ -5748,15 +5785,16 @@ pub mod app {
 
         /// 🌳️ Terminal — see this struct's own doc for why `.selected()`/`.highlighted()` no longer
         /// reach the built tree this wave.
-        pub fn build(self) -> BuiltNode {
-            let mut builder = ui::tree().id(self.namespace).children(self.sections);
+        pub fn build(self) -> UiAssemblyResult<BuiltNode> {
+            let builder = ui::tree().try_id(&self.namespace).map_err(|_| ui_assembly_error("panel-tree.root-id"))?;
+            let mut builder = builder.try_children(self.sections).map_err(|_| ui_assembly_error("panel-tree.root-sections"))?;
             if let Some(domain) = self.interaction_domain {
                 builder = builder.interaction_domain(domain);
             }
             if let Some(action) = self.drop_action {
-                builder = builder.on(Trigger::Drop, action);
+                builder = builder.try_on(Trigger::Drop, action).map_err(|_| ui_assembly_error("panel-tree.drop-binding"))?;
             }
-            builder.build()
+            builder.try_build().map_err(|_| ui_assembly_error("panel-tree.root-build"))
         }
     }
 
@@ -5766,7 +5804,7 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn tree_item_builds_a_bare_item() {
-            let item = tree_item("ns.kind.a", "A");
+            let item = tree_item("ns.kind.a", "A").expect("bounded fixture");
             assert_eq!(item.key, "ns.kind.a");
             let Component::TreeItem(props) = &item.component else { panic!("expected a TreeItem") };
             assert_eq!(props.label.0, "A");
@@ -5776,11 +5814,11 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn tree_item_with_action_draggable_maps_json_object_to_string_drag_data() {
-            let action = ActionId::v1("app", "addWidget");
-            let item = tree_item_with_action_draggable("ns.kind.a", "A", None, (action, None), &serde_json::json!({ "application/x-widget": "{\"kind\":\"a\"}" }));
+            let action = ActionId::try_v1("app", "addWidget").expect("bounded fixture");
+            let item = tree_item_with_action_draggable("ns.kind.a", "A", None, (action, None), &serde_json::json!({ "application/x-widget": "{\"kind\":\"a\"}" })).expect("bounded fixture");
             let Component::TreeItem(props) = &item.component else { panic!("expected a TreeItem") };
             assert_eq!(props.draggable, Some(true));
-            assert_eq!(props.drag_data.as_ref().unwrap().get("application/x-widget").map(String::as_str), Some("{\"kind\":\"a\"}"));
+            assert!(props.drag_data.as_ref().unwrap().iter().any(|(key, value)| key.as_str() == "application/x-widget" && value.as_str() == "{\"kind\":\"a\"}"));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -5792,15 +5830,16 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn panel_tree_builder_produces_a_namespaced_tree_with_placeholder() {
-            let builder = PanelTreeBuilder::new("ns-play-document");
-            let item_id = builder.item_id("widget", "w1");
+            let builder = PanelTreeBuilder::new("ns-play-document").expect("bounded fixture");
+            let item_id = builder.item_id("widget", "w1").expect("bounded fixture");
             assert_eq!(item_id, "ns-play-document.widget.w1");
-            let node = builder
-                .section("ns-play-document.widgets", Some(Label::from("Widgets")), true, vec![tree_item(item_id, "W1")])
-                .section_or_placeholder("ns-play-document.synapses", Some(Label::from("Synapses")), false, vec![], "(none)")
-                .selected(vec!["ns-play-document.widget.w1".into()])
-                .interaction_domain("ns-play-document")
-                .build();
+            let mut items = UiFixedList::default();
+            items.try_push(tree_item(item_id, "W1").expect("bounded fixture")).expect("bounded fixture");
+            let builder = builder.section("ns-play-document.widgets", Some(Label::try_from("Widgets").expect("bounded fixture")), true, items).expect("bounded fixture");
+            let builder = builder.section_or_placeholder("ns-play-document.synapses", Some(Label::try_from("Synapses").expect("bounded fixture")), false, UiFixedList::default(), "(none)").expect("bounded fixture");
+            let builder = builder.selected(["ns-play-document.widget.w1".to_string()]).expect("bounded fixture");
+            let builder = builder.interaction_domain("ns-play-document").expect("bounded fixture");
+            let node = builder.build().expect("bounded fixture");
             assert_eq!(node.children.len(), 2);
             let Component::TreeSection(_) = &node.children[0].component else { panic!("expected a TreeSection") };
             assert_eq!(node.children[0].children.len(), 1);
@@ -5821,20 +5860,20 @@ pub mod app {
     /// 📋️ Fluent builder for a `Section` of labeled `Field` rows ending in an optional submit `Button` —
     /// same namespaced-id / method-chaining shape as `PanelTreeBuilder`.
     pub struct FormPanelBuilder {
-        namespace: String,
-        fields: Vec<BuiltNode>,
+        namespace: UiText,
+        fields: UiFixedList<BuiltNode>,
         submit: Option<BuiltNode>,
     }
 
     impl FormPanelBuilder {
         /// 📋️ `namespace` prefixes every field id built via `.field_id()`/`.field()`/`.from_dictionary()`.
-        pub async fn new(namespace: impl Into<String>) -> Self {
-            Self { namespace: namespace.into(), fields: Vec::new(), submit: None }
+        pub async fn new(namespace: impl TryInto<UiText>) -> UiAssemblyResult<Self> {
+            Ok(Self { namespace: ui_text(namespace, "form-panel.namespace")?, fields: UiFixedList::default(), submit: None })
         }
 
         /// 📋️ Builds a namespaced field id: `"{namespace}.field.{id}"` — mirrors `PanelTreeBuilder::item_id`.
-        pub async fn field_id(&self, id: &str) -> String {
-            format!("{}.field.{id}", self.namespace)
+        pub async fn field_id(&self, id: &str) -> UiAssemblyResult<UiText> {
+            UiText::try_format(format_args!("{}.field.{id}", self.namespace)).ok_or_else(|| ui_assembly_error("form-panel.field-id"))
         }
 
         /// 📋️ Adds one labeled field row: `control` is any already-built child node. The old
@@ -5842,14 +5881,17 @@ pub mod app {
         /// call: every one of its variants is already a `Component` variant in its own right, so a
         /// control-as-child needs no separate wrapper type) — callers build `control` with the plain
         /// `ui::*` DSL (`ui::input(..).build()`, `ui::toggle(..).build()`, …) instead.
-        pub async fn field(mut self, id: &str, label: impl Into<Label>, description: Option<String>, control: BuiltNode) -> Self {
-            let field_id = self.field_id(id).await;
-            let mut builder = ui::field(label).id(field_id).child(control);
+        pub async fn field<L: TryInto<Label>>(mut self, id: &str, label: L, description: Option<String>, control: BuiltNode) -> UiAssemblyResult<Self> {
+            let field_id = self.field_id(id).await?;
+            let builder = ui::field(ui_label(label, "form-panel.field-label")?);
+            let builder = builder.try_id(&field_id).map_err(|_| ui_assembly_error("form-panel.field-id"))?;
+            let mut builder = builder.try_child(control).map_err(|_| ui_assembly_error("form-panel.field-control"))?;
             if let Some(description) = description {
-                builder = builder.description(description);
+                builder = builder.description(ui_text(description, "form-panel.field-description")?);
             }
-            self.fields.push(builder.build());
-            self
+            let field = builder.try_build().map_err(|_| ui_assembly_error("form-panel.field-build"))?;
+            self.fields.try_push(field).map_err(|_| ui_assembly_error("form-panel.fields"))?;
+            Ok(self)
         }
 
         /// 📋️ Routes the OS `form.dictionary` resource shape (see the `ArtifactKindSpec { id:
@@ -5858,27 +5900,34 @@ pub mod app {
         /// `dictionary_json` array — `{ "id", "label"?, "description"?, "value"? }` — becomes one field
         /// dispatching the shared `on_change` action (its `args` are left to the caller; the emitted input's
         /// own id already carries which field changed).
-        pub async fn from_dictionary(mut self, dictionary_json: &Value, on_change: ActionId) -> Self {
-            let Some(entries) = dictionary_json.as_array() else { return self };
+        pub async fn from_dictionary(mut self, dictionary_json: &Value, on_change: ActionId) -> UiAssemblyResult<Self> {
+            let Some(entries) = dictionary_json.as_array() else { return Ok(self) };
             for entry in entries {
                 let Some(id) = entry.get("id").and_then(Value::as_str) else { continue };
-                let label = entry.get("label").and_then(Value::as_str).unwrap_or(id).to_string();
+                let label = ui_label(entry.get("label").and_then(Value::as_str).unwrap_or(id), "form-panel.dictionary-label")?;
                 let description = entry.get("description").and_then(Value::as_str).map(str::to_string);
-                let value = entry.get("value").and_then(Value::as_str).unwrap_or_default().to_string();
-                let field_id = self.field_id(id).await;
-                let control = ui::input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
-                self = self.field(id, label, description, control).await;
+                let value = ui_text(entry.get("value").and_then(Value::as_str).unwrap_or_default(), "form-panel.dictionary-value")?;
+                let field_id = self.field_id(id).await?;
+                let builder = ui::input(InputKind::Text).value(value);
+                let builder = builder.try_id(&field_id).map_err(|_| ui_assembly_error("form-panel.dictionary-id"))?;
+                let builder = builder.try_on(Trigger::Change, on_change.clone()).map_err(|_| ui_assembly_error("form-panel.dictionary-binding"))?;
+                let control = builder.try_build().map_err(|_| ui_assembly_error("form-panel.dictionary-control"))?;
+                self = self.field(id, label, description, control).await?;
             }
-            self
+            Ok(self)
         }
 
         /// 📋️ Sets the trailing submit `Button` row. ⚠️ Decision: narrowed from `action: ActionDescriptor`
         /// to a bare [`ActionId`] bound as [`Trigger::Activate`] — same call as `tree_item_with_action`'s,
         /// same reasoning (see that function's doc).
-        pub async fn submit(mut self, label: impl Into<Label>, action: ActionId) -> Self {
-            let id = self.field_id("submit").await;
-            self.submit = Some(ui::button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
-            self
+        pub async fn submit<L: TryInto<Label>>(mut self, label: L, action: ActionId) -> UiAssemblyResult<Self> {
+            let id = self.field_id("submit").await?;
+            let icon = ui_text(IconName::CircleDot.as_str(), "form-panel.submit-icon")?;
+            let builder = ui::button(ui_label(label, "form-panel.submit-label")?).icon(icon);
+            let builder = builder.try_id(&id).map_err(|_| ui_assembly_error("form-panel.submit-id"))?;
+            let builder = builder.try_on(Trigger::Activate, action).map_err(|_| ui_assembly_error("form-panel.submit-binding"))?;
+            self.submit = Some(builder.try_build().map_err(|_| ui_assembly_error("form-panel.submit-build"))?);
+            Ok(self)
         }
 
         /// 📋️ Builds `Fields -> optional submit Button` under one wrapper, id'd by the builder's
@@ -5888,12 +5937,13 @@ pub mod app {
         /// an empty label through it would be the wrong component, not a faithful rename. `default_open`
         /// is dropped for the same reason — it only means something on a collapsible header this wrapper
         /// no longer has.
-        pub async fn build(self) -> BuiltNode {
-            let mut builder = ui::column().id(self.namespace).children(self.fields);
+        pub async fn build(self) -> UiAssemblyResult<BuiltNode> {
+            let builder = ui::column().try_id(&self.namespace).map_err(|_| ui_assembly_error("form-panel.root-id"))?;
+            let mut builder = builder.try_children(self.fields).map_err(|_| ui_assembly_error("form-panel.fields"))?;
             if let Some(submit) = self.submit {
-                builder = builder.child(submit);
+                builder = builder.try_child(submit).map_err(|_| ui_assembly_error("form-panel.submit"))?;
             }
-            builder.build()
+            builder.try_build().map_err(|_| ui_assembly_error("form-panel.root-build"))
         }
     }
 
@@ -5902,25 +5952,25 @@ pub mod app {
     /// verbatim: `Component::KeyValueList` has no `ui::*` builder yet (§4), so its `BuiltNode` is
     /// hand-assembled; `actions` takes already-built nodes (`Vec<BuiltNode>`) rather than a bare props
     /// struct, since a `Component::Button`'s `action`/`style` now live on the node, not `ButtonProps`.
-    pub async fn entity_detail(title: impl Into<Label>, subtitle: Option<Label>, entries: Vec<KeyValueEntry>, actions: Vec<BuiltNode>) -> BuiltNode {
-        let mut children = vec![ui::text(title).build()];
+    pub async fn entity_detail<L: TryInto<Label>, E: IntoIterator<Item = KeyValueEntry>, A: IntoIterator<Item = BuiltNode>>(title: L, subtitle: Option<Label>, entries: E, actions: A) -> UiAssemblyResult<BuiltNode> {
+        let mut children = UiFixedList::default();
+        let title = ui::text(ui_label(title, "entity-detail.title")?).try_build().map_err(|_| ui_assembly_error("entity-detail.title-build"))?;
+        children.try_push(title).map_err(|_| ui_assembly_error("entity-detail.children"))?;
         if let Some(subtitle) = subtitle {
-            children.push(ui::text(subtitle).build());
+            let subtitle = ui::text(subtitle).try_build().map_err(|_| ui_assembly_error("entity-detail.subtitle-build"))?;
+            children.try_push(subtitle).map_err(|_| ui_assembly_error("entity-detail.children"))?;
         }
-        children.push(BuiltNode {
-            key: "summary".into(),
-            component: Component::KeyValueList(KeyValueListProps { entries }),
-            layout: Default::default(),
-            style: Default::default(),
-            activity: Default::default(),
-            disabled: false,
-            accessibility: Default::default(),
-            bindings: Vec::new(),
-            menu: None,
-            children: Vec::new(),
-        });
-        children.extend(actions);
-        ui::column().children(children).build()
+        let mut fixed_entries = UiFixedList::default();
+        for entry in entries {
+            fixed_entries.try_push(entry).map_err(|_| ui_assembly_error("entity-detail.entries"))?;
+        }
+        let summary = BuiltNode::try_new("summary", Component::KeyValueList(KeyValueListProps { entries: fixed_entries })).map_err(|_| ui_assembly_error("entity-detail.summary"))?;
+        children.try_push(summary).map_err(|_| ui_assembly_error("entity-detail.children"))?;
+        for action in actions {
+            children.try_push(action).map_err(|_| ui_assembly_error("entity-detail.actions"))?;
+        }
+        let builder = ui::column().try_children(children).map_err(|_| ui_assembly_error("entity-detail.children"))?;
+        builder.try_build().map_err(|_| ui_assembly_error("entity-detail.build"))
     }
 
     #[cfg(test)]
@@ -5929,10 +5979,16 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn form_panel_builder_wraps_a_field_control_and_submit_button() {
-            let on_change = ActionId::v1("app", "setValue");
-            let submit_action = ActionId::v1("app", "submit");
-            let control = ui::input(InputKind::Text).id("ns-play-form.field.name").on(Trigger::Change, on_change).build();
-            let node = FormPanelBuilder::new("ns-play-form").await.field("name", "Name", Some("Full name".into()), control).await.submit("Submit", submit_action).await.build().await;
+            let on_change = ActionId::try_v1("app", "setValue").expect("bounded fixture");
+            let submit_action = ActionId::try_v1("app", "submit").expect("bounded fixture");
+            let control = ui::input(InputKind::Text)
+                .try_id("ns-play-form.field.name").expect("bounded fixture")
+                .try_on(Trigger::Change, on_change).expect("bounded fixture")
+                .try_build().expect("bounded fixture");
+            let builder = FormPanelBuilder::new("ns-play-form").await.expect("bounded fixture");
+            let builder = builder.field("name", "Name", Some("Full name".into()), control).await.expect("bounded fixture");
+            let builder = builder.submit("Submit", submit_action).await.expect("bounded fixture");
+            let node = builder.build().await.expect("bounded fixture");
             assert_eq!(node.key, "ns-play-form");
             assert_eq!(node.children.len(), 2);
             let field = &node.children[0];
@@ -5945,12 +6001,14 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn form_panel_builder_from_dictionary_routes_entries_into_field_rows() {
-            let on_change = ActionId::v1("app", "setValue");
+            let on_change = ActionId::try_v1("app", "setValue").expect("bounded fixture");
             let dictionary = serde_json::json!([
                 { "id": "email", "label": "Email", "description": "Contact email", "value": "a@b.com" },
                 { "id": "phone" },
             ]);
-            let node = FormPanelBuilder::new("ns-play-form").await.from_dictionary(&dictionary, on_change).await.build().await;
+            let builder = FormPanelBuilder::new("ns-play-form").await.expect("bounded fixture");
+            let builder = builder.from_dictionary(&dictionary, on_change).await.expect("bounded fixture");
+            let node = builder.build().await.expect("bounded fixture");
             assert_eq!(node.children.len(), 2);
             let email_field = &node.children[0];
             assert_eq!(email_field.key, "ns-play-form.field.email");
@@ -5962,8 +6020,13 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn entity_detail_builds_a_stack_with_header_key_value_and_actions() {
-            let action = ActionId::v1("app", "edit");
-            let node = entity_detail("Widget", Some(Label::from("A widget")), vec![KeyValueEntry { label: Label::from("Kind"), value: "gizmo".into() }], vec![ui::button("Edit").icon("edit").on(Trigger::Activate, action).build()]).await;
+            let action = ActionId::try_v1("app", "edit").expect("bounded fixture");
+            let button = ui::button(Label::try_from("Edit").expect("bounded fixture"))
+                .icon(UiText::try_from_str("edit").expect("bounded fixture"))
+                .try_on(Trigger::Activate, action).expect("bounded fixture")
+                .try_build().expect("bounded fixture");
+            let entry = KeyValueEntry { label: Label::try_from("Kind").expect("bounded fixture"), value: UiText::try_from_str("gizmo").expect("bounded fixture") };
+            let node = entity_detail("Widget", Some(Label::try_from("A widget").expect("bounded fixture")), [entry], [button]).await.expect("bounded fixture");
             assert_eq!(node.children.len(), 4);
             let Component::KeyValueList(key_value) = &node.children[2].component else { panic!("expected a KeyValue node") };
             assert_eq!(key_value.entries[0].value, "gizmo");
@@ -6112,39 +6175,20 @@ pub mod app {
     // optional_json_to_dsl(args) } }` body — every app keeps its own locally-named wrapper (so call
     // sites never change), delegating to `ActionFactory::new(X_CONTROLLER_ID).action(action, args)`.
 
-    /// 🔄️ `dsl::DslValue` → `ui_contract::UiValue`: both are structurally identical closed JSON-value
-    /// enums (`DslValue::Object`'s `Vec<(String, DslValue)>` collapses into `UiValue::Map`'s
-    /// `BTreeMap`, re-sorting by key — order was never significant on either side, both are keyed
-    /// lookups). Needed at every SDK helper that still receives the old kernel `DslValue` for an
-    /// `ActionBinding.args` payload; the contract crate itself must never depend on `DslValue` (see
-    /// `🦀️action.rs`'s own `UiValue` doc), so this conversion lives here at the boundary, not there.
-    // 🚫️async: E1-adjacent pure recursive structural transform consumed by sync `ActionBinding` call sites
-    fn dsl_value_to_ui_value(value: DslValue) -> UiValue {
-        match value {
-            DslValue::Null => UiValue::Null,
-            DslValue::Bool(value) => UiValue::Bool(value),
-            DslValue::Number(value) => UiValue::Number(value),
-            DslValue::String(value) => UiValue::Text(value),
-            DslValue::Array(values) => UiValue::List(values.into_iter().map(dsl_value_to_ui_value).collect()),
-            DslValue::Object(entries) => UiValue::Map(entries.into_iter().map(|(key, value)| (key, dsl_value_to_ui_value(value))).collect()),
-        }
-    }
-
     /// 🔄️ M1 (ticket 26/08/17 `design-unified.md`): `ui_contract::UiValue` → `serde_json::Value` —
-    /// the mirror-image fold of `dsl_value_to_ui_value` above, placed beside it per the same "both are
-    /// structurally identical closed JSON-value shapes, conversion lives at the SDK boundary" reasoning
+    /// the JSON fold for the typed intent bridge, placed at the SDK boundary so the contract remains
     /// (the contract crate must never depend on `serde_json` — see `UiValue`'s own doc in
     /// `🦀️action.rs`). Needed by `command_from_intent`'s default bridge: `ActionBinding.args`/the
     /// trigger's `input` are `UiValue`, but `ArtifactApp::command_from_action` takes `Option<&Value>`.
-    // 🚫️async: E1-adjacent pure recursive structural transform — see `dsl_value_to_ui_value`'s own tag.
+    // 🚫️async: E1-adjacent pure structural transform consumed by typed intent dispatch.
     fn ui_value_to_json(value: &UiValue) -> Value {
         match value {
             UiValue::Null => Value::Null,
             UiValue::Bool(value) => Value::Bool(*value),
             UiValue::Number(value) => serde_json::Number::from_f64(*value).map(Value::Number).unwrap_or(Value::Null),
-            UiValue::Text(value) => Value::String(value.clone()),
-            UiValue::List(values) => Value::Array(values.iter().map(ui_value_to_json).collect()),
-            UiValue::Map(entries) => Value::Object(entries.iter().map(|(key, value)| (key.clone(), ui_value_to_json(value))).collect()),
+            UiValue::Text(value) => Value::String(value.to_string()),
+            UiValue::List(values) => Value::Array(values.iter().map(|value| ui_value_to_json(&value)).collect()),
+            UiValue::Map(entries) => Value::Object(entries.iter().map(|(key, value)| (key.to_string(), ui_value_to_json(&value))).collect()),
         }
     }
 
@@ -6154,7 +6198,7 @@ pub mod app {
     /// more recent datum); otherwise a present `input` replaces `args` wholesale (a scalar `input`,
     /// e.g. `Trigger::Delta`'s signed step count, has no field to merge INTO). `None` when neither is
     /// set, matching `command_from_action`'s existing `None` (no-args) call shape.
-    // 🚫️async: E1-adjacent pure recursive structural transform — see `dsl_value_to_ui_value`'s own tag.
+    // 🚫️async: E1-adjacent pure structural transform consumed by typed intent dispatch.
     fn merge_ui_values(args: Option<&UiValue>, input: Option<&UiValue>) -> Option<Value> {
         match (args.map(ui_value_to_json), input.map(ui_value_to_json)) {
             (None, None) => None,
@@ -6175,8 +6219,8 @@ pub mod app {
     /// (`ActionId`) from "when" (`Trigger`, chosen wherever `.on`/`.on_with` is actually called on a
     /// node builder) — a factory scoped only to one controller cannot know the trigger, so trigger
     /// selection stays out of scope here too. `args` is still accepted and converted
-    /// (`dsl_value_to_ui_value`), just returned alongside the id rather than folded into one struct —
-    /// call `.on_with(trigger, id, args)` when `args.is_some()`, `.on(trigger, id)` otherwise.
+    /// (`UiValue`), just returned alongside the id rather than folded into one struct — call
+    /// `.on_with(trigger, id, args)` when `args.is_some()`, `.on(trigger, id)` otherwise.
     pub struct ActionFactory {
         controller_id: &'static str,
     }
@@ -6186,8 +6230,9 @@ pub mod app {
             Self { controller_id }
         }
 
-        pub fn action(&self, action: &str, args: Option<Value>) -> (ActionId, Option<UiValue>) {
-            (ActionId::v1(self.controller_id, action), semio_framework::optional_json_to_dsl(args).map(dsl_value_to_ui_value))
+        pub fn action(&self, action: &str, args: Option<UiValue>) -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
+            let id = ActionId::try_v1(self.controller_id, action).ok_or_else(|| ui_assembly_error("action-factory.id"))?;
+            Ok((id, args))
         }
     }
     //#endregion 🔖️ActionFactory
@@ -6201,16 +6246,36 @@ pub mod app {
     mod merge_ui_values_tests {
         use super::*;
 
+        fn ui_text(value: &str) -> ui_contract::UiText {
+            ui_contract::UiText::try_from_str(value).expect("bounded fixture text")
+        }
+
+        fn ui_list(values: impl IntoIterator<Item = UiValue>) -> ui_contract::UiList {
+            let mut builder = ui_contract::UiListBuilder::try_new().expect("fixed list builder");
+            for value in values {
+                builder.push(value).expect("fixed list page");
+            }
+            builder.finish()
+        }
+
+        fn ui_map(entries: impl IntoIterator<Item = (String, UiValue)>) -> ui_contract::UiMap {
+            let mut builder = ui_contract::UiMapBuilder::try_new().expect("fixed map builder");
+            for (key, value) in entries {
+                builder.push(key, value).expect("ascending fixed map page");
+            }
+            builder.finish()
+        }
+
         #[test]
         fn every_ui_value_shape_folds_to_the_matching_json_shape() {
             assert_eq!(ui_value_to_json(&UiValue::Null), Value::Null);
             assert_eq!(ui_value_to_json(&UiValue::Bool(true)), Value::Bool(true));
             assert_eq!(ui_value_to_json(&UiValue::Number(-2.5)), serde_json::json!(-2.5));
-            assert_eq!(ui_value_to_json(&UiValue::Text("hi".into())), Value::String("hi".into()));
-            assert_eq!(ui_value_to_json(&UiValue::List(vec![UiValue::Number(1.0), UiValue::Bool(false)])), serde_json::json!([1.0, false]));
+            assert_eq!(ui_value_to_json(&UiValue::Text(ui_text("hi"))), Value::String("hi".into()));
+            assert_eq!(ui_value_to_json(&UiValue::List(ui_list([UiValue::Number(1.0), UiValue::Bool(false)]))), serde_json::json!([1.0, false]));
             let mut map = std::collections::BTreeMap::new();
-            map.insert("id".to_string(), UiValue::Text("w1".into()));
-            assert_eq!(ui_value_to_json(&UiValue::Map(map)), serde_json::json!({ "id": "w1" }));
+            map.insert("id".to_string(), UiValue::Text(ui_text("w1")));
+            assert_eq!(ui_value_to_json(&UiValue::Map(ui_map(map))), serde_json::json!({ "id": "w1" }));
         }
 
         #[test]
@@ -6220,7 +6285,7 @@ pub mod app {
 
         #[test]
         fn merge_ui_values_falls_back_to_whichever_single_side_is_set() {
-            assert_eq!(merge_ui_values(Some(&UiValue::Text("a".into())), None), Some(serde_json::json!("a")));
+            assert_eq!(merge_ui_values(Some(&UiValue::Text(ui_text("a"))), None), Some(serde_json::json!("a")));
             assert_eq!(merge_ui_values(None, Some(&UiValue::Number(3.0))), Some(serde_json::json!(3.0)));
         }
 
@@ -6229,10 +6294,14 @@ pub mod app {
         fn merge_ui_values_prefers_input_on_key_collision_between_two_maps() {
             let mut args_map = std::collections::BTreeMap::new();
             args_map.insert("value".to_string(), UiValue::Number(1.0));
-            args_map.insert("scope".to_string(), UiValue::Text("keep".into()));
+            args_map.insert("scope".to_string(), UiValue::Text(ui_text("keep")));
             let mut input_map = std::collections::BTreeMap::new();
             input_map.insert("value".to_string(), UiValue::Number(2.0));
-            let merged = merge_ui_values(Some(&UiValue::Map(args_map)), Some(&UiValue::Map(input_map))).expect("both sides set");
+            let merged = merge_ui_values(
+                Some(&UiValue::Map(ui_map(args_map))),
+                Some(&UiValue::Map(ui_map(input_map))),
+            )
+            .expect("both sides set");
             assert_eq!(merged, serde_json::json!({ "value": 2.0, "scope": "keep" }));
         }
 
@@ -6240,7 +6309,7 @@ pub mod app {
         /// `Trigger::Delta`'s signed step count next to a non-object `args`).
         #[test]
         fn merge_ui_values_replaces_a_non_object_args_wholesale_when_input_is_also_set() {
-            let merged = merge_ui_values(Some(&UiValue::Text("stale".into())), Some(&UiValue::Number(-2.0)));
+            let merged = merge_ui_values(Some(&UiValue::Text(ui_text("stale"))), Some(&UiValue::Number(-2.0)));
             assert_eq!(merged, Some(serde_json::json!(-2.0)));
         }
     }
@@ -6663,11 +6732,8 @@ pub mod app {
                     }
                 }
 
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
-                        "text",
-                        semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
-                    ))
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+                    built_text_node("text", format!("count={}", doc.snapshot.count)).map(semio_framework_ui_runtime::ComponentTree::new)
                 }
             }
 
@@ -6932,11 +6998,8 @@ pub mod app {
                     }
                 }
 
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
-                        "text",
-                        semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
-                    ))
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+                    built_text_node("text", format!("count={}", doc.snapshot.count)).map(semio_framework_ui_runtime::ComponentTree::new)
                 }
             }
 
@@ -7320,11 +7383,8 @@ pub mod app {
                     }
                 }
 
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
-                        "text",
-                        semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
-                    ))
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+                    built_text_node("text", format!("count={}", doc.snapshot.count)).map(semio_framework_ui_runtime::ComponentTree::new)
                 }
             }
 
@@ -7358,11 +7418,8 @@ pub mod app {
                     Ok(ViewEmit::default())
                 }
 
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
-                    semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
-                        "text",
-                        semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
-                    ))
+                async fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+                    built_text_node("text", format!("count={}", doc.snapshot.count)).map(semio_framework_ui_runtime::ComponentTree::new)
                 }
             }
 
@@ -10428,10 +10485,6 @@ pub mod app {
     //#endregion 🔖️CommandLog
 
     //#region 🔖️HistoryPanel
-    /// @emoji 🔢️ Newest-rendered rows in `ui_history_panel` — the log itself stays complete, only display
-    /// is capped, matching the "no silent caps" convention (never truncates data, only the view).
-    const HISTORY_PANEL_ROW_LIMIT: usize = 300;
-
     async fn history_panel_icon_id(kind: ActionKind) -> IconName {
         match kind {
             ActionKind::Mutation => IconName::Pencil,
@@ -10454,11 +10507,19 @@ pub mod app {
     /// per-command "Backwards" revert action is omitted entirely, regardless of `can_undo`/`can_redo`
     /// or `entry.revertible` — the filter control and Commands list themselves stay fully live, since
     /// browsing history is not a mutation.
-    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool) -> BuiltNode {
-        let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| {
+    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool) -> UiAssemblyResult<BuiltNode> {
+        let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| -> UiAssemblyResult<BuiltNode> {
             let label = if is_de { label_de } else { label_en };
-            let button = ui::button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_id, action)).disabled(!enabled).build();
-            ui::tree_item(label).id(id).icon(icon_id.as_str()).disabled(!enabled).child(button).build()
+            let action = ActionId::try_v1(controller_id, action).ok_or_else(|| ui_assembly_error("history-panel.action-id"))?;
+            let button_id = UiText::try_format(format_args!("{id}.run")).ok_or_else(|| ui_assembly_error("history-panel.button-id"))?;
+            let icon = ui_text(icon_id.as_str(), "history-panel.icon")?;
+            let builder = ui::button(ui_label(label, "history-panel.button-label")?).icon(icon.clone()).disabled(!enabled);
+            let builder = builder.try_id(&button_id).map_err(|_| ui_assembly_error("history-panel.button-id"))?;
+            let button = builder.try_on(Trigger::Activate, action).map_err(|_| ui_assembly_error("history-panel.button-binding"))?.try_build().map_err(|_| ui_assembly_error("history-panel.button-build"))?;
+            let builder = ui::tree_item(ui_label(label, "history-panel.item-label")?).icon(icon).disabled(!enabled);
+            let builder = builder.try_id(id).map_err(|_| ui_assembly_error("history-panel.item-id"))?;
+            let builder = builder.try_child(button).map_err(|_| ui_assembly_error("history-panel.item-child"))?;
+            builder.try_build().map_err(|_| ui_assembly_error("history-panel.item-build"))
         };
 
         let filter_value = match history.command_filter {
@@ -10466,16 +10527,24 @@ pub mod app {
             HistoryCommandFilter::WithoutMutations => "withoutMutations",
             HistoryCommandFilter::OnlyMutations => "onlyMutations",
         };
-        let filter_select = ui::select(filter_value)
-            .id("framework.history.filter.control")
-            .item("all", if is_de { "Alle" } else { "All" })
-            .item("withoutMutations", if is_de { "Ohne Operationen" } else { "Without Operations" })
-            .item("onlyMutations", if is_de { "Nur Operationen" } else { "Only Operations" })
-            .on(Trigger::Change, ActionId::v1(controller_id, SET_HISTORY_COMMAND_FILTER_ACTION_ID))
-            .build();
-        let filter_item = ui::tree_item("Filter").id("framework.history.filter").icon(IconName::Filter.as_str()).child(filter_select).build();
+        let mut filter_builder = ui::select(ui_text(filter_value, "history-panel.filter-value")?);
+        for (value, label) in [
+            ("all", if is_de { "Alle" } else { "All" }),
+            ("withoutMutations", if is_de { "Ohne Operationen" } else { "Without Operations" }),
+            ("onlyMutations", if is_de { "Nur Operationen" } else { "Only Operations" }),
+        ] {
+            filter_builder = filter_builder
+                .try_item(ui_text(value, "history-panel.filter-item-value")?, ui_label(label, "history-panel.filter-item-label")?)
+                .map_err(|_| ui_assembly_error("history-panel.filter-items"))?;
+        }
+        let filter_builder = filter_builder.try_id("framework.history.filter.control").map_err(|_| ui_assembly_error("history-panel.filter-id"))?;
+        let filter_action = ActionId::try_v1(controller_id, SET_HISTORY_COMMAND_FILTER_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.filter-action"))?;
+        let filter_select = filter_builder.try_on(Trigger::Change, filter_action).map_err(|_| ui_assembly_error("history-panel.filter-binding"))?.try_build().map_err(|_| ui_assembly_error("history-panel.filter-build"))?;
+        let filter_builder = ui::tree_item(ui_label("Filter", "history-panel.filter-label")?).icon(ui_text(IconName::Filter.as_str(), "history-panel.filter-icon")?);
+        let filter_builder = filter_builder.try_id("framework.history.filter").map_err(|_| ui_assembly_error("history-panel.filter-item-id"))?;
+        let filter_item = filter_builder.try_child(filter_select).map_err(|_| ui_assembly_error("history-panel.filter-child"))?.try_build().map_err(|_| ui_assembly_error("history-panel.filter-item-build"))?;
 
-        let mut command_items: Vec<BuiltNode> = Vec::new();
+        let mut command_items = UiFixedList::default();
         for entry in history
             .commands
             .iter()
@@ -10484,47 +10553,63 @@ pub mod app {
                 HistoryCommandFilter::WithoutMutations => entry.edit_id.is_none(),
                 HistoryCommandFilter::OnlyMutations => entry.edit_id.is_some(),
             })
-            .take(HISTORY_PANEL_ROW_LIMIT)
         {
             // 🔢️ A folded row (`count > 1`) shows "Label xN" instead of the bare label.
-            let label = if entry.count > 1 { format!("{} x{}", entry.label, entry.count) } else { entry.label.clone() };
-            let mut builder = ui::tree_item(label).id(format!("framework.history.entry.{}", entry.seq)).icon(history_panel_icon_id(entry.kind).await.as_str());
+            let label = if entry.count > 1 {
+                UiText::try_format(format_args!("{} x{}", entry.label, entry.count)).ok_or_else(|| ui_assembly_error("history-panel.command-label"))?
+            } else {
+                ui_text(entry.label.clone(), "history-panel.command-label")?
+            };
+            let label = Label(label);
+            let id = UiText::try_format(format_args!("framework.history.entry.{}", entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
+            let mut builder = ui::tree_item(label).icon(ui_text(history_panel_icon_id(entry.kind).await.as_str(), "history-panel.command-icon")?);
+            builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.command-id"))?;
             if !entry.op_lines.is_empty() {
-                builder = builder.description(entry.op_lines.join(" · "));
+                builder = builder.description(ui_text(entry.op_lines.join(" · "), "history-panel.command-description")?);
             }
             if entry.edit_id.is_some() && !entry.applied {
                 builder = builder.dimmed(true);
             }
             if entry.revertible && !read_only {
-                builder = builder.row_action(RowAction {
-                    icon: IconName::RotateCcw.as_str().to_string(),
-                    label: Some(Label::from(if is_de { "Zurück bis hier" } else { "Backwards" })),
+                let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.row-action-args"))?;
+                args.push("entrySeq".to_owned(), UiValue::Number(entry.seq as f64)).map_err(|_| ui_assembly_error("history-panel.row-action-args"))?;
+                let row_action = RowAction {
+                    icon: ui_text(IconName::RotateCcw.as_str(), "history-panel.row-action-icon")?,
+                    label: Some(ui_label(if is_de { "Zurück bis hier" } else { "Backwards" }, "history-panel.row-action-label")?),
                     action: ActionBinding {
                         trigger: Trigger::Activate,
-                        action: ActionId::v1(controller_id, REVERT_TO_COMMAND_ACTION_ID),
-                        args: Some(dsl_value_to_ui_value(DslValue::Object(vec![("entrySeq".into(), DslValue::Number(entry.seq as f64))]))),
+                        action: ActionId::try_v1(controller_id, REVERT_TO_COMMAND_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.row-action-id"))?,
+                        args: Some(UiValue::Map(args.finish())),
                         capability: None,
                     },
                     placement: RowActionPlacement::Menu,
-                });
+                };
+                builder = builder.try_row_action(row_action).map_err(|_| ui_assembly_error("history-panel.row-actions"))?;
             }
-            command_items.push(builder.build());
+            let command = builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"))?;
+            command_items.try_push(command).map_err(|_| ui_assembly_error("history-panel.commands"))?;
         }
 
-        let actions_section = ui::tree_section(if is_de { "Aktionen" } else { "Actions" })
-            .id("framework.history.actions")
-            .default_open(true)
-            .children(vec![
-                action_item("framework.history.undo", IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo && !read_only),
-                action_item("framework.history.redo", IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo && !read_only),
-                action_item("framework.history.commitCheckpoint", IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", !read_only),
-                action_item("framework.history.createAlternative", IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", !read_only),
-                filter_item,
-            ])
-            .build();
-        let commands_section = ui::tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default_open(true).children(command_items).build();
-
-        ui::tree().children(vec![actions_section, commands_section]).build()
+        let mut action_items = UiFixedList::default();
+        for item in [
+            action_item("framework.history.undo", IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo && !read_only)?,
+            action_item("framework.history.redo", IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo && !read_only)?,
+            action_item("framework.history.commitCheckpoint", IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", !read_only)?,
+            action_item("framework.history.createAlternative", IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", !read_only)?,
+            filter_item,
+        ] {
+            action_items.try_push(item).map_err(|_| ui_assembly_error("history-panel.actions"))?;
+        }
+        let actions_builder = ui::tree_section(ui_label(if is_de { "Aktionen" } else { "Actions" }, "history-panel.actions-label")?).default_open(true);
+        let actions_builder = actions_builder.try_id("framework.history.actions").map_err(|_| ui_assembly_error("history-panel.actions-id"))?;
+        let actions_section = actions_builder.try_children(action_items).map_err(|_| ui_assembly_error("history-panel.actions"))?.try_build().map_err(|_| ui_assembly_error("history-panel.actions-build"))?;
+        let commands_builder = ui::tree_section(ui_label(if is_de { "Befehle" } else { "Commands" }, "history-panel.commands-label")?).default_open(true);
+        let commands_builder = commands_builder.try_id("framework.history.commands").map_err(|_| ui_assembly_error("history-panel.commands-id"))?;
+        let commands_section = commands_builder.try_children(command_items).map_err(|_| ui_assembly_error("history-panel.commands"))?.try_build().map_err(|_| ui_assembly_error("history-panel.commands-build"))?;
+        let mut sections = UiFixedList::default();
+        sections.try_push(actions_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
+        sections.try_push(commands_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
+        ui::tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_assembly_error("history-panel.build"))
     }
     //#endregion 🔖️HistoryPanel
 
@@ -11605,7 +11690,7 @@ pub mod app {
         // 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
         // from `ui_wgpu::wgpu::UiNode` to `ui_runtime::ComponentTree` — the choke-point change every
         // implementer of this trait must follow; see `📓️recipe-plugin.md` in this ticket's folder.
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> ComponentTree;
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree>;
         /// 🪟️ Keyed by window INSTANCE id — an app with two open instances of the same kind (e.g. split
         /// panes) returns one entry per instance so their chrome/options never collapse together. Apps with
         /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
@@ -13040,7 +13125,10 @@ pub mod app {
                     }
                     authority.step(cx)
                 }
-                None if self.terminal_handoff => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() }),
+                None if self.terminal_handoff => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                }),
                 None => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"artifact-store.initializer-owner-missing".to_vec() }),
             }
         }
@@ -14503,12 +14591,13 @@ pub mod app {
         meta: ActionMeta,
         operation: semio_framework_job::Operation,
         contract: semio_framework::ToolExecutionContract,
-        session: Option<semio_framework_job::WorkerJobSession<semio_framework::ErasedToolJob>>,
-        pending_step: Option<semio_framework_async::oneshot::Receiver<semio_framework_job::StepOutcome>>,
+        session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
+        session_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::ErasedToolJob>>,
         completion: ArtifactToolCompletion<A>,
         output_chunks: ArtifactOutputChunks,
         cancellation_lease: ToolCancellationLease,
         terminal_outcome: Option<semio_framework_job::StepOutcome>,
+        terminal_seen: bool,
         stage: ActiveToolCommandStage,
     }
 
@@ -14517,32 +14606,60 @@ pub mod app {
             if self.stage == ActiveToolCommandStage::CommitReady {
                 return Ok(PluginCloseStep::Blocked { reason: "typed command awaits its bounded revision-validated publication turn" });
             }
-            let Some(pending) = self.pending_step.as_mut() else {
-                let session = self.session.as_ref().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-session"), "typed operation lost its persistent worker session before publication"))?;
-                match session.try_submit_step(pool, semio_framework_async::Lane::Interactive) {
-                    Ok(pending) => {
-                        self.pending_step = Some(pending);
-                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-                    }
-                    Err(_) => return Ok(PluginCloseStep::Blocked { reason: "typed operation worker lane is saturated or contended" }),
-                }
-            };
-            match pending.try_recv() {
-                Err(semio_framework_async::oneshot::TryRecvError::Empty) => Ok(PluginCloseStep::Blocked { reason: "typed operation worker step has not published its bounded outcome" }),
-                Err(semio_framework_async::oneshot::TryRecvError::Closed) => {
-                    self.pending_step = None;
-                    self.terminal_outcome = Some(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"typed operation worker result channel closed".to_vec() }));
+            if let Some(rejected) = self.session_rejected.as_mut() {
+                let step = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if rejected.terminal_is_empty() {
+                    self.session_rejected = None;
                     self.stage = ActiveToolCommandStage::CommitReady;
+                }
+                return Ok(match step {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "typed operation rejected-session close is blocked" },
+                    semio_framework_job::InteractiveJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                });
+            }
+            if let Some(outcome) = self.terminal_outcome.as_mut() {
+                let step = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if !outcome.terminal_is_empty() {
+                    return Ok(match step {
+                        semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                        semio_framework_job::JobPayloadCloseStep::Complete => PluginCloseStep::Blocked { reason: "typed command retained outcome reported false terminal" },
+                    });
+                }
+                self.terminal_outcome = None;
+                let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-session"), "typed operation lost its persistent mounted session during outcome handback"))?;
+                if self.terminal_seen {
+                    session.begin_close();
+                } else if session.resume().is_err() {
+                    return Ok(PluginCloseStep::Blocked { reason: "typed operation outcome handback is contended" });
+                }
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-session"), "typed operation lost its persistent worker session before publication"))?;
+            if self.terminal_seen {
+                let step = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if session.terminal_is_empty() {
+                    self.session = None;
+                    self.stage = ActiveToolCommandStage::CommitReady;
+                }
+                return Ok(match step {
+                    semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::WorkerJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "typed operation mounted session close is blocked" },
+                    semio_framework_job::WorkerJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                });
+            }
+            match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
+                Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                    let terminal = session.checked_out_outcome().is_some_and(semio_framework_job::StepOutcome::is_terminal);
+                    let Some(outcome) = session.take_checked_out_outcome() else {
+                        return Ok(PluginCloseStep::Blocked { reason: "typed operation checked-out outcome changed during one mounted turn" });
+                    };
+                    self.terminal_seen = terminal;
+                    self.terminal_outcome = Some(outcome);
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                Ok(outcome) => {
-                    self.pending_step = None;
-                    if outcome.is_terminal() {
-                        self.terminal_outcome = Some(outcome);
-                        self.stage = ActiveToolCommandStage::CommitReady;
-                    }
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
+                Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Rejected) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+                Ok(_) | Err(_) => Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker is quiet or contended" }),
             }
         }
     }
@@ -14678,7 +14795,10 @@ pub mod app {
             *self.output.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactToolCompletionValue::Emit(emit, ephemeral));
             match fault_detail {
                 Some(detail) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail }),
-                None => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() }),
+                None => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                }),
             }
         }
     }
@@ -15491,7 +15611,10 @@ pub mod app {
             };
             let cores = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
             let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
-            let session = semio_framework_job::WorkerJobSession::new(dispatch.job, params);
+            let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
+                Ok(session) => (Some(session), None),
+                Err(rejected) => (None, Some(rejected)),
+            };
             let mut checkpoint_progress = 0u64;
             let candidate = loop {
                 let outcome = session.step(&pool, semio_framework_async::Lane::Interactive).await.map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.worker-closed"), "framework reserved worker result channel closed"))?;
@@ -17557,7 +17680,7 @@ pub mod app {
         /// selection/hover is `ui_contract::PresenceUpdate` now, never written back onto the tree
         /// itself (`TreeNode`/`Component::TreeItem` carry no presence field — the render-plane
         /// derivation lives entirely in this outbox, never in a document mutation).
-        pub(crate) async fn stamp_and_cache_interaction_ui(&mut self, tree: &mut ComponentTree, state: &protocol::InteractionState, body_key: &str) {
+        pub(crate) async fn stamp_and_cache_interaction_ui(&mut self, tree: &ComponentTree, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
             // 🕹️ Materialized owned BEFORE the mutable walk — same "clone owned before the field-wise
             // destructure" reasoning `dispatch_typed_command_inner` already uses: `pending_presence` is
             // WRITTEN inside the walk while `interaction_hover`/`peer_presence` are only ever READ by
@@ -17566,63 +17689,82 @@ pub mod app {
             let peers = std::sync::Arc::clone(&self.peer_presence);
             let own_color = self.own_color;
             let interaction = InteractionView { state, hover: &hover, peers: peers.as_ref() };
-            Box::pin(self.stamp_and_cache_interaction_ui_node(&mut tree.root, state, &interaction, None, body_key, own_color)).await;
-        }
-
-        /// 🕹️ One node of `stamp_and_cache_interaction_ui`'s walk — see that method's own doc for what
-        /// this does. `domain` is the nearest ANCESTOR `Component::Tree`'s `interaction_domain` (a
-        /// domain applies to every descendant item, not just the `Tree` node itself); `None` outside
-        /// any domain-bound subtree, where no presence is derived (matches this wave's scope: only
-        /// framework-owned interaction-domain trees, not every app-owned selection — see this packet's
-        /// own report for the `PanelTreeBuilder` non-domain gap this leaves open).
-        async fn stamp_and_cache_interaction_ui_node(&mut self, node: &mut TreeNode, state: &protocol::InteractionState, interaction: &InteractionView<'_>, domain: Option<&str>, body_key: &str, own_color: Option<u8>) {
-            let mut current_domain = domain.map(str::to_string);
-            if let Component::Tree(props) = &node.component {
-                if let Some(domain_id) = props.interaction_domain.clone() {
-                    let granularity = self.registry.interaction(&domain_id).await.and_then(|def| def.granularities.first()).map(|granularity| granularity.id.clone()).unwrap_or_default();
-                    self.interaction_ui_topology.insert(domain_id.clone(), ui_tree_domain_topology(&node.children, &granularity).await);
-                    current_domain = Some(domain_id);
+            struct Frame<'a> {
+                node: &'a TreeNode,
+                next: usize,
+                entered: bool,
+                domain: Option<UiText>,
+            }
+            let mut stack: UiFixedList<Frame<'_>, { semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH }> = UiFixedList::default();
+            stack.try_push(Frame { node: &tree.root, next: 0, entered: false, domain: None }).map_err(|_| ui_assembly_error("interaction-walk.depth"))?;
+            while let Some(mut frame) = stack.pop() {
+                if !frame.entered {
+                    if let Component::Tree(props) = &frame.node.component {
+                        if let Some(domain_id) = props.interaction_domain.clone() {
+                            let granularity = self.registry.interaction(domain_id.as_str()).await.and_then(|def| def.granularities.first()).map(|granularity| granularity.id.clone()).unwrap_or_default();
+                            let topology = ui_tree_domain_topology(&frame.node.children, &granularity).await?;
+                            self.interaction_ui_topology.insert(domain_id.to_string(), topology);
+                            frame.domain = Some(domain_id);
+                        }
+                    }
+                    if let Some(domain_id) = frame.domain.as_ref() {
+                        self.derive_node_presence(frame.node, state, &interaction, domain_id.as_str(), body_key, own_color).await?;
+                    }
+                    frame.entered = true;
                 }
+                let Some(child) = frame.node.children.get(frame.next) else { continue };
+                frame.next = frame.next.checked_add(1).ok_or_else(|| ui_assembly_error("interaction-walk.cursor"))?;
+                let child_domain = frame.domain.clone();
+                stack.try_push(frame).map_err(|_| ui_assembly_error("interaction-walk.depth"))?;
+                stack.try_push(Frame { node: child, next: 0, entered: false, domain: child_domain }).map_err(|_| ui_assembly_error("interaction-walk.depth"))?;
             }
-            if let Some(domain_id) = current_domain.clone() {
-                self.derive_node_presence(node, state, interaction, &domain_id, body_key, own_color).await;
-            }
-            for child in &mut node.children {
-                Box::pin(self.stamp_and_cache_interaction_ui_node(child, state, interaction, current_domain.as_deref(), body_key, own_color)).await;
-            }
+            Ok(())
         }
 
         /// 👥️ M2: derives `node`'s `PresenceUpdate` (if it has any own/peer selection or hover on
         /// `domain_id`) and pushes it onto `self.pending_presence`. A node with nothing to report is
         /// skipped entirely — an idle node costs no outbox entry, matching `PresenceHub::flush`'s own
         /// "only dirty keys" contract downstream.
-        async fn derive_node_presence(&mut self, node: &TreeNode, state: &protocol::InteractionState, interaction: &InteractionView<'_>, domain_id: &str, body_key: &str, own_color: Option<u8>) {
+        async fn derive_node_presence(&mut self, node: &TreeNode, state: &protocol::InteractionState, interaction: &InteractionView<'_>, domain_id: &str, body_key: &str, own_color: Option<u8>) -> UiAssemblyResult<()> {
             let key = node.key.as_str();
             let own_selected = state.selection.get(domain_id).is_some_and(|selection| selection.ids.iter().any(|id| id == key));
             let own_hovered = self.interaction_hover.get(domain_id).is_some_and(|hover| hover.ids.iter().any(|id| id == key));
             let selecting = interaction.peers_selecting(domain_id, key);
             let hovering = interaction.peers_hovering(domain_id, key);
             if !own_selected && !own_hovered && selecting.is_empty() && hovering.is_empty() {
-                return;
+                return Ok(());
             }
-            let mut marks: BTreeMap<&str, ui::PeerMark> = BTreeMap::new();
+            let mut marks: UiFixedList<ui::PeerMark> = UiFixedList::default();
             for mark in &selecting {
-                marks.entry(mark.actor).or_insert_with(|| ui::PeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: false, selected: false, label: mark.actor.to_string() }).selected = true;
+                if let Some(index) = marks.iter().position(|entry| entry.actor == mark.actor) {
+                    if let Some(entry) = marks.get_mut(index) {
+                        entry.selected = true;
+                    }
+                } else {
+                    marks.try_push(ui::PeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: false, selected: true, label: mark.actor.to_string() }).map_err(|_| ui_assembly_error("presence.peer-marks"))?;
+                }
             }
             for mark in &hovering {
-                marks.entry(mark.actor).or_insert_with(|| ui::PeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: false, selected: false, label: mark.actor.to_string() }).hovered = true;
+                if let Some(index) = marks.iter().position(|entry| entry.actor == mark.actor) {
+                    if let Some(entry) = marks.get_mut(index) {
+                        entry.hovered = true;
+                    }
+                } else {
+                    marks.try_push(ui::PeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: true, selected: false, label: mark.actor.to_string() }).map_err(|_| ui_assembly_error("presence.peer-marks"))?;
+                }
             }
             self.pending_presence.push(PresenceUpdate {
                 // 🪪️ Bare `body_key` — `VcsArtifactApp` never knows its own instance id (see
                 // `render`'s own signature); `plugin_runtime::plugin_take_presence` prefixes it to the
                 // reactor's `"<instance>:<body-key>"` surface convention on drain (the SAME split
                 // `parse_surface_instance`/`wit_event_to_kernel` already use for every other surface).
-                surface: SurfaceId::from(body_key),
-                node_key: node.key.clone(),
+                surface: SurfaceId::try_from(body_key).map_err(|_| ui_assembly_error("presence.surface"))?,
+                node_key: node.key.to_string(),
                 own: OwnPresence { hovered: own_hovered, selected: own_selected, previewed: false, color: own_color },
                 peers: marks.into_values().collect(),
                 ttl_ms: PRESENCE_TTL_MS,
             });
+            Ok(())
         }
         //#endregion 🔖️InteractionDispatch
 
@@ -17768,7 +17910,10 @@ pub mod app {
                 },
                 now_ms: semio_framework_job::default_now_ms,
             };
-            let session = semio_framework_job::WorkerJobSession::new(dispatch.job, params);
+            let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
+                Ok(session) => (Some(session), None),
+                Err(rejected) => (None, Some(rejected)),
+            };
             {
                 let active = self.media_closures.get_mut(operation_id.0).expect("pre-admitted media construction owner");
                 active.session = Some(session);
@@ -18343,7 +18488,10 @@ pub mod app {
             };
             let pool =
                 semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
-            let session = semio_framework_job::WorkerJobSession::new(dispatch.job, params);
+            let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
+                Ok(session) => (Some(session), None),
+                Err(rejected) => (None, Some(rejected)),
+            };
             self.tool_operations.insert_admitted(
                 operation_id.0,
                 ActiveToolCommand {
@@ -18351,12 +18499,13 @@ pub mod app {
                     meta: meta.clone(),
                     operation,
                     contract: admission.proof.contract(),
-                    session: Some(session),
-                    pending_step: None,
+                    session,
+                    session_rejected,
                     completion,
                     output_chunks,
                     cancellation_lease,
                     terminal_outcome: None,
+                    terminal_seen: false,
                     stage: ActiveToolCommandStage::AwaitWorker,
                 },
             );
@@ -19855,8 +20004,11 @@ pub mod app {
             self.refresh_cache().await?;
             if body_key == FRAMEWORK_HISTORY_BODY_KEY {
                 // 🕰️ Framework-owned, snapshot-independent — served before any app body-key match.
-                let (_, _, _, history) = self.cache.as_ref().expect("cache refreshed above");
-                return Ok(built_to_component_tree(ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer).await));
+                let Some((_, _, _, history)) = self.cache.as_ref() else {
+                    return Err(plugin_sdk_fault("render cache unavailable after refresh"));
+                };
+                let root = ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                return Ok(built_to_component_tree(root));
             }
             let effective_body_key = if let Some(ref wid) = view_state.window_id {
                 if !body_key.contains(':') {
@@ -19876,25 +20028,31 @@ pub mod app {
                 let doc = ArtifactView::new(&snapshot, &history).await;
                 let config = self.config_store.snapshot().await.unwrap_or_else(|_| A::Config::default());
                 let cfg = ConfigView { snapshot: &config };
-                let mut node = A::render(&effective_body_key, &doc, &cfg).await;
-                self.stamp_and_cache_interaction_ui(&mut node, &interaction_state, &effective_body_key).await;
+                let node = A::render(&effective_body_key, &doc, &cfg).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                self.stamp_and_cache_interaction_ui(&node, &interaction_state, &effective_body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(node);
             }
             let canonical_base_revision = self.store.content_revision().await;
+            let revision_lane = canonical_base_revision
+                .get(..8)
+                .and_then(|bytes| bytes.try_into().ok())
+                .ok_or_else(|| plugin_sdk_fault("canonical revision has no generation lane"))?;
             let render_operation = AppRenderOperationContext {
                 app_instance_id: self.live_runtime_instance_id.unwrap_or_default(),
-                base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width"))),
+                base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(revision_lane)),
                 generation: semio_framework_job::Generation(self.store.generation().await),
                 canonical_base_revision,
             };
-            let mut node = {
+            let node = {
                 let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
-                let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
+                let Some((_, snapshot, config, history)) = cache.as_ref() else {
+                    return Err(plugin_sdk_fault("render cache unavailable after refresh"));
+                };
                 let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
                 let cfg = ConfigView { snapshot: config.as_ref() };
-                A::render(&effective_body_key, &doc, &cfg).await
+                A::render(&effective_body_key, &doc, &cfg).await.map_err(|error| plugin_sdk_fault(error.to_string()))?
             };
-            self.stamp_and_cache_interaction_ui(&mut node, &interaction_state, &effective_body_key).await;
+            self.stamp_and_cache_interaction_ui(&node, &interaction_state, &effective_body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
             Ok(node)
         }
 
@@ -20278,7 +20436,7 @@ pub mod app {
         const KIND_ID: &'static str;
         fn window_kind() -> WindowKindDefinition;
         fn editable_window_kind() -> WindowKindDefinition;
-        fn render(view: &Self::ViewModel) -> BuiltNode;
+        fn render(view: &Self::ViewModel) -> UiAssemblyResult<BuiltNode>;
     }
 
     //#region 🔖️TextWindowKit
@@ -20305,7 +20463,7 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", vec![ActionDefinition::bounded_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &TextView) -> BuiltNode {
+        fn render(view: &TextView) -> UiAssemblyResult<BuiltNode> {
             let scene = semio_framework_ui_scene::TextEditorScene {
                 buffer: view.text.clone(),
                 language: view.language.clone(),
@@ -20324,7 +20482,9 @@ pub mod app {
                 newline_gates_json: None,
                 rename_json: None,
             };
-            ui::surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+            let props = semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene).map_err(|_| ui_assembly_error("text-window.scene"))?;
+            let builder = ui::surface(props);
+            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("text-window.id"))?.try_build().map_err(|_| ui_assembly_error("text-window.build"))
         }
     }
     //#endregion 🔖️TextWindowKit
@@ -20352,14 +20512,16 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", vec![ActionDefinition::bounded_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &TableView) -> BuiltNode {
+        fn render(view: &TableView) -> UiAssemblyResult<BuiltNode> {
             let columns_json = serde_json::to_string(&view.columns).unwrap_or_else(|_| "[]".into());
             let rows_json = serde_json::to_string(&view.rows).unwrap_or_else(|_| "[]".into());
             // 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-framework-ui-scene` and its
             // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
             // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
             let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
-            ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+            let props = semio_framework_ui_scene::encode(SurfaceKind::Table, &scene).map_err(|_| ui_assembly_error("table-window.scene"))?;
+            let builder = ui::surface(props);
+            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-window.id"))?.try_build().map_err(|_| ui_assembly_error("table-window.build"))
         }
     }
 
@@ -20410,7 +20572,7 @@ pub mod app {
         /// `render`'s flat positional-string grid, which carries neither. The actions column is only
         /// appended when at least one row has an action, so plain identified tables (no row buttons yet)
         /// don't grow a dead column.
-        pub fn render_rows(view: &TableRowsView) -> BuiltNode {
+        pub fn render_rows(view: &TableRowsView) -> UiAssemblyResult<BuiltNode> {
             let has_actions = view.rows.iter().any(|row| !row.actions.is_empty());
             let mut columns: Vec<Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": format!("col{index}"), "label": label })).collect();
             if has_actions {
@@ -20435,7 +20597,9 @@ pub mod app {
             // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
             // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
             let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
-            ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+            let props = semio_framework_ui_scene::encode(SurfaceKind::Table, &scene).map_err(|_| ui_assembly_error("table-rows-window.scene"))?;
+            let builder = ui::surface(props);
+            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-rows-window.id"))?.try_build().map_err(|_| ui_assembly_error("table-rows-window.build"))
         }
     }
     //#endregion 🔖️TableWindowKit
@@ -20468,13 +20632,42 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", vec![ActionDefinition::bounded_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &TreeView) -> BuiltNode {
-            fn to_item(node: &TreeNodeView) -> BuiltNode {
-                let children = node.children.iter().map(to_item).collect::<Vec<_>>();
-                ui::tree_item(node.label.clone()).id(node.id.clone()).default_open(!children.is_empty()).children(children).build()
+        fn render(view: &TreeView) -> UiAssemblyResult<BuiltNode> {
+            struct Frame<'a> {
+                node: Option<&'a TreeNodeView>,
+                children: &'a [TreeNodeView],
+                next: usize,
+                built: UiFixedList<BuiltNode>,
             }
-            let section = ui::tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(to_item)).build();
-            ui::tree().id(Self::KIND_ID).child(section).build()
+            let mut stack: UiFixedList<Frame<'_>, { semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH }> = UiFixedList::default();
+            stack
+                .try_push(Frame { node: None, children: &view.roots, next: 0, built: UiFixedList::default() })
+                .map_err(|_| ui_assembly_error("tree-window.depth"))?;
+            let roots = loop {
+                let mut frame = stack.pop().ok_or_else(|| ui_assembly_error("tree-window.frames"))?;
+                if let Some(child) = frame.children.get(frame.next) {
+                    frame.next = frame.next.checked_add(1).ok_or_else(|| ui_assembly_error("tree-window.cursor"))?;
+                    stack.try_push(frame).map_err(|_| ui_assembly_error("tree-window.depth"))?;
+                    stack
+                        .try_push(Frame { node: Some(child), children: &child.children, next: 0, built: UiFixedList::default() })
+                        .map_err(|_| ui_assembly_error("tree-window.depth"))?;
+                    continue;
+                }
+                let Some(node) = frame.node else { break frame.built };
+                let has_children = !frame.built.is_empty();
+                let builder = ui::tree_item(ui_label(node.label.clone(), "tree-window.item-label")?).default_open(has_children);
+                let builder = builder.try_id(&node.id).map_err(|_| ui_assembly_error("tree-window.item-id"))?;
+                let builder = builder.try_children(frame.built).map_err(|_| ui_assembly_error("tree-window.item-children"))?;
+                let item = builder.try_build().map_err(|_| ui_assembly_error("tree-window.item-build"))?;
+                let parent = stack.last_mut().ok_or_else(|| ui_assembly_error("tree-window.parent"))?;
+                parent.built.try_push(item).map_err(|_| ui_assembly_error("tree-window.siblings"))?;
+            };
+            let root_id = UiText::try_format(format_args!("{}-root", Self::KIND_ID)).ok_or_else(|| ui_assembly_error("tree-window.section-id"))?;
+            let section_builder = ui::tree_section(Label::default()).default_open(true);
+            let section_builder = section_builder.try_id(&root_id).map_err(|_| ui_assembly_error("tree-window.section-id"))?;
+            let section = section_builder.try_children(roots).map_err(|_| ui_assembly_error("tree-window.roots"))?.try_build().map_err(|_| ui_assembly_error("tree-window.section-build"))?;
+            let tree_builder = ui::tree().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("tree-window.id"))?;
+            tree_builder.try_child(section).map_err(|_| ui_assembly_error("tree-window.section"))?.try_build().map_err(|_| ui_assembly_error("tree-window.build"))
         }
     }
     //#endregion 🔖️TreeWindowKit
@@ -20504,9 +20697,11 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::bounded_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &ImageView) -> BuiltNode {
-            let src = format!("data:{};base64,{}", view.mime, view.base64);
-            ui::image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+        fn render(view: &ImageView) -> UiAssemblyResult<BuiltNode> {
+            let src = UiText::try_format(format_args!("data:{};base64,{}", view.mime, view.base64)).ok_or_else(|| ui_assembly_error("image-window.source"))?;
+            let alt = UiText::try_format(format_args!("{}x{}", view.width, view.height)).map(Label).ok_or_else(|| ui_assembly_error("image-window.alt"))?;
+            let builder = ui::image(src).alt(alt);
+            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("image-window.id"))?.try_build().map_err(|_| ui_assembly_error("image-window.build"))
         }
     }
     //#endregion 🔖️ImageWindowKit
@@ -20536,10 +20731,12 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", vec![ActionDefinition::bounded_catalog("set-vertex", LocalizedLabel::native("Set Vertex", "Vertex setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &MeshView) -> BuiltNode {
+        fn render(view: &MeshView) -> UiAssemblyResult<BuiltNode> {
             let sun_config = crate::world3d_host::WorldSunConfig::default();
             let scene = crate::world3d_host::world3d_scene(view.camera_json.clone(), view.meshes_json.clone(), view.instances_json.clone(), view.selection_json.clone(), &sun_config);
-            ui::surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+            let props = semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene).map_err(|_| ui_assembly_error("mesh-window.scene"))?;
+            let builder = ui::surface(props);
+            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("mesh-window.id"))?.try_build().map_err(|_| ui_assembly_error("mesh-window.build"))
         }
     }
     //#endregion 🔖️MeshWindowKit
@@ -20570,9 +20767,16 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", vec![ActionDefinition::bounded_catalog("set-page", LocalizedLabel::native("Set Page", "Seite setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &DocumentView) -> BuiltNode {
-            let children = view.pages.iter().enumerate().map(|(index, page)| ui::text(page.text.clone()).id(format!("page-{index}")).build());
-            ui::column().id(Self::KIND_ID).children(children).build()
+        fn render(view: &DocumentView) -> UiAssemblyResult<BuiltNode> {
+            let mut children = UiFixedList::default();
+            for (index, page) in view.pages.iter().enumerate() {
+                let id = UiText::try_format(format_args!("page-{index}")).ok_or_else(|| ui_assembly_error("document-window.page-id"))?;
+                let builder = ui::text(ui_label(page.text.clone(), "document-window.page-text")?);
+                let page = builder.try_id(&id).map_err(|_| ui_assembly_error("document-window.page-id"))?.try_build().map_err(|_| ui_assembly_error("document-window.page-build"))?;
+                children.try_push(page).map_err(|_| ui_assembly_error("document-window.pages"))?;
+            }
+            let builder = ui::column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("document-window.id"))?;
+            builder.try_children(children).map_err(|_| ui_assembly_error("document-window.pages"))?.try_build().map_err(|_| ui_assembly_error("document-window.build"))
         }
     }
     //#endregion 🔖️DocumentWindowKit
@@ -20606,29 +20810,20 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", vec![ActionDefinition::bounded_catalog("seek-media", LocalizedLabel::native("Seek", "Position setzen"), ActionKind::Mutation)])
         }
 
-        fn render(view: &MediaView) -> BuiltNode {
+        fn render(view: &MediaView) -> UiAssemblyResult<BuiltNode> {
             let kind_label = match view.kind {
                 MediaKind::Audio => "audio",
                 MediaKind::Video => "video",
             };
-            BuiltNode {
-                key: Self::KIND_ID.into(),
-                component: Component::KeyValueList(KeyValueListProps {
-                    entries: vec![
-                        KeyValueEntry { label: Label::from("Duration"), value: view.duration_ms.to_string() },
-                        KeyValueEntry { label: Label::from("Position"), value: view.position_ms.to_string() },
-                        KeyValueEntry { label: Label::from("Kind"), value: kind_label.into() },
-                    ],
-                }),
-                layout: LayoutSpec::default(),
-                style: StyleSpec::default(),
-                activity: Activity::default(),
-                disabled: false,
-                accessibility: AccessibilitySpec::default(),
-                bindings: Vec::new(),
-                menu: None,
-                children: Vec::new(),
+            let mut entries = UiFixedList::default();
+            for entry in [
+                KeyValueEntry { label: ui_label("Duration", "media-window.duration-label")?, value: ui_text(view.duration_ms.to_string(), "media-window.duration")? },
+                KeyValueEntry { label: ui_label("Position", "media-window.position-label")?, value: ui_text(view.position_ms.to_string(), "media-window.position")? },
+                KeyValueEntry { label: ui_label("Kind", "media-window.kind-label")?, value: ui_text(kind_label, "media-window.kind")? },
+            ] {
+                entries.try_push(entry).map_err(|_| ui_assembly_error("media-window.entries"))?;
             }
+            BuiltNode::try_new(Self::KIND_ID, Component::KeyValueList(KeyValueListProps { entries })).map_err(|_| ui_assembly_error("media-window.build"))
         }
     }
     //#endregion 🔖️MediaWindowKit
@@ -20729,7 +20924,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn text_kit_renders_buffer_into_component_scene() {
             let view = TextView { text: "hello world".into(), language: Some("en".into()), read_only: false };
-            let node = TextWindowKit::render(&view);
+            let node = TextWindowKit::render(&view).expect("bounded fixture");
             let Component::Surface(props) = node.component else { panic!("expected Surface") };
             let expected = semio_framework_ui_scene::TextEditorScene {
                 buffer: "hello world".into(),
@@ -20749,13 +20944,13 @@ pub mod app {
                 newline_gates_json: None,
                 rename_json: None,
             };
-            assert_eq!(props, semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::TextEditor, &expected));
+            assert_eq!(props, semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::TextEditor, &expected).expect("bounded fixture"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn text_kit_read_only_stamps_settings_json() {
             let view = TextView { text: "x".into(), language: None, read_only: true };
-            let node = TextWindowKit::render(&view);
+            let node = TextWindowKit::render(&view).expect("bounded fixture");
             let Component::Surface(props) = node.component else { panic!("expected Surface") };
             let expected = semio_framework_ui_scene::TextEditorScene {
                 buffer: "x".into(),
@@ -20775,13 +20970,13 @@ pub mod app {
                 newline_gates_json: None,
                 rename_json: None,
             };
-            assert_eq!(props, semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::TextEditor, &expected));
+            assert_eq!(props, semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::TextEditor, &expected).expect("bounded fixture"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn table_kit_renders_columns_and_rows_json() {
             let view = TableView { columns: vec!["a".into(), "b".into()], rows: vec![vec!["1".into(), "2".into()]] };
-            let node = TableWindowKit::render(&view);
+            let node = TableWindowKit::render(&view).expect("bounded fixture");
             let Component::Surface(props) = node.component else { panic!("expected Surface") };
             let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
             assert_eq!(scene.columns_json, "[\"a\",\"b\"]");
@@ -20791,7 +20986,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn table_kit_render_rows_stamps_a_stable_row_id_and_omits_the_actions_column_when_no_row_has_one() {
             let view = TableRowsView { columns: vec!["Name".into()], rows: vec![TableRow { id: "space:abc".into(), cells: vec!["Atelier".into()], actions: Vec::new() }], actions_label: "Actions".into() };
-            let node = TableWindowKit::render_rows(&view);
+            let node = TableWindowKit::render_rows(&view).expect("bounded fixture");
             let Component::Surface(props) = node.component else { panic!("expected Surface") };
             let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
             let rows: Vec<Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
@@ -20809,7 +21004,7 @@ pub mod app {
                 rows: vec![TableRow { id: "space:abc".into(), cells: vec!["Atelier".into()], actions: vec![TableRowAction { icon_id: IconName::Trash2, label: None, action: action.clone() }] }],
                 actions_label: "Actions".into(),
             };
-            let node = TableWindowKit::render_rows(&view);
+            let node = TableWindowKit::render_rows(&view).expect("bounded fixture");
             let Component::Surface(props) = node.component else { panic!("expected Surface") };
             let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
             let columns: Vec<Value> = serde_json::from_str(&scene.columns_json).expect("columns_json parses");
@@ -20825,20 +21020,20 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn tree_kit_renders_nested_items() {
             let view = TreeView { roots: vec![TreeNodeView { id: "root".into(), label: "Root".into(), children: vec![TreeNodeView { id: "child".into(), label: "Child".into(), children: Vec::new() }] }] };
-            let tree = TreeWindowKit::render(&view);
+            let tree = TreeWindowKit::render(&view).expect("bounded fixture");
             assert!(matches!(tree.component, Component::Tree(_)));
             assert_eq!(tree.children.len(), 1);
             let section = &tree.children[0];
             assert!(matches!(section.component, Component::TreeSection(_)));
             let root_item = &section.children[0];
-            assert_eq!(root_item.key, "root");
-            assert_eq!(root_item.children[0].key, "child");
+            assert_eq!(root_item.key.as_str(), "root");
+            assert_eq!(root_item.children[0].key.as_str(), "child");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn image_kit_renders_data_uri_from_base64() {
             let view = ImageView { width: 4, height: 2, mime: "image/png".into(), base64: "QUJD".into() };
-            let node = ImageWindowKit::render(&view);
+            let node = ImageWindowKit::render(&view).expect("bounded fixture");
             let Component::Image(image) = node.component else { panic!("expected Image") };
             assert_eq!(image.src, "data:image/png;base64,QUJD");
         }
@@ -20846,7 +21041,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn mesh_kit_renders_world3d_component_scene() {
             let view = MeshView { camera_json: "{}".into(), meshes_json: "[]".into(), instances_json: "[]".into(), selection_json: "[]".into() };
-            let node = MeshWindowKit::render(&view);
+            let node = MeshWindowKit::render(&view).expect("bounded fixture");
             let Component::Surface(props) = node.component else { panic!("expected Surface") };
             let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(&props).expect("world_3d scene");
             assert_eq!(scene.camera_json, "{}");
@@ -20855,7 +21050,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn document_kit_renders_one_child_per_page() {
             let view = DocumentView { pages: vec![DocumentPage { text: "p1".into() }, DocumentPage { text: "p2".into() }] };
-            let stack = DocumentWindowKit::render(&view);
+            let stack = DocumentWindowKit::render(&view).expect("bounded fixture");
             assert!(matches!(stack.layout, LayoutSpec::Stack(_)));
             assert_eq!(stack.children.len(), 2);
         }
@@ -20863,7 +21058,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn media_kit_renders_duration_and_position() {
             let view = MediaView { duration_ms: 60_000, position_ms: 1_500, kind: MediaKind::Video };
-            let node = MediaWindowKit::render(&view);
+            let node = MediaWindowKit::render(&view).expect("bounded fixture");
             let Component::KeyValueList(key_value) = node.component else { panic!("expected KeyValueList") };
             assert_eq!(key_value.entries.len(), 3);
             assert_eq!(key_value.entries[0].value, "60000");
@@ -21071,7 +21266,7 @@ pub mod app {
         async fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             Vec::new()
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> ComponentTree;
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree>;
         async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
@@ -21194,7 +21389,7 @@ pub mod app {
         async fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             protocol::InteractionTopology::default()
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> ComponentTree;
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree>;
         async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
@@ -21439,7 +21634,7 @@ pub mod app {
         async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             E::pending_effects(doc, cfg).await
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
             E::render(body_key, doc, cfg).await
         }
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
@@ -21565,7 +21760,7 @@ pub mod app {
         async fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             V::interaction_topology(doc, cfg).await
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
             V::render(body_key, doc, cfg).await
         }
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
@@ -22297,8 +22492,8 @@ pub mod app {
                         ) -> Result<Emit<$mutation>, Fault> {
                             Ok(Emit { artifact_mutations: vec![$mutation::SetValue { value: doc.snapshot.value }], ..Default::default() })
                         }
-                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> ComponentTree {
-                            ComponentTree::new(TreeNode::new("text", Component::Text(TextProps { value: Label::from(format!("value={}", doc.snapshot.value)), emphasize: None, data_attributes: None })))
+                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
+                            built_text_node("text", format!("value={}", doc.snapshot.value)).map(ComponentTree::new)
                         }
                     }
 
@@ -22322,8 +22517,8 @@ pub mod app {
                         async fn handle(_command: &$command, _doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
                             Ok(ViewEmit::default())
                         }
-                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> ComponentTree {
-                            ComponentTree::new(TreeNode::new("text", Component::Text(TextProps { value: Label::from(format!("value={}", doc.snapshot.value)), emphasize: None, data_attributes: None })))
+                        async fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
+                            built_text_node("text", format!("value={}", doc.snapshot.value)).map(ComponentTree::new)
                         }
                     }
                 };
@@ -24980,20 +25175,20 @@ pub mod plugin_runtime {
     /// `VcsArtifactApp` cannot know its own instance id) into the reactor's `"<instance>:<body-key>"`
     /// surface convention — the SAME split `parse_surface_instance`/`wit_event_to_kernel` already use
     /// for every other surface — so the caller's `PresenceHub` keys it identically to `PatchTracker`.
-    pub async fn plugin_take_presence<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Vec<ui_contract::PresenceUpdate> {
+    pub async fn plugin_take_presence<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<Vec<ui_contract::PresenceUpdate>, Fault> {
         let drained = with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
             Ok(resolve_ready(instance.app.take_pending_presence()))
         })
         .await
         .unwrap_or_default();
-        drained
-            .into_iter()
-            .map(|mut update| {
-                update.surface = ui_contract::SurfaceId::from(format!("{instance_id}:{}", update.surface.0));
-                update
-            })
-            .collect()
+        let mut qualified = Vec::with_capacity(drained.len());
+        for mut update in drained {
+            let surface = UiText::try_format(format_args!("{instance_id}:{}", update.surface.0)).ok_or_else(|| plugin_internal_fault("qualified presence surface exceeds fixed capacity"))?;
+            update.surface = ui_contract::SurfaceId(surface);
+            qualified.push(update);
+        }
+        Ok(qualified)
     }
 
     pub async fn plugin_reserve_presence_ingress<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, seq: u64) -> Result<PresenceRosterAdmission, Fault> {
@@ -26914,11 +27109,8 @@ pub mod plugin_runtime {
                 }
             }
 
-            async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> semio_framework_ui_runtime::ComponentTree {
-                semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
-                    "text",
-                    semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
-                ))
+            async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+                built_text_node("text", format!("count={}", doc.snapshot.count)).map(semio_framework_ui_runtime::ComponentTree::new)
             }
 
             async fn clipboard_media_type() -> Option<MediaType> {
@@ -27043,7 +27235,7 @@ pub mod plugin_runtime {
                 TestApp::handle(command, doc, cfg, interaction, draft, engines).await
             }
 
-            async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>) -> semio_framework_ui_runtime::ComponentTree {
+            async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
                 TestApp::render(body_key, doc, cfg).await
             }
         }
@@ -28807,12 +28999,12 @@ pub mod plugin_runtime {
         async fn activate_intent_dispatches_through_the_typed_command_path_same_turn() {
             let mut app = contract_app_under_test().await;
             let intent = UiIntent {
-                surface: SurfaceId::from("s"),
+                surface: SurfaceId::try_from("s").expect("bounded fixture"),
                 revision: UiRevision(0),
                 node: UiNodeId::default(),
                 node_key: "counter".into(),
                 trigger: Trigger::Activate,
-                action: ActionId::v1("app", "incrementViaCommand"),
+                action: ActionId::try_v1("app", "incrementViaCommand").expect("bounded fixture"),
                 args: None,
                 input: None,
                 seq: 1,
@@ -28830,7 +29022,7 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn view_kind_intent_returning_operations_hard_faults() {
             let mut app = contract_app_under_test().await;
-            let intent = UiIntent { surface: SurfaceId::from("s"), revision: UiRevision(0), node: UiNodeId::default(), node_key: "bad".into(), trigger: Trigger::Activate, action: ActionId::v1("app", "badView"), args: None, input: None, seq: 2 };
+            let intent = UiIntent { surface: SurfaceId::try_from("s").expect("bounded fixture"), revision: UiRevision(0), node: UiNodeId::default(), node_key: "bad".into(), trigger: Trigger::Activate, action: ActionId::try_v1("app", "badView").expect("bounded fixture"), args: None, input: None, seq: 2 };
             let error = app.handle_intent_frame(&intent, &meta()).await.expect_err("a View-kind intent emitting operations must be rejected");
             assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
             assert_eq!(app.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
@@ -28841,12 +29033,12 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn command_from_intent_rejects_a_non_v1_action_version() {
             let intent = UiIntent {
-                surface: SurfaceId::from("s"),
+                surface: SurfaceId::try_from("s").expect("bounded fixture"),
                 revision: UiRevision(0),
                 node: UiNodeId::default(),
                 node_key: "counter".into(),
                 trigger: Trigger::Activate,
-                action: ActionId::new("app".into(), "incrementViaCommand".into(), 2),
+                action: ActionId::new(UiText::try_from_str("app").expect("bounded fixture"), UiText::try_from_str("incrementViaCommand").expect("bounded fixture"), 2),
                 args: None,
                 input: None,
                 seq: 3,
@@ -29183,25 +29375,35 @@ pub mod plugin_runtime {
             // method's own doc comment for why "the framework wins" onto the tree is gone for good);
             // it derives `ui_contract::PresenceUpdate`s into `self.pending_presence` instead, asserted
             // below.
-            let item = semio_framework_ui_runtime::TreeNode::new(
+            let item = semio_framework_ui_runtime::TreeNode::try_new(
                 "item-1",
                 semio_framework_ui_contract::Component::TreeItem(semio_framework_ui_contract::TreeItemProps {
-                    label: semio_framework_ui_contract::Label::from("Item 1"),
+                    label: ui_label("Item 1").expect("bounded fixture"),
                     description: None,
                     icon: None,
                     default_open: None,
                     draggable: None,
                     drag_data: None,
                     dimmed: None,
-                    row_actions: Vec::new(),
+                    row_actions: semio_framework_ui_contract::UiFixedList::default(),
                 }),
-            );
-            let section = semio_framework_ui_runtime::TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None })).with_children([item]);
-            let mut tree = semio_framework_ui_runtime::ComponentTree::new(
-                semio_framework_ui_runtime::TreeNode::new("root", semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some("items".into()) })).with_children([section]),
+            )
+            .expect("bounded fixture");
+            let section = semio_framework_ui_runtime::TreeNode::try_new("sec", semio_framework_ui_contract::Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None }))
+                .expect("bounded fixture")
+                .try_with_children([item])
+                .unwrap_or_else(|_| panic!("bounded fixture"));
+            let tree = semio_framework_ui_runtime::ComponentTree::new(
+                semio_framework_ui_runtime::TreeNode::try_new(
+                    "root",
+                    semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some(ui_text("items").expect("bounded fixture")) }),
+                )
+                .expect("bounded fixture")
+                .try_with_children([section])
+                .unwrap_or_else(|_| panic!("bounded fixture")),
             );
             let state = app.interaction_state().await;
-            app.stamp_and_cache_interaction_ui(&mut tree, &state, "window").await;
+            app.stamp_and_cache_interaction_ui(&tree, &state, "window").await.expect("bounded fixture");
             let topology = app.interaction_ui_topology.get("items").expect("topology cached for the items domain");
             assert_eq!(topology.ordered.len(), 1);
             assert_eq!(topology.ordered[0].id, "item-1");
@@ -29212,7 +29414,7 @@ pub mod plugin_runtime {
             // instance id on drain — see `plugin_take_presence`'s own doc).
             assert_eq!(app.pending_presence.len(), 1, "expected exactly one dirty presence key, got {:?}", app.pending_presence);
             let update = &app.pending_presence[0];
-            assert_eq!(update.surface, semio_framework_ui_contract::SurfaceId::from("window"));
+            assert_eq!(update.surface, semio_framework_ui_contract::SurfaceId::try_from("window").expect("bounded fixture"));
             assert_eq!(update.node_key, "item-1");
             assert!(update.own.selected, "own selection must be reported");
             assert!(!update.own.hovered);

@@ -23,13 +23,13 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 /// 🕹️ Item ids are the RAW widget id (no namespace prefix) — they must equal the `graph` interaction
-/// domain's target ids one-for-one so `.interaction_domain("graph")`'s post-render presence stamping
+/// domain's target ids one-for-one so `.interaction_domain("graph")?`'s post-render presence stamping
 /// (`ui_tree_stamp_presence`) can match them by plain string membership (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). Clicks/selection are the framework's now — no
 /// per-item action needed, and `_config` is unused (kept for call-site symmetry with `inspection`).
-pub fn render(document: &Procedural2dSnapshot, _config: &Procedural2dConfig, labels: &Procedural2dLabels) -> BuiltNode {
-    let widget_items: Vec<BuiltNode> = document.fixture.widgets.iter().map(|widget| tree_item(widget_id(widget).to_string(), widget_id(widget).to_string())).collect();
-    PanelTreeBuilder::new("procedural2d-play-document").section_or_placeholder("procedural2d-play-document.widgets", Some(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL.into()), true, widget_items, labels.none.as_str()).interaction_domain("graph").build()
+pub fn render(document: &Procedural2dSnapshot, _config: &Procedural2dConfig, labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let widget_items: Vec<BuiltNode> = document.fixture.widgets.iter().map(|widget| tree_item(widget_id(widget).to_string(), widget_id(widget).to_string())?).collect();
+    PanelTreeBuilder::new("procedural2d-play-document")?.section_or_placeholder("procedural2d-play-document.widgets", Some(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL.into()), true, widget_items, labels.none.as_str())?.interaction_domain("graph")?.build()
 }
 //#endregion 🔖️Render
 

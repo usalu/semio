@@ -569,6 +569,31 @@ impl store::ArtifactPack for SemioPresentationSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🔖️ReachableCodecs
+/// 🚪️ The four codec entry points above, reachable from OUTSIDE this crate. `store` is a private
+/// `extern crate semio_framework_os_kernel as store` alias in `📦️glue.rs`, so an external caller —
+/// an owner-root test adapter is exactly that — can neither bring `store::ArtifactDsl`/
+/// `store::ArtifactPack` into scope nor name `store::TextError`/`store::PackError` in a signature.
+/// These four wrappers carry the error across as a plain `String` so the subset's own text and
+/// binary envelopes stay drivable end to end (`kit`'s precedent for the same structural gap).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_presentation_dsl(text: &str) -> Result<SemioPresentationSnapshot, String> {
+    <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_presentation_dsl(snapshot: &SemioPresentationSnapshot) -> String {
+    <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_presentation_pack(snapshot: &SemioPresentationSnapshot) -> Vec<u8> {
+    <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(snapshot)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_presentation_pack(bytes: &[u8]) -> Result<SemioPresentationSnapshot, String> {
+    <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string())
+}
+//#endregion 🔖️ReachableCodecs
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.presentation` snapshot — masters/layouts/slides all populated,
 /// exercising every `SlideShape` variant (incl. `Table`) and every `PlaceholderKind` variant (incl.

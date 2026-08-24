@@ -340,6 +340,71 @@ pub struct CommitNotification {
 //#endregion 🔖️Receipt
 
 //#region 🔖️State
+async fn admit_wal_bytes(source: Vec<u8>, maximum: u64, control: &mut db_wal::WalCursorControl) -> Result<db_wal::WalBytes, DbError> {
+    match db_wal::WalBytes::try_admit(source, maximum, control).await {
+        Ok(bytes) => Ok(bytes),
+        Err(mut rejected) => {
+            while rejected.close_step()? {
+                control.grant()?;
+            }
+            Err(rejected.into_error())
+        }
+    }
+}
+
+async fn push_wal_record(records: &mut db_wal::WalRecordBatch, record: db_wal::WalRecord, control: &mut db_wal::WalCursorControl) -> Result<(), DbError> {
+    match records.push(record) {
+        Ok(()) => Ok(()),
+        Err(mut record) => {
+            while record.close_step()? {
+                control.grant()?;
+            }
+            Err(DbError::LimitExceeded("db_artifact fixed wal record batch"))
+        }
+    }
+}
+
+fn decode_retained_envelope(bytes: &db_wal::WalBytes, control: &mut db_wal::WalCursorControl) -> Result<protocol::MutationEnvelope, DbError> {
+    let mut cursor = bytes.cursor();
+    let mutation_id = protocol::MutationId(cursor.text(4_096, control)?);
+    let document_id = protocol::ArtifactId(cursor.text(4_096, control)?);
+    let actor = protocol::ActorId(cursor.text(4_096, control)?);
+    let count = cursor.varint(control)?;
+    check_len(count, 65_536, "artifact wal envelope dependencies")?;
+    let mut dependencies = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        dependencies.push(protocol::MutationId(cursor.text(4_096, control)?));
+    }
+    let diff_schema = protocol::SchemaId(cursor.text(4_096, control)?);
+    let diff_payload = decode_protocol_field(&mut cursor, 256 * 1024 * 1024, control)?;
+    let inverse_schema = protocol::SchemaId(cursor.text(4_096, control)?);
+    let inverse_payload = decode_protocol_field(&mut cursor, 256 * 1024 * 1024, control)?;
+    let timestamp = protocol::HybridLogicalTimestamp { actor: cursor.varint(control)?, physical_ms: cursor.varint(control)?, logical: cursor.varint(control)? };
+    if cursor.remaining() != 0 {
+        return Err(DbError::Corrupt("wal command envelope has trailing bytes".to_string()));
+    }
+    Ok(protocol::MutationEnvelope {
+        mutation_id,
+        document_id,
+        actor,
+        dependencies,
+        diff: protocol::ArtifactDiff { schema: diff_schema, payload: diff_payload },
+        inverse: protocol::InverseMutation { schema: inverse_schema, payload: inverse_payload },
+        timestamp,
+    })
+}
+
+fn decode_protocol_field(cursor: &mut db_wal::WalBytesCursor<'_>, maximum: u64, control: &mut db_wal::WalCursorControl) -> Result<Vec<u8>, DbError> {
+    let mut remaining = cursor.begin_field(maximum, control)?;
+    let mut output = Vec::with_capacity(remaining);
+    let mut fragment = [0u8; 4096];
+    while remaining != 0 {
+        let copied = cursor.read_field_fragment(&mut remaining, &mut fragment, control)?;
+        output.extend_from_slice(&fragment[..copied]);
+    }
+    Ok(output)
+}
+
 /// @emoji 🏗️ A document's materialized state: a flat `db_state::PMap` from path to raw value
 /// bytes, plus a per-path last-writer map for `submit`'s local, path-granular conflict detection
 /// (see `🔖️Conflict`'s doc on why this stays local rather than `db_conflict`-backed). `values` uses
@@ -347,49 +412,89 @@ pub struct CommitNotification {
 /// source — is a real content-addressed digest of the whole state, not an incidental byte count,
 /// and so `PMap::iter` gives `snapshot_now`/`query` a cheap, complete enumeration.
 struct DocumentState {
-    values: db_state::PMap<String, Vec<u8>>,
+    values: db_state::RetainedStateMap,
     last_writer: db_state::PMap<String, protocol::MutationId>,
 }
 
 impl DocumentState {
     // 🚫️async: E1 pure constructor, `db_state::PMap::new` is sync — see R9
     fn new() -> DocumentState {
-        DocumentState { values: db_state::PMap::new(), last_writer: db_state::PMap::new() }
+        DocumentState { values: db_state::RetainedStateMap::new(), last_writer: db_state::PMap::new() }
     }
 
-    async fn get(&self, path: &str) -> Option<Vec<u8>> {
-        self.values.get(&path.to_string()).cloned()
+    fn get(&self, path: &str) -> Option<&db_storage::DbIoPages> {
+        self.values.get(path)
     }
 
-    async fn content_hash(&self) -> ContentHash {
-        self.values.content_hash()
+    async fn content_hash(&self) -> Result<ContentHash, DbError> {
+        let mut control = db_state::StateCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        self.values.content_hash(&mut control).await
     }
 
     /// @emoji ✍️ Applies one envelope's flattened path-value entries, returning the new state, the
     /// `TouchedSet` it wrote, and any conflicts (a path whose last writer is neither `mutation_id`
     /// itself nor a declared `dependencies` member).
-    async fn apply_entries(&self, mutation_id: &protocol::MutationId, dependencies: &[protocol::MutationId], entries: &[(String, Option<DslValue>)]) -> Result<(DocumentState, db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
-        let mut values = self.values.clone();
-        let mut last_writer = self.last_writer.clone();
+    async fn apply_entries(&mut self, mutation_id: &protocol::MutationId, dependencies: &[protocol::MutationId], entries: &[(String, Option<DslValue>)]) -> Result<(db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
+        check_len(entries.len() as u64, 64, "db_artifact::retained_state_mutations")?;
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut control = db_state::StateCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        let mut staged: [Option<db_state::StateEntry>; 64] = std::array::from_fn(|_| None);
+        for (index, (path, value)) in entries.iter().enumerate() {
+            let Some(dsl_value) = value else { continue };
+            let bytes = store::pack_rt::encode_wire_value(dsl_value);
+            match db_state::StateEntry::try_admit(path, bytes, MAX_STATE_PAGE_VALUE_BYTES, &mut control).await {
+                Ok(entry) => staged[index] = Some(entry),
+                Err(mut rejected) => {
+                    while rejected.close_step()? {
+                        control.grant()?;
+                    }
+                    for entry in staged.iter_mut().flatten() {
+                        while entry.close_step()? {
+                            control.grant()?;
+                        }
+                    }
+                    return Err(DbError::InvalidArgument(format!("retained state admission failed: {}", rejected.error())));
+                }
+            }
+        }
         let mut touched = db_state::TouchedSet::new();
         let mut conflicts = Vec::new();
-        for (path, value) in entries {
+        for (index, (path, value)) in entries.iter().enumerate() {
             if let Some(previous_writer) = self.last_writer.get(path) {
                 if previous_writer != mutation_id && !dependencies.contains(previous_writer) {
                     conflicts.push(ConflictRecord { command_id: mutation_id.clone(), conflicting_with: previous_writer.clone(), path: path.clone() });
                 }
             }
             match value {
-                Some(dsl_value) => {
-                    let bytes = store::pack_rt::encode_wire_value(dsl_value);
-                    values = values.insert(path.clone(), bytes);
+                Some(_) => {
+                    let entry = staged[index].take().ok_or_else(|| DbError::Internal("retained state staging lost entry".to_string()))?;
+                    let replaced = match self.values.insert(entry) {
+                        Ok(replaced) => replaced,
+                        Err(mut rejected) => {
+                            while rejected.close_step()? {
+                                control.grant()?;
+                            }
+                            return Err(DbError::LimitExceeded("retained state entries"));
+                        }
+                    };
+                    if let Some(mut replaced) = replaced {
+                        while replaced.close_step()? {
+                            control.grant()?;
+                        }
+                    }
                 }
-                None => values = values.remove(path),
+                None => {
+                    if let Some(mut removed) = self.values.remove(path) {
+                        while removed.close_step()? {
+                            control.grant()?;
+                        }
+                    }
+                }
             }
             touched.record(db_state::TouchedRegion::write(path.clone()));
-            last_writer = last_writer.insert(path.clone(), mutation_id.clone());
+            self.last_writer = self.last_writer.insert(path.clone(), mutation_id.clone());
         }
-        Ok((DocumentState { values, last_writer }, touched, conflicts))
+        Ok((touched, conflicts))
     }
 }
 //#endregion 🔖️State
@@ -546,17 +651,29 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         if let Some((generation, descriptor)) = snapshot_manager.load_latest(&core_id).await? {
             report.from_snapshot = true;
             report.snapshot_generation = Some(generation);
-            let combined = snapshot_manager.materialize_chain(&core_id, generation).await?;
-            let handle = db_snapshot::open_latest(&combined).await?;
+            let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let control = db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+            let mut snapshot_cursor = snapshot_manager.chain_cursor(&core_id, generation, control);
             for hash in &descriptor.roots {
-                let page_bytes = db_snapshot::read_page(&combined, &handle, *hash).await?;
-                for (path, value) in decode_state_page(&page_bytes).await? {
-                    state.values = match value {
-                        Some(bytes) => state.values.insert(path, bytes),
-                        None => state.values.remove(&path),
+                let mut page_bytes = snapshot_cursor.read_page(*hash).await?;
+                let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+                let mut decoder = StatePageDecodeCursor::new(&page_bytes, cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+                while let Some(entry) = decoder.next().await? {
+                    let replaced = match state.values.insert(entry) {
+                        Ok(replaced) => replaced,
+                        Err(mut rejected) => {
+                            while rejected.close_step()? {}
+                            return Err(DbError::LimitExceeded("retained state entries"));
+                        }
                     };
+                    if let Some(mut replaced) = replaced {
+                        while replaced.close_step()? {}
+                    }
                 }
+                while decoder.close_step()? {}
+                while page_bytes.close_step()?.is_some() {}
             }
+            while snapshot_cursor.close_step()? {}
             applied_head_seq = descriptor.head_seq;
             vcs_head = descriptor.vcs_head;
         }
@@ -569,15 +686,18 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         engine.state = state;
         engine.frontier.head_seq = applied_head_seq;
 
-        let records = db_wal::replay_document(&storage.wal().await, &core_id).await?;
+        let wal_facet = storage.wal().await;
+        let replay_cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let replay_control = db_wal::WalCursorControl::new(replay_cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+        let mut records = db_wal::replay_document(&wal_facet, &core_id, replay_control).await?;
         let mut batch_ids: HashSet<String> = HashSet::new();
         let mut seen: u64 = 0;
-        for record in records {
-            match record {
+        while let Some(mut record) = records.next().await? {
+            match &mut record {
                 db_wal::WalRecord::TxBegin { .. } => batch_ids.clear(),
                 db_wal::WalRecord::Command(bytes) => {
-                    let mut pos = 0usize;
-                    let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
+                    let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+                    let envelope = decode_retained_envelope(bytes, &mut control)?;
                     seen += 1;
                     batch_ids.insert(envelope.mutation_id.0.clone());
                     if seen <= applied_head_seq {
@@ -592,10 +712,13 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                     engine.recent_touches.push_back(touch);
                     report.commands_replayed += 1;
                 }
-                db_wal::WalRecord::Frontier(frontier) => engine.frontier = frontier,
+                db_wal::WalRecord::Frontier(frontier) => engine.frontier = frontier.clone(),
                 _ => {}
             }
+            while record.close_step()? {}
         }
+        while records.close_step().await? {}
+        drop(wal_facet);
         Ok((engine, report))
     }
 
@@ -645,8 +768,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         }
         let entries = diff_entries(&envelope.diff).await?;
         check_len(entries.len() as u64, self.config.limits.max_batch_commands as u64, "db_artifact::diff_entries")?;
-        let (new_state, touched, conflicts) = self.state.apply_entries(&envelope.mutation_id, &envelope.dependencies, &entries).await?;
-        self.state = new_state;
+        let (touched, conflicts) = self.state.apply_entries(&envelope.mutation_id, &envelope.dependencies, &entries).await?;
         self.applied.insert(envelope.mutation_id.0.clone(), envelope.clone());
         let actor_seq = self.actor_seq.entry(envelope.actor.0.clone()).or_insert(0);
         *actor_seq += 1;
@@ -678,7 +800,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         }
 
         let mut batch_ids: HashSet<String> = HashSet::new();
-        let mut records: Vec<db_wal::WalRecord> = Vec::new();
+        let mut records = db_wal::WalRecordBatch::new();
+        let wal_cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut wal_control = db_wal::WalCursorControl::new(wal_cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
         let mut touched_all = db_state::TouchedSet::new();
         let mut conflicts_all: Vec<ConflictRecord> = Vec::new();
         // 🎯️ Third tuple element (`Vec<u8>`, the envelope's own encoded bytes) is kept alongside so
@@ -721,15 +845,21 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             // `Command` already carries in real binary, via `protocol::encode_envelope`) deleted —
             // never read anywhere in recovery/replay (confirmed: `db_artifact`/`db_engine` only
             // ever reconstruct state from `WalRecord::Command`), a pure redundant JSON duplicate.
-            records.push(db_wal::WalRecord::Command(envelope_bytes.clone()));
-            records.push(db_wal::WalRecord::Outbox(envelope_bytes.clone()));
+            let command_bytes = admit_wal_bytes(envelope_bytes, self.config.limits.max_command_bytes, &mut wal_control).await?;
+            let mut outbox_bytes = Vec::new();
+            protocol::encode_envelope(envelope, &mut outbox_bytes);
+            let outbox_bytes = admit_wal_bytes(outbox_bytes, self.config.limits.max_command_bytes, &mut wal_control).await?;
+            push_wal_record(&mut records, db_wal::WalRecord::Command(command_bytes), &mut wal_control).await?;
+            push_wal_record(&mut records, db_wal::WalRecord::Outbox(outbox_bytes), &mut wal_control).await?;
+            let mut envelope_bytes = Vec::new();
+            protocol::encode_envelope(envelope, &mut envelope_bytes);
             newly_applied.push((envelope.clone(), touched, envelope_bytes));
         }
 
         if newly_applied.is_empty() {
             // Every envelope in this (re-)submitted batch was already durable individually — a
             // full no-op commit, per-envelope half of the dedupe law (see `apply_one`'s doc).
-            let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash().await), messages: Vec::new() };
+            let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash().await?), messages: Vec::new() };
             self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone());
             return Ok(receipt);
         }
@@ -770,13 +900,16 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
         // publish: compute + WAL-append the new frontier in the same transaction as its commands
         let new_frontier =
-            Frontier { document: self.document.clone(), head_seq: self.frontier.head_seq + newly_applied.len() as u64, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().await.0, epoch: self.frontier.epoch };
-        records.push(db_wal::WalRecord::Frontier(new_frontier.clone()));
+            Frontier { document: self.document.clone(), head_seq: self.frontier.head_seq + newly_applied.len() as u64, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().await?.0, epoch: self.frontier.epoch };
+        push_wal_record(&mut records, db_wal::WalRecord::Frontier(new_frontier.clone()), &mut wal_control).await?;
 
         // WAL append + durability (ArtifactWal::submit wraps `records` in its own TxBegin/TxCommit)
         let wal_facet = self.storage.wal().await;
         self.wal.submit(&wal_facet, &records, options.durability, now_ms).await?;
         drop(wal_facet);
+        while records.close_step()? {
+            wal_control.grant()?;
+        }
         self.frontier = new_frontier.clone();
 
         // publish: durable indices
@@ -818,7 +951,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                 .version_graph
                 .record_change(
                     &self.document,
-                    ChangeRecord { parent: None, content_hash: self.state.content_hash().await, author: to_core_actor_id(&envelope.actor).await, message: format!("operation {}", envelope.mutation_id.0), timestamp_ms: now_ms },
+                    ChangeRecord { parent: None, content_hash: self.state.content_hash().await?, author: to_core_actor_id(&envelope.actor).await, message: format!("operation {}", envelope.mutation_id.0), timestamp_ms: now_ms },
                 )
                 .await
             {
@@ -835,7 +968,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let _ = self.refresh_live_queries().await;
 
         // receipt
-        let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash().await), messages };
+        let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash().await?), messages };
         self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone());
         Ok(receipt)
     }
@@ -861,8 +994,10 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         self.submit(CommandBatch::new(vec![compensating]).await?, SubmitOptions::default(), now_ms).await
     }
 
-    pub async fn get(&self, path: &str) -> Option<Vec<u8>> {
-        self.state.get(path).await
+    pub async fn get(&self, path: &str) -> Result<Option<db_query::QueryBytes>, DbError> {
+        let Some(value) = self.state.get(path) else { return Ok(None) };
+        let mut control = db_query::QueryCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        Ok(Some(db_query::QueryBytes::copy_from_pages(value, &mut control).await?))
     }
 
     pub async fn frontier(&self) -> Frontier {
@@ -886,8 +1021,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// @emoji 📸️ Publishes a new `db_snapshot` generation of the whole current `DocumentState` —
     /// new this revision; the counterpart `open` reads back to accelerate materialization.
     pub async fn snapshot_now(&self, now_ms: u64) -> Result<u64, DbError> {
-        let entries: Vec<(String, Option<Vec<u8>>)> = self.state.values.iter().map(|(path, bytes)| (path.clone(), Some(bytes.clone()))).collect();
-        let page = db_state::Page::new(encode_state_page(&entries).await);
+        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let encoder = StatePageEncodeCursor::try_new(&self.state.values, cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        let page = db_state::Page::try_from_pages(encoder.finish().await?).await?;
         let snapshot_facet = self.storage.snapshot().await;
         let snapshot_manager = db_snapshot::SnapshotManager::new(&snapshot_facet).await;
         let origin = if snapshot_manager.load_latest(&self.document).await?.is_some() { db_snapshot::SnapshotOrigin::Incremental } else { db_snapshot::SnapshotOrigin::FullBaseline };
@@ -925,7 +1061,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             db_query::resolve_consistency(&consistency, &resolver).await?;
         }
         let source = StateQuerySource(&self.state.values);
-        db_query::execute(&query, &source, None::<&db_query::NoFullTextLookup>, &db_query::QueryLimits::default()).await
+        let mut control = db_query::QueryCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+        db_query::execute(&query, &source, None::<&db_query::NoFullTextLookup>, &db_query::QueryLimits::default(), &mut control).await
     }
 
     /// @emoji 📡️ Registers a live query, returning its subscription id — new this revision.
@@ -947,7 +1084,11 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let limits = db_query::QueryLimits::default();
         let mut diffs = Vec::new();
         for (id, live_query) in self.live_queries.iter_mut() {
-            if let Ok(diff) = live_query.refresh(&source, None::<&db_query::NoFullTextLookup>, &limits).await {
+            let mut control = match db_query::QueryCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536) {
+                Ok(control) => control,
+                Err(_) => continue,
+            };
+            if let Ok(diff) = live_query.refresh(&source, None::<&db_query::NoFullTextLookup>, &limits, &mut control).await {
                 if !diff.added.is_empty() || !diff.removed.is_empty() || !diff.updated.is_empty() {
                     diffs.push((*id, diff));
                 }
@@ -997,17 +1138,29 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
     /// @emoji 🌫️ The value a preview would show at `path`: the preview's own diff if it touches
     /// `path`, else falling through to the committed state.
-    pub async fn preview_get(&self, id: &db_preview::PreviewId, path: &str) -> Result<Option<Vec<u8>>, DbError> {
+    pub async fn preview_get(&self, id: &db_preview::PreviewId, path: &str) -> Result<Option<db_query::QueryBytes>, DbError> {
         let preview = self.previews.get(id).ok_or_else(|| DbError::NotFound(format!("preview {id} not found")))?;
         for (entry_path, value) in diff_entries(&preview.envelope.diff).await? {
             if entry_path == path {
                 return match value {
-                    Some(dsl_value) => Ok(Some(store::pack_rt::encode_wire_value(&dsl_value))),
+                    Some(dsl_value) => {
+                        let bytes = store::pack_rt::encode_wire_value(&dsl_value);
+                        let mut writer = db_storage::DbIoPageWriter::try_reserve(bytes.capacity().div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+                        let mut offset = 0;
+                        while offset < bytes.len() {
+                            offset += writer.write_fragment(&bytes[offset..])?;
+                        }
+                        let pages = writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+                        Ok(Some(db_query::QueryBytes::from_pages(pages).map_err(|(error, mut pages)| {
+                            while pages.close_step().ok().flatten().is_some() {}
+                            error
+                        })?))
+                    }
                     None => Ok(None),
                 };
             }
         }
-        Ok(self.state.get(path).await)
+        self.get(path).await
     }
 
     pub async fn preview_status(&self, id: &db_preview::PreviewId) -> Result<db_preview::PreviewState, DbError> {
@@ -1032,78 +1185,274 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 //#region 🔖️QuerySource
 /// @emoji 🚰️ The `db_query::QuerySource` this crate supplies over its own `DocumentState`: one row
 /// per stored path, `{"path": <path>, "value": <text-or-bytes>}`.
-struct StateQuerySource<'a>(&'a db_state::PMap<String, Vec<u8>>);
+struct StateQuerySource<'a>(&'a db_state::RetainedStateMap);
 
 // 🚫️async: E1 pure accessor consumed by a sync Iterator::map (QuerySource::scan's row builder) — see R9
-fn path_row_value(path: &str, bytes: &[u8]) -> db_query::Value {
+async fn path_row_value(path: &str, bytes: &db_storage::DbIoPages, control: &mut db_query::QueryCursorControl) -> Result<db_query::Value, DbError> {
     let mut map = std::collections::BTreeMap::new();
     map.insert("path".to_string(), db_query::Value::Text(path.to_string()));
-    match std::str::from_utf8(bytes) {
-        Ok(text) => {
-            map.insert("value".to_string(), db_query::Value::Text(text.to_string()));
-        }
-        Err(_) => {
-            map.insert("value".to_string(), db_query::Value::Bytes(bytes.to_vec()));
-        }
-    }
-    db_query::Value::Map(map)
+    map.insert("value".to_string(), db_query::Value::Bytes(db_query::QueryBytes::copy_from_pages(bytes, control).await?));
+    Ok(db_query::Value::Map(map))
 }
 
 impl<'a> db_query::QuerySource for StateQuerySource<'a> {
-    async fn scan(&self) -> Box<dyn Iterator<Item = (db_query::RowId, db_query::Value)> + '_> {
-        Box::new(self.0.iter().enumerate().map(|(index, (path, bytes))| (db_query::RowId(index as u64), path_row_value(path, bytes))))
+    async fn scan(&self, control: &mut db_query::QueryCursorControl) -> Result<db_query::QueryRows, DbError> {
+        let mut rows = db_query::QueryRows::new();
+        for (index, entry) in self.0.iter().enumerate() {
+            control.grant()?;
+            let row = db_query::QueryRow::new(db_query::RowId(index as u64), path_row_value(entry.key(), entry.value(), control).await?);
+            rows.push(row).map_err(|_| DbError::LimitExceeded("artifact query row slots"))?;
+        }
+        Ok(rows)
     }
 }
 //#endregion 🔖️QuerySource
 
 //#region 🔖️Snapshot
-/// @emoji 📸️ This crate's own snapshot page convention (opaque to `db_snapshot`/`db_storage`): the
-/// whole `DocumentState` as of the snapshot's frontier, one entry per stored path.
-async fn encode_state_page(entries: &[(String, Option<Vec<u8>>)]) -> Vec<u8> {
-    let mut writer = pack::ByteWriter::new();
-    writer.write_varint_u64(entries.len() as u64);
-    for (path, value) in entries {
-        writer.write_varint_u64(path.len() as u64);
-        writer.write_bytes(path.as_bytes());
-        match value {
-            Some(bytes) => {
-                writer.write_u8(1);
-                writer.write_varint_u64(bytes.len() as u64);
-                writer.write_bytes(bytes);
-            }
-            None => writer.write_u8(0),
-        }
-    }
-    writer.into_bytes()
-}
-
 const MAX_STATE_PAGE_ENTRIES: u64 = 10_000_000;
-const MAX_STATE_PAGE_PATH_BYTES: u64 = 4_096;
+const MAX_STATE_PAGE_PATH_BYTES: u64 = db_storage::DbIoText::maximum_capacity() as u64;
 const MAX_STATE_PAGE_VALUE_BYTES: u64 = 256 * 1024 * 1024;
 
-/// @emoji 🗺️ One decoded state page: `(path, value_bytes)` pairs, `None` marking a tombstoned path.
-type StatePageEntries = Vec<(String, Option<Vec<u8>>)>;
-
-async fn decode_state_page(bytes: &[u8]) -> Result<StatePageEntries, DbError> {
-    let mut reader = pack::ByteReader::new(bytes);
-    let count = reader.read_varint_u64()?;
-    check_len(count, MAX_STATE_PAGE_ENTRIES, "db_artifact::snapshot_page_entries")?;
-    let mut entries = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        let path_len = reader.read_varint_u64()?;
-        check_len(path_len, MAX_STATE_PAGE_PATH_BYTES, "db_artifact::snapshot_page_path")?;
-        let path_bytes = reader.read_bytes(path_len as usize)?.to_vec();
-        let path = String::from_utf8(path_bytes).map_err(|_| DbError::Corrupt("snapshot page path is not valid utf-8".to_string()))?;
-        let value = if reader.read_u8()? == 1 {
-            let len = reader.read_varint_u64()?;
-            check_len(len, MAX_STATE_PAGE_VALUE_BYTES, "db_artifact::snapshot_page_value")?;
-            Some(reader.read_bytes(len as usize)?.to_vec())
-        } else {
-            None
-        };
-        entries.push((path, value));
+fn state_page_varint_len(mut value: u64) -> usize {
+    let mut len = 1;
+    while value >= 0x80 {
+        value >>= 7;
+        len += 1;
     }
-    Ok(entries)
+    len
+}
+
+fn state_page_varint(mut value: u64, output: &mut [u8; 10]) -> &[u8] {
+    let mut len = 0;
+    loop {
+        let mut byte = (value & 0x7f) as u8;
+        value >>= 7;
+        if value != 0 {
+            byte |= 0x80;
+        }
+        output[len] = byte;
+        len += 1;
+        if value == 0 {
+            return &output[..len];
+        }
+    }
+}
+
+struct StatePageGrant {
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+    deadline: std::time::Instant,
+    fuel: usize,
+}
+
+impl StatePageGrant {
+    fn consume(&mut self) -> Result<(), DbError> {
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(DbError::Unavailable("state page cursor cancelled".to_string()));
+        }
+        if std::time::Instant::now() >= self.deadline {
+            return Err(DbError::Unavailable("state page cursor deadline reached".to_string()));
+        }
+        self.fuel = self.fuel.checked_sub(1).ok_or(DbError::LimitExceeded("state page cursor fuel"))?;
+        Ok(())
+    }
+}
+
+struct StatePageEncodeCursor<'state> {
+    values: &'state db_state::RetainedStateMap,
+    writer: db_storage::DbIoPageWriter,
+    grant: StatePageGrant,
+}
+
+impl<'state> StatePageEncodeCursor<'state> {
+    fn try_new(values: &'state db_state::RetainedStateMap, cancelled: Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
+        check_len(values.len() as u64, MAX_STATE_PAGE_ENTRIES, "db_artifact::snapshot_page_entries")?;
+        let mut len = state_page_varint_len(values.len() as u64);
+        for entry in values.iter() {
+            let path = entry.key();
+            let value = entry.value();
+            check_len(path.len() as u64, MAX_STATE_PAGE_PATH_BYTES, "db_artifact::snapshot_page_path")?;
+            check_len(value.len() as u64, MAX_STATE_PAGE_VALUE_BYTES, "db_artifact::snapshot_page_value")?;
+            len = len.checked_add(state_page_varint_len(path.len() as u64) + path.len() + 1 + state_page_varint_len(value.len() as u64) + value.len()).ok_or(DbError::LimitExceeded("state page encoded bytes"))?;
+        }
+        let pages = len.div_ceil(db_storage::DB_IO_PAGE_BYTES);
+        if pages > db_storage::DB_IO_OPERATION_PAGES {
+            return Err(DbError::LimitExceeded("state page reservation"));
+        }
+        let writer = db_storage::DbIoPageWriter::try_reserve(pages).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+        Ok(Self { values, writer, grant: StatePageGrant { cancelled, deadline, fuel } })
+    }
+
+    async fn write(&mut self, bytes: &[u8]) -> Result<(), DbError> {
+        let mut offset = 0;
+        while offset < bytes.len() {
+            self.grant.consume()?;
+            offset += self.writer.write_fragment(&bytes[offset..])?;
+            std::future::poll_fn(|context| {
+                context.waker().wake_by_ref();
+                std::task::Poll::Ready(())
+            })
+            .await;
+        }
+        Ok(())
+    }
+
+    async fn finish(mut self) -> Result<db_storage::DbIoPages, DbError> {
+        let mut varint = [0u8; 10];
+        self.write(state_page_varint(self.values.len() as u64, &mut varint)).await?;
+        for entry in self.values.iter() {
+            let path = entry.key();
+            let value = entry.value();
+            self.write(state_page_varint(path.len() as u64, &mut varint)).await?;
+            self.write(path.as_bytes()).await?;
+            self.write(&[1]).await?;
+            self.write(state_page_varint(value.len() as u64, &mut varint)).await?;
+            for fragment in value.fragments() {
+                self.write(fragment).await?;
+            }
+        }
+        self.writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+    }
+}
+
+struct StatePageDecodeCursor<'pages> {
+    pages: &'pages db_storage::DbIoPages,
+    page: u8,
+    offset: usize,
+    remaining: Option<u64>,
+    grant: StatePageGrant,
+    closed: bool,
+}
+
+impl<'pages> StatePageDecodeCursor<'pages> {
+    fn new(pages: &'pages db_storage::DbIoPages, cancelled: Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
+        if pages.operation() == 0 || fuel == 0 {
+            return Err(DbError::InvalidArgument("state page decode authority".to_string()));
+        }
+        Ok(Self { pages, page: 0, offset: 0, remaining: None, grant: StatePageGrant { cancelled, deadline, fuel }, closed: false })
+    }
+
+    fn byte(&mut self) -> Result<u8, DbError> {
+        self.grant.consume()?;
+        loop {
+            let fragment = self.pages.page(self.page).ok_or_else(|| DbError::Corrupt("state page ended early".to_string()))?;
+            if let Some(byte) = fragment.get(self.offset) {
+                self.offset += 1;
+                return Ok(*byte);
+            }
+            self.page = self.page.checked_add(1).ok_or(DbError::LimitExceeded("state page fragment cursor"))?;
+            self.offset = 0;
+        }
+    }
+
+    fn varint(&mut self) -> Result<u64, DbError> {
+        let mut value = 0u64;
+        for shift in (0..70).step_by(7) {
+            let byte = self.byte()?;
+            value |= u64::from(byte & 0x7f) << shift;
+            if byte & 0x80 == 0 {
+                return Ok(value);
+            }
+        }
+        Err(DbError::Corrupt("state page varint overflow".to_string()))
+    }
+
+    fn fixed_field<const N: usize>(&mut self, len: usize) -> Result<[u8; N], DbError> {
+        if len > N {
+            return Err(DbError::LimitExceeded("state page fixed field"));
+        }
+        let mut output = [0u8; N];
+        let mut written = 0;
+        while written < len {
+            self.grant.consume()?;
+            let fragment = self.pages.page(self.page).ok_or_else(|| DbError::Corrupt("state page field ended early".to_string()))?;
+            if self.offset == fragment.len() {
+                self.page = self.page.checked_add(1).ok_or(DbError::LimitExceeded("state page fragment cursor"))?;
+                self.offset = 0;
+                continue;
+            }
+            let copied = (len - written).min(fragment.len() - self.offset);
+            output[written..written + copied].copy_from_slice(&fragment[self.offset..self.offset + copied]);
+            written += copied;
+            self.offset += copied;
+        }
+        Ok(output)
+    }
+
+    async fn retained_field(&mut self, len: usize) -> Result<db_storage::DbIoPages, DbError> {
+        let pages = len.div_ceil(db_storage::DB_IO_PAGE_BYTES);
+        let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(self.pages.operation(), pages).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+        let mut written = 0;
+        while written < len {
+            self.grant.consume()?;
+            let fragment = self.pages.page(self.page).ok_or_else(|| DbError::Corrupt("state page value ended early".to_string()))?;
+            if self.offset == fragment.len() {
+                self.page = self.page.checked_add(1).ok_or(DbError::LimitExceeded("state page fragment cursor"))?;
+                self.offset = 0;
+                continue;
+            }
+            let copied = (len - written).min(fragment.len() - self.offset);
+            let accepted = writer.write_fragment(&fragment[self.offset..self.offset + copied])?;
+            if accepted != copied {
+                return Err(DbError::Internal("state page value writer made partial progress".to_string()));
+            }
+            self.offset += copied;
+            written += copied;
+            std::future::poll_fn(|context| {
+                context.waker().wake_by_ref();
+                std::task::Poll::Ready(())
+            })
+            .await;
+        }
+        writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+    }
+
+    async fn next(&mut self) -> Result<Option<db_state::StateEntry>, DbError> {
+        let remaining = match self.remaining {
+            Some(remaining) => remaining,
+            None => {
+                let count = self.varint()?;
+                check_len(count, MAX_STATE_PAGE_ENTRIES, "db_artifact::snapshot_page_entries")?;
+                self.remaining = Some(count);
+                count
+            }
+        };
+        if remaining == 0 {
+            return Ok(None);
+        }
+        let path_len = self.varint()?;
+        check_len(path_len, MAX_STATE_PAGE_PATH_BYTES, "db_artifact::snapshot_page_path")?;
+        let path = self.fixed_field::<1024>(path_len as usize)?;
+        let path = std::str::from_utf8(&path[..path_len as usize]).map_err(|_| DbError::Corrupt("snapshot page path is not valid utf-8".to_string()))?;
+        let value = match self.byte()? {
+            1 => {
+                let len = self.varint()?;
+                check_len(len, MAX_STATE_PAGE_VALUE_BYTES, "db_artifact::snapshot_page_value")?;
+                self.retained_field(len as usize).await?
+            }
+            _ => return Err(DbError::Corrupt("state page value tag".to_string())),
+        };
+        let entry = db_state::StateEntry::try_new(path, value).map_err(|(error, mut value)| {
+            while value.close_step().ok().flatten().is_some() {}
+            error
+        })?;
+        self.remaining = Some(remaining - 1);
+        std::future::poll_fn(|context| {
+            context.waker().wake_by_ref();
+            std::task::Poll::Ready(())
+        })
+        .await;
+        Ok(Some(entry))
+    }
+
+    fn close_step(&mut self) -> Result<bool, DbError> {
+        self.grant.consume()?;
+        if self.closed {
+            return Ok(false);
+        }
+        self.remaining = Some(0);
+        self.closed = true;
+        Ok(true)
+    }
 }
 
 /// @emoji 📋️ What `ArtifactEngine::open` did to materialize state — "initial ⊕ snapshot ⊕ WAL
@@ -2586,7 +2935,7 @@ pub enum ArtifactMessage {
     },
     Query {
         path: String,
-        reply: db_actor::ReplySender<Option<Vec<u8>>>,
+        reply: db_actor::ReplySender<Result<Option<db_query::QueryBytes>, DbError>>,
     },
     Frontier {
         reply: db_actor::ReplySender<Frontier>,
@@ -2737,9 +3086,25 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
         }
-        let generation = self.retry_generation.fetch_add(1, Ordering::AcqRel).checked_add(1).expect("artifact runner retry generation exhausted");
+        let generation = match self.retry_generation.fetch_update(Ordering::AcqRel, Ordering::Acquire, |generation| generation.checked_add(1).filter(|next| *next != 0)) {
+            Ok(previous) => match previous.checked_add(1) {
+                Some(generation) => generation,
+                None => {
+                    self.terminalize_retry_authority("artifact runner retry generation exhausted");
+                    return;
+                }
+            },
+            Err(_) => {
+                self.terminalize_retry_authority("artifact runner retry generation exhausted");
+                return;
+            }
+        };
+        let Some(deadline) = self.pool.now_ms().checked_add(ARTIFACT_RUNNER_RETRY_MS) else {
+            self.terminalize_retry_authority("artifact runner retry deadline exhausted");
+            return;
+        };
         let runner = self.clone();
-        self.pool.callback_at(self.pool.now_ms().saturating_add(ARTIFACT_RUNNER_RETRY_MS), move || {
+        self.pool.callback_at(deadline, move || {
             if generation != runner.retry_generation.load(Ordering::Acquire) {
                 return;
             }
@@ -2754,6 +3119,24 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                 }
             }
         });
+    }
+
+    fn terminalize_retry_authority(&self, detail: &'static str) {
+        self.retry_armed.store(false, std::sync::atomic::Ordering::Release);
+        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+        if let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            let mut terminal = self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if terminal.is_none() {
+                *terminal = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
+            } else {
+                drop(terminal);
+                *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
+            }
+        }
+        if let Some(ready) = self.ready.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            ready.send(Err(DbError::Unavailable(detail.to_string())));
+            self.finish();
+        }
     }
 
     fn cancel(self: &Arc<Self>) {
@@ -3053,9 +3436,9 @@ impl ArtifactAuthority {
         self.address.ask(Priority::Command, |reply| ArtifactMessage::Submit { batch, options, now_ms, reply }).await?
     }
 
-    pub async fn query(&self, path: &str) -> Result<Option<Vec<u8>>, DbError> {
+    pub async fn query(&self, path: &str) -> Result<Option<db_query::QueryBytes>, DbError> {
         let path = path.to_string();
-        self.address.ask(Priority::Query, |reply| ArtifactMessage::Query { path, reply }).await
+        self.address.ask(Priority::Query, |reply| ArtifactMessage::Query { path, reply }).await?
     }
 
     pub async fn frontier(&self) -> Result<Frontier, DbError> {
@@ -3138,15 +3521,20 @@ mod tests {
     }
 
     async fn storage() -> StdArc<db_storage::DbBackend> {
-        StdArc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await))
+        StdArc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))
     }
 
     async fn document_id() -> protocol::ArtifactId {
         protocol::ArtifactId("doc-1".to_string())
     }
 
-    async fn stored_json(bytes: &[u8]) -> serde_json::Value {
-        decode_pathmap_json(bytes).await.expect("stored json value")
+    async fn stored_json(mut bytes: db_query::QueryBytes) -> serde_json::Value {
+        let mut raw = Vec::with_capacity(bytes.len());
+        for fragment in bytes.fragments() {
+            raw.extend_from_slice(fragment);
+        }
+        while bytes.close_step().unwrap().is_some() {}
+        decode_pathmap_json(&raw).await.expect("stored json value")
     }
 
     async fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
@@ -3235,8 +3623,8 @@ mod tests {
         assert!(receipt.conflicts.is_empty());
         assert!(receipt.state_hash.is_some());
 
-        let stored = engine.get("name").await.unwrap();
-        let value: serde_json::Value = stored_json(&stored).await;
+        let stored = engine.get("name").await.unwrap().unwrap();
+        let value: serde_json::Value = stored_json(stored).await;
         assert_eq!(value, serde_json::json!("hello"));
         assert_eq!(engine.frontier().await.head_seq, 1);
     }
@@ -3257,9 +3645,9 @@ mod tests {
         assert_eq!(reopened.frontier().await.head_seq, 2);
         assert_eq!(reopened.frontier().await.commit_seq, 2);
 
-        let name: serde_json::Value = stored_json(&reopened.get("name").await.unwrap()).await;
+        let name: serde_json::Value = stored_json(reopened.get("name").await.unwrap().unwrap()).await;
         assert_eq!(name, serde_json::json!("hello"));
-        let count: serde_json::Value = stored_json(&reopened.get("count").await.unwrap()).await;
+        let count: serde_json::Value = stored_json(reopened.get("count").await.unwrap().unwrap()).await;
         assert_eq!(count, serde_json::json!(2));
     }
 
@@ -3288,7 +3676,7 @@ mod tests {
         assert_eq!(report.commands_replayed, 3);
         assert_eq!(reopened.frontier().await.head_seq, 6);
         for i in 0..6 {
-            let value: serde_json::Value = stored_json(&reopened.get(&format!("path-{i}")).await.unwrap()).await;
+            let value: serde_json::Value = stored_json(reopened.get(&format!("path-{i}")).await.unwrap().unwrap()).await;
             assert_eq!(value, serde_json::json!(format!("value-{i}")));
         }
     }
@@ -3298,9 +3686,9 @@ mod tests {
         let storage = storage().await;
         let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
         engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
-        assert!(engine.get("x").await.is_some());
+        assert!(engine.get("x").await.unwrap().is_some());
         engine.submit(CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("x", serde_json::Value::Null)]).await]).await.unwrap(), SubmitOptions::default(), 1).await.unwrap();
-        assert!(engine.get("x").await.is_none());
+        assert!(engine.get("x").await.unwrap().is_none());
     }
     //#endregion 🔖️Engine submit + materialize + WAL replay
 
@@ -3312,7 +3700,7 @@ mod tests {
         let batch = CommandBatch::new(vec![envelope("op-2", &["op-1-never-applied"], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap();
         let result = engine.submit(batch, SubmitOptions::default(), 0);
         assert!(matches!(result.await, Err(DbError::InvalidArgument(_))));
-        assert!(engine.get("x").await.is_none(), "a rejected batch must not have partially applied");
+        assert!(engine.get("x").await.unwrap().is_none(), "a rejected batch must not have partially applied");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3344,7 +3732,7 @@ mod tests {
         assert_eq!(receipt.conflicts[0].conflicting_with, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.conflicts[0].path, "x");
         // Last-writer-wins: the conflicting write still applies.
-        let x: serde_json::Value = stored_json(&engine.get("x").await.unwrap()).await;
+        let x: serde_json::Value = stored_json(engine.get("x").await.unwrap().unwrap()).await;
         assert_eq!(x, serde_json::json!(2));
     }
 
@@ -3384,11 +3772,11 @@ mod tests {
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         };
         engine.submit(CommandBatch::new(vec![original]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
-        assert!(engine.get("x").await.is_some());
+        assert!(engine.get("x").await.unwrap().is_some());
 
         let receipt = engine.undo(&protocol::MutationId("op-1".to_string()), protocol::MutationId("op-1-undo".to_string()), protocol::ActorId("alice".to_string()), 1).await.unwrap();
         assert_eq!(receipt.frontier.head_seq, 2);
-        assert!(engine.get("x").await.is_none(), "undo must have applied the recorded inverse (delete x)");
+        assert!(engine.get("x").await.unwrap().is_none(), "undo must have applied the recorded inverse (delete x)");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3409,14 +3797,14 @@ mod tests {
 
         let preview_id = engine.publish_preview(&[("y".to_string(), Some(serde_json::json!("preview-value")))], 0).await.unwrap();
         assert_eq!(engine.preview_status(&preview_id).await.unwrap(), db_preview::PreviewState::Active);
-        let preview_value: serde_json::Value = stored_json(&engine.preview_get(&preview_id, "y").await.unwrap().unwrap()).await;
+        let preview_value: serde_json::Value = stored_json(engine.preview_get(&preview_id, "y").await.unwrap().unwrap()).await;
         assert_eq!(preview_value, serde_json::json!("preview-value"));
-        assert!(engine.get("y").await.is_none(), "a preview must never be visible in committed state");
+        assert!(engine.get("y").await.unwrap().is_none(), "a preview must never be visible in committed state");
 
         engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "bob", &[("y", serde_json::json!("committed-value"))]).await]).await.unwrap(), SubmitOptions::default(), 1).await.unwrap();
         assert_eq!(engine.preview_status(&preview_id).await.unwrap(), db_preview::PreviewState::Superseded, "an intersecting real commit must supersede the preview");
 
-        let committed: serde_json::Value = stored_json(&engine.get("y").await.unwrap()).await;
+        let committed: serde_json::Value = stored_json(engine.get("y").await.unwrap().unwrap()).await;
         assert_eq!(committed, serde_json::json!("committed-value"));
     }
 
@@ -3445,7 +3833,7 @@ mod tests {
         let mut engine = ArtifactEngine::create(document_id().await, storage, config, 0).unwrap();
         let result = engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "bob", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0);
         assert!(matches!(result.await, Err(DbError::Unauthorized(_))));
-        assert!(engine.get("x").await.is_none());
+        assert!(engine.get("x").await.unwrap().is_none());
     }
     //#endregion 🔖️Security
 
@@ -3502,7 +3890,7 @@ mod tests {
         let receipt = authority.submit(batch, SubmitOptions::default(), 0).await.unwrap();
         assert_eq!(receipt.frontier.head_seq, 1);
 
-        let queried: serde_json::Value = stored_json(&authority.query("name").await.unwrap().unwrap()).await;
+        let queried: serde_json::Value = stored_json(authority.query("name").await.unwrap().unwrap()).await;
         assert_eq!(queried, serde_json::json!("hi"));
 
         let frontier = authority.frontier().await.unwrap();

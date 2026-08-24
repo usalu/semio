@@ -96,6 +96,14 @@ pub enum SemioPresentationMutation {
         master_id: String,
     },
 }
+
+/// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
+/// list the repository test platform's completeness gate measures `mutate-semio-presentation`
+/// against (catalog `semio-v1-presentation` in `../../🧪️oracle/🔣️component.json`). It aliases
+/// [`OP_KEYWORDS`], which the binary op frame's `tag` byte already indexes by [`variant_ordinal`],
+/// so the vocabulary is declared exactly once and `kinds_match_the_enum_and_the_catalog` keeps that
+/// declaration honest against both the enum and the manifest.
+pub const KINDS: &[&str] = &OP_KEYWORDS;
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -105,6 +113,17 @@ pub enum SemioPresentationMutation {
 pub fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapshot, mutation: &SemioPresentationMutation) -> protocol::MutationOutcome<SemioPresentationDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ `SemioPresentationMutation`'s own computed inverse, reachable from OUTSIDE this crate.
+/// `protocol` is a private `extern crate semio_framework_os_kernel as protocol` alias in
+/// `📦️glue.rs`, so an external caller — an owner-root test adapter is exactly that — cannot bring
+/// `protocol::Mutation` into scope and therefore cannot call the trait method at all. This
+/// wrapper's signature names only types this subset already exports (`kit`'s precedent for the same
+/// structural gap).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn semio_presentation_mutation_inverse(mutation: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {
+    Mutation::inverse(mutation, base)
 }
 //#endregion 🔖️Apply
 
@@ -392,6 +411,31 @@ mod tests {
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
+
+    /// 🧪️ kinds_match_the_enum_and_the_catalog — the honesty check the test platform cannot make
+    /// for itself, because the framework reads a DECLARED list and never parses Rust. Two claims:
+    /// every enum variant reaches `KINDS` at its own [`variant_ordinal`] under exactly the keyword
+    /// its `print_op` grammar emits (`demo_mutation_cases` carries at least one instance of every
+    /// variant), and `KINDS` is character-for-character the `semio-v1-presentation` catalog the
+    /// platform reads.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let mut covered = vec![false; KINDS.len()];
+        for case in demo_mutation_cases() {
+            let ordinal = variant_ordinal(&case) as usize;
+            let keyword = case.print_op().split(' ').next().expect("print_op is never empty").to_string();
+            assert_eq!(KINDS[ordinal], keyword, "semio-presentation: KINDS[{ordinal}] must be the keyword print_op emits for {case:?}");
+            covered[ordinal] = true;
+        }
+        let uncovered: Vec<&&str> = KINDS.iter().zip(&covered).filter(|(_, hit)| !**hit).map(|(kind, _)| kind).collect();
+        assert!(uncovered.is_empty(), "semio-presentation: demo_mutation_cases carries no instance of {uncovered:?}, so those kinds are declared but never exercised");
+
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("the subset's own oracle manifest decodes");
+        let catalog =
+            manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"] == "semio-v1-presentation").expect("the manifest declares the semio-v1-presentation catalog");
+        let declared: Vec<&str> = catalog["kinds"].as_array().expect("the catalog declares kinds").iter().map(|kind| kind.as_str().expect("every declared kind is a string")).collect();
+        assert_eq!(declared, KINDS.to_vec(), "semio-presentation: the declared catalog and KINDS have drifted apart");
+    }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn frame(x: f64, y: f64, w: f64, h: f64) -> SlideFrame {

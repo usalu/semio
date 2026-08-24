@@ -10,6 +10,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_las};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, round_trip_preserves_within};
 
 //#region 🔖️Kinds
 /// 🧾️ Mirrors `LasMutation::KINDS`
@@ -18,6 +19,14 @@ use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::
 /// if this list and the catalog ever drift apart.
 const KINDS: [&str; 15] = ["no-mutation", "set-snapshot", "set-version", "set-system-identifier", "set-software-info", "set-creation-date", "set-scale-and-offset", "set-bounds", "set-points-by-return", "insert-vlr", "remove-vlr", "set-vlr-data", "insert-point", "remove-point", "set-point"];
 //#endregion 🔖️Kinds
+
+//#region 🔖️Profile
+/// 📏️ `semantic-las-v1`'s own declared tolerance (`../../🏅️standards/🔖️1.0/🪆️subsets/✳️any/
+/// 🧪️oracle/🔣️component.json`) — the scale/offset quantization LAS 1.0 stores coordinates through.
+/// Mirrored here so an in-handler law check is exactly as strict as the profile the case is
+/// measured by, never stricter.
+const LAS_TOLERANCE: f64 = 1e-3;
+//#endregion 🔖️Profile
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🧊️pattern-sphere.las";
@@ -39,7 +48,11 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 }
 
 /// ↩️ Applies `<id>` forward, then its independently computed inverse — both against the SAME
-/// untouched `input`, matching `LasMutation::inverse()`'s own base-relative semantics.
+/// untouched `input`, matching `LasMutation::inverse()`'s own base-relative semantics — and ASSERTS
+/// the law here rather than deferring it to the parity phase: the restored cloud's independent
+/// `las::raw` projection must equal the REAL original's own, within `semantic-las-v1`'s own declared
+/// tolerance (the scale/offset quantization) and no stricter. Without the check the scenario would
+/// pass for any inverse the `las` crate merely tolerated.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -47,9 +60,14 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let inverse_spec = oracle_inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &inverse_spec)?;
     let projection = project_las(&restored)?;
+    inverse_restores_within(&spec.str("kind"), &projection, &project_las(&input)?, &[], LAS_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
+/// 🔁️ The identity law, both halves asserted in role: the header, VLRs and every point must survive
+/// the decode/re-encode unchanged, and the output must not be the input bytes back — the reference
+/// re-derives the whole header block and point record layout, so bit-identical output would mean
+/// nothing was parsed.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_round_trip(&input)?;
@@ -57,6 +75,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
         return Err("byte pass-through: oracle output is bit-identical to the input".to_string());
     }
     let projection = project_las(&bytes)?;
+    round_trip_preserves_within(&projection, &project_las(&input)?, &[], LAS_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

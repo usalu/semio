@@ -1,0 +1,52 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ PPTX ECMA-376/✳️strict's own contribution to the repository test platform: the CONFORMANCE-CLASS mutation vocabulary this subset owns, and the reference implementation that performs it independently. The ✳️any subset owns the document vocabulary (sheets, cells, blocks, runs, slides); this subset owns the ISO/IEC 29500-1 Strict class, which is a property of the OPC package and of no document object — one kind per axis its own check_strict_conformance reads, and the two vocabularies are disjoint. Reference: `quick-xml` 0.42 over the `zip` 6 container codec — a generic, namespace-agnostic OPC + XML implementation, which is what this axis needs. The obvious alternative, the Python `python-pptx` distribution on the venv host that landed with `pypdf-pdf-1-4-text`, was considered and NOT chosen: it is a document object model over the PresentationML schema, exposing sheets/paragraphs/slides rather than the package's conformance class, so it could neither perform nor observe a single kind in this catalog. That is a statement about the shape of its API, not a claim about its quality, and it was not verified against an installed copy in the session that wrote this file.",
+  "oracles": [
+    {
+      "id": "pptx-ecma-376-strict-mutate",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42",
+      "capabilities": [
+        "pptx-ecma-376-strict-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-ooxml-pptx-strict-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/tafia/quick-xml",
+      "rationale": "The reference streaming XML reader/writer of the Rust ecosystem, paired with `zip` 6 (MIT/Apache-2.0, already a registered oracle of this owner) for the OPC container. Together they read a real ECMA-376 package, perform every conformance-class edit this catalog declares — namespace declarations, the officeDocument relationship base, the root conformance attribute, legacy VML parts and mc:AlternateContent markup — and reassemble the whole container from the parts alone. That is a genuine second producer for every declared kind, which is why every scenario is @mode-differential. Registered under `quick-xml` because it performs and observes the edit; `zip` is the paired container codec and is exercised by every green scenario. Neither crate is production-reachable: this repository's own OPC and XML codecs are hand-written and link neither.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "pptx-ecma-376-strict",
+      "capability": "pptx-ecma-376-strict-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-main-namespace",
+        "set-drawing-namespace",
+        "set-relationship-base",
+        "set-conformance-attribute",
+        "remove-conformance-attribute",
+        "insert-vml-part",
+        "remove-vml-part",
+        "insert-alternate-content",
+        "remove-alternate-content"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-ooxml-pptx-strict-v1",
+      "description": "An ECMA-376 package compared by its CONFORMANCE-CLASS surface, every field read back out of the bytes by the independent `zip` + `quick-xml` implementation: the part inventory with each part's resolved content type, the main part (ppt/presentation.xml on the real fixture, resolved through the root officeDocument relationship rather than assumed), that part's root element name and full attribute list, every OOXML-family namespace declared anywhere in the package, every relationship type, and the inventory of parts carrying mc:AlternateContent. Document CONTENT is deliberately absent — cell values, paragraphs and slide shapes belong to the ✳️any subset's own profile, and a conformance class says nothing about them. Compression method, entry order, attribute order within an element and XML whitespace are writer choices and are normalised away by projecting sorted, typed facts instead of bytes. No numeric field, hence no tolerance.",
+      "tolerance": 0,
+      "ignoreKeys": []
+    }
+  ]
+}

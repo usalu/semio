@@ -1,0 +1,8 @@
+# 🧭️ Standalone scratch workspace (ticket 26/08/23/END-TO-END-TESTING-REFACTOR, 🏗️ifc 2x3 MVD subsets).
+# The stdio plugin crate cannot compile today — `semio-framework-job` is mid-refactor in another
+# session (RetainedJobPayload / ManuallyDrop) — so the three new production mutation modules and the
+# shared 🧬️mvd primitives are typechecked and unit-tested HERE against the REAL `part21` module and
+# faithful stand-ins for `Ifc2x3Snapshot`/`Ifc2x3Diff`/`protocol`. Never part of the repo build.
+[workspace]
+members = ["async-macros", "protocol", "subject"]
+resolver = "2"

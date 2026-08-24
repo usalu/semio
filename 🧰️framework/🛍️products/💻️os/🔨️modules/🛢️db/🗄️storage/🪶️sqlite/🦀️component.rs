@@ -6,11 +6,8 @@ mod sqlite_storage {
     use crate::db_durability::{DurabilityClass, EpochFence};
     use crate::db_ids::{check_len, ArtifactId, DbError};
     use crate::db_storage::{
-        register_db_io_backend, submit_db_io_task, CatalogStorage, DbIoBackendControl,
-        DbIoBackendKind, DbIoExecutionStep, DbIoLeaseResult, DbIoPageWriter,
-        DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText,
-        DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage,
-        StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
+        close_db_io_backend, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoBackendControl, DbIoBackendKind, DbIoExecutionStep, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult,
+        DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
     };
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
@@ -86,6 +83,8 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         path: DbIoText,
         in_memory: bool,
         payload_hashes: [Mutex<Option<(u64, blake3::Hasher)>>; SQLITE_OPERATION_OWNERS],
+        backend_close_cursor: std::sync::atomic::AtomicUsize,
+        backend_terminal: std::sync::atomic::AtomicBool,
     }
 
     impl SqliteDbIoExecutor {
@@ -95,6 +94,8 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                 path,
                 in_memory,
                 payload_hashes: [const { Mutex::new(None) }; SQLITE_OPERATION_OWNERS],
+                backend_close_cursor: std::sync::atomic::AtomicUsize::new(0),
+                backend_terminal: std::sync::atomic::AtomicBool::new(false),
             }
         }
 
@@ -103,12 +104,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         }
 
         fn ensure_write_stage(connection: &Connection, operation: i64) -> Result<(), DbError> {
-            connection
-                .execute(
-                    "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) VALUES (?1, x'', NULL)",
-                    params![operation],
-                )
-                .map_err(sqlite_err)?;
+            connection.execute("INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) VALUES (?1, x'', NULL)", params![operation]).map_err(sqlite_err)?;
             Ok(())
         }
 
@@ -116,38 +112,20 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             Self::ensure_write_stage(connection, operation)?;
             let Some(fragment) = input.page(0) else { return Ok(true) };
             let fragment_len = fragment.len();
-            connection
-                .execute(
-                    "UPDATE db_io_stage SET bytes = bytes || ?2 WHERE operation = ?1",
-                    params![operation, fragment],
-                )
-                .map_err(sqlite_err)?;
+            connection.execute("UPDATE db_io_stage SET bytes = bytes || ?2 WHERE operation = ?1", params![operation, fragment]).map_err(sqlite_err)?;
             input.advance(fragment_len)?;
             Ok(false)
         }
 
         fn read_stage_step(connection: &Connection, operation: i64, output: &mut DbIoPageWriter) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
-            let total: i64 = connection
-                .query_row(
-                    "SELECT length(bytes) FROM db_io_stage WHERE operation = ?1",
-                    params![operation],
-                    |row| row.get(0),
-                )
-                .optional()
-                .map_err(sqlite_err)?
-                .ok_or_else(|| DbError::NotFound("SQLite DB I/O stage not found".to_string()))?;
+            let total: i64 =
+                connection.query_row("SELECT length(bytes) FROM db_io_stage WHERE operation = ?1", params![operation], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound("SQLite DB I/O stage not found".to_string()))?;
             check_len(total as u64, MAX_BLOB_BYTES, "sqlite retained stage read")?;
             if output.len() == total as usize {
                 return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Pages(output.finish()?))));
             }
             let offset = to_sql_i64(output.len() as u64 + 1, "sqlite retained read offset")?;
-            let fragment: Vec<u8> = connection
-                .query_row(
-                    "SELECT substr(bytes, ?2, ?3) FROM db_io_stage WHERE operation = ?1",
-                    params![operation, offset, DB_IO_PAGE_BYTES as i64],
-                    |row| row.get(0),
-                )
-                .map_err(sqlite_err)?;
+            let fragment: Vec<u8> = connection.query_row("SELECT substr(bytes, ?2, ?3) FROM db_io_stage WHERE operation = ?1", params![operation, offset, DB_IO_PAGE_BYTES as i64], |row| row.get(0)).map_err(sqlite_err)?;
             if fragment.is_empty() || fragment.len() > DB_IO_PAGE_BYTES {
                 return Err(DbError::Corrupt("SQLite returned an invalid fixed DB I/O fragment".to_string()));
             }
@@ -157,10 +135,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
         fn list_step(connection: &Connection, sql: &str, document: &DbIoText, output: &mut DbIoU64List) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
             let offset = to_sql_i64(output.len() as u64, "sqlite list cursor")?;
-            let next: Option<i64> = connection
-                .query_row(sql, params![document.as_str(), offset], |row| row.get(0))
-                .optional()
-                .map_err(sqlite_err)?;
+            let next: Option<i64> = connection.query_row(sql, params![document.as_str(), offset], |row| row.get(0)).optional().map_err(sqlite_err)?;
             if let Some(next) = next {
                 output.push(next as u64)?;
                 Ok((DbIoExecutionStep::Yield, None))
@@ -180,12 +155,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             let (_, hasher) = state.get_or_insert_with(|| (operation, blake3::Hasher::new()));
             if let Some(fragment) = input.page(0) {
                 let fragment_len = fragment.len();
-                connection
-                    .execute(
-                        "UPDATE db_io_stage SET bytes = bytes || ?2 WHERE operation = ?1",
-                        params![sql_operation, fragment],
-                    )
-                    .map_err(sqlite_err)?;
+                connection.execute("UPDATE db_io_stage SET bytes = bytes || ?2 WHERE operation = ?1", params![sql_operation, fragment]).map_err(sqlite_err)?;
                 hasher.update(fragment);
                 input.advance(fragment_len)?;
                 return Ok(None);
@@ -194,19 +164,8 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             Ok(Some(ContentHash(*hasher.finalize().as_bytes())))
         }
 
-        fn stage_read(
-            connection: &Connection,
-            operation: i64,
-            insert: impl FnOnce(&Connection, i64) -> Result<usize, rusqlite::Error>,
-            missing: impl FnOnce() -> DbError,
-        ) -> Result<(), DbError> {
-            let exists: bool = connection
-                .query_row(
-                    "SELECT EXISTS(SELECT 1 FROM db_io_stage WHERE operation = ?1)",
-                    params![operation],
-                    |row| row.get(0),
-                )
-                .map_err(sqlite_err)?;
+        fn stage_read(connection: &Connection, operation: i64, insert: impl FnOnce(&Connection, i64) -> Result<usize, rusqlite::Error>, missing: impl FnOnce() -> DbError) -> Result<(), DbError> {
+            let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM db_io_stage WHERE operation = ?1)", params![operation], |row| row.get(0)).map_err(sqlite_err)?;
             if !exists && insert(connection, operation).map_err(sqlite_err)? == 0 {
                 return Err(missing());
             }
@@ -217,6 +176,10 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
     //#region 🔖️Executor
     impl DbIoTaskExecutor for SqliteDbIoExecutor {
+        fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+            self
+        }
+
         fn execute_step(&self, operation: u64, task: &mut DbIoTask) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
             if let DbIoTask::BackendOpen { path, .. } = task {
                 if path.as_str() != self.path.as_str() {
@@ -241,7 +204,6 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                 return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)));
             }
             if matches!(task, DbIoTask::BackendClose { .. }) {
-                self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
                 return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)));
             }
             let mut owner = self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -250,10 +212,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             match task {
                 DbIoTask::WalCreate { document, index, .. } => {
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
-                    let changed = connection.execute(
-                        "INSERT OR IGNORE INTO wal_segment (document, segment_index, bytes, sealed) VALUES (?1, ?2, x'', 0)",
-                        params![document.as_str(), index],
-                    ).map_err(sqlite_err)?;
+                    let changed = connection.execute("INSERT OR IGNORE INTO wal_segment (document, segment_index, bytes, sealed) VALUES (?1, ?2, x'', 0)", params![document.as_str(), index]).map_err(sqlite_err)?;
                     if changed == 0 {
                         return Err(DbError::AlreadyExists(format!("WAL segment {index} for {} already exists", document.as_str())));
                     }
@@ -265,25 +224,16 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     }
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
                     let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-                    let sealed: Option<i64> = transaction.query_row(
-                        "SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
-                        params![document.as_str(), index],
-                        |row| row.get(0),
-                    ).optional().map_err(sqlite_err)?;
+                    let sealed: Option<i64> = transaction.query_row("SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).optional().map_err(sqlite_err)?;
                     match sealed {
                         None => return Err(DbError::NotFound(format!("WAL segment {index} not found"))),
                         Some(1) => return Err(DbError::InvalidArgument("cannot append to sealed WAL segment".to_string())),
                         _ => {}
                     }
-                    transaction.execute(
-                        "UPDATE wal_segment SET bytes = bytes || (SELECT bytes FROM db_io_stage WHERE operation = ?3) WHERE document = ?1 AND segment_index = ?2",
-                        params![document.as_str(), index, sql_operation],
-                    ).map_err(sqlite_err)?;
-                    let length: i64 = transaction.query_row(
-                        "SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
-                        params![document.as_str(), index],
-                        |row| row.get(0),
-                    ).map_err(sqlite_err)?;
+                    transaction
+                        .execute("UPDATE wal_segment SET bytes = bytes || (SELECT bytes FROM db_io_stage WHERE operation = ?3) WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index, sql_operation])
+                        .map_err(sqlite_err)?;
+                    let length: i64 = transaction.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).map_err(sqlite_err)?;
                     transaction.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
                     transaction.commit().map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(length as u64))))
@@ -294,10 +244,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                 }
                 DbIoTask::WalSeal { document, index, .. } => {
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
-                    let changed = connection.execute(
-                        "UPDATE wal_segment SET sealed = 1 WHERE document = ?1 AND segment_index = ?2",
-                        params![document.as_str(), index],
-                    ).map_err(sqlite_err)?;
+                    let changed = connection.execute("UPDATE wal_segment SET sealed = 1 WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index]).map_err(sqlite_err)?;
                     if changed == 0 {
                         return Err(DbError::NotFound(format!("WAL segment {index} not found")));
                     }
@@ -307,11 +254,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
                     let start = to_sql_i64(range.offset.saturating_add(1), "sqlite WAL offset")?;
                     let length = to_sql_i64(range.len, "sqlite WAL length")?;
-                    let actual: Option<i64> = connection.query_row(
-                        "SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
-                        params![document.as_str(), index],
-                        |row| row.get(0),
-                    ).optional().map_err(sqlite_err)?;
+                    let actual: Option<i64> = connection.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).optional().map_err(sqlite_err)?;
                     let actual = actual.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))? as u64;
                     let end = range.offset.checked_add(range.len).ok_or(DbError::LimitExceeded("sqlite WAL range"))?;
                     if end > actual {
@@ -320,62 +263,48 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     Self::stage_read(
                         connection,
                         sql_operation,
-                        |connection, operation| connection.execute(
-                            "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, substr(bytes, ?4, ?5), NULL FROM wal_segment WHERE document = ?2 AND segment_index = ?3",
-                            params![operation, document.as_str(), index, start, length],
-                        ),
+                        |connection, operation| {
+                            connection.execute(
+                                "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, substr(bytes, ?4, ?5), NULL FROM wal_segment WHERE document = ?2 AND segment_index = ?3",
+                                params![operation, document.as_str(), index, start, length],
+                            )
+                        },
                         || DbError::NotFound(format!("WAL segment {index} not found")),
                     )?;
                     Self::read_stage_step(connection, sql_operation, output)
                 }
                 DbIoTask::WalLength { document, index, .. } => {
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
-                    let length: Option<i64> = connection.query_row(
-                        "SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
-                        params![document.as_str(), index],
-                        |row| row.get(0),
-                    ).optional().map_err(sqlite_err)?;
+                    let length: Option<i64> = connection.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| row.get(0)).optional().map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(length.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))? as u64))))
                 }
-                DbIoTask::WalList { document, output, .. } => Self::list_step(
-                    connection,
-                    "SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC LIMIT 1 OFFSET ?2",
-                    document,
-                    output,
-                ),
+                DbIoTask::WalList { document, output, .. } => Self::list_step(connection, "SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC LIMIT 1 OFFSET ?2", document, output),
                 DbIoTask::WalTruncate { document, index, new_len, .. } => {
                     let index = to_sql_i64(*index, "sqlite WAL index")?;
                     let new_len = to_sql_i64(*new_len, "sqlite WAL truncate length")?;
-                    let current: Option<(i64, i64)> = connection.query_row(
-                        "SELECT length(bytes), sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
-                        params![document.as_str(), index],
-                        |row| Ok((row.get(0)?, row.get(1)?)),
-                    ).optional().map_err(sqlite_err)?;
+                    let current: Option<(i64, i64)> =
+                        connection.query_row("SELECT length(bytes), sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
                     let (current, sealed) = current.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))?;
                     if sealed != 0 || new_len > current {
                         return Err(DbError::InvalidArgument("invalid sealed or growing WAL truncation".to_string()));
                     }
-                    connection.execute(
-                        "UPDATE wal_segment SET bytes = substr(bytes, 1, ?3) WHERE document = ?1 AND segment_index = ?2",
-                        params![document.as_str(), index, new_len],
-                    ).map_err(sqlite_err)?;
+                    connection.execute("UPDATE wal_segment SET bytes = substr(bytes, 1, ?3) WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), index, new_len]).map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }
                 DbIoTask::WalDelete { document, index, .. } => {
-                    connection.execute(
-                        "DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
-                        params![document.as_str(), to_sql_i64(*index, "sqlite WAL index")?],
-                    ).map_err(sqlite_err)?;
+                    connection.execute("DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.as_str(), to_sql_i64(*index, "sqlite WAL index")?]).map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }
                 DbIoTask::SnapshotWrite { document, generation, input, .. } => {
                     if !Self::write_stage_step(connection, sql_operation, input)? {
                         return Ok((DbIoExecutionStep::Yield, None));
                     }
-                    connection.execute(
-                        "INSERT INTO snapshot_generation (document, generation, bytes) SELECT ?1, ?2, bytes FROM db_io_stage WHERE operation = ?3 ON CONFLICT(document, generation) DO UPDATE SET bytes = excluded.bytes",
-                        params![document.as_str(), to_sql_i64(*generation, "sqlite snapshot generation")?, sql_operation],
-                    ).map_err(sqlite_err)?;
+                    connection
+                        .execute(
+                            "INSERT INTO snapshot_generation (document, generation, bytes) SELECT ?1, ?2, bytes FROM db_io_stage WHERE operation = ?3 ON CONFLICT(document, generation) DO UPDATE SET bytes = excluded.bytes",
+                            params![document.as_str(), to_sql_i64(*generation, "sqlite snapshot generation")?, sql_operation],
+                        )
+                        .map_err(sqlite_err)?;
                     connection.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }
@@ -384,43 +313,27 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     Self::stage_read(
                         connection,
                         sql_operation,
-                        |connection, operation| connection.execute(
-                            "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, NULL FROM snapshot_generation WHERE document = ?2 AND generation = ?3",
-                            params![operation, document.as_str(), generation],
-                        ),
+                        |connection, operation| {
+                            connection.execute("INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, NULL FROM snapshot_generation WHERE document = ?2 AND generation = ?3", params![operation, document.as_str(), generation])
+                        },
                         || DbError::NotFound(format!("snapshot generation {generation} not found")),
                     )?;
                     Self::read_stage_step(connection, sql_operation, output)
                 }
                 DbIoTask::SnapshotLatest { document, .. } => {
-                    let latest: Option<i64> = connection.query_row(
-                        "SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1",
-                        params![document.as_str()],
-                        |row| row.get(0),
-                    ).map_err(sqlite_err)?;
+                    let latest: Option<i64> = connection.query_row("SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1", params![document.as_str()], |row| row.get(0)).map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::OptionalLength(latest.map(|value| value as u64)))))
                 }
-                DbIoTask::SnapshotList { document, output, .. } => Self::list_step(
-                    connection,
-                    "SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC LIMIT 1 OFFSET ?2",
-                    document,
-                    output,
-                ),
+                DbIoTask::SnapshotList { document, output, .. } => Self::list_step(connection, "SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC LIMIT 1 OFFSET ?2", document, output),
                 DbIoTask::SnapshotDelete { document, generation, .. } => {
-                    connection.execute(
-                        "DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2",
-                        params![document.as_str(), to_sql_i64(*generation, "sqlite snapshot generation")?],
-                    ).map_err(sqlite_err)?;
+                    connection.execute("DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.as_str(), to_sql_i64(*generation, "sqlite snapshot generation")?]).map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }
                 DbIoTask::PayloadPut { input, .. } => {
                     let Some(hash) = self.payload_stage_step(connection, operation, input)? else {
                         return Ok((DbIoExecutionStep::Yield, None));
                     };
-                    connection.execute(
-                        "INSERT OR IGNORE INTO payload (hash, bytes, len) SELECT ?1, bytes, length(bytes) FROM db_io_stage WHERE operation = ?2",
-                        params![hash.to_string(), sql_operation],
-                    ).map_err(sqlite_err)?;
+                    connection.execute("INSERT OR IGNORE INTO payload (hash, bytes, len) SELECT ?1, bytes, length(bytes) FROM db_io_stage WHERE operation = ?2", params![hash.to_string(), sql_operation]).map_err(sqlite_err)?;
                     connection.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Hash(hash))))
                 }
@@ -428,28 +341,17 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     Self::stage_read(
                         connection,
                         sql_operation,
-                        |connection, operation| connection.execute(
-                            "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, NULL FROM payload WHERE hash = ?2",
-                            params![operation, hash.to_string()],
-                        ),
+                        |connection, operation| connection.execute("INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, NULL FROM payload WHERE hash = ?2", params![operation, hash.to_string()]),
                         || DbError::NotFound(format!("payload {hash} not found")),
                     )?;
                     Self::read_stage_step(connection, sql_operation, output)
                 }
                 DbIoTask::PayloadExists { hash, .. } => {
-                    let exists: bool = connection.query_row(
-                        "SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)",
-                        params![hash.to_string()],
-                        |row| row.get(0),
-                    ).map_err(sqlite_err)?;
+                    let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)", params![hash.to_string()], |row| row.get(0)).map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Exists(exists))))
                 }
                 DbIoTask::PayloadLength { hash, .. } => {
-                    let length: Option<i64> = connection.query_row(
-                        "SELECT len FROM payload WHERE hash = ?1",
-                        params![hash.to_string()],
-                        |row| row.get(0),
-                    ).optional().map_err(sqlite_err)?;
+                    let length: Option<i64> = connection.query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(length.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))? as u64))))
                 }
                 DbIoTask::PayloadDelete { hash, .. } => {
@@ -457,28 +359,20 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }
                 DbIoTask::CatalogRead { output, .. } => {
-                    let inserted = connection.execute(
-                        "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, epoch FROM catalog_root WHERE id = 0",
-                        params![sql_operation],
-                    ).map_err(sqlite_err)?;
-                    let exists: bool = connection.query_row(
-                        "SELECT EXISTS(SELECT 1 FROM db_io_stage WHERE operation = ?1)",
-                        params![sql_operation],
-                        |row| row.get(0),
-                    ).map_err(sqlite_err)?;
+                    let inserted = connection.execute("INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, epoch FROM catalog_root WHERE id = 0", params![sql_operation]).map_err(sqlite_err)?;
+                    let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM db_io_stage WHERE operation = ?1)", params![sql_operation], |row| row.get(0)).map_err(sqlite_err)?;
                     if inserted == 0 && !exists {
                         return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::OptionalCatalog(None))));
                     }
                     let (step, result) = Self::read_stage_step(connection, sql_operation, output)?;
-                    let fence: i64 = connection.query_row(
-                        "SELECT number FROM db_io_stage WHERE operation = ?1",
-                        params![sql_operation],
-                        |row| row.get(0),
-                    ).map_err(sqlite_err)?;
-                    Ok((step, result.map(|result| match result {
-                        DbIoResult::Pages(pages) => DbIoResult::OptionalCatalog(Some((pages, EpochFence { epoch: fence as u64 }))),
-                        _ => unreachable!("SQLite catalog stage returns pages"),
-                    })))
+                    let fence: i64 = connection.query_row("SELECT number FROM db_io_stage WHERE operation = ?1", params![sql_operation], |row| row.get(0)).map_err(sqlite_err)?;
+                    Ok((
+                        step,
+                        result.map(|result| match result {
+                            DbIoResult::Pages(pages) => DbIoResult::OptionalCatalog(Some((pages, EpochFence { epoch: fence as u64 }))),
+                            _ => unreachable!("SQLite catalog stage returns pages"),
+                        }),
+                    ))
                 }
                 DbIoTask::CatalogCas { expected, input, .. } => {
                     if !Self::write_stage_step(connection, sql_operation, input)? {
@@ -488,10 +382,12 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     let current: Option<i64> = transaction.query_row("SELECT epoch FROM catalog_root WHERE id = 0", [], |row| row.get(0)).optional().map_err(sqlite_err)?;
                     expected.check(current.map_or(EpochFence::INITIAL, |epoch| EpochFence { epoch: epoch as u64 }))?;
                     let next = expected.next();
-                    transaction.execute(
-                        "INSERT INTO catalog_root (id, bytes, epoch) SELECT 0, bytes, ?2 FROM db_io_stage WHERE operation = ?1 ON CONFLICT(id) DO UPDATE SET bytes = excluded.bytes, epoch = excluded.epoch",
-                        params![sql_operation, to_sql_i64(next.epoch, "sqlite catalog epoch")?],
-                    ).map_err(sqlite_err)?;
+                    transaction
+                        .execute(
+                            "INSERT INTO catalog_root (id, bytes, epoch) SELECT 0, bytes, ?2 FROM db_io_stage WHERE operation = ?1 ON CONFLICT(id) DO UPDATE SET bytes = excluded.bytes, epoch = excluded.epoch",
+                            params![sql_operation, to_sql_i64(next.epoch, "sqlite catalog epoch")?],
+                        )
+                        .map_err(sqlite_err)?;
                     transaction.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
                     transaction.commit().map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Fence(next))))
@@ -500,10 +396,12 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     if !Self::write_stage_step(connection, sql_operation, input)? {
                         return Ok((DbIoExecutionStep::Yield, None));
                     }
-                    connection.execute(
-                        "INSERT INTO index_run (document, run_id, bytes) SELECT ?1, ?2, bytes FROM db_io_stage WHERE operation = ?3 ON CONFLICT(document, run_id) DO UPDATE SET bytes = excluded.bytes",
-                        params![document.as_str(), to_sql_i64(*run_id, "sqlite index run")?, sql_operation],
-                    ).map_err(sqlite_err)?;
+                    connection
+                        .execute(
+                            "INSERT INTO index_run (document, run_id, bytes) SELECT ?1, ?2, bytes FROM db_io_stage WHERE operation = ?3 ON CONFLICT(document, run_id) DO UPDATE SET bytes = excluded.bytes",
+                            params![document.as_str(), to_sql_i64(*run_id, "sqlite index run")?, sql_operation],
+                        )
+                        .map_err(sqlite_err)?;
                     connection.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }
@@ -512,34 +410,22 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     Self::stage_read(
                         connection,
                         sql_operation,
-                        |connection, operation| connection.execute(
-                            "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, NULL FROM index_run WHERE document = ?2 AND run_id = ?3",
-                            params![operation, document.as_str(), run_id],
-                        ),
+                        |connection, operation| {
+                            connection.execute("INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, NULL FROM index_run WHERE document = ?2 AND run_id = ?3", params![operation, document.as_str(), run_id])
+                        },
                         || DbError::NotFound(format!("index run {run_id} not found")),
                     )?;
                     Self::read_stage_step(connection, sql_operation, output)
                 }
-                DbIoTask::IndexList { document, output, .. } => Self::list_step(
-                    connection,
-                    "SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC LIMIT 1 OFFSET ?2",
-                    document,
-                    output,
-                ),
+                DbIoTask::IndexList { document, output, .. } => Self::list_step(connection, "SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC LIMIT 1 OFFSET ?2", document, output),
                 DbIoTask::IndexDelete { document, run_id, .. } => {
-                    connection.execute(
-                        "DELETE FROM index_run WHERE document = ?1 AND run_id = ?2",
-                        params![document.as_str(), to_sql_i64(*run_id, "sqlite index run")?],
-                    ).map_err(sqlite_err)?;
+                    connection.execute("DELETE FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.as_str(), to_sql_i64(*run_id, "sqlite index run")?]).map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }
                 DbIoTask::LeaseAcquire { document, holder, now_ms, ttl_ms, .. } => {
                     let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-                    let existing: Option<(String, i64, i64)> = transaction.query_row(
-                        "SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1",
-                        params![document.as_str()],
-                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-                    ).optional().map_err(sqlite_err)?;
+                    let existing: Option<(String, i64, i64)> =
+                        transaction.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![document.as_str()], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
                     let fence = match existing {
                         Some((existing_holder, epoch, expires)) if *now_ms < expires as u64 => {
                             if existing_holder != holder.as_str() {
@@ -551,20 +437,19 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                         None => EpochFence::INITIAL,
                     };
                     let expires = (*now_ms).checked_add(*ttl_ms).ok_or(DbError::LimitExceeded("sqlite lease expiry"))?;
-                    transaction.execute(
-                        "INSERT INTO lease (resource, holder, epoch, expires_at_ms) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(resource) DO UPDATE SET holder = excluded.holder, epoch = excluded.epoch, expires_at_ms = excluded.expires_at_ms",
-                        params![document.as_str(), holder.as_str(), to_sql_i64(fence.epoch, "sqlite lease epoch")?, to_sql_i64(expires, "sqlite lease expiry")?],
-                    ).map_err(sqlite_err)?;
+                    transaction
+                        .execute(
+                            "INSERT INTO lease (resource, holder, epoch, expires_at_ms) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(resource) DO UPDATE SET holder = excluded.holder, epoch = excluded.epoch, expires_at_ms = excluded.expires_at_ms",
+                            params![document.as_str(), holder.as_str(), to_sql_i64(fence.epoch, "sqlite lease epoch")?, to_sql_i64(expires, "sqlite lease expiry")?],
+                        )
+                        .map_err(sqlite_err)?;
                     transaction.commit().map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Fence(fence))))
                 }
                 DbIoTask::LeaseRenew { document, holder, fence, now_ms, ttl_ms, .. } => {
                     let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-                    let existing: Option<(String, i64, i64)> = transaction.query_row(
-                        "SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1",
-                        params![document.as_str()],
-                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-                    ).optional().map_err(sqlite_err)?;
+                    let existing: Option<(String, i64, i64)> =
+                        transaction.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![document.as_str()], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
                     let (existing_holder, epoch, expires) = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
                     if *now_ms >= expires as u64 {
                         return Err(DbError::Unavailable("lease expired".to_string()));
@@ -574,20 +459,13 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     }
                     fence.check(EpochFence { epoch: epoch as u64 })?;
                     let expires = (*now_ms).checked_add(*ttl_ms).ok_or(DbError::LimitExceeded("sqlite lease expiry"))?;
-                    transaction.execute(
-                        "UPDATE lease SET expires_at_ms = ?2 WHERE resource = ?1",
-                        params![document.as_str(), to_sql_i64(expires, "sqlite lease expiry")?],
-                    ).map_err(sqlite_err)?;
+                    transaction.execute("UPDATE lease SET expires_at_ms = ?2 WHERE resource = ?1", params![document.as_str(), to_sql_i64(expires, "sqlite lease expiry")?]).map_err(sqlite_err)?;
                     transaction.commit().map_err(sqlite_err)?;
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }
                 DbIoTask::LeaseRelease { document, holder, fence, .. } => {
                     let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-                    let existing: Option<(String, i64)> = transaction.query_row(
-                        "SELECT holder, epoch FROM lease WHERE resource = ?1",
-                        params![document.as_str()],
-                        |row| Ok((row.get(0)?, row.get(1)?)),
-                    ).optional().map_err(sqlite_err)?;
+                    let existing: Option<(String, i64)> = transaction.query_row("SELECT holder, epoch FROM lease WHERE resource = ?1", params![document.as_str()], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
                     let (existing_holder, epoch) = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
                     if existing_holder != holder.as_str() {
                         return Err(DbError::Unauthorized("lease holder mismatch".to_string()));
@@ -598,18 +476,10 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
                 }
                 DbIoTask::LeaseGet { document, now_ms, .. } => {
-                    let existing: Option<(String, i64, i64)> = connection.query_row(
-                        "SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1",
-                        params![document.as_str()],
-                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-                    ).optional().map_err(sqlite_err)?;
+                    let existing: Option<(String, i64, i64)> =
+                        connection.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![document.as_str()], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
                     let lease = match existing {
-                        Some((holder, epoch, expires)) if *now_ms < expires as u64 => Some(DbIoLeaseResult {
-                            resource: document.clone(),
-                            holder: DbIoText::try_from_str(&holder)?,
-                            fence: EpochFence { epoch: epoch as u64 },
-                            expires_at_ms: expires as u64,
-                        }),
+                        Some((holder, epoch, expires)) if *now_ms < expires as u64 => Some(DbIoLeaseResult::new(document.clone(), DbIoText::try_from_str(&holder)?, EpochFence { epoch: epoch as u64 }, expires as u64)),
                         _ => None,
                     };
                     Ok((DbIoExecutionStep::Complete, Some(DbIoResult::OptionalLease(lease))))
@@ -633,6 +503,26 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             }
             Ok(true)
         }
+
+        fn close_backend_step(&mut self) -> Result<bool, DbError> {
+            let cursor = self.backend_close_cursor.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            if cursor < self.payload_hashes.len() {
+                self.payload_hashes[cursor].lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                return Ok(false);
+            }
+            if cursor == self.payload_hashes.len() {
+                self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                return Ok(false);
+            }
+            self.backend_terminal.store(true, std::sync::atomic::Ordering::Release);
+            Ok(true)
+        }
+
+        fn backend_terminal_is_empty(&self) -> bool {
+            self.backend_terminal.load(std::sync::atomic::Ordering::Acquire)
+                && self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+                && self.payload_hashes.iter().all(|owner| owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none())
+        }
     }
     //#endregion 🔖️Executor
 
@@ -640,10 +530,11 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     pub struct SqliteStorage {
         control: DbIoBackendControl,
         pool: Arc<WorkerPool>,
+        closed: std::sync::atomic::AtomicBool,
     }
 
     async fn execute(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoResult, DbError> {
-        submit_db_io_task(pool, task).map_err(|(error, _)| error)?.await.map_err(crate::db_storage::DbIoFault::into_db_error)
+        submit_db_io_task(pool, task).map_err(|(error, _)| error)?.await.map_err(crate::db_storage::DbIoFault::into_db_error)?.into_result()
     }
 
     fn output_writer(bytes: u64) -> Result<DbIoPageWriter, DbError> {
@@ -660,30 +551,42 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     }
 
     fn unit(result: DbIoResult) -> Result<(), DbError> {
-        match result { DbIoResult::Unit => Ok(()), _ => Err(result_fault("unit")) }
+        match result {
+            DbIoResult::Unit => Ok(()),
+            _ => Err(result_fault("unit")),
+        }
     }
 
     fn length(result: DbIoResult) -> Result<u64, DbError> {
-        match result { DbIoResult::Length(value) => Ok(value), _ => Err(result_fault("length")) }
+        match result {
+            DbIoResult::Length(value) => Ok(value),
+            _ => Err(result_fault("length")),
+        }
     }
 
     fn pages(result: DbIoResult) -> Result<DbIoPages, DbError> {
-        match result { DbIoResult::Pages(value) => Ok(value), _ => Err(result_fault("pages")) }
+        match result {
+            DbIoResult::Pages(value) => Ok(value),
+            _ => Err(result_fault("pages")),
+        }
     }
 
     fn list(result: DbIoResult) -> Result<DbIoU64List, DbError> {
-        match result { DbIoResult::List(value) => Ok(value), _ => Err(result_fault("list")) }
+        match result {
+            DbIoResult::List(value) => Ok(value),
+            _ => Err(result_fault("list")),
+        }
     }
 
     impl SqliteStorage {
         async fn open_owned(pool: Arc<WorkerPool>, path: DbIoText, in_memory: bool) -> Result<Self, DbError> {
-            let executor = Arc::new(SqliteDbIoExecutor::new(path.clone(), in_memory));
+            let executor = Box::new(SqliteDbIoExecutor::new(path.clone(), in_memory));
             let control = register_db_io_backend(DbIoBackendKind::Sqlite, executor)?;
             if let Err(error) = execute(pool.as_ref(), DbIoTask::BackendOpen { backend: control, path }).await {
                 let _ = execute(pool.as_ref(), DbIoTask::BackendClose { backend: control }).await;
                 return Err(error);
             }
-            Ok(Self { control, pool })
+            Ok(Self { control, pool, closed: std::sync::atomic::AtomicBool::new(false) })
         }
 
         pub async fn open(pool: Arc<WorkerPool>, path: &std::path::Path) -> Result<Self, DbError> {
@@ -696,11 +599,24 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         }
 
         pub async fn close(&self) -> Result<(), DbError> {
-            unit(execute(self.pool.as_ref(), DbIoTask::BackendClose { backend: self.control }).await?)
+            let result = unit(execute(self.pool.as_ref(), DbIoTask::BackendClose { backend: self.control }).await?);
+            if result.is_ok() {
+                close_db_io_backend(self.control).await?;
+                self.closed.store(true, std::sync::atomic::Ordering::Release);
+            }
+            result
         }
 
         pub async fn capabilities(&self) -> StorageCapabilities {
             StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
+        }
+    }
+
+    impl Drop for SqliteStorage {
+        fn drop(&mut self) {
+            if !self.closed.swap(true, std::sync::atomic::Ordering::AcqRel) {
+                let _ = retire_db_io_backend(self.control);
+            }
         }
     }
 
@@ -853,12 +769,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
         async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
             match execute(self.pool.as_ref(), DbIoTask::LeaseGet { backend: self.control, document: DbIoText::try_from_str(resource)?, now_ms }).await? {
-                DbIoResult::OptionalLease(value) => Ok(value.map(|lease| LeaseInfo {
-                    resource: lease.resource.as_str().to_string(),
-                    holder: lease.holder.as_str().to_string(),
-                    fence: lease.fence,
-                    expires_at_ms: lease.expires_at_ms,
-                })),
+                DbIoResult::OptionalLease(value) => Ok(value.map(|lease| LeaseInfo { resource: lease.resource.as_str().to_string(), holder: lease.holder.as_str().to_string(), fence: lease.fence, expires_at_ms: lease.expires_at_ms })),
                 _ => Err(result_fault("optional lease")),
             }
         }

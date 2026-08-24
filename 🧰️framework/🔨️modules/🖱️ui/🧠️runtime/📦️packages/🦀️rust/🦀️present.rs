@@ -1,11 +1,8 @@
 //! @emoji 🎭️ The `Present` trait and the keyed `ComponentTree` a presenter builds.
 //!
-//! `TreeNode` is recursive and that is deliberate — unlike `🧬️contract`'s flat, id-keyed
-//! `UiNodeRecord` table, this tree is builder-side and internal to this crate, and it never crosses
-//! the wire. A presenter is free to re-run from scratch on every present, so this crate never invents
-//! an id: sibling `key`s are the only identity a `TreeNode` carries, and it is packet
-//! `runtime-reconcile`'s job to diff two `ComponentTree`s and assign `ui_contract::UiNodeId`s to the
-//! result, never this file's.
+//! `TreeNode` is the contract crate's fixed-page `BuiltNode`; child shape is an admitted arena handle,
+//! never inline recursion. The retained producer below visits one field, child, or duplicate-key
+//! comparison per opportunity and publishes only after the complete candidate has passed its census.
 //!
 //! [`PresentCx::read`] is the ONLY way a presenter reads entity state, which is what makes
 //! [`crate::DependencyTracker`]'s actual-read tracking automatic rather than declared: a presenter
@@ -15,7 +12,7 @@
 //! below is plain sync by owner ruling U1, which supersedes this program's general async-everything
 //! default for exactly this crate.
 
-use std::collections::HashSet;
+use std::mem::take;
 
 //#region 🔖️Present
 /// 🎭️ Something that presents a [`ComponentTree`] by reading entity state through `cx`. Consumed
@@ -78,92 +75,191 @@ impl<'a> PresentCx<'a> {
 //#endregion 🔖️Present
 
 //#region 🔖️ComponentTree
-/// 🌳️ One node of the builder-side presentation tree a [`Present::present`] returns. Recursive by
-/// design (see the module doc); children are addressed positionally through `children`, never through
-/// an id, since no id exists yet at this stage.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct TreeNode {
-    pub key: String,
-    pub component: ui_contract::Component,
-    pub layout: ui_contract::LayoutSpec,
-    pub style: ui_contract::StyleSpec,
-    pub activity: ui_contract::Activity,
-    pub disabled: bool,
-    pub accessibility: ui_contract::AccessibilitySpec,
-    pub bindings: Vec<ui_contract::ActionBinding>,
-    pub menu: Option<ui_contract::MenuRef>,
-    pub children: Vec<TreeNode>,
+pub use ui_contract::BuiltNode as TreeNode;
+
+pub fn position_key(position: usize) -> Option<ui_contract::UiText> {
+    ui_contract::UiText::try_format(format_args!("#{position}"))
 }
 
-impl TreeNode {
-    /// 🌱️ A node named `key` rendering `component`, every other field at its structural default —
-    /// the common case a presenter then customizes field-by-field via ordinary struct-update syntax.
-    pub fn new(key: impl Into<String>, component: ui_contract::Component) -> Self {
-        Self {
-            key: key.into(),
-            component,
-            layout: ui_contract::LayoutSpec::default(),
-            style: ui_contract::StyleSpec::default(),
-            activity: ui_contract::Activity::default(),
-            disabled: false,
-            accessibility: ui_contract::AccessibilitySpec::default(),
-            bindings: Vec::new(),
-            menu: None,
-            children: Vec::new(),
-        }
-    }
-
-    /// 🔢️ Like [`Self::new`], but with the key defaulted from `position` via [`position_key`] — the
-    /// ergonomic path for `Vec::iter().enumerate().map(...)` over children with no natural identity
-    /// of their own.
-    pub fn at(position: usize, component: ui_contract::Component) -> Self {
-        Self::new(position_key(position), component)
-    }
-
-    /// 👶️ Attaches `children`, asserting their keys are unique among themselves — a repeated sibling
-    /// key is a real authoring bug that otherwise only shows up later as mysterious state loss during
-    /// reconciliation, so this fails loudly here instead.
-    pub fn with_children(mut self, children: impl IntoIterator<Item = TreeNode>) -> Self {
-        self.children = children.into_iter().collect();
-        assert_unique_sibling_keys(&self.children);
-        self
-    }
-}
-
-/// 🔑️ The default sibling key for a child at `position` when its author supplies none — stable as
-/// long as sibling order itself is stable, the same assumption any index-keyed list already makes.
-pub fn position_key(position: usize) -> String {
-    format!("#{position}")
-}
-
-/// 🚨️ Panics naming the first duplicate sibling key found in `children`. A repeated key is an
-/// authoring bug, not a runtime condition to route around — silently keeping the first occurrence
-/// would only defer the failure to a much harder-to-diagnose spot downstream in reconciliation.
-pub fn assert_unique_sibling_keys(children: &[TreeNode]) {
-    let mut seen = HashSet::with_capacity(children.len());
-    for child in children {
-        assert!(seen.insert(child.key.as_str()), "duplicate sibling key {:?}", child.key);
-    }
-}
-
-/// 🌳️ The complete presentation tree one [`Present::present`] call produced.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug)]
 pub struct ComponentTree {
     pub root: TreeNode,
 }
 
 impl ComponentTree {
-    /// 🏗️ Wraps `root` as a complete tree, asserting every level's sibling keys are unique via an
-    /// explicit stack — no recursive call, matching the non-recursive traversal style
-    /// `🧬️contract::UiSnapshotState::iter_subtree` already uses for the same reason. Catches a
-    /// duplicate key anywhere in the tree, not only among `root`'s immediate children.
+    #[cfg(test)]
     pub fn new(root: TreeNode) -> Self {
-        let mut stack = vec![&root];
-        while let Some(node) = stack.pop() {
-            assert_unique_sibling_keys(&node.children);
-            stack.extend(node.children.iter());
-        }
         Self { root }
+    }
+}
+
+pub const COMPONENT_TREE_PRODUCER_DEPTH: usize = 64;
+const COMPONENT_TREE_NODE_FIELDS: u8 = 11;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ComponentTreeProducerFault {
+    Cancelled,
+    Deadline,
+    DuplicateSiblingKey,
+    Generation { expected: u64, actual: u64 },
+    IdentifierBytes,
+    NodeCapacity,
+    NodeDepth,
+    RejectedBacking,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ComponentTreeProducerStep {
+    MoreWork,
+    Complete,
+    Fault(ComponentTreeProducerFault),
+}
+
+struct ComponentTreeProducerFrame {
+    node: TreeNode,
+    source: ui_contract::BuiltChildrenIntoIter,
+    admitted: ui_contract::BuiltChildren,
+    pending: Option<TreeNode>,
+    compare: usize,
+    field: u8,
+}
+
+impl ComponentTreeProducerFrame {
+    fn new(mut node: TreeNode) -> Self {
+        let source = take(&mut node.children).into_iter();
+        Self { node, source, admitted: ui_contract::BuiltChildren::default(), pending: None, compare: 0, field: 0 }
+    }
+}
+
+pub struct ComponentTreeProducer {
+    generation: u64,
+    stack: ui_contract::UiFixedList<ComponentTreeProducerFrame, COMPONENT_TREE_PRODUCER_DEPTH>,
+    complete: Option<ComponentTree>,
+    overflow: Option<TreeNode>,
+    fault: Option<ComponentTreeProducerFault>,
+    nodes: usize,
+}
+
+impl ComponentTreeProducer {
+    pub fn try_new(root: TreeNode, generation: u64) -> Result<Self, TreeNode> {
+        if generation == 0 {
+            return Err(root);
+        }
+        let mut stack = ui_contract::UiFixedList::default();
+        if let Err(frame) = stack.try_push(ComponentTreeProducerFrame::new(root)) {
+            return Err(frame.node);
+        }
+        Ok(Self { generation, stack, complete: None, overflow: None, fault: None, nodes: 0 })
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    pub fn step(&mut self, generation: u64, cancelled: bool, deadline_expired: bool) -> ComponentTreeProducerStep {
+        if let Some(fault) = self.fault {
+            return ComponentTreeProducerStep::Fault(fault);
+        }
+        if generation != self.generation {
+            let fault = ComponentTreeProducerFault::Generation { expected: self.generation, actual: generation };
+            self.fault = Some(fault);
+            return ComponentTreeProducerStep::Fault(fault);
+        }
+        if cancelled {
+            self.fault = Some(ComponentTreeProducerFault::Cancelled);
+            return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::Cancelled);
+        }
+        if deadline_expired {
+            self.fault = Some(ComponentTreeProducerFault::Deadline);
+            return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::Deadline);
+        }
+        let Some(frame) = self.stack.last_mut() else { return ComponentTreeProducerStep::Complete };
+        if !frame.node.rejected_children.is_empty() {
+            self.fault = Some(ComponentTreeProducerFault::RejectedBacking);
+            return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::RejectedBacking);
+        }
+        if frame.field < COMPONENT_TREE_NODE_FIELDS {
+            if frame.field == 0 && frame.node.key.len() > ui_contract::UI_TEXT_MAX_BYTES {
+                self.fault = Some(ComponentTreeProducerFault::IdentifierBytes);
+                return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::IdentifierBytes);
+            }
+            frame.field += 1;
+            return ComponentTreeProducerStep::MoreWork;
+        }
+        if frame.pending.is_none() {
+            if let Some(child) = frame.source.next() {
+                frame.pending = Some(child);
+                frame.compare = 0;
+                return ComponentTreeProducerStep::MoreWork;
+            }
+            let Some(mut complete) = self.stack.pop() else { return ComponentTreeProducerStep::Complete };
+            complete.node.children = complete.admitted;
+            self.nodes = match self.nodes.checked_add(1) {
+                Some(nodes) if nodes <= ui_contract::UI_BUILT_CHILD_RETIRE_SLOTS => nodes,
+                _ => {
+                    self.overflow = Some(complete.node);
+                    self.fault = Some(ComponentTreeProducerFault::NodeCapacity);
+                    return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::NodeCapacity);
+                }
+            };
+            if let Some(parent) = self.stack.last_mut() {
+                if let Err(node) = parent.admitted.try_push(complete.node) {
+                    parent.pending = Some(node);
+                    self.fault = Some(ComponentTreeProducerFault::NodeCapacity);
+                    return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::NodeCapacity);
+                }
+                return ComponentTreeProducerStep::MoreWork;
+            }
+            self.complete = Some(ComponentTree { root: complete.node });
+            return ComponentTreeProducerStep::Complete;
+        }
+        if frame.compare < frame.admitted.len() {
+            let duplicate = frame.admitted[frame.compare].key == frame.pending.as_ref().map_or("", |node| node.key.as_str());
+            frame.compare += 1;
+            if duplicate {
+                self.fault = Some(ComponentTreeProducerFault::DuplicateSiblingKey);
+                return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::DuplicateSiblingKey);
+            }
+            return ComponentTreeProducerStep::MoreWork;
+        }
+        let Some(child) = frame.pending.take() else {
+            self.fault = Some(ComponentTreeProducerFault::RejectedBacking);
+            return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::RejectedBacking);
+        };
+        if let Err(child_frame) = self.stack.try_push(ComponentTreeProducerFrame::new(child)) {
+            let Some(parent) = self.stack.last_mut() else {
+                self.fault = Some(ComponentTreeProducerFault::NodeDepth);
+                return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::NodeDepth);
+            };
+            parent.pending = Some(child_frame.node);
+            self.fault = Some(ComponentTreeProducerFault::NodeDepth);
+            return ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::NodeDepth);
+        }
+        ComponentTreeProducerStep::MoreWork
+    }
+
+    pub fn take_complete(&mut self) -> Option<ComponentTree> {
+        self.complete.take()
+    }
+
+    pub fn fault(&self) -> Option<ComponentTreeProducerFault> {
+        self.fault
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if let Some(tree) = self.complete.take() {
+            drop(tree);
+            return false;
+        }
+        if let Some(node) = self.overflow.take() {
+            drop(node);
+            return false;
+        }
+        if let Some(frame) = self.stack.pop() {
+            drop(frame);
+            return false;
+        }
+        ui_contract::close_built_node_page_one()
     }
 }
 //#endregion 🔖️ComponentTree
@@ -174,56 +270,74 @@ mod tests {
     use super::*;
 
     fn leaf(key: &str) -> TreeNode {
-        TreeNode::new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {}))
+        TreeNode::try_new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})).ok().expect("bounded fixture key")
     }
 
     #[test]
-    fn duplicate_sibling_keys_via_with_children_panic() {
-        let result = std::panic::catch_unwind(|| leaf("root").with_children([leaf("a"), leaf("a")]));
-        assert!(result.is_err());
+    fn mounted_producer_advances_one_opportunity_and_publishes_only_complete_candidate() {
+        let root = leaf("root").try_with_children([leaf("a"), leaf("b")]).ok().expect("fixed child pages");
+        let mut producer = ComponentTreeProducer::try_new(root, 7).ok().expect("nonzero generation");
+        assert!(producer.take_complete().is_none());
+        assert_eq!(producer.step(7, false, false), ComponentTreeProducerStep::MoreWork);
+        assert!(producer.take_complete().is_none());
+        for _ in 0..256 {
+            if producer.step(7, false, false) == ComponentTreeProducerStep::Complete {
+                break;
+            }
+        }
+        assert!(producer.take_complete().is_some());
     }
 
     #[test]
-    fn duplicate_sibling_keys_nested_in_the_tree_are_detected() {
-        let grandchildren = [leaf("x"), leaf("x")];
-        let child = leaf("child");
-        let root = leaf("root").with_children([child]);
-        let result = std::panic::catch_unwind(|| {
-            let mut root = root.clone();
-            root.children[0].children = grandchildren.to_vec();
-            ComponentTree::new(root)
-        });
-        assert!(result.is_err());
+    fn duplicate_stale_cancel_and_deadline_fault_before_publication() {
+        let duplicate = leaf("root").try_with_children([leaf("same"), leaf("same")]).ok().expect("fixed child pages");
+        let mut duplicate = ComponentTreeProducer::try_new(duplicate, 9).ok().expect("producer");
+        for _ in 0..256 {
+            if matches!(duplicate.step(9, false, false), ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::DuplicateSiblingKey)) {
+                break;
+            }
+        }
+        assert_eq!(duplicate.fault(), Some(ComponentTreeProducerFault::DuplicateSiblingKey));
+        assert!(duplicate.take_complete().is_none());
+
+        let mut stale = ComponentTreeProducer::try_new(leaf("stale"), 11).ok().expect("producer");
+        assert_eq!(stale.step(12, false, false), ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::Generation { expected: 11, actual: 12 }));
+        let mut cancelled = ComponentTreeProducer::try_new(leaf("cancel"), 13).ok().expect("producer");
+        assert_eq!(cancelled.step(13, true, false), ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::Cancelled));
+        let mut deadline = ComponentTreeProducer::try_new(leaf("deadline"), 15).ok().expect("producer");
+        assert_eq!(deadline.step(15, false, true), ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::Deadline));
     }
 
     #[test]
-    fn position_derived_keys_are_stable_and_ergonomic() {
-        let children: Vec<TreeNode> = (0..3).map(|i| TreeNode::at(i, ui_contract::Component::Separator(ui_contract::SeparatorProps {}))).collect();
-        assert_eq!(children[0].key, "#0");
-        assert_eq!(children[1].key, "#1");
-        assert_eq!(children[2].key, "#2");
-        let tree = ComponentTree::new(leaf("root").with_children(children));
-        assert_eq!(tree.root.children.len(), 3);
-    }
+    fn deep_tree_maximum_and_plus_one_preserve_exact_fault_owner_for_incremental_close() {
+        let mut maximum = leaf("leaf");
+        for depth in 1..COMPONENT_TREE_PRODUCER_DEPTH {
+            maximum = leaf(position_key(depth).expect("bounded position").as_str()).try_with_children([maximum]).ok().expect("fixed child page");
+        }
+        let mut maximum = ComponentTreeProducer::try_new(maximum, 17).ok().expect("producer");
+        for _ in 0..4_096 {
+            if maximum.step(17, false, false) == ComponentTreeProducerStep::Complete {
+                break;
+            }
+        }
+        assert!(maximum.take_complete().is_some());
 
-    #[test]
-    fn component_tree_three_levels_builds_and_compares() {
-        let grandchild = TreeNode::new("grandchild", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::from("leaf"), emphasize: None, data_attributes: None }));
-        let child =
-            TreeNode::new("child", ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Group, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }))
-                .with_children([grandchild.clone()]);
-        let root = TreeNode::new("root", ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }))
-            .with_children([child.clone()]);
-
-        let tree = ComponentTree::new(root.clone());
-        assert_eq!(tree.root, root);
-        assert_eq!(tree.root.children.len(), 1);
-        assert_eq!(tree.root.children[0], child);
-        assert_eq!(tree.root.children[0].children[0], grandchild);
-        assert_eq!(tree.root.children[0].children[0].children.len(), 0);
-
-        let same_shape = ComponentTree::new(root);
-        assert_eq!(tree, same_shape);
+        let mut plus_one = leaf("leaf");
+        for depth in 1..=COMPONENT_TREE_PRODUCER_DEPTH {
+            plus_one = leaf(position_key(depth).expect("bounded position").as_str()).try_with_children([plus_one]).ok().expect("fixed child page");
+        }
+        let mut plus_one = ComponentTreeProducer::try_new(plus_one, 19).ok().expect("producer");
+        for _ in 0..4_096 {
+            if matches!(plus_one.step(19, false, false), ComponentTreeProducerStep::Fault(ComponentTreeProducerFault::NodeDepth)) {
+                break;
+            }
+        }
+        assert_eq!(plus_one.fault(), Some(ComponentTreeProducerFault::NodeDepth));
+        let mut opportunities = 0;
+        while !plus_one.close_step() {
+            opportunities += 1;
+            assert!(opportunities < 1_024);
+        }
     }
 
     fn _accepts_any_present<P: Present>(_p: &P) {}

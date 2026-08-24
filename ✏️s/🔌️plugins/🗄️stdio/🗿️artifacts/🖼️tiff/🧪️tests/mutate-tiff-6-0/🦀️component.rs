@@ -16,7 +16,8 @@
 //! this third copy is test-harness wiring, not vocabulary.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::any::{oracle_apply_mutation, project_tiff};
+use semio_s_plugin_stdio_test_oracle::artifacts::tiff::standards::v6_0::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_tiff};
+use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-byte-order", "insert-ifd", "remove-ifd", "set-tag", "remove-tag", "set-pixels"];
@@ -63,20 +64,43 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// ↩️ "Undoing `<id>` restores the document" is a PROPERTY, not a differential comparison: the
-/// oracle's target is simply the pristine, untouched original's own projection — the subject's own
-/// handler is what actually applies the mutation and then its inverse and must land back here.
+/// ↩️ "Undoing `<id>` restores the document" is a law checkable WITHOUT a subject, so this handler
+/// checks it: apply the row's kind with the reference IFD-chain codec, apply that codec's own
+/// independently computed inverse on top, and assert the result projects back onto the pristine
+/// original. Returning the untouched original (what this used to do) asserted nothing at all — the
+/// scenario passed whenever the reference codec did not error.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let projection = project_tiff(&input)?;
-    Ok(Outcome::with_raw(input, projection))
+    let spec = resolve_spec(ctx, ctx.doc_json()?)?;
+    let before = project_tiff(&input)?;
+    let mutated = oracle_apply_mutation(&input, &spec)?;
+    let restored = oracle_apply_mutation_inverse(&input, &spec, &mutated)?;
+    let projection = project_tiff(&restored)?;
+    law::inverse_restores(&spec.str("kind"), &projection, &before)?;
+    Ok(Outcome::with_raw(restored, projection))
 }
 
-/// ↩️ Same property shape as [`inverse_oracle`]: the target is the untouched original's projection.
+/// 🔁️ The identity round trip, asserted rather than assumed: the reference codec re-parses the real
+/// two-page document into its own IFD chain and re-serializes from that alone, and the semantic
+/// projection must survive unchanged.
+///
+/// 🚫️ The "re-encoded bytes must differ from the input" half of the law is NOT assertable on this
+/// side and is deliberately not contrived: `shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff` is
+/// itself the output of this very `write_tiff`
+/// (`../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own `derive_real_world_fixture`),
+/// so a canonical, deterministic writer reproducing it byte-for-byte is CORRECT, not a pass-through.
+/// What is assertable — and asserted — is that this writer is a fixpoint on its own output: any
+/// asymmetry between `read_tiff` and `write_tiff` would move the bytes. The pass-through tripwire
+/// itself still binds on the SUBJECT side, whose encoder did not write this fixture.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let projection = project_tiff(&input)?;
-    Ok(Outcome::with_raw(input, projection))
+    let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(Vec::new()))]);
+    let output = oracle_apply_mutation(&input, &no_mutation)?;
+    let before = project_tiff(&input)?;
+    let after = project_tiff(&output)?;
+    law::round_trip_preserves(&after, &before)?;
+    law::carrier_is_exact(&output, &input)?;
+    Ok(Outcome::with_raw(output, after))
 }
 //#endregion 🔖️Oracle
 

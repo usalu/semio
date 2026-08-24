@@ -140,6 +140,50 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
 }
 //#endregion 🔖️SpecHelpers
 
+//#region 🔖️Law
+/// 🔬️ First structural divergence between two projections — a dotted field path plus both values,
+/// so a law that fails names WHICH cell moved instead of only "not equal". Kept local to this
+/// adapter for the same reason `KINDS` is duplicated here: a case adapter is a leaf that links the
+/// test host and this subset's own oracle module, nothing else.
+fn first_divergence(path: &str, expected: &Json, actual: &Json) -> Option<String> {
+    let here = if path.is_empty() { "the projection".to_string() } else { path.to_string() };
+    let child = |key: &str| if path.is_empty() { key.to_string() } else { format!("{path}.{key}") };
+    match (expected, actual) {
+        (Json::Object(left), Json::Object(right)) => {
+            for (key, value) in left {
+                match right.iter().find(|(name, _)| name == key) {
+                    Some((_, other)) => {
+                        if let Some(found) = first_divergence(&child(key), value, other) {
+                            return Some(found);
+                        }
+                    }
+                    None => return Some(format!("{} is gone (the original carried {})", child(key), brief(value))),
+                }
+            }
+            right.iter().find(|(name, _)| !left.iter().any(|(other, _)| other == name)).map(|(name, value)| format!("{} appeared (absent in the original, now {})", child(name), brief(value)))
+        }
+        (Json::Array(left), Json::Array(right)) => {
+            if left.len() != right.len() {
+                return Some(format!("{here} has {} entries, the original had {}", right.len(), left.len()));
+            }
+            left.iter().zip(right.iter()).enumerate().find_map(|(index, (value, other))| first_divergence(&child(&index.to_string()), value, other))
+        }
+        (left, right) if left == right => None,
+        (left, right) => Some(format!("{here} is {} — the original had {}", brief(right), brief(left))),
+    }
+}
+
+/// ✂️ A projection value, truncated: a divergence message must stay readable, and this projection
+/// carries a real 50-row survey table.
+fn brief(value: &Json) -> String {
+    let text = value.to_string();
+    match text.char_indices().nth(160) {
+        Some((cut, _)) => format!("{}…", &text[..cut]),
+        None => text,
+    }
+}
+//#endregion 🔖️Law
+
 //#region 🔖️Oracle
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
@@ -150,25 +194,56 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(output, projection))
 }
 
+/// ↩️ Applies the mutation, applies its independently computed inverse, and ASSERTS the law in
+/// role: the restored workbook must project onto exactly what the real input projects onto.
+///
+/// ⚖️ `set-snapshot` is the ONE documented exception, and only on the `sharedStringCount` axis. That
+/// number is adapter-tracked arithmetic, never observed (`calamine` cannot read the pool — the
+/// oracle module's own doc comment), and this case's `set-snapshot` target is always built with an
+/// EMPTY pool because the JSON `sheets` shape carries no pool at all, on the oracle side and on the
+/// subject's `XlsxWorkbook { shared_strings: vec![] }` alike (see `shared_string_count_after`). Both
+/// sides therefore genuinely land on 0 rather than back on the real workbook's 229: the mutation is
+/// not invertible on that axis, by the vocabulary's own shape, and saying so is honest where
+/// exempting the whole comparison would not be. The sheet grid — every sheet, every cell, every
+/// value — is still held to the full law for `set-snapshot` too.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let kind = spec.str("kind");
     let mutated = oracle_apply_mutation(&input, &spec)?;
     let undo = inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &undo)?;
-    let count_after_forward = shared_string_count_after(BASELINE_SHARED_STRING_COUNT, &spec.str("kind"));
+    let count_after_forward = shared_string_count_after(BASELINE_SHARED_STRING_COUNT, &kind);
     let count_after_inverse = shared_string_count_after(count_after_forward, &undo.str("kind"));
     let projection = project_xlsx_workbook(&restored, count_after_inverse)?;
+    let original = project_xlsx_workbook(&input, BASELINE_SHARED_STRING_COUNT)?;
+    let divergence = match kind.as_str() {
+        "set-snapshot" => first_divergence("sheets", original.get("sheets").unwrap_or(&Json::Null), projection.get("sheets").unwrap_or(&Json::Null)),
+        _ => first_divergence("", &original, &projection),
+    };
+    if let Some(divergence) = divergence {
+        return Err(format!("inverse-{kind}: the mutation followed by its own computed inverse did not restore the original workbook — {divergence}"));
+    }
     Ok(Outcome::with_raw(restored, projection))
 }
 
 /// 🔁️ The oracle's own decode/re-encode, through the SAME independent `calamine` + `rust_xlsxwriter`
-/// pairing this subset's mutations use — proves the reference pairing itself is stable on the real
-/// fixture before the subject's own codec is asked to be.
+/// pairing this subset's mutations use — and ASSERTED, not merely produced: the rebuilt package's
+/// bytes must differ from the input (nothing was copied — `rust_xlsxwriter` assembles a brand-new
+/// package and cannot reproduce another writer's object layout) and its projection must be
+/// identical to the input's (nothing was lost). `sharedStringCount` is the same adapter-tracked
+/// baseline on both sides, so it carries no evidence here; the sheet grid does.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = oracle_round_trip(&input)?;
+    if output == input {
+        return Err("byte pass-through: the rebuilt package is bit-identical to the input".to_string());
+    }
     let projection = project_xlsx_workbook(&output, BASELINE_SHARED_STRING_COUNT)?;
+    let original = project_xlsx_workbook(&input, BASELINE_SHARED_STRING_COUNT)?;
+    if let Some(divergence) = first_divergence("", &original, &projection) {
+        return Err(format!("identity round trip: reading and rebuilding the real workbook did not preserve its semantic projection — {divergence}"));
+    }
     Ok(Outcome::with_raw(output, projection))
 }
 //#endregion 🔖️Oracle

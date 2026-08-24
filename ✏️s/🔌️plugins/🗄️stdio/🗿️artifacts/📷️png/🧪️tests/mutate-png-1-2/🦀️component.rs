@@ -15,6 +15,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_undo_mutation, project_png_mutation};
+use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 📇️ Mirrors `../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
@@ -68,18 +69,33 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
+/// ↩️ The inverse law, asserted rather than assumed: the reference `png` codec applies the row's
+/// kind, then its own computed inverse ON TOP OF that real forward result, and the outcome must
+/// project back onto the pristine original. Returning `undo_mutation(original)` without ever
+/// applying the forward mutation (what this used to do) asserted nothing — the scenario passed
+/// whenever the reference crate re-encoded the untouched fixture without erroring.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let bytes = oracle_undo_mutation(&input, &spec)?;
+    let before = project_png_mutation(&input)?;
+    let mutated = oracle_apply_mutation(&input, &spec)?;
+    let bytes = oracle_undo_mutation(&input, &spec, &mutated)?;
     let projection = project_png_mutation(&bytes)?;
+    law::inverse_restores(&spec.str("kind"), &projection, &before)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
+/// 🔁️ The no-byte-pass-through law on the ORACLE side: the reference `png` codec decodes the real
+/// document and re-encodes it from its own RGBA buffer alone, so the bytes must move (its filter
+/// choices, deflate level and chunk layout are not this fixture's) while the semantic projection —
+/// geometry plus the decoded-sample digest — must not.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_apply_mutation(&input, &no_mutation_spec())?;
+    law::reparsed_not_copied(&bytes, &input)?;
+    let before = project_png_mutation(&input)?;
     let projection = project_png_mutation(&bytes)?;
+    law::round_trip_preserves(&projection, &before)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

@@ -44,6 +44,14 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   and both results are read back through the SAME independent `project_docx_ecma_376` before
   comparison.
 
+  THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because the reference
+  composition did not error. `inverse-<kind>` applies the mutation, applies its own independently
+  computed inverse, and fails with the first diverging field unless the result projects onto exactly
+  what the original document projects onto. `identity-round-trip` fails unless the re-serialized
+  bytes differ from the input AND their projection is identical to the input's. Neither law is
+  scoped down: the whole projection — the ordered block tree, the ordered style list and the
+  path-keyed digest of every other OPC part — has to come back.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

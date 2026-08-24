@@ -1538,7 +1538,10 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
                 let candidate = store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, writer_document_store_owners());
                 *self.candidate = Some(candidate);
                 self.phase = WriterStoreInitializationPhase::Complete;
-                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() })
+                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                })
             }
             WriterStoreInitializationPhase::RetireCancelled | WriterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
@@ -1559,7 +1562,10 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
                     semio_framework_job::StepOutcome::Yield
                 }
             },
-            WriterStoreInitializationPhase::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() }),
+            WriterStoreInitializationPhase::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+            }),
             WriterStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
             WriterStoreInitializationPhase::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.clone().unwrap_or_else(|| b"writer-store.initializer-fault".to_vec()) }),
         }

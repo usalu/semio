@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.animation`'s (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.animation` is a semio-NATIVE format — no third party in any ecosystem reads or writes `.dsl.semio`/`.pack.semio` — so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-animation-mutation-semantics",
+      "capabilities": ["semio-v1-animation-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over this subset's `SemioAnimationMutation` vocabulary — that vocabulary IS this subset's own specification. The three interchange formats this subset imports from were surveyed through the crates already registered by this plugin: `gif` 0.13 exposes per-frame delays and nothing else, which can carry a keyframe TIME but has no representation for a channel target, an interpolation mode, a quaternion or a morph-weight vector, so nine of the thirteen kinds would have nothing to compare against; no glTF crate is registered at all, and the glTF animation model this snapshot is shaped after (`channel` + `sampler`, flattened) is resolved here into owned keyframes rather than accessor indirection, so even a glTF reader would be judging a different structure. The cross-language hosts have landed (a cache-local Python venv and an npm-resolving TypeScript host, see 📓️cross-language-oracle-hosts-2026-08-24.md), so a Python or JavaScript reference was checked too and fails one level earlier: `pygltflib`/`gltf-transform` read glTF, and nothing in any registry reads a semio envelope. Registering a reader that can judge four of thirteen kinds would leave the other nine comparing our output with our own output — the one failure this platform exists to prevent. Confidence comes instead from specification vectors — the committed `(before, mutation, after)` triple per kind under `../../../../🧪️tests/mutate-semio-animation/🧫️fixtures/`, whose BEFORE snapshot is the exact decoded content of this standard's own committed real artifact `✳️any/📚️examples/🚶️walk/🖼️assets/🗣️example.dsl.semio` — plus the metamorphic inverse law: applying a mutation and then its own computed inverse must restore the pre-mutation snapshot exactly.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-animation",
+      "capability": "semio-v1-animation-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "insert-timeline", "remove-timeline", "set-timeline-name", "insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation", "insert-keyframe", "remove-keyframe", "set-keyframe-time", "set-keyframe-value"]
+    }
+  ]
+}

@@ -1,0 +1,373 @@
+{
+  "kind": "set-block-entity-layer",
+  "mutation": {
+    "mutation": "setBlockEntityLayer",
+    "block_name": "door",
+    "handle": "be1",
+    "layer": "dim"
+  },
+  "before": {
+    "schema": "stdio.semio.cad",
+    "layers": [
+      {
+        "name": "0",
+        "colorIndex": 7,
+        "lineType": "CONTINUOUS",
+        "visible": true
+      },
+      {
+        "name": "dim",
+        "colorIndex": 1,
+        "lineType": "DASHED",
+        "visible": true
+      }
+    ],
+    "blocks": [
+      {
+        "name": "door",
+        "basePoint": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "handle": "be1",
+            "layer": "0",
+            "entity": {
+              "kind": "line",
+              "a": {
+                "x": 0.0,
+                "y": 0.0
+              },
+              "b": {
+                "x": 1.0,
+                "y": 0.0
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "entities": [
+      {
+        "handle": "h1",
+        "layer": "0",
+        "entity": {
+          "kind": "arc",
+          "center": {
+            "x": 2.0,
+            "y": 2.0
+          },
+          "radius": 1.0,
+          "start_angle": 0.0,
+          "end_angle": 180.0
+        }
+      },
+      {
+        "handle": "h2",
+        "layer": "0",
+        "entity": {
+          "kind": "circle",
+          "center": {
+            "x": 5.0,
+            "y": 5.0
+          },
+          "radius": 2.0
+        }
+      },
+      {
+        "handle": "h3",
+        "layer": "0",
+        "entity": {
+          "kind": "ellipse",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "major_axis_end": {
+            "x": 3.0,
+            "y": 0.0
+          },
+          "ratio": 0.5,
+          "start_param": 0.0,
+          "end_param": 6.283
+        }
+      },
+      {
+        "handle": "h4",
+        "layer": "0",
+        "entity": {
+          "kind": "polyline",
+          "vertices": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 1.0,
+              "y": 1.0
+            },
+            {
+              "x": 2.0,
+              "y": 0.0
+            }
+          ],
+          "closed": true
+        }
+      },
+      {
+        "handle": "h5",
+        "layer": "0",
+        "entity": {
+          "kind": "text",
+          "position": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "height": 2.5,
+          "rotation": 0.0,
+          "content": "Room 101"
+        }
+      },
+      {
+        "handle": "h6",
+        "layer": "0",
+        "entity": {
+          "kind": "insert",
+          "block_name": "door",
+          "insertion_point": {
+            "x": 10.0,
+            "y": 10.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "rotation": 90.0
+        }
+      },
+      {
+        "handle": "h7",
+        "layer": "0",
+        "entity": {
+          "kind": "solid",
+          "p1": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "p2": {
+            "x": 1.0,
+            "y": 0.0
+          },
+          "p3": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "p4": {
+            "x": 0.0,
+            "y": 1.0
+          }
+        }
+      },
+      {
+        "handle": "h8",
+        "layer": "dim",
+        "entity": {
+          "kind": "dimension",
+          "def_point": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "text_position": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "measurement": 4.2,
+          "text": "4.20m"
+        }
+      }
+    ]
+  },
+  "after": {
+    "schema": "stdio.semio.cad",
+    "layers": [
+      {
+        "name": "0",
+        "colorIndex": 7,
+        "lineType": "CONTINUOUS",
+        "visible": true
+      },
+      {
+        "name": "dim",
+        "colorIndex": 1,
+        "lineType": "DASHED",
+        "visible": true
+      }
+    ],
+    "blocks": [
+      {
+        "name": "door",
+        "basePoint": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "handle": "be1",
+            "layer": "dim",
+            "entity": {
+              "kind": "line",
+              "a": {
+                "x": 0.0,
+                "y": 0.0
+              },
+              "b": {
+                "x": 1.0,
+                "y": 0.0
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "entities": [
+      {
+        "handle": "h1",
+        "layer": "0",
+        "entity": {
+          "kind": "arc",
+          "center": {
+            "x": 2.0,
+            "y": 2.0
+          },
+          "radius": 1.0,
+          "start_angle": 0.0,
+          "end_angle": 180.0
+        }
+      },
+      {
+        "handle": "h2",
+        "layer": "0",
+        "entity": {
+          "kind": "circle",
+          "center": {
+            "x": 5.0,
+            "y": 5.0
+          },
+          "radius": 2.0
+        }
+      },
+      {
+        "handle": "h3",
+        "layer": "0",
+        "entity": {
+          "kind": "ellipse",
+          "center": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "major_axis_end": {
+            "x": 3.0,
+            "y": 0.0
+          },
+          "ratio": 0.5,
+          "start_param": 0.0,
+          "end_param": 6.283
+        }
+      },
+      {
+        "handle": "h4",
+        "layer": "0",
+        "entity": {
+          "kind": "polyline",
+          "vertices": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 1.0,
+              "y": 1.0
+            },
+            {
+              "x": 2.0,
+              "y": 0.0
+            }
+          ],
+          "closed": true
+        }
+      },
+      {
+        "handle": "h5",
+        "layer": "0",
+        "entity": {
+          "kind": "text",
+          "position": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "height": 2.5,
+          "rotation": 0.0,
+          "content": "Room 101"
+        }
+      },
+      {
+        "handle": "h6",
+        "layer": "0",
+        "entity": {
+          "kind": "insert",
+          "block_name": "door",
+          "insertion_point": {
+            "x": 10.0,
+            "y": 10.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "rotation": 90.0
+        }
+      },
+      {
+        "handle": "h7",
+        "layer": "0",
+        "entity": {
+          "kind": "solid",
+          "p1": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "p2": {
+            "x": 1.0,
+            "y": 0.0
+          },
+          "p3": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "p4": {
+            "x": 0.0,
+            "y": 1.0
+          }
+        }
+      },
+      {
+        "handle": "h8",
+        "layer": "dim",
+        "entity": {
+          "kind": "dimension",
+          "def_point": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "text_position": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "measurement": 4.2,
+          "text": "4.20m"
+        }
+      }
+    ]
+  }
+}

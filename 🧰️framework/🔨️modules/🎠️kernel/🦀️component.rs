@@ -1066,10 +1066,468 @@ pub struct Usage {
 }
 
 /// 🏁️ Result of one `reactor::poll` call — `📜️wit/📜️reactor.wit`'s `turn-result` record.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub const UI_TURN_PATCHES_MAXIMUM: usize = 1;
+pub const UI_TURN_PATCH_RETIRE_SLOTS: usize = 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct UiTurnPatchRetireKey {
+    slot: usize,
+    epoch: u64,
+}
+
+#[derive(Debug, Default)]
+struct UiTurnPatchRetireSlot {
+    epoch: u64,
+    reserved: bool,
+    patches: semio_framework_ui_contract::UiFixedList<UiPatch, UI_TURN_PATCHES_MAXIMUM>,
+}
+
+#[derive(Debug)]
+struct UiTurnPatchRetireArena {
+    slots: [UiTurnPatchRetireSlot; UI_TURN_PATCH_RETIRE_SLOTS],
+    next_epoch: u64,
+    epoch_exhausted: bool,
+    close_cursor: usize,
+}
+
+impl Default for UiTurnPatchRetireArena {
+    fn default() -> Self {
+        Self { slots: std::array::from_fn(|_| UiTurnPatchRetireSlot::default()), next_epoch: 1, epoch_exhausted: false, close_cursor: 0 }
+    }
+}
+
+impl UiTurnPatchRetireArena {
+    fn reserve(&mut self) -> Option<UiTurnPatchRetireKey> {
+        if self.epoch_exhausted {
+            return None;
+        }
+        let slot = self.slots.iter().position(|slot| !slot.reserved)?;
+        let epoch = self.next_epoch;
+        let target = &mut self.slots[slot];
+        target.epoch = epoch;
+        target.reserved = true;
+        match epoch.checked_add(1) {
+            Some(next) => self.next_epoch = next,
+            None => self.epoch_exhausted = true,
+        }
+        Some(UiTurnPatchRetireKey { slot, epoch })
+    }
+
+    fn release_empty(&mut self, key: UiTurnPatchRetireKey) -> bool {
+        let Some(slot) = self.slots.get_mut(key.slot) else { return false };
+        if !slot.reserved || slot.epoch != key.epoch || !slot.patches.is_empty() {
+            return false;
+        }
+        slot.reserved = false;
+        true
+    }
+
+    fn handback(
+        &mut self,
+        key: UiTurnPatchRetireKey,
+        patches: semio_framework_ui_contract::UiFixedList<UiPatch, UI_TURN_PATCHES_MAXIMUM>,
+    ) {
+        let slot = &mut self.slots[key.slot];
+        slot.patches = patches;
+    }
+
+    fn close_one(&mut self) -> bool {
+        for offset in 0..UI_TURN_PATCH_RETIRE_SLOTS {
+            let Some(index) = self.close_cursor.checked_add(offset).map(|index| index % UI_TURN_PATCH_RETIRE_SLOTS) else { return false };
+            let slot = &mut self.slots[index];
+            if !slot.reserved || slot.patches.is_empty() {
+                continue;
+            }
+            let Some(next) = index.checked_add(1) else { return false };
+            self.close_cursor = next % UI_TURN_PATCH_RETIRE_SLOTS;
+            let Some(patch) = slot.patches.get_mut(0) else { return false };
+            if patch.ops.pop().is_some() {
+                return true;
+            }
+            slot.patches.swap_remove(0);
+            if slot.patches.is_empty() {
+                slot.reserved = false;
+            }
+            return true;
+        }
+        false
+    }
+}
+
+fn with_ui_turn_patch_retire_arena<T>(f: impl FnOnce(&mut UiTurnPatchRetireArena) -> T) -> T {
+    static ARENA: std::sync::LazyLock<std::sync::Mutex<UiTurnPatchRetireArena>> =
+        std::sync::LazyLock::new(|| std::sync::Mutex::new(UiTurnPatchRetireArena::default()));
+    let mut arena = ARENA.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    f(&mut arena)
+}
+
+pub fn close_ui_turn_patch_owner_one() -> bool {
+    with_ui_turn_patch_retire_arena(UiTurnPatchRetireArena::close_one)
+}
+
+pub const UI_TURN_PATCH_TRANSPORT_SLOTS: usize = 64;
+const UI_TURN_PATCH_TRANSPORT_TOKEN_BYTES: usize = 32;
+const UI_TURN_PATCH_TRANSPORT_MAGIC: [u8; 8] = *b"semui005";
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct UiTurnPatchTransportKey {
+    slot: usize,
+    epoch: u64,
+    session: u64,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum UiTurnPatchTransportState {
+    #[default]
+    Vacant,
+    Building,
+    Published,
+    CheckedOut,
+    Closing,
+}
+
+#[derive(Debug, Default)]
+struct UiTurnPatchTransportSlot {
+    epoch: u64,
+    session: u64,
+    state: UiTurnPatchTransportState,
+    owner: Option<UiTurnPatches>,
+}
+
+#[derive(Debug)]
+struct UiTurnPatchTransportArena {
+    slots: [UiTurnPatchTransportSlot; UI_TURN_PATCH_TRANSPORT_SLOTS],
+    close_cursor: usize,
+}
+
+impl Default for UiTurnPatchTransportArena {
+    fn default() -> Self {
+        Self { slots: std::array::from_fn(|_| UiTurnPatchTransportSlot::default()), close_cursor: 0 }
+    }
+}
+
+impl UiTurnPatchTransportArena {
+    fn reserve(&mut self, session: u64, owner: UiTurnPatches) -> Result<UiTurnPatchTransportKey, UiTurnPatches> {
+        if session == 0 {
+            return Err(owner);
+        }
+        let Some(slot) = self.slots.iter().position(|slot| slot.state == UiTurnPatchTransportState::Vacant) else { return Err(owner) };
+        let Some(epoch) = self.slots[slot].epoch.checked_add(1) else { return Err(owner) };
+        self.slots[slot] = UiTurnPatchTransportSlot { epoch, session, state: UiTurnPatchTransportState::Building, owner: Some(owner) };
+        Ok(UiTurnPatchTransportKey { slot, epoch, session })
+    }
+
+    fn slot_mut(&mut self, key: UiTurnPatchTransportKey) -> Option<&mut UiTurnPatchTransportSlot> {
+        let slot = self.slots.get_mut(key.slot)?;
+        (slot.epoch == key.epoch && slot.session == key.session && slot.state != UiTurnPatchTransportState::Vacant).then_some(slot)
+    }
+
+    fn close_one(&mut self) -> bool {
+        for offset in 0..UI_TURN_PATCH_TRANSPORT_SLOTS {
+            let Some(index) = self.close_cursor.checked_add(offset).map(|index| index % UI_TURN_PATCH_TRANSPORT_SLOTS) else { return false };
+            if self.slots[index].state != UiTurnPatchTransportState::Closing {
+                continue;
+            }
+            let Some(next) = index.checked_add(1) else { return false };
+            self.close_cursor = next % UI_TURN_PATCH_TRANSPORT_SLOTS;
+            let complete = self.slots[index].owner.as_mut().is_none_or(UiTurnPatches::close_step);
+            if complete {
+                let epoch = self.slots[index].epoch;
+                self.slots[index] = UiTurnPatchTransportSlot { epoch, ..UiTurnPatchTransportSlot::default() };
+            }
+            return true;
+        }
+        false
+    }
+
+    fn request_session_close(&mut self, session: u64) -> bool {
+        let Some(slot) = self.slots.iter_mut().find(|slot| slot.session == session && slot.state != UiTurnPatchTransportState::Vacant) else { return false };
+        if slot.state != UiTurnPatchTransportState::CheckedOut {
+            slot.state = UiTurnPatchTransportState::Closing;
+        }
+        true
+    }
+}
+
+fn with_ui_turn_patch_transport_arena<T>(f: impl FnOnce(&mut UiTurnPatchTransportArena) -> T) -> T {
+    static ARENA: std::sync::LazyLock<std::sync::Mutex<UiTurnPatchTransportArena>> =
+        std::sync::LazyLock::new(|| std::sync::Mutex::new(UiTurnPatchTransportArena::default()));
+    let mut arena = ARENA.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    f(&mut arena)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiTurnPatchTransportStep {
+    MoreWork,
+    Ready,
+    Cancelled,
+    Stale,
+}
+
+pub struct UiTurnPatchTransportProducer {
+    key: UiTurnPatchTransportKey,
+    patch: usize,
+    operation: usize,
+    ready: bool,
+    transferred: bool,
+}
+
+impl UiTurnPatchTransportProducer {
+    pub fn try_new(session: u64, owner: UiTurnPatches) -> Result<Self, UiTurnPatches> {
+        let key = with_ui_turn_patch_transport_arena(|arena| arena.reserve(session, owner))?;
+        Ok(Self { key, patch: 0, operation: 0, ready: false, transferred: false })
+    }
+
+    pub fn drive_one(&mut self, session: u64, cancelled: bool, deadline_expired: bool) -> UiTurnPatchTransportStep {
+        if session != self.key.session {
+            return UiTurnPatchTransportStep::Stale;
+        }
+        if cancelled {
+            with_ui_turn_patch_transport_arena(|arena| {
+                if let Some(slot) = arena.slot_mut(self.key) {
+                    slot.state = UiTurnPatchTransportState::Closing;
+                }
+            });
+            return UiTurnPatchTransportStep::Cancelled;
+        }
+        if deadline_expired {
+            return UiTurnPatchTransportStep::MoreWork;
+        }
+        let step = with_ui_turn_patch_transport_arena(|arena| {
+            let slot = arena.slot_mut(self.key)?;
+            if slot.state != UiTurnPatchTransportState::Building {
+                return None;
+            }
+            let owner = slot.owner.as_ref()?;
+            let Some(patch) = owner.iter().nth(self.patch) else {
+                slot.state = UiTurnPatchTransportState::Published;
+                return Some(UiTurnPatchTransportStep::Ready);
+            };
+            if self.operation < patch.ops.len() {
+                self.operation = self.operation.checked_add(1)?;
+                return Some(UiTurnPatchTransportStep::MoreWork);
+            }
+            self.patch = self.patch.checked_add(1)?;
+            self.operation = 0;
+            Some(UiTurnPatchTransportStep::MoreWork)
+        });
+        let Some(step) = step else { return UiTurnPatchTransportStep::Stale };
+        self.ready |= step == UiTurnPatchTransportStep::Ready;
+        step
+    }
+
+    pub fn take_ready(&mut self) -> Option<[u8; UI_TURN_PATCH_TRANSPORT_TOKEN_BYTES]> {
+        if !self.ready || self.transferred {
+            return None;
+        }
+        self.transferred = true;
+        let mut token = [0u8; UI_TURN_PATCH_TRANSPORT_TOKEN_BYTES];
+        token[..8].copy_from_slice(&UI_TURN_PATCH_TRANSPORT_MAGIC);
+        token[8..16].copy_from_slice(&u64::try_from(self.key.slot).ok()?.to_le_bytes());
+        token[16..24].copy_from_slice(&self.key.epoch.to_le_bytes());
+        token[24..32].copy_from_slice(&self.key.session.to_le_bytes());
+        Some(token)
+    }
+}
+
+impl Drop for UiTurnPatchTransportProducer {
+    fn drop(&mut self) {
+        if self.transferred {
+            return;
+        }
+        with_ui_turn_patch_transport_arena(|arena| {
+            if let Some(slot) = arena.slot_mut(self.key) {
+                if matches!(slot.state, UiTurnPatchTransportState::Building | UiTurnPatchTransportState::Published) {
+                    slot.state = UiTurnPatchTransportState::Closing;
+                }
+            }
+        });
+    }
+}
+
+pub struct UiTurnPatchTransportLease {
+    key: UiTurnPatchTransportKey,
+    owner: Option<UiTurnPatches>,
+}
+
+impl UiTurnPatchTransportLease {
+    pub fn try_from_token(token: &[u8], expected_session: u64) -> Result<Self, &'static str> {
+        if token.len() != UI_TURN_PATCH_TRANSPORT_TOKEN_BYTES || token[..8] != UI_TURN_PATCH_TRANSPORT_MAGIC {
+            return Err("invalid turn patch transport token");
+        }
+        let slot = usize::try_from(u64::from_le_bytes(token[8..16].try_into().map_err(|_| "invalid turn patch slot")?)).map_err(|_| "invalid turn patch slot")?;
+        let epoch = u64::from_le_bytes(token[16..24].try_into().map_err(|_| "invalid turn patch epoch")?);
+        let session = u64::from_le_bytes(token[24..32].try_into().map_err(|_| "invalid turn patch session")?);
+        if session != expected_session || session == 0 {
+            return Err("stale turn patch session");
+        }
+        let key = UiTurnPatchTransportKey { slot, epoch, session };
+        let owner = with_ui_turn_patch_transport_arena(|arena| {
+            let slot = arena.slot_mut(key)?;
+            if slot.state != UiTurnPatchTransportState::Published {
+                return None;
+            }
+            slot.state = UiTurnPatchTransportState::CheckedOut;
+            slot.owner.take()
+        })
+        .ok_or("stale or duplicate turn patch token")?;
+        Ok(Self { key, owner: Some(owner) })
+    }
+
+    pub fn take_owner(mut self) -> Result<UiTurnPatches, Self> {
+        let Some(owner) = self.owner.take() else { return Err(self) };
+        with_ui_turn_patch_transport_arena(|arena| {
+            if let Some(slot) = arena.slot_mut(self.key) {
+                let epoch = slot.epoch;
+                *slot = UiTurnPatchTransportSlot { epoch, ..UiTurnPatchTransportSlot::default() };
+            }
+        });
+        Ok(owner)
+    }
+}
+
+impl Drop for UiTurnPatchTransportLease {
+    fn drop(&mut self) {
+        let Some(owner) = self.owner.take() else { return };
+        with_ui_turn_patch_transport_arena(|arena| {
+            if let Some(slot) = arena.slot_mut(self.key) {
+                slot.owner = Some(owner);
+                slot.state = UiTurnPatchTransportState::Closing;
+            }
+        });
+    }
+}
+
+pub fn close_ui_turn_patch_transport_one() -> bool {
+    with_ui_turn_patch_transport_arena(UiTurnPatchTransportArena::close_one)
+}
+
+pub fn close_ui_turn_patch_transport_session_one(session: u64) -> bool {
+    with_ui_turn_patch_transport_arena(|arena| arena.request_session_close(session))
+}
+
+/// 🧰️ The fixed exact-owner patch page emitted by one turn.
+#[derive(Debug)]
+pub struct UiTurnPatches {
+    patches: semio_framework_ui_contract::UiFixedList<UiPatch, UI_TURN_PATCHES_MAXIMUM>,
+    retirement: Option<UiTurnPatchRetireKey>,
+}
+
+impl Default for UiTurnPatches {
+    fn default() -> Self {
+        Self { patches: semio_framework_ui_contract::UiFixedList::default(), retirement: None }
+    }
+}
+
+impl PartialEq for UiTurnPatches {
+    fn eq(&self, other: &Self) -> bool {
+        self.patches == other.patches
+    }
+}
+
+impl UiTurnPatches {
+    pub fn try_push_ui_patch(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
+        if self.retirement.is_none() {
+            let Some(retirement) = with_ui_turn_patch_retire_arena(UiTurnPatchRetireArena::reserve) else { return Err(patch) };
+            self.retirement = Some(retirement);
+        }
+        self.patches.try_push(patch)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &UiPatch> {
+        self.patches.iter()
+    }
+
+    pub fn len(&self) -> usize {
+        self.patches.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.patches.is_empty()
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        let Some(patch) = self.patches.get_mut(0) else {
+            if let Some(retirement) = self.retirement.take() {
+                return with_ui_turn_patch_retire_arena(|arena| arena.release_empty(retirement));
+            }
+            return true;
+        };
+        if patch.ops.pop().is_some() {
+            return false;
+        }
+        self.patches.swap_remove(0);
+        false
+    }
+}
+
+impl IntoIterator for UiTurnPatches {
+    type Item = UiPatch;
+    type IntoIter = <semio_framework_ui_contract::UiFixedList<UiPatch, UI_TURN_PATCHES_MAXIMUM> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let mut owner = self;
+        let patches = std::mem::take(&mut owner.patches);
+        if let Some(retirement) = owner.retirement.take() {
+            let _ = with_ui_turn_patch_retire_arena(|arena| arena.release_empty(retirement));
+        }
+        patches.into_iter()
+    }
+}
+
+impl Drop for UiTurnPatches {
+    fn drop(&mut self) {
+        let Some(retirement) = self.retirement.take() else { return };
+        if self.patches.is_empty() {
+            let _ = with_ui_turn_patch_retire_arena(|arena| arena.release_empty(retirement));
+            return;
+        }
+        let patches = std::mem::take(&mut self.patches);
+        with_ui_turn_patch_retire_arena(|arena| arena.handback(retirement, patches));
+    }
+}
+
+impl Serialize for UiTurnPatches {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+        let mut sequence = serializer.serialize_seq(Some(self.len()))?;
+        for patch in self.iter() {
+            sequence.serialize_element(patch)?;
+        }
+        sequence.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for UiTurnPatches {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct UiTurnPatchesVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for UiTurnPatchesVisitor {
+            type Value = UiTurnPatches;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a fixed turn patch page")
+            }
+
+            fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
+                let mut patches = UiTurnPatches::default();
+                while let Some(patch) = access.next_element::<UiPatch>()? {
+                    if patches.try_push_ui_patch(patch).is_err() {
+                        return Err(serde::de::Error::custom("turn patch page capacity exceeded"));
+                    }
+                }
+                Ok(patches)
+            }
+        }
+
+        deserializer.deserialize_seq(UiTurnPatchesVisitor)
+    }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TurnResult {
-    pub ui_patches: Vec<UiPatch>,
+    pub ui_patches: UiTurnPatches,
     pub effects: Vec<Effect>,
     /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): render-plane presence derived this turn by the
     /// reactor's own `PresenceHub` — `(surface, node_key)`-addressed, TTL-scoped, NEVER a document
@@ -1084,6 +1542,124 @@ pub struct TurnResult {
     pub status: TurnStatus,
     pub fuel_used: u64,
     pub command_ingress: CommandIngressStatus,
+}
+
+#[cfg(test)]
+mod ui_turn_patch_tests {
+    use super::*;
+
+    fn patch(revision: u64) -> UiPatch {
+        UiPatch {
+            surface: semio_framework_ui_contract::SurfaceId::try_from("turn.surface").expect("bounded surface"),
+            base_revision: semio_framework_ui_contract::UiRevision(revision.checked_sub(1).unwrap_or(0)),
+            revision: semio_framework_ui_contract::UiRevision(revision),
+            ops: semio_framework_ui_contract::UiPatchOps::default(),
+        }
+    }
+
+    #[test]
+    fn ui_turn_patches_max_plus_one_returns_the_exact_patch_owner() {
+        let mut patches = UiTurnPatches::default();
+        patches.try_push_ui_patch(patch(1)).expect("maximum owner");
+        let rejected = patches.try_push_ui_patch(patch(2)).expect_err("maximum plus one");
+        assert_eq!(rejected.revision, semio_framework_ui_contract::UiRevision(2));
+        assert_eq!(patches.len(), UI_TURN_PATCHES_MAXIMUM);
+    }
+
+    #[test]
+    fn ui_turn_patches_fixed_serde_visitor_rejects_plus_one() {
+        let encoded = serde_json::to_vec(&[patch(1), patch(2)]).expect("bounded fixture encoding");
+        let error = serde_json::from_slice::<UiTurnPatches>(&encoded).expect_err("visitor maximum plus one");
+        assert!(error.to_string().contains("turn patch page capacity exceeded"));
+    }
+
+    #[test]
+    fn ui_turn_patches_close_retires_one_op_or_patch_owner_per_step() {
+        let mut owner = patch(1);
+        owner.ops.try_push(UiPatchOp::SetRoot { id: semio_framework_ui_contract::UiNodeId(7) }).expect("one op");
+        let mut patches = UiTurnPatches::default();
+        patches.try_push_ui_patch(owner).expect("one patch");
+        assert!(!patches.close_step());
+        assert!(!patches.close_step());
+        assert!(patches.close_step());
+    }
+
+    #[test]
+    fn ui_turn_patch_retirement_max_plus_one_refuses_before_owner_transfer() {
+        let mut arena = UiTurnPatchRetireArena::default();
+        let mut keys = [None; UI_TURN_PATCH_RETIRE_SLOTS];
+        for key in &mut keys {
+            *key = arena.reserve();
+            assert!(key.is_some());
+        }
+        assert!(arena.reserve().is_none());
+        for key in keys.into_iter().flatten() {
+            assert!(arena.release_empty(key));
+        }
+    }
+
+    #[test]
+    fn ui_turn_patch_retirement_rejects_stale_epoch_release_and_closes_one_owner_per_step() {
+        let mut arena = UiTurnPatchRetireArena::default();
+        let key = arena.reserve().expect("fixed retirement slot");
+        let stale = UiTurnPatchRetireKey { epoch: key.epoch.checked_add(1).expect("fixture epoch"), ..key };
+        assert!(!arena.release_empty(stale));
+        let mut owner = patch(1);
+        owner.ops.try_push(UiPatchOp::SetRoot { id: semio_framework_ui_contract::UiNodeId(7) }).expect("one op");
+        let mut patches = semio_framework_ui_contract::UiFixedList::default();
+        patches.try_push(owner).expect("one patch");
+        arena.handback(key, patches);
+        assert!(arena.close_one());
+        assert!(arena.slots[key.slot].reserved);
+        assert!(arena.close_one());
+        assert!(!arena.slots[key.slot].reserved);
+    }
+
+    #[test]
+    fn ui_turn_patch_transport_round_trip_is_single_claim_and_preserves_populated_owner() {
+        let session = 70_001;
+        let mut patch = patch(3);
+        patch.ops.try_push(UiPatchOp::SetRoot { id: semio_framework_ui_contract::UiNodeId(9) }).expect("one populated op");
+        let mut owner = UiTurnPatches::default();
+        owner.try_push_ui_patch(patch).expect("one patch");
+        let mut producer = UiTurnPatchTransportProducer::try_new(session, owner).expect("fixed transport admission");
+        assert_eq!(producer.drive_one(session, false, true), UiTurnPatchTransportStep::MoreWork);
+        assert_eq!((producer.patch, producer.operation), (0, 0));
+        assert_eq!(producer.drive_one(session, false, false), UiTurnPatchTransportStep::MoreWork);
+        assert_eq!(producer.drive_one(session, false, false), UiTurnPatchTransportStep::MoreWork);
+        assert_eq!(producer.drive_one(session, false, false), UiTurnPatchTransportStep::Ready);
+        let token = producer.take_ready().expect("complete token");
+        let lease = UiTurnPatchTransportLease::try_from_token(&token, session).expect("first exact claim");
+        assert!(UiTurnPatchTransportLease::try_from_token(&token, session).is_err());
+        let mut owner = lease.take_owner().expect("exact transport owner");
+        let patch = owner.iter().next().expect("one patch");
+        assert_eq!(patch.revision, semio_framework_ui_contract::UiRevision(3));
+        assert_eq!(patch.ops.len(), 1);
+        while !owner.close_step() {}
+    }
+
+    #[test]
+    fn ui_turn_patch_transport_rejects_truncated_stale_and_cancelled_tokens() {
+        assert!(UiTurnPatchTransportLease::try_from_token(&[0; UI_TURN_PATCH_TRANSPORT_TOKEN_BYTES - 1], 81).is_err());
+        let mut producer = UiTurnPatchTransportProducer::try_new(81, UiTurnPatches::default()).expect("fixed transport admission");
+        assert_eq!(producer.drive_one(82, false, false), UiTurnPatchTransportStep::Stale);
+        assert_eq!(producer.drive_one(81, true, false), UiTurnPatchTransportStep::Cancelled);
+        drop(producer);
+        while close_ui_turn_patch_transport_one() {}
+    }
+
+    #[test]
+    fn ui_turn_patch_transport_max_plus_one_returns_exact_owner_and_session_close_is_incremental() {
+        let mut arena = UiTurnPatchTransportArena::default();
+        for session in 1..=UI_TURN_PATCH_TRANSPORT_SLOTS {
+            arena.reserve(u64::try_from(session).expect("bounded session"), UiTurnPatches::default()).expect("fixed slot");
+        }
+        let rejected = arena.reserve(90_001, UiTurnPatches::default()).expect_err("maximum plus one");
+        assert!(rejected.is_empty());
+        assert!(arena.request_session_close(1));
+        assert!(arena.close_one());
+        assert_eq!(arena.slots.iter().filter(|slot| slot.state != UiTurnPatchTransportState::Vacant).count(), UI_TURN_PATCH_TRANSPORT_SLOTS - 1);
+    }
 }
 //#endregion 🔖️TurnResult
 

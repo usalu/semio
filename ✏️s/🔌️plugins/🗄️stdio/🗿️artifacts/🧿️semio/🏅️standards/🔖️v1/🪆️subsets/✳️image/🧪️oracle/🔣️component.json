@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.image` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-image-mutation-semantics",
+      "capabilities": ["semio-v1-image-mutate"],
+      "rationale": "There is no third-party crate that reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none that is authoritative over this subset's `SemioImageMutation` vocabulary. `SemioImageSnapshot` is a NEUTRAL raster model — an rgba8 frame list with an absolute width/height, a recorded source colorspace and bit depth, an optional ICC blob and an ordered key/value metadata list — not a wire format any decoder produces, so the raster crates this plugin already registers elsewhere (`png` 0.18, `gif` 0.13, `image` 0.25) cannot serve here: each would first have to be handed a real PNG/GIF/BMP, which means our own encoder would have had to produce the input, and the comparison would then be our implementation against itself. Deliberately rejected rather than dressed up as a differential. Confidence instead comes from the committed, independently handcrafted per-kind fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff, outcome)` specification vector for twelve of the thirteen kinds, authored by hand and already unit-tested inside the production crate itself (`produces_committed_diff`, `committed_diff_applies_to_after`, `committed_json_is_canonical`, `declared_outcome_holds_with_no_guard_branch_firing` per leaf) — plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation fixture. The thirteenth kind, `no-mutation`, is nullary and has no leaf of its own; it is exercised as the identity law against a committed before-snapshot. This feature re-exercises those SAME committed fixtures end-to-end through `apply_semio_image_mutation` rather than calling `Mutation::diff`/`inverse` directly as the in-crate unit tests do.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-image",
+      "capability": "semio-v1-image-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "set-dimensions", "set-colorspace", "set-bit-depth", "set-icc", "insert-frame", "remove-frame", "move-frame", "set-frame-delay", "set-frame-pixels", "set-metadata-entry", "remove-metadata-entry"]
+    }
+  ]
+}

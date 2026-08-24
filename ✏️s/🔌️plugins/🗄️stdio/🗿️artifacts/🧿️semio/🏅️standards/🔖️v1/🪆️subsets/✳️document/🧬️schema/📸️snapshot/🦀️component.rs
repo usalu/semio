@@ -608,6 +608,60 @@ impl store::ArtifactPack for SemioDocumentSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioDocumentSnapshot`] — a thin
+/// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// crate's private `store` extern-crate item (the `mutate-semio-document` test adapter, which reads the
+/// REAL committed example artifact rather than a hand-transcribed Rust literal of it) can still
+/// drive the same codec production does. Same rationale as `✳️kit`'s `decode_kit_snapshot_json`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_document_dsl(text: &str) -> Result<SemioDocumentSnapshot, String> {
+    <SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_document_dsl`] — same rationale.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_document_dsl(snapshot: &SemioDocumentSnapshot) -> String {
+    <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+}
+
+/// 📥️ Decodes this subset's own committed `.pack.semio` bytes into a real [`SemioDocumentSnapshot`] — the
+/// binary half of the same bridge, so a caller outside this crate can check the two codecs against
+/// each other on the two real committed artifacts instead of against itself.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_document_pack(bytes: &[u8]) -> Result<SemioDocumentSnapshot, String> {
+    <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactPack::encode_pack` inverse of [`decode_semio_document_pack`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_document_pack(snapshot: &SemioDocumentSnapshot) -> Vec<u8> {
+    <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(snapshot)
+}
+
+/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// `s.stdio.semio.document` — the shape the `mutate-semio-document` case compares under `ordered-json-v1`. A thin
+/// `serde_json` wrapper (already a direct dependency of this crate, used behind this interface per
+/// CLAUDE.md's "external libraries behind an interface" rule, never a new one), so a projection is
+/// derived from the snapshot type itself rather than hand-written a second time in the adapter,
+/// where it could drift.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_document_snapshot_json(snapshot: &SemioDocumentSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioDocumentSnapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_semio_document_snapshot_json`] — decodes the
+/// `before`/`after` halves of `mutate-semio-document`'s committed specification vectors
+/// (`../../../../../🧪️tests/mutate-semio-document/🧫️fixtures/🦠️<kind>.json`) into real [`SemioDocumentSnapshot`]
+/// values, so the adapter never hand-transcribes a fixture into a Rust literal that could silently
+/// drift away from the JSON it claims to mirror.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_document_snapshot_json(text: &str) -> Result<SemioDocumentSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.document` snapshot — one style, one image, and one block of every
 /// kind (Heading/Paragraph/List/Table/Code/Quote/Image/PageBreak), exercising every leaf shape at

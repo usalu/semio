@@ -211,9 +211,24 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
         db_sync::BootstrapPlan::Tail { envelopes } => {
             let count = envelopes.len();
             let (mut wal, _report) = db_wal::ArtifactWal::open(&follower.wal().await, document.clone(), policy, now_ms).await?;
+            let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
             for envelope in &envelopes {
-                let bytes = db_sync::encode_command_envelope(envelope);
-                wal.submit(&follower.wal().await, &[db_wal::WalRecord::Command(bytes.await)], DurabilityClass::Fsync, now_ms).await?;
+                let bytes = db_sync::encode_command_envelope(envelope).await;
+                let bytes = match db_wal::WalBytes::try_admit(bytes, 1024 * 1024, &mut control).await {
+                    Ok(bytes) => bytes,
+                    Err(mut rejected) => {
+                        while rejected.close_step()? {
+                            control.grant()?;
+                        }
+                        return Err(rejected.into_error());
+                    }
+                };
+                let mut records = db_wal::WalRecordBatch::new();
+                records.push(db_wal::WalRecord::Command(bytes)).map_err(|_| DbError::LimitExceeded("db_cluster fixed wal record batch"))?;
+                wal.submit(&follower.wal().await, &records, DurabilityClass::Fsync, now_ms).await?;
+                while records.close_step()? {
+                    control.grant()?;
+                }
             }
             let frontier = db_sync::replay_sync_state(&follower.wal().await, document).await?.frontier;
             Ok(ReplicationOutcome::TailApplied { frontier, count })
@@ -395,7 +410,6 @@ pub async fn cluster_mailbox(capacities: MailboxCapacities) -> (db_actor::Addres
     db_actor::mailbox(capacities)
 }
 //#endregion 🔖️Coordinator
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -465,7 +479,7 @@ mod tests {
     //#region 🔖️Ownership
     #[semio_framework_async_macros::async_test]
     async fn shard_ownership_acquire_renew_and_validate_round_trip() {
-        let storage = db_storage::MemoryStorage::new().await;
+        let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let owner = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0)).unwrap();
         assert_eq!(owner.fence, EpochFence::INITIAL);
         assert!(owner.validate(EpochFence::INITIAL).await.is_ok());
@@ -477,13 +491,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ownership_status_reports_vacant_before_any_acquire() {
-        let storage = db_storage::MemoryStorage::new().await;
+        let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         assert_eq!(db_actor::block_on(ownership_status(&storage, "shard-0", 0)).unwrap(), OwnershipStatus::Vacant);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn shard_ownership_release_frees_the_resource_for_a_fresh_acquire() {
-        let storage = db_storage::MemoryStorage::new().await;
+        let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let owner = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0)).unwrap();
         db_actor::block_on(owner.release(&storage)).unwrap();
         assert_eq!(db_actor::block_on(ownership_status(&storage, "shard-0", 0)).unwrap(), OwnershipStatus::Vacant);
@@ -494,7 +508,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn failover_via_lease_expiry_bumps_the_epoch_and_hands_off_to_the_new_leader() {
-        let storage = db_storage::MemoryStorage::new().await;
+        let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let stale = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 100, 0)).unwrap();
         assert_eq!(stale.fence, EpochFence::INITIAL);
 
@@ -517,19 +531,31 @@ mod tests {
         }
     }
 
+    async fn submit_record(storage: &db_storage::MemoryStorage, wal: &mut db_wal::ArtifactWal, record: db_wal::WalRecord, now_ms: u64) {
+        let mut records = db_wal::WalRecordBatch::new();
+        assert!(records.push(record).is_ok());
+        wal.submit(storage, &records, DurabilityClass::Fsync, now_ms).await.unwrap();
+        while records.close_step().unwrap() {}
+    }
+
+    async fn command_record(envelope: &protocol::MutationEnvelope) -> db_wal::WalRecord {
+        let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+        let bytes = db_wal::WalBytes::try_admit(db_sync::encode_command_envelope(envelope).await, 1024 * 1024, &mut control).await.unwrap();
+        db_wal::WalRecord::Command(bytes)
+    }
+
     async fn seed_leader_wal(storage: &db_storage::MemoryStorage, document: &ArtifactId, count: u64) {
         let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         for i in 0..count {
             let envelope = sample_envelope(&format!("op-{i}"), i).await;
-            let bytes = db_sync::encode_command_envelope(&envelope).await;
-            db_actor::block_on(wal.submit(storage, &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, i)).unwrap();
+            submit_record(storage, &mut wal, command_record(&envelope).await, i).await;
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replicate_document_applies_missing_tail_commands_to_a_fresh_follower() {
-        let leader = db_storage::MemoryStorage::new().await;
-        let follower = db_storage::MemoryStorage::new().await;
+        let leader = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let follower = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 4).await;
         let leader: db_storage::DbBackend = db_storage::DbBackend::Memory(leader);
@@ -552,8 +578,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn replicate_document_reports_up_to_date_once_a_follower_catches_up() {
-        let leader = db_storage::MemoryStorage::new().await;
-        let follower = db_storage::MemoryStorage::new().await;
+        let leader = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let follower = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 2).await;
         let leader: db_storage::DbBackend = db_storage::DbBackend::Memory(leader);
@@ -568,15 +594,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor() {
-        let leader = db_storage::MemoryStorage::new().await;
-        let follower = db_storage::MemoryStorage::new().await;
+        let leader = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let follower = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 5).await;
 
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
         {
             let (mut wal, _report) = db_actor::block_on(db_wal::ArtifactWal::open(&leader, document.clone(), db_wal::GroupCommitPolicy::default(), 1_000)).unwrap();
-            db_actor::block_on(wal.submit(&leader, &[db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }], DurabilityClass::Fsync, 1_000)).unwrap();
+            submit_record(&leader, &mut wal, db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }, 1_000).await;
         }
         db_actor::block_on(db_storage::SnapshotStorage::write_generation(&leader, &document, 9, b"snapshot-bytes")).unwrap();
         let leader: db_storage::DbBackend = db_storage::DbBackend::Memory(leader);
@@ -679,14 +705,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn reconcile_shard_owner_confirms_a_still_valid_local_claim() {
-        let storage = db_storage::MemoryStorage::new().await;
+        let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let owner = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0)).unwrap();
         assert_eq!(db_actor::block_on(reconcile_shard_owner(&storage, "shard-0", &owner, 0)).unwrap(), SplitBrainOutcome::LocalWins);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn reconcile_shard_owner_reports_vacant_shard_as_uncontested_local_win() {
-        let storage = db_storage::MemoryStorage::new().await;
+        let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         let owner = ShardOwnership { shard: "shard-0".to_string(), holder: NodeId::from("node-a"), fence: EpochFence::INITIAL };
         assert_eq!(db_actor::block_on(reconcile_shard_owner(&storage, "shard-0", &owner, 0)).unwrap(), SplitBrainOutcome::LocalWins);
     }

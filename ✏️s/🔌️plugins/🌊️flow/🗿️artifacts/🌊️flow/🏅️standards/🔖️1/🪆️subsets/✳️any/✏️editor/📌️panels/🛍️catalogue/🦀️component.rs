@@ -49,7 +49,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> UiNode {
+pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let host = host_from_snapshot(fixture, config, session);
     let sections: Vec<Value> = host.catalogue_json().ok().and_then(|raw| serde_json::from_str(&raw).ok()).unwrap_or_default();
     let tree_sections: Vec<UiTreeSectionNode> = sections
@@ -68,7 +68,7 @@ pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowE
                             let label = entry.get("name").or_else(|| entry.get("abbreviation")).and_then(|value| value.as_str()).unwrap_or(kind);
                             let descriptor = if kind == "neuron" { flow_widget_descriptor("neuron", entry.get("neuronKind").and_then(|value| value.as_str())) } else { flow_widget_descriptor(kind, None) };
                             let action = flow_action("addWidget", Some(descriptor.clone()));
-                            Some(tree_item_with_action_draggable(format!("flow-play-catalogue.{id}.{kind}.{label}"), Label::data(label), Some(kind.to_string()), action, &flow_widget_drag_json(&descriptor)))
+                            Some(tree_item_with_action_draggable(format!("flow-play-catalogue.{id}.{kind}.{label}"), Label::data(label), Some(kind.to_string()), action, &flow_widget_drag_json(&descriptor))?)
                         })
                         .collect()
                 })
@@ -77,11 +77,11 @@ pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowE
         })
         .collect();
     let tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
-    let mut builder = PanelTreeBuilder::new("flow-play-catalogue");
+    let mut builder = PanelTreeBuilder::new("flow-play-catalogue")?;
     for section in tree_sections.into_iter().chain(flow_extensions_tree_sections(config, labels)) {
-        builder = builder.section(section.id, section.label, section.default_open.unwrap_or(false), section.items);
+        builder = builder.section(section.id, section.label, section.default_open.unwrap_or(false), section.items)?;
     }
-    builder.selected(vec![]).build()
+    builder.selected(vec![])?.build()
 }
 
 /// 🧩️ Installed/enabled extension palette plus actions surfaced by active extensions.
@@ -96,14 +96,14 @@ async fn flow_extensions_tree_sections(config: &FlowConfig, labels: &FlowPlayLab
                 flow_extension_label(id, name, labels),
                 Some(if enabled { "enabled".into() } else { "disabled".into() }),
                 flow_action("toggleExtension", Some(json!({ "id": id, "enabled": !enabled }))),
-            )
+            )?
         })
         .collect();
     let actions: Vec<UiTreeItemNode> = FLOW_AUTOMATIONS
         .iter()
         .filter(|(id, ..)| extension_enabled.get(*id).copied().unwrap_or(false))
         .map(|(_, _, action_id, title, _)| {
-            tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels), Some((*action_id).into()), flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))))
+            tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels), Some((*action_id).into()), flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))))?
         })
         .collect();
     let mut sections = vec![UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed }];
@@ -128,7 +128,7 @@ async fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTree
                 .iter()
                 .map(|(kind, label)| {
                     let descriptor = flow_widget_descriptor(kind, None);
-                    tree_item_with_action_draggable(format!("flow-play-catalogue.source.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
+                    tree_item_with_action_draggable(format!("flow-play-catalogue.source.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))?
                 })
                 .collect(),
         },
@@ -141,7 +141,7 @@ async fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTree
                 .iter()
                 .map(|(kind, label)| {
                     let descriptor = flow_widget_descriptor("neuron", Some(kind));
-                    tree_item_with_action_draggable(format!("flow-play-catalogue.component.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
+                    tree_item_with_action_draggable(format!("flow-play-catalogue.component.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))?
                 })
                 .collect(),
         },
@@ -154,7 +154,7 @@ async fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTree
                 .iter()
                 .map(|(kind, label)| {
                     let descriptor = flow_widget_descriptor(kind, None);
-                    tree_item_with_action_draggable(format!("flow-play-catalogue.sink.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
+                    tree_item_with_action_draggable(format!("flow-play-catalogue.sink.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))?
                 })
                 .collect(),
         },

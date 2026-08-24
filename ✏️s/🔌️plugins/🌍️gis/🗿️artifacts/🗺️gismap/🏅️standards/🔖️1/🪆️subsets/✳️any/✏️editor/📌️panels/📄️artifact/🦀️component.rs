@@ -24,13 +24,13 @@ pub async fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 /// 🕹️ `_cfg` is unused now — layer selection moved into the framework-owned `"features"` interaction
 /// domain (granularity `"layer"`, ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM);
-/// `.interaction_domain("features")` below has the framework's renderer translate clicks into
+/// `.interaction_domain("features")?` below has the framework's renderer translate clicks into
 /// injected `interactionSelect` and stamp presence from `InteractionState`, replacing the deleted
-/// `.selected()`/`.selection_change()` calls.
-pub async fn render(_cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
-    let builder = PanelTreeBuilder::new("gis2d-play-document");
-    let layer_items: Vec<UiTreeItemNode> = GIS_MAP_LAYER_IDS.iter().map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id), Label::data(gis2d_layer_label(id, labels)), Some((*id).into()), icon, None)).collect();
-    builder.section("gis2d-play-document.layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, layer_items).interaction_domain("features").build()
+/// `.selected()?`/`.selection_change()` calls.
+pub async fn render(_cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let builder = PanelTreeBuilder::new("gis2d-play-document")?;
+    let layer_items: Vec<UiTreeItemNode> = GIS_MAP_LAYER_IDS.iter().map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id)?, Label::data(gis2d_layer_label(id, labels)), Some((*id).into()), icon, None)?).collect();
+    builder.section("gis2d-play-document.layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, layer_items)?.interaction_domain("features")?.build()
 }
 //#endregion 🔖️Render
 

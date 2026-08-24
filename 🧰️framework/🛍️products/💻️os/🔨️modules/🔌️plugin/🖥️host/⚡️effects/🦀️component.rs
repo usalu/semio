@@ -562,19 +562,11 @@ pub enum RouterEffectJobOutcome {
     Fault(String),
 }
 
-pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect) -> RouterEffectJobOutcome {
+pub async fn run_router_effect_job<R: HostAsyncRuntime>(_compute: &ComputePool, _runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, _handler: &Arc<dyn RouterEffectHandler>, _effect: RouterEffect) -> RouterEffectJobOutcome {
     if ctx.cancel.is_cancelled().await {
         return RouterEffectJobOutcome::Cancelled;
     }
-    let job = DynRouterEffectJob(handler.create_job(effect));
-    match compute.run_job(runtime, scope, ctx, job).await {
-        Ok(StepOutcome::Complete(candidate)) => RouterEffectJobOutcome::Complete(candidate.output),
-        Ok(StepOutcome::Cancelled) => RouterEffectJobOutcome::Cancelled,
-        Ok(StepOutcome::Fault(fault)) => RouterEffectJobOutcome::Fault(String::from_utf8_lossy(&fault.detail).into_owned()),
-        Ok(StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_)) => RouterEffectJobOutcome::Fault("compute job driver returned a non-terminal router outcome".to_string()),
-        Err(ComputeError::DeadlineExceeded) => RouterEffectJobOutcome::DeadlineExceeded,
-        Err(ComputeError::WorkerLost) => RouterEffectJobOutcome::WorkerLost,
-    }
+    RouterEffectJobOutcome::Fault("router effect retained-session pump is not mounted".to_string())
 }
 
 /// 🚧️ Default until a real handler is wired (mirrors `UnwiredHttpTransport`'s own honest-gap
@@ -1541,7 +1533,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn router_effect_runs_as_multiple_bounded_compute_steps_and_completes_ok() {
+    async fn router_effect_fails_closed_until_a_retained_session_pump_is_mounted() {
         let runtime = ManualRuntime::new(0).await;
         let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
         let (mut executor, injector, actors) = executor(runtime_dyn.clone()).await;
@@ -1551,7 +1543,7 @@ mod tests {
         let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
         executor.execute(&dispatch, &[Effect::CacheRead { req: RequestId(5), engine_id: "e".to_string(), key: "k".to_string() }]).await;
         runtime.drive().await;
-        assert_eq!(recording_handler.0.load(Ordering::SeqCst), 1);
+        assert_eq!(recording_handler.0.load(Ordering::SeqCst), 0);
         assert_eq!(injector.recorded().await.len(), 1);
     }
     //#endregion 🚀️ClassificationTests

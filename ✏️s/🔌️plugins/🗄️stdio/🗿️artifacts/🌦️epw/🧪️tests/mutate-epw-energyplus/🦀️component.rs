@@ -11,6 +11,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::{oracle_apply_mutation, project_epw, round_trip_epw};
+use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `epw-energyplus-any` catalog. Duplicated, not imported, from
@@ -140,6 +141,10 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(output, projection))
 }
 
+/// ↩️ The inverse law, asserted HERE by the reference against its own pre-mutation reading rather
+/// than deferred to the parity phase: `apply(m)` followed by `apply(inverse(m))` has to land back
+/// on the ORIGINAL weather file's semantic projection — all eight header blocks and the full
+/// ordered record grid.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -147,6 +152,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let undo = inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &undo)?;
     let projection = project_epw(&restored)?;
+    inverse_restores(&spec.str("kind"), &projection, &project_epw(&input)?)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
@@ -154,10 +160,21 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// the SAME independent `csv` reader/writer this subset's record-kind mutations use — proves the
 /// reference library itself is stable on the real fixture before the subject's own codec is asked
 /// to be.
+///
+/// The no-byte-pass-through tripwire most other containers in this wave assert does NOT apply to
+/// EPW, and asserting it here would be a fabricated law: EPW is a fixed-column CSV-shaped text
+/// format with no object layout, no whitespace freedom and one normative CRLF terminator, and this
+/// subset's own schema stores every record column as a `String` precisely so nothing is ever
+/// reformatted (see the feature file's own note, and `codec_retention_law` on the subject side).
+/// So the honest form of the law is asserted instead: the output must reproduce the input exactly
+/// AND carry the same semantic projection — both still real failures if the reference's split,
+/// reader or writer ever drifts.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = round_trip_epw(&input)?;
+    carrier_is_exact(&output, &input)?;
     let projection = project_epw(&output)?;
+    round_trip_preserves(&projection, &project_epw(&input)?)?;
     Ok(Outcome::with_raw(output, projection))
 }
 //#endregion 🔖️Oracle

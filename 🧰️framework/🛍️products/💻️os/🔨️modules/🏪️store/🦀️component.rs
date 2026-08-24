@@ -6711,7 +6711,10 @@ where
         let terminal = match self.state {
             ArtifactEnvelopeDecodeState::ReleaseSuccess => {
                 self.state = ArtifactEnvelopeDecodeState::Complete;
-                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() })
+                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                })
             }
             ArtifactEnvelopeDecodeState::ReleaseCancelled => {
                 self.state = ArtifactEnvelopeDecodeState::Cancelled;
@@ -6754,7 +6757,12 @@ where
             return self.release_step(cx).unwrap_or(semio_framework_job::StepOutcome::Yield);
         }
         match self.state {
-            ArtifactEnvelopeDecodeState::Complete => return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() }),
+            ArtifactEnvelopeDecodeState::Complete => {
+                return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                });
+            }
             ArtifactEnvelopeDecodeState::Cancelled => return semio_framework_job::StepOutcome::Cancelled,
             ArtifactEnvelopeDecodeState::Fault(diagnostic) => return Self::terminal_fault(diagnostic),
             ArtifactEnvelopeDecodeState::Fields => {}
