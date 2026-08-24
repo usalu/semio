@@ -388,6 +388,11 @@ struct LdltColumnCursor {
     entry: usize,
     emit_row: usize,
     active_column: usize,
+    lookup_lower: usize,
+    lookup_upper: usize,
+    lookup_mid: usize,
+    lookup_comparison: i8,
+    lookup_initialized: bool,
     factor: f64,
     pivot: f64,
 }
@@ -556,7 +561,21 @@ impl LdltJob {
             && a.vals.capacity().saturating_mul(std::mem::size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
         let admission_fault = n > LDLT_MAXIMUM_ORDER || a.colptr.len() != n.saturating_add(1) || a.rowind.len() != a.vals.len() || !input_pages_valid;
         let workspace = LdltColumnWorkspace { values: Vec::new(), marks: Vec::new(), generation: 0, candidate: Vec::new() };
-        let cursor = LdltColumnCursor { stage: LdltColumnStage::ReserveColumn, source: 0, contributor: 0, entry: 0, emit_row: 0, active_column: 0, factor: 0.0, pivot: 0.0 };
+        let cursor = LdltColumnCursor {
+            stage: LdltColumnStage::ReserveColumn,
+            source: 0,
+            contributor: 0,
+            entry: 0,
+            emit_row: 0,
+            active_column: 0,
+            lookup_lower: 0,
+            lookup_upper: 0,
+            lookup_mid: 0,
+            lookup_comparison: 0,
+            lookup_initialized: false,
+            factor: 0.0,
+            pivot: 0.0,
+        };
         Self {
             operation,
             state: LdltCheckpoint {
@@ -705,6 +724,11 @@ impl LdltJob {
                 self.state.cursor.contributor = 0;
                 self.state.cursor.entry = 0;
                 self.state.cursor.active_column = 0;
+                self.state.cursor.lookup_lower = 0;
+                self.state.cursor.lookup_upper = 0;
+                self.state.cursor.lookup_mid = 0;
+                self.state.cursor.lookup_comparison = 0;
+                self.state.cursor.lookup_initialized = false;
                 self.state.cursor.emit_row = column.saturating_add(1);
                 self.state.cursor.stage = LdltColumnStage::SourceEntry;
             }
@@ -722,14 +746,38 @@ impl LdltJob {
             LdltColumnStage::ContributorLookup => {
                 if self.state.cursor.contributor < self.state.row_lists[column].len() {
                     let active = self.state.row_lists[column][self.state.cursor.contributor];
-                    self.state.cursor.active_column = active;
-                    self.state.cursor.entry = 0;
-                    self.state.cursor.factor = match self.state.l_cols[active].binary_search_by_key(&(column as u32), |entry| entry.0).ok().map(|index| self.state.l_cols[active][index].1 * self.state.d[active]) {
-                        Some(factor) => factor,
-                        None => 0.0,
-                    };
-                    self.state.cursor.contributor += 1;
-                    self.state.cursor.stage = LdltColumnStage::ContributorEntry;
+                    if !self.state.cursor.lookup_initialized {
+                        self.state.cursor.active_column = active;
+                        self.state.cursor.lookup_upper = self.state.l_cols[active].len();
+                        self.state.cursor.lookup_mid = 0;
+                        self.state.cursor.lookup_comparison = 0;
+                        self.state.cursor.lookup_initialized = true;
+                    } else if self.state.cursor.lookup_lower < self.state.cursor.lookup_upper {
+                        let mid = self.state.cursor.lookup_lower + (self.state.cursor.lookup_upper - self.state.cursor.lookup_lower) / 2;
+                        let comparison = self.state.l_cols[active][mid].0.cmp(&(column as u32));
+                        self.state.cursor.lookup_mid = mid;
+                        self.state.cursor.lookup_comparison = match comparison {
+                            std::cmp::Ordering::Less => -1,
+                            std::cmp::Ordering::Equal => 0,
+                            std::cmp::Ordering::Greater => 1,
+                        };
+                        if comparison == std::cmp::Ordering::Less {
+                            self.state.cursor.lookup_lower = mid + 1;
+                        } else {
+                            self.state.cursor.lookup_upper = mid;
+                        }
+                    } else {
+                        let index = self.state.cursor.lookup_lower;
+                        self.state.cursor.factor = self.state.l_cols[active].get(index).filter(|entry| entry.0 == column as u32).map_or(0.0, |entry| entry.1 * self.state.d[active]);
+                        self.state.cursor.entry = 0;
+                        self.state.cursor.lookup_lower = 0;
+                        self.state.cursor.lookup_upper = 0;
+                        self.state.cursor.lookup_mid = 0;
+                        self.state.cursor.lookup_comparison = 0;
+                        self.state.cursor.lookup_initialized = false;
+                        self.state.cursor.contributor += 1;
+                        self.state.cursor.stage = LdltColumnStage::ContributorEntry;
+                    }
                 } else {
                     self.state.cursor.stage = LdltColumnStage::PivotRead;
                 }
@@ -819,6 +867,11 @@ impl LdltJob {
                     state.publication_outer as u64,
                     state.publication_inner as u64,
                     state.workspace.generation as u64,
+                    state.cursor.lookup_lower as u64,
+                    state.cursor.lookup_upper as u64,
+                    state.cursor.lookup_mid as u64,
+                    state.cursor.lookup_comparison as i64 as u64,
+                    state.cursor.lookup_initialized as u64,
                 ];
                 advance_u64_values(writer, &values, cursor)?
             }
@@ -1124,7 +1177,7 @@ pub struct LdltRestoreCursor {
     close_due: bool,
     expected_field: u16,
     page_entry: usize,
-    control: [u64; 24],
+    control: [u64; 32],
     state: Option<LdltCheckpoint>,
     fault: Option<NumericalCheckpointFault>,
 }
@@ -1132,7 +1185,7 @@ pub struct LdltRestoreCursor {
 impl LdltRestoreCursor {
     pub fn new(operation: Operation, payload: RetainedJobPayload) -> Self {
         let total_pages = payload.page_count();
-        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, page_entry: 0, control: [0; 24], state: None, fault: None }
+        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, page_entry: 0, control: [0; 32], state: None, fault: None }
     }
 
     fn decode_page_entry(&mut self, bytes: &[u8]) -> Result<bool, NumericalCheckpointFault> {
@@ -1142,7 +1195,7 @@ impl LdltRestoreCursor {
         }
         if page.field == 0 {
             let count = declared_owner_length(&page, 32)?;
-            if count != 21 || page.bytes.len() != 8 + count * 8 {
+            if count != 26 || page.bytes.len() != 8 + count * 8 {
                 return Err(NumericalCheckpointFault::Truncated);
             }
             if self.page_entry == 0 {
@@ -1190,6 +1243,11 @@ impl LdltRestoreCursor {
                     entry: value(9) as usize,
                     emit_row: value(10) as usize,
                     active_column: value(11) as usize,
+                    lookup_lower: value(21) as usize,
+                    lookup_upper: value(22) as usize,
+                    lookup_mid: value(23) as usize,
+                    lookup_comparison: value(24) as i64 as i8,
+                    lookup_initialized: value(25) != 0,
                     factor: f64::from_bits(value(12)),
                     pivot: f64::from_bits(value(13)),
                 },
@@ -1645,6 +1703,15 @@ pub struct PcgJob {
     close_lane: u8,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PcgVisualScalar {
+    pub displacement: f64,
+    pub residual: f64,
+    pub reaction: f64,
+    pub contour: f64,
+    pub mode_estimate: f64,
+}
+
 impl PcgJob {
     pub fn new(operation: Operation, a: Csr, b: VecD, x: VecD, tol_rel: f64, max_iter: usize, batch_units: usize) -> Self {
         assert_eq!(a.n, b.len(), "pcg rhs dimension mismatch");
@@ -1720,6 +1787,18 @@ impl PcgJob {
 
     pub fn solution(&self) -> (&VecD, PcgStats) {
         (&self.state.x, PcgStats { iterations: self.state.iteration, residual_norm: self.state.residual_norm, converged: self.state.converged })
+    }
+
+    /// 👁️ Borrows one numerical-to-visual scalar without cloning a solver vector.
+    pub fn visual_scalar(&self, index: usize) -> Option<PcgVisualScalar> {
+        let displacement = *self.state.x.0.get(index)?;
+        let residual = *self.state.r.0.get(index)?;
+        Some(PcgVisualScalar { displacement, residual, reaction: -residual, contour: displacement.abs(), mode_estimate: displacement })
+    }
+
+    /// 📈️ Exposes generation-local convergence scalars for one retained visual page.
+    pub fn visual_progress(&self) -> (usize, usize, f64, f64, bool) {
+        (self.state.iteration, self.state.max_iter, self.state.residual_norm, self.state.tol_rel, self.state.converged)
     }
 
     /// 🧹️ Retires one matrix/vector scalar owner per governed close opportunity.
@@ -2297,6 +2376,8 @@ struct SubspaceCheckpoint {
     checkpoint_due: bool,
     preview_due: bool,
     admission_fault: bool,
+    factor_validation_cursor: usize,
+    factor_validation_complete: bool,
     initialization_cursor: usize,
     publication_stage: u8,
     publication_first: usize,
@@ -2428,8 +2509,7 @@ pub struct SubspaceIterationJob {
 
 impl SubspaceIterationJob {
     pub fn new(operation: Operation, k_factor: LdltFactor, b: Csr, n: usize, p: usize, max_iter: usize) -> Self {
-        let factor_pages_valid = k_factor.l_cols.capacity().saturating_mul(std::mem::size_of::<Vec<(u32, f64)>>()) <= NUMERICAL_OWNER_PAGE_BYTES
-            && k_factor.l_cols.iter().all(|column| column.capacity().saturating_mul(std::mem::size_of::<(u32, f64)>()) <= NUMERICAL_OWNER_PAGE_BYTES);
+        let factor_pages_valid = k_factor.l_cols.capacity().saturating_mul(std::mem::size_of::<Vec<(u32, f64)>>()) <= NUMERICAL_OWNER_PAGE_BYTES;
         let sparse_pages_valid = b.indptr.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
             && b.indices.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
             && b.vals.capacity().saturating_mul(std::mem::size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
@@ -2455,6 +2535,8 @@ impl SubspaceIterationJob {
                 checkpoint_due: false,
                 preview_due: false,
                 admission_fault,
+                factor_validation_cursor: 0,
+                factor_validation_complete: admission_fault,
                 initialization_cursor: 0,
                 publication_stage: 0,
                 publication_first: 0,
@@ -2551,6 +2633,8 @@ impl SubspaceIterationJob {
                     state.checkpoint_due as u64,
                     state.preview_due as u64,
                     state.admission_fault as u64,
+                    state.factor_validation_cursor as u64,
+                    state.factor_validation_complete as u64,
                     state.initialization_cursor as u64,
                     state.publication_stage as u64,
                     state.publication_first as u64,
@@ -3654,7 +3738,7 @@ impl SubspaceRestoreCursor {
         }
         if page.field == 0 {
             let count = declared_owner_length(&page, 24)?;
-            if count != 18 || page.bytes.len() != 8 + count * 8 {
+            if count != 20 || page.bytes.len() != 8 + count * 8 {
                 return Err(NumericalCheckpointFault::Truncated);
             }
             if self.page_entry == 0 {
@@ -3696,10 +3780,12 @@ impl SubspaceRestoreCursor {
                 checkpoint_due: false,
                 preview_due: value(12) != 0,
                 admission_fault: value(13) != 0,
-                initialization_cursor: value(14) as usize,
-                publication_stage: value(15) as u8,
-                publication_first: value(16) as usize,
-                publication_second: value(17) as usize,
+                factor_validation_cursor: value(14) as usize,
+                factor_validation_complete: value(15) != 0,
+                initialization_cursor: value(16) as usize,
+                publication_stage: value(17) as u8,
+                publication_first: value(18) as usize,
+                publication_second: value(19) as usize,
                 work: SubspaceWork::empty(),
                 retiring_work: None,
             });
@@ -3897,6 +3983,24 @@ impl InteractiveJob for SubspaceIterationJob {
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+        }
+        if !self.state.factor_validation_complete {
+            context.set_stage("fem.subspace.validate-factor-owner");
+            if context.should_yield() {
+                return StepOutcome::Yield;
+            }
+            context.consume_fuel(1);
+            if let Some(column) = self.state.k_factor.l_cols.get(self.state.factor_validation_cursor) {
+                if column.capacity().saturating_mul(std::mem::size_of::<(u32, f64)>()) > NUMERICAL_OWNER_PAGE_BYTES {
+                    self.state.admission_fault = true;
+                    self.state.factor_validation_complete = true;
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                }
+                self.state.factor_validation_cursor += 1;
+                return StepOutcome::Yield;
+            }
+            self.state.factor_validation_complete = true;
+            return StepOutcome::Yield;
         }
         if self.state.admission_fault || self.state.n > SUBSPACE_MAXIMUM_ORDER || self.state.m > SUBSPACE_MAXIMUM_COLUMNS {
             return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
@@ -4843,6 +4947,31 @@ mod tests {
         assert_eq!(cancelled.step(&mut context), StepOutcome::Cancelled);
         assert!(cancelled.state == before);
 
+        let mut lookup = LdltJob::new(operation, deadline.state.a.clone(), 1);
+        let mut observed_lookup = false;
+        for _ in 0..200_000 {
+            if lookup.state.cursor.stage == LdltColumnStage::ContributorLookup && lookup.state.cursor.lookup_initialized && lookup.state.cursor.lookup_lower < lookup.state.cursor.lookup_upper {
+                let before = lookup.state.clone();
+                let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                assert_eq!(lookup.step(&mut expired), StepOutcome::Yield);
+                assert!(lookup.state == before);
+                let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                assert_eq!(lookup.step(&mut one), StepOutcome::Yield);
+                assert_eq!(lookup.state.cursor.contributor, before.cursor.contributor);
+                assert!(lookup.state.cursor.lookup_lower != before.cursor.lookup_lower || lookup.state.cursor.lookup_upper != before.cursor.lookup_upper);
+                observed_lookup = true;
+                break;
+            }
+            let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = lookup.step(&mut one) {
+                close_payload(checkpoint.state);
+            }
+        }
+        assert!(observed_lookup, "adversarial LDLT reaches retained contributor comparison");
+        while !InteractiveJob::terminal_is_empty(&lookup) {
+            let _ = InteractiveJob::close_step(&mut lookup, 1, usize::MAX);
+        }
+
         let refused = CscSym { n: LDLT_MAXIMUM_ORDER + 1, colptr: vec![0; LDLT_MAXIMUM_ORDER + 2], rowind: Vec::new(), vals: Vec::new() };
         let mut maximum_plus_one = LdltJob::new(operation, refused, 1);
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
@@ -5028,6 +5157,32 @@ mod tests {
         let single = drive(1);
         assert_eq!(drive(2), single);
         assert_eq!(drive(4), single);
+
+        let mut validating = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
+        let before = validating.state.clone();
+        let mut validation_sequence = 0;
+        let mut expired = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut validation_sequence);
+        assert_eq!(validating.step(&mut expired), StepOutcome::Yield);
+        assert!(validating.state == before);
+        let mut one = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut validation_sequence);
+        assert_eq!(validating.step(&mut one), StepOutcome::Yield);
+        assert_eq!(validating.state.factor_validation_cursor, 1, "one construction grant validates one factor owner");
+        while !InteractiveJob::terminal_is_empty(&validating) {
+            let _ = InteractiveJob::close_step(&mut validating, 1, usize::MAX);
+        }
+
+        let mut oversized = Vec::<(u32, f64)>::new();
+        oversized.try_reserve_exact(NUMERICAL_OWNER_PAGE_BYTES / std::mem::size_of::<(u32, f64)>() + 1).expect("hostile factor backing");
+        assert!(oversized.capacity() * std::mem::size_of::<(u32, f64)>() > NUMERICAL_OWNER_PAGE_BYTES);
+        let mut columns = vec![Vec::new(); n];
+        columns[0] = oversized;
+        let mut refused_owner = SubspaceIterationJob::new(operation, LdltFactor { n, l_cols: columns, d: vec![1.0; n] }, mass.clone(), n, 3, 1);
+        let mut refused_sequence = 0;
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut refused_sequence);
+        assert!(matches!(refused_owner.step(&mut context), StepOutcome::Fault(_)));
+        while !InteractiveJob::terminal_is_empty(&refused_owner) {
+            let _ = InteractiveJob::close_step(&mut refused_owner, 1, usize::MAX);
+        }
 
         for refused_order in [0, SUBSPACE_MAXIMUM_ORDER + 1] {
             let factor = LdltFactor { n: refused_order, l_cols: vec![Vec::new(); refused_order], d: vec![1.0; refused_order] };

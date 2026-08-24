@@ -12,13 +12,45 @@ use ui_wgpu::wgpu::{
 };
 
 //#region 📦️PreparedWorldResources
+const WORLD3D_FRAME_RESOURCE_CAPACITY: usize = 256;
+
+pub enum World3dBuildRejected {
+    Upload(PreparedRenderUpload),
+    Eviction(PreparedRenderEviction),
+}
+
+impl World3dBuildRejected {
+    pub fn close_step(&mut self) -> bool {
+        match self {
+            Self::Upload(PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. }) => pixels.pop().is_none(),
+            Self::Upload(PreparedRenderUpload::Raster { key, pixels, .. }) => pixels.pop().is_none() && key.pop().is_none(),
+            Self::Upload(PreparedRenderUpload::RasterPages { key, .. } | PreparedRenderUpload::Mesh { key, .. }) => key.pop().is_none(),
+            Self::Eviction(PreparedRenderEviction::Mesh { key }) => key.pop().is_none(),
+        }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        match self {
+            Self::Upload(PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. }) => pixels.is_empty(),
+            Self::Upload(PreparedRenderUpload::Raster { key, pixels, .. }) => key.is_empty() && pixels.is_empty(),
+            Self::Upload(PreparedRenderUpload::RasterPages { key, .. } | PreparedRenderUpload::Mesh { key, .. }) => key.is_empty(),
+            Self::Eviction(PreparedRenderEviction::Mesh { key }) => key.is_empty(),
+        }
+    }
+}
+
 /// 📦️ Worker-owned World3d resource requests. It contains only CPU buffers and cache keys; device,
 /// queue, texture, and surface authority remain in the prepared renderer presenter.
 pub struct World3dBuildContext {
-    uploads: Vec<PreparedRenderUpload>,
-    evictions: Vec<PreparedRenderEviction>,
-    mesh_requests: HashSet<(String, u64)>,
-    raster_requests: HashSet<String>,
+    uploads: Box<[Option<PreparedRenderUpload>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    upload_len: usize,
+    evictions: Box<[Option<PreparedRenderEviction>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    eviction_len: usize,
+    mesh_requests: Box<[Option<(String, u64)>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    mesh_request_len: usize,
+    raster_requests: Box<[Option<String>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    raster_request_len: usize,
+    rejected: Option<World3dBuildRejected>,
     cursor_wake: WorldCursorWakeAuthority,
     cursor_wake_token: Option<WorldCursorWakeToken>,
     cursor_wake_fault: Option<WorldCursorWakeFault>,
@@ -125,23 +157,66 @@ impl WorldCursorWakeAuthority {
 
 impl World3dBuildContext {
     pub fn new(cursor_wake: WorldCursorWakeAuthority) -> Self {
-        Self { uploads: Vec::new(), evictions: Vec::new(), mesh_requests: HashSet::new(), raster_requests: HashSet::new(), cursor_wake, cursor_wake_token: None, cursor_wake_fault: None }
+        Self {
+            uploads: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            upload_len: 0,
+            evictions: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            eviction_len: 0,
+            mesh_requests: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            mesh_request_len: 0,
+            raster_requests: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            raster_request_len: 0,
+            rejected: None,
+            cursor_wake,
+            cursor_wake_token: None,
+            cursor_wake_fault: None,
+        }
     }
 
     pub fn ensure_mesh(&mut self, key: &str, version: u64, lease: Mesh3dLease) {
-        if self.mesh_requests.insert((key.to_string(), version)) {
-            self.uploads.push(PreparedRenderUpload::Mesh { key: key.to_string(), version, lease });
+        if self.mesh_requests[..self.mesh_request_len].iter().flatten().any(|candidate| candidate.0 == key && candidate.1 == version) {
+            return;
         }
+        let upload = PreparedRenderUpload::Mesh { key: key.to_string(), version, lease };
+        if self.mesh_request_len == WORLD3D_FRAME_RESOURCE_CAPACITY || self.upload_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
+            if self.rejected.is_none() {
+                self.rejected = Some(World3dBuildRejected::Upload(upload));
+            }
+            return;
+        }
+        self.mesh_requests[self.mesh_request_len] = Some((key.to_string(), version));
+        self.mesh_request_len += 1;
+        self.uploads[self.upload_len] = Some(upload);
+        self.upload_len += 1;
     }
 
     pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
-        if self.raster_requests.insert(key.to_string()) {
-            self.uploads.push(PreparedRenderUpload::Raster { key: key.to_string(), pixels: pixels.to_vec(), width, height });
+        if self.raster_requests[..self.raster_request_len].iter().flatten().any(|candidate| candidate == key) {
+            return;
         }
+        let upload = PreparedRenderUpload::Raster { key: key.to_string(), pixels: pixels.to_vec(), width, height };
+        if self.raster_request_len == WORLD3D_FRAME_RESOURCE_CAPACITY || self.upload_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
+            if self.rejected.is_none() {
+                self.rejected = Some(World3dBuildRejected::Upload(upload));
+            }
+            return;
+        }
+        self.raster_requests[self.raster_request_len] = Some(key.to_string());
+        self.raster_request_len += 1;
+        self.uploads[self.upload_len] = Some(upload);
+        self.upload_len += 1;
     }
 
     pub fn evict_mesh(&mut self, key: &str) {
-        self.evictions.push(PreparedRenderEviction::Mesh { key: key.to_string() });
+        let eviction = PreparedRenderEviction::Mesh { key: key.to_string() };
+        if self.eviction_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
+            if self.rejected.is_none() {
+                self.rejected = Some(World3dBuildRejected::Eviction(eviction));
+            }
+            return;
+        }
+        self.evictions[self.eviction_len] = Some(eviction);
+        self.eviction_len += 1;
     }
 
     fn request_cursor_wake(&mut self) {
@@ -161,11 +236,51 @@ impl World3dBuildContext {
         }
     }
 
-    pub fn append_to(&mut self, input: &mut ui_wgpu::wgpu::PreparedRenderInput) {
-        input.uploads.append(&mut self.uploads);
-        input.evictions.append(&mut self.evictions);
-        self.mesh_requests.clear();
-        self.raster_requests.clear();
+    pub fn append_step(&mut self, input: &mut ui_wgpu::wgpu::PreparedRenderInput) -> Result<bool, World3dBuildRejected> {
+        if let Some(rejected) = self.rejected.take() {
+            return Err(rejected);
+        }
+        if let Some(index) = self.upload_len.checked_sub(1) {
+            self.upload_len = index;
+            let Some(upload) = self.uploads[index].take() else { return Ok(false) };
+            let Some(next) = input.raster_producers.len().checked_add(input.uploads.len()).and_then(|count| count.checked_add(1)) else {
+                return Err(World3dBuildRejected::Upload(upload));
+            };
+            if next > input.limits.max_upload_items {
+                return Err(World3dBuildRejected::Upload(upload));
+            }
+            input.uploads.push(upload);
+            return Ok(false);
+        }
+        if let Some(index) = self.eviction_len.checked_sub(1) {
+            self.eviction_len = index;
+            let Some(eviction) = self.evictions[index].take() else { return Ok(false) };
+            input.evictions.push(eviction);
+            return Ok(false);
+        }
+        if let Some(index) = self.mesh_request_len.checked_sub(1) {
+            self.mesh_request_len = index;
+            self.mesh_requests[index] = None;
+            return Ok(false);
+        }
+        if let Some(index) = self.raster_request_len.checked_sub(1) {
+            self.raster_request_len = index;
+            self.raster_requests[index] = None;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.upload_len == 0
+            && self.eviction_len == 0
+            && self.mesh_request_len == 0
+            && self.raster_request_len == 0
+            && self.rejected.is_none()
+            && self.uploads.iter().all(Option::is_none)
+            && self.evictions.iter().all(Option::is_none)
+            && self.mesh_requests.iter().all(Option::is_none)
+            && self.raster_requests.iter().all(Option::is_none)
     }
 }
 //#endregion 📦️PreparedWorldResources
@@ -12415,7 +12530,12 @@ mod tests {
         resources.ensure_world_plane_texture("image", &[9, 9, 9, 9], 1, 1);
         resources.evict_mesh("stale");
         let mut input = ui_wgpu::wgpu::PreparedRenderInput::new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0);
-        resources.append_to(&mut input);
+        assert_eq!(resources.append_step(&mut input).ok(), Some(false));
+        assert_eq!(resources.append_step(&mut input).ok(), Some(false));
+        assert_eq!(resources.append_step(&mut input).ok(), Some(false));
+        assert_eq!(resources.append_step(&mut input).ok(), Some(false));
+        assert_eq!(resources.append_step(&mut input).ok(), Some(false));
+        assert_eq!(resources.append_step(&mut input).ok(), Some(true));
         assert_eq!(input.uploads.len(), 2);
         assert_eq!(input.evictions, vec![PreparedRenderEviction::Mesh { key: "stale".into() }]);
     }

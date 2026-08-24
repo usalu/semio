@@ -374,28 +374,54 @@ impl EngineCanvasPacket {
     }
 }
 
-/// 🧰️ Worker-owned resource sink threaded through chrome/scene traversal.
-#[derive(Default)]
+const ENGINE_CANVAS_FRAME_PACKET_CAPACITY: usize = 256;
+
+/// 🧰️ Worker-owned fixed resource sink threaded through chrome/scene traversal.
 pub(crate) struct EngineCanvasBuildContext {
     dpr: f64,
-    packets: Vec<EngineCanvasPacket>,
+    packets: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>,
+    len: usize,
+    rejected: Option<EngineCanvasPacket>,
+}
+
+impl Default for EngineCanvasBuildContext {
+    fn default() -> Self {
+        Self { dpr: 0.0, packets: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]), len: 0, rejected: None }
+    }
 }
 
 impl EngineCanvasBuildContext {
     pub(crate) fn new(dpr: f64) -> Self {
-        Self { dpr, packets: Vec::new() }
+        Self { dpr, ..Self::default() }
     }
 
     pub(crate) fn dpr(&self) -> f64 {
         self.dpr
     }
 
-    pub(crate) fn take_packets(&mut self) -> Vec<EngineCanvasPacket> {
-        std::mem::take(&mut self.packets)
+    pub(crate) fn take_packet_step(&mut self) -> Result<Option<EngineCanvasPacket>, EngineCanvasPacket> {
+        if let Some(rejected) = self.rejected.take() {
+            return Err(rejected);
+        }
+        let Some(index) = self.len.checked_sub(1) else { return Ok(None) };
+        self.len = index;
+        Ok(self.packets[index].take())
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.rejected.is_none() && self.packets.iter().all(Option::is_none)
     }
 
     fn enqueue(&mut self, surface_id: &str, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
-        self.packets.push(EngineCanvasPacket { surface_id: surface_id.to_string(), scene, clear, width, height });
+        let packet = EngineCanvasPacket { surface_id: surface_id.to_string(), scene, clear, width, height };
+        if self.len == ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
+            if self.rejected.is_none() {
+                self.rejected = Some(packet);
+            }
+            return;
+        }
+        self.packets[self.len] = Some(packet);
+        self.len += 1;
     }
 }
 

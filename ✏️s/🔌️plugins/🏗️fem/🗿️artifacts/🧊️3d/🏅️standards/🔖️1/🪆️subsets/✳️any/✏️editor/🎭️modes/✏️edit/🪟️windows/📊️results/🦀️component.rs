@@ -85,6 +85,21 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> semio_framework_plugin:
     }
 }
 
+/// 👁️ Adopts the immutable mounted result packet without solving, meshing, sorting, or encoding during render.
+pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::editor::fem3d::session::Fem3dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let (meshes_json, instances_json) = visual.map_or(("[]", "[]"), |lease| (lease.meshes_json(), lease.instances_json()));
+    crate::app_surface::world_3d_surface(
+        FEM3D_BODY_RESULTS,
+        semio_framework_plugin::world3d_scene(
+            crate::editor::fem3d::fem3d_camera_json(camera),
+            meshes_json.to_string(),
+            instances_json.to_string(),
+            semio_framework_plugin::world3d_selection_json("rectangle", &[], None),
+            &semio_framework_plugin::WorldSunConfig::default(),
+        ),
+    )
+}
+
 /// 📊️ Static results: solved fresh on every render (no cache, mirrors `Fem3dPlayApp`'s v0 design) —
 /// same node/member/solid instances as the model window, offset by the solved displacements, solids
 /// additionally colored by nodal-averaged von Mises stress. `source_id` selects a `fem3d_solve_all`

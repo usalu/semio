@@ -36,6 +36,15 @@ Feature: Apply every typed semio DRAWING mutation to its committed specification
   three alone — `change-stroke-color` moves it to a translucent white, so an alpha channel dropped
   on the way through shows up.
 
+  A word on what "real" can mean here, since it cannot mean what it means for PDF or DWG. There is
+  no real-world corpus of `.dsl.semio` drawings outside this repository — the format exists nowhere
+  else — so the identity round trip reads the artifact's own committed 394-byte sketch example,
+  which is handcrafted rather than found, and is chosen because it carries every `DrawNode` variant
+  and every `PathSegment` variant at once. Its image node is an `image/png` media type over three
+  opaque payload bytes, not an encoded picture: this subset's codecs carry image payloads through
+  without interpreting them, so what the round trip can honestly assert is that the media type and
+  the bytes survive, and that is what it asserts.
+
   Because this case records a no-oracle decision, the runner executes NO oracle role — every
   assertion below therefore lives inside the subject handler, which compares the applied snapshot
   against the committed after-snapshot and the undone snapshot against the committed
@@ -104,4 +113,4 @@ Feature: Apply every typed semio DRAWING mutation to its committed specification
     Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖍️sketch/🖼️assets/🗣️example.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖍️sketch/🖼️assets/🎒️example.pack.semio
     When the text artifact is parsed, printed back to DSL and parsed again, and the binary twin is decoded and re-encoded
-    Then every decoding agrees on the same one-layer sketch, a path exercising move, line, cubic, quadratic, arc and close, a text node, an image node carrying real png bytes, and an empty nested group
+    Then every decoding agrees on the same one-layer sketch, a path exercising move, line, cubic, quadratic, arc and close, a text node, an image node whose `image/png` media type and opaque payload bytes survive as-is, and an empty nested group

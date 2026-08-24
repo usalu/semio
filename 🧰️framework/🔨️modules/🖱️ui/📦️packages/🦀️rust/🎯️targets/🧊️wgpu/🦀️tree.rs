@@ -120,7 +120,8 @@ impl UiDocumentTree {
     }
 
     pub fn close_step(&mut self) -> bool {
-        if let Some(id) = self.nodes.keys().next().copied() {
+        let next = self.nodes.keys().next().copied();
+        if let Some(id) = next {
             drop(self.nodes.remove(&id));
             return false;
         }
@@ -268,6 +269,20 @@ pub struct LayoutBucket {
     pub cached_text_measure: TextMeasureCache,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub(crate) struct AcceptedLayout {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+struct MountedLayoutRecord {
+    generation: u64,
+    layout: AcceptedLayout,
+}
+
 /// 🎨️ M4 decision: stays an empty marker. Every `paint::paint_*` function recomputes its `DrawList`
 /// entries fresh from `spec`+`layout`+`theme` on each visit instead of caching tessellation output —
 /// the composite widgets that would benefit most from caching (Select's open menu, Tree's rows)
@@ -289,13 +304,27 @@ pub struct Node {
     pub spec: WidgetSpec,
     pub state: WidgetState,
     pub layout: LayoutBucket,
+    mounted_layout: [MountedLayoutRecord; 2],
     pub paint: PaintBucket,
     pub flags: NodeFlags,
 }
 
 impl Node {
     pub fn new(key: NodeKey, spec: WidgetSpec) -> Self {
-        Self { parent: None, first_child: None, last_child: None, prev_sibling: None, next_sibling: None, key, spec, state: WidgetState::default(), layout: LayoutBucket::default(), paint: PaintBucket, flags: NodeFlags::empty() }
+        Self {
+            parent: None,
+            first_child: None,
+            last_child: None,
+            prev_sibling: None,
+            next_sibling: None,
+            key,
+            spec,
+            state: WidgetState::default(),
+            layout: LayoutBucket::default(),
+            mounted_layout: [MountedLayoutRecord::default(); 2],
+            paint: PaintBucket,
+            flags: NodeFlags::empty(),
+        }
     }
 }
 
@@ -305,6 +334,8 @@ pub struct UiTree {
     arena: Arena<Node>,
     pub root: Option<NodeId>,
     document: Option<UiDocumentTree>,
+    mounted_layout_active: usize,
+    mounted_layout_generation: u64,
 }
 
 impl UiTree {
@@ -318,6 +349,32 @@ impl UiTree {
 
     pub fn node_mut(&mut self, id: NodeId) -> Option<&mut Node> {
         self.arena.get_mut(id)
+    }
+
+    pub(crate) fn accepted_layout(&self, id: NodeId) -> Option<AcceptedLayout> {
+        let node = self.arena.get(id)?;
+        let mounted = node.mounted_layout[self.mounted_layout_active];
+        if self.mounted_layout_generation != 0 && mounted.generation == self.mounted_layout_generation {
+            Some(mounted.layout)
+        } else {
+            Some(AcceptedLayout { x: node.layout.x, y: node.layout.y, width: node.layout.width, height: node.layout.height })
+        }
+    }
+
+    pub(crate) fn write_inactive_layout(&mut self, id: NodeId, generation: u64, layout: AcceptedLayout) -> bool {
+        let inactive = self.mounted_layout_active ^ 1;
+        let Some(node) = self.arena.get_mut(id) else { return false };
+        node.mounted_layout[inactive] = MountedLayoutRecord { generation, layout };
+        true
+    }
+
+    pub(crate) fn commit_inactive_layout(&mut self, generation: u64) {
+        self.mounted_layout_active ^= 1;
+        self.mounted_layout_generation = generation;
+    }
+
+    pub(crate) fn accepted_layout_generation(&self) -> u64 {
+        self.mounted_layout_generation
     }
 
     pub fn contains(&self, id: NodeId) -> bool {
@@ -454,6 +511,7 @@ mod tests {
     use super::*;
     use crate::wgpu::component::ui::{UiNode, UiPresence, UiTextNode};
     use crate::wgpu::Label;
+    use ui_contract::{Component, SeparatorProps};
 
     fn text(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
@@ -528,6 +586,39 @@ mod tests {
         assert!(!tree.contains(grandchild));
         assert!(tree.contains(root));
         assert_eq!(tree.children(root).count(), 0);
+    }
+
+    #[test]
+    fn retained_document_close_retires_one_record_per_step() {
+        let id = UiNodeId(1);
+        let header = UiDocumentLeaseHeader {
+            generation: 1,
+            surface: SurfaceId::try_from("test.surface").expect("bounded surface"),
+            revision: UiRevision(1),
+            root: id,
+            layout_epoch: 1,
+            node_count: 1,
+        };
+        let mut document = UiDocumentTree::new(header).expect("valid header");
+        document
+            .try_upsert_record(UiNodeRecord {
+                id,
+                key: "root".try_into().expect("bounded key"),
+                component: Component::Separator(SeparatorProps {}),
+                layout: Default::default(),
+                style: Default::default(),
+                activity: Default::default(),
+                disabled: false,
+                transition: None,
+                accessibility: Default::default(),
+                bindings: Default::default(),
+                menu: None,
+                children: Default::default(),
+            })
+            .expect("record admitted");
+
+        assert!(!document.close_step());
+        assert!(document.close_step());
     }
 }
 // #endregion tree

@@ -500,6 +500,10 @@ pub struct DbIoPageWriter {
     cursor: u8,
     total_len: usize,
     shell_returned: bool,
+    seal_phase: u8,
+    seal_page: u8,
+    seal_visible: u8,
+    seal_current: Option<DbIoPagePhase>,
 }
 
 #[derive(Debug)]
@@ -511,10 +515,6 @@ pub struct DbIoPageWriterRejected {
 /// @emoji 🧵 One retained unused-page retirement opportunity per poll before writer publication.
 pub struct DbIoPageWriterSeal {
     writer: Option<DbIoPageWriter>,
-    phase: u8,
-    page: u8,
-    visible: u8,
-    current: Option<DbIoPagePhase>,
 }
 
 impl DbIoPageWriter {
@@ -542,7 +542,7 @@ impl DbIoPageWriter {
                 return Err(DbIoPageWriterRejected { error, writer: None });
             }
         };
-        Ok(Self { operation, pages, reserved: reserved_pages as u8, cursor: 0, total_len: 0, shell_returned: false })
+        Ok(Self { operation, pages, reserved: reserved_pages as u8, cursor: 0, total_len: 0, shell_returned: false, seal_phase: 0, seal_page: 0, seal_visible: 0, seal_current: None })
     }
 
     pub fn operation(&self) -> u64 {
@@ -591,9 +591,10 @@ impl DbIoPageWriter {
     }
 
     pub fn seal_retained(self) -> DbIoPageWriterSeal {
-        DbIoPageWriterSeal { writer: Some(self), phase: 0, page: 0, visible: 0, current: None }
+        DbIoPageWriterSeal { writer: Some(self) }
     }
 
+    #[cfg(test)]
     pub fn seal(mut self) -> Result<DbIoPages, DbIoPageWriterRejected> {
         match self.finish() {
             Ok(pages) => Ok(pages),
@@ -601,31 +602,84 @@ impl DbIoPageWriter {
         }
     }
 
+    #[cfg(test)]
     pub fn finish(&mut self) -> Result<DbIoPages, DbError> {
-        let visible = if self.total_len == 0 { 0 } else { self.total_len.div_ceil(DB_IO_PAGE_BYTES) };
-        let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let current = self.pages.iter().take(self.reserved as usize).flatten().next().map_or(DbIoPagePhase::CheckedOutWriter, |page| state.slots[page.slot as usize].phase);
-        if !matches!(current, DbIoPagePhase::CheckedOutWriter | DbIoPagePhase::Executing) {
-            return Err(DbError::Internal("DB I/O writer finished outside an owned phase".to_string()));
-        }
-        for page in self.pages.iter().take(self.reserved as usize).flatten() {
-            let slot = state.slots[page.slot as usize];
-            if slot.generation != page.generation || slot.operation != page.operation || slot.phase != current {
-                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(page.generation), actual: crate::db_ids::GenerationId(slot.generation) });
+        loop {
+            if let Some(owner) = self.seal_retained_step()? {
+                return Ok(owner);
             }
         }
-        let next = if current == DbIoPagePhase::Executing { DbIoPagePhase::TerminalResult } else { DbIoPagePhase::CheckedOutInput };
-        for page in self.pages.iter().take(self.reserved as usize).flatten() {
-            state.slots[page.slot as usize].phase = next;
+    }
+
+    /// @emoji 🪡 One retained validation, transition, unused-page, or publication opportunity.
+    pub fn seal_retained_step(&mut self) -> Result<Option<DbIoPages>, DbError> {
+        match self.seal_phase {
+            0 if self.reserved > self.seal_visible => {
+                self.seal_visible = if self.total_len == 0 { 0 } else { self.total_len.div_ceil(DB_IO_PAGE_BYTES) as u8 };
+                if self.reserved <= self.seal_visible {
+                    return Ok(None);
+                }
+                let index = usize::from(self.reserved - 1);
+                let page = self.pages[index].take().ok_or_else(|| DbError::Internal("DB I/O retained writer lost an unused page".to_string()))?;
+                let phase = {
+                    let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    state.slots[page.slot as usize].phase
+                };
+                page.transition(phase, DbIoPagePhase::Closing)?;
+                page.return_to_arena()?;
+                self.reserved -= 1;
+                Ok(None)
+            }
+            0 => {
+                self.seal_visible = if self.total_len == 0 { 0 } else { self.total_len.div_ceil(DB_IO_PAGE_BYTES) as u8 };
+                let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                let current = self.pages.iter().take(self.reserved as usize).flatten().next().map_or(DbIoPagePhase::CheckedOutWriter, |page| state.slots[page.slot as usize].phase);
+                if !matches!(current, DbIoPagePhase::CheckedOutWriter | DbIoPagePhase::Executing) {
+                    return Err(DbError::Internal("DB I/O retained writer finished outside an owned phase".to_string()));
+                }
+                self.seal_current = Some(current);
+                self.seal_phase = 1;
+                Ok(None)
+            }
+            1 if self.seal_page < self.reserved => {
+                let page = self.pages[self.seal_page as usize].as_ref().ok_or_else(|| DbError::Internal("DB I/O retained writer validation lost a page".to_string()))?;
+                let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                let slot = state.slots[page.slot as usize];
+                let current = self.seal_current.ok_or_else(|| DbError::Internal("DB I/O retained writer lost its source phase".to_string()))?;
+                if slot.generation != page.generation || slot.operation != page.operation || slot.phase != current {
+                    return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(page.generation), actual: crate::db_ids::GenerationId(slot.generation) });
+                }
+                self.seal_page += 1;
+                Ok(None)
+            }
+            1 => {
+                self.seal_phase = 2;
+                self.seal_page = 0;
+                Ok(None)
+            }
+            2 if self.seal_page < self.reserved => {
+                let page = self.pages[self.seal_page as usize].as_ref().ok_or_else(|| DbError::Internal("DB I/O retained writer transition lost a page".to_string()))?;
+                let current = self.seal_current.ok_or_else(|| DbError::Internal("DB I/O retained writer lost its transition phase".to_string()))?;
+                let next = if current == DbIoPagePhase::Executing { DbIoPagePhase::TerminalResult } else { DbIoPagePhase::CheckedOutInput };
+                page.transition(current, next)?;
+                self.seal_page += 1;
+                Ok(None)
+            }
+            2 => {
+                self.seal_phase = 3;
+                Ok(None)
+            }
+            _ => {
+                let pages = std::mem::replace(&mut self.pages, std::array::from_fn(|_| None));
+                let owner = DbIoPages { operation: self.operation, pages, retained: self.reserved, visible: self.seal_visible, first_offset: 0, total_len: self.total_len, shell_returned: false, result_handback: None };
+                self.shell_returned = true;
+                self.reserved = 0;
+                self.cursor = 0;
+                self.total_len = 0;
+                self.seal_phase = 4;
+                Ok(Some(owner))
+            }
         }
-        drop(state);
-        let pages = std::mem::replace(&mut self.pages, std::array::from_fn(|_| None));
-        let owner = DbIoPages { operation: self.operation, pages, retained: self.reserved, visible: visible as u8, first_offset: 0, total_len: self.total_len, shell_returned: false, result_handback: None };
-        self.shell_returned = true;
-        self.reserved = 0;
-        self.cursor = 0;
-        self.total_len = 0;
-        Ok(owner)
     }
 
     pub fn len(&self) -> usize {
@@ -679,71 +733,17 @@ impl Future for DbIoPageWriterSeal {
         let Some(writer) = owner.writer.as_mut() else {
             return std::task::Poll::Ready(Err(DbIoPageWriterRejected { error: DbError::Internal("DB I/O retained writer lost its exact owner".to_string()), writer: None }));
         };
-        if owner.phase == 0 {
-            owner.visible = if writer.total_len == 0 { 0 } else { writer.total_len.div_ceil(DB_IO_PAGE_BYTES) as u8 };
+        match writer.seal_retained_step() {
+            Ok(Some(published)) => {
+                owner.writer.take();
+                std::task::Poll::Ready(Ok(published))
+            }
+            Ok(None) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Err(error) => std::task::Poll::Ready(Err(DbIoPageWriterRejected { error, writer: owner.writer.take() })),
         }
-        if owner.phase == 0 && writer.reserved > owner.visible {
-            let index = usize::from(writer.reserved - 1);
-            let Some(page) = writer.pages[index].take() else {
-                return std::task::Poll::Ready(Err(DbIoPageWriterRejected { error: DbError::Internal("DB I/O retained writer lost an unused page".to_string()), writer: owner.writer.take() }));
-            };
-            let phase = {
-                let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                state.slots[page.slot as usize].phase
-            };
-            if let Err(error) = page.transition(phase, DbIoPagePhase::Closing).and_then(|()| page.return_to_arena().map(|_| ())) {
-                return std::task::Poll::Ready(Err(DbIoPageWriterRejected { error, writer: owner.writer.take() }));
-            }
-            writer.reserved -= 1;
-            context.waker().wake_by_ref();
-            return std::task::Poll::Pending;
-        }
-        match owner.phase {
-            0 => {
-                let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                let current = writer.pages.iter().take(writer.reserved as usize).flatten().next().map_or(DbIoPagePhase::CheckedOutWriter, |page| state.slots[page.slot as usize].phase);
-                if !matches!(current, DbIoPagePhase::CheckedOutWriter | DbIoPagePhase::Executing) {
-                    return std::task::Poll::Ready(Err(DbIoPageWriterRejected { error: DbError::Internal("DB I/O retained writer finished outside an owned phase".to_string()), writer: owner.writer.take() }));
-                }
-                owner.current = Some(current);
-                owner.phase = 1;
-            }
-            1 if owner.page < writer.reserved => {
-                let page = writer.pages[owner.page as usize].as_ref().ok_or_else(|| DbIoPageWriterRejected { error: DbError::Internal("DB I/O retained writer validation lost a page".to_string()), writer: None })?;
-                let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                let slot = state.slots[page.slot as usize];
-                let current = owner.current.ok_or_else(|| DbIoPageWriterRejected { error: DbError::Internal("DB I/O retained writer lost its source phase".to_string()), writer: None })?;
-                if slot.generation != page.generation || slot.operation != page.operation || slot.phase != current {
-                    let error = DbError::StaleGeneration { expected: crate::db_ids::GenerationId(page.generation), actual: crate::db_ids::GenerationId(slot.generation) };
-                    return std::task::Poll::Ready(Err(DbIoPageWriterRejected { error, writer: owner.writer.take() }));
-                }
-                owner.page += 1;
-            }
-            1 => {
-                owner.phase = 2;
-                owner.page = 0;
-            }
-            2 if owner.page < writer.reserved => {
-                let page = writer.pages[owner.page as usize].as_ref().ok_or_else(|| DbIoPageWriterRejected { error: DbError::Internal("DB I/O retained writer transition lost a page".to_string()), writer: None })?;
-                let current = owner.current.ok_or_else(|| DbIoPageWriterRejected { error: DbError::Internal("DB I/O retained writer lost its transition phase".to_string()), writer: None })?;
-                let next = if current == DbIoPagePhase::Executing { DbIoPagePhase::TerminalResult } else { DbIoPagePhase::CheckedOutInput };
-                page.transition(current, next).map_err(|error| DbIoPageWriterRejected { error, writer: None })?;
-                owner.page += 1;
-            }
-            2 => owner.phase = 3,
-            _ => {
-                let mut writer = owner.writer.take().ok_or_else(|| DbIoPageWriterRejected { error: DbError::Internal("DB I/O retained writer publication lost its owner".to_string()), writer: None })?;
-                let pages = std::mem::replace(&mut writer.pages, std::array::from_fn(|_| None));
-                let published = DbIoPages { operation: writer.operation, pages, retained: writer.reserved, visible: owner.visible, first_offset: 0, total_len: writer.total_len, shell_returned: false, result_handback: None };
-                writer.shell_returned = true;
-                writer.reserved = 0;
-                writer.cursor = 0;
-                writer.total_len = 0;
-                return std::task::Poll::Ready(Ok(published));
-            }
-        }
-        context.waker().wake_by_ref();
-        std::task::Poll::Pending
     }
 }
 
@@ -752,7 +752,18 @@ impl Drop for DbIoPageWriter {
         if self.terminal_is_empty() {
             return;
         }
-        let owner = Self { operation: self.operation, pages: std::mem::replace(&mut self.pages, std::array::from_fn(|_| None)), reserved: self.reserved, cursor: self.cursor, total_len: self.total_len, shell_returned: self.shell_returned };
+        let owner = Self {
+            operation: self.operation,
+            pages: std::mem::replace(&mut self.pages, std::array::from_fn(|_| None)),
+            reserved: self.reserved,
+            cursor: self.cursor,
+            total_len: self.total_len,
+            shell_returned: self.shell_returned,
+            seal_phase: self.seal_phase,
+            seal_page: self.seal_page,
+            seal_visible: self.seal_visible,
+            seal_current: self.seal_current,
+        };
         self.reserved = 0;
         self.cursor = 0;
         self.total_len = 0;
@@ -780,6 +791,10 @@ impl DbIoPageWriterRejected {
 
     pub fn into_error(self) -> DbError {
         self.error
+    }
+
+    pub fn into_parts(self) -> (DbError, Option<DbIoPageWriter>) {
+        (self.error, self.writer)
     }
 }
 
@@ -858,6 +873,10 @@ impl Drop for DbIoDriverReservation {
 /// @emoji 🏷️ Exact fixed post-admission artifact identity retained without a heap string.
 pub struct DbIoArtifactId {
     value: DbIoText,
+    driver: Option<ArtifactId>,
+    external: Option<DbIoExternalBytes>,
+    reservation: Option<DbIoDriverReservation>,
+    phase: u8,
 }
 
 impl DbIoArtifactId {
@@ -865,15 +884,68 @@ impl DbIoArtifactId {
         if operation == 0 {
             return Err(DbError::InvalidArgument("artifact identity requires an admitted operation".to_string()));
         }
-        Ok(Self { value: DbIoText::try_from_str(source.as_str())? })
+        let reservation = DbIoDriverReservation::try_reserve(operation, DbIoText::maximum_capacity())?;
+        let mut owner = Self { value: DbIoText::try_from_str(source.as_str())?, driver: Some(ArtifactId(source.as_str().to_owned())), external: None, reservation: Some(reservation), phase: 0 };
+        let capacity = owner.driver.as_ref().ok_or_else(|| DbError::Internal("artifact conversion lost its admitted driver identity".to_string()))?.0.capacity();
+        owner.reservation.as_mut().ok_or_else(|| DbError::Internal("artifact conversion lost its exact reservation".to_string()))?.observe_capacity(capacity)?;
+        Ok(owner)
     }
 
     pub fn as_str(&self) -> &str {
         self.value.as_str()
     }
 
+    pub fn as_artifact(&self) -> Result<&ArtifactId, DbError> {
+        self.driver.as_ref().ok_or(DbError::Closed)
+    }
+
     pub fn close_step(&mut self) -> Result<bool, DbError> {
-        Ok(self.value.close_step())
+        match self.phase {
+            0 => {
+                let driver = self.driver.take().ok_or_else(|| DbError::Internal("artifact conversion lost its exact driver identity".to_string()))?;
+                self.external = Some(DbIoExternalBytes::new(driver.0.into_bytes()));
+                self.phase = 1;
+                Ok(true)
+            }
+            1 => {
+                let external = self.external.as_mut().ok_or_else(|| DbError::Internal("artifact conversion lost its external allocation".to_string()))?;
+                if external.close_step() {
+                    return Ok(true);
+                }
+                self.external.take();
+                self.phase = 2;
+                Ok(true)
+            }
+            2 => {
+                let _ = self.value.close_step();
+                self.phase = 3;
+                Ok(true)
+            }
+            3 => {
+                self.reservation.as_mut().ok_or_else(|| DbError::Internal("artifact conversion lost its reservation during close".to_string()))?.close_step()?;
+                self.reservation.take();
+                self.phase = 4;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.phase == 4 && self.value.terminal_is_empty() && self.driver.is_none() && self.external.is_none() && self.reservation.is_none()
+    }
+}
+
+impl Drop for DbIoArtifactId {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() {
+            return;
+        }
+        let owner = Self { value: std::mem::replace(&mut self.value, DbIoText::new()), driver: self.driver.take(), external: self.external.take(), reservation: self.reservation.take(), phase: self.phase };
+        self.phase = 4;
+        if let Err(DbIoLostOwner::ArtifactId(owner)) = db_io_park_lost_owner(DbIoLostOwner::ArtifactId(owner)) {
+            *self = owner;
+        }
     }
 }
 
@@ -884,19 +956,25 @@ pub struct DbIoExternalBytes {
 }
 
 impl DbIoExternalBytes {
-    fn new(value: Vec<u8>) -> Self {
+    pub fn new(value: Vec<u8>) -> Self {
         Self { value: Some(value), phase: 0 }
     }
 
-    fn capacity(&self) -> Result<usize, DbError> {
+    pub fn capacity(&self) -> Result<usize, DbError> {
         self.value.as_ref().map(Vec::capacity).ok_or_else(|| DbError::Closed)
     }
 
-    fn as_slice(&self) -> Result<&[u8], DbError> {
+    pub fn as_slice(&self) -> Result<&[u8], DbError> {
         self.value.as_deref().ok_or(DbError::Closed)
     }
 
-    fn close_step(&mut self) -> bool {
+    pub fn into_value(mut self) -> Result<Vec<u8>, DbError> {
+        let value = self.value.take().ok_or(DbError::Closed)?;
+        self.phase = 2;
+        Ok(value)
+    }
+
+    pub fn close_step(&mut self) -> bool {
         let Some(value) = self.value.as_mut() else { return false };
         if !value.is_empty() {
             value.truncate(value.len().saturating_sub(DB_IO_PAGE_BYTES));
@@ -911,7 +989,7 @@ impl DbIoExternalBytes {
         true
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.value.is_none() && self.phase == 2
     }
 }
@@ -935,14 +1013,22 @@ pub struct DbIoObservedBytesWrite<'a> {
     source: Option<DbIoExternalBytes>,
     output: &'a mut DbIoPageWriter,
     cursor: usize,
+    limit: usize,
     phase: u8,
-    page: u8,
-    visible: u8,
-    current: Option<DbIoPagePhase>,
 }
 
 pub fn db_io_write_observed_bytes(reservation: DbIoDriverReservation, source: Vec<u8>, output: &mut DbIoPageWriter) -> DbIoObservedBytesWrite<'_> {
-    DbIoObservedBytesWrite { reservation: Some(reservation), source: Some(DbIoExternalBytes::new(source)), output, cursor: 0, phase: 0, page: 0, visible: 0, current: None }
+    let limit = source.len();
+    DbIoObservedBytesWrite { reservation: Some(reservation), source: Some(DbIoExternalBytes::new(source)), output, cursor: 0, limit, phase: 0 }
+}
+
+/// @emoji 🧷 Retained ranged external-driver transfer with the same exact close authority.
+pub fn db_io_write_observed_bytes_range(reservation: DbIoDriverReservation, source: Vec<u8>, offset: usize, length: usize, output: &mut DbIoPageWriter) -> Result<DbIoObservedBytesWrite<'_>, DbError> {
+    let limit = offset.checked_add(length).ok_or(DbError::LimitExceeded("DB I/O observed-byte range"))?;
+    if limit > source.len() {
+        return Err(DbError::InvalidArgument("DB I/O observed-byte range exceeds result".to_string()));
+    }
+    Ok(DbIoObservedBytesWrite { reservation: Some(reservation), source: Some(DbIoExternalBytes::new(source)), output, cursor: offset, limit, phase: 0 })
 }
 
 impl Future for DbIoObservedBytesWrite<'_> {
@@ -958,8 +1044,8 @@ impl Future for DbIoObservedBytesWrite<'_> {
             }
             1 => {
                 let source = owner.source.as_ref().ok_or_else(|| DbError::Internal("DB I/O observed-byte cursor lost its source during copy".to_string()))?.as_slice()?;
-                if owner.cursor < source.len() {
-                    let end = owner.cursor.checked_add(DB_IO_PAGE_BYTES).ok_or(DbError::LimitExceeded("DB I/O observed-byte cursor"))?.min(source.len());
+                if owner.cursor < owner.limit {
+                    let end = owner.cursor.checked_add(DB_IO_PAGE_BYTES).ok_or(DbError::LimitExceeded("DB I/O observed-byte cursor"))?.min(owner.limit);
                     let written = owner.output.write_fragment(&source[owner.cursor..end])?;
                     owner.cursor += written;
                 } else {
@@ -978,46 +1064,10 @@ impl Future for DbIoObservedBytesWrite<'_> {
                 owner.reservation.take();
                 owner.phase = 4;
             }
-            4 => {
-                owner.visible = if owner.output.total_len == 0 { 0 } else { owner.output.total_len.div_ceil(DB_IO_PAGE_BYTES) as u8 };
-                let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                let current = owner.output.pages.iter().take(owner.output.reserved as usize).flatten().next().map_or(DbIoPagePhase::CheckedOutWriter, |page| state.slots[page.slot as usize].phase);
-                if !matches!(current, DbIoPagePhase::CheckedOutWriter | DbIoPagePhase::Executing) {
-                    return std::task::Poll::Ready(Err(DbError::Internal("DB I/O observed-byte publication found an invalid source phase".to_string())));
-                }
-                owner.current = Some(current);
-                owner.phase = 5;
-            }
-            5 if owner.page < owner.output.reserved => {
-                let page = owner.output.pages[owner.page as usize].as_ref().ok_or_else(|| DbError::Internal("DB I/O observed-byte publication lost a page".to_string()))?;
-                let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                let slot = state.slots[page.slot as usize];
-                let current = owner.current.ok_or_else(|| DbError::Internal("DB I/O observed-byte publication lost its source phase".to_string()))?;
-                if slot.generation != page.generation || slot.operation != page.operation || slot.phase != current {
-                    return std::task::Poll::Ready(Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(page.generation), actual: crate::db_ids::GenerationId(slot.generation) }));
-                }
-                owner.page += 1;
-            }
-            5 => {
-                owner.phase = 6;
-                owner.page = 0;
-            }
-            6 if owner.page < owner.output.reserved => {
-                let page = owner.output.pages[owner.page as usize].as_ref().ok_or_else(|| DbError::Internal("DB I/O observed-byte transition lost a page".to_string()))?;
-                let current = owner.current.ok_or_else(|| DbError::Internal("DB I/O observed-byte transition lost its source phase".to_string()))?;
-                let next = if current == DbIoPagePhase::Executing { DbIoPagePhase::TerminalResult } else { DbIoPagePhase::CheckedOutInput };
-                page.transition(current, next)?;
-                owner.page += 1;
-            }
-            _ => {
-                let pages = std::mem::replace(&mut owner.output.pages, std::array::from_fn(|_| None));
-                let published = DbIoPages { operation: owner.output.operation, pages, retained: owner.output.reserved, visible: owner.visible, first_offset: 0, total_len: owner.output.total_len, shell_returned: false, result_handback: None };
-                owner.output.shell_returned = true;
-                owner.output.reserved = 0;
-                owner.output.cursor = 0;
-                owner.output.total_len = 0;
-                return std::task::Poll::Ready(Ok(published));
-            }
+            _ => match owner.output.seal_retained_step()? {
+                Some(published) => return std::task::Poll::Ready(Ok(published)),
+                None => {}
+            },
         }
         context.waker().wake_by_ref();
         std::task::Poll::Pending
@@ -1075,10 +1125,19 @@ impl Future for DbIoPageCopy<'_> {
     fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         let owner = self.as_mut().get_mut();
         if owner.cursor == owner.source.len() {
-            let Some(writer) = owner.writer.take() else {
+            let Some(writer) = owner.writer.as_mut() else {
                 return std::task::Poll::Ready(Err(DbError::Internal("DB I/O page-copy cursor lost its retained writer".to_string())));
             };
-            return std::task::Poll::Ready(writer.seal().map_err(DbIoPageWriterRejected::into_error));
+            return match writer.seal_retained_step()? {
+                Some(pages) => {
+                    owner.writer.take();
+                    std::task::Poll::Ready(Ok(pages))
+                }
+                None => {
+                    context.waker().wake_by_ref();
+                    std::task::Poll::Pending
+                }
+            };
         }
         let start = owner.cursor;
         let end = start.checked_add(DB_IO_PAGE_BYTES).ok_or(DbError::LimitExceeded("DB I/O page-copy cursor"))?.min(owner.source.len());
@@ -1099,10 +1158,19 @@ impl Future for DbIoPageOwnerCopy<'_> {
     fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         let owner = self.as_mut().get_mut();
         let Some(source) = owner.source.page(owner.cursor) else {
-            let Some(writer) = owner.writer.take() else {
+            let Some(writer) = owner.writer.as_mut() else {
                 return std::task::Poll::Ready(Err(DbError::Internal("DB I/O page-owner cursor lost its retained writer".to_string())));
             };
-            return std::task::Poll::Ready(writer.seal().map_err(DbIoPageWriterRejected::into_error));
+            return match writer.seal_retained_step()? {
+                Some(pages) => {
+                    owner.writer.take();
+                    std::task::Poll::Ready(Ok(pages))
+                }
+                None => {
+                    context.waker().wake_by_ref();
+                    std::task::Poll::Pending
+                }
+            };
         };
         let Some(writer) = owner.writer.as_mut() else {
             return std::task::Poll::Ready(Err(DbError::Internal("DB I/O page-owner cursor lost its retained writer".to_string())));
@@ -1716,16 +1784,17 @@ impl DbIoText {
 }
 
 /// @emoji 🔤 Converts one pre-admitted external-driver string into fixed repository text.
-pub fn db_io_copy_observed_text(mut reservation: DbIoDriverReservation, source: String) -> Result<DbIoText, DbError> {
-    if let Err(error) = reservation.observe_capacity(source.capacity()) {
-        drop(source);
-        reservation.close_step()?;
-        return Err(error);
+pub async fn db_io_copy_observed_text(mut reservation: DbIoDriverReservation, source: String) -> Result<DbIoText, DbError> {
+    let mut source = DbIoExternalBytes::new(source.into_bytes());
+    reservation.observe_capacity(source.capacity()?)?;
+    let value = std::str::from_utf8(source.as_slice()?).map_err(|_| DbError::Corrupt("DB I/O observed text is not UTF-8".to_string()))?;
+    let text = DbIoText::try_from_str(value)?;
+    while !source.terminal_is_empty() {
+        let _ = source.close_step();
+        semio_framework_async::yield_once().await;
     }
-    let text = DbIoText::try_from_str(&source);
-    drop(source);
     reservation.close_step()?;
-    text
+    Ok(text)
 }
 
 impl std::fmt::Write for DbIoText {
@@ -3512,6 +3581,7 @@ enum DbIoLostOwner {
     Fault(DbIoFault),
     DriverReservation(DbIoDriverReservation),
     ExternalBytes(DbIoExternalBytes),
+    ArtifactId(DbIoArtifactId),
     Backend { owner: Option<Box<dyn DbIoTaskExecutor>>, operation: u64, credit: DbIoCredit, pool: Option<Arc<WorkerPool>> },
     ResultLease { handle: DbIoTaskHandle, result: Option<DbIoResult> },
 }
@@ -3607,6 +3677,10 @@ fn db_io_lost_owner_close_opportunity(owner: &mut DbIoLostOwner) -> Result<bool,
             true
         }
         DbIoLostOwner::ExternalBytes(owner) => !owner.close_step(),
+        DbIoLostOwner::ArtifactId(owner) => {
+            let _ = owner.close_step()?;
+            owner.terminal_is_empty()
+        }
         DbIoLostOwner::Backend { owner, operation, credit, pool } => {
             let backend = owner.take().ok_or_else(|| DbError::Internal("DB I/O rejected backend lost its exact executor".to_string()))?;
             let worker_pool = pool.take().ok_or_else(|| DbError::Internal("DB I/O rejected backend lost its shared WorkerPool".to_string()))?;
@@ -5121,10 +5195,19 @@ impl Future for MemWalRangeCopy<'_> {
     fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         let owner = self.as_mut().get_mut();
         if owner.remaining == 0 {
-            let Some(writer) = owner.writer.take() else {
+            let Some(writer) = owner.writer.as_mut() else {
                 return std::task::Poll::Ready(Err(DbError::Internal("memory WAL range writer already consumed".to_string())));
             };
-            return std::task::Poll::Ready(writer.seal().map_err(DbIoPageWriterRejected::into_error));
+            return match writer.seal_retained_step()? {
+                Some(pages) => {
+                    owner.writer.take();
+                    std::task::Poll::Ready(Ok(pages))
+                }
+                None => {
+                    context.waker().wake_by_ref();
+                    std::task::Poll::Pending
+                }
+            };
         }
         let Some(chunk) = owner.segment.chunks.get(owner.chunk).and_then(Option::as_ref) else {
             return std::task::Poll::Ready(Err(DbError::Corrupt("memory WAL range exceeded retained chunks".to_string())));
@@ -5528,9 +5611,13 @@ impl DbIoTaskExecutor for MemoryDbIoExecutor {
                     return Err(DbError::Internal("memory WAL cursor taxonomy mismatch".to_string()));
                 };
                 if *remaining == 0 {
-                    cursors[cursor_index] = None;
-                    drop(cursors);
-                    return complete(DbIoResult::Pages(output.finish()?));
+                    return match output.seal_retained_step()? {
+                        Some(pages) => {
+                            cursors[cursor_index] = None;
+                            complete(DbIoResult::Pages(pages))
+                        }
+                        None => yield_step(),
+                    };
                 }
                 let wal = lock(&self.wal);
                 let segment = &wal.iter().flatten().find(|owner| owner.document == *document && owner.index == *index).ok_or_else(|| DbError::NotFound("memory WAL segment not found".to_string()))?.segment;
@@ -5644,8 +5731,13 @@ impl DbIoTaskExecutor for MemoryDbIoExecutor {
                     return yield_step();
                 }
                 drop(snapshots);
-                cursors[cursor_index] = None;
-                complete(DbIoResult::Pages(output.finish()?))
+                match output.seal_retained_step()? {
+                    Some(pages) => {
+                        cursors[cursor_index] = None;
+                        complete(DbIoResult::Pages(pages))
+                    }
+                    None => yield_step(),
+                }
             }
             DbIoTask::SnapshotLatest { document, .. } => complete(DbIoResult::OptionalLength(lock(&self.snapshots).iter().flatten().filter(|owner| owner.document == *document).map(|owner| owner.ordinal).max())),
             DbIoTask::SnapshotList { document, output, .. } => {
@@ -5710,8 +5802,13 @@ impl DbIoTaskExecutor for MemoryDbIoExecutor {
                     return yield_step();
                 }
                 drop(payloads);
-                cursors[cursor_index] = None;
-                complete(DbIoResult::Pages(output.finish()?))
+                match output.seal_retained_step()? {
+                    Some(pages) => {
+                        cursors[cursor_index] = None;
+                        complete(DbIoResult::Pages(pages))
+                    }
+                    None => yield_step(),
+                }
             }
             DbIoTask::PayloadExists { hash, .. } => complete(DbIoResult::Exists(lock(&self.payloads).iter().flatten().any(|owner| owner.hash == *hash))),
             DbIoTask::PayloadLength { hash, .. } => {
@@ -5745,8 +5842,13 @@ impl DbIoTaskExecutor for MemoryDbIoExecutor {
                 }
                 let fence = *fence;
                 drop(catalog);
-                cursors[cursor_index] = None;
-                complete(DbIoResult::OptionalCatalog(Some((output.finish()?, fence))))
+                match output.seal_retained_step()? {
+                    Some(pages) => {
+                        cursors[cursor_index] = None;
+                        complete(DbIoResult::OptionalCatalog(Some((pages, fence))))
+                    }
+                    None => yield_step(),
+                }
             }
             DbIoTask::CatalogCas { expected, input, .. } => {
                 let mut retired = lock(&self.retired_pages);
@@ -5786,8 +5888,13 @@ impl DbIoTaskExecutor for MemoryDbIoExecutor {
                     return yield_step();
                 }
                 drop(runs);
-                cursors[cursor_index] = None;
-                complete(DbIoResult::Pages(output.finish()?))
+                match output.seal_retained_step()? {
+                    Some(pages) => {
+                        cursors[cursor_index] = None;
+                        complete(DbIoResult::Pages(pages))
+                    }
+                    None => yield_step(),
+                }
             }
             DbIoTask::IndexDelete { document, run_id, .. } => {
                 let mut retired = lock(&self.retired_pages);
@@ -6352,8 +6459,13 @@ mod fs_storage {
             };
             if output.len() == reader.total {
                 let fence = reader.fence;
-                owner.take();
-                return Ok((DbIoExecutionStep::Complete, Some((output.finish()?, fence))));
+                return match output.seal_retained_step()? {
+                    Some(pages) => {
+                        owner.take();
+                        Ok((DbIoExecutionStep::Complete, Some((pages, fence))))
+                    }
+                    None => Ok((DbIoExecutionStep::Yield, None)),
+                };
             }
             let mut fragment = [0u8; super::DB_IO_PAGE_BYTES];
             let fragment_len = (reader.total - output.len()).min(fragment.len());
@@ -7257,6 +7369,49 @@ mod db_io_retained_fixtures {
     }
 
     #[test]
+    fn db_io_page_writer_seal_memory_sqlite_neo_state_wal_index_max_cancel_fault_drop_is_one_opportunity() {
+        let _serial = fixture_serial();
+        let before = ledger_witness();
+        let waker = std::task::Waker::noop();
+        let context = &mut std::task::Context::from_waker(waker);
+
+        let mut writer = DbIoPageWriter::try_reserve(2).unwrap();
+        assert_eq!(writer.write_fragment(&vec![0x41; DB_IO_PAGE_BYTES + 1]).unwrap(), DB_IO_PAGE_BYTES);
+        assert_eq!(writer.write_fragment(&[0x42]).unwrap(), 1);
+        let mut seal = Box::pin(writer.seal_retained());
+        assert!(matches!(Future::poll(seal.as_mut(), context), std::task::Poll::Pending));
+        drop(seal);
+        while db_io_lost_owner_close_step().unwrap() {}
+        assert_eq!(ledger_witness(), before);
+
+        let mut writer = DbIoPageWriter::try_reserve(DB_IO_OPERATION_PAGES).unwrap();
+        assert_eq!(writer.write_fragment(&[0x43]).unwrap(), 1);
+        let mut seal = Box::pin(writer.seal_retained());
+        let mut pending = 0usize;
+        let pages = loop {
+            match Future::poll(seal.as_mut(), context) {
+                std::task::Poll::Pending => pending += 1,
+                std::task::Poll::Ready(Ok(pages)) => break pages,
+                std::task::Poll::Ready(Err(rejected)) => panic!("retained seal faulted: {}", rejected.error()),
+            }
+        };
+        assert!(pending > DB_IO_OPERATION_PAGES);
+        drain_pages(pages);
+        assert!(DbIoPageWriter::try_reserve(DB_IO_OPERATION_PAGES + 1).is_err());
+
+        let writer = DbIoPageWriter::try_reserve(1).unwrap();
+        writer.transition(DbIoPagePhase::CheckedOutWriter, DbIoPagePhase::Queued).unwrap();
+        let mut seal = Box::pin(writer.seal_retained());
+        let rejected = match Future::poll(seal.as_mut(), context) {
+            std::task::Poll::Ready(Err(rejected)) => rejected,
+            _ => panic!("invalid-phase seal did not retain its typed fault owner"),
+        };
+        let mut writer = rejected.into_writer().unwrap();
+        while writer.close_step().unwrap().is_some() {}
+        assert_eq!(ledger_witness(), before);
+    }
+
+    #[test]
     fn db_io_one_byte_high_capacity_candidate_is_rejected_with_exact_owner() {
         let _serial = fixture_serial();
         let before = ledger_witness();
@@ -7285,9 +7440,10 @@ mod db_io_retained_fixtures {
         let text = DbIoText::try_from_str("post-admission-artifact").unwrap();
         let mut artifact = DbIoArtifactId::try_from_text(operation, &text).unwrap();
         assert_eq!(artifact.as_str(), "post-admission-artifact");
+        assert_eq!(artifact.as_artifact().unwrap().0, "post-admission-artifact");
         assert!(artifact.close_step().unwrap());
         drop(artifact);
-        assert!(db_io_lost_owner_close_step().unwrap());
+        while db_io_lost_owner_close_step().unwrap() {}
         db_io_operation_return(operation, DbIoCredit { pages: 0, bytes: 0, items: 0, controls: 1 }).unwrap();
 
         let mut lease = DbIoLeaseResult::new(DbIoText::try_from_str("resource").unwrap(), DbIoText::try_from_str("holder").unwrap(), EpochFence::INITIAL, 10);

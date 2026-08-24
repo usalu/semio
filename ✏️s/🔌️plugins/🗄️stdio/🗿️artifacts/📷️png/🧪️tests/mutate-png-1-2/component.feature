@@ -27,12 +27,12 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
 
   ⚠️ Two of the seventeen kinds genuinely cannot reach the bytes, and the case says so rather than
   letting them pass as though they had:
-    * set-header — IHDR must describe the IDAT that follows it, and both encoders always write
+    – set-header — IHDR must describe the IDAT that follows it, and both encoders always write
       colour type 6 / bit depth 8 / interlace 0 because `PngSnapshot.pixels` is a canonical RGBA
       buffer (`encode_png`'s own 🚫️EncodeScopeNote). `SetHeader` also does not resize `pixels`, so
       changing width or height would only make the snapshot unencodable. Every field of this kind
       is model-only.
-    * set-transparency — §11.3.3 forbids tRNS alongside colour types 4 and 6, so at the colour type
+    – set-transparency — §11.3.3 forbids tRNS alongside colour types 4 and 6, so at the colour type
       both encoders write, the chunk can never appear. `encode_png` used to emit it anyway from the
       snapshot, producing a file the reference decoder rejects outright (`ColorWithBadTrns`); it now
       omits it, with the source's alpha already resolved into `pixels`.

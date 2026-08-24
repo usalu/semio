@@ -2426,6 +2426,11 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
 mod tests {
     use super::*;
 
+    #[test]
+    fn retained_batch_descriptor_has_no_destructor() {
+        assert!(!std::mem::needs_drop::<CommandBatchEntry>());
+    }
+
     //#region 🧸️Fixtures
     async fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
         crate::os_spr::causal::MutationEnvelope {

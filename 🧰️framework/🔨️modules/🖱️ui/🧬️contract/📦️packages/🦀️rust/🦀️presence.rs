@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn presence_update_round_trips_with_peers() {
         let update = PresenceUpdate {
-            surface: crate::SurfaceId::from("note.play.navigator"),
+            surface: crate::SurfaceId::try_from("note.play.navigator").expect("bounded surface id"),
             node_key: "row-9".into(),
             own: OwnPresence { hovered: true, selected: true, previewed: false, color: Some(2) },
             peers: vec![PeerMark { actor: "a".into(), color: Some(1), hovered: true, selected: false, label: "A".into() }, PeerMark { actor: "b".into(), color: None, hovered: false, selected: true, label: "B".into() }],
@@ -135,7 +135,7 @@ mod tests {
 
     #[test]
     fn presence_update_omits_empty_peers() {
-        let update = PresenceUpdate { surface: crate::SurfaceId::from("s"), node_key: "k".into(), own: OwnPresence::default(), peers: Vec::new(), ttl_ms: 1_000 };
+        let update = PresenceUpdate { surface: crate::SurfaceId::try_from("s").expect("bounded surface id"), node_key: "k".into(), own: OwnPresence::default(), peers: Vec::new(), ttl_ms: 1_000 };
         let json = serde_json::to_value(&update).expect("serialize");
         assert!(json.get("peers").is_none());
     }

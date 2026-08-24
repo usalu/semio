@@ -6,6 +6,7 @@
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
+use std::mem::size_of;
 use std::sync::{LazyLock, Mutex};
 
 pub const UI_TEXT_MAX_BYTES: usize = 512;
@@ -141,7 +142,7 @@ impl<'de> Deserialize<'de> for UiText {
 
 #[derive(Debug, PartialEq)]
 pub struct UiFixedList<T, const N: usize = UI_FIXED_LIST_ITEMS> {
-    items: [Option<T>; N],
+    items: Option<Box<[Option<T>]>>,
     len: usize,
 }
 
@@ -149,28 +150,38 @@ impl<T: Eq, const N: usize> Eq for UiFixedList<T, N> {}
 
 impl<T, const N: usize> Default for UiFixedList<T, N> {
     fn default() -> Self {
-        Self { items: std::array::from_fn(|_| None), len: 0 }
+        Self { items: None, len: 0 }
     }
 }
 
 impl<T: Clone, const N: usize> Clone for UiFixedList<T, N> {
     fn clone(&self) -> Self {
-        let mut items = std::array::from_fn(|_| None);
+        if self.items.is_none() {
+            return Self::default();
+        }
+        let mut items = Vec::with_capacity(N);
+        items.resize_with(N, || None);
         for (index, value) in self.iter().enumerate() {
             items[index] = Some(value.clone());
         }
-        Self { items, len: self.len }
+        Self { items: Some(items.into_boxed_slice()), len: self.len }
     }
 }
 
 impl<T, const N: usize> UiFixedList<T, N> {
     pub fn try_push(&mut self, value: T) -> Result<(), T> {
         let index = self.len;
-        if index == self.items.len() {
+        if index == N {
             return Err(value);
         }
+        if self.items.is_none() {
+            let mut items = Vec::with_capacity(N);
+            items.resize_with(N, || None);
+            self.items = Some(items.into_boxed_slice());
+        }
         let Some(len) = self.len.checked_add(1) else { return Err(value) };
-        self.items[index] = Some(value);
+        let Some(items) = self.items.as_mut() else { return Err(value) };
+        items[index] = Some(value);
         self.len = len;
         Ok(())
     }
@@ -178,19 +189,19 @@ impl<T, const N: usize> UiFixedList<T, N> {
     pub fn pop(&mut self) -> Option<T> {
         let index = self.len.checked_sub(1)?;
         self.len = index;
-        self.items[index].take()
+        self.items.as_mut()?.get_mut(index)?.take()
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
-        (index < self.len).then(|| self.items[index].as_ref()).flatten()
+        (index < self.len).then(|| self.items.as_ref()?.get(index)?.as_ref()).flatten()
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        (index < self.len).then(|| self.items[index].as_mut()).flatten()
+        (index < self.len).then(|| self.items.as_mut()?.get_mut(index)?.as_mut()).flatten()
     }
 
     pub fn last_mut(&mut self) -> Option<&mut T> {
-        self.len.checked_sub(1).and_then(|index| self.items[index].as_mut())
+        self.len.checked_sub(1).and_then(|index| self.items.as_mut()?.get_mut(index)?.as_mut())
     }
 
     pub fn swap_remove(&mut self, index: usize) -> Option<T> {
@@ -199,31 +210,47 @@ impl<T, const N: usize> UiFixedList<T, N> {
         }
         let last = self.len.checked_sub(1)?;
         self.len = last;
-        let removed = self.items[index].take();
+        let items = self.items.as_mut()?;
+        let removed = items[index].take();
         if index != last {
-            self.items[index] = self.items[last].take();
+            items[index] = items[last].take();
         }
         removed
     }
 
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
-        self.items[..self.len].iter_mut().filter_map(Option::as_mut)
+        let len = self.len;
+        self.items.as_deref_mut().map_or([].as_mut_slice(), |items| &mut items[..len]).iter_mut().filter_map(Option::as_mut)
     }
 
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = &T> {
-        self.items[..self.len].iter().filter_map(Option::as_ref)
+        self.items.as_deref().map_or([].as_slice(), |items| &items[..self.len]).iter().filter_map(Option::as_ref)
     }
 
     pub fn len(&self) -> usize {
         self.len
     }
 
-    pub const fn capacity(&self) -> usize {
-        N
+    pub fn capacity(&self) -> usize {
+        self.items.as_ref().map_or(0, |items| items.len())
     }
 
     pub fn is_empty(&self) -> bool {
         self.len == 0
+    }
+}
+
+impl<T, const N: usize> std::ops::Index<usize> for UiFixedList<T, N> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.get(index).expect("fixed-list index must be within admitted length")
+    }
+}
+
+impl<T, const N: usize> std::ops::IndexMut<usize> for UiFixedList<T, N> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.get_mut(index).expect("fixed-list index must be within admitted length")
     }
 }
 
@@ -235,29 +262,30 @@ impl<'a, T, const N: usize> IntoIterator for &'a UiFixedList<T, N> {
         fn present<T>(value: &Option<T>) -> Option<&T> {
             value.as_ref()
         }
-        self.items[..self.len].iter().filter_map(present::<T>)
+        self.items.as_deref().map_or([].as_slice(), |items| &items[..self.len]).iter().filter_map(present::<T>)
     }
 }
 
 impl<T, const N: usize> IntoIterator for UiFixedList<T, N> {
     type Item = T;
-    type IntoIter = std::iter::FilterMap<std::array::IntoIter<Option<T>, N>, fn(Option<T>) -> Option<T>>;
+    type IntoIter = std::iter::FilterMap<std::vec::IntoIter<Option<T>>, fn(Option<T>) -> Option<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         fn present<T>(value: Option<T>) -> Option<T> {
             value
         }
-        self.items.into_iter().filter_map(present::<T>)
+        self.items.map_or_else(Vec::new, |items| items.into_vec()).into_iter().filter_map(present::<T>)
     }
 }
 
 impl<T: Serialize, const N: usize> Serialize for UiFixedList<T, N> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::{Error, SerializeSeq};
-        if !self.is_empty() {
-            return Err(S::Error::custom("UiFixedList requires incremental page transport"));
+        use serde::ser::SerializeSeq;
+        let mut sequence = serializer.serialize_seq(Some(self.len))?;
+        for value in self {
+            sequence.serialize_element(value)?;
         }
-        serializer.serialize_seq(Some(0))?.end()
+        sequence.end()
     }
 }
 
@@ -273,10 +301,13 @@ impl<'de, T: Deserialize<'de>, const N: usize> Deserialize<'de> for UiFixedList<
             }
 
             fn visit_seq<A: SeqAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
-                if access.next_element::<T>()?.is_some() {
-                    return Err(serde::de::Error::custom("UiFixedList requires incremental page transport"));
+                let mut values = UiFixedList::default();
+                while let Some(value) = access.next_element::<T>()? {
+                    if values.try_push(value).is_err() {
+                        return Err(serde::de::Error::custom(format!("UiFixedList exceeds {N} items")));
+                    }
                 }
-                Ok(UiFixedList::default())
+                Ok(values)
             }
         }
         deserializer.deserialize_seq(FixedListVisitor::<T, N>(std::marker::PhantomData))
@@ -336,10 +367,11 @@ impl<V> UiFixedMap<V> {
 impl<V: Serialize> Serialize for UiFixedMap<V> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeMap;
-        if !self.is_empty() {
-            return Err(serde::ser::Error::custom("UiFixedMap requires incremental page transport"));
+        let mut map = serializer.serialize_map(Some(self.len()))?;
+        for (key, value) in self.iter() {
+            map.serialize_entry(key, value)?;
         }
-        serializer.serialize_map(Some(0))?.end()
+        map.end()
     }
 }
 
@@ -355,25 +387,28 @@ impl<'de, V: Deserialize<'de>> Deserialize<'de> for UiFixedMap<V> {
             }
 
             fn visit_map<A: MapAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
-                if access.next_entry::<UiText, V>()?.is_some() {
-                    return Err(serde::de::Error::custom("UiFixedMap requires incremental page transport"));
+                let mut values = UiFixedMap::default();
+                while let Some((key, value)) = access.next_entry::<UiText, V>()? {
+                    if values.try_push(key, value).is_err() {
+                        return Err(serde::de::Error::custom(format!("UiFixedMap requires at most {UI_FIXED_LIST_ITEMS} ascending unique entries")));
+                    }
                 }
-                Ok(UiFixedMap::default())
+                Ok(values)
             }
         }
         deserializer.deserialize_map(FixedMapVisitor(std::marker::PhantomData))
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct UiFixedBytes {
-    bytes: [u8; UI_FIXED_BYTES],
+    bytes: Box<[u8]>,
     len: u16,
 }
 
 impl Default for UiFixedBytes {
     fn default() -> Self {
-        Self { bytes: [0; UI_FIXED_BYTES], len: 0 }
+        Self { bytes: vec![0; UI_FIXED_BYTES].into_boxed_slice(), len: 0 }
     }
 }
 
@@ -413,10 +448,7 @@ impl UiFixedBytes {
 
 impl Serialize for UiFixedBytes {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        if !self.is_empty() {
-            return Err(serde::ser::Error::custom("UiFixedBytes requires incremental page transport"));
-        }
-        serializer.serialize_bytes(&[])
+        serializer.serialize_bytes(self.as_slice())
     }
 }
 
@@ -432,18 +464,18 @@ impl<'de> Deserialize<'de> for UiFixedBytes {
             }
 
             fn visit_bytes<E: serde::de::Error>(self, value: &[u8]) -> Result<Self::Value, E> {
-                if value.is_empty() {
-                    Ok(UiFixedBytes::default())
-                } else {
-                    Err(E::custom("UiFixedBytes requires incremental page transport"))
-                }
+                UiFixedBytes::try_from_vec(value.to_vec()).map_err(|value| E::custom(format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes with {}", value.len())))
             }
 
             fn visit_seq<A: SeqAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
-                if access.next_element::<u8>()?.is_some() {
-                    return Err(serde::de::Error::custom("UiFixedBytes requires incremental page transport"));
+                let mut bytes = Vec::with_capacity(access.size_hint().unwrap_or(0).min(UI_FIXED_BYTES));
+                while let Some(byte) = access.next_element::<u8>()? {
+                    if bytes.len() == UI_FIXED_BYTES {
+                        return Err(serde::de::Error::custom(format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")));
+                    }
+                    bytes.push(byte);
                 }
-                Ok(UiFixedBytes::default())
+                UiFixedBytes::try_from_vec(bytes).map_err(|_| serde::de::Error::custom(format!("UiFixedBytes exceeds {UI_FIXED_BYTES} bytes")))
             }
         }
         deserializer.deserialize_bytes(FixedBytesVisitor)
@@ -495,7 +527,7 @@ struct UiCollectionSlot {
     retiring: bool,
 }
 
-pub const UI_VALUE_AGGREGATE_BYTES: usize = UI_VALUE_AGGREGATE_ITEMS * std::mem::size_of::<UiPageSlot>() + UI_VALUE_ADMISSION_SLOTS * std::mem::size_of::<UiCollectionSlot>();
+pub const UI_VALUE_AGGREGATE_BYTES: usize = UI_VALUE_AGGREGATE_ITEMS * size_of::<UiPageSlot>() + UI_VALUE_ADMISSION_SLOTS * size_of::<UiCollectionSlot>();
 
 impl Default for UiCollectionSlot {
     fn default() -> Self {
@@ -514,13 +546,13 @@ impl Default for UiCollectionSlot {
 }
 
 struct UiValueArena {
-    pages: [UiPageSlot; UI_VALUE_AGGREGATE_ITEMS],
-    collections: [UiCollectionSlot; UI_VALUE_ADMISSION_SLOTS],
-    free_pages: [usize; UI_VALUE_AGGREGATE_ITEMS],
+    pages: Box<[UiPageSlot]>,
+    collections: Box<[UiCollectionSlot]>,
+    free_pages: Box<[usize]>,
     free_page_count: usize,
-    free_collections: [usize; UI_VALUE_ADMISSION_SLOTS],
+    free_collections: Box<[usize]>,
     free_collection_count: usize,
-    retirement: [usize; UI_VALUE_ADMISSION_SLOTS],
+    retirement: Box<[usize]>,
     retirement_head: usize,
     retirement_len: usize,
     items: usize,
@@ -529,14 +561,18 @@ struct UiValueArena {
 
 impl Default for UiValueArena {
     fn default() -> Self {
+        let mut pages = Vec::with_capacity(UI_VALUE_AGGREGATE_ITEMS);
+        pages.resize_with(UI_VALUE_AGGREGATE_ITEMS, UiPageSlot::default);
+        let mut collections = Vec::with_capacity(UI_VALUE_ADMISSION_SLOTS);
+        collections.resize_with(UI_VALUE_ADMISSION_SLOTS, UiCollectionSlot::default);
         Self {
-            pages: std::array::from_fn(|_| UiPageSlot::default()),
-            collections: std::array::from_fn(|_| UiCollectionSlot::default()),
-            free_pages: std::array::from_fn(|index| UI_VALUE_AGGREGATE_ITEMS - 1 - index),
+            pages: pages.into_boxed_slice(),
+            collections: collections.into_boxed_slice(),
+            free_pages: (0..UI_VALUE_AGGREGATE_ITEMS).rev().collect::<Vec<_>>().into_boxed_slice(),
             free_page_count: UI_VALUE_AGGREGATE_ITEMS,
-            free_collections: std::array::from_fn(|index| UI_VALUE_ADMISSION_SLOTS - 1 - index),
+            free_collections: (0..UI_VALUE_ADMISSION_SLOTS).rev().collect::<Vec<_>>().into_boxed_slice(),
             free_collection_count: UI_VALUE_ADMISSION_SLOTS,
-            retirement: [UI_VALUE_NONE; UI_VALUE_ADMISSION_SLOTS],
+            retirement: vec![UI_VALUE_NONE; UI_VALUE_ADMISSION_SLOTS].into_boxed_slice(),
             retirement_head: 0,
             retirement_len: 0,
             items: 0,
@@ -554,7 +590,7 @@ fn with_ui_value_arena<T>(f: impl FnOnce(&mut UiValueArena) -> T) -> T {
 
 impl UiValueArena {
     fn reserve_collection(&mut self, kind: UiCollectionKind) -> Option<UiCollectionHandle> {
-        let bytes = std::mem::size_of::<UiCollectionSlot>();
+        let bytes = size_of::<UiCollectionSlot>();
         let next_bytes = self.bytes.checked_add(bytes)?;
         if self.free_collection_count == 0 || next_bytes > UI_VALUE_AGGREGATE_BYTES {
             return None;
@@ -589,7 +625,7 @@ impl UiValueArena {
     }
 
     fn try_push_page(&mut self, handle: UiCollectionHandle, value: UiPageValue) -> Result<(), UiPageValue> {
-        let bytes = std::mem::size_of::<UiPageSlot>();
+        let bytes = size_of::<UiPageSlot>();
         let Some(free_page_count) = self.free_page_count.checked_sub(1) else { return Err(value) };
         let page = self.free_pages[free_page_count];
         let Some(epoch) = self.pages[page].epoch.checked_add(1) else { return Err(value) };
@@ -929,11 +965,12 @@ impl Drop for UiListBuilder {
 
 impl Serialize for UiList {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::{Error, SerializeSeq};
-        if !self.is_empty() {
-            return Err(S::Error::custom("UiList requires the incremental page transport"));
+        use serde::ser::SerializeSeq;
+        let mut sequence = serializer.serialize_seq(Some(self.len))?;
+        for value in self.iter() {
+            sequence.serialize_element(&value)?;
         }
-        serializer.serialize_seq(Some(0))?.end()
+        sequence.end()
     }
 }
 
@@ -951,8 +988,10 @@ impl<'de> Deserialize<'de> for UiList {
 
             fn visit_seq<A: SeqAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
                 let Some(mut builder) = UiListBuilder::try_new() else { return Err(serde::de::Error::custom("UiList admission failed")) };
-                if access.next_element::<UiValue>()?.is_some() {
-                    return Err(serde::de::Error::custom("UiList requires the incremental page transport"));
+                while let Some(value) = access.next_element::<UiValue>()? {
+                    if builder.push(value).is_err() {
+                        return Err(serde::de::Error::custom(format!("UiList exceeds {UI_VALUE_MAX_ITEMS} items or the aggregate page budget")));
+                    }
                 }
                 Ok(builder.finish())
             }
@@ -1139,10 +1178,10 @@ impl Drop for UiMapBuilder {
 impl Serialize for UiMap {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeMap;
-        if !self.is_empty() {
-            return Err(serde::ser::Error::custom("UiMap requires the incremental page transport"));
-        }
         let mut map = serializer.serialize_map(Some(self.len))?;
+        for (key, value) in self.iter() {
+            map.serialize_entry(&key, &value)?;
+        }
         map.end()
     }
 }
@@ -1161,8 +1200,10 @@ impl<'de> Deserialize<'de> for UiMap {
 
             fn visit_map<A: MapAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
                 let Some(mut builder) = UiMapBuilder::try_new() else { return Err(serde::de::Error::custom("UiMap admission failed")) };
-                if access.next_entry::<String, UiValue>()?.is_some() {
-                    return Err(serde::de::Error::custom("UiMap requires the incremental page transport"));
+                while let Some((key, value)) = access.next_entry::<String, UiValue>()? {
+                    if builder.push(key, value).is_err() {
+                        return Err(serde::de::Error::custom(format!("UiMap requires at most {UI_VALUE_MAX_ITEMS} ascending unique entries within the aggregate page budget")));
+                    }
                 }
                 Ok(builder.finish())
             }
@@ -1202,9 +1243,9 @@ impl ActionId {
     }
 }
 
-impl std::fmt::Display for ActionId {
+impl fmt::Display for ActionId {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}.{}@{}", self.scope, self.name, self.version)
     }
 }
@@ -1369,9 +1410,16 @@ mod tests {
 
     #[test]
     fn action_id_displays_scope_dot_name_at_version() {
-        let id = ActionId::v1("cad-play", "objectMove");
+        let id = ActionId::try_v1("cad-play", "objectMove").expect("bounded action id");
         assert_eq!(id.to_string(), "cad-play.objectMove@1");
-        assert_eq!(ActionId::new("app".into(), "submit".into(), 3).to_string(), "app.submit@3");
+        assert_eq!(ActionId::new(ui_text("app"), ui_text("submit"), 3).to_string(), "app.submit@3");
+    }
+
+    #[test]
+    fn fixed_owners_keep_bounded_payloads_off_the_stack() {
+        assert!(size_of::<UiFixedBytes>() <= size_of::<usize>() * 3);
+        assert!(size_of::<UiFixedList<UiFixedBytes>>() <= size_of::<usize>() * 3);
+        assert!(size_of::<UiValueArena>() <= size_of::<usize>() * 24);
     }
 
     #[allow(clippy::needless_pass_by_value)]
@@ -1389,13 +1437,11 @@ mod tests {
         value_round_trips(UiValue::Bool(true));
         value_round_trips(UiValue::Number(-3.5));
         value_round_trips(UiValue::Text(ui_text("hi")));
-        let list = ui_list([UiValue::Number(1.0), UiValue::Text(ui_text("two"))]);
-        assert!(serde_json::to_string(&UiValue::List(list)).is_err(), "populated pages require incremental transport");
-        let map = ui_map([
+        value_round_trips(UiValue::List(ui_list([UiValue::Number(1.0), UiValue::Text(ui_text("two"))])));
+        value_round_trips(UiValue::Map(ui_map([
             ("id".to_string(), UiValue::Text(ui_text("widget"))),
             ("nested".to_string(), UiValue::List(ui_list([UiValue::Bool(false), UiValue::Null]))),
-        ]);
-        assert!(serde_json::to_string(&UiValue::Map(map)).is_err(), "populated pages require incremental transport");
+        ])));
     }
 
     #[test]
@@ -1405,7 +1451,7 @@ mod tests {
 
     #[test]
     fn action_binding_round_trips_with_and_without_args() {
-        let full = ActionBinding { trigger: Trigger::Change, action: ActionId::v1("app", "setValue"), args: Some(UiValue::Text(ui_text("scope"))), capability: Some("edit".into()) };
+        let full = ActionBinding { trigger: Trigger::Change, action: ActionId::try_v1("app", "setValue").expect("bounded action id"), args: Some(UiValue::Text(ui_text("scope"))), capability: Some(ui_text("edit")) };
         let first = serde_json::to_string(&full).expect("serialize");
         let back: ActionBinding = serde_json::from_str(&first).expect("deserialize");
         assert_eq!(full, back);
@@ -1418,7 +1464,7 @@ mod tests {
 
     #[test]
     fn menu_ref_round_trips() {
-        let menu = MenuRef { id: "context.tree-item".into(), args: Some(UiValue::Number(2.0)) };
+        let menu = MenuRef { id: ui_text("context.tree-item"), args: Some(UiValue::Number(2.0)) };
         let first = serde_json::to_string(&menu).expect("serialize");
         let back: MenuRef = serde_json::from_str(&first).expect("deserialize");
         assert_eq!(menu, back);
@@ -1427,12 +1473,12 @@ mod tests {
     #[test]
     fn ui_intent_round_trips() {
         let intent = UiIntent {
-            surface: crate::SurfaceId::from("note.play.navigator"),
+            surface: crate::SurfaceId::try_from("note.play.navigator").expect("bounded surface id"),
             revision: crate::UiRevision(4),
             node: crate::UiNodeId(9),
-            node_key: "row-9".into(),
+            node_key: ui_text("row-9"),
             trigger: Trigger::Delta,
-            action: ActionId::v1("cad-play", "objectMove"),
+            action: ActionId::try_v1("cad-play", "objectMove").expect("bounded action id"),
             args: Some(UiValue::Number(1.0)),
             input: Some(UiValue::Number(-2.0)),
             seq: 42,

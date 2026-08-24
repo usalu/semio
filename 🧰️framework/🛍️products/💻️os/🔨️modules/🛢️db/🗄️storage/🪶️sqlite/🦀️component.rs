@@ -122,7 +122,10 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                 connection.query_row("SELECT length(bytes) FROM db_io_stage WHERE operation = ?1", params![operation], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound("SQLite DB I/O stage not found".to_string()))?;
             check_len(total as u64, MAX_BLOB_BYTES, "sqlite retained stage read")?;
             if output.len() == total as usize {
-                return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Pages(output.finish()?))));
+                return match output.seal_retained_step()? {
+                    Some(pages) => Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Pages(pages)))),
+                    None => Ok((DbIoExecutionStep::Yield, None)),
+                };
             }
             let offset = to_sql_i64(output.len() as u64 + 1, "sqlite retained read offset")?;
             let fragment: Vec<u8> = connection.query_row("SELECT substr(bytes, ?2, ?3) FROM db_io_stage WHERE operation = ?1", params![operation, offset, DB_IO_PAGE_BYTES as i64], |row| row.get(0)).map_err(sqlite_err)?;

@@ -646,14 +646,6 @@ pub struct JobCheckpoint {
 }
 
 impl JobCheckpoint {
-    pub fn from_job(checkpoint: job::Checkpoint) -> Self {
-        Self { state: checkpoint.state, applied_progress: checkpoint.applied_progress }
-    }
-
-    pub fn into_job(self) -> job::Checkpoint {
-        job::Checkpoint { state: self.state, applied_progress: self.applied_progress }
-    }
-
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         pack::write_bytes(out, &self.state).await;
         pack::write_u64(out, self.applied_progress).await;
@@ -672,14 +664,6 @@ pub struct JobCommitCandidate {
 }
 
 impl JobCommitCandidate {
-    pub fn from_job(candidate: job::CommitCandidate) -> Self {
-        Self { state: candidate.state, output: candidate.output }
-    }
-
-    pub fn into_job(self) -> job::CommitCandidate {
-        job::CommitCandidate { state: self.state, output: self.output }
-    }
-
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         pack::write_bytes(out, &self.state).await;
         pack::write_bytes(out, &self.output).await;
@@ -703,28 +687,6 @@ pub enum JobStepOutcome {
 }
 
 impl JobStepOutcome {
-    pub fn from_job(outcome: job::StepOutcome) -> Self {
-        match outcome {
-            job::StepOutcome::Yield => Self::Yield,
-            job::StepOutcome::PreviewReady(preview) => Self::PreviewReady { preview },
-            job::StepOutcome::CheckpointReady(checkpoint) => Self::CheckpointReady { checkpoint: JobCheckpoint::from_job(checkpoint) },
-            job::StepOutcome::Complete(candidate) => Self::Complete { candidate: JobCommitCandidate::from_job(candidate) },
-            job::StepOutcome::Cancelled => Self::Cancelled,
-            job::StepOutcome::Fault(fault) => Self::Fault { detail: fault.detail },
-        }
-    }
-
-    pub fn into_job(self) -> job::StepOutcome {
-        match self {
-            Self::Yield => job::StepOutcome::Yield,
-            Self::PreviewReady { preview } => job::StepOutcome::PreviewReady(preview),
-            Self::CheckpointReady { checkpoint } => job::StepOutcome::CheckpointReady(checkpoint.into_job()),
-            Self::Complete { candidate } => job::StepOutcome::Complete(candidate.into_job()),
-            Self::Cancelled => job::StepOutcome::Cancelled,
-            Self::Fault { detail } => job::StepOutcome::Fault(job::JobFault { detail }),
-        }
-    }
-
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
             Self::Yield => pack::write_u8(out, 0).await,
@@ -854,16 +816,118 @@ impl std::fmt::Display for JobPublicationError {
 
 impl std::error::Error for JobPublicationError {}
 
-/// 🌉️ Stateful actor bridge that invokes exactly one `InteractiveJob::step` per turn.
+struct JobPayloadProjection {
+    owner: Option<job::RetainedJobPayload>,
+    bytes: Vec<u8>,
+    page: usize,
+}
+
+impl JobPayloadProjection {
+    fn new(owner: job::RetainedJobPayload) -> Self {
+        let bytes = Vec::with_capacity(owner.len());
+        Self { owner: Some(owner), bytes, page: 0 }
+    }
+
+    fn step(&mut self) -> (bool, bool) {
+        let Some(owner) = self.owner.as_mut() else { return (true, false) };
+        if owner.terminal_is_empty() {
+            drop(self.owner.take());
+            return (true, false);
+        }
+        let Some(page) = owner.page(self.page) else {
+            self.page = self.page.saturating_add(1);
+            return (false, false);
+        };
+        let length = page.len();
+        self.bytes.extend_from_slice(page);
+        self.page = self.page.saturating_add(1);
+        let step = owner.close_step(1, length);
+        assert!(matches!(step, job::JobPayloadCloseStep::Pending { released_items: 1, released_bytes } if released_bytes == length));
+        let complete = owner.terminal_is_empty();
+        if complete {
+            drop(self.owner.take());
+        }
+        (complete, true)
+    }
+
+    fn take_bytes(&mut self) -> Vec<u8> {
+        assert!(self.owner.is_none(), "projected job payload must be terminal before publication");
+        std::mem::take(&mut self.bytes)
+    }
+}
+
+enum JobOutcomeProjection {
+    Preview { payload: JobPayloadProjection },
+    Checkpoint { state: JobPayloadProjection, applied_progress: u64 },
+    Complete { state: JobPayloadProjection, output: JobPayloadProjection, state_bytes: Option<Vec<u8>> },
+    Fault { detail: JobPayloadProjection },
+}
+
+impl JobOutcomeProjection {
+    fn start(outcome: job::StepOutcome) -> Result<JobStepOutcome, Self> {
+        match outcome {
+            job::StepOutcome::Yield => Ok(JobStepOutcome::Yield),
+            job::StepOutcome::PreviewReady(preview) => Err(Self::Preview { payload: JobPayloadProjection::new(preview) }),
+            job::StepOutcome::CheckpointReady(checkpoint) => {
+                Err(Self::Checkpoint { state: JobPayloadProjection::new(checkpoint.state), applied_progress: checkpoint.applied_progress })
+            }
+            job::StepOutcome::Complete(candidate) => Err(Self::Complete {
+                state: JobPayloadProjection::new(candidate.state),
+                output: JobPayloadProjection::new(candidate.output),
+                state_bytes: None,
+            }),
+            job::StepOutcome::Cancelled => Ok(JobStepOutcome::Cancelled),
+            job::StepOutcome::Fault(fault) => Err(Self::Fault { detail: JobPayloadProjection::new(fault.detail) }),
+        }
+    }
+
+    fn step(&mut self) -> Option<JobStepOutcome> {
+        match self {
+            Self::Preview { payload } => {
+                let (complete, _) = payload.step();
+                complete.then(|| JobStepOutcome::PreviewReady { preview: payload.take_bytes() })
+            }
+            Self::Checkpoint { state, applied_progress } => {
+                let (complete, _) = state.step();
+                complete.then(|| JobStepOutcome::CheckpointReady {
+                    checkpoint: JobCheckpoint { state: state.take_bytes(), applied_progress: *applied_progress },
+                })
+            }
+            Self::Complete { state, output, state_bytes } => {
+                if state_bytes.is_none() {
+                    let (complete, progressed) = state.step();
+                    if !complete {
+                        return None;
+                    }
+                    *state_bytes = Some(state.take_bytes());
+                    if progressed {
+                        return None;
+                    }
+                }
+                let (complete, _) = output.step();
+                complete.then(|| JobStepOutcome::Complete {
+                    candidate: JobCommitCandidate { state: state_bytes.take().expect("projected state"), output: output.take_bytes() },
+                })
+            }
+            Self::Fault { detail } => {
+                let (complete, _) = detail.step();
+                complete.then(|| JobStepOutcome::Fault { detail: detail.take_bytes() })
+            }
+        }
+    }
+}
+
+/// 🌉️ Stateful actor bridge that advances at most one interactive job step or one retained payload page per turn.
 pub struct JobTurnBridge {
     operation: job::Operation,
     next_step_sequence: u64,
     terminal: bool,
+    pending: Option<JobOutcomeProjection>,
 }
 
 impl JobTurnBridge {
     pub fn new(operation: job::Operation) -> Self {
-        Self { operation, next_step_sequence: 0, terminal: false }
+        Self { operation, next_step_sequence: 0, terminal: false, pending: None }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -899,15 +963,32 @@ impl JobTurnBridge {
         {
             return Err(JobPublicationError::Stale { live_revision: live_revision.0, live_generation: live_generation.0 });
         }
-        let before = self.operation.preview_sequence;
-        let outcome = job::drive_step(job, site, self.operation.operation, self.operation.generation, stage, budget, cancel, now_ms, &mut self.operation.preview_sequence);
-        let after = self.operation.preview_sequence;
-        let preview = matches!(outcome, job::StepOutcome::PreviewReady(_));
-        if (preview && after != before.saturating_add(1)) || (!preview && after != before) {
-            return Err(JobPublicationError::PreviewSequence { before, after });
-        }
-        let terminal = outcome.is_terminal();
-        let publication = JobPublication { turn: JobTurn { operation: JobOperation::from_job(self.operation), ..turn }, outcome: JobStepOutcome::from_job(outcome) };
+        let outcome = if let Some(projection) = self.pending.as_mut() {
+            match projection.step() {
+                Some(outcome) => {
+                    self.pending = None;
+                    outcome
+                }
+                None => JobStepOutcome::Yield,
+            }
+        } else {
+            let before = self.operation.preview_sequence;
+            let outcome = job::drive_step(job, site, self.operation.operation, self.operation.generation, stage, budget, cancel, now_ms, &mut self.operation.preview_sequence);
+            let after = self.operation.preview_sequence;
+            let preview = matches!(outcome, job::StepOutcome::PreviewReady(_));
+            if (preview && after != before.saturating_add(1)) || (!preview && after != before) {
+                return Err(JobPublicationError::PreviewSequence { before, after });
+            }
+            match JobOutcomeProjection::start(outcome) {
+                Ok(outcome) => outcome,
+                Err(projection) => {
+                    self.pending = Some(projection);
+                    JobStepOutcome::Yield
+                }
+            }
+        };
+        let terminal = matches!(outcome, JobStepOutcome::Complete { .. } | JobStepOutcome::Cancelled | JobStepOutcome::Fault { .. });
+        let publication = JobPublication { turn: JobTurn { operation: JobOperation::from_job(self.operation), ..turn }, outcome };
         self.next_step_sequence += 1;
         self.terminal = terminal;
         Ok(publication)
@@ -4109,19 +4190,74 @@ mod tests {
             10
         }
 
+        #[derive(Default)]
         struct ScriptJob {
             outcomes: VecDeque<JobStepOutcome>,
             calls: usize,
+            pending_state: Option<job::RetainedJobPayload>,
+            pending_complete: Option<JobCommitCandidate>,
+            closing: bool,
         }
 
         impl job::InteractiveJob for ScriptJob {
             fn step(&mut self, cx: &mut job::StepContext<'_>) -> job::StepOutcome {
                 self.calls += 1;
-                let outcome = self.outcomes.pop_front().expect("scripted bridge outcome");
-                if matches!(outcome, JobStepOutcome::PreviewReady { .. }) {
-                    cx.next_preview_sequence();
+                if let Some(candidate) = self.pending_complete.take() {
+                    let output = cx.payload_from_bytes(job::JobPayloadStream::CommitOutput, &candidate.output).expect("scripted output payload");
+                    let state = self.pending_state.take().expect("scripted state payload");
+                    return job::StepOutcome::Complete(job::CommitCandidate { state, output });
                 }
-                outcome.into_job()
+                let outcome = self.outcomes.pop_front().expect("scripted bridge outcome");
+                match outcome {
+                    JobStepOutcome::Yield => job::StepOutcome::Yield,
+                    JobStepOutcome::PreviewReady { preview } => {
+                        cx.next_preview_sequence();
+                        let preview = cx.payload_from_bytes(job::JobPayloadStream::Preview, &preview).expect("scripted preview payload");
+                        job::StepOutcome::PreviewReady(preview)
+                    }
+                    JobStepOutcome::CheckpointReady { checkpoint } => {
+                        let state = cx.payload_from_bytes(job::JobPayloadStream::CheckpointState, &checkpoint.state).expect("scripted checkpoint payload");
+                        job::StepOutcome::CheckpointReady(job::Checkpoint { state, applied_progress: checkpoint.applied_progress })
+                    }
+                    JobStepOutcome::Complete { candidate } => {
+                        self.pending_state = Some(cx.payload_from_bytes(job::JobPayloadStream::CommitState, &candidate.state).expect("scripted commit state"));
+                        self.pending_complete = Some(candidate);
+                        job::StepOutcome::Yield
+                    }
+                    JobStepOutcome::Cancelled => job::StepOutcome::Cancelled,
+                    JobStepOutcome::Fault { detail } => {
+                        let detail = cx.payload_from_bytes(job::JobPayloadStream::Fault, &detail).expect("scripted fault payload");
+                        job::StepOutcome::Fault(job::JobFault { detail })
+                    }
+                }
+            }
+
+            fn begin_close(&mut self) {
+                self.closing = true;
+            }
+
+            fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> job::InteractiveJobCloseStep {
+                self.begin_close();
+                if let Some(state) = self.pending_state.as_mut() {
+                    return match state.close_step(maximum_items, maximum_bytes) {
+                        job::JobPayloadCloseStep::Pending { released_items, released_bytes } => job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                        job::JobPayloadCloseStep::Complete => {
+                            self.pending_state = None;
+                            job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                        }
+                    };
+                }
+                if maximum_items == 0 && (!self.outcomes.is_empty() || self.pending_complete.is_some()) {
+                    return job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                if self.pending_complete.take().is_some() || self.outcomes.pop_front().is_some() {
+                    return job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                job::InteractiveJobCloseStep::Complete
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                self.closing && self.outcomes.is_empty() && self.pending_state.is_none() && self.pending_complete.is_none()
             }
         }
 
@@ -4129,7 +4265,17 @@ mod tests {
 
         impl job::InteractiveJob for UnsequencedPreviewJob {
             fn step(&mut self, _cx: &mut job::StepContext<'_>) -> job::StepOutcome {
-                job::StepOutcome::PreviewReady(vec![1])
+                job::StepOutcome::PreviewReady(job::RetainedJobPayload::empty(job::JobPayloadStream::Preview))
+            }
+
+            fn begin_close(&mut self) {}
+
+            fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> job::InteractiveJobCloseStep {
+                job::InteractiveJobCloseStep::Complete
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                true
             }
         }
         //#endregion 🔖️Helpers
@@ -4139,7 +4285,7 @@ mod tests {
         fn job_bridge_invokes_exactly_one_step_per_turn() {
             let operation = bridge_operation();
             let mut bridge = JobTurnBridge::new(operation);
-            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield, JobStepOutcome::Yield]), calls: 0 };
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield, JobStepOutcome::Yield]), calls: 0, ..Default::default() };
             let publication = bridge
                 .step(
                     &mut job,
@@ -4163,11 +4309,26 @@ mod tests {
             let operation = bridge_operation();
             let mut bridge = JobTurnBridge::new(operation);
             let checkpoint = JobCheckpoint { state: vec![4, 5, 6], applied_progress: 73 };
-            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() }]), calls: 0 };
-            let publication = bridge
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::CheckpointReady { checkpoint: checkpoint.clone() }]), calls: 0, ..Default::default() };
+            let pending = bridge
                 .step(
                     &mut job,
                     bridge_turn(0, 0),
+                    operation.operation,
+                    operation.base_revision,
+                    operation.generation,
+                    "actor.job.checkpoint",
+                    job::InteractiveStage::BackgroundStep,
+                    job::StepBudget::new(100, 20),
+                    job::root_cancel_token(),
+                    bridge_now_ms,
+                )
+                .expect("checkpoint projection admission");
+            assert!(matches!(pending.outcome, JobStepOutcome::Yield));
+            let publication = bridge
+                .step(
+                    &mut job,
+                    JobTurn { step_sequence: 1, ..pending.turn },
                     operation.operation,
                     operation.base_revision,
                     operation.generation,
@@ -4188,7 +4349,7 @@ mod tests {
             let mut bridge = JobTurnBridge::new(operation);
             let cancel = job::root_cancel_token();
             cancel.cancel().await;
-            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0 };
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0, ..Default::default() };
             let publication = bridge
                 .step(&mut job, bridge_turn(0, 0), operation.operation, operation.base_revision, operation.generation, "actor.job.cancel", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), cancel, bridge_now_ms)
                 .expect("cancel publication");
@@ -4215,7 +4376,7 @@ mod tests {
         fn job_bridge_rejects_stale_commit_before_work_or_publication() {
             let operation = bridge_operation();
             let mut bridge = JobTurnBridge::new(operation);
-            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![1], output: vec![2] } }]), calls: 0 };
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![1], output: vec![2] } }]), calls: 0, ..Default::default() };
             let result = bridge.step(
                 &mut job,
                 bridge_turn(0, 0),
@@ -4236,7 +4397,7 @@ mod tests {
         fn job_bridge_rejects_replayed_preview_identity_before_work() {
             let operation = bridge_operation();
             let mut bridge = JobTurnBridge::new(operation);
-            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0 };
+            let mut job = ScriptJob { outcomes: VecDeque::from([JobStepOutcome::Yield]), calls: 0, ..Default::default() };
             assert!(matches!(
                 bridge.step(
                     &mut job,
@@ -4289,6 +4450,7 @@ mod tests {
                         JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![3], output: vec![2, 1] } },
                     ]),
                     calls: 0,
+                    ..Default::default()
                 };
                 let mut log = JobReplayLog::default();
                 let mut turn = bridge_turn(0, 0);

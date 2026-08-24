@@ -24,6 +24,21 @@ pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin
     )
 }
 
+/// 👁️ Borrows a generation-qualified immutable renderer packet without scene rebuilding on the UI thread.
+pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::editor::fem3d::session::Fem3dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let (meshes_json, instances_json) = visual.map_or(("[]", "[]"), |lease| (lease.meshes_json(), lease.instances_json()));
+    crate::app_surface::world_3d_surface(
+        FEM3D_BODY_MODEL,
+        semio_framework_plugin::world3d_scene(
+            crate::editor::fem3d::fem3d_camera_json(camera),
+            meshes_json.to_string(),
+            instances_json.to_string(),
+            semio_framework_plugin::world3d_selection_json("rectangle", &[], None),
+            &semio_framework_plugin::WorldSunConfig::default(),
+        ),
+    )
+}
+
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {

@@ -94,8 +94,14 @@ impl RenderSnapshotSink {
     /// against it, and passes the same value into the `RenderSnapshot` it constructs, so revisions are
     /// assigned by the sink (one source of truth) rather than guessed by each caller.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn next_revision(&self) -> u64 {
-        self.next_revision.fetch_add(1, Ordering::Relaxed)
+    pub fn next_revision(&self) -> Option<u64> {
+        loop {
+            let current = self.next_revision.load(Ordering::Acquire);
+            let next = current.checked_add(1)?;
+            if self.next_revision.compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                return Some(current);
+            }
+        }
     }
 
     /// 📥️ Acquires the newest published snapshot — never blocks on a worker, never waits for a build:
@@ -158,7 +164,16 @@ mod tests {
         let sink = RenderSnapshotSink::new(snapshot(0));
         let a = sink.next_revision();
         let b = sink.next_revision();
-        assert!(b > a);
+        assert!(matches!((a, b), (Some(a), Some(b)) if b > a));
+    }
+
+    #[test]
+    fn revision_exhaustion_is_permanent_and_preserves_last_valid_snapshot() {
+        let sink = RenderSnapshotSink::new(snapshot(9));
+        sink.next_revision.store(u64::MAX - 1, Ordering::Release);
+        assert_eq!(sink.next_revision(), Some(u64::MAX - 1));
+        assert_eq!(sink.next_revision(), None);
+        assert_eq!(sink.acquire().revision, 9);
     }
 
     #[test]

@@ -3827,11 +3827,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     const fresh =
       !latest ||
       identity[0] > latest[0] ||
-      (identity[0] === latest[0] &&
-        (identity[1] > latest[1] ||
-          (identity[1] === latest[1] &&
-            (identity[2] > latest[2] ||
-              (identity[2] === latest[2] && (identity[3] > latest[3] || (identity[3] === latest[3] && identity[4] >= latest[4]))))));
+      (identity[0] === latest[0] && identity[1] > latest[1]) ||
+      (identity[0] === latest[0] && identity[1] === latest[1] && identity[2] > latest[2]) ||
+      (identity[0] === latest[0] && identity[1] === latest[1] && identity[2] === latest[2] && identity[3] > latest[3]) ||
+      (identity[0] === latest[0] && identity[1] === latest[1] && identity[2] === latest[2] && identity[3] === latest[3] && identity[4] >= latest[4]);
     if (fresh) {
       latestFillIdentityRef.current = identity;
       fillDiagnostic = suppliedFillDiagnostic;

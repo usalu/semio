@@ -7,9 +7,9 @@
 //!
 //! Two properties make this crate what it is:
 //!
-//! 1. **A transaction is persistent and atomically published.** [`transaction`]'s
-//!    `FrameTransaction::step()` advances seven scheduler-bounded stages. Reconciliation happens on
-//!    shadow state, and only a completed snapshot changes the retained revisions.
+//! 1. **Production frame authority is mounted by the product host.** This headless crate retains the
+//!    entity, presentation, and reconciliation primitives; its former standalone transaction is a
+//!    test oracle only so production cannot select an unmounted alternate frame authority.
 //! 2. **It runs on both sides of the plugin boundary.** A guest plugin embeds it to produce patches;
 //!    a host embeds it to drive its own screens. Hence no `Send` bounds and no dependency beyond the
 //!    contract and shared job protocol — it compiles for `wasm32-wasip2` and
@@ -33,6 +33,7 @@ mod present;
 mod reconcile;
 #[path = "🦀️tracking.rs"]
 mod tracking;
+#[cfg(test)]
 #[path = "🦀️transaction.rs"]
 mod transaction;
 
@@ -45,4 +46,5 @@ pub use presence::*;
 pub use present::*;
 pub use reconcile::*;
 pub use tracking::*;
+#[cfg(test)]
 pub use transaction::*;

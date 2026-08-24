@@ -91,6 +91,10 @@ pub mod layout;
 pub mod flex;
 
 #[cfg(feature = "wgpu-engine")]
+#[path = "🦀️mounted_layout.rs"]
+pub mod mounted_layout;
+
+#[cfg(feature = "wgpu-engine")]
 #[path = "🦀️shaders.rs"]
 pub mod shaders;
 
@@ -240,7 +244,7 @@ pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event,
 pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardIoJob, WindowInputState};
 #[cfg(feature = "wgpu-engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(feature = "wgpu-engine", target_arch = "wasm32"))]
 pub use prepared::OffscreenPresentToken;
 #[cfg(feature = "wgpu-engine")]
 pub use prepared::{

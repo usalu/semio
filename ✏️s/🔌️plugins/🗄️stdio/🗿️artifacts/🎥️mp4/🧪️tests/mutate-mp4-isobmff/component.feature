@@ -27,6 +27,13 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   leaving zero tracks, which `mp4` still muxes and re-parses cleanly. Every scenario is therefore
   genuinely `@mode-differential`; §6 of the wave brief (reader-only fallback) does not apply here.
 
+  ⚠️ The fixture's own `stss` box lists exactly TWO sync samples, at 1-based sample ids 1 and 28 —
+  read straight out of the committed bytes, not assumed. That is what the `set-sample-sync` row
+  addresses: it clears the flag on 0-based sample 27, the second real key frame. The row used to
+  name index 2, which is not a key frame, so it set an already-false flag to false and the scenario
+  passed without a mutation ever happening. The observability law added in this wave is what
+  surfaced it.
+
   Every scenario copies the immutable fixture into the case work directory before touching it; the
   committed fixture is never written to. Both the oracle's and the subject's results are read back by
   the SAME independent `mp4`-backed projection (`ftyp`, per-track geometry/codec digest, and every
@@ -58,7 +65,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
       | set-track-codec       | {"trackIndex":0,"sps":[103,66,0,30,140,141,64],"pps":[104,206,60,128]}                                                    |
       | insert-sample         | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}}               |
       | remove-sample         | {"trackIndex":0,"index":10}                                                                                               |
-      | set-sample-sync       | {"trackIndex":0,"index":2,"sync":false}                                                                                   |
+      | set-sample-sync       | {"trackIndex":0,"index":27,"sync":false}                                                                                   |
 
   @id-inverse
   @level-exhaustive
@@ -82,7 +89,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
       | set-track-codec       | {"trackIndex":0,"sps":[103,66,0,30,140,141,64],"pps":[104,206,60,128]}                                                    |
       | insert-sample         | {"trackIndex":0,"index":10,"sample":{"data":[0,0,0,4,101,1,2,3],"duration":512,"ctsOffset":0,"sync":false}}               |
       | remove-sample         | {"trackIndex":0,"index":10}                                                                                               |
-      | set-sample-sync       | {"trackIndex":0,"index":2,"sync":false}                                                                                   |
+      | set-sample-sync       | {"trackIndex":0,"index":27,"sync":false}                                                                                   |
 
   @id-identity-round-trip
   @level-long

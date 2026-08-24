@@ -627,19 +627,6 @@ impl UiPatchApplyProducer {
             self.phase = UiPatchApplyPhase::CloneState;
             return UiPatchApplyStep::MoreWork;
         };
-        if let crate::UiPatchOp::Remove { id } = op {
-            if let Err(id) = self.remove_stack.try_push(*id) {
-                self.reject(PatchRejection::UnknownNode { id });
-                return UiPatchApplyStep::Rejected;
-            }
-            let Some(next_op) = self.next_op.checked_add(1) else {
-                self.reject(PatchRejection::AliasCapacity);
-                return UiPatchApplyStep::Rejected;
-            };
-            self.next_op = next_op;
-            self.phase = UiPatchApplyPhase::RemoveSubtree;
-            return UiPatchApplyStep::MoreWork;
-        }
         const OP_OVERHEAD_BYTES: usize = 16;
         let Some(bytes) = self.patch_bytes.checked_add(OP_OVERHEAD_BYTES).and_then(|bytes| bytes.checked_add(op_text_bytes(op))) else {
             self.reject(PatchRejection::QuotaExceeded { quota: QuotaKind::PatchBytes, actual: usize::MAX, max: self.limits.max_patch_bytes });
@@ -677,6 +664,11 @@ impl UiPatchApplyProducer {
             return UiPatchApplyStep::MoreWork;
         }
         let Some(id) = self.remove_stack.pop() else {
+            let Some(next_op) = self.next_op.checked_add(1) else {
+                self.reject(PatchRejection::AliasCapacity);
+                return UiPatchApplyStep::Rejected;
+            };
+            self.next_op = next_op;
             self.phase = UiPatchApplyPhase::ApplyOps;
             return UiPatchApplyStep::MoreWork;
         };
@@ -739,6 +731,14 @@ impl UiPatchApplyProducer {
             self.phase = UiPatchApplyPhase::Validate;
             return UiPatchApplyStep::MoreWork;
         };
+        if let crate::UiPatchOp::Remove { id } = op {
+            if let Err(id) = self.remove_stack.try_push(*id) {
+                self.reject(PatchRejection::UnknownNode { id });
+                return UiPatchApplyStep::Rejected;
+            }
+            self.phase = UiPatchApplyPhase::RemoveSubtree;
+            return UiPatchApplyStep::MoreWork;
+        }
         let Some(draft) = self.draft.as_mut() else {
             self.reject(PatchRejection::AliasCapacity);
             return UiPatchApplyStep::Rejected;
@@ -1087,7 +1087,8 @@ impl Drop for UiPatchApplyRejected {
 
 fn retire_snapshot_one(state: &mut Option<crate::UiSnapshotState>) -> bool {
     let Some(owner) = state.as_mut() else { return true };
-    if let Some(id) = owner.nodes.keys().next().copied() {
+    let id = owner.nodes.keys().next().copied();
+    if let Some(id) = id {
         drop(owner.nodes.remove(&id));
         return false;
     }

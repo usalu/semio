@@ -22,6 +22,12 @@ use semio_repo_test_host::Json;
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
+///
+/// `no-mutation` returns the input verbatim, and that is the reference's CORRECT answer for "apply
+/// nothing" rather than a pass-through cheat: the comparison it feeds holds the subject's own
+/// re-serialization against the committed bytes' projection, which is a stricter claim than holding
+/// it against a second muxer's re-mux would be. The decode/re-mux claim is made separately and
+/// asserted separately, by `oracle_identity_round_trip` and the `@id-identity-round-trip` scenario.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));

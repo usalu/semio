@@ -88,11 +88,11 @@ use crate::db_storage::{
 macro_rules! with_admitted_artifact {
     ($operation:expr, $document:expr, $artifact:ident, $call:expr) => {{
         let mut owner = DbIoArtifactId::try_from_text($operation, $document)?;
-        let artifact_value = ArtifactId(owner.as_str().to_string());
-        let $artifact = &artifact_value;
+        let $artifact = owner.as_artifact()?;
         let terminal = $call.await;
-        drop(artifact_value);
-        owner.close_step()?;
+        while owner.close_step()? {
+            semio_framework_async::yield_once().await;
+        }
         terminal
     }};
 }
@@ -563,7 +563,7 @@ where
         reservation.close_step()?;
         return Ok(None);
     };
-    Ok(Some(ExistingLease { holder: db_io_copy_observed_text(reservation, holder)?, fence: EpochFence { epoch: epoch as u64 }, expires_at_ms: expires_at_ms as u64 }))
+    Ok(Some(ExistingLease { holder: db_io_copy_observed_text(reservation, holder).await?, fence: EpochFence { epoch: epoch as u64 }, expires_at_ms: expires_at_ms as u64 }))
 }
 
 async fn read_existing_lease<'e, E>(operation: u64, executor: E, resource: &str) -> Result<Option<ExistingLease>, DbError>
@@ -576,7 +576,7 @@ where
         reservation.close_step()?;
         return Ok(None);
     };
-    Ok(Some(ExistingLease { holder: db_io_copy_observed_text(reservation, holder)?, fence: EpochFence { epoch: epoch as u64 }, expires_at_ms: expires_at_ms as u64 }))
+    Ok(Some(ExistingLease { holder: db_io_copy_observed_text(reservation, holder).await?, fence: EpochFence { epoch: epoch as u64 }, expires_at_ms: expires_at_ms as u64 }))
 }
 
 impl LeaseStorage for PostgresDbIoExecutor {

@@ -22,8 +22,8 @@ use crate::editor::fem3d::modes::edit::windows::{model as window_model, results 
 use crate::model::{Dof, ElementResult};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError,
-    MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation,
+    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppDefinition, AppIo, AppRenderOperationContext, ArtifactEditor, ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -405,6 +405,22 @@ impl ArtifactEditor for Fem3dPlayApp {
         Some(fem3d_io())
     }
 
+    fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        Ok(crate::editor::fem3d::session::maintenance_step(instance_id, maximum_items, maximum_bytes))
+    }
+
+    fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        Ok(crate::editor::fem3d::session::close_step(instance_id, maximum_items, maximum_bytes))
+    }
+
+    fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
+        crate::editor::fem3d::session::terminal_is_empty(instance_id)
+    }
+
+    fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
+        crate::editor::fem3d::session::prepare_snapshot_read(operation, snapshot)
+    }
+
     /// 🎞️ `"document:out"` reproduces the trait's default whole-document pack (overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new
     /// one). `"results:out"` runs every load case/combination's analysis fresh and returns them as plain
@@ -494,11 +510,15 @@ impl ArtifactEditor for Fem3dPlayApp {
         command.dispatch(doc, cfg)
     }
 
+    async fn pending_effects(doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Vec<semio_framework::kernel::Effect> {
+        crate::editor::fem3d::session::reconcile(doc)
+    }
+
     async fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>) -> semio_framework_plugin::ComponentTree {
         let camera = &cfg.snapshot.camera;
         semio_framework_plugin::built_to_component_tree(match body_key {
-            window_model::FEM3D_BODY_MODEL => window_model::render(doc.snapshot, camera),
-            window_results::FEM3D_BODY_RESULTS => window_results::render(doc.snapshot, cfg.snapshot),
+            window_model::FEM3D_BODY_MODEL => crate::editor::fem3d::session::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(camera, visual)),
+            window_results::FEM3D_BODY_RESULTS => crate::editor::fem3d::session::with_live_visual(doc.render_operation(), |visual| window_results::render_with_progress(camera, visual)),
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))),
         })
     }

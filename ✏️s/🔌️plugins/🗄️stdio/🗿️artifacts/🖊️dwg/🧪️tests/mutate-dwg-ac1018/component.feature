@@ -54,15 +54,26 @@ Feature: Stamp a real DWG container R2004 and read the AC1018 preamble back at t
   the handler ZEROES the 21-byte preamble region before writing it back, so byte equality proves
   every one of those bytes was re-derived from the parse rather than left in place by a memcpy.
 
-  ⚠️ This subset's vocabulary is the AC1024 one, shared by CONSTRUCTION rather than copied. The ODA
-  `.dwg` specification gives R2004 and R2010 the SAME file-header layout — the three fields above,
-  at the same offsets — so one `DwgMutation` addresses both, and `🔖️ac1018/🪆️subsets/✳️any/
-  🧬️schema/🧬️mutations/🦀️component.rs` re-exports it rather than restating it; the AC1024 oracle
-  module's `every_ac1018_facet_is_a_re_export_of_this_one` test reads the committed sources and
-  fails the moment that stops being true. What is NOT identical by specification is what the two
-  containers hold BEHIND that header, and this repository decodes both through one R2004 path whose
-  own errors name AC1024 framing — a real gap, recorded in the ticket's report rather than dressed
-  up here as coverage.
+  ⚠️ This subset's vocabulary is the AC1024 one, shared by CONSTRUCTION rather than copied, and the
+  claim is scoped to exactly what a source backs. The plain file-header PREAMBLE — 0x00-0x14, the
+  three fields above at those offsets — is shared by every AC1015+ DWG file. That is not asserted
+  here on authority: it is what this repository's OWN production conformance code already says, in
+  `DwgSnapshot`'s doc comments and in `parse_version_header_fields` ("the plain file-header preamble
+  shared by every AC1015+ DWG file"), sourced there to LibreDWG's `header.spec` field order and
+  written months before either DWG case existed. One `DwgMutation` therefore addresses both, and
+  `🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` re-exports it rather than
+  restating it; the AC1024 oracle module's `every_ac1018_facet_is_a_re_export_of_this_one` test
+  reads the committed sources and fails the moment that stops being true.
+
+  The claim stops there, deliberately, and the boundary is pinned as bytes rather than as prose. The
+  R2004 file header is customarily documented with three 0x00 bytes at 0x15; the real fixture
+  carries `00 1d 02` there, repeating the 0x11-0x12 pair. So nothing here says the two releases
+  share a header layout BEYOND the preamble — the oracle models 0x00-0x14 and stops, and
+  `the_shared_layout_claim_stops_where_the_modelled_preamble_stops` fails if that region is ever
+  widened without re-sourcing the claim. What is likewise NOT identical is what the two containers
+  hold behind the header, and this repository decodes both through one R2004 path whose own errors
+  name AC1024 framing — a real gap, recorded in the ticket's report rather than dressed up here as
+  coverage.
 
   @id-mutate
   @level-exhaustive

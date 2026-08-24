@@ -555,7 +555,7 @@ impl TextEditAuthority {
         }
         let token = self.begin(generation, bytes, start, end)?;
         if let Err(fault) = self.push(token, text) {
-            self.enqueue_retirement(token.slot)?;
+            let _ = self.release_operation_one(token.slot);
             return Err(fault);
         }
         self.commit(token)
@@ -917,6 +917,14 @@ impl ActiveEdit {
             }
             return Ok(TextEditProgress::Complete);
         };
+        let node_start = self.offset;
+        let node_end = node_start.saturating_add(node_bytes(&node));
+        if node_end <= self.start || node_start >= self.end && self.inserted {
+            let bytes = node_end.saturating_sub(node_start);
+            self.append(TextRoot { node: Some(node), bytes })?;
+            self.offset = node_end;
+            return Ok(TextEditProgress::Yield);
+        }
         match node.as_ref() {
             TextNode::Concat { left, right, .. } => {
                 self.stack.push(right.clone())?;
@@ -989,9 +997,13 @@ mod tests {
             }
         }
         assert_eq!(published, Some(2 * 1024 * 1024 + TEXT_INGRESS_BYTES));
-        let mut projection = authority.projection(2 * 1024 * 1024, TEXT_PROJECTION_BYTES).unwrap();
-        while !projection.step(1).unwrap() {}
-        assert_eq!(projection.take().unwrap(), "x".repeat(TEXT_PROJECTION_BYTES));
+        authority.start_projection(2 * 1024 * 1024, TEXT_PROJECTION_BYTES).unwrap();
+        let projected = loop {
+            if let Some(projected) = authority.step_projection(1).unwrap() {
+                break projected;
+            }
+        };
+        assert_eq!(projected, "x".repeat(TEXT_PROJECTION_BYTES));
         assert_eq!(authority.undo(), Some(2 * 1024 * 1024));
         assert_eq!(authority.root().len(), 4 * 1024 * 1024);
     }

@@ -42,11 +42,20 @@ fn render_frame_operation_id() -> semio_framework_trace::OperationId {
     *ID.get_or_init(semio_framework_trace::allocate_operation_id)
 }
 
+/// 🔢️ Advances a mounted frame generation once and permanently refuses exhaustion.
+fn advance_frame_generation(generation: &mut u64) -> bool {
+    let Some(next) = generation.checked_add(1) else { return false };
+    *generation = next;
+    true
+}
+
 /// 📥️ The exact mounted event-callback core, split from `OsHost` only so its latency contract can
 /// be stress-tested without constructing a platform window or GPU surface.
 fn enqueue_host_event(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, event: DispatchEvent) -> ui_host::EnqueueOutcome {
     let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_event", render_frame_operation_id(), semio_framework_trace::Generation(*frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
-    *frame_generation = frame_generation.wrapping_add(1);
+    if !advance_frame_generation(frame_generation) {
+        return ui_host::EnqueueOutcome::Overflow;
+    }
     scheduler.invalidate(InvalidationReason::INPUT_STATE);
     events.enqueue(ui_token, event)
 }
@@ -55,7 +64,9 @@ fn enqueue_host_event(events: &mut ui_host::EventQueue, scheduler: &mut ui_rende
 /// [`enqueue_host_event`]. GPU surface reconfiguration remains the immediate platform-only step.
 fn enqueue_host_metrics(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, physical_width: u32, physical_height: u32, scale_factor: f32) {
     let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_metrics", render_frame_operation_id(), semio_framework_trace::Generation(*frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
-    *frame_generation = frame_generation.wrapping_add(1);
+    if !advance_frame_generation(frame_generation) {
+        return;
+    }
     scheduler.invalidate(InvalidationReason::VIEWPORT);
     events.enqueue_metrics(ui_token, physical_width, physical_height, scale_factor);
 }
@@ -130,7 +141,9 @@ impl OsHost {
         if self.frame_ready {
             self.frame_ready = false;
         } else {
-            self.frame_generation = self.frame_generation.wrapping_add(1);
+            if !advance_frame_generation(&mut self.frame_generation) {
+                self.present_fault = Some("frame generation exhausted".to_string());
+            }
         }
         let now = self.clock.now_seconds();
         self.build_and_publish_snapshot();
@@ -169,9 +182,13 @@ impl OsHost {
         let runtime = self.runtime.clone();
         let dpr = self.presenter.dpr();
         let frame_build = &mut self.frame_build;
-        let cursor = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation, dpr)).map(semio_cursor_to_request).unwrap_or_else(|| self.snapshot_sink.acquire().cursor);
+        let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation, dpr));
         match self.presenter.present_step() {
-            Ok(crate::AppPresentStep::Complete { fullscreen, cursor_wake }) => {
+            Ok(crate::AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake }) => {
+                if generation.0 != self.frame_generation {
+                    self.scheduler.invalidate(InvalidationReason::INPUT_STATE);
+                    return;
+                }
                 self.platform_fullscreen = fullscreen;
                 if let Some(token) = cursor_wake {
                     if self.runtime.acknowledge_world_cursor_wake(&token) {
@@ -179,15 +196,17 @@ impl OsHost {
                         self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
                     }
                 }
+                let Some(revision) = self.snapshot_sink.next_revision() else {
+                    self.present_fault = Some("render snapshot revision exhausted".to_string());
+                    return;
+                };
+                let timestamp_us = (self.now_seconds() * 1_000_000.0) as u64;
+                self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, generation, timestamp_us, semio_cursor_to_request(cursor), None));
             }
             Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
             Ok(crate::AppPresentStep::Idle) => {}
             Err(error) => self.present_fault = Some(error),
         }
-        let revision = self.snapshot_sink.next_revision();
-        let generation = semio_framework_trace::Generation(self.frame_generation);
-        let timestamp_us = (self.now_seconds() * 1_000_000.0) as u64;
-        self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, generation, timestamp_us, cursor, None));
     }
 
     /// 📤️ The PRESENT half — atomically acquires the newest published snapshot (never blocks, never
@@ -703,7 +722,9 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
             // 🔔️ Worker completion wake: invalidate only; no future is polled on this callback.
             HostUserEvent::Wake => {
                 if let Some(host) = self.host.as_mut() {
-                    host.frame_generation = host.frame_generation.wrapping_add(1);
+                    if !advance_frame_generation(&mut host.frame_generation) {
+                        host.present_fault = Some("frame generation exhausted".to_string());
+                    }
                     host.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
                 }
             }
@@ -823,5 +844,14 @@ mod callback_latency_tests {
         let drained = events.drain_page(ui_host::WorkerContext::new(events.current_generation()));
         let latest = drained.metrics.expect("coalesced resize sample");
         assert_eq!((latest.physical_width, latest.physical_height), (831, 631));
+    }
+
+    #[test]
+    fn mounted_frame_generation_exhaustion_is_permanent_and_non_wrapping() {
+        let mut generation = u64::MAX - 1;
+        assert!(advance_frame_generation(&mut generation));
+        assert_eq!(generation, u64::MAX);
+        assert!(!advance_frame_generation(&mut generation));
+        assert_eq!(generation, u64::MAX);
     }
 }

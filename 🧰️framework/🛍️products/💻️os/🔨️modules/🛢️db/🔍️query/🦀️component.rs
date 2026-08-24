@@ -725,7 +725,8 @@ impl QueryRows {
         self.len == 0
     }
 
-    fn preflight_push(&mut self) -> Result<(), DbError> {
+    /// @emoji 🛂️ Reserves the exact retirement authority before a caller acquires its next row.
+    pub fn preflight_push(&mut self) -> Result<(), DbError> {
         if self.len() == QUERY_ROW_SLOTS {
             return Err(DbError::LimitExceeded("query row slots"));
         }
@@ -735,7 +736,8 @@ impl QueryRows {
         Ok(())
     }
 
-    fn push_preflighted(&mut self, row: QueryRow) {
+    /// @emoji 📥️ Installs one row after `preflight_push` preserved its exact refusal boundary.
+    pub fn push_preflighted(&mut self, row: QueryRow) {
         let index = self.len();
         self.slots[index] = Some(row);
         self.len += 1;
@@ -1059,18 +1061,27 @@ pub struct ProjectionSource(std::cell::RefCell<QueryRows>);
 impl ProjectionSource {
     pub async fn from_value(value: Value) -> Result<ProjectionSource, DbError> {
         let mut rows = QueryRows::new();
+        let count = match &value {
+            Value::List(items) => items.len(),
+            Value::Map(map) => map.len(),
+            _ => 1,
+        };
+        check_len(count as u64, QUERY_ROW_SLOTS as u64, "projection query row slots")?;
+        if count != 0 {
+            rows.preflight_push()?;
+        }
         match value {
             Value::List(items) => {
                 for (index, item) in items.into_iter().enumerate() {
-                    rows.push(QueryRow::new(RowId(index as u64), item)).map_err(|_| DbError::LimitExceeded("projection query row slots"))?;
+                    rows.push_preflighted(QueryRow::new(RowId(index as u64), item));
                 }
             }
             Value::Map(map) => {
                 for (index, item) in map.into_values().enumerate() {
-                    rows.push(QueryRow::new(RowId(index as u64), item)).map_err(|_| DbError::LimitExceeded("projection query row slots"))?;
+                    rows.push_preflighted(QueryRow::new(RowId(index as u64), item));
                 }
             }
-            other => rows.push(QueryRow::new(RowId(0), other)).map_err(|_| DbError::LimitExceeded("projection query row slots"))?,
+            other => rows.push_preflighted(QueryRow::new(RowId(0), other)),
         }
         Ok(ProjectionSource(std::cell::RefCell::new(rows)))
     }

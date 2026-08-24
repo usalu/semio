@@ -47,6 +47,17 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   those is an exact claim; the digests exist only so the comparison engine is not diffing ~24
   million JSON numbers per scenario.
 
+  The identity round trip asserts EXACT bytes rather than "the bytes moved", and this is the one
+  carrier in the fleet where that is the correct law rather than the suspicious one. An uncompressed
+  BMP v3 leaves a writer nothing to choose: a 14-byte BITMAPFILEHEADER and a 40-byte
+  BITMAPINFOHEADER whose every field is determined by the image, a colour table that is the palette
+  verbatim, and a pixel array that is the index buffer padded to a 4-byte row stride. No filters, no
+  compression level, no chunk order. The committed fixture was additionally authored by the
+  reference encoder itself, so a byte that moves is a defect in a codec rather than freedom being
+  exercised. What rules out a read/write shortcut is structural instead of assertional: on the
+  subject side the ONLY channel from input to output is decode_bmp → the DSL text codec → parse_dsl
+  → encode_bmp, so a byte that survives did so by being modelled.
+
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -93,16 +104,6 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real document, reproducing it exactly
-    An uncompressed BMP v3 is the one carrier in this fleet where byte-exactness is the CORRECT
-    answer rather than the suspicious one, and the case says so instead of contriving a difference
-    to assert. The format leaves a writer nothing to choose: a 14-byte BITMAPFILEHEADER and a
-    40-byte BITMAPINFOHEADER whose every field is determined by the image, a colour table that is
-    the palette verbatim, and a pixel array that is the index buffer padded to a 4-byte row stride.
-    No filters, no compression level, no chunk order. The committed fixture was additionally
-    authored by the reference encoder itself, so a byte that moves is a defect in a codec, not
-    freedom being exercised. What rules out a `read`/`write` shortcut here is structural rather than
-    assertional: on the subject side the ONLY channel from input to output is decode_bmp → the DSL
-    text codec → parse_dsl → encode_bmp, so a byte that survives did so by being modelled.
     Given the real input document shared://🖼️rathaus-ahlen-grundriss.bmp
     When the document is decoded, printed through the DSL text codec, reparsed and re-encoded
     Then the output reproduces the input byte for byte

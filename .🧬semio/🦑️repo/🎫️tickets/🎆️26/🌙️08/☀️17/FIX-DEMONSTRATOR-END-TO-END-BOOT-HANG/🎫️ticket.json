@@ -1,11 +1,12 @@
 {
   "title": "Fix Demonstrator End to End Boot Hang",
   "emoji": "🧪",
-  "status": "closed",
+  "status": "open",
   "description": "Demonstrator apps hang in loading. Fix puzzle wasm compile, plugin boot deps, and backbone worker wire decoding so apps boot end to end.",
   "summary": "Demonstrator panes boot end-to-end: transitive plugin deps, hot-swap watch SSE, appId session on owning plugin, worker wire guard, Canvas duplicate export fix.",
   "goal": "🎯r2603",
   "sessions": [
-    "⚪db5e40db0eb74de78974de9c57c18ed1"
+    "⚪db5e40db0eb74de78974de9c57c18ed1",
+    "⚪97924b906f944db9930670034c266cd1"
   ]
 }

@@ -62,6 +62,30 @@ pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) ->
 }
 //#endregion 🔖️Mutation
 
+//#region 🔖️Kinds
+impl Mp3Mutation {
+    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `../../🧪️oracle/🔣️component.json`'s
+    /// `mutationCatalogs[].kinds` declares and `mutate-mp3-mpeg1-layer3`'s Scenario Outline row ids
+    /// equal. Hand-matched rather than derived, so [`KINDS`] is checked against something with its
+    /// own reason to be right; and exhaustive, so a variant added to the enum is a COMPILE error
+    /// here rather than a silently uncatalogued kind.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Mp3Mutation::NoMutation => "no-mutation",
+            Mp3Mutation::SetSnapshot { .. } => "set-snapshot",
+            Mp3Mutation::SetId3v2 { .. } => "set-id3v2",
+            Mp3Mutation::SetFrames { .. } => "set-frames",
+            Mp3Mutation::SetId3v1 { .. } => "set-id3v1",
+        }
+    }
+}
+
+/// 🏷️ Every declared kind, kebab-case, in the enum's own declaration order — mirrors the catalog's
+/// `mutationCatalogs[].kinds` exactly.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
+//#endregion 🔖️Kinds
+
 //#region OpCodecs
 /// 🎙️ Handcrafted `OpText`/`OpBinary` via plain `serde_json` (one line of compact JSON per op) —
 /// deliberately NOT `#[derive(dsl::DslOps)]`: `Mp3Frame`/`Id3v2Tag` embed nested collections of
@@ -120,6 +144,25 @@ mod tests {
             Mp3Mutation::SetId3v1 { id3v1: Some(Id3v1Tag { raw: vec![b'T', b'A', b'G'] }) },
             Mp3Mutation::SetId3v1 { id3v1: None },
         ]
+    }
+
+    /// 🧪️ Keeps the declaration honest, which nothing else can: the framework never parses Rust, so
+    /// the CATALOG is what the contract gate counts against, and this is the only check that ties it
+    /// to the enum. `variants()` already carries every declared variant, `kind()` is an exhaustive
+    /// match, and the manifest is read as committed text — so a kind added to one of the three and
+    /// not the others fails here. The sibling `KINDS` in `../../🧪️oracle/🦀️component.rs` mirrors
+    /// this one from the oracle crate, which must never link this crate; it can only compare
+    /// strings, whereas this test compares against real values.
+    #[test]
+    fn kinds_matches_every_variant_and_the_catalog() {
+        let from_variants: std::collections::BTreeSet<&str> = variants(&base_snapshot()).iter().map(Mp3Mutation::kind).collect();
+        let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
+        assert_eq!(from_variants, from_kinds, "KINDS must equal every Mp3Mutation variant's kind()");
+        assert_eq!(KINDS.len(), 5, "KINDS must list exactly the declared 5 kinds");
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "the oracle catalog manifest must declare kind {kind:?}");
+        }
     }
 
     //#region mutation_diff_law

@@ -539,6 +539,14 @@ mod tests {
         Json::Object(vec![("name".to_string(), Json::String(name.to_string())), ("cells".to_string(), Json::Array(cells))])
     }
 
+    /// 🧫️ The REAL committed workbook this subset's case runs on — 11 parts, two worksheets and a
+    /// genuine 229-entry shared-string table. The synthetic [`fixture_bytes`] below is a
+    /// `rust_xlsxwriter` build whose pool holds one entry, which is the right input for the grid
+    /// kinds and the wrong one for anything that measures the pool.
+    fn real_fixture_bytes() -> Vec<u8> {
+        std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🗿️artifacts/📕️xlsx/🧫️fixtures/📕️reuse-marketplaces.xlsx")).expect("the committed reuse-marketplaces workbook")
+    }
+
     fn fixture_bytes() -> Vec<u8> {
         write_workbook_grid(&[("Sheet1".to_string(), vec![(0, 0, GridValue::Text("hello".to_string())), (0, 1, GridValue::Number(1.0)), (1, 0, GridValue::Bool(true))])]).unwrap()
     }
@@ -590,12 +598,46 @@ mod tests {
     }
 
     #[test]
-    fn shared_string_kinds_are_a_true_byte_identity() {
-        let input = fixture_bytes();
-        for kind in ["insert-shared-string", "remove-shared-string", "set-shared-string"] {
-            let output = oracle_apply_mutation(&input, &spec(kind, Json::Object(vec![("index".to_string(), Json::Number(0.0)), ("value".to_string(), Json::String("x".to_string()))]))).unwrap();
-            assert_eq!(output, input, "{kind} has no observable effect through this reference pairing (see module doc comment)");
-        }
+    /// 📑️ The three pool kinds really move the real 229-entry `xl/sharedStrings.xml`, and the pool
+    /// is really read back out of the bytes. This replaces a test that asserted the opposite — that
+    /// they were a byte identity — which was true only of the `calamine`/`rust_xlsxwriter` pairing
+    /// and never of the package.
+    fn shared_string_kinds_move_the_real_pool() {
+        let input = real_fixture_bytes();
+        let pool = shared_strings::read_pool(&input).expect("the real fixture carries a shared-string pool");
+        assert_eq!(pool.len(), 229, "the committed fixture's own uniqueCount");
+
+        let inserted = oracle_apply_mutation(&input, &spec("insert-shared-string", Json::Object(vec![("value".to_string(), Json::String("Ökobau Referenzquelle 2024".to_string()))]))).unwrap();
+        let grown = shared_strings::read_pool(&inserted).unwrap();
+        assert_eq!(grown.len(), 230);
+        assert_eq!(grown.last().map(String::as_str), Some("Ökobau Referenzquelle 2024"));
+
+        let removed = oracle_apply_mutation(&inserted, &spec("remove-shared-string", Json::Object(vec![("index".to_string(), Json::Number(229.0))]))).unwrap();
+        assert_eq!(shared_strings::read_pool(&removed).unwrap(), pool, "removing the appended entry restores the pool exactly");
+
+        let set = oracle_apply_mutation(&input, &spec("set-shared-string", Json::Object(vec![("index".to_string(), Json::Number(0.0)), ("value".to_string(), Json::String("Aktualisierter Quellwert".to_string()))]))).unwrap();
+        assert_eq!(shared_strings::read_pool(&set).unwrap()[0], "Aktualisierter Quellwert");
+    }
+
+    /// ⚠️ An INTERIOR removal has no inverse in this vocabulary — `InsertSharedString` appends — and
+    /// the oracle refuses to invent one rather than returning an undo that does not undo.
+    #[test]
+    fn an_interior_shared_string_removal_is_refused_an_inverse() {
+        let input = real_fixture_bytes();
+        let forward = spec("remove-shared-string", Json::Object(vec![("index".to_string(), Json::Number(0.0))]));
+        let error = shared_string_inverse_spec(&input, &forward).expect_err("index 0 of 229 is interior");
+        assert!(error.contains("no inverse in this vocabulary"), "{error}");
+        let last = spec("remove-shared-string", Json::Object(vec![("index".to_string(), Json::Number(228.0))]));
+        assert_eq!(shared_string_inverse_spec(&input, &last).unwrap().str("kind"), "insert-shared-string");
+    }
+
+    /// 🕳️ A parameter set that would leave the pool exactly as it was is an error, not a pass.
+    #[test]
+    fn a_shared_string_write_that_changes_nothing_is_refused() {
+        let input = real_fixture_bytes();
+        let pool = shared_strings::read_pool(&input).unwrap();
+        let unchanged = spec("set-shared-string", Json::Object(vec![("index".to_string(), Json::Number(0.0)), ("value".to_string(), Json::String(pool[0].clone()))]));
+        assert!(oracle_apply_mutation(&input, &unchanged).is_err());
     }
 
     #[test]

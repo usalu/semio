@@ -6633,8 +6633,11 @@ where
         OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT }
     }
 
-    fn terminal_fault(diagnostic: OwnedSchemaDecodeDiagnostic) -> semio_framework_job::StepOutcome {
-        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: diagnostic.code.as_bytes().to_vec() })
+    fn terminal_fault(diagnostic: OwnedSchemaDecodeDiagnostic, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        let detail = cx
+            .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, diagnostic.code.as_bytes())
+            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
     }
 
     fn release_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Option<semio_framework_job::StepOutcome> {
@@ -6722,7 +6725,7 @@ where
             }
             ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic) => {
                 self.state = ArtifactEnvelopeDecodeState::Fault(diagnostic);
-                Self::terminal_fault(diagnostic)
+                Self::terminal_fault(diagnostic, cx)
             }
             _ => return None,
         };
@@ -6764,7 +6767,7 @@ where
                 });
             }
             ArtifactEnvelopeDecodeState::Cancelled => return semio_framework_job::StepOutcome::Cancelled,
-            ArtifactEnvelopeDecodeState::Fault(diagnostic) => return Self::terminal_fault(diagnostic),
+            ArtifactEnvelopeDecodeState::Fault(diagnostic) => return Self::terminal_fault(diagnostic, cx),
             ArtifactEnvelopeDecodeState::Fields => {}
             _ => unreachable!("release states returned before decode"),
         }
@@ -6846,6 +6849,79 @@ where
                 semio_framework_job::StepOutcome::Yield
             }
         }
+    }
+
+    fn begin_close(&mut self) {
+        if matches!(self.state, ArtifactEnvelopeDecodeState::Fields) {
+            self.state = ArtifactEnvelopeDecodeState::ReleaseCancelled;
+        }
+        self.pending_field = None;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.begin_close();
+        if let Some(fields) = self.fields.as_mut() {
+            let close = fields.with_owner(|owner| {
+                if owner.terminal_is_empty() {
+                    Ok(SnapshotRetirementStep::Complete)
+                } else {
+                    owner.close_step(maximum_items, maximum_bytes)
+                }
+            });
+            match close {
+                Ok(Ok(SnapshotRetirementStep::Pending { released_items, released_bytes })) => {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                }
+                Ok(Ok(SnapshotRetirementStep::Blocked)) | Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => {
+                    return semio_framework_job::InteractiveJobCloseStep::Blocked;
+                }
+                Ok(Ok(SnapshotRetirementStep::Complete)) => {}
+                Ok(Err(_)) | Err(_) => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+            }
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let terminal = fields.with_owner(|owner| owner.terminal_is_empty());
+            if terminal != Ok(true) || !fields.return_now() {
+                return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            }
+            drop(self.fields.take());
+            self.field_returned = true;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if !self.field_returned || !self.field_registry.ticket_reclaimed(self.field_ticket) {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if let Some(record) = self.record.as_mut() {
+            if maximum_items == 0 || maximum_bytes < ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            match record.close_step(1) {
+                SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+                }
+                SnapshotRetirementStep::Blocked => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+                SnapshotRetirementStep::Complete if record.terminal_is_empty() => {}
+                SnapshotRetirementStep::Complete => return semio_framework_job::InteractiveJobCloseStep::Blocked,
+            }
+            let record = self.record.take().expect("terminal envelope record cursor remains present");
+            drop(record);
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        self.state = match self.state {
+            ArtifactEnvelopeDecodeState::ReleaseSuccess | ArtifactEnvelopeDecodeState::Complete => ArtifactEnvelopeDecodeState::Complete,
+            ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic) | ArtifactEnvelopeDecodeState::Fault(diagnostic) => ArtifactEnvelopeDecodeState::Fault(diagnostic),
+            _ => ArtifactEnvelopeDecodeState::Cancelled,
+        };
+        if ArtifactEnvelopeDecodeAuthority::terminal_is_empty(self) {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Blocked
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ArtifactEnvelopeDecodeAuthority::terminal_is_empty(self)
     }
 }
 
@@ -8840,7 +8916,7 @@ pub struct ArtifactTextFiles {
 
 /// @emoji 🧩️ The result of loading a document from text: the reconstructed envelope plus the live
 /// snapshot folded from every edit, so a caller never has to replay again after loading.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct ParsedDocumentText<P, Mutation> {
     pub envelope: ArtifactEnvelope<P, Mutation>,
     pub snapshot: P,
@@ -18405,6 +18481,37 @@ mod tests {
         }
         assert!(close_turns >= 3, "rejected field, page, and terminal record are independently witnessed");
         assert!(registry.terminal_is_empty());
+    }
+
+    #[test]
+    fn interactive_envelope_close_reclaims_every_owner_through_the_job_protocol() {
+        use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
+
+        let registry = ArtifactEnvelopeFieldDecoderRegistry::new();
+        let mut job = ArtifactEnvelopeDecodeAuthority::<(), ()>::try_new(
+            artifact_envelope_decode_test_cursor(&[br#"{"schema":"s","id":"i","vcs":{},"editMessages":[],"conflicts":[]}"#]),
+            &registry,
+            Box::new(TestEnvelopeFieldDecoder { terminal: false, accepted: 0 }),
+        )
+        .unwrap_or_else(|_| panic!("fixed close-protocol decoder admission"));
+        job.begin_close();
+        let mut detached = None;
+        for _ in 0..16 {
+            drive_test_envelope_field_return(&registry, &mut detached);
+            match job.close_step(1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1);
+                    assert!(released_bytes <= ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                }
+                InteractiveJobCloseStep::Blocked => {}
+                InteractiveJobCloseStep::Complete => {
+                    assert!(job.terminal_is_empty());
+                    assert!(registry.terminal_is_empty());
+                    return;
+                }
+            }
+        }
+        panic!("interactive envelope close did not reclaim every exact owner");
     }
 
     #[test]

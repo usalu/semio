@@ -235,24 +235,35 @@ impl WalBytes {
             Ok(reservation) => reservation,
             Err(error) => return Err(WalBytesRejected { source: Some(source), writer: Some(writer), error }),
         };
-        if let Err(error) = reservation.observe_capacity(source.capacity()) {
-            return Err(WalBytesRejected { source: Some(source), writer: Some(writer), error });
+        let mut source = db_storage::DbIoExternalBytes::new(source);
+        if let Err(error) = source.capacity().and_then(|capacity| reservation.observe_capacity(capacity)) {
+            return Err(WalBytesRejected { source: source.into_value().ok(), writer: Some(writer), error });
         }
         let mut offset = 0;
-        while offset < source.len() {
+        while offset < source.as_slice().map_err(|error| WalBytesRejected { source: None, writer: None, error })?.len() {
             if let Err(error) = control.grant() {
-                return Err(WalBytesRejected { source: Some(source), writer: Some(writer), error });
+                return Err(WalBytesRejected { source: source.into_value().ok(), writer: Some(writer), error });
             }
-            match writer.write_fragment(&source[offset..]) {
+            match source.as_slice().and_then(|source| writer.write_fragment(&source[offset..])) {
                 Ok(written) => offset += written,
-                Err(error) => return Err(WalBytesRejected { source: Some(source), writer: Some(writer), error }),
+                Err(error) => return Err(WalBytesRejected { source: source.into_value().ok(), writer: Some(writer), error }),
             }
+            semio_framework_async::yield_once().await;
         }
-        drop(source);
+        while !source.terminal_is_empty() {
+            if let Err(error) = control.grant() {
+                return Err(WalBytesRejected { source: None, writer: Some(writer), error });
+            }
+            let _ = source.close_step();
+            semio_framework_async::yield_once().await;
+        }
         if let Err(error) = reservation.close_step() {
             return Err(WalBytesRejected { source: None, writer: Some(writer), error });
         }
-        writer.finish().map(|pages| Self { pages }).map_err(|error| WalBytesRejected { source: None, writer: Some(writer), error })
+        writer.seal_retained().await.map(|pages| Self { pages }).map_err(|rejected| {
+            let (error, writer) = rejected.into_parts();
+            WalBytesRejected { source: None, writer, error }
+        })
     }
 
     async fn copy_for_operation(operation: u64, source: &[u8], control: &mut WalCursorControl) -> Result<Self, DbError> {
@@ -261,8 +272,9 @@ impl WalBytes {
         while offset < source.len() {
             control.grant()?;
             offset += writer.write_fragment(&source[offset..])?;
+            semio_framework_async::yield_once().await;
         }
-        writer.finish().map(|pages| Self { pages })
+        writer.seal_retained().await.map(|pages| Self { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
     }
 
     pub fn operation(&self) -> u64 {
@@ -370,16 +382,16 @@ impl WalBytesRejected {
         self.source.as_ref()
     }
 
-    pub fn into_source(self) -> Option<Vec<u8>> {
-        self.source
+    pub fn into_source(mut self) -> Option<Vec<u8>> {
+        self.source.take()
     }
 
     pub fn error(&self) -> &DbError {
         &self.error
     }
 
-    pub fn into_error(self) -> DbError {
-        self.error
+    pub fn into_error(mut self) -> DbError {
+        std::mem::replace(&mut self.error, DbError::Closed)
     }
 
     pub fn close_step(&mut self) -> Result<bool, DbError> {
@@ -390,6 +402,14 @@ impl WalBytesRejected {
         }
         self.writer = None;
         Ok(false)
+    }
+}
+
+impl Drop for WalBytesRejected {
+    fn drop(&mut self) {
+        if let Some(source) = self.source.take() {
+            drop(db_storage::DbIoExternalBytes::new(source));
+        }
     }
 }
 
@@ -878,13 +898,9 @@ impl SharedBuf {
                 return Err(DbError::LimitExceeded("WAL retained suffix writer"));
             }
             copied += read;
-            std::future::poll_fn(|context| {
-                context.waker().wake_by_ref();
-                std::task::Poll::Ready(())
-            })
-            .await;
+            semio_framework_async::yield_once().await;
         }
-        output.seal().map_err(db_storage::DbIoPageWriterRejected::into_error)
+        output.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
     }
 
     async fn read_exact(&self, offset: usize, output: &mut [u8]) -> Result<(), DbError> {
@@ -895,11 +911,7 @@ impl SharedBuf {
                 return Err(DbError::Corrupt("WAL retained page read ended early".to_string()));
             }
             copied += read;
-            std::future::poll_fn(|context| {
-                context.waker().wake_by_ref();
-                std::task::Poll::Ready(())
-            })
-            .await;
+            semio_framework_async::yield_once().await;
         }
         Ok(())
     }
@@ -910,11 +922,7 @@ impl pack::PackSink for SharedBuf {
         let mut cursor = 0;
         while cursor < bytes.len() {
             cursor += lock(&self.0).write_fragment(&bytes[cursor..]).map_err(|error| pack::PackError::Io(error.to_string()))?;
-            std::future::poll_fn(|context| {
-                context.waker().wake_by_ref();
-                std::task::Poll::Ready(())
-            })
-            .await;
+            semio_framework_async::yield_once().await;
         }
         Ok(())
     }
@@ -1076,7 +1084,7 @@ impl<'pages> WalPageReader<'pages> {
             let written = writer.write_fragment(&fragment[..count])?;
             self.position += written;
         }
-        writer.finish().map(|pages| WalBytes { pages })
+        writer.seal_retained().await.map(|pages| WalBytes { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
     }
 }
 
@@ -2042,6 +2050,16 @@ mod retained_tests {
         while rejected.close_step().unwrap() {}
         let returned = rejected.into_source().unwrap();
         assert_eq!(returned.as_ptr(), pointer);
+
+        cancelled.store(false, std::sync::atomic::Ordering::Release);
+        let mut deadline_control = WalCursorControl::new(cancelled, std::time::Instant::now(), 16).unwrap();
+        let mut source = Vec::with_capacity(2);
+        source.push(0x33);
+        let pointer = source.as_ptr();
+        let mut rejected = WalBytes::try_admit(source, 2, &mut deadline_control).await.unwrap_err();
+        assert!(matches!(rejected.error(), DbError::Unavailable(message) if message == "wal cursor deadline reached"));
+        while rejected.close_step().unwrap() {}
+        assert_eq!(rejected.into_source().unwrap().as_ptr(), pointer);
     }
 
     #[semio_framework_async_macros::async_test]

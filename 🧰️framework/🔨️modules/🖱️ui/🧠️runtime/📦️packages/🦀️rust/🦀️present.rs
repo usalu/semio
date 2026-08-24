@@ -214,7 +214,7 @@ impl ComponentTreeProducer {
             return ComponentTreeProducerStep::Complete;
         }
         if frame.compare < frame.admitted.len() {
-            let duplicate = frame.admitted[frame.compare].key == frame.pending.as_ref().map_or("", |node| node.key.as_str());
+            let duplicate = frame.pending.as_ref().is_some_and(|node| frame.admitted[frame.compare].key.as_str() == node.key.as_str());
             frame.compare += 1;
             if duplicate {
                 self.fault = Some(ComponentTreeProducerFault::DuplicateSiblingKey);

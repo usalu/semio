@@ -43,11 +43,17 @@ pub struct CorrelationId(pub u64);
 /// 📦️ The runtime's own outbound envelope — an id, a correlation id, and an opaque, crate-neutral
 /// payload. Deliberately NOT the os-kernel's `DslValue` or any actor type (see module docs); a host's
 /// [`CommandSink`] converts `payload` to whatever its own mailbox actually expects.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct Command {
     pub id: CommandId,
     pub correlation: CorrelationId,
     pub payload: ui_contract::UiValue,
+}
+
+impl Command {
+    pub fn credited_clone(&self) -> Option<Self> {
+        Some(Self { id: self.id, correlation: self.correlation, payload: self.payload.credited_clone()? })
+    }
 }
 //#endregion 🔖️Command
 
@@ -106,7 +112,7 @@ pub enum GatewayError {
 /// bound the backing mailbox itself enforces — so a UI that keeps submitting into a slow actor fails
 /// fast locally instead of growing its own tracking table without limit.
 pub struct CommandGateway<S: CommandSink> {
-    queue: VecDeque<Command>,
+    queue: VecDeque<CommandTicket>,
     capacity: usize,
     sink: S,
     resolved: HashMap<CommandId, OptimisticStatus>,
@@ -129,8 +135,8 @@ impl<S: CommandSink> CommandGateway<S> {
             return Err(GatewayError::Full { command_id: command.id });
         }
         let ticket = CommandTicket { command_id: command.id, correlation: command.correlation };
-        self.sink.try_send(command.clone()).map_err(|SinkFull| GatewayError::Full { command_id: command.id })?;
-        self.queue.push_back(command);
+        self.sink.try_send(command).map_err(|SinkFull| GatewayError::Full { command_id: ticket.command_id })?;
+        self.queue.push_back(ticket);
         Ok(ticket)
     }
 
@@ -157,7 +163,7 @@ impl<S: CommandSink> CommandGateway<S> {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resolve(&mut self, command_id: CommandId, status: OptimisticStatus) -> bool {
-        let Some(index) = self.queue.iter().position(|command| command.id == command_id) else { return false };
+        let Some(index) = self.queue.iter().position(|ticket| ticket.command_id == command_id) else { return false };
         self.queue.remove(index);
         self.resolved.insert(command_id, status);
         true
@@ -168,7 +174,7 @@ impl<S: CommandSink> CommandGateway<S> {
     /// `None` if `command_id` was never submitted through this gateway.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn status(&self, command_id: CommandId) -> Option<OptimisticStatus> {
-        if self.queue.iter().any(|command| command.id == command_id) {
+        if self.queue.iter().any(|ticket| ticket.command_id == command_id) {
             return Some(OptimisticStatus::Pending);
         }
         self.resolved.get(&command_id).copied()

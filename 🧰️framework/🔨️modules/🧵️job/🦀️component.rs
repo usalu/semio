@@ -286,23 +286,23 @@ impl JobPayloadOperationLedger {
 
     fn reserve(&self, stream: JobPayloadStream) -> Result<(), JobPayloadAdmissionFault> {
         let stream_index = stream as usize;
-        let pages = self.pages.fetch_update(Ordering::AcqRel, Ordering::Acquire, |pages| pages.checked_add(1).filter(|pages| *pages <= JOB_PAYLOAD_OPERATION_PAGES)).map_err(|_| JobPayloadAdmissionFault::OperationItems)?;
-        if self.bytes.fetch_update(Ordering::AcqRel, Ordering::Acquire, |bytes| bytes.checked_add(JOB_PAYLOAD_PAGE_BYTES).filter(|bytes| *bytes <= JOB_PAYLOAD_OPERATION_BYTES)).is_err() {
+        let pages = self.pages.try_update(Ordering::AcqRel, Ordering::Acquire, |pages| pages.checked_add(1).filter(|pages| *pages <= JOB_PAYLOAD_OPERATION_PAGES)).map_err(|_| JobPayloadAdmissionFault::OperationItems)?;
+        if self.bytes.try_update(Ordering::AcqRel, Ordering::Acquire, |bytes| bytes.checked_add(JOB_PAYLOAD_PAGE_BYTES).filter(|bytes| *bytes <= JOB_PAYLOAD_OPERATION_BYTES)).is_err() {
             self.pages.store(pages, Ordering::Release);
             return Err(JobPayloadAdmissionFault::OperationBytes);
         }
-        if self.stream_pages[stream_index].fetch_update(Ordering::AcqRel, Ordering::Acquire, |pages| pages.checked_add(1).filter(|pages| *pages <= JOB_PAYLOAD_OPERATION_PAGES)).is_err() {
+        if self.stream_pages[stream_index].try_update(Ordering::AcqRel, Ordering::Acquire, |pages| pages.checked_add(1).filter(|pages| *pages <= JOB_PAYLOAD_OPERATION_PAGES)).is_err() {
             self.bytes.fetch_sub(JOB_PAYLOAD_PAGE_BYTES, Ordering::AcqRel);
             self.pages.fetch_sub(1, Ordering::AcqRel);
             return Err(JobPayloadAdmissionFault::StreamItems);
         }
-        if self.stream_bytes[stream_index].fetch_update(Ordering::AcqRel, Ordering::Acquire, |bytes| bytes.checked_add(JOB_PAYLOAD_PAGE_BYTES).filter(|bytes| *bytes <= JOB_PAYLOAD_OPERATION_BYTES)).is_err() {
+        if self.stream_bytes[stream_index].try_update(Ordering::AcqRel, Ordering::Acquire, |bytes| bytes.checked_add(JOB_PAYLOAD_PAGE_BYTES).filter(|bytes| *bytes <= JOB_PAYLOAD_OPERATION_BYTES)).is_err() {
             self.stream_pages[stream_index].fetch_sub(1, Ordering::AcqRel);
             self.bytes.fetch_sub(JOB_PAYLOAD_PAGE_BYTES, Ordering::AcqRel);
             self.pages.fetch_sub(1, Ordering::AcqRel);
             return Err(JobPayloadAdmissionFault::StreamBytes);
         }
-        if JOB_PAYLOAD_PROCESS_OWNED_BYTES.fetch_update(Ordering::AcqRel, Ordering::Acquire, |bytes| bytes.checked_add(JOB_PAYLOAD_PAGE_BYTES).filter(|bytes| *bytes <= JOB_PAYLOAD_PROCESS_BYTES)).is_err() {
+        if JOB_PAYLOAD_PROCESS_OWNED_BYTES.try_update(Ordering::AcqRel, Ordering::Acquire, |bytes| bytes.checked_add(JOB_PAYLOAD_PAGE_BYTES).filter(|bytes| *bytes <= JOB_PAYLOAD_PROCESS_BYTES)).is_err() {
             self.stream_bytes[stream_index].fetch_sub(JOB_PAYLOAD_PAGE_BYTES, Ordering::AcqRel);
             self.stream_pages[stream_index].fetch_sub(1, Ordering::AcqRel);
             self.bytes.fetch_sub(JOB_PAYLOAD_PAGE_BYTES, Ordering::AcqRel);
@@ -483,14 +483,17 @@ impl RetainedJobPayloadWriter {
 
     pub fn admit_page<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<JobPayloadPageGrant<'a>, JobPayloadAdmissionFault> {
         let source = self.rejected.take().unwrap_or_default();
-        match cx.admit_payload_page(self, source) {
-            Ok(page) => Ok(page),
-            Err(rejected) => {
-                let fault = rejected.fault;
-                *self.rejected = Some(rejected.into_source());
-                Err(fault)
-            }
+        if cx.payload_page_granted {
+            *self.rejected = Some(source);
+            return Err(JobPayloadAdmissionFault::OpportunityExhausted);
         }
+        let ledger = Arc::clone(&cx.payload_ledger);
+        if let Err(fault) = self.reserve_page(&ledger) {
+            *self.rejected = Some(source);
+            return Err(fault);
+        }
+        cx.payload_page_granted = true;
+        Ok(self.begin_page(ledger, source))
     }
 
     pub fn finish(mut self) -> Result<RetainedJobPayload, Self> {
@@ -521,7 +524,7 @@ impl RetainedJobPayloadWriter {
             if maximum_items == 0 {
                 return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
-            self.rejected = None;
+            *self.rejected = None;
             return JobPayloadCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         let Some(payload) = self.payload.as_mut() else { return JobPayloadCloseStep::Complete };
@@ -531,7 +534,7 @@ impl RetainedJobPayloadWriter {
         if maximum_items == 0 {
             return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        self.payload = None;
+        *self.payload = None;
         JobPayloadCloseStep::Pending { released_items: 1, released_bytes: 0 }
     }
 
@@ -586,15 +589,7 @@ impl RetainedJobPayloadWriter {
         if cx.should_yield() {
             return Ok(false);
         }
-        let source = self.rejected.take().unwrap_or_default();
-        let mut page = match cx.admit_payload_page(self, source) {
-            Ok(page) => page,
-            Err(rejected) => {
-                let fault = rejected.fault;
-                self.rejected = Some(rejected.into_source());
-                return Err(fault);
-            }
-        };
+        let mut page = self.admit_page(cx)?;
         let end = cursor.saturating_add(JOB_PAYLOAD_PAGE_BYTES).min(bytes.len());
         page.write(&bytes[*cursor..end])?;
         page.commit();
@@ -602,21 +597,22 @@ impl RetainedJobPayloadWriter {
         Ok(*cursor == bytes.len())
     }
 
-    fn begin_page<'a>(&'a mut self, ledger: Arc<JobPayloadOperationLedger>, source: JobPayloadPageSource) -> Result<JobPayloadPageGrant<'a>, JobPayloadRejectedPage> {
+    fn reserve_page(&self, ledger: &JobPayloadOperationLedger) -> Result<(), JobPayloadAdmissionFault> {
         if self.sealed {
-            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::WriterSealed, source: ManuallyDrop::new(Some(source)) });
+            return Err(JobPayloadAdmissionFault::WriterSealed);
         }
         if self.rejected.is_some() {
-            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::RejectedSourcePending, source: ManuallyDrop::new(Some(source)) });
+            return Err(JobPayloadAdmissionFault::RejectedSourcePending);
         }
-        let payload = self.payload.as_mut().expect("retained payload writer owns payload before finish");
+        let payload = self.payload.as_ref().ok_or(JobPayloadAdmissionFault::WriterSealed)?;
         if payload.page_count >= JOB_PAYLOAD_OPERATION_PAGES {
-            return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::WriterFull, source: ManuallyDrop::new(Some(source)) });
+            return Err(JobPayloadAdmissionFault::WriterFull);
         }
-        if let Err(fault) = ledger.reserve(payload.stream) {
-            return Err(JobPayloadRejectedPage { fault, source: ManuallyDrop::new(Some(source)) });
-        }
-        Ok(JobPayloadPageGrant { writer: self, ledger: Some(ledger), source: Some(source), length: 0, committed: false })
+        ledger.reserve(payload.stream)
+    }
+
+    fn begin_page(&mut self, ledger: Arc<JobPayloadOperationLedger>, source: JobPayloadPageSource) -> JobPayloadPageGrant<'_> {
+        JobPayloadPageGrant { writer: self, ledger: Some(ledger), source: Some(source), length: 0, committed: false }
     }
 }
 
@@ -689,7 +685,7 @@ impl JobPayloadPageGrant<'_> {
     pub fn stage(mut self) {
         let ledger = self.ledger.take().expect("admitted staged page owns ledger credit");
         let source = self.source.take().expect("admitted staged page owns backing");
-        self.writer.staged = Some((ledger, source, self.length));
+        *self.writer.staged = Some((ledger, source, self.length));
         self.committed = true;
     }
 }
@@ -703,7 +699,7 @@ impl Drop for JobPayloadPageGrant<'_> {
             let stream = self.writer.payload.as_ref().expect("retained payload writer owns payload while grant is live").stream;
             ledger.release(stream);
         }
-        self.writer.rejected = self.source.take();
+        *self.writer.rejected = self.source.take();
     }
 }
 //#endregion 📄️RetainedPayload
@@ -818,9 +814,12 @@ impl<'a> StepContext<'a> {
         if self.payload_page_granted {
             return Err(JobPayloadRejectedPage { fault: JobPayloadAdmissionFault::OpportunityExhausted, source: ManuallyDrop::new(Some(source)) });
         }
-        let grant = writer.begin_page(Arc::clone(&self.payload_ledger), source)?;
+        let ledger = Arc::clone(&self.payload_ledger);
+        if let Err(fault) = writer.reserve_page(&ledger) {
+            return Err(JobPayloadRejectedPage { fault, source: ManuallyDrop::new(Some(source)) });
+        }
         self.payload_page_granted = true;
-        Ok(grant)
+        Ok(writer.begin_page(ledger, source))
     }
 
     pub fn payload_from_bytes(&mut self, stream: JobPayloadStream, bytes: &[u8]) -> Result<RetainedJobPayload, JobPayloadRejectedPage> {
@@ -2017,7 +2016,7 @@ impl<J> WorkerJobSessionInner<J> {
         if self.wake_pending.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return;
         }
-        if self.wake_sequence.fetch_update(Ordering::AcqRel, Ordering::Acquire, |sequence| sequence.checked_add(1)).is_err() {
+        if self.wake_sequence.try_update(Ordering::AcqRel, Ordering::Acquire, |sequence| sequence.checked_add(1)).is_err() {
             self.wake_exhausted.store(true, Ordering::Release);
         }
         if self.wake_guard.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_ok() {
@@ -2280,6 +2279,16 @@ fn worker_job_close_step<J: InteractiveJob>(inner: &WorkerJobSessionInner<J>, ma
         unsafe { inner.put_authority(authority, SESSION_CLOSE) };
         return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
     }
+    if authority.close_stage == 0 {
+        if maximum_items == 0 {
+            unsafe { inner.put_authority(authority, SESSION_CLOSE) };
+            return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        authority.job.as_mut().expect("closing worker authority owns job").begin_close();
+        authority.close_stage = 1;
+        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
+        return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    }
     if let Some(fault) = authority.preadmitted_fault.as_mut() {
         if !fault.terminal_is_empty() {
             let step = match fault.close_step(maximum_items, maximum_bytes) {
@@ -2296,16 +2305,6 @@ fn worker_job_close_step<J: InteractiveJob>(inner: &WorkerJobSessionInner<J>, ma
         authority.preadmitted_fault = None;
         unsafe { inner.put_authority(authority, SESSION_CLOSE) };
         return WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-    }
-    if authority.close_stage == 0 {
-        if maximum_items == 0 {
-            unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-            return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
-        authority.job.as_mut().expect("closing worker authority owns job").begin_close();
-        authority.close_stage = 1;
-        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
-        return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
     }
     if authority.close_stage == 1 {
         let step = authority.job.as_mut().expect("closing worker authority owns job").close_step(maximum_items, maximum_bytes);
@@ -2351,9 +2350,14 @@ fn worker_job_close_step<J: InteractiveJob>(inner: &WorkerJobSessionInner<J>, ma
         unsafe { inner.put_authority(authority, SESSION_CLOSE) };
         return WorkerJobCloseStep::Blocked;
     }
+    if maximum_items == 0 {
+        unsafe { inner.put_authority(authority, SESSION_CLOSE) };
+        return WorkerJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    }
+    drop(authority);
     inner.phase.store(SESSION_EMPTY, Ordering::Release);
     inner.raise_wake();
-    WorkerJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+    WorkerJobCloseStep::Complete
 }
 
 impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
@@ -2595,7 +2599,10 @@ impl<J> WorkerJobOutcome<J> {
     }
 
     pub fn begin_close(mut self) {
-        let authority = self.authority.take().expect("checked-out worker outcome owns authority");
+        let mut authority = self.authority.take().expect("checked-out worker outcome owns authority");
+        if authority.outcome.as_ref().is_some_and(StepOutcome::terminal_is_empty) {
+            authority.outcome = None;
+        }
         unsafe { self.inner.put_authority(authority, SESSION_CLOSE) };
     }
 }

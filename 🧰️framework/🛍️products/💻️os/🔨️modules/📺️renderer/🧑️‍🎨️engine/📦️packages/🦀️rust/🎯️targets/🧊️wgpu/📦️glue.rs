@@ -2723,6 +2723,11 @@ pub(crate) fn renderer_worker_pool() -> semio_framework_async::WorkerPool {
     semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores))
 }
 
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn renderer_worker_pool() -> semio_framework_async::WorkerPool {
+    semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 1))
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 struct RendererIoHandle {
     slot: usize,
@@ -7914,7 +7919,9 @@ mod async_boundary_tests {
 
     #[test]
     fn frame_deferred_cursor_advances_one_owned_operation_in_order() {
-        let actions = vec![ActionDescriptor { controller_id: "a".to_string(), action: "one".to_string(), args: None }, ActionDescriptor { controller_id: "b".to_string(), action: "two".to_string(), args: None }];
+        let mut actions = FrameActionOwners::default();
+        assert!(actions.try_push(ActionDescriptor { controller_id: "a".to_string(), action: "one".to_string(), args: None }).is_ok());
+        assert!(actions.try_push(ActionDescriptor { controller_id: "b".to_string(), action: "two".to_string(), args: None }).is_ok());
         let mut cursor = FrameDeferredCursor::new(actions, true, true);
         assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::PumpSync)));
         assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "one"));
@@ -7926,13 +7933,28 @@ mod async_boundary_tests {
 
     #[test]
     fn frame_deferred_cancel_retires_one_action_per_step() {
-        let actions = (0..WORLD3D_DEADLINE_CAPACITY).map(|index| ActionDescriptor { controller_id: index.to_string(), action: "cancel".to_string(), args: None }).collect();
+        let mut actions = FrameActionOwners::default();
+        for index in 0..WORLD3D_DEADLINE_CAPACITY {
+            assert!(actions.try_push(ActionDescriptor { controller_id: index.to_string(), action: "cancel".to_string(), args: None }).is_ok());
+        }
         let mut cursor = FrameDeferredCursor::new(actions, false, true);
         for _ in 0..WORLD3D_DEADLINE_CAPACITY {
             assert!(!cursor.close_step());
         }
         assert!(cursor.close_step());
         assert!(cursor.terminal_is_empty());
+    }
+
+    #[test]
+    fn frame_action_max_plus_one_returns_the_exact_owner() {
+        let mut actions = FrameActionOwners::default();
+        for index in 0..WORLD3D_DEADLINE_CAPACITY {
+            assert!(actions.try_push(ActionDescriptor { controller_id: index.to_string(), action: "admitted".to_string(), args: None }).is_ok());
+        }
+        let rejected = ActionDescriptor { controller_id: "exact-owner".to_string(), action: "commit".to_string(), args: None };
+        let identity = rejected.controller_id.as_ptr();
+        let Err(rejected) = actions.try_push(rejected) else { panic!("MAX + 1 must refuse") };
+        assert_eq!(rejected.controller_id.as_ptr(), identity);
     }
 
     #[test]
@@ -8217,8 +8239,51 @@ impl RuntimeDispatchCursor {
     }
 }
 
+/// 📦️ Fixed FIFO ownership for admitted frame actions; refusal returns the identical action.
+struct FrameActionOwners {
+    slots: [Option<ActionDescriptor>; WORLD3D_DEADLINE_CAPACITY],
+    head: usize,
+    len: usize,
+}
+
+impl Default for FrameActionOwners {
+    fn default() -> Self {
+        Self { slots: std::array::from_fn(|_| None), head: 0, len: 0 }
+    }
+}
+
+impl FrameActionOwners {
+    fn try_push(&mut self, action: ActionDescriptor) -> Result<(), ActionDescriptor> {
+        if self.len == self.slots.len() {
+            return Err(action);
+        }
+        let Some(index) = self.head.checked_add(self.len).map(|index| index % self.slots.len()) else { return Err(action) };
+        let Some(next_len) = self.len.checked_add(1) else { return Err(action) };
+        if self.slots[index].is_some() {
+            return Err(action);
+        }
+        self.slots[index] = Some(action);
+        self.len = next_len;
+        Ok(())
+    }
+
+    fn pop_front(&mut self) -> Option<ActionDescriptor> {
+        if self.len == 0 {
+            return None;
+        }
+        let action = self.slots[self.head].take()?;
+        self.head = self.head.checked_add(1).map(|index| index % self.slots.len())?;
+        self.len = self.len.checked_sub(1)?;
+        Some(action)
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
 struct FrameDeferredCursor {
-    actions: std::vec::IntoIter<ActionDescriptor>,
+    actions: FrameActionOwners,
     pump_sync: bool,
     flush_tutorial: bool,
     phase: u8,
@@ -8231,8 +8296,8 @@ enum FrameDeferredWork {
 }
 
 impl FrameDeferredCursor {
-    fn new(actions: Vec<ActionDescriptor>, pump_sync: bool, flush_tutorial: bool) -> Self {
-        Self { actions: actions.into_iter(), pump_sync, flush_tutorial, phase: 0 }
+    fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool) -> Self {
+        Self { actions, pump_sync, flush_tutorial, phase: 0 }
     }
 
     fn take_next(&mut self) -> Option<FrameDeferredWork> {
@@ -8242,7 +8307,7 @@ impl FrameDeferredCursor {
                 return Some(FrameDeferredWork::PumpSync);
             }
         }
-        if let Some(action) = self.actions.next() {
+        if let Some(action) = self.actions.pop_front() {
             return Some(FrameDeferredWork::Action(action));
         }
         if self.phase == 1 {
@@ -8255,11 +8320,11 @@ impl FrameDeferredCursor {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.actions.len() == 0 && (self.phase > 0 || !self.pump_sync) && (self.phase > 1 || !self.flush_tutorial)
+        self.actions.is_empty() && (self.phase > 0 || !self.pump_sync) && (self.phase > 1 || !self.flush_tutorial)
     }
 
     fn close_step(&mut self) -> bool {
-        if self.actions.next().is_some() {
+        if self.actions.pop_front().is_some() {
             return false;
         }
         self.pump_sync = false;
@@ -8329,7 +8394,10 @@ impl RuntimeApply {
             runtime.interaction = Some(interaction);
             return false;
         }
-        let mut cursor_value = cursor.take().expect("deferred cursor admitted above");
+        let Some(mut cursor_value) = cursor.take() else {
+            runtime.interaction = Some(interaction);
+            return false;
+        };
         let Some(work) = cursor_value.take_next() else {
             runtime.interaction = Some(interaction);
             return true;
@@ -8394,6 +8462,7 @@ impl RuntimeApply {
 const RUNTIME_COMPLETION_CAPACITY: usize = 128;
 const WORLD3D_DEADLINE_CAPACITY: usize = 256;
 const WORLD3D_DEADLINE_ID_BYTES: usize = 256;
+const EFFECT_STORM_BUDGET: u32 = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct RuntimePresentationWitness {
@@ -9199,13 +9268,6 @@ impl AppRuntime {
         self.interaction.is_some()
     }
 
-    fn drive_pending_frame_deferred(&mut self, handle: &AppHandle) {
-        let mut cursor = self.pending_frame_deferred.take();
-        if !RuntimeApply::start_frame_deferred(&mut cursor, self, handle) {
-            self.pending_frame_deferred = cursor;
-        }
-    }
-
     #[cfg(not(target_arch = "wasm32"))]
     fn submit_interaction<F, Fut>(&mut self, handle: &AppHandle, key: Option<&'static str>, work: F) -> bool
     where
@@ -9247,9 +9309,53 @@ impl AppRuntime {
 
 //#endregion 🎮️AppInteractionState
 
+const FRAME_ENGINE_PACKET_CAPACITY: usize = 256;
+const FRAME_ATLAS_PAGE_BYTES: usize = 16 * 1024;
+
+struct FrameEnginePackets {
+    slots: Box<[Option<engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_CAPACITY]>,
+    len: usize,
+}
+
+impl Default for FrameEnginePackets {
+    fn default() -> Self {
+        Self { slots: Box::new([const { None }; FRAME_ENGINE_PACKET_CAPACITY]), len: 0 }
+    }
+}
+
+impl FrameEnginePackets {
+    fn try_push(&mut self, packet: engine_canvas::EngineCanvasPacket) -> Result<(), engine_canvas::EngineCanvasPacket> {
+        if self.len == FRAME_ENGINE_PACKET_CAPACITY {
+            return Err(packet);
+        }
+        self.slots[self.len] = Some(packet);
+        self.len += 1;
+        Ok(())
+    }
+
+    fn pop(&mut self) -> Option<engine_canvas::EngineCanvasPacket> {
+        let index = self.len.checked_sub(1)?;
+        self.len = index;
+        self.slots[index].take()
+    }
+
+    fn last_mut(&mut self) -> Option<&mut engine_canvas::EngineCanvasPacket> {
+        self.len.checked_sub(1).and_then(|index| self.slots[index].as_mut())
+    }
+
+    fn get(&self, index: usize) -> Option<&engine_canvas::EngineCanvasPacket> {
+        (index < self.len).then(|| self.slots[index].as_ref()).flatten()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0 && self.slots.iter().all(Option::is_none)
+    }
+}
+
 pub(crate) struct AppFrameBuild {
     input: ui_wgpu::wgpu::PreparedRenderInput,
-    engine_packets: Vec<engine_canvas::EngineCanvasPacket>,
+    engine_packets: FrameEnginePackets,
+    generation: semio_framework_trace::Generation,
     pub(crate) cursor: SemioCursor,
     theme_dark: bool,
     fullscreen: Option<bool>,
@@ -9260,13 +9366,299 @@ pub(crate) struct AppFrameBuild {
 
 struct AppFrameAfterChrome {
     resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
-    engine_packets: Option<Vec<engine_canvas::EngineCanvasPacket>>,
-    deferred_actions: Vec<ActionDescriptor>,
+    engine_packets: Option<FrameEnginePackets>,
+    deferred_actions: FrameActionOwners,
     fullscreen: Option<bool>,
     cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
     job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
     retirement: Option<AppFramePreparation>,
+}
+
+struct FrameBuildCursor {
+    phase: FrameBuildPhase,
+    presentation_witness: RuntimePresentationWitness,
+    deferred_actions: Option<FrameActionOwners>,
+    fullscreen: Option<bool>,
+    previous_draw: Option<DrawList>,
+    previous_overlay: Option<DrawList>,
+    icon_checked: bool,
+    icon_offset: usize,
+    icon_pixels: Vec<u8>,
+    icon_width: u32,
+    icon_height: u32,
+    icon_upload: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
+    engine_resources: Option<engine_canvas::EngineCanvasBuildContext>,
+    world_resources: Option<infinite_world::world::World3dBuildContext>,
+    resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
+    engine_packets: FrameEnginePackets,
+    engine_rejected: Option<engine_canvas::EngineCanvasPacket>,
+    world_rejected: Option<infinite_world::world::World3dBuildRejected>,
+    retirement: Option<AppFramePreparation>,
+    chrome: shell::ShellChromeFrameCursor,
+    cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+    #[cfg(not(target_arch = "wasm32"))]
+    job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
+}
+
+#[derive(Clone, Copy)]
+enum FrameBuildPhase {
+    Deferred,
+    Text,
+    Fullscreen,
+    NativePoll,
+    NativeReload,
+    ThemeResolve,
+    ThemeAppearance,
+    Drag,
+    Hover,
+    InputFrame,
+    WheelDeadline,
+    Caret,
+    TakeDraw,
+    RetireDraw,
+    TakeOverlay,
+    RetireOverlay,
+    IconAtlas,
+    Tutorial,
+    EngineResources,
+    WorldResources,
+    Chrome,
+    JobProgressTake,
+    JobProgressOverlay,
+    ResourceInput,
+    WorldTransfer,
+    IconTransfer,
+    EngineTransfer,
+    CursorWake,
+    Complete,
+}
+
+impl FrameBuildCursor {
+    fn new(presentation_witness: RuntimePresentationWitness, deferred_actions: FrameActionOwners) -> Self {
+        Self {
+            phase: FrameBuildPhase::Deferred,
+            presentation_witness,
+            deferred_actions: Some(deferred_actions),
+            fullscreen: None,
+            previous_draw: None,
+            previous_overlay: None,
+            icon_checked: false,
+            icon_offset: 0,
+            icon_pixels: Vec::new(),
+            icon_width: 0,
+            icon_height: 0,
+            icon_upload: None,
+            engine_resources: None,
+            world_resources: None,
+            resource_input: None,
+            engine_packets: FrameEnginePackets::default(),
+            engine_rejected: None,
+            world_rejected: None,
+            retirement: None,
+            chrome: shell::ShellChromeFrameCursor::default(),
+            cursor_wake: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            job_progress: None,
+        }
+    }
+
+    fn close_step(&mut self) -> bool {
+        if let Some(packet) = self.engine_rejected.as_mut() {
+            if !packet.close_step() {
+                return false;
+            }
+            self.engine_rejected = None;
+            return false;
+        }
+        if let Some(retirement) = self.retirement.as_mut() {
+            if !retirement.close_step() || !retirement.terminal_is_empty() {
+                return false;
+            }
+            self.retirement = None;
+            return false;
+        }
+        if let Some(rejected) = self.world_rejected.as_mut() {
+            if !rejected.close_step() {
+                return false;
+            }
+            self.world_rejected = None;
+            return false;
+        }
+        if let Some(draw) = self.previous_draw.as_mut() {
+            if !draw.retire_step() {
+                return false;
+            }
+            self.previous_draw = None;
+            return false;
+        }
+        if let Some(overlay) = self.previous_overlay.as_mut() {
+            if !overlay.retire_step() {
+                return false;
+            }
+            self.previous_overlay = None;
+            return false;
+        }
+        if !self.icon_pixels.is_empty() {
+            let retained = self.icon_pixels.len().saturating_sub(FRAME_ATLAS_PAGE_BYTES);
+            self.icon_pixels.truncate(retained);
+            return false;
+        }
+        if let Some(packet) = self.engine_packets.last_mut() {
+            if !packet.close_step() {
+                return false;
+            }
+            self.engine_packets.pop();
+            return false;
+        }
+        if let Some(resources) = self.engine_resources.as_mut() {
+            match resources.take_packet_step() {
+                Ok(Some(packet)) | Err(packet) => {
+                    if let Err(rejected) = self.engine_packets.try_push(packet) {
+                        self.engine_rejected = Some(rejected);
+                    }
+                }
+                Ok(None) => self.engine_resources = None,
+            }
+            return false;
+        }
+        if self.resource_input.is_none() && (self.world_resources.is_some() || self.icon_upload.is_some()) {
+            self.resource_input = Some(ui_wgpu::wgpu::PreparedRenderInput::new(
+                self.presentation_witness.scene_revision,
+                self.presentation_witness.input_generation,
+                ui_wgpu::wgpu::DrawList::default(),
+                None,
+                0.0,
+            ));
+            return false;
+        }
+        if let Some(resources) = self.world_resources.as_mut() {
+            let Some(input) = self.resource_input.as_mut() else { return false };
+            match resources.append_step(input) {
+                Ok(true) => match resources.take_cursor_wake() {
+                    Ok(token) => {
+                        self.cursor_wake = token;
+                        self.world_resources = None;
+                    }
+                    Err(_) => return false,
+                },
+                Ok(false) => {}
+                Err(rejected) => self.world_rejected = Some(rejected),
+            }
+            return false;
+        }
+        if let Some(upload) = self.icon_upload.take() {
+            let Some(input) = self.resource_input.as_mut() else {
+                self.icon_upload = Some(upload);
+                return false;
+            };
+            input.uploads.push(upload);
+            return false;
+        }
+        if let Some(input) = self.resource_input.take() {
+            self.retirement = Some(
+                AppFrameBuild {
+                    generation: semio_framework_trace::Generation(input.preview_generation),
+                    input,
+                    engine_packets: std::mem::take(&mut self.engine_packets),
+                    cursor: SemioCursor::Default,
+                    theme_dark: false,
+                    fullscreen: self.fullscreen.take(),
+                    cursor_wake: self.cursor_wake.take(),
+                    #[cfg(not(target_arch = "wasm32"))]
+                    job_progress: self.job_progress.take(),
+                }
+                .into_preparation(),
+            );
+            return false;
+        }
+        self.cursor_wake.take();
+        self.deferred_actions.as_mut().is_none_or(|actions| actions.pop_front().is_none())
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.previous_draw.is_none()
+            && self.previous_overlay.is_none()
+            && self.engine_rejected.is_none()
+            && self.world_rejected.is_none()
+            && self.engine_packets.is_empty()
+            && self.engine_resources.is_none()
+            && self.world_resources.is_none()
+            && self.resource_input.is_none()
+            && self.icon_upload.is_none()
+            && self.icon_pixels.is_empty()
+            && self.retirement.is_none()
+            && self.cursor_wake.is_none()
+            && self.deferred_actions.as_ref().is_none_or(FrameActionOwners::is_empty)
+    }
+}
+
+struct FrameFinishCursor {
+    phase: FrameFinishPhase,
+    cursor: SemioCursor,
+    pump_sync: bool,
+    flush_tutorial: bool,
+    deferred_actions: Option<FrameActionOwners>,
+    glyph_started: bool,
+    glyph_offset: usize,
+    glyph_pixels: Vec<u8>,
+    glyph_width: u32,
+    glyph_height: u32,
+}
+
+#[derive(Clone, Copy)]
+enum FrameFinishPhase {
+    Inputs,
+    Deferred,
+    GlyphUpload,
+    Cursor,
+    Draw,
+    Overlay,
+    Complete,
+}
+
+impl Default for FrameFinishCursor {
+    fn default() -> Self {
+        Self {
+            phase: FrameFinishPhase::Inputs,
+            cursor: SemioCursor::Default,
+            pump_sync: false,
+            flush_tutorial: false,
+            deferred_actions: None,
+            glyph_started: false,
+            glyph_offset: 0,
+            glyph_pixels: Vec::new(),
+            glyph_width: 0,
+            glyph_height: 0,
+        }
+    }
+}
+
+impl FrameFinishCursor {
+    fn close_step(&mut self) -> bool {
+        if !self.glyph_pixels.is_empty() {
+            let retained = self.glyph_pixels.len().saturating_sub(FRAME_ATLAS_PAGE_BYTES);
+            self.glyph_pixels.truncate(retained);
+            return false;
+        }
+        self.deferred_actions.as_mut().is_none_or(|actions| actions.pop_front().is_none())
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.glyph_pixels.is_empty() && self.deferred_actions.as_ref().is_none_or(FrameActionOwners::is_empty)
+    }
+}
+
+enum FrameBuildBoundaryStep {
+    Pending,
+    Complete(AppFrameAfterChrome),
+    Fault(&'static str),
+}
+
+enum FrameFinishBoundaryStep {
+    Pending,
+    Complete(AppFrameBuild),
+    Fault(&'static str),
 }
 
 struct FrameWheelCursor {
@@ -9279,7 +9671,7 @@ struct FrameWheelCursor {
 
 impl AppFrameAfterChrome {
     fn close_step(&mut self) -> bool {
-        if self.deferred_actions.pop().is_some() {
+        if self.deferred_actions.pop_front().is_some() {
             return false;
         }
         if self.retirement.is_none() {
@@ -9290,8 +9682,12 @@ impl AppFrameAfterChrome {
                 return true;
             };
             let build = AppFrameBuild {
+                generation: semio_framework_trace::Generation(input.preview_generation),
                 input,
-                engine_packets: self.engine_packets.take().unwrap_or_default(),
+                engine_packets: match self.engine_packets.take() {
+                    Some(packets) => packets,
+                    None => return false,
+                },
                 cursor: SemioCursor::Default,
                 theme_dark: false,
                 fullscreen: self.fullscreen.take(),
@@ -9302,7 +9698,7 @@ impl AppFrameAfterChrome {
             self.retirement = Some(build.into_preparation());
             return false;
         }
-        let retirement = self.retirement.as_mut().expect("retirement initialized above");
+        let Some(retirement) = self.retirement.as_mut() else { return false };
         if !retirement.close_step() || !retirement.terminal_is_empty() {
             return false;
         }
@@ -9311,18 +9707,23 @@ impl AppFrameAfterChrome {
     }
 }
 
-pub(crate) struct AppFrameTransaction {
+pub(crate) struct FrameTransaction {
     directives: Option<crate::frame_job::FrameDirectives>,
+    operation: semio_framework_trace::OperationId,
     generation: semio_framework_trace::Generation,
+    base_witness: Option<RuntimePresentationWitness>,
+    effect_opportunities: u32,
     dpr: f32,
+    stage: FrameTransactionStage,
     phase: AppFrameTransactionPhase,
     board_authority_cursor: usize,
     world3d_authority_cursor: usize,
     scene_camera_cursor: scenes::SceneCameraDispatchCursor,
-    deferred_actions: Vec<ActionDescriptor>,
+    deferred_actions: FrameActionOwners,
+    build_cursor: Option<FrameBuildCursor>,
+    finish_cursor: Option<FrameFinishCursor>,
     after_chrome: Option<AppFrameAfterChrome>,
     wheel: Option<FrameWheelCursor>,
-    generated_actions: Option<std::vec::IntoIter<ActionDescriptor>>,
     raster_uploads: Option<scenes::PendingRasterUploadCursor>,
     raster_rejected: Option<ui_wgpu::wgpu::PreparedRasterProducer>,
 }
@@ -9333,10 +9734,23 @@ pub(crate) enum AppFrameTransactionStep {
     Fault,
 }
 
+/// 🧭️ The mounted frame's seven monotonic publication stages.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum FrameTransactionStage {
+    DrainProjectionDeltas,
+    RouteIntents,
+    FlushEffects,
+    PresentSurface,
+    ReconcileTree,
+    BuildRenderPackets,
+    PublishSnapshot,
+}
+
 enum AppFrameTransactionPhase {
     SceneCamera,
     Build,
     InputEvents,
+    FrameDeferred,
     BoardAuthority,
     World3dSnapshot,
     World3dAuthority,
@@ -9350,26 +9764,64 @@ enum AppFrameTransactionPhase {
     Terminal,
 }
 
-impl AppFrameTransaction {
-    pub(crate) fn new(directives: crate::frame_job::FrameDirectives, generation: semio_framework_trace::Generation, dpr: f32) -> Self {
+impl FrameTransaction {
+    pub(crate) fn new(directives: crate::frame_job::FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation, dpr: f32) -> Self {
         Self {
             directives: Some(directives),
+            operation,
             generation,
+            base_witness: None,
+            effect_opportunities: 0,
             dpr,
+            stage: FrameTransactionStage::DrainProjectionDeltas,
             phase: AppFrameTransactionPhase::SceneCamera,
             board_authority_cursor: 0,
             world3d_authority_cursor: 0,
             scene_camera_cursor: scenes::SceneCameraDispatchCursor::begin(app_now_ms()),
-            deferred_actions: Vec::with_capacity(WORLD3D_DEADLINE_CAPACITY),
+            deferred_actions: FrameActionOwners::default(),
+            build_cursor: None,
+            finish_cursor: None,
             after_chrome: None,
             wheel: None,
-            generated_actions: None,
             raster_uploads: None,
             raster_rejected: None,
         }
     }
 
     pub(crate) fn step(&mut self, runtime: &RuntimeMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
+        context.set_stage(self.stage_label());
+        if context.operation() != self.operation || context.generation() != self.generation || context.is_cancelled() || context.deadline_exceeded() {
+            runtime.record_frame_fault("frame opportunity freshness guard refused operation, generation, cancellation, or deadline");
+            self.phase = AppFrameTransactionPhase::Terminal;
+            return AppFrameTransactionStep::Fault;
+        }
+        let Some(current_witness) = runtime.presentation_witness_for(self.generation.0) else {
+            runtime.record_frame_fault("frame opportunity input generation was superseded");
+            self.phase = AppFrameTransactionPhase::Terminal;
+            return AppFrameTransactionStep::Fault;
+        };
+        if let Some(base_witness) = self.base_witness {
+            if base_witness != current_witness {
+                runtime.record_frame_fault("frame opportunity base revision was superseded");
+                self.phase = AppFrameTransactionPhase::Terminal;
+                return AppFrameTransactionStep::Fault;
+            }
+        } else {
+            self.base_witness = Some(current_witness);
+        }
+        if self.stage == FrameTransactionStage::FlushEffects {
+            let Some(next) = self.effect_opportunities.checked_add(1) else {
+                runtime.record_frame_fault("frame effect opportunity counter exhausted");
+                self.phase = AppFrameTransactionPhase::Terminal;
+                return AppFrameTransactionStep::Fault;
+            };
+            if next > EFFECT_STORM_BUDGET {
+                runtime.record_frame_fault("frame effect storm budget exhausted");
+                self.phase = AppFrameTransactionPhase::Terminal;
+                return AppFrameTransactionStep::Fault;
+            }
+            self.effect_opportunities = next;
+        }
         let Some(directives) = self.directives.as_ref() else { return AppFrameTransactionStep::Pending };
         if context.should_yield() {
             return AppFrameTransactionStep::Pending;
@@ -9391,33 +9843,19 @@ impl AppFrameTransaction {
         if !app.interaction_available() {
             return AppFrameTransactionStep::Pending;
         }
-        if let Some(actions) = self.generated_actions.as_mut() {
-            if let Some(action) = actions.next() {
-                let partial = self.after_chrome.as_mut().expect("chrome phase owns generated actions");
-                if partial.deferred_actions.len() >= WORLD3D_DEADLINE_CAPACITY {
-                    runtime.record_frame_fault("frame generated action credits exceeded");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                }
-                partial.deferred_actions.push(action);
-                return AppFrameTransactionStep::Pending;
-            }
-            self.generated_actions = None;
-            return AppFrameTransactionStep::Pending;
-        }
         match self.phase {
             AppFrameTransactionPhase::SceneCamera => match self.scene_camera_cursor.step() {
                 scenes::SceneCameraDispatchStep::Pending => AppFrameTransactionStep::Pending,
                 scenes::SceneCameraDispatchStep::Action(action) => {
-                    if self.deferred_actions.len() >= WORLD3D_DEADLINE_CAPACITY {
+                    if let Err(_action) = self.deferred_actions.try_push(action) {
                         runtime.record_frame_fault("frame deferred action credits exceeded");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     }
-                    self.deferred_actions.push(action);
                     AppFrameTransactionStep::Pending
                 }
                 scenes::SceneCameraDispatchStep::Complete => {
+                    self.stage = FrameTransactionStage::RouteIntents;
                     self.phase = AppFrameTransactionPhase::Build;
                     AppFrameTransactionStep::Pending
                 }
@@ -9428,18 +9866,31 @@ impl AppFrameTransaction {
                 }
             },
             AppFrameTransactionPhase::Build => {
-                if app.pending_frame_deferred.is_some() {
-                    app.drive_pending_frame_deferred(handle);
+                if self.build_cursor.is_none() {
+                    let Some(presentation_witness) = runtime.presentation_witness_for(self.generation.0) else {
+                        runtime.record_frame_fault("frame presentation input generation was stale before candidate construction");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    };
+                    self.build_cursor = Some(FrameBuildCursor::new(presentation_witness, std::mem::take(&mut self.deferred_actions)));
                     return AppFrameTransactionStep::Pending;
                 }
-                let Some(presentation_witness) = runtime.presentation_witness_for(self.generation.0) else {
-                    runtime.record_frame_fault("frame presentation input generation was stale before candidate construction");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                };
-                self.after_chrome = Some(app.frame_before_input(handle, directives, presentation_witness, self.dpr, std::mem::take(&mut self.deferred_actions)));
-                self.phase = AppFrameTransactionPhase::InputEvents;
-                AppFrameTransactionStep::Pending
+                let Some(cursor) = self.build_cursor.as_mut() else { return AppFrameTransactionStep::Pending };
+                match app.frame_before_input_step(handle, directives, self.dpr, cursor) {
+                    FrameBuildBoundaryStep::Pending => AppFrameTransactionStep::Pending,
+                    FrameBuildBoundaryStep::Complete(partial) => {
+                        self.build_cursor = None;
+                        self.after_chrome = Some(partial);
+                        self.stage = FrameTransactionStage::RouteIntents;
+                        self.phase = AppFrameTransactionPhase::InputEvents;
+                        AppFrameTransactionStep::Pending
+                    }
+                    FrameBuildBoundaryStep::Fault(fault) => {
+                        runtime.record_frame_fault(fault);
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        AppFrameTransactionStep::Fault
+                    }
+                }
             }
             AppFrameTransactionPhase::InputEvents => {
                 let action = match app.input.take_action_step() {
@@ -9451,21 +9902,34 @@ impl AppFrameTransaction {
                     }
                 };
                 if let Some(action) = action {
-                    let partial = self.after_chrome.as_mut().expect("chrome phase precedes input drain");
-                    if partial.deferred_actions.len() >= WORLD3D_DEADLINE_CAPACITY {
-                        runtime.record_frame_fault("frame input action credits exceeded");
+                    let Some(partial) = self.after_chrome.as_mut() else {
+                        runtime.record_frame_fault("frame input phase lost the retained chrome owner");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
-                    }
+                    };
                     let Ok(action) = action.into_descriptor() else {
                         runtime.record_frame_fault("bounded frame input action failed materialization");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     };
-                    partial.deferred_actions.push(action);
+                    if let Err(_action) = partial.deferred_actions.try_push(action) {
+                        runtime.record_frame_fault("frame input action credits exceeded");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
                     return AppFrameTransactionStep::Pending;
                 }
                 if crate::interpreter::drive_scene_interaction_step(&mut app.input) {
+                    return AppFrameTransactionStep::Pending;
+                }
+                self.stage = FrameTransactionStage::FlushEffects;
+                self.phase = AppFrameTransactionPhase::FrameDeferred;
+                AppFrameTransactionStep::Pending
+            }
+            AppFrameTransactionPhase::FrameDeferred => {
+                let mut deferred = app.pending_frame_deferred.take();
+                if deferred.is_some() && !RuntimeApply::start_frame_deferred(&mut deferred, &mut app, handle) {
+                    app.pending_frame_deferred = deferred;
                     return AppFrameTransactionStep::Pending;
                 }
                 self.phase = AppFrameTransactionPhase::BoardAuthority;
@@ -9601,6 +10065,7 @@ impl AppFrameTransaction {
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 let Some(surface_id) = interaction.shell.world3d_states.id_at(self.world3d_authority_cursor) else {
                     self.world3d_authority_cursor = 0;
+                    self.stage = FrameTransactionStage::PresentSurface;
                     self.phase = AppFrameTransactionPhase::WheelStart;
                     return AppFrameTransactionStep::Pending;
                 };
@@ -9642,6 +10107,7 @@ impl AppFrameTransaction {
                 let delta = app.wheel_delta;
                 app.wheel_delta = 0.0;
                 if delta.abs() == 0.0 {
+                    self.stage = FrameTransactionStage::ReconcileTree;
                     self.phase = AppFrameTransactionPhase::RasterUploads;
                     return AppFrameTransactionStep::Pending;
                 }
@@ -9651,6 +10117,7 @@ impl AppFrameTransaction {
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 interaction.shell.handle_pointer_wheel(x, y, delta, &interaction.input);
                 if !ShellState::wheel_propagates_to_scene_surface(interaction.input.hit_at(x, y)) {
+                    self.stage = FrameTransactionStage::ReconcileTree;
                     self.phase = AppFrameTransactionPhase::RasterUploads;
                     return AppFrameTransactionStep::Pending;
                 }
@@ -9666,7 +10133,11 @@ impl AppFrameTransaction {
                 AppFrameTransactionStep::Pending
             }
             AppFrameTransactionPhase::WheelWorld3d => {
-                let wheel = self.wheel.as_mut().expect("wheel start precedes traversal");
+                let Some(wheel) = self.wheel.as_mut() else {
+                    runtime.record_frame_fault("world3d wheel phase lost its retained cursor");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 let Some(surface_id) = interaction.shell.world3d_states.id_at(wheel.index).map(str::to_owned) else {
                     wheel.index = 0;
@@ -9695,7 +10166,11 @@ impl AppFrameTransaction {
                 AppFrameTransactionStep::Pending
             }
             AppFrameTransactionPhase::WheelGraph => {
-                let wheel = self.wheel.as_mut().expect("wheel start precedes traversal");
+                let Some(wheel) = self.wheel.as_mut() else {
+                    runtime.record_frame_fault("graph wheel phase lost its retained cursor");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 let Some(surface_id) = interaction.shell.node_graph_states.id_at(wheel.index).map(str::to_owned) else {
                     wheel.index = 0;
@@ -9725,7 +10200,11 @@ impl AppFrameTransaction {
                 AppFrameTransactionStep::Pending
             }
             AppFrameTransactionPhase::WheelMap => {
-                let wheel = self.wheel.as_mut().expect("wheel start precedes traversal");
+                let Some(wheel) = self.wheel.as_mut() else {
+                    runtime.record_frame_fault("map wheel phase lost its retained cursor");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 let Some(surface_id) = interaction.shell.tiled_map_states.id_at(wheel.index).map(str::to_owned) else {
                     wheel.index = 0;
@@ -9754,10 +10233,15 @@ impl AppFrameTransaction {
                 AppFrameTransactionStep::Pending
             }
             AppFrameTransactionPhase::WheelBoard => {
-                let wheel = self.wheel.as_mut().expect("wheel start precedes traversal");
+                let Some(wheel) = self.wheel.as_mut() else {
+                    runtime.record_frame_fault("board wheel phase lost its retained cursor");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 let Some(surface_id) = interaction.shell.board2d_states.id_at(wheel.index).map(str::to_owned) else {
                     self.wheel = None;
+                    self.stage = FrameTransactionStage::ReconcileTree;
                     self.phase = AppFrameTransactionPhase::RasterUploads;
                     return AppFrameTransactionStep::Pending;
                 };
@@ -9792,9 +10276,26 @@ impl AppFrameTransaction {
                             self.phase = AppFrameTransactionPhase::Terminal;
                             return AppFrameTransactionStep::Fault;
                         };
-                        let partial = self.after_chrome.as_mut().expect("chrome phase precedes raster uploads");
-                        let input = partial.resource_input.as_mut().expect("chrome resource input");
-                        if input.raster_producers.len().saturating_add(input.uploads.len()) >= input.limits.max_upload_items {
+                        let Some(partial) = self.after_chrome.as_mut() else {
+                            runtime.record_frame_fault("raster upload phase lost the retained chrome owner");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            return AppFrameTransactionStep::Fault;
+                        };
+                        let Some(input) = partial.resource_input.as_mut() else {
+                            runtime.record_frame_fault("raster upload phase lost the retained resource input");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            return AppFrameTransactionStep::Fault;
+                        };
+                        let Some(upload_items) = input.raster_producers.len().checked_add(input.uploads.len()) else {
+                            if let Err(mut returned) = cursor.retain_rejected(producer) {
+                                returned.begin_close();
+                                self.raster_rejected = Some(returned);
+                            }
+                            runtime.record_frame_fault("frame raster upload item credits exhausted");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            return AppFrameTransactionStep::Fault;
+                        };
+                        if upload_items >= input.limits.max_upload_items {
                             if let Err(mut returned) = cursor.retain_rejected(producer) {
                                 returned.begin_close();
                                 self.raster_rejected = Some(returned);
@@ -9817,6 +10318,7 @@ impl AppFrameTransaction {
                     }
                     scenes::PendingRasterUploadStep::Complete => {
                         self.raster_uploads = None;
+                        self.stage = FrameTransactionStage::BuildRenderPackets;
                         self.phase = AppFrameTransactionPhase::Finish;
                         AppFrameTransactionStep::Pending
                     }
@@ -9828,12 +10330,28 @@ impl AppFrameTransaction {
                 }
             }
             AppFrameTransactionPhase::Finish => {
-                let partial = self.after_chrome.take().expect("chrome phase precedes finish");
-                runtime.update_frame_inputs(&app);
-                let frame = app.frame_after_input(handle, partial);
-                self.phase = AppFrameTransactionPhase::Terminal;
-                self.directives = None;
-                AppFrameTransactionStep::Complete(frame)
+                let Some(partial) = self.after_chrome.as_mut() else {
+                    runtime.record_frame_fault("frame finish lost the retained chrome owner");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                let cursor = self.finish_cursor.get_or_insert_with(Default::default);
+                match app.frame_after_input_step(runtime, partial, cursor) {
+                    FrameFinishBoundaryStep::Pending => AppFrameTransactionStep::Pending,
+                    FrameFinishBoundaryStep::Complete(frame) => {
+                        self.after_chrome = None;
+                        self.finish_cursor = None;
+                        self.stage = FrameTransactionStage::PublishSnapshot;
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        self.directives = None;
+                        AppFrameTransactionStep::Complete(frame)
+                    }
+                    FrameFinishBoundaryStep::Fault(fault) => {
+                        runtime.record_frame_fault(fault);
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        AppFrameTransactionStep::Fault
+                    }
+                }
             }
             AppFrameTransactionPhase::Terminal => AppFrameTransactionStep::Pending,
         }
@@ -9854,11 +10372,18 @@ impl AppFrameTransaction {
             self.raster_uploads = None;
             return false;
         }
-        if let Some(actions) = self.generated_actions.as_mut() {
-            if actions.next().is_some() {
+        if let Some(cursor) = self.build_cursor.as_mut() {
+            if !cursor.close_step() || !cursor.terminal_is_empty() {
                 return false;
             }
-            self.generated_actions = None;
+            self.build_cursor = None;
+            return false;
+        }
+        if let Some(cursor) = self.finish_cursor.as_mut() {
+            if !cursor.close_step() || !cursor.terminal_is_empty() {
+                return false;
+            }
+            self.finish_cursor = None;
             return false;
         }
         self.wheel = None;
@@ -9873,7 +10398,7 @@ impl AppFrameTransaction {
             self.scene_camera_cursor.close_step();
             return false;
         }
-        if self.deferred_actions.pop().is_some() {
+        if self.deferred_actions.pop_front().is_some() {
             return false;
         }
         let Some(directives) = self.directives.as_mut() else { return true };
@@ -9883,11 +10408,40 @@ impl AppFrameTransaction {
         self.directives = None;
         true
     }
+
+    pub(crate) fn stage(&self) -> FrameTransactionStage {
+        self.stage
+    }
+
+    fn stage_label(&self) -> &'static str {
+        match self.stage {
+            FrameTransactionStage::DrainProjectionDeltas => "DrainProjectionDeltas",
+            FrameTransactionStage::RouteIntents => "RouteIntents",
+            FrameTransactionStage::FlushEffects => "FlushEffects",
+            FrameTransactionStage::PresentSurface => "PresentSurface",
+            FrameTransactionStage::ReconcileTree => "ReconcileTree",
+            FrameTransactionStage::BuildRenderPackets => "BuildRenderPackets",
+            FrameTransactionStage::PublishSnapshot => "PublishSnapshot",
+        }
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.directives.is_none()
+            && self.build_cursor.is_none()
+            && self.finish_cursor.is_none()
+            && self.after_chrome.is_none()
+            && self.wheel.is_none()
+            && self.raster_uploads.is_none()
+            && self.raster_rejected.is_none()
+            && self.scene_camera_cursor.terminal_is_empty()
+            && self.deferred_actions.is_empty()
+    }
 }
 
 pub(crate) struct AppFramePresentation {
     packet: Option<ui_wgpu::wgpu::PreparedRenderPacket>,
-    engine_packets: Vec<engine_canvas::EngineCanvasPacket>,
+    engine_packets: FrameEnginePackets,
+    generation: semio_framework_trace::Generation,
     pub(crate) cursor: SemioCursor,
     theme_dark: bool,
     fullscreen: Option<bool>,
@@ -9903,6 +10457,7 @@ impl AppFrameBuild {
             session: None,
             rejected: None,
             engine_packets: Some(self.engine_packets),
+            generation: self.generation,
             cursor: self.cursor,
             theme_dark: self.theme_dark,
             fullscreen: self.fullscreen,
@@ -9918,7 +10473,8 @@ pub(crate) struct AppFramePreparation {
     job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
     session: Option<semio_framework_job::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>,
     rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>>,
-    engine_packets: Option<Vec<engine_canvas::EngineCanvasPacket>>,
+    engine_packets: Option<FrameEnginePackets>,
+    generation: semio_framework_trace::Generation,
     cursor: SemioCursor,
     theme_dark: bool,
     fullscreen: Option<bool>,
@@ -9996,6 +10552,7 @@ impl AppFramePreparation {
         Some(AppFramePresentation {
             packet: Some(packet),
             engine_packets: self.engine_packets.take()?,
+            generation: self.generation,
             cursor: self.cursor,
             theme_dark: self.theme_dark,
             fullscreen: self.fullscreen,
@@ -10123,7 +10680,7 @@ enum RasterCandidateRetirement {
 pub(crate) enum AppPresentStep {
     Idle,
     Pending,
-    Complete { fullscreen: Option<bool>, cursor_wake: Option<infinite_world::world::WorldCursorWakeToken> },
+    Complete { generation: semio_framework_trace::Generation, cursor: SemioCursor, fullscreen: Option<bool>, cursor_wake: Option<infinite_world::world::WorldCursorWakeToken> },
 }
 
 impl AppFramePresentation {
@@ -10584,7 +11141,9 @@ impl AppPresenter {
                     apply_window_cursor(window, cursor.frame.cursor, cursor.frame.theme_dark, &mut self.last_cursor);
                 }
                 let fullscreen = self.window.is_none().then_some(cursor.frame.fullscreen).flatten();
-                let mut completed = self.pending.take().expect("completed presentation cursor");
+                let Some(mut completed) = self.pending.take() else { return Err("completed presentation cursor was missing".to_string()) };
+                let accepted_cursor = completed.frame.cursor;
+                let accepted_generation = completed.frame.generation;
                 let cursor_wake = completed.frame.cursor_wake.take();
                 let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
                 if retirement.completed_frame.is_some() {
@@ -10593,7 +11152,7 @@ impl AppPresenter {
                     return Err("completed presentation retirement capacity exhausted".to_string());
                 }
                 retirement.completed_frame = Some(completed.frame);
-                Ok(AppPresentStep::Complete { fullscreen, cursor_wake })
+                Ok(AppPresentStep::Complete { generation: accepted_generation, cursor: accepted_cursor, fullscreen, cursor_wake })
             }
         }
     }
@@ -10782,152 +11341,366 @@ impl AppRuntime {
         }
     }
 
-    /// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `build_directives` is
-    /// `frame_job::FrameBuildJob`'s (possibly stale, see that module's own doc) output — a candidate
-    /// list this method re-validates against LIVE state before acting on, never applies blindly. See
-    /// `winit_app.rs`'s `build_and_publish_snapshot` for where it is computed and passed in.
-    fn frame_before_input(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, presentation_witness: RuntimePresentationWitness, dpr: f32, deferred_actions: Vec<ActionDescriptor>) -> AppFrameAfterChrome {
-        self.drive_text_operation();
-        let fullscreen = std::mem::take(&mut self.shell.fullscreen_toggle_requested).then(|| {
-            self.shell.fullscreen_active = !self.shell.fullscreen_active;
-            self.shell.fullscreen_active
-        });
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            self.poll_native_plugin_hot_swap();
-            self.maybe_reload_native_plugins(handle);
-        }
-        self.theme = shell::resolve_theme_for_ids(&shell::active_theme_id(), &self.shell.appearance_id);
-        self.theme_dark = appearance_is_dark(&self.shell.appearance_id);
-        if !self.pointer_down && self.input.drag.active {
-            self.input.end_drag();
-        }
-        let pointer = (self.last_pointer_x, self.last_pointer_y);
-        self.input.update_hover(pointer.0, pointer.1);
-        self.input.clear_frame();
-        // 🧵️ P3b: `build_directives.wheel_zoom_deadline_cleared` is `frame_job::FrameBuildJob`'s
-        // (possibly stale) verdict — re-checked against the LIVE `self.wheel_zoom_deadline_ms`/`now`
-        // right here rather than trusted outright, so a directive computed before this SAME tick
-        // re-armed the deadline (further down this function, on a fresh wheel event) can never clear a
-        // deadline it never actually saw. A stale `false` just means "check again next frame."
-        if build_directives.wheel_zoom_deadline_cleared && self.wheel_zoom_deadline_ms > 0.0 && app_now_ms() >= self.wheel_zoom_deadline_ms {
-            self.wheel_zoom_deadline_ms = 0.0;
-            engine_canvas::node_graph_clear_wheel_zoom_active();
-        }
-        if app_now_ms() - self.caret_blink_at_ms >= 500.0 {
-            self.caret_blink_at_ms = app_now_ms();
-            self.caret_blink_visible = !self.caret_blink_visible;
-            engine_canvas::node_graph_sync_caret_blink(self.caret_blink_visible);
-        }
-        self.draw.clear();
-        self.overlay.clear();
-        let mut icon_upload = None;
-        ICON_ATLAS_RUNTIME.with(|cell| {
-            if let Some(atlas) = cell.borrow_mut().take() {
-                self.icons = atlas;
-                icon_upload = Some(ui_wgpu::wgpu::PreparedRenderUpload::IconAtlas { pixels: self.icons.pixels.clone(), width: self.icons.width, height: self.icons.height });
+    /// 🧵️ Advances exactly one retained pre-input frame owner or chrome child.
+    fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, dpr: f32, cursor: &mut FrameBuildCursor) -> FrameBuildBoundaryStep {
+        match cursor.phase {
+            FrameBuildPhase::Deferred => {
+                cursor.phase = FrameBuildPhase::Text;
             }
-        });
-        // 🎬️ Tutorial tick — advances the playhead/recorder and applies UI/camera synchronously; any
-        // resulting document-track operations are queued onto `shell.tutorial_pending_document_ops` and
-        // flushed asynchronously below (the plugin bridge's document calls are async, chrome rendering
-        // isn't — same reason `scene_events` gets deferred through `spawn_app_task` just after).
-        self.shell.tutorial_tick(app_now_ms());
-        let mut engine_resources = engine_canvas::EngineCanvasBuildContext::new(dpr as f64);
-        let runtime = RuntimeMailbox(handle.upgrade().expect("frame runtime retains its wake authority"));
-        let mut world_resources = infinite_world::world::World3dBuildContext::new(runtime.world_cursor_wake_authority());
-        {
-            let AppRuntime { atlas, icons, interaction, draw, overlay, .. } = self;
-            let interaction = interaction.as_mut().expect("checked interaction availability");
-            interaction.shell.render_chrome(draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, &mut engine_resources, &mut world_resources);
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        let job_progress = kernel_runtime::take_job_progress_presentation();
-        #[cfg(not(target_arch = "wasm32"))]
-        if let Some(progress) = job_progress.as_ref() {
-            let (kind, applied) = progress.visual();
-            let color = match kind {
-                semio_framework_actor::JobProgressKind::CommitValidated => ui_wgpu::wgpu::Rgba::from_srgb8(36, 158, 91, 255),
-                semio_framework_actor::JobProgressKind::Cancelled | semio_framework_actor::JobProgressKind::Fault => ui_wgpu::wgpu::Rgba::from_srgb8(218, 74, 74, 255),
-                _ => ui_wgpu::wgpu::Rgba::from_srgb8(67, 132, 245, 255),
-            };
-            self.overlay.push_solid_overlay([12.0, 12.0, 24.0 + applied.min(100) as f32 * 2.0, 4.0], color);
-        }
-        let engine_packets = engine_resources.take_packets();
-        let cursor_wake = match world_resources.take_cursor_wake() {
-            Ok(token) => token,
-            Err(fault) => {
-                self.frame_fault = Some(format!("World cursor wake authority fault: {fault:?}"));
-                None
+            FrameBuildPhase::Text => {
+                self.drive_text_operation();
+                cursor.phase = FrameBuildPhase::Fullscreen;
             }
-        };
-        let mut resource_input = ui_wgpu::wgpu::PreparedRenderInput::new(presentation_witness.scene_revision, presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::default(), None, 0.0);
-        world_resources.append_to(&mut resource_input);
-        if let Some(upload) = icon_upload {
-            resource_input.uploads.push(upload);
+            FrameBuildPhase::Fullscreen => {
+                cursor.fullscreen = std::mem::take(&mut self.shell.fullscreen_toggle_requested).then(|| {
+                    self.shell.fullscreen_active = !self.shell.fullscreen_active;
+                    self.shell.fullscreen_active
+                });
+                cursor.phase = FrameBuildPhase::NativePoll;
+            }
+            FrameBuildPhase::NativePoll => {
+                #[cfg(not(target_arch = "wasm32"))]
+                self.poll_native_plugin_hot_swap();
+                cursor.phase = FrameBuildPhase::NativeReload;
+            }
+            FrameBuildPhase::NativeReload => {
+                #[cfg(not(target_arch = "wasm32"))]
+                self.maybe_reload_native_plugins(handle);
+                cursor.phase = FrameBuildPhase::ThemeResolve;
+            }
+            FrameBuildPhase::ThemeResolve => {
+                self.theme = shell::resolve_theme_for_ids(&shell::active_theme_id(), &self.shell.appearance_id);
+                cursor.phase = FrameBuildPhase::ThemeAppearance;
+            }
+            FrameBuildPhase::ThemeAppearance => {
+                self.theme_dark = appearance_is_dark(&self.shell.appearance_id);
+                cursor.phase = FrameBuildPhase::Drag;
+            }
+            FrameBuildPhase::Drag => {
+                if !self.pointer_down && self.input.drag.active {
+                    self.input.end_drag();
+                }
+                cursor.phase = FrameBuildPhase::Hover;
+            }
+            FrameBuildPhase::Hover => {
+                self.input.update_hover(self.last_pointer_x, self.last_pointer_y);
+                cursor.phase = FrameBuildPhase::InputFrame;
+            }
+            FrameBuildPhase::InputFrame => {
+                if self.input.hit_targets.pop().is_some() {
+                    return FrameBuildBoundaryStep::Pending;
+                }
+                self.input.wheel_delta = 0.0;
+                self.input.right_click_pos = None;
+                cursor.phase = FrameBuildPhase::WheelDeadline;
+            }
+            FrameBuildPhase::WheelDeadline => {
+                if build_directives.wheel_zoom_deadline_cleared && self.wheel_zoom_deadline_ms > 0.0 && app_now_ms() >= self.wheel_zoom_deadline_ms {
+                    self.wheel_zoom_deadline_ms = 0.0;
+                    engine_canvas::node_graph_clear_wheel_zoom_active();
+                }
+                cursor.phase = FrameBuildPhase::Caret;
+            }
+            FrameBuildPhase::Caret => {
+                if app_now_ms() - self.caret_blink_at_ms >= 500.0 {
+                    self.caret_blink_at_ms = app_now_ms();
+                    self.caret_blink_visible = !self.caret_blink_visible;
+                    engine_canvas::node_graph_sync_caret_blink(self.caret_blink_visible);
+                }
+                cursor.phase = FrameBuildPhase::TakeDraw;
+            }
+            FrameBuildPhase::TakeDraw => {
+                cursor.previous_draw = Some(std::mem::take(&mut self.draw));
+                cursor.phase = FrameBuildPhase::RetireDraw;
+            }
+            FrameBuildPhase::RetireDraw => {
+                let Some(previous) = cursor.previous_draw.as_mut() else {
+                    cursor.phase = FrameBuildPhase::TakeOverlay;
+                    return FrameBuildBoundaryStep::Pending;
+                };
+                if previous.retire_step() {
+                    cursor.previous_draw = None;
+                    cursor.phase = FrameBuildPhase::TakeOverlay;
+                }
+            }
+            FrameBuildPhase::TakeOverlay => {
+                cursor.previous_overlay = Some(std::mem::take(&mut self.overlay));
+                cursor.phase = FrameBuildPhase::RetireOverlay;
+            }
+            FrameBuildPhase::RetireOverlay => {
+                let Some(previous) = cursor.previous_overlay.as_mut() else {
+                    cursor.phase = FrameBuildPhase::IconAtlas;
+                    return FrameBuildBoundaryStep::Pending;
+                };
+                if previous.retire_step() {
+                    cursor.previous_overlay = None;
+                    cursor.phase = FrameBuildPhase::IconAtlas;
+                }
+            }
+            FrameBuildPhase::IconAtlas => {
+                if !cursor.icon_checked {
+                    let mut pending = false;
+                    ICON_ATLAS_RUNTIME.with(|cell| {
+                        if let Some(atlas) = cell.borrow_mut().take() {
+                            self.icons = atlas;
+                            cursor.icon_pixels = Vec::with_capacity(self.icons.pixels.len());
+                            cursor.icon_width = self.icons.width;
+                            cursor.icon_height = self.icons.height;
+                            pending = true;
+                        }
+                    });
+                    if !pending {
+                        cursor.icon_offset = self.icons.pixels.len();
+                    }
+                    cursor.icon_checked = true;
+                    return FrameBuildBoundaryStep::Pending;
+                }
+                if cursor.icon_offset < self.icons.pixels.len() {
+                    let Some(end) = cursor.icon_offset.checked_add(FRAME_ATLAS_PAGE_BYTES).map(|end| end.min(self.icons.pixels.len())) else { return FrameBuildBoundaryStep::Fault("frame icon page cursor exhausted") };
+                    cursor.icon_pixels.extend_from_slice(&self.icons.pixels[cursor.icon_offset..end]);
+                    cursor.icon_offset = end;
+                    return FrameBuildBoundaryStep::Pending;
+                }
+                if cursor.icon_width != 0 && cursor.icon_height != 0 {
+                    cursor.icon_upload = Some(ui_wgpu::wgpu::PreparedRenderUpload::IconAtlas {
+                        pixels: std::mem::take(&mut cursor.icon_pixels),
+                        width: cursor.icon_width,
+                        height: cursor.icon_height,
+                    });
+                }
+                cursor.phase = FrameBuildPhase::Tutorial;
+            }
+            FrameBuildPhase::Tutorial => {
+                self.shell.tutorial_tick(app_now_ms());
+                cursor.phase = FrameBuildPhase::EngineResources;
+            }
+            FrameBuildPhase::EngineResources => {
+                cursor.engine_resources = Some(engine_canvas::EngineCanvasBuildContext::new(dpr as f64));
+                cursor.phase = FrameBuildPhase::WorldResources;
+            }
+            FrameBuildPhase::WorldResources => {
+                let Some(runtime) = handle.upgrade().map(RuntimeMailbox) else { return FrameBuildBoundaryStep::Fault("frame runtime lost its wake authority") };
+                cursor.world_resources = Some(infinite_world::world::World3dBuildContext::new(runtime.world_cursor_wake_authority()));
+                cursor.phase = FrameBuildPhase::Chrome;
+            }
+            FrameBuildPhase::Chrome => {
+                let Some(engine_resources) = cursor.engine_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost engine resources") };
+                let Some(world_resources) = cursor.world_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") };
+                let AppRuntime { atlas, icons, interaction, draw, overlay, .. } = self;
+                let Some(interaction) = interaction.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost interaction state") };
+                if interaction.shell.render_chrome_step(&mut cursor.chrome, draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, engine_resources, world_resources) {
+                    cursor.phase = FrameBuildPhase::JobProgressTake;
+                }
+            }
+            FrameBuildPhase::JobProgressTake => {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    cursor.job_progress = kernel_runtime::take_job_progress_presentation();
+                }
+                cursor.phase = FrameBuildPhase::JobProgressOverlay;
+            }
+            FrameBuildPhase::JobProgressOverlay => {
+                #[cfg(not(target_arch = "wasm32"))]
+                if let Some(progress) = cursor.job_progress.as_ref() {
+                    let (kind, applied) = progress.visual();
+                    let color = match kind {
+                        semio_framework_actor::JobProgressKind::CommitValidated => ui_wgpu::wgpu::Rgba::from_srgb8(36, 158, 91, 255),
+                        semio_framework_actor::JobProgressKind::Cancelled | semio_framework_actor::JobProgressKind::Fault => ui_wgpu::wgpu::Rgba::from_srgb8(218, 74, 74, 255),
+                        _ => ui_wgpu::wgpu::Rgba::from_srgb8(67, 132, 245, 255),
+                    };
+                    self.overlay.push_solid_overlay([12.0, 12.0, 24.0 + applied.min(100) as f32 * 2.0, 4.0], color);
+                }
+                cursor.phase = FrameBuildPhase::ResourceInput;
+            }
+            FrameBuildPhase::ResourceInput => {
+                cursor.resource_input = Some(ui_wgpu::wgpu::PreparedRenderInput::new(
+                    cursor.presentation_witness.scene_revision,
+                    cursor.presentation_witness.input_generation,
+                    ui_wgpu::wgpu::DrawList::default(),
+                    None,
+                    0.0,
+                ));
+                cursor.phase = FrameBuildPhase::WorldTransfer;
+            }
+            FrameBuildPhase::WorldTransfer => {
+                let Some(resources) = cursor.world_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame transfer lost world resources") };
+                let Some(input) = cursor.resource_input.as_mut() else { return FrameBuildBoundaryStep::Fault("frame transfer lost resource input") };
+                match resources.append_step(input) {
+                    Ok(true) => cursor.phase = FrameBuildPhase::IconTransfer,
+                    Ok(false) => {}
+                    Err(rejected) => {
+                        cursor.world_rejected = Some(rejected);
+                        return FrameBuildBoundaryStep::Fault("frame world resource admission exceeded fixed credits");
+                    }
+                }
+            }
+            FrameBuildPhase::IconTransfer => {
+                if let Some(upload) = cursor.icon_upload.take() {
+                    let Some(input) = cursor.resource_input.as_mut() else { return FrameBuildBoundaryStep::Fault("frame icon transfer lost resource input") };
+                    let Some(next) = input.raster_producers.len().checked_add(input.uploads.len()).and_then(|count| count.checked_add(1)) else {
+                        cursor.world_rejected = Some(infinite_world::world::World3dBuildRejected::Upload(upload));
+                        return FrameBuildBoundaryStep::Fault("frame icon upload credits exhausted");
+                    };
+                    if next > input.limits.max_upload_items {
+                        cursor.world_rejected = Some(infinite_world::world::World3dBuildRejected::Upload(upload));
+                        return FrameBuildBoundaryStep::Fault("frame icon upload credits exceeded");
+                    }
+                    input.uploads.push(upload);
+                }
+                cursor.phase = FrameBuildPhase::EngineTransfer;
+            }
+            FrameBuildPhase::EngineTransfer => {
+                let Some(resources) = cursor.engine_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame transfer lost engine resources") };
+                match resources.take_packet_step() {
+                    Ok(Some(packet)) => {
+                        if let Err(rejected) = cursor.engine_packets.try_push(packet) {
+                            cursor.engine_rejected = Some(rejected);
+                            return FrameBuildBoundaryStep::Fault("frame engine packet credits exceeded");
+                        }
+                    }
+                    Ok(None) => cursor.phase = FrameBuildPhase::CursorWake,
+                    Err(packet) => {
+                        cursor.engine_rejected = Some(packet);
+                        return FrameBuildBoundaryStep::Fault("frame engine packet producer exceeded fixed credits");
+                    }
+                }
+            }
+            FrameBuildPhase::CursorWake => {
+                let Some(resources) = cursor.world_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame cursor wake lost world resources") };
+                match resources.take_cursor_wake() {
+                    Ok(token) => cursor.cursor_wake = token,
+                    Err(_) => return FrameBuildBoundaryStep::Fault("frame cursor wake authority faulted"),
+                }
+                cursor.phase = FrameBuildPhase::Complete;
+            }
+            FrameBuildPhase::Complete => {
+                if cursor.engine_resources.as_ref().is_some_and(|resources| !resources.terminal_is_empty()) || cursor.world_resources.as_ref().is_some_and(|resources| !resources.terminal_is_empty()) {
+                    return FrameBuildBoundaryStep::Fault("frame build resource cursor was not terminal-empty");
+                }
+                let Some(resource_input) = cursor.resource_input.take() else { return FrameBuildBoundaryStep::Fault("frame build lost resource input") };
+                let Some(deferred_actions) = cursor.deferred_actions.take() else { return FrameBuildBoundaryStep::Fault("frame build lost deferred action owners") };
+                let engine_packets = std::mem::take(&mut cursor.engine_packets);
+                return FrameBuildBoundaryStep::Complete(AppFrameAfterChrome {
+                    resource_input: Some(resource_input),
+                    engine_packets: Some(engine_packets),
+                    deferred_actions,
+                    fullscreen: cursor.fullscreen.take(),
+                    cursor_wake: cursor.cursor_wake.take(),
+                    #[cfg(not(target_arch = "wasm32"))]
+                    job_progress: cursor.job_progress.take(),
+                    retirement: None,
+                });
+            }
         }
-        AppFrameAfterChrome {
-            resource_input: Some(resource_input),
-            engine_packets: Some(engine_packets),
-            deferred_actions,
-            fullscreen,
-            cursor_wake,
-            #[cfg(not(target_arch = "wasm32"))]
-            job_progress,
-            retirement: None,
-        }
+        FrameBuildBoundaryStep::Pending
     }
 
-    fn frame_after_input(&mut self, handle: &AppHandle, mut partial: AppFrameAfterChrome) -> AppFrameBuild {
-        let deferred_actions = std::mem::take(&mut partial.deferred_actions);
-        let mut resource_input = partial.resource_input.take().expect("chrome resource input");
-        let engine_packets = partial.engine_packets.take().expect("chrome engine packets");
-        let fullscreen = partial.fullscreen.take();
-        let cursor_wake = partial.cursor_wake.take();
-        #[cfg(not(target_arch = "wasm32"))]
-        let job_progress = partial.job_progress.take();
-        let flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
-        if self.atlas.take_dirty() {
-            resource_input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlas { pixels: self.atlas.pixels.clone(), width: self.atlas.width, height: self.atlas.height });
+    /// 🎞️ Advances one retained post-input owner transfer without driving deferred work inline.
+    fn frame_after_input_step(&mut self, runtime: &RuntimeMailbox, partial: &mut AppFrameAfterChrome, cursor: &mut FrameFinishCursor) -> FrameFinishBoundaryStep {
+        match cursor.phase {
+            FrameFinishPhase::Inputs => {
+                runtime.update_frame_inputs(self);
+                cursor.phase = FrameFinishPhase::Deferred;
+            }
+            FrameFinishPhase::Deferred => {
+                cursor.deferred_actions = Some(std::mem::take(&mut partial.deferred_actions));
+                cursor.flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= 100.0;
+                    if cursor.pump_sync {
+                        self.last_sync_pump_ms = app_now_ms();
+                    }
+                }
+                cursor.phase = FrameFinishPhase::GlyphUpload;
+            }
+            FrameFinishPhase::GlyphUpload => {
+                if !cursor.glyph_started {
+                    if !self.atlas.take_dirty() {
+                        cursor.phase = FrameFinishPhase::Cursor;
+                        return FrameFinishBoundaryStep::Pending;
+                    }
+                    let Some(input) = partial.resource_input.as_ref() else { return FrameFinishBoundaryStep::Fault("frame glyph transfer lost resource input") };
+                    let Some(next) = input.raster_producers.len().checked_add(input.uploads.len()).and_then(|count| count.checked_add(1)) else { return FrameFinishBoundaryStep::Fault("frame glyph upload credits exhausted") };
+                    if next > input.limits.max_upload_items {
+                        return FrameFinishBoundaryStep::Fault("frame glyph upload credits exceeded");
+                    }
+                    cursor.glyph_pixels = Vec::with_capacity(self.atlas.pixels.len());
+                    cursor.glyph_width = self.atlas.width;
+                    cursor.glyph_height = self.atlas.height;
+                    cursor.glyph_started = true;
+                    return FrameFinishBoundaryStep::Pending;
+                }
+                if cursor.glyph_offset < self.atlas.pixels.len() {
+                    let Some(end) = cursor.glyph_offset.checked_add(FRAME_ATLAS_PAGE_BYTES).map(|end| end.min(self.atlas.pixels.len())) else { return FrameFinishBoundaryStep::Fault("frame glyph page cursor exhausted") };
+                    cursor.glyph_pixels.extend_from_slice(&self.atlas.pixels[cursor.glyph_offset..end]);
+                    cursor.glyph_offset = end;
+                    return FrameFinishBoundaryStep::Pending;
+                }
+                let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame glyph transfer lost resource input") };
+                input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlas {
+                    pixels: std::mem::take(&mut cursor.glyph_pixels),
+                    width: cursor.glyph_width,
+                    height: cursor.glyph_height,
+                });
+                cursor.phase = FrameFinishPhase::Cursor;
+            }
+            FrameFinishPhase::Cursor => {
+                let hit = self.input.hit_at(self.last_pointer_x, self.last_pointer_y);
+                let base_cursor = resolve_semio_cursor(
+                    hit,
+                    CursorDragState { tree_drag: self.shell.tree_drag.is_some(), dock_drag: self.shell.dock_drag.is_some(), pointer_drag_active: self.input.drag.active, pointer_drag_axis: self.input.drag.axis, pointer_drag_kind: self.input.drag.kind },
+                );
+                cursor.cursor = match self.shell.utility_cursor_override(self.last_pointer_x, self.last_pointer_y) {
+                    Some(utility_cursor) if matches!(base_cursor, SemioCursor::Default | SemioCursor::Grab | SemioCursor::Selectable | SemioCursor::Pointer) => utility_cursor,
+                    _ => base_cursor,
+                };
+                cursor.phase = FrameFinishPhase::Draw;
+            }
+            FrameFinishPhase::Draw => {
+                let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame draw transfer lost resource input") };
+                input.draw = std::mem::take(&mut self.draw);
+                input.time_seconds = (app_now_ms() / 1000.0) as f32;
+                cursor.phase = FrameFinishPhase::Overlay;
+            }
+            FrameFinishPhase::Overlay => {
+                let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame overlay transfer lost resource input") };
+                input.overlay = Some(std::mem::take(&mut self.overlay));
+                cursor.phase = FrameFinishPhase::Complete;
+            }
+            FrameFinishPhase::Complete => {
+                let Some(deferred_actions) = cursor.deferred_actions.take() else { return FrameFinishBoundaryStep::Fault("frame completion lost deferred action owners") };
+                let has_deferred = cursor.pump_sync || !deferred_actions.is_empty() || cursor.flush_tutorial;
+                if has_deferred && self.pending_frame_deferred.is_some() {
+                    cursor.deferred_actions = Some(deferred_actions);
+                    return FrameFinishBoundaryStep::Fault("frame completion found an unclosed deferred owner");
+                }
+                let Some(input) = partial.resource_input.take() else {
+                    cursor.deferred_actions = Some(deferred_actions);
+                    return FrameFinishBoundaryStep::Fault("frame completion lost resource input");
+                };
+                let Some(engine_packets) = partial.engine_packets.take() else {
+                    partial.resource_input = Some(input);
+                    cursor.deferred_actions = Some(deferred_actions);
+                    return FrameFinishBoundaryStep::Fault("frame completion lost engine packets");
+                };
+                if has_deferred {
+                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial));
+                }
+                return FrameFinishBoundaryStep::Complete(AppFrameBuild {
+                    generation: semio_framework_trace::Generation(input.preview_generation),
+                    input,
+                    engine_packets,
+                    cursor: cursor.cursor,
+                    theme_dark: self.theme_dark,
+                    fullscreen: partial.fullscreen.take(),
+                    cursor_wake: partial.cursor_wake.take(),
+                    #[cfg(not(target_arch = "wasm32"))]
+                    job_progress: partial.job_progress.take(),
+                });
+            }
         }
-        let time_seconds = (app_now_ms() / 1000.0) as f32;
-        let hit = self.input.hit_at(self.last_pointer_x, self.last_pointer_y);
-        let base_cursor = resolve_semio_cursor(
-            hit,
-            CursorDragState { tree_drag: self.shell.tree_drag.is_some(), dock_drag: self.shell.dock_drag.is_some(), pointer_drag_active: self.input.drag.active, pointer_drag_axis: self.input.drag.axis, pointer_drag_kind: self.input.drag.kind },
-        );
-        // 🖱️ The active utility's cursor overrides generic body cursors while the pointer is over the
-        // window body (P5), but never a specific control cursor (text inputs, resize handles).
-        let cursor = match self.shell.utility_cursor_override(self.last_pointer_x, self.last_pointer_y) {
-            Some(utility_cursor) if matches!(base_cursor, SemioCursor::Default | SemioCursor::Grab | SemioCursor::Selectable | SemioCursor::Pointer) => utility_cursor,
-            _ => base_cursor,
-        };
-        #[cfg(not(target_arch = "wasm32"))]
-        let pump_sync = app_now_ms() - self.last_sync_pump_ms >= 100.0;
-        #[cfg(not(target_arch = "wasm32"))]
-        if pump_sync {
-            self.last_sync_pump_ms = app_now_ms();
-        }
-        resource_input.draw = std::mem::take(&mut self.draw);
-        resource_input.overlay = Some(std::mem::take(&mut self.overlay));
-        resource_input.time_seconds = time_seconds;
-        let frame = AppFrameBuild {
-            input: resource_input,
-            engine_packets,
-            cursor,
-            theme_dark: self.theme_dark,
-            fullscreen,
-            cursor_wake,
-            #[cfg(not(target_arch = "wasm32"))]
-            job_progress,
-        };
-        #[cfg(target_arch = "wasm32")]
-        let pump_sync = false;
-        if pump_sync || !deferred_actions.is_empty() || flush_tutorial {
-            self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, pump_sync, flush_tutorial));
-            self.drive_pending_frame_deferred(handle);
-        }
-        frame
+        FrameFinishBoundaryStep::Pending
     }
 }
 

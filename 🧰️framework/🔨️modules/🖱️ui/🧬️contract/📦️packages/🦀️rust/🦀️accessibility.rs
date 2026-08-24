@@ -47,6 +47,10 @@ pub struct AccessibilitySpec {
 mod tests {
     use super::*;
 
+    fn ui_text(value: &str) -> crate::UiText {
+        crate::UiText::try_from_str(value).expect("bounded fixture text")
+    }
+
     #[test]
     fn default_spec_serializes_to_empty_object() {
         let json = serde_json::to_value(AccessibilitySpec::default()).expect("serialize");
@@ -67,7 +71,7 @@ mod tests {
 
     #[test]
     fn shortcut_roundtrips() {
-        let spec = AccessibilitySpec { shortcut: Some("Ctrl+S".into()), live: Liveness::Polite, hidden: false, ..AccessibilitySpec::default() };
+        let spec = AccessibilitySpec { shortcut: Some(ui_text("Ctrl+S")), live: Liveness::Polite, hidden: false, ..AccessibilitySpec::default() };
         let json = serde_json::to_string(&spec).expect("serialize");
         let back: AccessibilitySpec = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(spec, back);

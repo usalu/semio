@@ -2882,6 +2882,12 @@
       }
     },
     {
+      "name": "⚖️gate🦀️zero-warnings🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify rust-warnings --target native",
+      "cwd": "${workspaceFolder}",
+      "presentation":     {
       "name": "🧹clean",
       "type": "node-terminal",
       "request": "launch",
@@ -2892,13 +2898,7 @@
         "order": 410
       }
     },
-    {
-      "name": "⚖️gate🦀️zero-warnings🖥️native",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts verify rust-warnings --target native",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
+{
         "group": "4_gate",
         "order": 411.4
       }
@@ -3399,204 +3399,6 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.98
-      }
-    },
-    {
-      "name": "⚖️gate🏛️layering",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts verify layering",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.05
-      }
-    },
-    {
-      "name": "⚖️gate🏛️layering-write-baseline",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts verify layering write-baseline",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.06
-      }
-    },
-    {
-      "name": "🧪️test🔍️discover",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test discover",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.10
-      }
-    },
-    {
-      "name": "🧪️test🩺️doctor",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test doctor",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.11
-      }
-    },
-    {
-      "name": "🧪️test🧾️contract",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test contract",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.12
-      }
-    },
-    {
-      "name": "🧪️test🔮️oracle",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test oracle quick",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.13
-      }
-    },
-    {
-      "name": "🧪️test🎯️subject",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test subject quick",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.14
-      }
-    },
-    {
-      "name": "🧪️test⚖️parity",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test parity quick",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.15
-      }
-    },
-    {
-      "name": "🧪️test🎚️affected-quick",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx affected -t test-quick",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.16
-      }
-    },
-    {
-      "name": "🧪️test🎚️exhaustive",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test parity exhaustive",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.17
-      }
-    },
-    {
-      "name": "🧪️test📈️metrics",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test metrics",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.175
-      }
-    },
-    {
-      "name": "🧪️test📈️metrics-enforce",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test metrics --enforce",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.176
-      }
-    },
-    {
-      "name": "🧪️test📊️report",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test report",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.18
-      }
-    },
-    {
-      "name": "🧪️test🔒️dependency",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts test dependency",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.19
-      }
-    },
-    {
-      "name": "🧪️test🧹️clean--dry",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts clean test --dry",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.20
-      }
-    },
-    {
-      "name": "🧪️test🧹️clean",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts clean test",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.21
-      }
-    },
-    {
-      "name": "🧪️test🧹️clean--stale",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts clean test --stale",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.22
-      }
-    },
-    {
-      "name": "🧪️test📊️clean-coverage",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun ./📜️script.ts clean coverage",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 412.23
       }
     },
     {

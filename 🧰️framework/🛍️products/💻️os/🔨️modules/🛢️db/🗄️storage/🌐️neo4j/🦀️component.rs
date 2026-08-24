@@ -41,19 +41,19 @@
 use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
-    close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_prepare_platform_slices, db_io_transfer_list, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage,
-    DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor,
-    DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
+    close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_prepare_platform_slices, db_io_transfer_list, db_io_write_observed_bytes_range, register_db_io_backend, retire_db_io_backend,
+    submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoLeaseResult, DbIoPageWriter,
+    DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
 };
 
 macro_rules! with_admitted_artifact {
     ($operation:expr, $document:expr, $artifact:ident, $call:expr) => {{
         let mut owner = DbIoArtifactId::try_from_text($operation, $document)?;
-        let artifact_value = ArtifactId(owner.as_str().to_string());
-        let $artifact = &artifact_value;
+        let $artifact = owner.as_artifact()?;
         let terminal = $call.await;
-        drop(artifact_value);
-        owner.close_step()?;
+        while owner.close_step()? {
+            semio_framework_async::yield_once().await;
+        }
         terminal
     }};
 }
@@ -68,25 +68,8 @@ use std::sync::Arc;
 /// fix a number): validated before the driver byte owner is admitted.
 const MAX_READ_BYTES: u64 = 496 * 1024;
 
-async fn write_driver_bytes(mut reservation: DbIoDriverReservation, bytes: BoltBytes, offset: usize, length: usize, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
-    reservation.observe_capacity(bytes.len())?;
-    let limit = offset.checked_add(length).ok_or(DbError::LimitExceeded("Neo4j driver byte range"))?;
-    if limit > bytes.len() {
-        return Err(DbError::InvalidArgument("Neo4j driver byte range exceeds result".to_string()));
-    }
-    let mut cursor = offset;
-    while cursor < limit {
-        let end = match cursor.checked_add(DB_IO_PAGE_BYTES) {
-            Some(end) => end.min(limit),
-            None => limit,
-        };
-        let written = output.write_fragment(&bytes.value[cursor..end])?;
-        cursor += written;
-        semio_framework_async::yield_once().await;
-    }
-    drop(bytes);
-    reservation.close_step()?;
-    output.finish()
+async fn write_driver_bytes(reservation: DbIoDriverReservation, bytes: BoltBytes, offset: usize, length: usize, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
+    db_io_write_observed_bytes_range(reservation, bytes.value, offset, length, output)?.await
 }
 
 /// @emoji 🔢️ Neo4j's `Integer` bolt type is a signed 64-bit value; the family's identity/sequence
@@ -434,19 +417,23 @@ impl WalStorage for Neo4jDbIoExecutor {
         let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
         check_len(current_len, MAX_READ_BYTES, "wal_storage::append current length")?;
         let current: BoltBytes = row.get("bytes").map_err(map_de_error)?;
-        current_reservation.observe_capacity(current.len())?;
+        let mut current = DbIoExternalBytes::new(current.value);
+        current_reservation.observe_capacity(current.capacity()?)?;
         let sealed: bool = row.get("sealed").map_err(map_de_error)?;
         if sealed {
             return Err(DbError::InvalidArgument("cannot append to sealed wal segment".to_string()));
         }
-        let new_len = current.len().checked_add(prepared.as_slice().len()).ok_or(DbError::LimitExceeded("Neo4j WAL append length"))?;
+        let new_len = current.as_slice()?.len().checked_add(prepared.as_slice().len()).ok_or(DbError::LimitExceeded("Neo4j WAL append length"))?;
         check_len(new_len as u64, MAX_READ_BYTES, "wal_storage::append result")?;
-        let combined = db_io_prepare_platform_slices(self.active_operation, &current.value, prepared.as_slice()).await?;
+        let combined = db_io_prepare_platform_slices(self.active_operation, current.as_slice()?, prepared.as_slice()).await?;
         let write = txn
             .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", BoltBytes::new(combined.as_static_driver_slice().into())).param("len", u64_to_i64(new_len as u64, "wal segment length")?))
             .await
             .map_err(map_neo4rs_error);
-        drop(current);
+        while !current.terminal_is_empty() {
+            let _ = current.close_step();
+            semio_framework_async::yield_once().await;
+        }
         current_reservation.close_step()?;
         db_io_close_platform(combined).await?;
         db_io_close_platform(prepared).await?;
@@ -512,20 +499,24 @@ impl WalStorage for Neo4jDbIoExecutor {
         let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
         check_len(current_len, MAX_READ_BYTES, "wal_storage::truncate_tail current length")?;
         let current: BoltBytes = row.get("bytes").map_err(map_de_error)?;
-        current_reservation.observe_capacity(current.len())?;
+        let mut current = DbIoExternalBytes::new(current.value);
+        current_reservation.observe_capacity(current.capacity()?)?;
         let sealed: bool = row.get("sealed").map_err(map_de_error)?;
         if sealed {
             return Err(DbError::InvalidArgument("cannot truncate sealed wal segment".to_string()));
         }
-        if new_len > current.len() as u64 {
+        if new_len > current.as_slice()?.len() as u64 {
             return Err(DbError::InvalidArgument("truncate_tail new_len exceeds current segment length".to_string()));
         }
-        let truncated = db_io_prepare_platform_slices(self.active_operation, &current.value[..new_len as usize], &[]).await?;
+        let truncated = db_io_prepare_platform_slices(self.active_operation, &current.as_slice()?[..new_len as usize], &[]).await?;
         let write = txn
             .run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", BoltBytes::new(truncated.as_static_driver_slice().into())).param("len", u64_to_i64(new_len, "wal segment length")?))
             .await
             .map_err(map_neo4rs_error);
-        drop(current);
+        while !current.terminal_is_empty() {
+            let _ = current.close_step();
+            semio_framework_async::yield_once().await;
+        }
         current_reservation.close_step()?;
         db_io_close_platform(truncated).await?;
         write?;
@@ -736,7 +727,7 @@ impl Neo4jDbIoExecutor {
         let fence = EpochFence { epoch: i64_to_u64(row.get("epoch").map_err(map_de_error)?, "lease epoch")? };
         let expires_at_ms = i64_to_u64(row.get("expiresAtMs").map_err(map_de_error)?, "lease expiry")?;
         let holder: String = row.get("holder").map_err(map_de_error)?;
-        Ok(Some((fence, expires_at_ms, db_io_copy_observed_text(reservation, holder)?)))
+        Ok(Some((fence, expires_at_ms, db_io_copy_observed_text(reservation, holder).await?)))
     }
 }
 
@@ -788,7 +779,7 @@ impl LeaseStorage for Neo4jDbIoExecutor {
             return Ok(None);
         }
         let holder: String = row.get("holder").map_err(map_de_error)?;
-        let holder = db_io_copy_observed_text(reservation, holder)?;
+        let holder = db_io_copy_observed_text(reservation, holder).await?;
         Ok(Some(DbIoLeaseResult::new(DbIoText::try_from_str(resource)?, holder, EpochFence { epoch }, expires_at_ms)))
     }
 }

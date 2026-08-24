@@ -36,7 +36,7 @@ fn is_false(value: &bool) -> bool {
 pub const UI_BUILT_CHILDREN_MAX: usize = 32;
 pub const UI_BUILT_CHILD_RETIRE_SLOTS: usize = 384;
 
-type BuiltChildBacking = Box<[Option<BuiltNode>; UI_BUILT_CHILDREN_MAX]>;
+type BuiltChildBacking = Box<[Option<Box<BuiltNode>>]>;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct BuiltChildRetireKey {
@@ -123,7 +123,7 @@ impl BuiltChildRetireAuthority {
                 owner.cursor = next;
                 if let Some(node) = owner.backing[cursor].take() {
                     self.close_cursor = slot;
-                    return Some(node);
+                    return Some(*node);
                 }
             }
             entry.owner = None;
@@ -142,7 +142,7 @@ impl BuiltChildRetireAuthority {
 pub fn close_built_node_page_one() -> bool {
     let node = with_built_child_retire_authority(BuiltChildRetireAuthority::take_close_page);
     drop(node);
-    with_built_child_retire_authority(BuiltChildRetireAuthority::is_terminal_empty)
+    with_built_child_retire_authority(|authority| authority.is_terminal_empty())
 }
 
 pub struct BuiltChildren {
@@ -170,7 +170,9 @@ impl BuiltChildren {
         }
         if self.backing.is_none() {
             let Some(handback) = with_built_child_retire_authority(BuiltChildRetireAuthority::reserve) else { return Err(node) };
-            self.backing = Some(Box::new(std::array::from_fn(|_| None)));
+            let mut backing = Vec::with_capacity(UI_BUILT_CHILDREN_MAX);
+            backing.resize_with(UI_BUILT_CHILDREN_MAX, || None);
+            self.backing = Some(backing.into_boxed_slice());
             self.handback = Some(handback);
         }
         let Some(backing) = self.backing.as_mut() else { return Err(node) };
@@ -179,7 +181,7 @@ impl BuiltChildren {
             return Err(node);
         }
         let Some(len) = self.len.checked_add(1) else { return Err(node) };
-        *slot = Some(node);
+        *slot = Some(Box::new(node));
         self.len = len;
         Ok(())
     }
@@ -187,24 +189,39 @@ impl BuiltChildren {
     pub fn pop(&mut self) -> Option<BuiltNode> {
         let index = self.len.checked_sub(1)?;
         self.len = index;
-        self.backing.as_mut()?.get_mut(index)?.take()
+        self.backing.as_mut()?.get_mut(index)?.take().map(|node| *node)
     }
 
     pub fn len(&self) -> usize {
         self.len
     }
 
+    pub fn capacity(&self) -> usize {
+        self.backing.as_ref().map_or(0, |_| UI_BUILT_CHILDREN_MAX)
+    }
+
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
+    pub fn get(&self, index: usize) -> Option<&BuiltNode> {
+        (index < self.len).then(|| self.backing.as_ref()?.get(index)?.as_deref()).flatten()
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut BuiltNode> {
+        if index >= self.len {
+            return None;
+        }
+        self.backing.as_mut()?.get_mut(index)?.as_deref_mut()
+    }
+
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = &BuiltNode> {
-        self.backing.iter().flat_map(|backing| backing[..self.len].iter()).filter_map(Option::as_ref)
+        self.backing.iter().flat_map(|backing| backing[..self.len].iter()).filter_map(Option::as_deref)
     }
 
     pub fn iter_mut(&mut self) -> impl DoubleEndedIterator<Item = &mut BuiltNode> {
         let len = self.len;
-        self.backing.iter_mut().flat_map(move |backing| backing[..len].iter_mut()).filter_map(Option::as_mut)
+        self.backing.iter_mut().flat_map(move |backing| backing[..len].iter_mut()).filter_map(Option::as_deref_mut)
     }
 }
 
@@ -212,23 +229,23 @@ impl Index<usize> for BuiltChildren {
     type Output = BuiltNode;
 
     fn index(&self, index: usize) -> &Self::Output {
-        self.backing.as_ref().and_then(|backing| backing.get(index)).and_then(Option::as_ref).expect("built child index must be admitted")
+        self.backing.as_ref().and_then(|backing| backing.get(index)).and_then(Option::as_deref).expect("built child index must be admitted")
     }
 }
 
 impl IndexMut<usize> for BuiltChildren {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.backing.as_mut().and_then(|backing| backing.get_mut(index)).and_then(Option::as_mut).expect("built child index must be admitted")
+        self.backing.as_mut().and_then(|backing| backing.get_mut(index)).and_then(Option::as_deref_mut).expect("built child index must be admitted")
     }
 }
 
 impl<'a> IntoIterator for &'a BuiltChildren {
     type Item = &'a BuiltNode;
-    type IntoIter = std::iter::FilterMap<std::slice::Iter<'a, Option<BuiltNode>>, fn(&Option<BuiltNode>) -> Option<&BuiltNode>>;
+    type IntoIter = std::iter::FilterMap<std::slice::Iter<'a, Option<Box<BuiltNode>>>, fn(&Option<Box<BuiltNode>>) -> Option<&BuiltNode>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        fn present(value: &Option<BuiltNode>) -> Option<&BuiltNode> {
-            value.as_ref()
+        fn present(value: &Option<Box<BuiltNode>>) -> Option<&BuiltNode> {
+            value.as_deref()
         }
         self.backing.as_deref().map_or([].as_slice(), |backing| &backing[..self.len]).iter().filter_map(present)
     }
@@ -236,11 +253,11 @@ impl<'a> IntoIterator for &'a BuiltChildren {
 
 impl<'a> IntoIterator for &'a mut BuiltChildren {
     type Item = &'a mut BuiltNode;
-    type IntoIter = std::iter::FilterMap<std::slice::IterMut<'a, Option<BuiltNode>>, fn(&mut Option<BuiltNode>) -> Option<&mut BuiltNode>>;
+    type IntoIter = std::iter::FilterMap<std::slice::IterMut<'a, Option<Box<BuiltNode>>>, fn(&mut Option<Box<BuiltNode>>) -> Option<&mut BuiltNode>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        fn present(value: &mut Option<BuiltNode>) -> Option<&mut BuiltNode> {
-            value.as_mut()
+        fn present(value: &mut Option<Box<BuiltNode>>) -> Option<&mut BuiltNode> {
+            value.as_deref_mut()
         }
         let len = self.len;
         self.backing.as_deref_mut().map_or([].as_mut_slice(), |backing| &mut backing[..len]).iter_mut().filter_map(present)
@@ -263,7 +280,7 @@ impl Iterator for BuiltChildrenIntoIter {
             let Some(next) = self.cursor.checked_add(1) else { return None };
             self.cursor = next;
             if let Some(node) = self.backing.as_mut()?.get_mut(cursor)?.take() {
-                return Some(node);
+                return Some(*node);
             }
         }
         if let Some(handback) = self.handback.take() {
@@ -1568,10 +1585,18 @@ impl From<ExtensionBuilder> for BuiltNode {
 mod tests {
     use super::*;
 
+    fn ui_text(value: &str) -> crate::UiText {
+        crate::UiText::try_from_str(value).expect("bounded fixture text")
+    }
+
+    fn label(value: &str) -> crate::Label {
+        crate::Label::try_from(value).expect("bounded fixture label")
+    }
+
     //#region 🔖️WireCost
     #[test]
     fn button_serializes_to_minimal_json() {
-        let node = button("Save").build();
+        let node = button(label("Save")).try_build().unwrap_or_else(|_| panic!("button build"));
         let json = serde_json::to_value(&node).expect("serialize");
         assert!(json.get("layout").is_none());
         assert!(json.get("style").is_none());
@@ -1587,23 +1612,47 @@ mod tests {
     //#region 🔖️NestedShape
     #[test]
     fn nested_column_builds_expected_shape() {
-        let node = column().children([text("A"), text("B")]).build();
+        let node = column()
+            .try_children([text(label("A")), text(label("B"))])
+            .unwrap_or_else(|_| panic!("bounded children"))
+            .try_build()
+            .unwrap_or_else(|_| panic!("column build"));
         assert!(matches!(node.component, crate::Component::Container(crate::ContainerProps { role: crate::ContainerRole::Plain, .. })));
         assert!(matches!(node.layout, crate::LayoutSpec::Stack(crate::StackLayout { axis: crate::Axis::Vertical, .. })));
         assert_eq!(node.children.len(), 2);
         match &node.children[0].component {
-            crate::Component::Text(props) => assert_eq!(props.value, crate::Label::from("A")),
+            crate::Component::Text(props) => assert_eq!(props.value, label("A")),
             other => panic!("expected text, got {other:?}"),
         }
         match &node.children[1].component {
-            crate::Component::Text(props) => assert_eq!(props.value, crate::Label::from("B")),
+            crate::Component::Text(props) => assert_eq!(props.value, label("B")),
             other => panic!("expected text, got {other:?}"),
         }
     }
 
     #[test]
+    fn built_children_expose_bounded_shared_and_mutable_lookup() {
+        let mut node = column()
+            .try_children([text(label("A")), text(label("B"))])
+            .unwrap_or_else(|_| panic!("bounded children"))
+            .try_build()
+            .unwrap_or_else(|_| panic!("column build"));
+
+        assert!(matches!(node.children.get(0).map(|child| &child.component), Some(crate::Component::Text(_))));
+        node.children.get_mut(1).expect("second child").disabled = true;
+        assert!(node.children.get(1).expect("second child").disabled);
+        assert!(node.children.get(2).is_none());
+    }
+
+    #[test]
     fn mixed_child_types_nest_through_child() {
-        let node = row().child(text("A")).child(button("Go")).build();
+        let node = row()
+            .try_child(text(label("A")))
+            .unwrap_or_else(|_| panic!("first child"))
+            .try_child(button(label("Go")))
+            .unwrap_or_else(|_| panic!("second child"))
+            .try_build()
+            .unwrap_or_else(|_| panic!("row build"));
         assert_eq!(node.children.len(), 2);
         assert!(matches!(node.children[0].component, crate::Component::Text(_)));
         assert!(matches!(node.children[1].component, crate::Component::Button(_)));
@@ -1613,34 +1662,47 @@ mod tests {
     //#region 🔖️Bindings
     #[test]
     fn on_lands_in_bindings() {
-        let action = crate::ActionId::v1("app", "save");
-        let node = button("Save").on(crate::Trigger::Activate, action.clone()).build();
+        let action = crate::ActionId::try_v1("app", "save").expect("bounded action id");
+        let node = button(label("Save"))
+            .try_on(crate::Trigger::Activate, action.clone())
+            .unwrap_or_else(|_| panic!("bounded binding"))
+            .try_build()
+            .unwrap_or_else(|_| panic!("button build"));
         assert_eq!(node.bindings.len(), 1);
-        assert_eq!(node.bindings[0].trigger, crate::Trigger::Activate);
-        assert_eq!(node.bindings[0].action, action);
-        assert!(node.bindings[0].args.is_none());
+        let binding = node.bindings.get(0).expect("first binding");
+        assert_eq!(binding.trigger, crate::Trigger::Activate);
+        assert_eq!(binding.action, action);
+        assert!(binding.args.is_none());
     }
 
     #[test]
     fn on_with_carries_args() {
-        let action = crate::ActionId::v1("app", "setValue");
+        let action = crate::ActionId::try_v1("app", "setValue").expect("bounded action id");
         let value = crate::UiText::try_from_str("hi").expect("bounded fixture text");
-        let node = input(crate::InputKind::Text).on_with(crate::Trigger::Change, action, crate::UiValue::Text(value.clone())).build();
-        assert_eq!(node.bindings[0].args, Some(crate::UiValue::Text(value)));
+        let node = input(crate::InputKind::Text)
+            .try_on_with(crate::Trigger::Change, action, crate::UiValue::Text(value.clone()))
+            .unwrap_or_else(|_| panic!("bounded binding"))
+            .try_build()
+            .unwrap_or_else(|_| panic!("input build"));
+        assert_eq!(node.bindings.get(0).expect("first binding").args, Some(crate::UiValue::Text(value)));
     }
     //#endregion 🔖️Bindings
 
     //#region 🔖️Accessibility
     #[test]
     fn button_auto_derives_accessibility_label_from_visible_label() {
-        let node = button("Save").build();
-        assert_eq!(node.accessibility.label, Some(crate::Label::from("Save")));
+        let node = button(label("Save")).try_build().unwrap_or_else(|_| panic!("button build"));
+        assert_eq!(node.accessibility.label, Some(label("Save")));
     }
 
     #[test]
     fn explicit_label_overrides_auto_derived_accessibility_label() {
-        let node = button("Save").label("Save the document").build();
-        assert_eq!(node.accessibility.label, Some(crate::Label::from("Save the document")));
+        let node = button(label("Save"))
+            .try_label("Save the document")
+            .unwrap_or_else(|_| panic!("bounded label"))
+            .try_build()
+            .unwrap_or_else(|_| panic!("button build"));
+        assert_eq!(node.accessibility.label, Some(label("Save the document")));
     }
 
     /// 🚫️ `image(..)` without `.alt(..)`/`.decorative()` is a COMPILE error now (see the `compile_fail`
@@ -1649,12 +1711,12 @@ mod tests {
     /// next reader finds the negative case instead of assuming it was dropped.
     #[test]
     fn image_builder_no_alt_state_has_no_build_method_verified_by_the_type_doc_compile_fail_test() {
-        let _: ImageBuilder<NoAlt> = image("atlas://logo");
+        let _: ImageBuilder<NoAlt> = image(ui_text("atlas://logo"));
     }
 
     #[test]
     fn image_decorative_hides_from_accessibility_tree_and_omits_alt() {
-        let node = image("atlas://deco").decorative().build();
+        let node = image(ui_text("atlas://deco")).decorative().try_build().unwrap_or_else(|_| panic!("decorative image build"));
         assert!(node.accessibility.hidden);
         match node.component {
             crate::Component::Image(props) => assert!(props.alt.is_none()),
@@ -1664,10 +1726,10 @@ mod tests {
 
     #[test]
     fn image_alt_populates_component_and_accessibility() {
-        let node = image("atlas://logo").alt("Company logo").build();
-        assert_eq!(node.accessibility.label, Some(crate::Label::from("Company logo")));
+        let node = image(ui_text("atlas://logo")).alt(label("Company logo")).try_build().unwrap_or_else(|_| panic!("image build"));
+        assert_eq!(node.accessibility.label, Some(label("Company logo")));
         match node.component {
-            crate::Component::Image(props) => assert_eq!(props.alt, Some(crate::Label::from("Company logo"))),
+            crate::Component::Image(props) => assert_eq!(props.alt, Some(label("Company logo"))),
             other => panic!("expected image, got {other:?}"),
         }
     }
@@ -1676,7 +1738,13 @@ mod tests {
     //#region 🔖️Keys
     #[test]
     fn positional_keys_are_stable_and_distinct_among_siblings() {
-        let build = || column().children([text("A"), text("B"), text("C")]).build();
+        let build = || {
+            column()
+                .try_children([text(label("A")), text(label("B")), text(label("C"))])
+                .unwrap_or_else(|_| panic!("bounded children"))
+                .try_build()
+                .unwrap_or_else(|_| panic!("column build"))
+        };
         let first = build();
         let second = build();
         let keys: Vec<&str> = first.children.iter().map(|child| child.key.as_str()).collect();
@@ -1689,9 +1757,16 @@ mod tests {
 
     #[test]
     fn explicit_id_overrides_positional_key() {
-        let node = column().child(text("A").id("first")).child(text("B")).build();
-        assert_eq!(node.children[0].key, "first");
-        assert_eq!(node.children[1].key, "#1");
+        let first = text(label("A")).try_id("first").unwrap_or_else(|_| panic!("bounded id"));
+        let node = column()
+            .try_child(first)
+            .unwrap_or_else(|_| panic!("first child"))
+            .try_child(text(label("B")))
+            .unwrap_or_else(|_| panic!("second child"))
+            .try_build()
+            .unwrap_or_else(|_| panic!("column build"));
+        assert_eq!(node.children[0].key.as_str(), "first");
+        assert_eq!(node.children[1].key.as_str(), "#1");
     }
     //#endregion 🔖️Keys
 }

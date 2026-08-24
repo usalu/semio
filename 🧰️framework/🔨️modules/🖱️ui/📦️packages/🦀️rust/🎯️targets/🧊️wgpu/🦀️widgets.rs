@@ -450,7 +450,7 @@ pub fn render_window_measure_slider<E: Clone>(id: &str, value: f64, min: f64, ma
 }
 
 pub fn render_window_measure_toggle<E: Clone>(id: &str, icon_id: crate::wgpu::IconName, pressed: bool, text: Option<&str>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
-    render_toggle(id, icon_id, pressed, text, None, bounds, ctx);
+    render_toggle(id, icon_id, pressed, text, bounds, ctx);
 }
 //#endregion 🔖️WindowMeasureBorrowedControls
 use crate::wgpu::toggle::render_toggle;

@@ -8,12 +8,16 @@
       "ecosystem": "rust",
       "package": "png",
       "version": "0.18",
-      "capabilities": ["png-1-2-mutate"],
-      "comparisonProfiles": ["semantic-raster-v1"],
+      "capabilities": [
+        "png-1-2-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image-png",
-      "rationale": "The same reference PNG encoder/decoder the shared png-raster entry already approves, registered under its own id and capability so this subset's exhaustive PngMutation catalog (17 kinds: header, palette, transparency, the typed ancillary set, text chunks, pixels and unknown-chunk retention) is measured against a reference implementation surveyed for exactly that capability rather than borrowing a neighbour's. Every mutation is applied independently against the `png` crate's own Encoder/Decoder API — never by reusing this repository's own decode_png/encode_png — so the comparison stays a genuine cross-check.",
+      "rationale": "The same reference PNG encoder/decoder the shared png-raster entry already approves, registered under its own id and capability so this subset's exhaustive PngMutation catalog (17 kinds: header, palette, transparency, the typed ancillary set, text chunks, pixels and unknown-chunk retention) is measured against a reference implementation surveyed for exactly that capability rather than borrowing a neighbour's. Every mutation is applied independently against the `png` crate's own Encoder/Decoder API — never by reusing this repository's own decode_png/encode_png — so the comparison stays a genuine cross-check. Two chunk families are the documented exception and are read and written outside the crate's typed surface, because it has none for them: `Info` has no tIME field at all, and no accessor for chunk types it does not recognise. Both are recovered by a fixed-grammar walk over §5.3's length/type/data/crc chain and written back through `Writer::write_chunk`, the crate's own escape hatch. A third caveat is a defect in the crate rather than a gap: `Info::source_gamma` and `Info::source_chromaticities` are documented as the members to prefer over `gama_chunk`/`chrm_chunk` and are assigned nowhere in png 0.18.1, so a caller who follows that advice reads None for every file carrying a gAMA or cHRM chunk. This oracle reads the chunk members.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [

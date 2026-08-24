@@ -78,9 +78,10 @@ pub(crate) fn collect_scene_slots<'tree>(tree: &'tree UiTree, root: NodeId) -> V
 
 fn collect_scene_slots_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<SceneSlot<'tree>>) {
     let Some(node) = tree.node(id) else { return };
-    let abs_x = origin_x + node.layout.x;
-    let abs_y = origin_y + node.layout.y;
-    let rect = Rect::new(abs_x, abs_y, node.layout.width, node.layout.height);
+    let Some(layout) = tree.accepted_layout(id) else { return };
+    let abs_x = origin_x + layout.x;
+    let abs_y = origin_y + layout.y;
+    let rect = Rect::new(abs_x, abs_y, layout.width, layout.height);
     match &node.spec.0 {
         UiNode::ComponentScene(scene) => out.push(SceneSlot { node: id, rect, content: SlotContent::Scene(scene) }),
         UiNode::Image(image) => out.push(SceneSlot { node: id, rect, content: SlotContent::Image(image) }),

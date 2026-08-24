@@ -153,7 +153,8 @@ mod tests {
         for expected in &tree.shape {
             let record = state.get(expected.id).unwrap_or_else(|| panic!("{case_id}: expected node {:?} missing from state", expected.id));
             assert_eq!(component_type_tag(&record.component), expected.component_type, "{case_id}: node {:?} component type mismatch", expected.id);
-            assert_eq!(record.children, expected.children, "{case_id}: node {:?} children mismatch", expected.id);
+            let children: Vec<_> = record.children.iter().copied().collect();
+            assert_eq!(children, expected.children, "{case_id}: node {:?} children mismatch", expected.id);
         }
         for expected in &expectation.accessibility {
             let record = state.get(expected.id).unwrap_or_else(|| panic!("{case_id}: expected node {:?} missing from state", expected.id));
@@ -166,7 +167,10 @@ mod tests {
         }
         let mut ids: Vec<crate::UiNodeId> = state.nodes.keys().copied().collect();
         ids.sort();
-        let action_ids: Vec<String> = ids.iter().flat_map(|id| state.nodes[id].bindings.iter().map(|binding| binding.action.to_string())).collect();
+        let action_ids: Vec<String> = ids
+            .iter()
+            .flat_map(|id| state.nodes.get(id).expect("enumerated node remains present").bindings.iter().map(|binding| binding.action.to_string()))
+            .collect();
         assert_eq!(action_ids, expectation.action_ids, "{case_id}: reachable action ids mismatch");
     }
     //#endregion 📄️Expectation
@@ -227,7 +231,7 @@ mod tests {
             assert_eq!(expectation.outcome, "reject", "{group}/{slug}: 🚫️rejection fixtures are always reject cases");
             let limits = expectation.limits.unwrap_or(default_limits);
             let before: crate::UiSnapshotState = snapshot.into();
-            let mut after = before.clone();
+            let mut after = before.credited_clone().expect("credited fixture clone");
             let rejection = crate::apply_patch(&mut after, &patch, &limits).expect_err(&format!("{group}/{slug}: expected the patch to be rejected, but it applied"));
             let expected = expectation.patch_rejection.as_ref().unwrap_or_else(|| panic!("{group}/{slug}: reject case has no `patchRejection` in its expectation"));
             assert_eq!(&rejection, expected, "{group}/{slug}: rejection reason mismatch");

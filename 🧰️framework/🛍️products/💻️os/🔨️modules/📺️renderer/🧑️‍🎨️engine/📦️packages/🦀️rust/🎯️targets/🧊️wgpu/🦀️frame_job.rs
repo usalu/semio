@@ -10,14 +10,12 @@
 //! renderer has booted inside its dedicated Worker isolate; calls from a browser UI isolate fail
 //! closed and never execute the transaction inline.
 
+use semio_framework_async::Lane;
 use semio_framework_job::{
     root_cancel_token, BatchDriveConfig, BatchJobParams, BatchJobSession, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, WorkerJobSessionAdmissionRejected, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS,
 };
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::sync::Arc;
-
-#[cfg(not(target_arch = "wasm32"))]
-use semio_framework_async::Lane;
 
 //#region 📥️FrameBuildInputs
 /// 📥️ The fixed scalar `Send`-safe slice of `AppRuntime` this job needs.
@@ -159,7 +157,7 @@ enum ActiveFramePhase {
     Deadlines(BatchJobSession<FrameBuildJob>),
     DeadlineAdmissionRejected(WorkerJobSessionAdmissionRejected<FrameBuildJob>),
     ApplyPending(FrameDirectives),
-    Build(crate::AppFrameTransaction),
+    Build(crate::FrameTransaction),
     Prepare(crate::AppFramePreparation),
     Terminal,
 }
@@ -197,7 +195,7 @@ fn retire_active_phase(phase: &mut ActiveFramePhase) -> bool {
             rejected.terminal_is_empty()
         }
         ActiveFramePhase::ApplyPending(directives) => directives.close_step(),
-        ActiveFramePhase::Build(transaction) => transaction.close_step(),
+        ActiveFramePhase::Build(transaction) => transaction.close_step() && transaction.terminal_is_empty(),
         ActiveFramePhase::Prepare(preparation) => preparation.close_step() && preparation.terminal_is_empty(),
         ActiveFramePhase::Terminal => true,
     }
@@ -293,7 +291,7 @@ impl ActiveFrameBuild {
                 if applied {
                     return ActiveFrameStep::Pending;
                 }
-                self.phase = ActiveFramePhase::Build(crate::AppFrameTransaction::new(std::mem::take(directives), self.generation, self.dpr));
+                self.phase = ActiveFramePhase::Build(crate::FrameTransaction::new(std::mem::take(directives), self.operation, self.generation, self.dpr));
                 ActiveFrameStep::Pending
             }
             ActiveFramePhase::Build(transaction) => {
@@ -555,16 +553,30 @@ impl FrameBuildHandle {
                 return None;
             }
             match session.poll() {
-                semio_framework_job::WorkerJobPoll::Idle => {
-                    if let Ok((ticket, _)) = session.try_step_on_caller() {
-                        self.ticket = Some(ticket);
+                semio_framework_job::WorkerJobPoll::Idle => match session.try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive) {
+                    Ok(ticket) => self.ticket = Some(ticket),
+                    Err(semio_framework_job::WorkerJobSubmitFault::Pool(kind)) => {
+                        if let Ok(rejected) = session.take_rejected() {
+                            if matches!(kind, semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended) {
+                                rejected.resume();
+                            } else {
+                                rejected.begin_close();
+                            }
+                        }
                     }
-                }
+                    Err(_) => {
+                        let _ = session.begin_close();
+                    }
+                },
                 semio_framework_job::WorkerJobPoll::Outcome => {
                     if let Some(ticket) = self.ticket.take() {
                         if let Ok(mut owner) = session.take_outcome(ticket) {
-                            let _ = owner.take_outcome();
-                            let _ = owner.resume();
+                            if matches!(owner.outcome(), StepOutcome::Yield) {
+                                let _ = owner.take_outcome();
+                                let _ = owner.resume();
+                            } else {
+                                owner.begin_close();
+                            }
                         }
                     }
                 }
@@ -707,6 +719,7 @@ mod tests {
         let build = crate::AppFrameBuild {
             input: ui_wgpu::wgpu::PreparedRenderInput::new(1, 1, ui_wgpu::wgpu::DrawList::default(), None, 0.0),
             engine_packets: Vec::new(),
+            generation: Generation(1),
             cursor: ui_wgpu::wgpu::SemioCursor::Default,
             theme_dark: false,
             fullscreen: None,

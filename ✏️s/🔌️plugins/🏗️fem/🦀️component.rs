@@ -33,6 +33,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// publisher-trusted mode), and one `documents.write` ask covering both editors' persisted mutations.
 pub fn plugin() -> Result<Plugin<FemApps>, semio_framework_plugin::PluginAssemblyError> {
     crate::editor::fem2d::session::initialize();
+    crate::editor::fem3d::session::initialize();
     Plugin::<FemApps>::builder("fem")
         .label("FEM")
         .version("0.1.0")

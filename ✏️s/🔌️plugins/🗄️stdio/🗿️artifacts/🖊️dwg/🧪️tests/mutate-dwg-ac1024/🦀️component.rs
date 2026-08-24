@@ -17,10 +17,11 @@
 //! reference exists.
 //!
 //! ⚠️ The oracle implementation is shared with the sibling AC1018 case, and that is by
-//! CONSTRUCTION rather than by copy: the ODA `.dwg` specification gives R2004 (AC1018) and R2010
-//! (AC1024) the SAME file-header layout — six ASCII version characters at `0x00`, the application
-//! maintenance-release byte at `0x12`, the codepage `RS` at `0x13`-`0x14` — so one reader serves
-//! both, and `🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` re-exports THIS
+//! CONSTRUCTION rather than by copy: the plain file-header PREAMBLE — `0x00`..`0x15`: six ASCII
+//! version characters at `0x00`, the application maintenance-release byte at `0x12`, the codepage
+//! `RS` at `0x13`-`0x14` — is shared by every AC1015+ DWG file, which is what this repository's own
+//! production conformance code says in `DwgSnapshot`'s doc comments, sourced there to LibreDWG's
+//! `header.spec` field order. So one reader serves both, and `🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` re-exports THIS
 //! standard's `DwgMutation` instead of restating it. What differs between the two cases is what
 //! each one claims and asserts, which is why this file and the AC1018 adapter carry different
 //! expectation tables rather than one text under two names.

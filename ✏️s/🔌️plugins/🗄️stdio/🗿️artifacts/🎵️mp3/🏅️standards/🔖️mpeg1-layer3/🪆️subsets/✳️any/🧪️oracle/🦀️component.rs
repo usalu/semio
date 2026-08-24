@@ -36,10 +36,13 @@
 use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
-/// 🏷️ The declared vocabulary of this subset, mirroring `Mp3Mutation`'s own variants
-/// (`../🧬️schema/🧬️mutations/🦀️component.rs`) in declaration order. Duplicated rather than
-/// imported: the oracle crate must never link the production crate. `kinds_match_the_catalog_and_
-/// the_vocabulary` below reads BOTH committed files and fails if any of the three drift apart.
+/// 🏷️ The declared vocabulary of this subset, mirroring the production `KINDS`
+/// (`../🧬️schema/🧬️mutations/🦀️component.rs`, itself checked there against `Mp3Mutation::kind()`)
+/// in declaration order. Duplicated rather than imported: the oracle crate must never link the
+/// production crate, so this side can only compare STRINGS —
+/// `kinds_match_the_catalog_and_the_vocabulary` below reads the committed manifest, vocabulary and
+/// feature as text and fails if any of them drift apart. The check that a kind exists as a real
+/// enum variant is the production-side test's, and only it can make that claim.
 pub const KINDS: [&str; 5] = ["no-mutation", "set-snapshot", "set-id3v2", "set-frames", "set-id3v1"];
 //#endregion 🔖️Kinds
 
@@ -525,11 +528,13 @@ pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
 mod tests {
     use super::*;
 
-    /// 🎵️ The real committed fixture — 1,725 bytes: an ID3v2.3.0 tag (TIT2 "semio fixture", TPE1
-    /// "W0 handcraft") followed by four 417-byte MPEG1 Layer III frames at 128 kbps / 44.1 kHz, and
-    /// no ID3v1 trailer. The gherkin case reads the same file through `ctx.copy_fixture`.
+    /// 🎵️ The real committed fixture — 193,275 bytes of genuinely encoded MPEG-1 Layer III audio,
+    /// derived once from the repository's own real camera-captured video and encoded by `lame`, a
+    /// real third-party encoder. Provenance and the exact derivation command are in the case's
+    /// feature description and in the ticket's `mp3-fixture-derive/🐍️derive-real-mp3-fixture.py`.
+    /// The gherkin case reads the same file through `ctx.copy_fixture`.
     fn fixture() -> Vec<u8> {
-        include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎵️example.mp3").to_vec()
+        include_bytes!("../../../../../🧫️fixtures/🎵️bauen-mit-bestand-ausschnitt.mp3").to_vec()
     }
 
     fn spec(kind: &str, params: Json) -> Json {
@@ -543,31 +548,54 @@ mod tests {
     #[test]
     fn the_three_layers_of_the_real_fixture_are_found_where_the_specification_puts_them() {
         let input = fixture();
+        assert_eq!(input.len(), 193_275, "the committed real fixture");
         let regions = layers::split(&input).unwrap();
-        assert_eq!(regions.v2.len(), 57, "the ID3v2.3 region is a 10-byte header plus a 47-byte body");
-        assert_eq!(regions.audio.len(), 4 * 417);
-        assert!(regions.v1.is_empty(), "the fixture carries no ID3v1 trailer");
+        assert_eq!(regions.v2.len(), 179, "the ID3v2.3 region LAME wrote is a 10-byte header plus a 169-byte body");
+        assert_eq!(regions.audio.len(), 193_096);
+        assert_eq!(regions.v2.len() + regions.audio.len(), input.len(), "the three layers must partition the stream, leaving nothing unaccounted for");
+        assert!(regions.v1.is_empty(), "`lame --id3v2-only` wrote no ID3v1 trailer, which is what keeps `set-id3v1` an ADD");
     }
 
+    /// 🚶 The frame walk over a REAL encoded stream, which is what makes this different from a
+    /// walk over digital silence: 462 frames, and — the point — BOTH padding-slot values genuinely
+    /// occur, so `144·bitrate/rate + pad` is exercised on both of its branches. 128000/44100 is not
+    /// an integer, so a real CBR encoder MUST alternate the padding slot to hold the average rate;
+    /// a fixture whose frames all measure 417 bytes never tests the `+ pad` term at all.
     #[test]
-    fn the_frame_walk_reads_four_real_mpeg1_layer3_frames() {
+    fn the_frame_walk_reads_every_real_mpeg1_layer3_frame_and_both_padding_slots() {
         let input = fixture();
         let frames = layers::walk(&layers::split(&input).unwrap().audio).unwrap();
-        assert_eq!(frames.len(), 4);
+        assert_eq!(frames.len(), 462);
         for frame in &frames {
             assert_eq!((frame.mpeg_version_id, frame.layer), (3, 1), "MPEG1 Layer III");
             assert_eq!((frame.bitrate_kbps, frame.sample_rate_hz), (128, 44_100));
-            assert_eq!(frame.size, 417, "144·128000/44100 = 417 with no padding slot");
+            assert_eq!(frame.channel_mode, 3, "mono");
+            assert_eq!(frame.size, if frame.padding { 418 } else { 417 }, "144·128000/44100 = 417, plus the padding slot");
         }
+        assert_eq!(frames.iter().filter(|frame| !frame.padding).count(), 20);
+        assert_eq!(frames.iter().filter(|frame| frame.padding).count(), 442);
+        assert_eq!(frames.iter().map(|frame| frame.size).sum::<usize>(), 193_096, "the walk must consume the audio region exactly");
     }
 
+    /// 🏷️ The reference reads the tag a REAL encoder wrote, including two frames in encoding `1`
+    /// (UTF-16 with a byte-order mark) — the form a real-world writer emits and the previous
+    /// handcrafted fixture, which was ISO-8859-1 throughout, never exercised.
     #[test]
-    fn the_reference_reads_the_committed_text_frames() {
+    fn the_reference_reads_the_text_frames_a_real_encoder_wrote() {
         let input = fixture();
         let projection = project_mp3(&input).unwrap();
         let v2 = projection.get("id3v2").unwrap();
         assert_eq!(v2.get("majorVersion").unwrap().clone(), Json::Number(3.0));
-        assert_eq!(v2.array("frames"), vec![object(vec![("id", Json::String("TIT2".to_string())), ("text", Json::String("semio fixture".to_string()))]), object(vec![("id", Json::String("TPE1".to_string())), ("text", Json::String("W0 handcraft".to_string()))])]);
+        let frame = |id: &str, text: &str| object(vec![("id", Json::String(id.to_string())), ("text", Json::String(text.to_string()))]);
+        assert_eq!(
+            v2.array("frames"),
+            vec![
+                frame("TSSE", "LAME 64bits version 3.100 (http://lame.sf.net)"),
+                frame("TIT2", "Bauen mit Bestand (Ausschnitt)"),
+                frame("TPE1", "semio"),
+                frame("TLEN", "12000"),
+            ]
+        );
         assert_eq!(projection.get("id3v1").unwrap().clone(), Json::Null);
     }
 
@@ -577,19 +605,30 @@ mod tests {
         assert_eq!(oracle_apply_mutation(&input, &spec("no-mutation", Json::Object(vec![]))).unwrap(), input);
     }
 
+    /// 🧾️ The case's OWN `Examples` rows, transcribed in the feature file's order. Checking the
+    /// laws against the parameters the scenarios actually carry is the point — a row whose params
+    /// address nothing would report green while testing nothing, and the runner never dispatches an
+    /// observability check of its own. `set-frames`'s `take` of 231 truncates at the midpoint of a
+    /// 462-frame stream and `set-snapshot`'s take of 3 crosses the first padding-slot change
+    /// (frames 0 and 1 are 417 bytes, frame 2 is 418), so both land on real offset arithmetic
+    /// rather than on the head of the region.
+    fn feature_example_rows() -> Vec<Json> {
+        let v1 = |title: &str| object(vec![("title", Json::String(title.to_string())), ("artist", Json::String("semio".to_string())), ("album", Json::String(String::new())), ("year", Json::String("2026".to_string())), ("comment", Json::String(String::new())), ("genreId", Json::Number(12.0))]);
+        let text = |id: &str, value: &str| object(vec![("id", Json::String(id.to_string())), ("text", Json::String(value.to_string()))]);
+        vec![
+            spec("no-mutation", Json::Object(vec![])),
+            spec("set-snapshot", object(vec![("text", Json::Array(vec![text("TALB", "replaced wholesale")])), ("take", Json::Number(3.0)), ("v1", v1("snapshot"))])),
+            spec("set-id3v2", object(vec![("text", Json::Array(vec![text("TIT2", "renamed by the oracle"), text("TPE1", "semio")]))])),
+            spec("set-frames", object(vec![("take", Json::Number(231.0))])),
+            spec("set-id3v1", object(vec![("v1", v1("added trailer"))])),
+        ]
+    }
+
     #[test]
     fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
         let input = fixture();
         let original = project_mp3(&input).unwrap();
-        let cases = vec![
-            spec("set-id3v2", object(vec![("text", Json::Array(vec![object(vec![("id", Json::String("TIT2".to_string())), ("text", Json::String("renamed".to_string()))])]))])),
-            spec("set-id3v2", object(vec![("text", Json::Null)])),
-            spec("set-frames", object(vec![("take", Json::Number(2.0))])),
-            spec("set-id3v1", object(vec![("v1", object(vec![("title", Json::String("trailer".to_string())), ("artist", Json::String("semio".to_string())), ("album", Json::String("".to_string())), ("year", Json::String("2026".to_string())), ("comment", Json::String("".to_string())), ("genreId", Json::Number(12.0))]))])),
-            spec("set-snapshot", object(vec![("text", Json::Null), ("take", Json::Number(1.0)), ("v1", Json::Null)])),
-            spec("no-mutation", Json::Object(vec![])),
-        ];
-        for case in cases {
+        for case in feature_example_rows() {
             let kind = case.str("kind");
             let mutated = oracle_apply_mutation(&input, &case).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
             let after = project_mp3(&mutated).unwrap();

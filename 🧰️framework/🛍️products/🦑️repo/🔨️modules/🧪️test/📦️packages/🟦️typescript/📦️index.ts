@@ -99,7 +99,7 @@ let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
 export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
-  const required = ["testsDirName", "testFixturesDirName", "testFeatureFilename", "testCaseSlugPattern", "testAdapterFilenames", "testImplementationIds", "testExcludedPathPrefixes", "testOutputCacheDirName", "testOutputMarkerFilename", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryPath", "testSchemaPath", "testContributionDirName", "testContributionFilename", "testDomainPath", "testPhases", "testLevellessPhases"];
+  const required = ["testsDirName", "testFixturesDirName", "testFeatureFilename", "testCaseSlugPattern", "testAdapterFilenames", "testImplementationIds", "testExcludedPathPrefixes", "testOutputCacheDirName", "testOutputMarkerFilename", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryPath", "testSchemaPath", "testContributionDirName", "testContributionFilename", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
   const missing = required.filter((key) => parsed[key] === undefined);
   if (missing.length > 0) throw new Error(`🔣️taxonomy.json is missing the test contract keys: ${missing.join(", ")}`);
   const value = Object.fromEntries(required.map((key) => [key, parsed[key]])) as unknown as TestTaxonomy;
@@ -1345,6 +1345,25 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   // 🔒️Shrink-only migration ratchet: the legacy backlog may only get smaller. Reported as one
   // ratcheted count per area rather than thousands of individual findings, so the signal stays
   // meaningful while Phase 6 migrates owners.
+  // 🦠️And a vocabulary declared in the TREE but in no manifest is more invisible still: the catalog
+  // check above can only see what a manifest declares, so an owner that handcrafts a mutation
+  // vocabulary and never registers a catalog is exempt from the completeness gate entirely. Two
+  // subsets shipped real, handcrafted vocabularies with no test at all through exactly this gap.
+  // The directory name is taxonomy vocabulary, so this rule names no format, language or plugin.
+  const vocabularyDir = testTaxonomy(repoRoot).testMutationVocabularyDirName;
+  {
+    walkDirectories(repoRoot, (abs, rel) => {
+      if (isExcludedTestPath(repoRoot, rel)) return "skip";
+      if (basename(abs) !== vocabularyDir) return "enter";
+      const owner = dirname(dirname(rel));
+      const claimed = registry.contributions.some((entry) => entry.owner === owner && entry.mutationCatalogs.length > 0);
+      if (!claimed) {
+        breaches.push(breach("testing/contract", "unregistered-mutation-vocabulary", rel, `A mutation vocabulary is declared here but no catalog registers it`, "The completeness gate measures a feature against a declared catalog. A vocabulary with no catalog is not measured at all — it looks finished and is untested.", `Add a ${testTaxonomy(repoRoot).testContributionDirName}/${testTaxonomy(repoRoot).testContributionFilename} beside it declaring a mutationCatalog, and a case that claims it.`));
+      }
+      return "skip";
+    });
+  }
+
   // 🦠️A declared mutation vocabulary that no feature claims is worse than an undeclared one: it reads
   // as covered surface in the manifest while nothing exercises it.
   //
@@ -1789,6 +1808,10 @@ export function planExecution(repoRoot: string, discovered: DiscoveredCase, leve
 
 /** 🏁️ Marks a generated output directory complete, so an interrupted run stays distinguishable from a finished one. */
 export function markRunComplete(absDir: string): void {
+  // 🏁️A run can legitimately finish without the directory existing — a case whose scenarios were all
+  // filtered out at this level never writes anything into its work directory. Crashing the whole
+  // sweep at the finish line for that is a worse failure than the empty directory it complains about.
+  mkdirSync(absDir, { recursive: true });
   writeFileSync(join(absDir, "🏁️done"), "");
 }
 

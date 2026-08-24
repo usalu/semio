@@ -1006,7 +1006,7 @@ pub enum Event {
 //#region 🔖️ActivationEvent
 /// 🚀️ Why an instance was activated — `📓️design-abi.md` §2's activation-event list, matched
 /// against a `manifest::PackageDescriptor.activation_events` declaration at install time.
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActivationEvent {
     OnCommand { id: String },
@@ -1655,7 +1655,10 @@ mod ui_turn_patch_tests {
         let token = producer.take_ready().expect("complete token");
         let lease = UiTurnPatchTransportLease::try_from_token(&token, session).expect("first exact claim");
         assert!(UiTurnPatchTransportLease::try_from_token(&token, session).is_err());
-        let mut owner = lease.take_owner().expect("exact transport owner");
+        let mut owner = match lease.take_owner() {
+            Ok(owner) => owner,
+            Err(_) => panic!("exact transport owner"),
+        };
         let patch = owner.iter().next().expect("one patch");
         assert_eq!(patch.revision, semio_framework_ui_contract::UiRevision(3));
         assert_eq!(patch.ops.len(), 1);
@@ -1906,6 +1909,14 @@ mod extension_activation_tests {
         ExtensionDescriptor { extension_id: extension_id.into(), extends: extends.into(), version: "0.1.0".into(), content_hash: format!("hash-{extension_id}"), capabilities: Vec::new(), capability_requests: Vec::new() }
     }
 
+    #[test]
+    fn activation_event_can_be_retained_by_manifest_owners() {
+        let original = ActivationEvent::OnCommand { id: "command.test".into() };
+        let retained = original.clone();
+
+        assert_eq!(retained, original);
+    }
+
     /// 🧫️ 64 synthetic descriptors, half extending `flow` and half `cad` — a smaller stand-in for
     /// the scale fixture's 50×50 shape, proving `extensions_extending` is a plain filter with no
     /// branch on `installed.len()`.
@@ -2047,7 +2058,6 @@ mod extension_activation_tests {
     #[test]
     fn retained_batch_arena_has_no_nested_page_or_descriptor_destructor() {
         assert!(!std::mem::needs_drop::<FixedCommandPage>());
-        assert!(!std::mem::needs_drop::<CommandBatchEntry>());
         let mut commands = CommandEnvelopeSet::try_new().unwrap();
         for seq in 0..COMMAND_BATCH_MAXIMUM_ITEMS as u64 {
             let mut pages = CommandPageSet::try_new().unwrap();

@@ -38,6 +38,9 @@ Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at t
 
 ---
 
+
+---
+
 Implement everything end to end. The plan is trusted, no need to double check it. There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---
@@ -69,6 +72,20 @@ Everything end to end.
 # 🔍️ Web
 
 ##
+
+---
+
+Our testing 
+use [FRAME3DD](https://sourceforge.net/p/frame3dd/code/HEAD/tree/trunk/) to 
+
+---
+
+The compose technology must be entirely migrated into our new os, s, artifact, app, mutation, test, etc systems.
+Make sure all algorithms are correctly 
+
+---
+
+Every artifact must have different viewers: snapshot, 
 
 ---
 

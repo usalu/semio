@@ -747,6 +747,33 @@ mod imp {
     //#endregion 🔖️Inverse
 
     //#region 🔖️Dispatch
+    /// 🎬️ Prepares the input a kind needs its target to be present in. The real 💃️dancing fixture
+    /// carries a genuine comment extension and a genuine NETSCAPE2.0 loop extension and nothing
+    /// else — verified by walking its block chain — and the NETSCAPE one is deliberately NOT part of
+    /// `app_extensions` (it IS the loop-count axis, modelled separately). So
+    /// `remove-app-extension` has nothing to remove on the committed bytes: it is exercised on the
+    /// real document after this same independent implementation has inserted its target, the same
+    /// arrange step the OOXML conformance cases and the PNG case use for their own removal kinds.
+    /// Every other kind reads the committed bytes untouched.
+    ///
+    /// The seeded extension is deliberately not the row's own params — seeding with what the row
+    /// then removes would still be a real removal, but seeding with a NAMED, distinct target makes
+    /// the arrange visible in the projection's before-state instead of hiding inside it.
+    pub fn oracle_arrange(input: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
+        if forward.str("kind") != "remove-app-extension" {
+            return Ok(input.to_vec());
+        }
+        let seed = Json::Object(vec![
+            ("index".to_string(), Json::Number(0.0)),
+            ("identifier".to_string(), Json::String("ARRANGE1".to_string())),
+            ("authCode".to_string(), Json::String("SED".to_string())),
+            ("data".to_string(), Json::Array(vec![Json::Number(1.0), Json::Number(2.0), Json::Number(3.0)])),
+        ]);
+        let mut snap = decode(input)?;
+        apply_kind(&mut snap, "add-app-extension", &seed)?;
+        encode(&snap)
+    }
+
     pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let kind = spec.str("kind");
         if kind.is_empty() {
@@ -781,13 +808,19 @@ mod imp {
 }
 
 #[cfg(feature = "oracles")]
-pub use imp::{oracle_apply_mutation, oracle_apply_mutation_inverse, project};
+pub use imp::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, project};
 //#endregion 🔖️Available
 
 //#region 🔖️Unavailable
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+/// 🎬️ The pre-state a kind needs to have something to act on. @see `imp::oracle_arrange`.
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_arrange(_input: &[u8], _forward: &Json) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

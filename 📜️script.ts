@@ -3613,6 +3613,7 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
   const elementOpen = elementStart < 0 ? -1 : analyses.indexOf("{", elementStart);
   const element = elementOpen < 0 ? undefined : toolJobRustBlock(analyses, elementOpen);
   const ldltCheckpoint = namedBlock(sparse, "fn advance_checkpoint_entry(state: &LdltCheckpoint");
+  const ldltColumn = namedBlock(sparse, "fn advance_column_microcursor(&mut self)");
   const subspaceCheckpoint = namedBlock(sparse, "fn advance_checkpoint_entry(state: &SubspaceCheckpoint");
   const ldltOutput = namedBlock(sparse, "fn advance_output_entry(");
   const subspacePreview = namedBlock(sparse, "fn advance_preview_entry(");
@@ -3624,10 +3625,21 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
   const restoreHelpers = ["fn restore_u32_entry(", "fn restore_usize_entry(", "fn restore_f64_entry(", "fn restore_pair_entry(", "fn restore_matrix_entry("].map((signature) => namedBlock(sparse, signature));
   const ownerWriters = ["fn advance_u32_owner(", "fn advance_u64_owner(", "fn advance_u64_values(", "fn advance_f64_owner(", "fn advance_pair_owner(", "fn advance_matrix_owner("].map((signature) => namedBlock(sparse, signature));
   const meshStep = namedBlock(mesh, "impl InteractiveJob for MeshJob");
+  const meshPreparation = namedBlock(mesh, "impl MeshInputPreparation");
+  const meshMountedBegin = namedBlock(mesh, "fn begin_mounted(points: Vec<[f64; 2]>");
+  const meshMountedInitialization = namedBlock(mesh, "fn advance_mounted_initialization(&mut self)");
+  const meshFinishInsertion = namedBlock(mesh, "fn advance_finish_insertion(&mut self)");
+  const meshPayload = namedBlock(mesh, "fn advance_mesh_payload(&mut self)");
+  const meshPublication = namedBlock(mesh, "fn advance_publication(&mut self");
+  const meshConstraint = namedBlock(mesh, "fn advance_constraint_recovery(&mut self)");
   const faceCursor = namedBlock(mesh, "fn advance_face_classification(&mut self)");
   const meshLaw = namedBlock(mesh, "fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affected_adjacencies()");
+  const meshCursorLaw = namedBlock(mesh, "fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_replay_timing_and_close()");
   const elementLaw = namedBlock(analyses, "fn p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws()");
+  const assemblyCursorLaw = namedBlock(analyses, "fn p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing()");
   const elementAdmissionLaw = namedBlock(analyses, "fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing()");
+  const partitionMerge = namedBlock(analyses, "fn advance_partition_merge(&mut self");
+  const subspaceConstructor = namedBlock(sparse, "pub fn new(operation: Operation, k_factor: LdltFactor");
   const identityMatches = namedBlock(sparse, "fn matches(self, operation: Operation) -> bool");
   const stagedWriterStart = runtime.indexOf("impl RetainedJobPayloadWriter");
   const stagedCloseStart = runtime.indexOf("pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> JobPayloadCloseStep", stagedWriterStart);
@@ -3728,6 +3740,7 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
     !ldlt.body.includes("checkpoint_bytes()") &&
     !ldlt.body.includes("serde_json") &&
     !ldlt.body.includes("expect(") &&
+    !!ldltColumn && loopFree(ldltColumn) && ldltColumn.body.includes("lookup_lower") && ldltColumn.body.includes("lookup_upper") && ldltColumn.body.includes("lookup_mid") && ldltColumn.body.includes("lookup_comparison") && !ldltColumn.body.includes("binary_search") &&
     !!subspace &&
     ordered(subspace.body, ["context.should_yield()", "context.consume_fuel(1)", "writer.staged_page_len().is_none()", "return match writer.begin_staged_page(context)", "advance_checkpoint_entry"]) &&
     !subspace.body.includes("self.iterate(") &&
@@ -3735,6 +3748,7 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
     !subspace.body.includes("serde_json::to_vec(&self.preview())") &&
     !subspace.body.includes("checkpoint_bytes()") &&
     !subspace.body.includes("expect(") &&
+    !!subspaceConstructor && !subspaceConstructor.body.includes(".iter().all") && subspaceConstructor.body.includes("factor_validation_complete: admission_fault") && subspace.body.includes("fem.subspace.validate-factor-owner") && ordered(subspace.body, ["!self.state.factor_validation_complete", "context.should_yield()", "context.consume_fuel(1)", "self.state.k_factor.l_cols.get(self.state.factor_validation_cursor)", "self.state.factor_validation_cursor += 1"]) &&
     constraint.includes("advance_constraint_recovery()") &&
     !constraint.includes("recover_constraint(") &&
     !constraint.includes(".edges()") &&
@@ -3754,9 +3768,20 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
     !!ldltRestoreImpl && !!subspaceRestoreImpl && !ldltRestoreImpl.body.includes("copy_from_slice(source)") && !subspaceRestoreImpl.body.includes("copy_from_slice(source)") && ldltRestoreImpl.body.includes("payload.take()") && subspaceRestoreImpl.body.includes("payload.take()") &&
     !!identityMatches && identityMatches.body.includes("self == Self::from_operation(operation)") &&
     !!meshStep && loopFree(meshStep) && ordered(meshStep.body, ["context.should_yield()", "context.consume_fuel(1)", "match self.stage"]) && meshStep.body.includes("MeshJobStage::CountInput") && meshStep.body.includes("triangulation.insert_next();") &&
+    !!meshPreparation && loopFree(meshPreparation) && meshPreparation.body.includes("point_lookup_cursor") && meshPreparation.body.includes("grid_polygon") && meshPreparation.body.includes("grid_edge") && !meshPreparation.body.includes(".iter().find") && !meshPreparation.body.includes("point_in_polygon(") && !meshPreparation.body.includes("holes.iter()") &&
+    !!meshMountedBegin && loopFree(meshMountedBegin) && !meshMountedBegin.body.includes(".iter()") && !meshMountedBegin.body.includes("sort_by") && !meshMountedBegin.body.includes("sort_unstable") && meshMountedBegin.body.includes("MountedTriangulationStage::BoundsPoint") &&
+    !!meshMountedInitialization && loopFree(meshMountedInitialization) && !meshMountedInitialization.body.includes("sort_by") && !meshMountedInitialization.body.includes("extend(") && meshMountedInitialization.body.includes("sort_inner") && meshMountedInitialization.body.includes("insertion_order.swap") &&
+    !!meshFinishInsertion && loopFree(meshFinishInsertion) && !meshFinishInsertion.body.includes(".retain(") && !meshFinishInsertion.body.includes("sort_unstable") && meshFinishInsertion.body.includes("finish.read") && meshFinishInsertion.body.includes("finish.write") && meshFinishInsertion.body.includes("triangles.swap") &&
+    !!meshPayload && loopFree(meshPayload) && !meshPayload.body.includes("Vec::with_capacity") && !meshPayload.body.includes("extend_from_slice") && meshPayload.body.includes("write_staged") && meshPayload.body.includes("commit_staged_page") && meshPayload.body.includes("MeshPayloadStage::PointCoordinate") && meshPayload.body.includes("MeshPayloadStage::TriangleIndex") &&
+    !!meshPublication && loopFree(meshPublication) && ordered(meshPublication.body, ["RetainedJobPayloadWriter::new", "writer.staged_page_len().is_none()", "writer.begin_staged_page(context)", "self.advance_mesh_payload()", "writer.finish()"]) &&
+    !!meshConstraint && loopFree(meshConstraint) && meshConstraint.body.includes("constraint_retire_adjacency_cursor") && meshConstraint.body.includes("slot.adjacent[self.constraint_retire_adjacency_cursor]") && ordered(meshConstraint.body, ["self.constraint_retire_adjacency_cursor += 1", "slot.active =", "self.constraint_retire_cursor += 1"]) &&
     !!faceCursor && loopFree(faceCursor) && faceCursor.body.includes("FaceClassificationStage::HoleEdge") && faceCursor.body.includes("self.point_index.get(cursor.lookup)") &&
     !!meshLaw && meshLaw.body.includes("job.step(&mut deadline)") && meshLaw.body.includes("job.step(&mut stale)") && meshLaw.body.includes("job.step(&mut cancelled)") && meshLaw.body.includes("maximum_micros < 8_000") && !meshLaw.body.includes("job.advance_constraint_recovery()") &&
+    !!meshCursorLaw && meshCursorLaw.body.includes("MeshJob::new_bounded") && meshCursorLaw.body.includes("preparation_lookup_seen") && meshCursorLaw.body.includes("MountedTriangulationStage::OrderInsertion") && meshCursorLaw.body.includes("TriangulationFinishStage::OrderTriangles") && meshCursorLaw.body.includes("MeshPayloadStage::CommitPage") && meshCursorLaw.body.includes("StepBudget::new(1, 0)") && meshCursorLaw.body.includes("InteractiveJob::close_step(&mut interrupted, 1, 0)") && meshCursorLaw.body.includes("first.1.max(second.1) < 8_000") &&
     !!elementLaw && elementLaw.body.includes("AssemblyJobConstruction::new_owned") && elementLaw.body.includes("Bar2") && elementLaw.body.includes("BeamEb2") && elementLaw.body.includes("Tri3Cst") && elementLaw.body.includes("mounted stiffness mismatch") && elementLaw.body.includes("maximum_micros < 8_000") &&
+    element.body.includes("lookup_cursor") && element.body.includes("PendingElementBuildStage::PublishIndex") && element.body.includes("PendingElementBuildStage::PublishPosition") && !element.body.includes("dof_map.get(") && !element.body.includes("nodes.iter().find") &&
+    !!partitionMerge && loopFree(partitionMerge) && partitionMerge.body.includes("merge_scan_partition") && partitionMerge.body.includes("merge_candidate") && !partitionMerge.body.includes(".iter()") && !partitionMerge.body.includes("filter_map") && !partitionMerge.body.includes("min_by_key") && !analyses.includes("fn next_partition_triplet") &&
+    !!assemblyCursorLaw && assemblyCursorLaw.body.includes("AssemblyJobConstruction::new_owned") && assemblyCursorLaw.body.includes("merge_scan_partition") && assemblyCursorLaw.body.includes("lookup_cursor") && assemblyCursorLaw.body.includes("StepBudget::new(1, 0)") && assemblyCursorLaw.body.includes("first.2.max(second.2) < 8_000") &&
     !!elementAdmissionLaw && elementAdmissionLaw.body.includes("reserve_exact_owner_page") && elementAdmissionLaw.body.includes("observed - 1") && elementAdmissionLaw.body.includes("rejected.as_ptr()") && !elementAdmissionLaw.body.includes("include_str!") &&
     !!stagedBegin && stagedBegin.body.includes("self.admit_page(cx)?.stage()") &&
     !!stagedCommit && stagedCommit.body.includes("self.staged.take()") &&
@@ -3819,6 +3844,24 @@ function toolJobFemNumericalMicrocursorSelfTests(sparse: string, mesh: string, a
     ["element numerical identity removed", () => exact(sparse, mesh, analyses.replace("mounted stiffness mismatch", "mounted stiffness smoke"))],
     ["element max+1 production admission bypassed", () => exact(sparse, mesh, analyses.replace("reserve_exact_owner_page(&mut rejected", "reserve_exact_owner_smoke(&mut rejected"))],
     ["element rejected backing identity omitted", () => exact(sparse, mesh, analyses.replaceAll("rejected.as_ptr()", "std::ptr::null()"))],
+    ["LDLT contributor library search restored", () => exact(sparse.replace("let comparison = self.state.l_cols[active][mid].0.cmp", "let _ = self.state.l_cols[active].binary_search_by_key(&(column as u32), |entry| entry.0); let comparison = self.state.l_cols[active][mid].0.cmp"))],
+    ["LDLT contributor bounds omitted", () => exact(sparse.replaceAll("lookup_lower", "lookup_start"))],
+    ["subspace constructor factor scan restored", () => exact(sparse.replace("let factor_pages_valid = k_factor.l_cols.capacity()", "let _all = k_factor.l_cols.iter().all(|column| column.is_empty()); let factor_pages_valid = k_factor.l_cols.capacity()"))],
+    ["subspace retained factor validation bypassed", () => exact(sparse.replace("!self.state.factor_validation_complete", "false"))],
+    ["mesh preparation point scan restored", () => exact(sparse, mesh.replace("self.point_indices.get(self.point_lookup_cursor)", "self.point_indices.iter().find(|_| true)"))],
+    ["mesh preparation polygon kernel restored", () => exact(sparse, mesh.replace("self.advance_grid_classification(domain)", "point_in_polygon([0.0; 2], &domain.outer); self.advance_grid_classification(domain)"))],
+    ["mesh mounted bounds scan restored", () => exact(sparse, mesh.replace("fn begin_mounted(points: Vec<[f64; 2]>, maximum_triangles: usize) -> Result<Self, MeshError> {", "fn begin_mounted(points: Vec<[f64; 2]>, maximum_triangles: usize) -> Result<Self, MeshError> { for point in &points { let _ = point; }"))],
+    ["mesh mounted insertion sort restored", () => exact(sparse, mesh.replace("match self.mounted_initialization.stage", "self.insertion_order.sort_by_key(|index| *index); match self.mounted_initialization.stage"))],
+    ["mesh finish retain restored", () => exact(sparse, mesh.replace("match self.finish.stage", "self.triangles.retain(|_| true); match self.finish.stage"))],
+    ["mesh finish whole sort restored", () => exact(sparse, mesh.replace("match self.finish.stage", "self.triangles.sort_unstable(); match self.finish.stage"))],
+    ["mesh contiguous publication restored", () => exact(sparse, mesh.replace("let mut scalar = [0; 8];", "let _bytes = Vec::with_capacity(self.mesh.points.len()); let mut scalar = [0; 8];"))],
+    ["mesh publication point loop restored", () => exact(sparse, mesh.replace("let mut scalar = [0; 8];", "for point in &self.mesh.points { let _ = point; } let mut scalar = [0; 8];"))],
+    ["mesh adjacency retirement loop restored", () => exact(sparse, mesh.replace("let owner = &mut slot.adjacent[self.constraint_retire_adjacency_cursor];", "for owner in &mut slot.adjacent { let _ = owner; } let owner = &mut slot.adjacent[self.constraint_retire_adjacency_cursor];"))],
+    ["assembly DOF whole lookup restored", () => exact(sparse, mesh, analyses.replace("self.plan.dof_map.order.get(build.lookup_cursor)", "self.plan.dof_map.get(node_id, element.dofs_per_node()[dof_index]).map(|index| &self.plan.dof_map.order[index])"))],
+    ["assembly node whole lookup restored", () => exact(sparse, mesh, analyses.replace("self.model.nodes.get(build.lookup_cursor)", "self.model.nodes.iter().find(|node| node.id == node_id)"))],
+    ["assembly partition minimum scan restored", () => exact(sparse, mesh, analyses.replace("let partition = &self.state.partitions[partition_index];", "let _ = self.state.partitions.iter().filter_map(|_| None::<AssemblyTriplet>).min_by_key(|entry| entry.sequence); let partition = &self.state.partitions[partition_index];"))],
+    ["mesh cursor execution law omitted", () => exact(sparse, mesh.replace("p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_replay_timing_and_close", "mesh_cursor_smoke"))],
+    ["assembly cursor execution law omitted", () => exact(sparse, mesh, analyses.replace("p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing", "assembly_cursor_smoke"))],
     ["staged page close omitted", () => exact(sparse, mesh, analyses, model, elements, session, runtime.replace("if let Some((ledger, _, length)) = self.staged.as_ref()", "if false"))],
     ["staged page transfer omitted", () => exact(sparse, mesh, analyses, model, elements, session, runtime.replaceAll("self.staged.take()", "None"))],
   ];
@@ -5323,6 +5366,233 @@ async fn run_job_on_worker() { WorkerJobSession::try_new(relay, params); self.re
   return fixtures.length + 360;
 }
 
+// 👁️ Exact mounted FEM 2D/3D live-visual construction and publication contract.
+function toolJobFemLiveVisualPublicationExact(
+  fem2dModel: string,
+  fem2dSession: string,
+  fem3dSession: string,
+  fem3dEditor: string,
+  fem3dModel: string,
+  fem3dResults: string,
+  femPluginRoot: string,
+  femGlue: string,
+  femSparse: string,
+): boolean {
+  const stages = [
+    "ReserveSnapshot",
+    "ReadProgressScalar",
+    "OrderRegionKey",
+    "BuildRegion",
+    "OrderElementKey",
+    "BuildMeshElement",
+    "BuildAssemblyMark",
+    "BuildLoadGlyph",
+    "BuildSupportGlyph",
+    "BuildDisplacementEntry",
+    "BuildResidualEntry",
+    "BuildReactionEntry",
+    "BuildContourEntry",
+    "BuildModeEntry",
+    "BuildLabelEntry",
+    "SealPages",
+    "ValidateFreshness",
+    "PublishLease",
+    "RetireDisplacedLease",
+  ];
+  const twoStart = fem2dModel.indexOf("pub struct Fem2dVisualJob");
+  const twoEnd = fem2dModel.indexOf("//#endregion 🧵️MountedVisualJob", twoStart);
+  const twoJob = twoStart < 0 || twoEnd < 0 ? "" : fem2dModel.slice(twoStart, twoEnd);
+  const threeStart = fem3dSession.indexOf("pub struct Fem3dVisualJob");
+  const threeEnd = fem3dSession.indexOf("//#endregion 🧵️VisualJob", threeStart);
+  const threeJob = threeStart < 0 || threeEnd < 0 ? "" : fem3dSession.slice(threeStart, threeEnd);
+  const twoDriveStart = fem2dSession.indexOf("fn drive_visual_one(");
+  const twoDriveOpen = twoDriveStart < 0 ? -1 : fem2dSession.indexOf("{", twoDriveStart);
+  const twoDrive = twoDriveOpen < 0 ? undefined : toolJobRustBlock(fem2dSession, twoDriveOpen);
+  const threeMountedStart = fem3dSession.indexOf("fn step(&mut self, budget: JobBudget)");
+  const threeMountedOpen = threeMountedStart < 0 ? -1 : fem3dSession.indexOf("{", threeMountedStart);
+  const threeMounted = threeMountedOpen < 0 ? undefined : toolJobRustBlock(fem3dSession, threeMountedOpen);
+  const threeReconcileStart = fem3dSession.indexOf("pub fn reconcile(");
+  const threeReconcileOpen = threeReconcileStart < 0 ? -1 : fem3dSession.indexOf("{", threeReconcileStart);
+  const threeReconcile = threeReconcileOpen < 0 ? undefined : toolJobRustBlock(fem3dSession, threeReconcileOpen);
+  const preflightStart = fem3dSession.indexOf("impl SnapshotPreflight");
+  const preflightEnd = fem3dSession.indexOf("struct PendingSnapshot", preflightStart);
+  const preflight = preflightStart < 0 || preflightEnd < 0 ? "" : fem3dSession.slice(preflightStart, preflightEnd);
+  const outputPreflightGuard = preflight.indexOf("if next > OUTPUT_BYTES");
+  const outputPreflightCommit = preflight.indexOf("self.output_bytes = next");
+  const loadPreflightGuard = preflight.indexOf("if next > MAXIMUM_LOADS", outputPreflightGuard + 1);
+  const loadPreflightCommit = preflight.indexOf("self.load_count = next", loadPreflightGuard + 1);
+  const modelRenderStart = fem3dModel.indexOf("pub fn render_with_progress(");
+  const modelRenderOpen = modelRenderStart < 0 ? -1 : fem3dModel.indexOf("{", modelRenderStart);
+  const modelRender = modelRenderOpen < 0 ? undefined : toolJobRustBlock(fem3dModel, modelRenderOpen);
+  const resultsRenderStart = fem3dResults.indexOf("pub fn render_with_progress(");
+  const resultsRenderOpen = resultsRenderStart < 0 ? -1 : fem3dResults.indexOf("{", resultsRenderStart);
+  const resultsRender = resultsRenderOpen < 0 ? undefined : toolJobRustBlock(fem3dResults, resultsRenderOpen);
+  const orderedStages = (source: string, prefix: string) => {
+    let cursor = -1;
+    for (const stage of stages) {
+      const next = source.indexOf(prefix + "::" + stage, cursor + 1);
+      if (next < 0) return false;
+      cursor = next;
+    }
+    return true;
+  };
+  const forbidden = [".sort(", ".sort_by(", ".sort_by_key(", ".collect(", "binary_search", ".iter().find(", "run_to_completion", "fem3d_scene_parts", "mesh_preview", "serde_json"];
+  const clean = (source: string) => forbidden.every((token) => !source.includes(token));
+  return (
+    orderedStages(twoJob, "Fem2dVisualJobStage") &&
+    orderedStages(threeJob, "Fem3dVisualJobStage") &&
+    clean(twoJob) &&
+    clean(threeJob) &&
+    !twoJob.includes("while ") &&
+    !twoJob.includes("for ") &&
+    !threeJob.includes("while ") &&
+    !threeJob.includes("for ") &&
+    twoJob.includes("try_reserve_exact(doc.regions.len())") &&
+    twoJob.includes("try_reserve_exact(doc.elements.len())") &&
+    twoJob.includes("try_reserve_exact(visual.fields.len())") &&
+    twoJob.includes("fem2d.visual-maximum-plus-one") &&
+    twoJob.includes("self.region_order.swap(") &&
+    twoJob.includes("self.element_order.swap(") &&
+    twoJob.includes("self.field_order.swap(") &&
+    twoJob.includes("freshness != self.freshness") &&
+    twoJob.includes("std::mem::take(&mut self.output.bytes)") &&
+    twoJob.includes("reaction-field-") &&
+    twoJob.includes("contour-field-") &&
+    twoJob.includes("mode-field-") &&
+    twoJob.includes("accessible-en") &&
+    twoJob.includes("accessible-de") &&
+    twoJob.includes("Cancel Retry Discard") &&
+    twoJob.includes("Abbrechen Wiederholen Verwerfen") &&
+    fem2dModel.includes("fem2d_visual_job_maximum_plus_one_rejects_before_owner_transfer") &&
+    fem2dModel.includes("fem2d_visual_job_stale_cancel_fault_and_device_close_preserve_last_valid") &&
+    fem2dModel.includes("fem2d_visual_job_replay_accessibility_and_each_step_are_bounded") &&
+    !!twoDrive &&
+    twoDrive.body.includes("if cx.should_yield()") &&
+    twoDrive.body.indexOf("if cx.should_yield()") < twoDrive.body.indexOf("cx.consume_fuel(1)") &&
+    twoDrive.body.indexOf("cx.consume_fuel(1)", twoDrive.body.indexOf("let candidate")) < twoDrive.body.indexOf("candidate.step_one(") &&
+    twoDrive.body.includes("self.visual_rejected = self.visual_job_candidate.take()") &&
+    fem2dSession.includes("self.visual_displaced = self.visual_current.take()") &&
+    fem2dSession.includes("lease.matches_freshness(freshness)") &&
+    fem2dSession.includes("snapshot.commit_authority_matches(") &&
+    fem2dSession.includes("MountedStage::SyncPcgVisual") &&
+    fem2dSession.includes("self.visual_loads > SESSION_MAXIMUM_VISUAL_LOADS") &&
+    fem2dSession.includes("fem2d.visual-load-maximum-plus-one") &&
+    femSparse.includes("pub fn visual_scalar(&self, index: usize) -> Option<PcgVisualScalar>") &&
+    femSparse.includes("reaction: -residual") &&
+    femSparse.includes("pub fn visual_progress(&self)") &&
+    threeJob.includes("fem3d.visual-maximum-plus-one") &&
+    threeJob.includes("self.region_order.swap(") &&
+    threeJob.includes("self.element_order.swap(") &&
+    threeJob.includes('"tetrahedron"') &&
+    threeJob.includes('"hexahedron"') &&
+    fem3dSession.includes("pub displacement: [f64; 3]") &&
+    fem3dSession.includes("pub residual: [f64; 3]") &&
+    fem3dSession.includes("pub reaction: [f64; 3]") &&
+    fem3dSession.includes("pub mode_shape: [f64; 3]") &&
+    fem3dSession.includes("pub eigen_estimate: f64") &&
+    threeJob.includes("freshness != self.freshness") &&
+    threeJob.includes("std::mem::take(&mut self.output.bytes)") &&
+    threeJob.includes("accessible-en") &&
+    threeJob.includes("accessible-de") &&
+    fem3dSession.includes("fem3d_visual_maximum_plus_one_rejects_before_owner_transfer") &&
+    fem3dSession.includes("fem3d_snapshot_preflight_maximum_plus_one_returns_the_exact_producer") &&
+    fem3dSession.includes("fem3d_visual_stale_freshness_cannot_publish") &&
+    fem3dSession.includes("fem3d_visual_replay_and_partial_close_are_exact") &&
+    fem3dSession.includes("fem3d_visual_cancel_deadline_fault_and_device_close_preserve_last_valid") &&
+    fem3dSession.includes("fem3d_visual_each_production_step_stays_below_eight_ms") &&
+    !!threeMounted &&
+    threeMounted.body.includes("if cx.should_yield()") &&
+    threeMounted.body.indexOf("if cx.should_yield()") < threeMounted.body.indexOf("cx.consume_fuel(1)") &&
+    threeMounted.body.indexOf("cx.consume_fuel(1)", threeMounted.body.indexOf("let Some(snapshot)")) < threeMounted.body.indexOf("candidate.step_one(snapshot, freshness)") &&
+    threeMounted.body.includes("self.displaced = self.current.replace(lease)") &&
+    !!threeReconcile &&
+    threeReconcile.body.includes("doc.take_snapshot_read()") &&
+    threeReconcile.body.includes("current.take()") &&
+    threeReconcile.body.includes("Effect::CancelJob") &&
+    threeReconcile.body.includes("Effect::SpawnJob") &&
+    threeReconcile.body.includes("JobPlacement::Isolated") &&
+    fem3dSession.includes("struct SnapshotPreflight") &&
+    fem3dSession.includes("fn step_one(&mut self, snapshot: &Fem3dSnapshot)") &&
+    fem3dSession.includes("pending.preflight.step_one(snapshot)") &&
+    fem3dSession.includes("pending.preflight.stage == SnapshotPreflightStage::Complete") &&
+    outputPreflightGuard >= 0 &&
+    outputPreflightGuard < outputPreflightCommit &&
+    loadPreflightGuard >= 0 &&
+    loadPreflightGuard < loadPreflightCommit &&
+    fem3dSession.includes("return_to_registry_witness()") &&
+    fem3dSession.includes("terminal_drop_is_shallow") &&
+    fem3dSession.includes("pub fn maintenance_step(") &&
+    fem3dSession.includes("pub fn close_step(") &&
+    fem3dSession.includes("pub fn terminal_is_empty(") &&
+    fem3dEditor.includes("async fn pending_effects(") &&
+    fem3dEditor.includes("crate::editor::fem3d::session::reconcile(doc)") &&
+    fem3dEditor.includes("session::with_live_visual(doc.render_operation()") &&
+    fem3dEditor.includes("fn mounted_job_prepare_snapshot_read(") &&
+    fem3dEditor.includes("fn mounted_job_close_step(") &&
+    femPluginRoot.includes("crate::editor::fem3d::session::initialize();") &&
+    femGlue.includes("✏️editor/🧵️session/🦀️component.rs") &&
+    !!modelRender &&
+    !!resultsRender &&
+    modelRender.body.includes("lease.meshes_json()") &&
+    modelRender.body.includes("lease.instances_json()") &&
+    resultsRender.body.includes("lease.meshes_json()") &&
+    resultsRender.body.includes("lease.instances_json()") &&
+    clean(modelRender.body) &&
+    clean(resultsRender.body)
+  );
+}
+
+// 🧬️ Faithful P6i structural mutations over the exact live 2D and 3D sources.
+function toolJobFemLiveVisualPublicationSelfTests(
+  fem2dModel: string,
+  fem2dSession: string,
+  fem3dSession: string,
+  fem3dEditor: string,
+  fem3dModel: string,
+  fem3dResults: string,
+  femPluginRoot: string,
+  femGlue: string,
+  femSparse: string,
+): number {
+  const exact = (twoModel = fem2dModel, twoSession = fem2dSession, threeSession = fem3dSession, threeEditor = fem3dEditor, threeModel = fem3dModel, threeResults = fem3dResults, pluginRoot = femPluginRoot, glue = femGlue, sparse = femSparse) =>
+    toolJobFemLiveVisualPublicationExact(twoModel, twoSession, threeSession, threeEditor, threeModel, threeResults, pluginRoot, glue, sparse);
+  if (!exact()) throw new Error("[verify interactivity tool-jobs p6i] valid live visual sources were rejected.");
+  const mutations: [string, boolean][] = [
+    ["2D maximum+1 guard", exact(fem2dModel.replace("fem2d.visual-maximum-plus-one", "fem2d.visual-unbounded"))],
+    ["2D stable field order", exact(fem2dModel.replace("self.field_order.swap(", "self.field_order.rotate_left("))],
+    ["2D freshness", exact(fem2dModel.replace("freshness != self.freshness", "freshness == self.freshness"))],
+    ["2D accessibility", exact(fem2dModel.replace("Abbrechen Wiederholen Verwerfen", "Cancel Retry Discard"))],
+    [
+      "2D pre-work fuel",
+      exact(
+        fem2dModel,
+        fem2dSession.replace(
+          "        cx.consume_fuel(1);\n        match candidate.step_one(snapshot, &self.visual, freshness) {",
+          "        match candidate.step_one(snapshot, &self.visual, freshness) {\n            _ if { cx.consume_fuel(1); false } => unreachable!(),",
+        ),
+      ),
+    ],
+    ["2D solver identity", exact(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, femPluginRoot, femGlue, femSparse.replace("reaction: -residual", "reaction: residual"))],
+    ["2D visual preflight maximum", exact(fem2dModel, fem2dSession.replace("self.visual_loads > SESSION_MAXIMUM_VISUAL_LOADS", "false"), fem3dSession, fem3dEditor, fem3dModel, fem3dResults, femPluginRoot, femGlue, femSparse)],
+    ["3D-only hexahedron field", exact(fem2dModel, fem2dSession, fem3dSession.replace('"hexahedron"', '"tetrahedron"'))],
+    ["3D three-component mode", exact(fem2dModel, fem2dSession, fem3dSession.replace("pub mode_shape: [f64; 3]", "pub mode_shape: [f64; 2]"))],
+    ["3D freshness", exact(fem2dModel, fem2dSession, fem3dSession.replace("freshness != self.freshness", "freshness == self.freshness"))],
+    ["3D atomic swap", exact(fem2dModel, fem2dSession, fem3dSession.replace("self.displaced = self.current.replace(lease)", "self.current = Some(lease)"))],
+    ["3D former lease transfer", exact(fem2dModel, fem2dSession, fem3dSession.replace("current.take()", "current.as_ref()"))],
+    ["3D shared placement", exact(fem2dModel, fem2dSession, fem3dSession.replace("JobPlacement::Isolated", "JobPlacement::Inline"))],
+    ["3D output preflight", exact(fem2dModel, fem2dSession, fem3dSession.replace("if next > OUTPUT_BYTES", "if false"))],
+    ["3D load preflight", exact(fem2dModel, fem2dSession, fem3dSession.replace("if next > MAXIMUM_LOADS", "if false"))],
+    ["3D producer handback law", exact(fem2dModel, fem2dSession, fem3dSession.replace("fem3d_snapshot_preflight_maximum_plus_one_returns_the_exact_producer", "fem3d_snapshot_preflight_smoke"))],
+    ["3D mounted render", exact(fem2dModel, fem2dSession, fem3dSession, fem3dEditor.replaceAll("session::with_live_visual(doc.render_operation()", "session::with_live_visual(None"))],
+    ["3D model whole scene", exact(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel.replace("lease.instances_json()", "fem3d_scene_parts()"))],
+    ["3D partial close law", exact(fem2dModel, fem2dSession, fem3dSession.replace("fem3d_visual_replay_and_partial_close_are_exact", "fem3d_visual_replay_smoke"))],
+    ["3D cancel/fault/device close law", exact(fem2dModel, fem2dSession, fem3dSession.replace("fem3d_visual_cancel_deadline_fault_and_device_close_preserve_last_valid", "fem3d_visual_close_smoke"))],
+    ["3D accessibility", exact(fem2dModel, fem2dSession, fem3dSession.replaceAll("accessible-de", "accessible-en"))],
+  ];
+  for (const [name, accepted] of mutations) if (accepted) throw new Error("[verify interactivity tool-jobs p6i] mutation " + name + " was falsely accepted.");
+  return mutations.length;
+}
+
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
 function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const macroFiles = new Set<string>();
@@ -5598,6 +5868,10 @@ export class VerifyScript extends Script {
       this.runInteractivityP1qB1B6();
       return;
     }
+    if (segments[0] === "interactivity" && segments[1] === "p1w") {
+      this.runInteractivityP1w();
+      return;
+    }
     if (segments[0] === "interactivity") {
       this.runInteractivityAudit();
       return;
@@ -5737,14 +6011,38 @@ export class VerifyScript extends Script {
         policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE),
         policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_COMPACT_FILE),
         policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_CLI_FILE),
+        policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_STATE_FILE),
       ),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p1q-b1-b6] ${failures.join("; ")}`);
     console.log("[verify interactivity p1q-b1-b6] live-source and hostile mutations clean.");
   }
 
+  /** 🌱️ Runs the isolated P1w retained initial-catalog CAS source and hostile-mutation gate. */
+  private runInteractivityP1w(): void {
+    interactivityDatabaseCatalogBootstrapSelfTests();
+    const failures = interactivityDatabaseCatalogBootstrapFailures(policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE));
+    if (failures.length > 0) throw new Error(`[verify interactivity p1w] ${failures.join("; ")}`);
+    console.log("[verify interactivity p1w] live-source and hostile mutations clean.");
+  }
+
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
   private runToolJobCoverage(args: string[]): void {
+    if (args.includes("--p6i-only")) {
+      const fem2dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️component.rs");
+      const fem2dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
+      const fem3dSession = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
+      const fem3dEditor = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+      const fem3dModel = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️component.rs");
+      const fem3dResults = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️component.rs");
+      const femPluginRoot = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🦀️component.rs");
+      const femGlue = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs");
+      const femSparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs");
+      const mutations = args.includes("--self-test") ? toolJobFemLiveVisualPublicationSelfTests(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, femPluginRoot, femGlue, femSparse) : 0;
+      if (!toolJobFemLiveVisualPublicationExact(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, femPluginRoot, femGlue, femSparse)) throw new Error("[verify interactivity tool-jobs p6i] mounted FEM live visual publication contract failed.");
+      console.log("[verify interactivity tool-jobs p6i] live-source clean; hostile-mutations=" + mutations + ".");
+      return;
+    }
     if (args.includes("--p6h-only")) {
       const session = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
       const sparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs");
@@ -6227,6 +6525,8 @@ const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products
 const INTERACTIVITY_AUDIT_RENDERER_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs";
 const INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs";
 const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs";
+const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🧊️component.rs";
+const INTERACTIVITY_AUDIT_WORLD3D_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️component.rs";
 
 /**
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
@@ -6566,6 +6866,24 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const reactorPatches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
   const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
   for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor, uiValue, uiSchema)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
+  interactivityMountedLayoutTextSelfTests(repoRoot);
+  const mountedLayout = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️mounted_layout.rs");
+  const mountedEngine = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs");
+  const mountedTree = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs");
+  const mountedPaint = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs");
+  const mountedEvents = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs");
+  const mountedSlots = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs");
+  const mountedInterpreter = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs");
+  for (const failure of interactivityMountedLayoutTextFailures(mountedLayout, mountedEngine, mountedTree, mountedPaint, mountedEvents, mountedSlots, mountedInterpreter, rendererGlue)) findings.push({ category: "blocking-bridge", file: "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️mounted_layout.rs", line: 0, text: failure });
+  interactivityMountedFrameTransactionSelfTests(repoRoot);
+  const mountedFrameJob = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️frame_job.rs");
+  const mountedFrameHost = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs");
+  const mountedFrameSnapshot = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️render_snapshot.rs");
+  const headlessUiRuntimeGlue = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs");
+  const mountedFrameShell = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_SHELL_FILE);
+  const mountedFrameEngineCanvas = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE);
+  const mountedFrameWorld3d = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_WORLD3D_FILE);
+  for (const failure of interactivityMountedFrameTransactionFailures(rendererGlue, mountedFrameJob, mountedFrameHost, mountedFrameSnapshot, headlessUiRuntimeGlue, mountedFrameShell, mountedFrameEngineCanvas, mountedFrameWorld3d)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
 
@@ -7652,6 +7970,412 @@ export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
   if (failures.length !== 0) throw new Error(`[verify interactivity] live reconcile baseline was falsely rejected: ${failures.join("; ")}`);
 }
 
+//#region 🧵️P5cMountedLayoutText
+export function interactivityMountedLayoutTextFailures(mountedSource: string, engineSource: string, treeSource: string, paintSource: string, eventsSource: string, slotsSource: string, interpreterSource: string, glueSource: string): string[] {
+  const mounted = interactivityProductionSource(mountedSource);
+  const engine = interactivityProductionSource(engineSource);
+  const tree = interactivityProductionSource(treeSource);
+  const paint = interactivityProductionSource(paintSource);
+  const events = interactivityProductionSource(eventsSource);
+  const slots = interactivityProductionSource(slotsSource);
+  const interpreter = interactivityProductionSource(interpreterSource);
+  const glue = interactivityProductionSource(glueSource);
+  const failures: string[] = [];
+  const requireAll = (source: string, needles: readonly string[], label: string) => {
+    if (needles.some((needle) => !source.includes(needle))) failures.push(label);
+  };
+  const count = (source: string, needle: string) => source.split(needle).length - 1;
+  const operation = (source: string, start: string, end: string) => {
+    const from = source.indexOf(start);
+    const until = source.indexOf(end, from + start.length);
+    return from < 0 ? "" : source.slice(from, until < 0 ? source.length : until);
+  };
+  const law = (source: string, name: string, evidence: readonly string[]) => {
+    const start = source.indexOf(`fn ${name}`);
+    const end = source.indexOf("\n    #[test]", start + name.length);
+    const body = start < 0 ? "" : source.slice(start, end < 0 ? source.length : end);
+    if (evidence.some((needle) => !body.includes(needle))) failures.push(`P5c hostile law ${name} is missing production-path evidence`);
+  };
+
+  requireAll(mounted, [
+    "LAYOUT_NODE_CREDITS: usize = 4_096",
+    "LAYOUT_GLYPH_CREDITS: usize = 16_384",
+    "LAYOUT_DEPTH_CREDITS: usize = 64",
+    "LAYOUT_ATLAS_PAGE_CREDITS: usize = 4",
+    "LAYOUT_ATLAS_PAGE_BYTES: usize = 16 * 1024",
+  ], "P5c fixed node/glyph/depth/atlas credits are missing or changed");
+  requireAll(mounted, [
+    "walk: Box<ui_contract::UiFixedList<WalkFrame",
+    "nodes: Box<ui_contract::UiFixedList<LayoutInputNode",
+    "glyphs: Box<ui_contract::UiFixedList<RetainedGlyphInput",
+    "runs: Box<ui_contract::UiFixedList<RetainedTextRun",
+    "lines: Box<ui_contract::UiFixedList<RetainedLine",
+    "glyph_previews: Box<ui_contract::UiFixedList<RetainedGlyphPreview",
+    "results: Box<ui_contract::UiFixedList<MountedLayoutResult",
+    "pages: [Option<Box<[u8; LAYOUT_ATLAS_PAGE_BYTES]>>; LAYOUT_ATLAS_PAGE_CREDITS]",
+  ], "P5c production working sets are not the actual fixed admitted owners");
+  requireAll(mounted, ["text_byte: usize", "text_glyph_start: usize", "run_cursor: usize", "glyph_cursor: usize", "line_cursor: usize", "measure_cursor: usize", "arrange_cursor: usize", "preview_cursor: usize", "publish_cursor: usize"], "P5c retained node/run/glyph/line/preview/publication cursors are incomplete");
+  for (const forbidden of ["Vec<", "HashMap<", "VecDeque", "FontAtlas", ".measure(", "std::mem::forget", "wrapping_add", "loop {", "while "]) if (mounted.includes(forbidden)) failures.push(`P5c mounted production source contains forbidden ${forbidden}`);
+  const admit = operation(mounted, "pub(crate) fn admit_one", "fn admit_node_one");
+  const worker = operation(mounted, "fn worker_one", "fn shape_one");
+  const shape = operation(mounted, "fn shape_one", "fn measure_one");
+  const publish = operation(mounted, "pub(crate) fn publish_one", "fn stage_label");
+  const close = operation(mounted, "pub(crate) fn close_one", "pub(crate) fn terminal_is_empty");
+  requireAll(admit, ["cx.is_cancelled()", "cx.should_yield()", "cx.consume_fuel(1)", "match self.admission"], "P5c admission is not one cancel/deadline/fuel-bounded cursor opportunity");
+  requireAll(worker, ["semio-pool-worker-", "match self.stage", "cx.consume_fuel(1)", "cx.deadline_exceeded()"], "P5c worker turn does not prove pool-thread and bounded before/after checks");
+  if (count(worker, "cx.is_cancelled()") < 2) failures.push("P5c opaque text worker call is not cancellation-checked before and after");
+  requireAll(shape, ["self.runs.get(self.run_cursor)", "self.text_worker.shape_one(input)", "self.atlas_candidate.retain_one", "self.glyph_cursor += 1"], "P5c text shaping is not one retained run/glyph/atlas unit");
+  requireAll(mounted, ["trait OwnedTextWorker: Send", "generation: u64", "revision: u64", "atlas_page: u8", "atlas_offset: u16", "atlas_length: u8"], "P5c external text boundary or generation-tagged atlas output is missing");
+  requireAll(publish, ["self.identity() != identity", "self.results.len() != self.nodes.len()", "tree.write_inactive_layout", "tree.commit_inactive_layout(generation)", "self.publication_committed = true"], "P5c publication is not complete, fresh, inactive, and one-swap-only");
+  requireAll(close, ["rejected_result.take()", "rejected_glyph.take()", "self.results.pop()", "self.atlas_candidate.close_one()"], "P5c close does not release exactly one retained/rejected owner or atlas page");
+
+  requireAll(engine, [
+    "slots: [Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS]",
+    "generations: [u64; UI_LAYOUT_SURFACE_SLOTS]",
+    "slots: [Option<UiSurfaceToken>; UI_LAYOUT_SURFACE_SLOTS]",
+    "window_id: SurfaceId",
+    "layout_queues: [SurfaceLaneRing; 3]",
+  ], "P5c multi-surface authority or lane queues are not fixed token storage");
+  for (const forbidden of ["VecDeque", "HashMap<String, UiWindow>", "wrapping_add", "job.worker_one", "try_step_on_caller", "WorkerPool::new(", "window.layout_session = None; session.close_step"]) if (engine.includes(forbidden)) failures.push(`P5c engine production path contains forbidden ${forbidden}`);
+  const scheduler = operation(engine, "pub fn step_layouts", "fn enqueue_layout");
+  requireAll(scheduler, ["session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut", "session.pump_one(pool, worker_lane(lane))", "cx.cancel_token()", "session.close_step(1", "job.close_one()", "job.identity() != identity", "MountedWorkerJobSession::try_new"], "P5c engine does not retain exact mounted take/resume/close authority on the shared pool");
+  requireAll(engine, ["theme_layout_identity(&self.theme) != theme_layout_identity(&theme)", "window.theme_revision == u64::MAX", "window.viewport_revision.checked_add(1)", "window.layout_generation.checked_add(1)", "window.revision.checked_add(1)"], "P5c equality or non-wrapping theme/tree/viewport generations are incomplete");
+  requireAll(engine, ["layout_preview: Option<MountedLayoutResult>", "glyph_preview: Option<RetainedGlyphPreview>", "MountedLayoutJob::take_preview_one", "preview.generation == window.layout_generation", "progressive_layout_preview", "progressive_glyph_preview"], "P5c progressive geometry/text preview retention is missing or stale-unchecked");
+
+  requireAll(tree, ["mounted_layout: [MountedLayoutRecord; 2]", "mounted_layout_active: usize", "mounted_layout_generation: u64", "write_inactive_layout", "self.mounted_layout_active ^= 1", "accepted_layout_generation"], "P5c tree lacks inactive/active O(1) accepted snapshot authority");
+  if (!paint.includes("let Some(layout) = tree.accepted_layout(id) else { return }") || !operation(events, "fn hit_test_node", "fn is_plain_stack_container").includes("let layout = tree.accepted_layout(id)?") || !slots.includes("let Some(layout) = tree.accepted_layout(id) else { return }")) failures.push("P5c paint, hit testing, and scene slots do not consume the same accepted snapshot");
+
+  const driver = operation(interpreter, "fn drive_mounted_layout_text_one", "/** 🔁️ The live cutover entry point");
+  requireAll(driver, ["StepBudget::new(1, now.saturating_add(1))", "crate::renderer_worker_pool()", "engine.step_layouts(&pool", "pool.pump(now)"], "P5c mounted renderer does not drive one shared-pool opportunity");
+  const documentRoute = operation(interpreter, "pub fn render_ui_document", "//#endregion 📄️RetainedDocumentConsumer");
+  const driveAt = documentRoute.indexOf("drive_mounted_layout_text_one");
+  const inputAt = documentRoute.indexOf("dispatch_pointer_events");
+  const frameAt = documentRoute.indexOf("engine.frame(");
+  if (!(driveAt >= 0 && inputAt > driveAt && frameAt > inputAt)) failures.push("P5c renderer production route does not prioritize fresh input then layout drive before frame");
+  const poolGlue = operation(glue, "//#region 🧵️RendererWorkerPool", "//#endregion 🧵️RendererWorkerPool");
+  requireAll(poolGlue, ["pub(crate) fn renderer_worker_pool()", "process_worker_pool", "ProcessKind::InteractiveNative"], "P5c renderer is not using the one process WorkerPool on native and Wasm-shaped routes");
+  if (poolGlue.includes("WorkerPool::new")) failures.push("P5c renderer introduced a second layout scheduler");
+
+  law(mountedSource, "mounted_layout_actual_glyph_max_plus_one_retains_the_exact_rejected_scalar", ["job.rejected_glyph().map", "Some('x')", "while !job.close_one()", "job.terminal_is_empty()"]);
+  law(mountedSource, "mounted_layout_actual_node_max_plus_one_retains_the_exact_rejected_tree_owner", ["tree.contains(rejected.id)", "!job.nodes.iter().any", "while !job.close_one()"]);
+  law(mountedSource, "mounted_layout_multi_page_unicode_uses_one_glyph_or_atlas_boundary_per_turn", ["job.glyph_cursor - before <= 1", "LAYOUT_ATLAS_PAGE_CREDITS - 1", "preview.generation == 11"]);
+  law(mountedSource, "mounted_layout_deep_tree_depth_refusal_retains_walk_authority_for_close", ["job.rejected_walk.is_some()", "retained - after, 1", "job.terminal_is_empty()"]);
+  law(mountedSource, "mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread", ["session.pump_one(&pool, lane)", "Lane::UserVisible", "owner.worker_thread_observed()", "session.terminal_is_empty()"]);
+  law(mountedSource, "mounted_layout_cancel_before_and_after_owned_text_call_is_typed_and_retained", ["after.cancel_after_shape", "StepOutcome::Cancelled", "after.glyph_cursor, 1", "after.terminal_is_empty()"]);
+  law(mountedSource, "mounted_layout_deadline_and_partial_close_each_advance_at_most_one_owner", ["StepBudget::new(1, 0)", "retained - after_one, 1", "job.terminal_is_empty()"]);
+  law(mountedSource, "mounted_layout_publication_rechecks_full_identity_and_repeat_ready_swaps_once", ["LayoutJobStep::Fault(\"layout.stale\")", "tree.accepted_layout_generation(), before", "tree.accepted_layout_generation(), 11"]);
+  law(engineSource, "mounted_layout_surface_max_plus_one_returns_exact_owner_without_mutation", ["rejected.id, owner", "ui.windows.ids().cloned().collect"]);
+  law(engineSource, "mounted_layout_equal_theme_does_not_invalidate_or_requeue", [
+    "assert_eq!(ui.windows.get(\"theme\").map(|window| window.layout_generation), before_generation)",
+    "assert_eq!(ui.windows.get(\"theme\").map(|window| window.theme_revision), before_theme_revision)",
+    "assert_eq!(ui.layout_queues.iter().map(SurfaceLaneRing::len).sum::<usize>(), before_queue)",
+  ]);
+  law(engineSource, "mounted_layout_atomic_snapshot_keeps_last_valid_geometry_until_fresh_swap", ["after, old_generation", "old_layout", "swaps, 1", "progressive_glyph_preview"]);
+  law(engineSource, "mounted_layout_revision_max_refuses_theme_tree_and_viewport_without_alias", ["theme_revision = u64::MAX", "viewport_revision = u64::MAX", "revision = u64::MAX"]);
+  law(engineSource, "mounted_layout_replay_and_resize_supersede_are_deterministic", ["assert_eq!(first, second)", "second.width, 640.0"]);
+  law(engineSource, "large_layout_and_shaping_job_keeps_every_observed_slice_below_eight_ms", ["slices > 10_000", "Duration::from_millis(8)", "accepted_layout"]);
+  law(engineSource, "interactive_storm_does_not_starve_background_surface_lane", ["slice < LANE_WHEEL.len()", "window_id.as_ref() == \"background\""]);
+  return failures;
+}
+
+export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void {
+  const paths = [
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️mounted_layout.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+  ] as const;
+  const clean = paths.map((path) => policyReadFileSafe(repoRoot, path));
+  const mutations: [string, number, string, string][] = [
+    ["node-credit", 0, "LAYOUT_NODE_CREDITS: usize = 4_096", "LAYOUT_NODE_CREDITS: usize = 4_095"],
+    ["glyph-credit", 0, "LAYOUT_GLYPH_CREDITS: usize = 16_384", "LAYOUT_GLYPH_CREDITS: usize = 16_383"],
+    ["dynamic-node-storage", 0, "nodes: Box<ui_contract::UiFixedList<LayoutInputNode", "nodes: Vec<LayoutInputNode"],
+    ["dynamic-atlas-storage", 0, "pages: [Option<Box<[u8; LAYOUT_ATLAS_PAGE_BYTES]>>; LAYOUT_ATLAS_PAGE_CREDITS]", "pages: Vec<Box<[u8; LAYOUT_ATLAS_PAGE_BYTES]>>"],
+    ["missing-run-cursor", 0, "run_cursor: usize", "run_progress: usize"],
+    ["missing-line-cursor", 0, "line_cursor: usize", "line_progress: usize"],
+    ["whole-shape-loop", 0, "fn shape_one(&mut self)", "fn shape_one(&mut self) /* loop { */"],
+    ["ui-thread-text-measure", 0, "self.text_worker.shape_one(input)", "FontAtlas::measure(input)"],
+    ["missing-post-cancel", 0, "if cx.is_cancelled() {\n            return semio_framework_job::StepOutcome::Cancelled;\n        }\n        if self.fault.is_some()", "if self.fault.is_some()"],
+    ["partial-live-publish", 0, "tree.write_inactive_layout", "tree.node_mut"],
+    ["missing-atomic-commit", 0, "tree.commit_inactive_layout(generation)", "let _ = generation"],
+    ["missing-completeness", 0, "self.results.len() != self.nodes.len()", "false"],
+    ["bulk-close", 0, "self.results.pop().is_some()", "self.results.clear(); false"],
+    ["dynamic-surface-registry", 1, "slots: [Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS]", "slots: HashMap<String, UiWindow>"],
+    ["dynamic-lane-ring", 1, "slots: [Option<UiSurfaceToken>; UI_LAYOUT_SURFACE_SLOTS]", "slots: VecDeque<UiSurfaceToken>"],
+    ["wrapping-generation", 1, "window.layout_generation.checked_add(1)", "Some(window.layout_generation.wrapping_add(1))"],
+    ["caller-lane-step", 1, "session.pump_one(pool, worker_lane(lane))", "job.worker_one(cx)"],
+    ["missing-cancel-propagation", 1, "cancel: cx.cancel_token()", "cancel: semio_framework_job::CancelToken::root_now()"],
+    ["bulk-session-drop", 1, "session.close_step(1", "window.layout_session = None; session.close_step(1"],
+    ["missing-progressive-preview", 1, "MountedLayoutJob::take_preview_one", "MountedLayoutJob::latest_glyph_preview"],
+    ["missing-double-buffer", 2, "mounted_layout: [MountedLayoutRecord; 2]", "mounted_layout: [MountedLayoutRecord; 1]"],
+    ["missing-snapshot-swap", 2, "self.mounted_layout_active ^= 1", "self.mounted_layout_active = 0"],
+    ["paint-live-layout", 3, "let Some(layout) = tree.accepted_layout(id) else { return }", "let layout = Default::default()"],
+    ["event-live-layout", 4, "let layout = tree.accepted_layout(id)?", "let layout = Default::default()"],
+    ["slot-live-layout", 5, "let Some(layout) = tree.accepted_layout(id) else { return }", "let layout = Default::default()"],
+    ["zero-production-driver", 6, "engine.step_layouts(&pool", "engine.needs_frame(); //"],
+    ["unbounded-renderer-budget", 6, "StepBudget::new(1, now.saturating_add(1))", "StepBudget::new(u64::MAX, u64::MAX)"],
+    ["second-scheduler", 7, "process_worker_pool", "WorkerPool::new"],
+  ];
+  for (const [name, index, needle, replacement] of mutations) {
+    const mutated = [...clean];
+    mutated[index] = mutated[index].replace(needle, replacement);
+    if (mutated[index] === clean[index]) throw new Error(`[verify interactivity] P5c mutation ${name} did not alter source.`);
+    if (interactivityMountedLayoutTextFailures(...mutated).length === 0) throw new Error(`[verify interactivity] P5c mutation ${name} was falsely accepted.`);
+  }
+  const lawMutations: [number, string][] = [
+    [0, "job.rejected_glyph().map"],
+    [0, "tree.contains(rejected.id)"],
+    [0, "job.glyph_cursor - before <= 1"],
+    [0, "retained - after, 1"],
+    [0, "session.pump_one(&pool, lane)"],
+    [0, "after.cancel_after_shape"],
+    [0, "retained - after_one, 1"],
+    [0, "tree.accepted_layout_generation(), before"],
+    [1, "rejected.id, owner"],
+    [1, "assert_eq!(ui.windows.get(\"theme\").map(|window| window.theme_revision), before_theme_revision)"],
+    [1, "swaps, 1"],
+    [1, "theme_revision = u64::MAX"],
+    [1, "assert_eq!(first, second)"],
+    [1, "Duration::from_millis(8)"],
+    [1, "slice < LANE_WHEEL.len()"],
+  ];
+  for (const [index, needle] of lawMutations) {
+    const mutated = [...clean];
+    mutated[index] = mutated[index].replace(needle, "P5C_MUTATED_LAW_EVIDENCE");
+    if (mutated[index] === clean[index]) throw new Error(`[verify interactivity] P5c law mutation ${needle} did not alter source.`);
+    if (interactivityMountedLayoutTextFailures(...mutated).length === 0) throw new Error(`[verify interactivity] P5c law mutation ${needle} was falsely accepted.`);
+  }
+  const failures = interactivityMountedLayoutTextFailures(...clean);
+  if (failures.length !== 0) throw new Error(`[verify interactivity] P5c mounted layout/text baseline was falsely rejected: ${failures.join("; ")}`);
+}
+//#endregion 🧵️P5cMountedLayoutText
+
+//#region 🔄️P5aMountedFrameTransaction
+export function interactivityMountedFrameTransactionFailures(
+  glueSource: string,
+  frameJobSource: string,
+  hostSource: string,
+  snapshotSource: string,
+  uiRuntimeGlueSource: string,
+  shellSource: string,
+  engineCanvasSource: string,
+  world3dSource: string,
+): string[] {
+  const glue = interactivityProductionSource(glueSource);
+  const frameJob = interactivityProductionSource(frameJobSource);
+  const host = interactivityProductionSource(hostSource);
+  const snapshot = interactivityProductionSource(snapshotSource);
+  const uiRuntimeGlue = interactivityProductionSource(uiRuntimeGlueSource);
+  const shell = interactivityProductionSource(shellSource);
+  const engineCanvas = interactivityProductionSource(engineCanvasSource);
+  const world3d = interactivityProductionSource(world3dSource);
+  const transaction = glue.slice(glue.indexOf("pub(crate) struct FrameTransaction"), glue.indexOf("pub(crate) struct AppFramePresentation"));
+  const frameCursors = glue.slice(glue.indexOf("struct FrameBuildCursor"), glue.indexOf("struct FrameWheelCursor"));
+  const buildBoundary = glue.slice(glue.indexOf("fn frame_before_input_step"), glue.indexOf("fn frame_after_input_step"));
+  const finishBoundary = glue.slice(glue.indexOf("fn frame_after_input_step"), glue.indexOf("impl AppInteractionState"));
+  const deferredBoundary = glue.slice(glue.indexOf("fn start_frame_deferred"), glue.indexOf("fn apply_step", glue.indexOf("fn start_frame_deferred")));
+  const chromeBoundary = shell.slice(shell.indexOf("pub(crate) struct ShellChromeFrameCursor"), shell.indexOf("fn body_rect"));
+  const engineBoundary = engineCanvas.slice(engineCanvas.indexOf("const ENGINE_CANVAS_FRAME_PACKET_CAPACITY"), engineCanvas.indexOf("struct EngineGpuSurface"));
+  const worldBoundary = world3d.slice(world3d.indexOf("const WORLD3D_FRAME_RESOURCE_CAPACITY"), world3d.indexOf("//#endregion 📦️PreparedWorldResources"));
+  const failures: string[] = [];
+  const requireAll = (source: string, needles: readonly string[], label: string) => {
+    if (needles.some((needle) => !source.includes(needle))) failures.push(label);
+  };
+  const requireExactlyOne = (source: string, needle: string, label: string) => {
+    if (source.split(needle).length - 1 !== 1) failures.push(label);
+  };
+  requireAll(transaction, [
+    "DrainProjectionDeltas",
+    "RouteIntents",
+    "FlushEffects",
+    "PresentSurface",
+    "ReconcileTree",
+    "BuildRenderPackets",
+    "PublishSnapshot",
+    "context.set_stage(self.stage_label())",
+  ], "P5a exact seven-stage mounted transaction is incomplete");
+  requireAll(glue, [
+    "struct FrameActionOwners",
+    "slots: [Option<ActionDescriptor>; WORLD3D_DEADLINE_CAPACITY]",
+    "fn try_push(&mut self, action: ActionDescriptor) -> Result<(), ActionDescriptor>",
+    "fn pop_front(&mut self) -> Option<ActionDescriptor>",
+    "EFFECT_STORM_BUDGET: u32 = 64",
+  ], "P5a action/effect admission is not fixed, fallible, and identity preserving");
+  requireAll(glueSource, ["frame_action_max_plus_one_returns_the_exact_owner", "assert_eq!(rejected.controller_id.as_ptr(), identity)"], "P5a exact MAX + 1 action owner law is missing");
+  requireAll(transaction, [
+    "operation: semio_framework_trace::OperationId",
+    "generation: semio_framework_trace::Generation",
+    "base_witness: Option<RuntimePresentationWitness>",
+    "context.operation() != self.operation",
+    "context.generation() != self.generation",
+    "context.is_cancelled()",
+    "context.deadline_exceeded()",
+    "base_witness != current_witness",
+    "checked_add(1)",
+  ], "P5a opportunity freshness, revision, generation, cancellation, deadline, or effect guards are incomplete");
+  for (const forbidden of ["VecDeque", "std::vec::IntoIter", "wrapping_add", "saturating_add", ".clear()", ".expect(", ".unwrap(", "loop {", "while "]) if (transaction.includes(forbidden)) failures.push(`P5a mounted transaction contains forbidden ${forbidden}`);
+  requireAll(frameCursors, [
+    "struct FrameBuildCursor",
+    "previous_draw: Option<DrawList>",
+    "previous_overlay: Option<DrawList>",
+    "struct FrameFinishCursor",
+    "glyph_offset: usize",
+    "FRAME_ATLAS_PAGE_BYTES",
+  ], "P5a mounted build/finish cursors do not retain draw, overlay, and atlas page ownership");
+  requireAll(glue, ["struct FrameEnginePackets", "engine_packets: FrameEnginePackets", "fn try_push(&mut self, packet: engine_canvas::EngineCanvasPacket) -> Result<(), engine_canvas::EngineCanvasPacket>"], "P5a mounted packet collector is not fixed and identity-preserving");
+  if (frameCursors.includes("engine_packets: Vec<")) failures.push("P5a mounted frame cursor retains a dynamic engine packet workset");
+  requireAll(buildBoundary, [
+    "FrameBuildPhase::RetireDraw",
+    "previous.retire_step()",
+    "FrameBuildPhase::RetireOverlay",
+    "render_chrome_step",
+    "resources.append_step(input)",
+    "resources.take_packet_step()",
+    "checked_add(input.uploads.len())",
+    "cursor.icon_offset.checked_add(FRAME_ATLAS_PAGE_BYTES)",
+    "cursor.icon_pixels.extend_from_slice",
+  ], "P5a pre-input boundary does not advance retained draw, chrome, packet, and upload owners one step at a time");
+  requireAll(finishBoundary, [
+    "FrameFinishPhase::GlyphUpload",
+    "checked_add(FRAME_ATLAS_PAGE_BYTES)",
+    "FrameFinishPhase::Draw",
+    "FrameFinishPhase::Overlay",
+    "self.pending_frame_deferred = Some",
+  ], "P5a post-input boundary does not page atlas work and retain draw/overlay/deferred transfers");
+  for (const forbidden of ["frame_before_input(", "frame_after_input(", "drive_pending_frame_deferred", "take_packets(", "append_to(", "self.draw.clear()", "self.overlay.clear()", "self.icons.pixels.clone()", "self.atlas.pixels.clone()"])
+    if (glue.includes(forbidden)) failures.push(`P5a mounted call graph retains opaque whole-work callee ${forbidden}`);
+  requireAll(deferredBoundary, ["cursor_value.take_next()", "spawn_frame_deferred_reserved", "runtime.interaction = Some(interaction)"], "P5a deferred boundary does not take and submit exactly one retained work owner");
+  for (const forbidden of [".expect(", ".unwrap(", "loop {", "while "])
+    if (deferredBoundary.includes(forbidden)) failures.push(`P5a deferred boundary retains panicking or run-to-completion ${forbidden}`);
+  requireAll(chromeBoundary, [
+    "ShellChromeFramePhase::MainWindow",
+    "ShellChromeFramePhase::LeftPanel",
+    "ShellChromeFramePhase::RightPanel",
+    "ShellChromeFramePhase::Navbar",
+    "ShellChromeFramePhase::TutorialBar",
+    "ShellChromeFramePhase::Footer",
+    "ShellChromeFramePhase::Overlay",
+    "ShellChromeFramePhase::IntroductionWrite",
+    "introduction_seen_writes.pop()",
+  ], "P5a shell chrome boundary is not a retained one-child cursor");
+  for (const child of ["self.render_main_window(", "self.render_left_panel(", "self.render_right_panel(", "self.render_navbar(", "self.render_tutorial_bar(", "self.render_footer(", "self.render_overlay(", "self.render_tree_drag_overlay(", "render_tutorial_gesture_overlay("])
+    requireExactlyOne(chromeBoundary, child, `P5a shell chrome cursor must invoke exactly one ${child} child site`);
+  for (const forbidden of ["render_chrome(", "render_chrome_build(", ".clear()", "std::mem::take(&mut self.chrome_build.introduction_seen_writes)", "for app_id in", "while "])
+    if (chromeBoundary.includes(forbidden)) failures.push(`P5a shell chrome cursor retains whole-work ${forbidden}`);
+  requireAll(engineBoundary, [
+    "ENGINE_CANVAS_FRAME_PACKET_CAPACITY: usize = 256",
+    "packets: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>",
+    "take_packet_step",
+    "Result<Option<EngineCanvasPacket>, EngineCanvasPacket>",
+    "terminal_is_empty",
+  ], "P5a EngineCanvas packet producer is not fixed, fallible, and one-owner resumable");
+  for (const forbidden of ["packets: Vec<EngineCanvasPacket>", "take_packets(", "std::mem::take(&mut self.packets)"])
+    if (engineBoundary.includes(forbidden)) failures.push(`P5a EngineCanvas boundary retains dynamic or bulk packet staging ${forbidden}`);
+  requireAll(worldBoundary, [
+    "WORLD3D_FRAME_RESOURCE_CAPACITY: usize = 256",
+    "uploads: Box<[Option<PreparedRenderUpload>; WORLD3D_FRAME_RESOURCE_CAPACITY]>",
+    "evictions: Box<[Option<PreparedRenderEviction>; WORLD3D_FRAME_RESOURCE_CAPACITY]>",
+    "pub fn append_step",
+    "Result<bool, World3dBuildRejected>",
+    "checked_add(input.uploads.len())",
+    "pub fn terminal_is_empty",
+  ], "P5a World3D resource producer is not fixed, fallible, and one-owner resumable");
+  for (const forbidden of ["uploads: Vec<", "evictions: Vec<", "mesh_requests: HashSet", "raster_requests: HashSet", "append_to(", ".append(", ".clear()"])
+    if (worldBoundary.includes(forbidden)) failures.push(`P5a World3D boundary retains dynamic or bulk resource staging ${forbidden}`);
+  requireAll(transaction, [
+    "pub(crate) fn close_step(&mut self) -> bool",
+    "pub(crate) fn terminal_is_empty(&self) -> bool",
+  ], "P5a retained close and terminal witness are incomplete");
+  requireAll(frameJob, [
+    "WorkerJobSession::try_new",
+    "crate::FrameTransaction::new",
+    "try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive)",
+    "session.take_rejected()",
+    "rejected.resume()",
+    "session.take_terminal()",
+    "session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)",
+    "transaction.close_step() && transaction.terminal_is_empty()",
+    "generation_is_fresh(generation, frame_generation)",
+  ], "P5a mounted shared-pool take/resume/close/terminal laws are incomplete");
+  for (const forbidden of ["try_step_on_caller", "WorkerPool::new(", "thread::spawn", "loop {"]) if (frameJob.includes(forbidden)) failures.push(`P5a mounted worker path contains forbidden ${forbidden}`);
+  requireAll(host, [
+    "fn advance_frame_generation",
+    "generation.checked_add(1)",
+    "observe_presentation_input_generation(build_generation.0)",
+    "AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake }",
+    "if generation.0 != self.frame_generation",
+    "self.snapshot_sink.publish",
+  ], "P5a host does not fail closed on exhaustion/stale publication or atomically publish the accepted frame");
+  requireAll(hostSource, ["mounted_pointer_storm_callback_p99_stays_below_two_milliseconds", "mounted_resize_storm_callback_p99_stays_below_two_milliseconds", "mounted_frame_generation_exhaustion_is_permanent_and_non_wrapping"], "P5a mounted input/resize/latency/exhaustion laws are missing");
+  if (host.includes("frame_generation.wrapping_add") || host.includes("snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, generation, timestamp_us, cursor")) failures.push("P5a host retains wrapping generation or callback-local snapshot publication");
+  requireAll(snapshot, ["pub fn next_revision(&self) -> Option<u64>", "current.checked_add(1)?", "compare_exchange(current, next"], "P5a snapshot revision does not permanently fail closed at exhaustion");
+  if (!snapshotSource.includes("revision_exhaustion_is_permanent_and_preserves_last_valid_snapshot")) failures.push("P5a last-valid snapshot exhaustion law is missing");
+  if (uiRuntimeGlue.includes("mod transaction") || uiRuntimeGlue.includes("pub use transaction::*")) failures.push("P5a dormant headless transaction is production reachable beside the mounted authority");
+  return failures;
+}
+
+export function interactivityMountedFrameTransactionSelfTests(repoRoot: string): void {
+  const files = [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️frame_job.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️render_snapshot.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs",
+    INTERACTIVITY_AUDIT_SHELL_FILE,
+    INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
+    INTERACTIVITY_AUDIT_WORLD3D_FILE,
+  ];
+  const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
+  const mutations: [string, number, string, string][] = [
+    ["zero-mounted-constructor", 1, "crate::FrameTransaction::new", "crate::UnmountedFrameTransaction::new"],
+    ["second-runtime", 1, "renderer_worker_pool()", "semio_framework_async::WorkerPool::new()"],
+    ["caller-drive", 1, "try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive)", "try_step_on_caller()"],
+    ["dynamic-actions", 0, "slots: [Option<ActionDescriptor>; WORLD3D_DEADLINE_CAPACITY]", "slots: Vec<ActionDescriptor>"],
+    ["postallocation-credit", 0, "checked_add(input.uploads.len())", "saturating_add(input.uploads.len())"],
+    ["wrapping-generation", 2, "generation.checked_add(1)", "Some(generation.wrapping_add(1))"],
+    ["stage-fallthrough", 0, "context.set_stage(self.stage_label())", "loop { context.set_stage(self.stage_label())"],
+    ["missing-input-freshness", 0, "base_witness != current_witness", "false"],
+    ["missing-terminal-witness", 0, "pub(crate) fn terminal_is_empty", "fn removed_terminal_is_empty"],
+    ["missing-worker-close", 1, "transaction.close_step() && transaction.terminal_is_empty()", "transaction.close_step()"],
+    ["missing-take-rejected", 1, "session.take_rejected()", "session.drop_rejected()"],
+    ["missing-resume", 1, "rejected.resume()", "rejected.begin_close()"],
+    ["missing-terminal-take", 1, "session.take_terminal()", "session.drop_terminal()"],
+    ["partial-stale-publish", 2, "if generation.0 != self.frame_generation", "if false"],
+    ["snapshot-wrap", 3, "current.checked_add(1)?", "current.wrapping_add(1)"],
+    ["missing-effect-budget", 0, "EFFECT_STORM_BUDGET: u32 = 64", "EFFECT_STORM_BUDGET: u32 = u32::MAX"],
+    ["missing-max-identity", 0, "assert_eq!(rejected.controller_id.as_ptr(), identity)", "assert_eq!(identity, identity)"],
+    ["missing-input-storm-law", 2, "mounted_pointer_storm_callback_p99_stays_below_two_milliseconds", "pointer_storm_smoke"],
+    ["missing-last-valid-law", 3, "revision_exhaustion_is_permanent_and_preserves_last_valid_snapshot", "revision_exhaustion_smoke"],
+    ["dormant-production-authority", 4, "#[cfg(test)]\n#[path = \"🦀️transaction.rs\"]", "#[path = \"🦀️transaction.rs\"]"],
+    ["opaque-before-callee", 0, "app.frame_before_input_step(handle, directives, self.dpr, cursor)", "app.frame_before_input(handle, directives, self.dpr, cursor)"],
+    ["bulk-draw-clear", 0, "previous.retire_step()", "self.draw.clear()"],
+    ["whole-icon-clone", 0, "cursor.icon_pixels.extend_from_slice", "cursor.icon_pixels = self.icons.pixels.clone(); let _ ="],
+    ["immediate-deferred-drive", 0, "self.pending_frame_deferred = Some", "self.drive_pending_frame_deferred(handle); self.pending_frame_deferred = Some"],
+    ["whole-chrome", 5, "render_chrome_step", "render_chrome"],
+    ["chrome-loop", 5, "introduction_seen_writes.pop()", "for app_id in self.chrome_build.introduction_seen_writes.iter()"],
+    ["two-chrome-children", 5, "self.render_main_window(", "self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, engine_resources, world_resources); self.render_main_window("],
+    ["dynamic-engine-packets", 0, "engine_packets: FrameEnginePackets", "engine_packets: Vec<engine_canvas::EngineCanvasPacket>"],
+    ["bulk-engine-take", 6, "take_packet_step", "take_packets"],
+    ["dynamic-world-uploads", 7, "uploads: Box<[Option<PreparedRenderUpload>; WORLD3D_FRAME_RESOURCE_CAPACITY]>", "uploads: Vec<PreparedRenderUpload>"],
+    ["bulk-world-append", 7, "pub fn append_step", "pub fn append_to"],
+    ["missing-atlas-page", 0, "checked_add(FRAME_ATLAS_PAGE_BYTES)", "checked_add(self.atlas.pixels.len())"],
+    ["deferred-run-to-completion", 0, "cursor_value.take_next()", "loop { cursor_value.take_next()"],
+  ];
+  for (const [name, index, needle, replacement] of mutations) {
+    const mutated = [...clean];
+    mutated[index] = mutated[index]!.replaceAll(needle, replacement);
+    if (mutated[index] === clean[index]) throw new Error(`[verify interactivity] P5a mutation ${name} did not alter source.`);
+    if (interactivityMountedFrameTransactionFailures(...mutated).length === 0) throw new Error(`[verify interactivity] P5a mutation ${name} was falsely accepted.`);
+  }
+  const failures = interactivityMountedFrameTransactionFailures(...clean);
+  if (failures.length !== 0) throw new Error(`[verify interactivity] P5a mounted frame baseline was falsely rejected: ${failures.join("; ")}`);
+}
+//#endregion 🔄️P5aMountedFrameTransaction
+
 function interactivityPreparedRasterProducerFailures(preparedSource: string, drawSource: string, gpuSource: string, canvasSource: string, interpreterSource: string, glueSource: string, hostSource: string): string[] {
   const prepared = interactivityProductionSource(preparedSource);
   const canvas = interactivityProductionSource(canvasSource);
@@ -8067,18 +8791,22 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     "pub struct DbIoArtifactId",
     "pub fn try_from_text(operation: u64, source: &DbIoText)",
     "value: DbIoText",
+    "driver: Option<ArtifactId>",
+    "external: Option<DbIoExternalBytes>",
+    "reservation: Option<DbIoDriverReservation>",
     "pub struct DbIoExternalBytes",
     "pub type LeaseInfo = DbIoLeaseResult",
     "pub fn try_reserve(operation: u64, maximum_capacity: usize)",
     "pub fn observe_capacity(&mut self, capacity: usize)",
     "pub struct DbIoObservedBytesWrite",
     "pub fn db_io_write_observed_bytes",
-    "pub fn db_io_copy_observed_text",
+    "pub async fn db_io_copy_observed_text",
     "pub struct DbIoListTransfer",
     "pub fn db_io_transfer_list",
     "pub struct DbIoPlatformClose",
     "pub(crate) struct DbIoPlatformSlicesCopy",
     "pub struct DbIoPageWriterSeal",
+    "pub fn seal_retained_step",
     "pub async fn close_db_io_backend",
     "pub fn retire_db_io_backend",
     "fn db_io_backend_maintenance_step",
@@ -8099,6 +8827,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     "DbIoLostOwner::Fault",
     "DbIoLostOwner::DriverReservation",
     "DbIoLostOwner::ExternalBytes",
+    "DbIoLostOwner::ArtifactId",
     "DbIoLostOwner::Backend",
     "DbIoLostOwner::ResultLease",
   ]) if (!storage.includes(required)) failures.push(`DB aggregate/result/backend authority missing: ${required}`);
@@ -8128,11 +8857,23 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     if (!lostOwnerClose.includes(required)) failures.push(`DB overflow/quarantine reclaim does not retain the exact owner until a primary target exists: ${required}`);
   if (/let\s+owner\s*=\s*(?:quarantine|overflow)\[index\]\.take\(\)/.test(lostOwnerClose)) failures.push("DB overflow/quarantine reclaim takes an exact owner before durable target installation");
   const artifactOwner = rustItem(storage, "impl DbIoArtifactId");
-  if (!artifactOwner.includes("DbIoText::try_from_str(source.as_str())") || artifactOwner.includes("std::mem::replace") || artifactOwner.includes("ArtifactId(")) failures.push("DB admitted artifact identity is not a fixed retained DbIoText owner");
+  for (const required of ["DbIoText::try_from_str(source.as_str())", "DbIoDriverReservation::try_reserve", "ArtifactId(source.as_str().to_owned())", ".observe_capacity(capacity)?", "driver.0.into_bytes()", "DbIoExternalBytes::new", "pub fn as_artifact", "pub fn terminal_is_empty"])
+    if (!artifactOwner.includes(required)) failures.push(`DB admitted artifact conversion lacks exact fixed/dynamic authority: ${required}`);
+  const artifactDrop = rustItem(storage, "impl Drop for DbIoArtifactId");
+  if (!artifactDrop.includes("DbIoLostOwner::ArtifactId(owner)")) failures.push("DB admitted artifact conversion Drop does not retain its exact dynamic owner");
   const observedBytes = rustItem(storage, "impl Future for DbIoObservedBytesWrite");
-  if (!storage.includes("source: Option<DbIoExternalBytes>") || !observedBytes.includes("source.close_step()") || !observedBytes.includes("owner.page") || observedBytes.includes("owner.output.finish()") || !storage.includes("fn terminal_is_empty(&self)") || !storage.includes("self.value.is_none() && self.phase == 2")) failures.push("DB observed driver allocation lacks an explicit resumable external owner");
+  if (!storage.includes("source: Option<DbIoExternalBytes>") || !observedBytes.includes("source.close_step()") || !observedBytes.includes("owner.output.seal_retained_step()") || observedBytes.includes("owner.output.finish()") || !storage.includes("fn terminal_is_empty(&self)") || !storage.includes("self.value.is_none() && self.phase == 2")) failures.push("DB observed driver allocation lacks an explicit resumable external owner");
+  const observedText = rustItem(storage, "pub async fn db_io_copy_observed_text");
+  for (const required of ["DbIoExternalBytes::new(source.into_bytes())", "reservation.observe_capacity(source.capacity()?)?", "while !source.terminal_is_empty()", "source.close_step()", "semio_framework_async::yield_once().await"])
+    if (!observedText.includes(required)) failures.push(`DB observed driver text lacks retained external-owner close evidence: ${required}`);
+  if (observedText.includes("drop(source)")) failures.push("DB observed driver text ordinarily drops its external allocation");
   const writerSeal = rustItem(storage, "impl Future for DbIoPageWriterSeal");
-  if (!writerSeal.includes("owner.phase") || !writerSeal.includes("owner.page") || writerSeal.includes("writer.finish()")) failures.push("DB writer publication is not a persisted one-page transition cursor");
+  const writerSealStep = rustItem(storage, "pub fn seal_retained_step");
+  for (const required of ["self.seal_phase", "self.seal_page", "page.transition(current, next)?", "Ok(None)", "Ok(Some(owner))"])
+    if (!writerSealStep.includes(required)) failures.push(`DB writer publication lacks persisted one-opportunity seal state: ${required}`);
+  if (!writerSeal.includes("writer.seal_retained_step()") || writerSeal.includes("writer.finish()") || /while\b|\bloop\b/.test(writerSealStep)) failures.push("DB writer publication is not a persisted one-page transition cursor");
+  for (const [name, source] of [["storage", storage], ["SQLite", sqlite], ["PostgreSQL", postgres], ["Neo4j", neo4j]] as const)
+    if (/\b(?:writer|output)\.(?:finish|seal)\(\)/.test(source)) failures.push(`${name} production bypasses retained DbIoPageWriterSeal completion`);
 
   const memoryStart = storage.indexOf("struct MemoryDbIoExecutor");
   const memoryEnd = storage.indexOf("//#region 🔖️Fs", memoryStart);
@@ -8151,8 +8892,9 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     if (memory.includes(forbidden)) failures.push(`memory typed operation retains uncensused dynamic owner: ${forbidden}`);
   const memoryFacade = storage.slice(storage.indexOf("pub struct MemoryStorage"), storage.indexOf("//#region 🔖️Fs"));
   if (!memoryFacade.includes("pub async fn new(pool: Arc<WorkerPool>)") || !memoryFacade.includes("memory_execute(self.pool.as_ref(), DbIoTask::")) failures.push("MemoryStorage does not inject and use the shared typed WorkerPool");
+  if (!memory.includes("output.seal_retained_step()")) failures.push("Memory production completion bypasses its retained one-opportunity page seal");
 
-  for (const owner of ["DbIoPageWriter", "DbIoPages", "DbIoU64List", "DbIoLeaseResult", "DbIoFault", "DbIoResultLease"] as const) {
+  for (const owner of ["DbIoPageWriter", "DbIoPages", "DbIoU64List", "DbIoLeaseResult", "DbIoFault", "DbIoResultLease", "DbIoArtifactId"] as const) {
     const dropBody = rustItem(storage, `impl Drop for ${owner}`);
     if (!dropBody.includes("db_io_park_lost_owner(")) failures.push(`${owner} Drop does not durably park its populated exact owner`);
     if (dropBody.includes("db_io_operation_return(") || dropBody.includes("db_io_result_handback(")) failures.push(`${owner} Drop directly returns aggregate credit or result handback`);
@@ -8169,6 +8911,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
 
   for (const required of ["backend_close_cursor", "backend_terminal", "fn close_backend_step(&mut self,", "fn backend_terminal_is_empty(&self)", "close_db_io_backend(self.control).await"])
     if (!sqlite.includes(required)) failures.push(`SQLite backend close witness missing: ${required}`);
+  if (!sqlite.includes("output.seal_retained_step()?")) failures.push("SQLite staged read bypasses retained one-opportunity page sealing");
   for (const [name, source, executor] of [
     ["PostgreSQL", postgres, "PostgresDbIoExecutor"],
     ["Neo4j", neo4j, "Neo4jDbIoExecutor"],
@@ -8195,7 +8938,10 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     if (/\.execute\(&self\.(?:pool|graph)\)|\.fetch_(?:one|optional)\(&self\.(?:pool|graph)\)/.test(facade)) failures.push(`${name} public facade directly calls its external driver`);
     if (!ordered(facade, ["submit_db_io_task(self.worker_pool.as_ref(), task)", "operation.start_async_native_on_lane_io().await?", "operation.await"])) failures.push(`${name} external driver execution escapes the generation-qualified Lane::Io worker order`);
     if (/drive_task\([^)]*\)\.await/.test(facade) || facade.includes("take_async_native().await")) failures.push(`${name} facade polls an actual external driver future outside WorkerPool authority`);
-    if (source.includes("ArtifactId(document.as_str().to_string())")) failures.push(`${name} constructs an uncensused post-admission ArtifactId`);
+    if (/ArtifactId\([^)]*(?:as_str\(\)|document)[^)]*(?:to_string|to_owned)/.test(source)) failures.push(`${name} constructs an uncensused post-admission ArtifactId`);
+    const artifactMacro = source.slice(source.indexOf("macro_rules! with_admitted_artifact"), source.indexOf("use ", source.indexOf("macro_rules! with_admitted_artifact")));
+    for (const required of ["owner.as_artifact()?", "while owner.close_step()?", "semio_framework_async::yield_once().await"])
+      if (!artifactMacro.includes(required)) failures.push(`${name} admitted artifact macro lacks retained conversion/close evidence: ${required}`);
     if (source.includes("LeaseInfo { resource:") || source.includes("holder.as_str().to_string(), fence:")) failures.push(`${name} constructs an uncensused raw LeaseInfo result`);
     if (source.includes("Waker::noop()")) failures.push(`${name} backend close manually polls an external future without the shared Lane::Io task context`);
     if (/poll_fn\([\s\S]{0,180}Poll::Ready\(\(\)\)/.test(source)) failures.push(`${name} retains a Ready-only external-driver pseudo-yield`);
@@ -8204,7 +8950,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     if (!postgres.includes(required)) failures.push(`PostgreSQL pre-driver capacity admission missing: ${required}`);
   for (const forbidden of ["reserve_driver_output(len as u64)", "reserve_driver_output(range.len)"])
     if (postgres.includes(forbidden)) failures.push(`PostgreSQL external Vec allocation is not precharged to its maximum observed capacity: ${forbidden}`);
-  for (const required of ["reserve_driver_read", "BoltBytes", "reservation.observe_capacity(bytes.len())?", "current_reservation.observe_capacity(current.len())?", "write_driver_bytes(reservation, bytes", "self.graph = Some(Graph::connect(config).await", "Neo4jDbIoExecutor::new(config"])
+  for (const required of ["reserve_driver_read", "BoltBytes", "db_io_write_observed_bytes_range(reservation, bytes.value", "DbIoExternalBytes::new(current.value)", "current_reservation.observe_capacity(current.capacity()?)?", "while !current.terminal_is_empty()", "semio_framework_async::yield_once().await", "write_driver_bytes(reservation, bytes", "self.graph = Some(Graph::connect(config).await", "Neo4jDbIoExecutor::new(config"])
     if (!neo4j.includes(required)) failures.push(`Neo4j retained codec/connect authority missing: ${required}`);
   for (const forbidden of ["fn encode_bytes(", "let updated = apply_append", "let updated = apply_truncate", "connect_with_config_and_uri(config, uri.clone()).await", "BASE64", "base64::", "decode_bytes(&row.get::<String>"])
     if (neo4j.includes(forbidden)) failures.push(`Neo4j production retains a whole-buffer or pre-registration path: ${forbidden}`);
@@ -8214,6 +8960,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     "db_io_platform_fixed_ring_max_plus_one_returns_exact_capacity",
     "db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate",
     "db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger",
+    "db_io_page_writer_seal_memory_sqlite_neo_state_wal_index_max_cancel_fault_drop_is_one_opportunity",
     "db_io_real_queued_callback_rejects_a_reused_task_slot_aba",
     "db_io_retry_generation_max_publishes_a_lossless_terminal_fault",
     "db_io_postgres_and_neo4j_mock_drivers_use_supplied_writer_and_observed_capacity",
@@ -8234,6 +8981,9 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
   const closeInterruptionLaw = rustItem(storageSource, "async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger");
   for (const evidence of ["db_io_close_platform", "Poll::Pending", "Poll::Ready(Ok(()))", "Poll::Ready(Err(DbError::Unavailable", "drop(close)", "ledger_witness"])
     if (!closeInterruptionLaw.includes(evidence)) failures.push(`DB Ready/Pending/fault close-interruption law lacks production-path evidence: ${evidence}`);
+  const pageSealLaw = rustItem(storageSource, "fn db_io_page_writer_seal_memory_sqlite_neo_state_wal_index_max_cancel_fault_drop_is_one_opportunity");
+  for (const evidence of ["seal_retained()", "Future::poll", "Poll::Pending", "drop(seal)", "DB_IO_OPERATION_PAGES + 1", "DbIoPagePhase::Queued", "Poll::Ready(Err(rejected))", "rejected.into_writer()", "ledger_witness()"])
+    if (!pageSealLaw.includes(evidence)) failures.push(`DB page-seal hostile law lacks exact interrupted/max/fault owner evidence: ${evidence}`);
   if (!postgresSource.includes("lost_postgres_facade_drives_the_real_lazy_pool_to_closed") || !postgres.includes("self.pool.is_closed()") || !postgres.includes("pool.close().await") || !postgres.includes("Future::poll(future.as_mut(), context)")) failures.push("PostgreSQL lost-facade path lacks a real Lane::Io-polled async pool-close terminal witness");
   if (!neo4jSource.includes("lost_neo4j_facade_retires_the_real_owned_config_without_a_service")) failures.push("Neo4j lost-facade path lacks its real owned-control retirement law");
   if (!hub.includes("PostgresStorage::connect(pool.clone()") || !hub.includes("Neo4jStorage::connect(pool.clone()")) failures.push("Hub async-native storage callers bypass the shared WorkerPool");
@@ -8242,13 +8992,13 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
 
 function interactivityDbIoB1B6SelfTests(): void {
   let storage =
-    "struct DbIoOperationLedger fn db_io_operation_reserve fn db_io_backend_owner_reserve fn db_io_operation_attach_task fn db_io_operation_add_result_lease fn db_io_operation_return_result_lease fn db_io_operation_transfer_to_backend fn db_io_operation_detach_task fn db_io_operation_terminal_is_empty backend_owner: bool pub struct DbIoResultLease result_handback: Option<DbIoTaskHandle> Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()) pub struct DbIoAsyncTaskLease credit_returned: bool fn db_io_result_lease_credit() fn db_io_async_lease_credit() pub async fn take_async_native pub async fn start_async_native_on_lane_io pub fn start_on_lane_io type DbIoAsyncDriverFuture async_driver: Option<DbIoAsyncDriverFuture> fn db_io_poll_async_driver db_io_submit_job(handle, Box::new(move || db_io_poll_async_driver(handle)) pub fn enter_lane_io_driver_turn pub fn leave_lane_io_driver_turn pub fn db_io_maintenance_step() fn db_io_backend_close_lane_step fn db_io_poll_backend_close_on_lane_io { db_io_backend_close_lane_step(control, context) } fn db_io_request_backend_close pool.try_submit(Lane::Io executor: Option<Box<dyn DbIoTaskExecutor>> fn close_backend_step(&mut self, context: &mut std::task::Context<'_>) -> Result<bool, DbError> fn backend_terminal_is_empty(&self) -> bool pub struct DbIoDriverReservation pub struct DbIoArtifactId pub fn try_from_text(operation: u64, source: &DbIoText) pub type LeaseInfo = DbIoLeaseResult pub fn try_reserve(operation: u64, maximum_capacity: usize) pub fn observe_capacity(&mut self, capacity: usize) pub struct DbIoPageWriterSeal impl std::future::Future for DbIoPageWriterSeal { context.waker().wake_by_ref(); std::task::Poll::Pending } pub struct DbIoObservedBytesWrite pub fn db_io_write_observed_bytes impl std::future::Future for DbIoObservedBytesWrite { context.waker().wake_by_ref(); std::task::Poll::Pending } pub fn db_io_copy_observed_text pub struct DbIoListTransfer pub fn db_io_transfer_list impl std::future::Future for DbIoListTransfer { context.waker().wake_by_ref(); std::task::Poll::Pending } pub struct DbIoPlatformClose impl std::future::Future for DbIoPlatformClose { context.waker().wake_by_ref(); std::task::Poll::Pending } pub(crate) struct DbIoPlatformSlicesCopy impl std::future::Future for DbIoPlatformSlicesCopy { context.waker().wake_by_ref(); std::task::Poll::Pending } pub async fn close_db_io_backend pub fn retire_db_io_backend fn db_io_backend_maintenance_step { db_io_request_backend_close(control) } pub fn close_backend_step(&self) -> Result<bool, DbError> pub fn backend_terminal_is_empty(&self) -> bool const DB_IO_LOST_OWNER_SLOTS const DB_IO_LOST_OWNER_OVERFLOW_SLOTS static DB_IO_LOST_OWNER_OVERFLOW static DB_IO_RETIREMENT_PRESSURE_FAULT struct DbIoRejectedBackendRegistry fn db_io_poll_rejected_backend_on_lane_io { executor.close_backend_step(context) } fn db_io_park_lost_owner fn db_io_try_park_lost_owner DbIoLostOwner::PageWriter DbIoLostOwner::Pages DbIoLostOwner::List DbIoLostOwner::Lease DbIoLostOwner::Fault DbIoLostOwner::DriverReservation DbIoLostOwner::Backend DbIoLostOwner::ResultLease struct MemoryDbIoExecutor { wal: std::sync::Mutex<Box<[Option<MemoryWalOwner>]>>, payloads: std::sync::Mutex<[Option<MemoryPayloadOwner>; DB_IO_MEMORY_OWNERS]>, leases: std::sync::Mutex<[Option<MemoryLeaseOwner>; DB_IO_MEMORY_OWNERS]> } fn bind_owner_operation fn owner_backing_bytes pages.transfer_to_backend(backend_operation)? impl DbIoTaskExecutor for MemoryDbIoExecutor MemoryDbIoCursor::LeaseRelease pub struct MemoryStorage pub async fn new(pool: Arc<WorkerPool>) memory_execute(self.pool.as_ref(), DbIoTask:: //#region 🔖️Fs impl Drop for DbIoPageWriter { db_io_park_lost_owner( } impl Drop for DbIoPages { db_io_park_lost_owner( } impl Drop for DbIoU64List { db_io_park_lost_owner( } impl Drop for DbIoLeaseResult { db_io_park_lost_owner( } impl Drop for DbIoFault { db_io_park_lost_owner( } impl Drop for DbIoResultLease { db_io_park_lost_owner( } pub fn cancel(&self) { owner.cancelled = true; drop(owner); db_io_enqueue_close(self.handle)?; } pub async fn take_async_native pub fn complete(mut self { owner.async_detached = false; Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()); drop(owner); db_io_operation_return(self.handle.operation, db_io_async_lease_credit())?; } impl Drop for DbIoAsyncTaskLease pub fn db_io_task_close_step { owner.phase == DbIoTaskPhase::Executing; db_io_rotate_close_head(handle)?; } fn db_io_rotate_close_head db_io_one_byte_high_capacity_candidate_is_rejected_with_exact_owner db_io_process_and_operation_ledger_return_to_exact_prior_witness db_io_platform_fixed_ring_max_plus_one_returns_exact_capacity db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate db_io_real_queued_callback_rejects_a_reused_task_slot_aba db_io_retry_generation_max_publishes_a_lossless_terminal_fault db_io_postgres_and_neo4j_mock_drivers_use_supplied_writer_and_observed_capacity db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker db_io_artifact_and_lease_result_owners_retain_exact_incremental_handback db_io_all_five_backend_controls_require_explicit_terminal_close_witness db_io_memory_backend_uses_actual_typed_submit_take_result_and_terminal_close db_io_async_native_lost_backend_uses_typed_lane_lease_and_mounted_terminal_witness db_io_cancellation_before_during_and_receiver_drop_retain_exact_terminal_owners db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness";
-  storage += " value: DbIoText pub struct DbIoExternalBytes source: Option<DbIoExternalBytes> DbIoLostOwner::ExternalBytes fn terminal_is_empty(&self) { self.value.is_none() && self.phase == 2 } impl DbIoArtifactId { DbIoText::try_from_str(source.as_str()) } static DB_IO_LOST_OWNER_QUARANTINE fn db_io_park_lost_owner(owner: DbIoLostOwner) -> Result<(), DbIoLostOwner> { DB_IO_LOST_OWNER_QUARANTINE } fn db_io_lost_owner_close_step() { db_io_lost_owner_close_opportunity quarantine[index].as_mut() overflow[index].as_mut() *slot = quarantine[index].take() *slot = overflow[index].take() } impl Future for DbIoPageWriterSeal { owner.phase owner.page context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoObservedBytesWrite { source.close_step(); owner.page context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoListTransfer { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoPlatformClose { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoPlatformSlicesCopy { context.waker().wake_by_ref(); std::task::Poll::Pending } fn db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate() { DB_IO_LOST_OWNER_SLOTS db_io_park_lost_owner(owner) DB_IO_LOST_OWNER_OVERFLOW DB_IO_LOST_OWNER_QUARANTINE retained-overflow-owner exact-plus-one-candidate exact-plus-two-candidate exact-all-tier-refusal db_io_park_lost_owner(refused) assert_eq!(exact db_io_lost_owner_close_step } async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger() { db_io_close_platform Poll::Pending Poll::Ready(Ok(())) Poll::Ready(Err(DbError::Unavailable drop(close) ledger_witness } async fn db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker() { worker_role.load assert_ne! close_worker_role.load close_thread.lock }";
-  const sqlite = "backend_close_cursor backend_terminal fn close_backend_step(&mut self, fn backend_terminal_is_empty(&self) close_db_io_backend(self.control).await";
+    "struct DbIoOperationLedger fn db_io_operation_reserve fn db_io_backend_owner_reserve fn db_io_operation_attach_task fn db_io_operation_add_result_lease fn db_io_operation_return_result_lease fn db_io_operation_transfer_to_backend fn db_io_operation_detach_task fn db_io_operation_terminal_is_empty backend_owner: bool pub struct DbIoResultLease result_handback: Option<DbIoTaskHandle> Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()) pub struct DbIoAsyncTaskLease credit_returned: bool fn db_io_result_lease_credit() fn db_io_async_lease_credit() pub async fn take_async_native pub async fn start_async_native_on_lane_io pub fn start_on_lane_io type DbIoAsyncDriverFuture async_driver: Option<DbIoAsyncDriverFuture> fn db_io_poll_async_driver db_io_submit_job(handle, Box::new(move || db_io_poll_async_driver(handle)) pub fn enter_lane_io_driver_turn pub fn leave_lane_io_driver_turn pub fn db_io_maintenance_step() fn db_io_backend_close_lane_step fn db_io_poll_backend_close_on_lane_io { db_io_backend_close_lane_step(control, context) } fn db_io_request_backend_close pool.try_submit(Lane::Io executor: Option<Box<dyn DbIoTaskExecutor>> fn close_backend_step(&mut self, context: &mut std::task::Context<'_>) -> Result<bool, DbError> fn backend_terminal_is_empty(&self) -> bool pub struct DbIoDriverReservation pub struct DbIoArtifactId pub fn try_from_text(operation: u64, source: &DbIoText) pub type LeaseInfo = DbIoLeaseResult pub fn try_reserve(operation: u64, maximum_capacity: usize) pub fn observe_capacity(&mut self, capacity: usize) pub struct DbIoPageWriterSeal impl std::future::Future for DbIoPageWriterSeal { context.waker().wake_by_ref(); std::task::Poll::Pending } pub struct DbIoObservedBytesWrite pub fn db_io_write_observed_bytes impl std::future::Future for DbIoObservedBytesWrite { context.waker().wake_by_ref(); std::task::Poll::Pending } pub fn db_io_copy_observed_text pub struct DbIoListTransfer pub fn db_io_transfer_list impl std::future::Future for DbIoListTransfer { context.waker().wake_by_ref(); std::task::Poll::Pending } pub struct DbIoPlatformClose impl std::future::Future for DbIoPlatformClose { context.waker().wake_by_ref(); std::task::Poll::Pending } pub(crate) struct DbIoPlatformSlicesCopy impl std::future::Future for DbIoPlatformSlicesCopy { context.waker().wake_by_ref(); std::task::Poll::Pending } pub async fn close_db_io_backend pub fn retire_db_io_backend fn db_io_backend_maintenance_step { db_io_request_backend_close(control) } pub fn close_backend_step(&self) -> Result<bool, DbError> pub fn backend_terminal_is_empty(&self) -> bool const DB_IO_LOST_OWNER_SLOTS const DB_IO_LOST_OWNER_OVERFLOW_SLOTS static DB_IO_LOST_OWNER_OVERFLOW static DB_IO_RETIREMENT_PRESSURE_FAULT struct DbIoRejectedBackendRegistry fn db_io_poll_rejected_backend_on_lane_io { executor.close_backend_step(context) } fn db_io_park_lost_owner fn db_io_try_park_lost_owner DbIoLostOwner::PageWriter DbIoLostOwner::Pages DbIoLostOwner::List DbIoLostOwner::Lease DbIoLostOwner::Fault DbIoLostOwner::DriverReservation DbIoLostOwner::Backend DbIoLostOwner::ResultLease struct MemoryDbIoExecutor { wal: std::sync::Mutex<Box<[Option<MemoryWalOwner>]>>, payloads: std::sync::Mutex<[Option<MemoryPayloadOwner>; DB_IO_MEMORY_OWNERS]>, leases: std::sync::Mutex<[Option<MemoryLeaseOwner>; DB_IO_MEMORY_OWNERS]> } fn bind_owner_operation fn owner_backing_bytes pages.transfer_to_backend(backend_operation)? impl DbIoTaskExecutor for MemoryDbIoExecutor MemoryDbIoCursor::LeaseRelease output.seal_retained_step() pub struct MemoryStorage pub async fn new(pool: Arc<WorkerPool>) memory_execute(self.pool.as_ref(), DbIoTask:: //#region 🔖️Fs impl Drop for DbIoPageWriter { db_io_park_lost_owner( } impl Drop for DbIoPages { db_io_park_lost_owner( } impl Drop for DbIoU64List { db_io_park_lost_owner( } impl Drop for DbIoLeaseResult { db_io_park_lost_owner( } impl Drop for DbIoFault { db_io_park_lost_owner( } impl Drop for DbIoResultLease { db_io_park_lost_owner( } pub fn cancel(&self) { owner.cancelled = true; drop(owner); db_io_enqueue_close(self.handle)?; } pub async fn take_async_native pub fn complete(mut self { owner.async_detached = false; Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()); drop(owner); db_io_operation_return(self.handle.operation, db_io_async_lease_credit())?; } impl Drop for DbIoAsyncTaskLease pub fn db_io_task_close_step { owner.phase == DbIoTaskPhase::Executing; db_io_rotate_close_head(handle)?; } fn db_io_rotate_close_head db_io_one_byte_high_capacity_candidate_is_rejected_with_exact_owner db_io_process_and_operation_ledger_return_to_exact_prior_witness db_io_platform_fixed_ring_max_plus_one_returns_exact_capacity db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate db_io_real_queued_callback_rejects_a_reused_task_slot_aba db_io_retry_generation_max_publishes_a_lossless_terminal_fault db_io_postgres_and_neo4j_mock_drivers_use_supplied_writer_and_observed_capacity db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker db_io_artifact_and_lease_result_owners_retain_exact_incremental_handback db_io_all_five_backend_controls_require_explicit_terminal_close_witness db_io_memory_backend_uses_actual_typed_submit_take_result_and_terminal_close db_io_async_native_lost_backend_uses_typed_lane_lease_and_mounted_terminal_witness db_io_cancellation_before_during_and_receiver_drop_retain_exact_terminal_owners db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness";
+  storage += " value: DbIoText driver: Option<ArtifactId> external: Option<DbIoExternalBytes> reservation: Option<DbIoDriverReservation> pub struct DbIoExternalBytes source: Option<DbIoExternalBytes> DbIoLostOwner::ExternalBytes DbIoLostOwner::ArtifactId fn terminal_is_empty(&self) { self.value.is_none() && self.phase == 2 } pub async fn db_io_copy_observed_text { DbIoExternalBytes::new(source.into_bytes()) reservation.observe_capacity(source.capacity()?)? while !source.terminal_is_empty() { source.close_step(); semio_framework_async::yield_once().await } } impl DbIoArtifactId { DbIoText::try_from_str(source.as_str()) DbIoDriverReservation::try_reserve ArtifactId(source.as_str().to_owned()) .observe_capacity(capacity)? driver.0.into_bytes() DbIoExternalBytes::new pub fn as_artifact pub fn terminal_is_empty } impl Drop for DbIoArtifactId { DbIoLostOwner::ArtifactId(owner) db_io_park_lost_owner( } static DB_IO_LOST_OWNER_QUARANTINE fn db_io_park_lost_owner(owner: DbIoLostOwner) -> Result<(), DbIoLostOwner> { DB_IO_LOST_OWNER_QUARANTINE } fn db_io_lost_owner_close_step() { db_io_lost_owner_close_opportunity quarantine[index].as_mut() overflow[index].as_mut() *slot = quarantine[index].take() *slot = overflow[index].take() } pub fn seal_retained_step { self.seal_phase self.seal_page page.transition(current, next)? Ok(None) Ok(Some(owner)) } impl Future for DbIoPageWriterSeal { writer.seal_retained_step() context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoObservedBytesWrite { source.close_step(); owner.output.seal_retained_step() context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoListTransfer { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoPlatformClose { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoPlatformSlicesCopy { context.waker().wake_by_ref(); std::task::Poll::Pending } output.seal_retained_step() fn db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate() { DB_IO_LOST_OWNER_SLOTS db_io_park_lost_owner(owner) DB_IO_LOST_OWNER_OVERFLOW DB_IO_LOST_OWNER_QUARANTINE retained-overflow-owner exact-plus-one-candidate exact-plus-two-candidate exact-all-tier-refusal db_io_park_lost_owner(refused) assert_eq!(exact db_io_lost_owner_close_step } async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger() { db_io_close_platform Poll::Pending Poll::Ready(Ok(())) Poll::Ready(Err(DbError::Unavailable drop(close) ledger_witness } fn db_io_page_writer_seal_memory_sqlite_neo_state_wal_index_max_cancel_fault_drop_is_one_opportunity() { seal_retained() Future::poll Poll::Pending drop(seal) DB_IO_OPERATION_PAGES + 1 DbIoPagePhase::Queued Poll::Ready(Err(rejected)) rejected.into_writer() ledger_witness() } async fn db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker() { worker_role.load assert_ne! close_worker_role.load close_thread.lock }";
+  const sqlite = "backend_close_cursor backend_terminal output.seal_retained_step()? fn close_backend_step(&mut self, fn backend_terminal_is_empty(&self) close_db_io_backend(self.control).await";
   const postgres =
-    "struct PostgresDbIoExecutor impl DbIoTaskExecutor for PostgresDbIoExecutor DbIoExecutorMode::AsyncNative register_db_io_backend db_io_transfer_list fn drive_async(self: Box<Self>, operation: u64, task: DbIoTask) with_admitted_artifact! fn close_backend_step(&mut self, pool.close().await Future::poll(future.as_mut(), context) fn backend_terminal_is_empty(&self) self.pool.is_closed() DbIoDriverReservation reserve_driver_output DbIoDriverReservation::try_reserve(self.active_operation db_io_write_observed_bytes(reservation, bytes, output).await db_io_copy_observed_text(reservation, holder) pub struct PostgresStorage worker_pool: Arc<WorkerPool> async fn execute { submit_db_io_task(self.worker_pool.as_ref(), task); operation.start_async_native_on_lane_io().await?; operation.await; } self.execute(DbIoTask:: close_db_io_backend(self.control).await //#region 🔖️DbBackend lost_postgres_facade_drives_the_real_lazy_pool_to_closed";
+    "macro_rules! with_admitted_artifact { owner.as_artifact()? while owner.close_step()? semio_framework_async::yield_once().await } use driver; struct PostgresDbIoExecutor impl DbIoTaskExecutor for PostgresDbIoExecutor DbIoExecutorMode::AsyncNative register_db_io_backend db_io_transfer_list fn drive_async(self: Box<Self>, operation: u64, task: DbIoTask) with_admitted_artifact! fn close_backend_step(&mut self, pool.close().await Future::poll(future.as_mut(), context) fn backend_terminal_is_empty(&self) self.pool.is_closed() DbIoDriverReservation reserve_driver_output DbIoDriverReservation::try_reserve(self.active_operation db_io_write_observed_bytes(reservation, bytes, output).await db_io_copy_observed_text(reservation, holder) pub struct PostgresStorage worker_pool: Arc<WorkerPool> async fn execute { submit_db_io_task(self.worker_pool.as_ref(), task); operation.start_async_native_on_lane_io().await?; operation.await; } self.execute(DbIoTask:: close_db_io_backend(self.control).await //#region 🔖️DbBackend lost_postgres_facade_drives_the_real_lazy_pool_to_closed";
   const neo4j =
-    "struct Neo4jDbIoExecutor impl DbIoTaskExecutor for Neo4jDbIoExecutor DbIoExecutorMode::AsyncNative register_db_io_backend db_io_transfer_list fn drive_async(self: Box<Self>, operation: u64, task: DbIoTask) with_admitted_artifact! fn close_backend_step(&mut self, fn backend_terminal_is_empty(&self) DbIoDriverReservation reserve_driver_read BoltBytes reservation.observe_capacity(bytes.len())? current_reservation.observe_capacity(current.len())? write_driver_bytes(reservation, bytes self.graph = Some(Graph::connect(config).await Neo4jDbIoExecutor::new(config pub struct Neo4jStorage worker_pool: Arc<WorkerPool> async fn execute { submit_db_io_task(self.worker_pool.as_ref(), task); operation.start_async_native_on_lane_io().await?; operation.await; } self.execute(DbIoTask:: close_db_io_backend(self.control).await //#region 🔖️DbBackend lost_neo4j_facade_retires_the_real_owned_config_without_a_service";
+    "macro_rules! with_admitted_artifact { owner.as_artifact()? while owner.close_step()? semio_framework_async::yield_once().await } use driver; struct Neo4jDbIoExecutor impl DbIoTaskExecutor for Neo4jDbIoExecutor DbIoExecutorMode::AsyncNative register_db_io_backend db_io_transfer_list fn drive_async(self: Box<Self>, operation: u64, task: DbIoTask) with_admitted_artifact! fn close_backend_step(&mut self, fn backend_terminal_is_empty(&self) DbIoDriverReservation reserve_driver_read BoltBytes db_io_write_observed_bytes_range(reservation, bytes.value DbIoExternalBytes::new(current.value) current_reservation.observe_capacity(current.capacity()?)? while !current.terminal_is_empty() semio_framework_async::yield_once().await write_driver_bytes(reservation, bytes self.graph = Some(Graph::connect(config).await Neo4jDbIoExecutor::new(config pub struct Neo4jStorage worker_pool: Arc<WorkerPool> async fn execute { submit_db_io_task(self.worker_pool.as_ref(), task); operation.start_async_native_on_lane_io().await?; operation.await; } self.execute(DbIoTask:: close_db_io_backend(self.control).await //#region 🔖️DbBackend lost_neo4j_facade_retires_the_real_owned_config_without_a_service";
   const hub = "PostgresStorage::connect(pool.clone() Neo4jStorage::connect(pool.clone()";
   const mutations = [
     ["aggregate-ledger", storage.replace("struct DbIoOperationLedger", "struct EstimatedRequest"), postgres, neo4j],
@@ -8263,24 +9013,28 @@ function interactivityDbIoB1B6SelfTests(): void {
     ["observed-capacity", storage.replace("pub struct DbIoObservedBytesWrite", "pub struct WholeBufferCopy"), postgres, neo4j],
     ["dynamic-artifact-owner", storage.replace("value: DbIoText", "value: ArtifactId"), postgres, neo4j],
     ["unretained-external-allocation", storage.replace("source: Option<DbIoExternalBytes>", "source: Option<Vec<u8>>"), postgres, neo4j],
-    ["writer-final-loop", storage.replace("owner.phase owner.page", "writer.finish()"), postgres, neo4j],
-    ["ready-only-copy", storage.replace("impl Future for DbIoObservedBytesWrite { source.close_step(); owner.page context.waker().wake_by_ref(); std::task::Poll::Pending }", "impl Future for DbIoObservedBytesWrite { std::task::Poll::Ready(()) }"), postgres, neo4j],
-    ["observed-writer-final-loop", storage.replace("source.close_step(); owner.page", "source.close_step(); owner.output.finish()"), postgres, neo4j],
+    ["writer-final-loop", storage.replace("writer.seal_retained_step()", "writer.finish()"), postgres, neo4j],
+    ["ready-only-copy", storage.replace("impl Future for DbIoObservedBytesWrite { source.close_step(); owner.output.seal_retained_step() context.waker().wake_by_ref(); std::task::Poll::Pending }", "impl Future for DbIoObservedBytesWrite { std::task::Poll::Ready(()) }"), postgres, neo4j],
+    ["observed-writer-final-loop", storage.replace("owner.output.seal_retained_step()", "owner.output.finish()"), postgres, neo4j],
+    ["memory-writer-final-loop", storage.replace("output.seal_retained_step()", "output.finish()"), postgres, neo4j],
     ["retirement-forget", `${storage} std::mem::forget(owner)`, postgres, neo4j],
     ["backend-noop-waker", storage, `${postgres} Waker::noop()`, neo4j],
     ["maintenance-close-poll", storage.replace("fn db_io_backend_maintenance_step { db_io_request_backend_close(control) }", "fn db_io_backend_maintenance_step { db_io_backend_close_lane_step(control, context) }"), postgres, neo4j],
     ["lost-owner-overflow", storage.replace("static DB_IO_LOST_OWNER_OVERFLOW", "static DB_IO_ABANDONED_OWNER_FLAG"), postgres, neo4j],
     ["lost-owner-quarantine", storage.replace("static DB_IO_LOST_OWNER_QUARANTINE", "static DB_IO_OWNER_OVERWRITE"), postgres, neo4j],
     ["unchecked-overflow-install", storage.replace("fn db_io_park_lost_owner(owner: DbIoLostOwner) -> Result<(), DbIoLostOwner>", "fn db_io_park_lost_owner(owner: DbIoLostOwner)"), postgres, neo4j],
-    ["observed-driver-text", storage.replace("pub fn db_io_copy_observed_text", "pub fn driver_string"), postgres, neo4j],
+    ["observed-driver-text", storage.replace("pub async fn db_io_copy_observed_text", "pub async fn driver_string"), postgres, neo4j],
+    ["observed-driver-text-drop", storage.replace("DbIoExternalBytes::new(source.into_bytes())", "drop(source)"), postgres, neo4j],
     ["postgres-predriver-reservation", storage, postgres.replace("reserve_driver_output", "reserve_driver_output(len as u64) // unchecked_driver_output"), neo4j],
     ["postgres-facade-driver-await", storage, postgres.replace("operation.start_async_native_on_lane_io().await?", "operation.take_async_native().await?; drive_task(operation, task).await"), neo4j],
     ["postgres-fake-close", storage, postgres.replace("pool.close().await", "backend_terminal.store(true, Ordering::Release)"), neo4j],
     ["postgres-driver-text", storage, postgres.replace("db_io_copy_observed_text(reservation, holder)", "DbIoText::try_from_str(&holder)"), neo4j],
-    ["neo4j-observed-owner", storage, postgres, neo4j.replace("reservation.observe_capacity(bytes.len())?", "let decoded: Vec<u8> = BASE64.decode(text)?")],
+    ["neo4j-observed-owner", storage, postgres, neo4j.replace("db_io_write_observed_bytes_range(reservation, bytes.value", "let decoded: Vec<u8> = BASE64.decode(text)?")],
     ["neo4j-ready-only-yield", storage, postgres, `${neo4j} poll_fn(|context| { context.waker().wake_by_ref(); Poll::Ready(()) })`],
     ["neo4j-facade-driver-await", storage, postgres, neo4j.replace("operation.start_async_native_on_lane_io().await?", "operation.take_async_native().await?; drive_task(operation, task).await")],
     ["postgres-uncensused-artifact", storage, `${postgres} ArtifactId(document.as_str().to_string())`, neo4j],
+    ["postgres-artifact-macro-close", storage, postgres.replace("while owner.close_step()?", "owner.close_step()?"), neo4j],
+    ["neo4j-artifact-macro-yield", storage, postgres, neo4j.replace("semio_framework_async::yield_once().await", "Poll::Ready(())")],
     ["neo4j-raw-lease-info", storage, postgres, `${neo4j} LeaseInfo { resource: resource.to_string(), holder: holder.as_str().to_string(), fence: fence }`],
     ["lease-bulk-conversion", `${storage} fn into_lease_info() { while self.holder.close_step() {} }`, postgres, neo4j],
     ["actual-worker-law", storage.replaceAll("db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker", "async_driver_shape_smoke"), postgres, neo4j],
@@ -8299,6 +9053,9 @@ function interactivityDbIoB1B6SelfTests(): void {
     ["lost-ring-no-overflow-fill", storage.replace("retained-overflow-owner", "anonymous-overflow"), postgres, neo4j],
     ["lost-ring-no-quarantine-proof", storage.replace("assert_eq!(exact", "assert!(true"), postgres, neo4j],
     ["close-interruption-law-body", storage.replace("Poll::Ready(Ok(()))", "Poll::Pending"), postgres, neo4j],
+    ["page-seal-law", storage.replace("db_io_page_writer_seal_memory_sqlite_neo_state_wal_index_max_cancel_fault_drop_is_one_opportunity", "page_seal_shape_smoke"), postgres, neo4j],
+    ["page-seal-law-drop-body", storage.replace("drop(seal)", "drop(writer)"), postgres, neo4j],
+    ["page-seal-law-fault-body", storage.replace("DbIoPagePhase::Queued", "DbIoPagePhase::CheckedOutWriter"), postgres, neo4j],
     ["cancellation-lifecycle-law", storage.replace("db_io_cancellation_before_during_and_receiver_drop_retain_exact_terminal_owners", "cancel_smoke"), postgres, neo4j],
     ["panic-fault-shutdown-law", storage.replace("db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness", "panic_smoke"), postgres, neo4j],
     ["postgres-real-close-law", storage, postgres.replace("lost_postgres_facade_drives_the_real_lazy_pool_to_closed", "postgres_close_flag_smoke"), neo4j],
@@ -8307,13 +9064,14 @@ function interactivityDbIoB1B6SelfTests(): void {
   ] as const;
   for (const [name, mutatedStorage, mutatedPostgres, mutatedNeo4j] of mutations)
     if (interactivityDbIoB1B6Failures(mutatedStorage, sqlite, mutatedPostgres, mutatedNeo4j, hub).length === 0) throw new Error(`[verify interactivity] DB I/O B1-B6 self-test ${name} was falsely accepted.`);
+  if (interactivityDbIoB1B6Failures(storage, sqlite.replace("output.seal_retained_step()?", "output.finish()?"), postgres, neo4j, hub).length === 0) throw new Error("[verify interactivity] DB I/O B1-B6 self-test SQLite writer-final-loop was falsely accepted.");
   const baselineFailures = interactivityDbIoB1B6Failures(storage, sqlite, postgres, neo4j, hub);
   if (baselineFailures.length !== 0) throw new Error(`[verify interactivity] DB I/O B1-B6 typed authority was falsely rejected: ${baselineFailures.join("; ")}`);
 }
 
-function interactivityP1qR4Failures(packSource: string, snapshotSource: string, indexSource: string, walSource: string, artifactSource: string, querySource: string, engineSource: string, compactSource: string, cliSource: string): string[] {
-  const production = [packSource, snapshotSource, indexSource, walSource, artifactSource, querySource, engineSource, compactSource, cliSource].map(interactivityProductionSource);
-  const [pack, snapshot, index, wal, artifact, query, engine, compact, cli] = production;
+function interactivityP1qR4Failures(packSource: string, snapshotSource: string, indexSource: string, walSource: string, artifactSource: string, querySource: string, engineSource: string, compactSource: string, cliSource: string, stateSource: string): string[] {
+  const production = [packSource, snapshotSource, indexSource, walSource, artifactSource, querySource, engineSource, compactSource, cliSource, stateSource].map(interactivityProductionSource);
+  const [pack, snapshot, index, wal, artifact, query, engine, compact, cli, state] = production;
   const failures: string[] = [];
   const rustItem = (source: string, marker: string): string => {
     const start = source.indexOf(marker);
@@ -8357,6 +9115,20 @@ function interactivityP1qR4Failures(packSource: string, snapshotSource: string, 
       if (source.includes(forbidden)) failures.push(`${name} retirement abandons an exact owner through ${forbidden}`);
   for (const [name, source] of [["artifact", artifact], ["query", query], ["engine", engine], ["compact", compact], ["CLI", cli]] as const)
     if (/poll_fn\([\s\S]{0,180}Poll::Ready\(\(\)\)/.test(source)) failures.push(`${name} retains a Ready-only pseudo-yield instead of persisted Pending state`);
+  for (const [name, source] of [["state", state], ["WAL", wal], ["index", index]] as const) {
+    if (/poll_fn\([\s\S]{0,180}Poll::Ready\(\(\)\)/.test(source)) failures.push(`${name} retains a Ready-only page/external-owner pseudo-yield`);
+    if (/\b(?:writer|output)\.(?:finish|seal)\(\)/.test(source)) failures.push(`${name} production bypasses retained DbIoPageWriterSeal completion`);
+    if (source.includes("drop(source)")) failures.push(`${name} ordinarily drops a raw admitted external byte owner`);
+  }
+  for (const [name, source, marker] of [["state", state, "pub async fn try_admit"], ["WAL", wal, "pub async fn try_admit"], ["index", index, "pub async fn try_admit"]] as const) {
+    const admission = rustItem(source, marker);
+    for (const required of ["DbIoExternalBytes::new(source)", "reservation.observe_capacity(capacity)", "while !source.terminal_is_empty()", "source.close_step()", "semio_framework_async::yield_once().await", "seal_retained().await"])
+      if (!admission.includes(required)) failures.push(`${name} admission lacks retained external-owner/page-seal evidence: ${required}`);
+  }
+  for (const [name, source, owner] of [["state", state, "StateEntryRejected"], ["WAL", wal, "WalBytesRejected"], ["index", index, "IndexBytesRejected"]] as const) {
+    const drop = rustItem(source, `impl Drop for ${owner}`);
+    if (!drop.includes("self.source.take()") || !drop.includes("DbIoExternalBytes::new(source)")) failures.push(`${name} rejected-source Drop does not retain its exact external allocation`);
+  }
   for (const [name, source, marker, quarantine] of [
     ["artifact", artifact, "fn retire_artifact_state_owner", "ARTIFACT_STATE_RETIREMENT_QUARANTINE"],
     ["query", query, "fn retire_query_rows", "QUERY_RETIRED_ROWS_QUARANTINE"],
@@ -8384,6 +9156,14 @@ function interactivityP1qR4Failures(packSource: string, snapshotSource: string, 
   for (const required of ["diff.added.preflight_push()?", "diff.updated.preflight_push()?", "result.rows.take(0)", "push_preflighted(row)"])
     if (!queryRefresh.includes(required)) failures.push(`query refresh lacks branch-specific retirement preflight before source-row extraction: ${required}`);
   if (queryRefresh.indexOf("diff.added.preflight_push()?") > queryRefresh.indexOf("result.rows.take(0)") || queryRefresh.indexOf("diff.updated.preflight_push()?") > queryRefresh.indexOf("result.rows.take(0)")) failures.push("query refresh extracts its source row before branch-specific retirement preflight");
+  const projectionSource = rustItem(query, "pub async fn from_value");
+  for (const required of ["check_len(count as u64", "rows.preflight_push()?", "rows.push_preflighted"])
+    if (!projectionSource.includes(required)) failures.push(`query projection source lacks fixed-count retirement preflight before value extraction: ${required}`);
+  if (projectionSource.includes("rows.push(QueryRow")) failures.push("query projection source restores post-extraction row admission");
+  const artifactQuerySource = rustItem(artifact, "impl<'a> db_query::QuerySource for StateQuerySource<'a>");
+  for (const required of ["rows.preflight_push()?", "path_row_value", "rows.push_preflighted(row)"])
+    if (!artifactQuerySource.includes(required)) failures.push(`artifact query source lacks retirement preflight before page-backed row construction: ${required}`);
+  if (artifactQuerySource.indexOf("rows.preflight_push()?") > artifactQuerySource.indexOf("path_row_value")) failures.push("artifact query source constructs a page-backed row before target retirement preflight");
   const compactCollect = rustItem(compact, "async fn collect_chain_pages");
   for (const required of ["pages.preflight_push()?", "cursor.read_page(hash).await?", "pages.push_preflighted(page)"])
     if (!compactCollect.includes(required)) failures.push(`compaction chain collection lacks retirement preflight before page acquisition: ${required}`);
@@ -8444,6 +9224,16 @@ function interactivityP1qR4Failures(packSource: string, snapshotSource: string, 
     ["compaction", compactSource, "compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit"],
     ["CLI", cliSource, "cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses"],
   ] as const) if (!raw.includes(fixture)) failures.push(`${name} hostile retained-close fixture missing: ${fixture}`);
+  for (const [name, raw, fixture] of [
+    ["state", stateSource, "retained_state_exact_backing_cancel_capacity_and_close_are_hostile"],
+    ["WAL bytes", walSource, "wal_bytes_exact_backing_handback_cancel_and_close_are_one_owner"],
+    ["index bytes", indexSource, "exact_backing_handback_cancel_close_and_fragment_order_are_deterministic"],
+  ] as const) {
+    if (!raw.includes(fixture)) failures.push(`${name} hostile external-owner fixture missing: ${fixture}`);
+    const law = rustItem(raw, `async fn ${fixture}`);
+    for (const evidence of ["Vec::with_capacity", "as_ptr()", "capacity()", "cancelled.store", "std::time::Instant::now()", "cursor deadline reached", "into_source().unwrap()"])
+      if (!law.includes(evidence)) failures.push(`${name} hostile external-owner law lacks exact capacity/cancel/deadline/handback evidence: ${evidence}`);
+  }
   const artifactLaw = rustItem(artifactSource, "async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless");
   for (const evidence of ["StateEntry::try_admit", "state cursor cancelled", "state cursor deadline reached", "ARTIFACT_STATE_RETIREMENT_OVERFLOW", "ARTIFACT_STATE_RETIREMENT_QUARANTINE", "ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT", "reserve_artifact_state_retirement", "Some(source)", "second_source", "exact-all-tier-state-refusal", "state.apply_entries"])
     if (!artifactLaw.includes(evidence)) failures.push(`artifact hostile law lacks exact production-path evidence: ${evidence}`);
@@ -8470,14 +9260,15 @@ function interactivityP1qR4Failures(packSource: string, snapshotSource: string, 
 function interactivityP1qR4SelfTests(): void {
   const pack = "pub struct PackIdentityChunkCursor pub async fn read_fragment pub fn identity_chunk_cursor retained fragment cursor requires an identity chunk identity_chunk_cursor_retains_fragment_progress_and_terminal_verification";
   const snapshot = "pub async fn read_page() { let mut cursor = file.identity_chunk_cursor(id, level)?; cursor.read_fragment(&mut fragment).await?; }";
-  const index = "async fn decode_run_pages() { let _ = pages.close_step()?; drop(pages); } impl RunEntries { fn close_step() { let _ = owner.close_step(); } } impl IndexBlobList { fn close_step() { let _ = owner.close_step(); } } index close lost retained entry index blob close lost retained owner";
-  const wal = "pub async fn next_step() { if self.close_segment_step().await? { return Ok(WalReplayStep::Yield); } } impl WalRecordBatch { fn close_step() { let _ = owner.close_step(); } } WAL batch close lost retained record wal_replay_cancel_resume_close_and_fragment_crc_are_deterministic";
-  const artifact = "struct ArtifactStateRetirementCursor static ARTIFACT_STATE_RETIREMENT static ARTIFACT_STATE_RETIREMENT_OVERFLOW static ARTIFACT_STATE_RETIREMENT_QUARANTINE static ARTIFACT_STATE_RETIREMENT_RESERVATIONS static ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT fetch_or(bit fetch_and(! fn reserve_artifact_state_retirement fn install_reserved_artifact_state_owner fn artifact_state_retirement_maintenance_step fn retire_artifact_state_owner(owner: Owner) -> Result<(), Owner> { ARTIFACT_STATE_RETIREMENT_QUARANTINE } async fn apply_entries() { let _ = owner.close_step()?; drop(owner); } struct ArtifactWalTextField struct ArtifactWalPageField ARTIFACT_WAL_DEPENDENCIES struct ArtifactWalEnvelopeDecode { dependency_count: u8 } impl Future for ArtifactWalEnvelopeDecode { owner.page.poll std::task::Poll::Pending } struct ArtifactWalEnvelopeAdapter impl Future for ArtifactWalEnvelopeAdapter { owner.control.grant(); retained.diff_payload.page(owner.page); retained.diff_payload.close_step()?; retained.inverse_payload.page(owner.page); retained.inverse_payload.close_step()?; std::task::Poll::Pending } pub async fn open_retained() { decode_retained_envelope(bytes, &mut control).await?; adapt_retained_envelope(retained, &mut control).await?; } async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless() { StateEntry::try_admit state cursor cancelled state cursor deadline reached ARTIFACT_STATE_RETIREMENT_OVERFLOW ARTIFACT_STATE_RETIREMENT_QUARANTINE ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT reserve_artifact_state_retirement Some(source) second_source exact-all-tier-state-refusal state.apply_entries } async fn retained_wal_decoder_covers_pending_cancel_deadline_corrupt_max_and_max_plus_one() { poll_artifact_wal_decode is_pending wal cursor cancelled wal cursor deadline reached WAL command envelope has trailing bytes ARTIFACT_WAL_DEPENDENCIES ARTIFACT_WAL_FIELD_BYTES max-plus-one db_io_maintenance_step }";
-  const query = "static QUERY_RETIRED_ROWS: Ring; static QUERY_RETIRED_ROWS_OVERFLOW: Ring; static QUERY_RETIRED_ROWS_QUARANTINE: Ring; static QUERY_RETIRED_ROWS_RESERVATIONS: Ring; static QUERY_RETIREMENT_PRESSURE_FAULT: Flag; fetch_or(bit fetch_and(! fn reserve_query_rows_retirement fn install_reserved_query_rows pub fn query_rows_maintenance_step() {} fn retire_query_rows(owner: Owner) -> Result<(), Owner> { QUERY_RETIRED_ROWS_QUARANTINE } impl Drop for QueryRows { fn drop(&mut self) { install_reserved_query_rows(std::mem::replace(self, Self::new())); } } pub async fn execute() { projected.preflight_push()?; matched.take(0); projected.push_preflighted(row); } pub async fn refresh() { diff.added.preflight_push()?; diff.updated.preflight_push()?; result.rows.take(0); diff.added.push_preflighted(row); } async fn interrupted_query_rows_drop_retains_one_resumable_close_owner() { QUERY_RETIRED_ROWS_OVERFLOW QUERY_RETIRED_ROWS_QUARANTINE QUERY_RETIREMENT_PRESSURE_FAULT retirement.map(|reservation| reservation.tier) Some(2) 0x5155_4552_59 0x5155_4552_5a 0x5155_4552_5b retire_query_rows(exact) }";
+  const index = "pub async fn try_admit() { DbIoExternalBytes::new(source); reservation.observe_capacity(capacity); while !source.terminal_is_empty() { source.close_step(); semio_framework_async::yield_once().await; } seal_retained().await; } impl Drop for IndexBytesRejected { self.source.take(); DbIoExternalBytes::new(source); } async fn decode_run_pages() { let _ = pages.close_step()?; drop(pages); } impl RunEntries { fn close_step() { let _ = owner.close_step(); } } impl IndexBlobList { fn close_step() { let _ = owner.close_step(); } } index close lost retained entry index blob close lost retained owner async fn exact_backing_handback_cancel_close_and_fragment_order_are_deterministic() { Vec::with_capacity as_ptr() capacity() cancelled.store std::time::Instant::now() index cursor deadline reached into_source().unwrap() }";
+  const wal = "pub async fn try_admit() { DbIoExternalBytes::new(source); reservation.observe_capacity(capacity); while !source.terminal_is_empty() { source.close_step(); semio_framework_async::yield_once().await; } seal_retained().await; } impl Drop for WalBytesRejected { self.source.take(); DbIoExternalBytes::new(source); } pub async fn next_step() { if self.close_segment_step().await? { return Ok(WalReplayStep::Yield); } } impl WalRecordBatch { fn close_step() { let _ = owner.close_step(); } } WAL batch close lost retained record wal_replay_cancel_resume_close_and_fragment_crc_are_deterministic async fn wal_bytes_exact_backing_handback_cancel_and_close_are_one_owner() { Vec::with_capacity as_ptr() capacity() cancelled.store std::time::Instant::now() wal cursor deadline reached into_source().unwrap() }";
+  const artifact = "struct ArtifactStateRetirementCursor static ARTIFACT_STATE_RETIREMENT static ARTIFACT_STATE_RETIREMENT_OVERFLOW static ARTIFACT_STATE_RETIREMENT_QUARANTINE static ARTIFACT_STATE_RETIREMENT_RESERVATIONS static ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT fetch_or(bit fetch_and(! fn reserve_artifact_state_retirement fn install_reserved_artifact_state_owner fn artifact_state_retirement_maintenance_step fn retire_artifact_state_owner(owner: Owner) -> Result<(), Owner> { ARTIFACT_STATE_RETIREMENT_QUARANTINE } async fn apply_entries() { let _ = owner.close_step()?; drop(owner); } impl<'a> db_query::QuerySource for StateQuerySource<'a> { rows.preflight_push()?; path_row_value; rows.push_preflighted(row); } struct ArtifactWalTextField struct ArtifactWalPageField ARTIFACT_WAL_DEPENDENCIES struct ArtifactWalEnvelopeDecode { dependency_count: u8 } impl Future for ArtifactWalEnvelopeDecode { owner.page.poll std::task::Poll::Pending } struct ArtifactWalEnvelopeAdapter impl Future for ArtifactWalEnvelopeAdapter { owner.control.grant(); retained.diff_payload.page(owner.page); retained.diff_payload.close_step()?; retained.inverse_payload.page(owner.page); retained.inverse_payload.close_step()?; std::task::Poll::Pending } pub async fn open_retained() { decode_retained_envelope(bytes, &mut control).await?; adapt_retained_envelope(retained, &mut control).await?; } async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless() { StateEntry::try_admit state cursor cancelled state cursor deadline reached ARTIFACT_STATE_RETIREMENT_OVERFLOW ARTIFACT_STATE_RETIREMENT_QUARANTINE ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT reserve_artifact_state_retirement Some(source) second_source exact-all-tier-state-refusal state.apply_entries } async fn retained_wal_decoder_covers_pending_cancel_deadline_corrupt_max_and_max_plus_one() { poll_artifact_wal_decode is_pending wal cursor cancelled wal cursor deadline reached WAL command envelope has trailing bytes ARTIFACT_WAL_DEPENDENCIES ARTIFACT_WAL_FIELD_BYTES max-plus-one db_io_maintenance_step }";
+  const query = "static QUERY_RETIRED_ROWS: Ring; static QUERY_RETIRED_ROWS_OVERFLOW: Ring; static QUERY_RETIRED_ROWS_QUARANTINE: Ring; static QUERY_RETIRED_ROWS_RESERVATIONS: Ring; static QUERY_RETIREMENT_PRESSURE_FAULT: Flag; fetch_or(bit fetch_and(! fn reserve_query_rows_retirement fn install_reserved_query_rows pub fn query_rows_maintenance_step() {} fn retire_query_rows(owner: Owner) -> Result<(), Owner> { QUERY_RETIRED_ROWS_QUARANTINE } impl Drop for QueryRows { fn drop(&mut self) { install_reserved_query_rows(std::mem::replace(self, Self::new())); } } pub async fn execute() { projected.preflight_push()?; matched.take(0); projected.push_preflighted(row); } pub async fn refresh() { diff.added.preflight_push()?; diff.updated.preflight_push()?; result.rows.take(0); diff.added.push_preflighted(row); } pub async fn from_value() { check_len(count as u64; rows.preflight_push()?; rows.push_preflighted(row); } async fn interrupted_query_rows_drop_retains_one_resumable_close_owner() { QUERY_RETIRED_ROWS_OVERFLOW QUERY_RETIRED_ROWS_QUARANTINE QUERY_RETIREMENT_PRESSURE_FAULT retirement.map(|reservation| reservation.tier) Some(2) 0x5155_4552_59 0x5155_4552_5a 0x5155_4552_5b retire_query_rows(exact) }";
   const engine = "static ENGINE_QUERY_RETIREMENT: Ring; static ENGINE_QUERY_RETIREMENT_OVERFLOW static ENGINE_QUERY_RETIREMENT_QUARANTINE: Ring; static ENGINE_QUERY_RETIREMENT_RESERVATIONS: Ring; static ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT: Flag; fetch_or(bit fetch_and(! fn reserve_engine_query_retirement fn install_reserved_engine_query_stream pub fn engine_query_maintenance_step() {} fn retire_engine_query_stream(owner: Owner) -> Result<(), Owner> { ENGINE_QUERY_RETIREMENT_QUARANTINE } impl Drop for QueryStream { fn drop(&mut self) { install_reserved_engine_query_stream(std::mem::replace(self, Self::new())); } } fn interrupted_query_stream_drop_retains_one_resumable_close_owner() { ENGINE_QUERY_RETIREMENT_OVERFLOW ENGINE_QUERY_RETIREMENT_QUARANTINE ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT retirement.map(|reservation| reservation.tier) Some(2) exact-overflow-stream second-overflow-stream exact-all-tier-stream-refusal retire_engine_query_stream(exact) }";
   const compact = "struct CompactionRetainedPages static COMPACTION_PAGE_RETIREMENT static COMPACTION_PAGE_RETIREMENT_OVERFLOW static COMPACTION_PAGE_RETIREMENT_QUARANTINE static COMPACTION_RETIREMENT_RESERVATIONS static COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT fetch_or(bit fetch_and(! fn reserve_compaction_retirement fn install_reserved_compaction_pages fn retire_compaction_pages(owner: Owner) -> Result<(), Owner> { COMPACTION_PAGE_RETIREMENT_QUARANTINE } async fn collect_chain_pages() { pages.preflight_push()?; cursor.read_page(hash).await?; pages.push_preflighted(page); } struct MountedCompactionPageClose fn publish_retained async fn compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit() { unwrap_err exact_operation second_operation COMPACTION_PAGE_RETIREMENT_OVERFLOW COMPACTION_PAGE_RETIREMENT_QUARANTINE COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT retirement.map(|reservation| reservation.tier) Some(2) MountedCompactionPageClose exact-all-tier-compaction-refusal exact_refusal_operation }";
   const cli = "struct MountedWalRecordCommandClose struct MountedWalBatchCommandClose struct MountedWalReplayCommandClose struct MountedSnapshotCommandClose struct CliCommandCloseWitness CliCommandCloseTerminal::Fault(error) impl std::future::Future for MountedWalRecordCommandClose { self.terminal } impl std::future::Future for MountedWalBatchCommandClose { self.terminal } impl std::future::Future for MountedWalReplayCommandClose { self.terminal } impl std::future::Future for MountedSnapshotCommandClose { self.terminal } async fn cmd_wal_inspect() {} async fn cmd_snapshot_inspect() {} async fn cmd_replay() {} async fn cmd_migrate() {} async fn cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses() { Future::poll Poll::Pending Poll::Ready(Ok(CliCommandCloseWitness Poll::Ready(Err(error)) error == fault CLI_COMMAND_CLOSE_INTERRUPTED terminal: Some(CliCommandCloseTerminal::Fault unwrap_err } cli_full_cycle_succeeds_for_a_seeded_document cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it cli_migrate_appends_a_migration_record_visible_to_wal_inspect";
-  const clean = [pack, snapshot, index, wal, artifact, query, engine, compact, cli] as const;
+  const state = "pub async fn try_admit() { DbIoExternalBytes::new(source); reservation.observe_capacity(capacity); while !source.terminal_is_empty() { source.close_step(); semio_framework_async::yield_once().await; } seal_retained().await; } impl Drop for StateEntryRejected { self.source.take(); DbIoExternalBytes::new(source); } async fn retained_state_exact_backing_cancel_capacity_and_close_are_hostile() { Vec::with_capacity as_ptr() capacity() cancelled.store std::time::Instant::now() state cursor deadline reached into_source().unwrap() }";
+  const clean = [pack, snapshot, index, wal, artifact, query, engine, compact, cli, state] as const;
   const baselineFailures = interactivityP1qR4Failures(...clean);
   if (baselineFailures.length !== 0) throw new Error(`[verify interactivity] P1q R4 retained source baseline was falsely rejected: ${baselineFailures.join("; ")}`);
   const mutations = [
@@ -8521,6 +9312,8 @@ function interactivityP1qR4SelfTests(): void {
     clean.with(7, compact.replace("COMPACTION_RETIREMENT_RESERVATIONS", "COMPACTION_UNRESERVED_PAGES")),
     clean.with(5, query.replace("projected.preflight_push()?", "matched.take(0)")),
     clean.with(5, query.replace("diff.added.preflight_push()?", "result.rows.take(0)")),
+    clean.with(5, query.replace("check_len(count as u64", "unchecked_projection_count(")),
+    clean.with(4, artifact.replace("rows.preflight_push()?; path_row_value", "path_row_value; rows.preflight_push()?")),
     clean.with(7, compact.replace("pages.preflight_push()?", "cursor.read_page(hash).await?")),
     clean.with(4, artifact.replace("impl Future for ArtifactWalEnvelopeDecode {", "impl Future for ArtifactWalEnvelopeDecode { Vec::with_capacity(count);")),
     clean.with(4, artifact.replace("owner.page.poll", "while remaining != 0 { decode_protocol_field() }")),
@@ -8530,6 +9323,13 @@ function interactivityP1qR4SelfTests(): void {
     clean.with(8, cli.replace("terminal: Some(CliCommandCloseTerminal::Fault", "owner: None")),
     clean.with(4, artifact.replace("wal cursor cancelled", "cancel flag only")),
     clean.with(4, artifact.replace("ARTIFACT_WAL_FIELD_BYTES max-plus-one", "unbounded field")),
+    clean.with(9, state.replace("DbIoExternalBytes::new(source)", "let raw: Vec<u8> = source; drop(raw)")),
+    clean.with(3, wal.replace("semio_framework_async::yield_once().await", "poll_fn(|_| Poll::Ready(()))")),
+    clean.with(2, index.replace("seal_retained().await", "writer.finish()")),
+    clean.with(9, state.replace("state cursor deadline reached", "deadline shape only")),
+    clean.with(9, state.replace("self.source.take()", "drop(self.source.as_mut())")),
+    clean.with(3, wal.replace("into_source().unwrap()", "Vec::new()")),
+    clean.with(2, index.replace("as_ptr()", "std::ptr::null()")),
   ];
   for (const [index, mutation] of mutations.entries())
     if (interactivityP1qR4Failures(...mutation).length === 0) throw new Error(`[verify interactivity] P1q R4 hostile mutation ${index} was falsely accepted.`);
@@ -8736,7 +9536,7 @@ function interactivityDatabaseCapabilityOpenFailures(engineSource: string): stri
   const openWith = engine.slice(engine.indexOf("async fn open_with"), engine.indexOf("pub async fn create_document", engine.indexOf("async fn open_with")));
   const waits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
   const failures: string[] = [];
-  if (waits !== 4 || engine.includes("db_actor::block_on(storage.capabilities())")) failures.push("DB retained open packets did not reduce production engine waits to exactly four");
+  if (waits !== 3 || engine.includes("db_actor::block_on(storage.capabilities())")) failures.push("DB retained open packets do not preserve the three post-P1w production waits");
   if (!openWith.includes("Self::open_retained(pool.clone(), storage)") || !openWith.includes("capability_probe.await?.into_parts()") || !openWith.includes("Err(rejected) => return Err(rejected.close_and_take_error())") || openWith.includes("rejected.into_parts().0") || openWith.includes("storage.capabilities().await")) failures.push("Database open does not consume the retained probe or explicitly close the exact rejected storage owner");
   for (const required of [
     "const DATABASE_CAPABILITY_OPEN_SLOTS: usize = 64",
@@ -8838,7 +9638,7 @@ function interactivityDatabaseCapabilityOpenFailures(engineSource: string): stri
 function interactivityDatabaseCapabilityOpenSelfTests(): void {
   const fixtures = `database_capability_open_fixed_admission_cap_plus_one_and_generation_aba database_capability_open_success_returns_exact_storage_owner_and_scalar database_capability_open_cancel_and_stale_generation_retain_exact_owner_for_public_close database_capability_open_saturation_and_shutdown_keep_retry_job_and_public_terminal database_capability_open_post_ready_cancel_and_stale_retain_public_exact_result database_capability_open_rejection_take_retry_and_close_preserve_exact_storage database_capability_open_terminal_result_take_resume_and_checked_out_drop_handback database_capability_open_retry_contention_is_one_compare_exchange_per_callback`;
   const wakeFixture = `struct ControlledCapabilitySubmitQueue { slots: [Option<semio_framework_async::Job>; 8] } async fn database_capability_open_poll_publication_precedes_wake_rearm_at_every_boundary { controlled_submit_hook state.schedule(); let initial = queue.pop(); initial(); wake-after-release cannot admit a duplicate successor let successor = queue.pop(); successor(); Pending is repolled only by its next governed successor terminal Ready/panic successor advances cleanup without repolling terminal_work staged_result }`;
-  const waits = "db_actor::block_on(entry)\n".repeat(4);
+  const waits = "db_actor::block_on(entry)\n".repeat(3);
   const capability = `//#region 🔖️CapabilityOpen const DATABASE_CAPABILITY_OPEN_SLOTS: usize = 64 const DATABASE_CAPABILITY_OPEN_ITEMS: u64 = 8 const DATABASE_CAPABILITY_OPEN_BYTES: u64 = 16 * 1024 DATABASE_CAPABILITY_OPEN_TOTAL_ITEMS DATABASE_CAPABILITY_OPEN_TOTAL_BYTES DatabaseCapabilityOpenAdmission::try_claim(DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES) database_capability_open_registry enum DatabaseCapabilityOpenPhase { Handoff, Poll, RetainWork, DrainWork, ReleaseWork, RetainResult, Publish, Terminal } fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } match self.phase() { DatabaseCapabilityOpenPhase::Handoff => {} DatabaseCapabilityOpenPhase::Poll => {} DatabaseCapabilityOpenPhase::Publish => {} } } fn publish_poll_terminal { self.cancelled.store(true); self.terminal_error.lock(); self.set_phase(DatabaseCapabilityOpenPhase::RetainWork); } fn poll_terminal_if_cancelled_or_stale {} fn release_terminal_poll { self.polling.store(false); self.wake_requested.store(false); self.schedule_cleanup(); } fn poll_backend_once { std::panic::catch_unwind(|| work.poll(&mut context)); match polled { Ok(std::task::Poll::Pending) => { slot = Some(work); self.poll_terminal_if_cancelled_or_stale(); self.polling.store(false); } Ok(std::task::Poll::Ready(output)) => { slot = Some(work); staged = Some(output); self.set_phase(DatabaseCapabilityOpenPhase::RetainWork); self.poll_terminal_if_cancelled_or_stale(); self.polling.store(false); } Err(_) => { slot = Some(work); self.publish_poll_terminal(fault); self.release_terminal_poll(); } } } fn arm_retry { advance_retry_generation_once(); } fn advance_retry_generation_once { advance_retry_generation_observed_once(current); } fn advance_retry_generation_observed_once { compare_exchange(current, generation); observed == state.retry_generation.load; self.pool.callback_at } fn publish_staged { self.cancelled.load(); !self.is_current(); self.complete(); } fn roots_are_empty self.pool.try_submit(Lane::Io, job) error.into_job() retry_generation pub struct DatabaseCapabilityOpenRejected pub fn take_storage(&mut self) -> Option<Arc<db_storage::DbBackend>> pub fn retry(mut self, pool: Arc<WorkerPool>) pub fn close_step(&mut self) -> DatabaseCapabilityOpenCloseStep pub fn close_and_take_error(mut self) -> DbError pub struct DatabaseCapabilityOpenTerminalHandle pub struct DatabaseCapabilityOpenTerminalResult terminal_result_checked_out pub fn take_database_capability_open_terminal pub fn take_next_database_capability_open_terminal pub fn take_result(&self) -> Option<DatabaseCapabilityOpenTerminalResult> pub fn resume(self) -> Result<DatabaseCapabilityOpenFuture, Self> pub fn close_step(&self) -> DatabaseCapabilityOpenCloseStep pub fn terminal_is_empty(&self) -> bool DatabaseCapabilityOpenResult { storage, capabilities } terminal_work terminal_result terminal_completion roots_are_empty //#endregion 🔖️CapabilityOpen`;
   const open = `async fn open_with { Self::open_retained(pool.clone(), storage); Err(rejected) => return Err(rejected.close_and_take_error()); capability_probe.await?.into_parts() } pub async fn create_document`;
   const good = `${waits}${capability}${open}${fixtures}${wakeFixture}`;
@@ -8885,7 +9685,7 @@ function interactivityDatabaseCatalogReadFailures(engineSource: string): string[
   const openWith = engine.slice(engine.indexOf("async fn open_with"), engine.indexOf("pub async fn create_document", engine.indexOf("async fn open_with")));
   const waits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
   const failures: string[] = [];
-  if (waits !== 4 || engine.includes("db_actor::block_on(async { storage.catalog().await.read_root().await })")) failures.push("DB catalog-root retained read did not remove exactly one production wait");
+  if (waits !== 3 || engine.includes("db_actor::block_on(async { storage.catalog().await.read_root().await })")) failures.push("DB catalog-root retained read does not preserve the three post-P1w production waits");
   if (!openWith.includes("Self::open_catalog_read_retained(pool.clone(), storage)") || !openWith.includes("catalog_probe.await?.into_parts()") || !openWith.includes("Err(rejected) => return Err(rejected.close_and_take_error(pool.clone()))")) failures.push("Database open does not consume the retained catalog-root authority and mount the exact rejection on the process pool");
   for (const required of [
     "const DATABASE_CATALOG_READ_SLOTS: usize = 64",
@@ -8951,7 +9751,7 @@ function interactivityDatabaseCatalogReadFailures(engineSource: string): string[
 }
 
 function interactivityDatabaseCatalogReadSelfTests(): void {
-  const waits = "db_actor::block_on(entry)\n".repeat(4);
+  const waits = "db_actor::block_on(entry)\n".repeat(3);
   const catalog = `//#region 🔖️CatalogRootRead const DATABASE_CATALOG_READ_SLOTS: usize = 64 const DATABASE_CATALOG_READ_ITEMS: u64 = 8 const DATABASE_CATALOG_READ_BYTES: u64 = 64 * 1024 DATABASE_CATALOG_READ_TOTAL_ITEMS DATABASE_CATALOG_READ_TOTAL_BYTES DatabaseCatalogReadAdmission::try_claim() database_catalog_read_registry pub struct DatabaseCatalogRootKey impl DatabaseCatalogReadWork { storage.catalog().await.read_root().await DatabaseCatalogReadResult { storage, key, root } } enum DatabaseCatalogReadPhase { Handoff Poll RetainWork DrainWork ReleaseWork RetainResult Publish Terminal } fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } match self.phase() { DatabaseCatalogReadPhase::Handoff => {} DatabaseCatalogReadPhase::Poll => {} } } fn poll_backend_once { std::panic::catch_unwind work.poll(&mut context) Poll::Pending Some(work) Poll::Ready Some(result) Err(_) DATABASE_CATALOG_READ_BYTES as usize self.release_terminal_poll() } fn publish_staged { self.cancelled.load !self.is_current() let result = } fn publish_public_completion {} controlled_publication_before_waker_hook pub struct DatabaseCatalogReadFuture impl Future for DatabaseCatalogReadFuture { let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take(); *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone()); let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take(); } impl Drop for DatabaseCatalogReadFuture {} impl std::task::Wake for DatabaseCatalogReadWake wake_requested self.scheduled.compare_exchange(false, true self.pool.try_submit(Lane::Io, job) error.into_job() self.pool.callback_at pub struct DatabaseCatalogReadRejected impl DatabaseCatalogReadRejected { pub fn retry(mut self, pool: Arc<WorkerPool>) pub fn close_step(&mut self) -> DatabaseCatalogReadCloseStep { if let Some(storage) = self.storage.take() { drop(storage); } else if let Some(key) = self.key.take() { drop(key); } } pub fn terminal_is_empty pub fn close_and_take_error(self, pool: Arc<WorkerPool>) -> DbError DatabaseCatalogReadRejectedClose::mount(pool, self, schedule) struct DatabaseCatalogReadRejectedClose impl DatabaseCatalogReadRejectedClose { self.pool.try_submit(Lane::Io, job) error.into_job() owner.close_step() } type DatabaseCatalogReadBackendFuture pub struct DatabaseCatalogReadTerminalHandle pub struct DatabaseCatalogReadTerminalResult pub fn take_database_catalog_read_terminal pub fn take_result(&self) -> Option<DatabaseCatalogReadTerminalResult> pub fn resume(self) -> Result<DatabaseCatalogReadFuture, Self> terminal_result_checked_out roots_are_empty //#endregion 🔖️CatalogRootRead`;
   const open = `async fn open_with { Self::open_catalog_read_retained(pool.clone(), storage) Err(rejected) => return Err(rejected.close_and_take_error(pool.clone())) catalog_probe.await?.into_parts() } pub async fn create_document`;
   const fixtures = `database_catalog_read_fixed_cap_plus_one_and_generation_aba database_catalog_read_success_returns_exact_storage_key_and_root database_catalog_read_cancel_stale_and_rejection_preserve_exact_storage_key database_catalog_read_terminal_result_drop_hands_back_exact_result database_catalog_read_publication_between_check_and_waker_registration_is_observed database_catalog_read_rejected_mount_retires_storage_and_key_on_distinct_grants async fn database_catalog_read_controlled_wakes_coalesce_and_terminal_never_repolls { state.schedule(); initial(); one coalesced catalog-read successor late wake cannot overtake successor(); } #[semio_framework_async_macros::async_test]`;
@@ -8983,6 +9783,203 @@ function interactivityDatabaseCatalogReadSelfTests(): void {
   if (failures.length !== 0) throw new Error(`[verify interactivity] catalog-read self-test retained route was falsely rejected: ${failures.join("; ")}`);
 }
 
+//#region 🗄️P1wCatalogBootstrapCas
+function interactivityDatabaseCatalogBootstrapFixtureBody(source: string, name: string): string {
+  const start = source.indexOf(`fn ${name}`);
+  if (start < 0) return "";
+  const open = source.indexOf("{", start);
+  return open < 0 ? "" : toolJobRustBlock(source, open)?.body ?? "";
+}
+
+function interactivityDatabaseCatalogBootstrapFailures(engineSource: string): string[] {
+  const production = interactivityProductionSource(engineSource);
+  const start = production.indexOf("//#region 🔖️CatalogBootstrapCas");
+  const end = production.indexOf("//#endregion 🔖️CatalogBootstrapCas", start);
+  const bootstrap = start < 0 || end < 0 ? "" : production.slice(start, end);
+  const openStart = production.indexOf("async fn open_with");
+  const openEnd = production.indexOf("pub async fn create_document", openStart);
+  const openWith = openStart < 0 || openEnd < 0 ? "" : production.slice(openStart, openEnd);
+  const failures: string[] = [];
+  const waits = production.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
+  if (waits !== 3 || openWith.includes("db_actor::block_on") || openWith.includes("storage.catalog().await.cas_root") || openWith.includes("cas_root(EpochFence::INITIAL")) failures.push("P1w did not remove exactly the initial-catalog production wait/direct CAS");
+  if (!openWith.includes("Self::open_catalog_bootstrap_retained(pool.clone(), storage, pages)") || !openWith.includes("Err(rejected) => return Err(rejected.close_and_take_error())") || !openWith.includes("let result = bootstrap.await?") || !openWith.includes("result.into_parts()") || !openWith.includes("storage = retained_storage") && !openWith.includes("(retained_storage, epoch, Vec::new())")) failures.push("fresh Database::open_with does not consume the retained P1w result and exact storage handback");
+  for (const caller of ["pub async fn open(", "pub async fn open_at(", "pub async fn open_with_emit", "pub async fn open_with_authz"])
+    if (!production.includes(caller)) failures.push(`P1w caller census lost ${caller}`);
+  for (const required of [
+    "const DATABASE_CATALOG_BOOTSTRAP_SLOTS: usize = 64",
+    "const DATABASE_CATALOG_BOOTSTRAP_ITEMS: u64 = 8",
+    "const DATABASE_CATALOG_BOOTSTRAP_PAGES: u8 = 8",
+    "const DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES: u64 = 16 * 1024",
+    "DATABASE_CATALOG_BOOTSTRAP_TOTAL_ITEMS",
+    "DATABASE_CATALOG_BOOTSTRAP_TOTAL_BYTES",
+    "DatabaseCatalogBootstrapAdmission::try_claim(pages.page_count())",
+    "generation.checked_add(1)",
+    "self.items.checked_add(DATABASE_CATALOG_BOOTSTRAP_ITEMS)",
+    "self.bytes.checked_add(bytes)",
+    "bytes.checked_add(DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES)",
+    "pub struct DatabaseCatalogBootstrapKey([u8; 16])",
+    "pages: Option<db_storage::DbIoPages>",
+    "expected: EpochFence",
+    "actual: Option<Result<EpochFence, DbError>>",
+    "pub struct DatabaseCatalogBootstrapResult",
+  ]) if (!bootstrap.includes(required)) failures.push(`P1w fixed credited authority missing ${required}`);
+  const prepare = bootstrap.slice(bootstrap.indexOf("fn try_prepare_with_key"), bootstrap.indexOf("pub fn generation(&self)", bootstrap.indexOf("fn try_prepare_with_key")));
+  if (prepare.indexOf("DatabaseCatalogBootstrapAdmission::try_claim(pages.page_count())") < 0 || prepare.indexOf("DatabaseCatalogBootstrapAdmission::try_claim(pages.page_count())") > prepare.indexOf("let state = Arc::new(DatabaseCatalogBootstrapState") || prepare.indexOf("database_catalog_bootstrap_registry") > prepare.lastIndexOf("state.schedule()")) failures.push("P1w pre-admission/registry guard ordering can expose or destructure owners before durable authority installation");
+  for (const phase of ["Handoff", "Poll", "RetainWork", "CloseWork", "RetireInput", "Validate", "Publish", "Terminal"])
+    if (!bootstrap.includes(`DatabaseCatalogBootstrapPhase::${phase}`)) failures.push(`P1w retained phase missing ${phase}`);
+  const driveStart = bootstrap.indexOf("fn drive_one(self: Arc<Self>, generation: u64)");
+  const driveEnd = bootstrap.indexOf("fn handoff_one", driveStart);
+  const drive = driveStart < 0 || driveEnd < 0 ? "" : bootstrap.slice(driveStart, driveEnd);
+  if (!drive.includes("if generation != self.generation") || !drive.includes("if !self.is_current()") || !drive.includes("match self.phase()") || !drive.includes("self.retire_one()")) failures.push("P1w callback does not bind exact generation, phase, freshness, and close authority");
+  const handoff = bootstrap.slice(bootstrap.indexOf("fn handoff_one"), bootstrap.indexOf("fn poll_backend_once"));
+  if (!handoff.includes("self.expected != EpochFence::INITIAL") || !handoff.includes("self.pages.lock()") || !handoff.includes("DatabaseCatalogBootstrapWork::new(storage, pages, self.expected)") || handoff.includes(".poll(")) failures.push("P1w handoff is not one guarded pages transfer distinct from backend polling");
+  const work = bootstrap.slice(bootstrap.indexOf("struct DatabaseCatalogBootstrapWork"), bootstrap.indexOf("enum DatabaseCatalogBootstrapPhase"));
+  const workNew = work.slice(work.indexOf("fn new("), work.indexOf("fn poll("));
+  const workPoll = work.slice(work.indexOf("fn poll("), work.indexOf("fn close_one"));
+  const workClose = work.slice(work.indexOf("fn close_one"), work.indexOf("fn terminal_is_empty"));
+  if (!workNew.includes("future: None") || !workNew.includes("storage: Some(storage)") || !workNew.includes("pages: Some(pages)") || workNew.includes("Box::pin") || !workPoll.includes("self.storage.take()") || !workPoll.includes("self.pages.take()") || !workPoll.includes("self.future = Some(Box::pin") || !workClose.includes("pages.close_step()?") || workClose.includes("loop {") || workClose.includes("while ")) failures.push("P1w unpolled backend work can own/drop raw pages before its first Lane::Io poll or close more than one page per opportunity");
+  const poll = bootstrap.slice(bootstrap.indexOf("fn poll_backend_once"), bootstrap.indexOf("fn publish_poll_error"));
+  const pending = poll.slice(poll.indexOf("Poll::Pending"), poll.indexOf("Poll::Ready"));
+  const ready = poll.slice(poll.indexOf("Poll::Ready"), poll.indexOf("Err(_)", poll.indexOf("Poll::Ready")));
+  if (!poll.includes("std::panic::catch_unwind") || !poll.includes("work.poll(&mut context)") || pending.indexOf("Some(work)") < 0 || pending.indexOf("Some(work)") > pending.indexOf("self.release_poll()") || ready.indexOf("Some(work)") < 0 || ready.indexOf("Some(actual)") < 0 || ready.indexOf("Some(work)") > ready.indexOf("self.release_poll()") || ready.indexOf("Some(actual)") > ready.indexOf("self.release_poll()")) failures.push("P1w Pending/Ready/panic polling does not publish exact owners before releasing the polling gate");
+  const validate = bootstrap.slice(bootstrap.indexOf("fn validate_one"), bootstrap.indexOf("fn publish_one"));
+  if (!validate.includes("self.expected.epoch.checked_add(1)") || !validate.includes("actual.epoch == expected") || !validate.includes("Err(error) => Err(error)") || !validate.includes("DbError::Fenced { expected, actual: actual.epoch }")) failures.push("P1w expected/actual revision validation is wrapping, lossy, or retries a CAS mismatch");
+  const publish = bootstrap.slice(bootstrap.indexOf("fn publish_one"), bootstrap.indexOf("fn retained_owner_count"));
+  if (!publish.includes("!self.is_current()") || !publish.includes("self.abandoned.load") || !publish.includes("terminal_completion") || !publish.includes("completion") || publish.indexOf("!self.is_current()") > publish.indexOf("let completion =")) failures.push("P1w freshness/lost-handle checks do not precede result exposure");
+  if (!bootstrap.includes("self.pool.try_submit(Lane::Io, job)") || !bootstrap.includes("error.into_job()") || !bootstrap.includes("self.pool.callback_at") || !bootstrap.includes("retry_pressure") || !bootstrap.includes("DATABASE_CATALOG_BOOTSTRAP_RETRY_LIMIT")) failures.push("P1w queue pressure does not retain and retry the exact Lane::Io job under a fixed pressure witness");
+  const publicFuture = bootstrap.slice(bootstrap.indexOf("impl Future for DatabaseCatalogBootstrapFuture"), bootstrap.indexOf("impl Drop for DatabaseCatalogBootstrapFuture"));
+  const firstCheck = publicFuture.indexOf("self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()");
+  const register = publicFuture.indexOf("Some(context.waker().clone())", firstCheck);
+  const recheck = publicFuture.indexOf("self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()", register);
+  if (firstCheck < 0 || register < firstCheck || recheck < register || !bootstrap.includes("controlled_publication_before_waker_hook")) failures.push("P1w public future lacks check-register-recheck lost-wakeup closure");
+  const cancel = bootstrap.slice(bootstrap.indexOf("pub fn cancel(&self)"), bootstrap.indexOf("impl Future for DatabaseCatalogBootstrapFuture"));
+  const futureDrop = bootstrap.slice(bootstrap.indexOf("impl Drop for DatabaseCatalogBootstrapFuture"), bootstrap.indexOf("pub struct DatabaseCatalogBootstrapTerminalHandle"));
+  if (!cancel.includes("self.state.polling.load") || !cancel.includes("self.state.wake_requested.store(true") || !cancel.includes("self.state.schedule()") || !futureDrop.includes("self.state.polling.load") || !futureDrop.includes("self.state.wake_requested.store(true")) failures.push("P1w cancel/Drop can schedule a concurrent second callback while the backend future is polled");
+  const terminal = bootstrap.slice(bootstrap.indexOf("impl DatabaseCatalogBootstrapTerminalHandle"), bootstrap.indexOf("impl Drop for DatabaseCatalogBootstrapTerminalHandle"));
+  const terminalClose = terminal.slice(terminal.indexOf("pub fn close_step"), terminal.indexOf("pub fn terminal_is_empty"));
+  for (const required of ["pub struct DatabaseCatalogBootstrapRejected", "impl Drop for DatabaseCatalogBootstrapRejected", "DatabaseCatalogBootstrapRejectedClose::prepare", "impl Drop for DatabaseCatalogBootstrapResult", "state.terminal_completion.lock()", "state.closing.store(true", "state.release_success()", "pub struct DatabaseCatalogBootstrapTerminalHandle", "pub struct DatabaseCatalogBootstrapTerminalResult", "pub fn take_database_catalog_bootstrap_terminal", "pub fn take_result", "pub fn resume", "pub fn witness", "retained_owner_count", "roots_are_empty"])
+    if (!bootstrap.includes(required)) failures.push(`P1w exact take/resume/close/witness authority missing ${required}`);
+  const resultDrop = bootstrap.slice(bootstrap.indexOf("impl Drop for DatabaseCatalogBootstrapResult"), bootstrap.indexOf("struct DatabaseCatalogBootstrapRejectedCloseOwner"));
+  if (!resultDrop.includes("let Some(state) = self.state.take()") || !resultDrop.includes("state: None") || !resultDrop.includes("state.terminal_completion.lock()") || !resultDrop.includes("state.schedule()") || resultDrop.includes("Arc::new") || resultDrop.includes("ResultClose::mount")) failures.push("P1w result Drop allocates post-admission retirement state or bypasses its generation registry handback");
+  const rejectedImpl = bootstrap.slice(bootstrap.indexOf("impl DatabaseCatalogBootstrapRejected {"), bootstrap.indexOf("impl Drop for DatabaseCatalogBootstrapRejected"));
+  const rejectedDropStart = bootstrap.indexOf("impl Drop for DatabaseCatalogBootstrapRejected");
+  const rejectedDrop = bootstrap.slice(rejectedDropStart, bootstrap.indexOf("struct DatabaseCatalogBootstrapRejectedClose {", rejectedDropStart));
+  if (!rejectedImpl.includes("DatabaseCatalogBootstrapRejectedClose::prepare(pool, owner)") || !rejectedImpl.includes("self.close.take_owner()") || !rejectedImpl.includes("self.close.restore_owner(owner)") || !rejectedDrop.includes("self.close.has_owner()") || !rejectedDrop.includes("self.close.schedule()") || rejectedDrop.includes("Arc::new") || rejectedDrop.includes("storage.take()") || rejectedDrop.includes("pages.take()") || rejectedDrop.includes("key.take()")) failures.push("P1w refusal destructures or allocates its retirement authority during Drop instead of preserving its prepared owner ledger");
+  if (!terminalClose.includes("self.state.schedule()") || terminalClose.includes("retire_one(") || terminalClose.includes("close_one(") || terminalClose.includes("drop(")) failures.push("P1w public close executes retirement on the facade caller instead of mounting Lane::Io work");
+  const retired = bootstrap.slice(bootstrap.indexOf("fn retire_one"), bootstrap.indexOf("fn release_success"));
+  if (!retired.includes("owner.close_step()") || !retired.includes("DatabaseCatalogBootstrapWork::close_one") || !retired.includes("owner.close_one()") || retired.includes("while ") || retired.includes("loop {")) failures.push("P1w retirement does not advance one page/future/result/control owner per opportunity");
+  for (const forbidden of ["db_actor::block_on", "semio_framework_async::block_on", "WorkerPool::new(", "thread::spawn", "loop {", "while ", ".unwrap()", ".expect(", ".to_string()", "Vec<", "String>"])
+    if (bootstrap.includes(forbidden)) failures.push(`P1w production region contains prohibited ${forbidden}`);
+
+  const fixtureRequirements: readonly [string, readonly string[]][] = [
+    ["database_catalog_bootstrap_max_plus_one_and_aba_preserve_exact_credit_identity", ["DATABASE_CATALOG_BOOTSTRAP_PAGES + 1", "replacement.1", "!state.release(slot, generation", "state.bytes"]],
+    ["database_catalog_bootstrap_real_max_plus_one_refusal_returns_pages_storage_key_and_fence", ["storage_pointer", "operation = pages.operation()", "page_count()", "mount_close_and_take_error", "terminal_is_empty"]],
+    ["database_catalog_bootstrap_success_runs_on_pool_io_worker_and_returns_exact_storage_epoch", ["poll_worker_thread", "Arc::as_ptr(&storage)", "EpochFence::INITIAL.next()"]],
+    ["database_catalog_bootstrap_cas_mismatch_returns_identical_storage_and_exact_fenced_error_without_retry", ["Arc::as_ptr(&storage)", "Err(DbError::Fenced { expected: 1, actual: 0 })"]],
+    ["database_catalog_bootstrap_ready_and_pending_interruption_publish_once_and_retain_owner", ["ControlledCatalogBootstrapPoll::Ready", "ControlledCatalogBootstrapPoll::Pending", "probe.cancel()", "polls.load", "Err(DbError::Closed)"]],
+    ["database_catalog_bootstrap_handoff_interruption_retires_unpolled_pages_one_lane_opportunity_at_a_time", ["catalog_bootstrap_pages(3)", "DatabaseCatalogBootstrapPhase::Poll", "work.future.is_none()", "work.pages", "work.storage", "probe.cancel()", "Err(DbError::Closed)", "terminal_work"]],
+    ["database_catalog_bootstrap_lost_handle_take_resume_close_and_terminal_witness_are_exact", ["take_database_catalog_bootstrap_terminal", "terminal.resume()", "terminal.close_step()", "retained_owners", "saturating_sub(current) <= 1"]],
+    ["database_catalog_bootstrap_backend_no_service_close_retires_only_on_io_lane", ["ControlledCatalogBootstrapPoll::NoService", "poll_worker_thread", "terminal.close_step()", "terminal_empty"]],
+    ["database_catalog_bootstrap_stale_generation_fault_preserves_storage_pages_and_current_slot", ["replacement_generation", "DbError::StaleGeneration", "admission.release(state.slot, replacement_generation", "Arc::as_ptr(&storage)"]],
+    ["database_catalog_bootstrap_real_queue_saturation_retains_exact_job_and_recovers_identity", ["WorkerSubmitErrorKind::Saturated", "retry_job", "Lane::Io", "Some(pointer)", "EpochFence::INITIAL.next()"]],
+    ["database_catalog_bootstrap_replay_is_deterministic_and_never_reuses_initial_after_a_winner", ["for _ in 0..2", "EpochFence::INITIAL.next()", "Err(DbError::Fenced { expected: 1, actual: 0 })"]],
+    ["database_catalog_bootstrap_publication_race_and_queue_pressure_keep_exact_successor", ["initial()", "successor()", "polls.load", "Ready is never repolled", "controlled_publication_before_waker_hook", "Poll::Ready(Ok(_))"]],
+    ["database_catalog_bootstrap_public_result_drop_hands_back_exact_owner_without_post_admission_allocation", ["drop(result)", "terminal_completion", "owner.state.is_none()", "Some(pointer)", "take_database_catalog_bootstrap_terminal", "terminal.take_result()", "retained.into_parts()", "state.admission"]],
+  ];
+  for (const [name, tokens] of fixtureRequirements) {
+    const body = interactivityDatabaseCatalogBootstrapFixtureBody(engineSource, name);
+    if (body.length === 0 || tokens.some((token) => !body.includes(token))) failures.push(`P1w hostile law body is missing production-path evidence: ${name}`);
+  }
+  return failures;
+}
+
+function interactivityDatabaseCatalogBootstrapSelfTests(): void {
+  const waits = "db_actor::block_on(entry)\n".repeat(3);
+  const bootstrap = `//#region 🔖️CatalogBootstrapCas
+const DATABASE_CATALOG_BOOTSTRAP_SLOTS: usize = 64;
+const DATABASE_CATALOG_BOOTSTRAP_ITEMS: u64 = 8;
+const DATABASE_CATALOG_BOOTSTRAP_PAGES: u8 = 8;
+const DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES: u64 = 16 * 1024;
+DATABASE_CATALOG_BOOTSTRAP_TOTAL_ITEMS DATABASE_CATALOG_BOOTSTRAP_TOTAL_BYTES
+pub struct DatabaseCatalogBootstrapKey([u8; 16]); pages: Option<db_storage::DbIoPages> expected: EpochFence actual: Option<Result<EpochFence, DbError>> pub struct DatabaseCatalogBootstrapResult
+generation.checked_add(1) self.items.checked_add(DATABASE_CATALOG_BOOTSTRAP_ITEMS) self.bytes.checked_add(bytes) bytes.checked_add(DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES)
+fn try_prepare_with_key { DatabaseCatalogBootstrapAdmission::try_claim(pages.page_count()); let state = Arc::new(DatabaseCatalogBootstrapState); database_catalog_bootstrap_registry; state.schedule(); }
+struct DatabaseCatalogBootstrapWork { future storage pages } impl DatabaseCatalogBootstrapWork { fn new(storage, pages) { future: None; storage: Some(storage); pages: Some(pages); } fn poll() { self.storage.take(); self.pages.take(); self.future = Some(Box::pin(async move {})); } fn close_one() { pages.close_step()?; } fn terminal_is_empty() {} }
+enum DatabaseCatalogBootstrapPhase { Handoff Poll RetainWork CloseWork RetireInput Validate Publish Terminal }
+DatabaseCatalogBootstrapPhase::Handoff DatabaseCatalogBootstrapPhase::Poll DatabaseCatalogBootstrapPhase::RetainWork DatabaseCatalogBootstrapPhase::CloseWork DatabaseCatalogBootstrapPhase::RetireInput DatabaseCatalogBootstrapPhase::Validate DatabaseCatalogBootstrapPhase::Publish DatabaseCatalogBootstrapPhase::Terminal
+fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } if !self.is_current() {} match self.phase() { DatabaseCatalogBootstrapPhase::Handoff => {} DatabaseCatalogBootstrapPhase::Poll => {} } self.retire_one(); }
+fn handoff_one { self.expected != EpochFence::INITIAL; self.pages.lock(); DatabaseCatalogBootstrapWork::new(storage, pages, self.expected); }
+fn poll_backend_once { std::panic::catch_unwind(|| work.poll(&mut context)); Poll::Pending; slot = Some(work); self.release_poll(); Poll::Ready; slot = Some(work); staged = Some(actual); self.release_poll(); Err(_) }
+fn publish_poll_error fn validate_one { self.expected.epoch.checked_add(1); actual.epoch == expected; Err(error) => Err(error); DbError::Fenced { expected, actual: actual.epoch }; }
+fn publish_one { !self.is_current(); self.abandoned.load; terminal_completion; let completion = completion; }
+self.pool.try_submit(Lane::Io, job) error.into_job() self.pool.callback_at retry_pressure DATABASE_CATALOG_BOOTSTRAP_RETRY_LIMIT
+controlled_publication_before_waker_hook pub fn cancel(&self) { self.state.polling.load; self.state.wake_requested.store(true; self.state.schedule(); } impl Future for DatabaseCatalogBootstrapFuture { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take(); Some(context.waker().clone()); self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take(); } impl Drop for DatabaseCatalogBootstrapFuture { self.state.polling.load; self.state.wake_requested.store(true; }
+pub struct DatabaseCatalogBootstrapRejected impl DatabaseCatalogBootstrapRejected { fn new { DatabaseCatalogBootstrapRejectedClose::prepare(pool, owner); } fn retry { self.close.take_owner(); self.close.restore_owner(owner); } } impl Drop for DatabaseCatalogBootstrapRejected { if self.close.has_owner() { self.close.schedule(); } } impl Drop for DatabaseCatalogBootstrapResult { let Some(state) = self.state.take(); let owner = Result { state: None }; state.terminal_completion.lock(); state.closing.store(true; state.schedule(); } fn into_parts { state.release_success(); } struct DatabaseCatalogBootstrapRejectedCloseOwner pub struct DatabaseCatalogBootstrapTerminalHandle pub struct DatabaseCatalogBootstrapTerminalResult pub fn take_database_catalog_bootstrap_terminal pub fn take_result pub fn resume pub fn witness retained_owner_count roots_are_empty
+impl DatabaseCatalogBootstrapTerminalHandle { pub fn close_step { self.state.schedule(); } pub fn terminal_is_empty }
+fn retire_one { DatabaseCatalogBootstrapWork::close_one; owner.close_step(); owner.close_one(); } fn release_success
+//#endregion 🔖️CatalogBootstrapCas`;
+  const open = `pub async fn open( pub async fn open_at( pub async fn open_with_emit pub async fn open_with_authz async fn open_with { Self::open_catalog_bootstrap_retained(pool.clone(), storage, pages); Err(rejected) => return Err(rejected.close_and_take_error()); let result = bootstrap.await?; result.into_parts(); (retained_storage, epoch, Vec::new()) } pub async fn create_document`;
+  const laws = [
+    `fn database_catalog_bootstrap_max_plus_one_and_aba_preserve_exact_credit_identity() { DATABASE_CATALOG_BOOTSTRAP_PAGES + 1; replacement.1; !state.release(slot, generation; state.bytes; }`,
+    `fn database_catalog_bootstrap_real_max_plus_one_refusal_returns_pages_storage_key_and_fence() { storage_pointer; operation = pages.operation(); page_count(); mount_close_and_take_error; terminal_is_empty; }`,
+    `fn database_catalog_bootstrap_success_runs_on_pool_io_worker_and_returns_exact_storage_epoch() { poll_worker_thread; Arc::as_ptr(&storage); EpochFence::INITIAL.next(); }`,
+    `fn database_catalog_bootstrap_cas_mismatch_returns_identical_storage_and_exact_fenced_error_without_retry() { Arc::as_ptr(&storage); Err(DbError::Fenced { expected: 1, actual: 0 }); }`,
+    `fn database_catalog_bootstrap_ready_and_pending_interruption_publish_once_and_retain_owner() { ControlledCatalogBootstrapPoll::Ready; ControlledCatalogBootstrapPoll::Pending; probe.cancel(); polls.load; Err(DbError::Closed); }`,
+    `fn database_catalog_bootstrap_handoff_interruption_retires_unpolled_pages_one_lane_opportunity_at_a_time() { catalog_bootstrap_pages(3); DatabaseCatalogBootstrapPhase::Poll; work.future.is_none(); work.pages; work.storage; probe.cancel(); Err(DbError::Closed); terminal_work; }`,
+    `fn database_catalog_bootstrap_lost_handle_take_resume_close_and_terminal_witness_are_exact() { take_database_catalog_bootstrap_terminal; terminal.resume(); terminal.close_step(); retained_owners; saturating_sub(current) <= 1; }`,
+    `fn database_catalog_bootstrap_backend_no_service_close_retires_only_on_io_lane() { ControlledCatalogBootstrapPoll::NoService; poll_worker_thread; terminal.close_step(); terminal_empty; }`,
+    `fn database_catalog_bootstrap_stale_generation_fault_preserves_storage_pages_and_current_slot() { replacement_generation; DbError::StaleGeneration; admission.release(state.slot, replacement_generation; Arc::as_ptr(&storage); }`,
+    `fn database_catalog_bootstrap_real_queue_saturation_retains_exact_job_and_recovers_identity() { WorkerSubmitErrorKind::Saturated; retry_job; Lane::Io; Some(pointer); EpochFence::INITIAL.next(); }`,
+    `fn database_catalog_bootstrap_replay_is_deterministic_and_never_reuses_initial_after_a_winner() { for _ in 0..2; EpochFence::INITIAL.next(); Err(DbError::Fenced { expected: 1, actual: 0 }); }`,
+    `fn database_catalog_bootstrap_publication_race_and_queue_pressure_keep_exact_successor() { initial(); successor(); polls.load; Ready is never repolled; controlled_publication_before_waker_hook; Poll::Ready(Ok(_)); }`,
+    `fn database_catalog_bootstrap_public_result_drop_hands_back_exact_owner_without_post_admission_allocation() { drop(result); terminal_completion; owner.state.is_none(); Some(pointer); take_database_catalog_bootstrap_terminal; terminal.take_result(); retained.into_parts(); state.admission; }`,
+  ].join("\n");
+  const good = `${waits}${bootstrap}${open}${laws}`;
+  const mutations: readonly [string, string][] = [
+    ["direct-open-cas", good.replace("Self::open_catalog_bootstrap_retained(pool.clone(), storage, pages)", "db_actor::block_on(storage.catalog().await.cas_root(EpochFence::INITIAL, pages))")],
+    ["fourth-wait", `${good} db_actor::block_on(extra)`],
+    ["unbounded-pages", good.replace("const DATABASE_CATALOG_BOOTSTRAP_PAGES: u8 = 8", "const DATABASE_CATALOG_BOOTSTRAP_PAGES: u8 = u8::MAX")],
+    ["missing-result-reserve", good.replace("bytes.checked_add(DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES)", "bytes")],
+    ["missing-byte-total", good.replace("DATABASE_CATALOG_BOOTSTRAP_TOTAL_BYTES", "UNBOUNDED_BOOTSTRAP_BYTES")],
+    ["unchecked-generation", good.replace("generation.checked_add(1)", "generation + 1")],
+    ["claim-after-state", good.replace("DatabaseCatalogBootstrapAdmission::try_claim(pages.page_count()); let state = Arc::new(DatabaseCatalogBootstrapState)", "let state = Arc::new(DatabaseCatalogBootstrapState); DatabaseCatalogBootstrapAdmission::try_claim(pages.page_count())")],
+    ["handoff-polls", good.replace("DatabaseCatalogBootstrapWork::new(storage, pages, self.expected);", "DatabaseCatalogBootstrapWork::new(storage, pages, self.expected).poll(&mut context);")],
+    ["unpolled-future-owns-pages", good.replace("future: None; storage: Some(storage); pages: Some(pages);", "future: Some(Box::pin(async move { drop(pages); })); storage: None; pages: None;")],
+    ["poll-loop", good.replace("work.poll(&mut context)", "loop { work.poll(&mut context) }")],
+    ["pending-drops-work", good.replace("Poll::Pending; slot = Some(work);", "Poll::Pending; drop(work);")],
+    ["ready-drops-actual", good.replace("slot = Some(work); staged = Some(actual);", "slot = Some(work); drop(actual);")],
+    ["wrapping-revision", good.replace("self.expected.epoch.checked_add(1)", "self.expected.epoch + 1")],
+    ["blind-mismatch-retry", good.replace("DbError::Fenced { expected, actual: actual.epoch }", "retry_initial_cas()")],
+    ["wrong-lane", good.replaceAll("self.pool.try_submit(Lane::Io, job)", "self.pool.try_submit(Lane::Maintenance, job)")],
+    ["saturation-drops-job", good.replace("error.into_job()", "drop(error)")],
+    ["facade-close", good.replace("pub fn close_step { self.state.schedule(); }", "pub fn close_step { self.state.retire_one(); }")],
+    ["lost-public-recheck", good.replace("Some(context.waker().clone()); self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();", "self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take(); Some(context.waker().clone());")],
+    ["cancel-concurrent-poll", good.replace("pub fn cancel(&self) { self.state.polling.load; self.state.wake_requested.store(true; self.state.schedule(); }", "pub fn cancel(&self) { self.state.schedule(); }")],
+    ["missing-result-drop", good.replace("impl Drop for DatabaseCatalogBootstrapResult", "impl Inspect for DatabaseCatalogBootstrapResult")],
+    ["post-admission-result-close-allocation", good.replace("let owner = Result { state: None }; state.terminal_completion.lock();", "let owner = Arc::new(ResultClose::mount());")],
+    ["missing-rejection-drop", good.replace("impl Drop for DatabaseCatalogBootstrapRejected", "impl Inspect for DatabaseCatalogBootstrapRejected")],
+    ["rejection-drop-allocates-close", good.replace("if self.close.has_owner() { self.close.schedule(); }", "Arc::new(DatabaseCatalogBootstrapRejectedClose::prepare(pool, owner));")],
+    ["missing-terminal-witness", good.replace("pub fn witness", "fn inspect_witness")],
+    ["max-law-tautology", good.replace("DATABASE_CATALOG_BOOTSTRAP_PAGES + 1; replacement.1; !state.release(slot, generation; state.bytes;", "assert!(true);")],
+    ["max-owner-law-shallow", good.replace("storage_pointer; operation = pages.operation(); page_count(); mount_close_and_take_error; terminal_is_empty;", "page_count();")],
+    ["lane-law-shallow", good.replace("poll_worker_thread; Arc::as_ptr(&storage); EpochFence::INITIAL.next();", "assert!(actual.is_ok());")],
+    ["mismatch-law-shallow", good.replace("Arc::as_ptr(&storage); Err(DbError::Fenced { expected: 1, actual: 0 });", "assert!(actual.is_err());")],
+    ["interruption-law-pending-only", good.replace("ControlledCatalogBootstrapPoll::Ready; ControlledCatalogBootstrapPoll::Pending; probe.cancel(); polls.load; Err(DbError::Closed);", "ControlledCatalogBootstrapPoll::Pending; probe.cancel();")],
+    ["handoff-interruption-law-no-owner", good.replace("catalog_bootstrap_pages(3); DatabaseCatalogBootstrapPhase::Poll; work.future.is_none(); work.pages; work.storage; probe.cancel(); Err(DbError::Closed); terminal_work;", "probe.cancel();")],
+    ["lost-handle-law-no-close", good.replace("take_database_catalog_bootstrap_terminal; terminal.resume(); terminal.close_step(); retained_owners; saturating_sub(current) <= 1;", "take_database_catalog_bootstrap_terminal;")],
+    ["no-service-law-no-lane", good.replace("ControlledCatalogBootstrapPoll::NoService; poll_worker_thread; terminal.close_step(); terminal_empty;", "ControlledCatalogBootstrapPoll::NoService;")],
+    ["stale-law-no-identity", good.replace("replacement_generation; DbError::StaleGeneration; admission.release(state.slot, replacement_generation; Arc::as_ptr(&storage);", "DbError::StaleGeneration;")],
+    ["saturation-law-no-recovery", good.replace("WorkerSubmitErrorKind::Saturated; retry_job; Lane::Io; Some(pointer); EpochFence::INITIAL.next();", "WorkerSubmitErrorKind::Saturated;")],
+    ["replay-law-no-fence", good.replace("for _ in 0..2; EpochFence::INITIAL.next(); Err(DbError::Fenced { expected: 1, actual: 0 });", "for _ in 0..2;")],
+    ["wake-law-bypasses-successor", good.replace("initial(); successor(); polls.load; Ready is never repolled; controlled_publication_before_waker_hook; Poll::Ready(Ok(_));", "initial();")],
+    ["result-drop-law-no-identity-recovery", good.replace("drop(result); terminal_completion; owner.state.is_none(); Some(pointer); take_database_catalog_bootstrap_terminal; terminal.take_result(); retained.into_parts(); state.admission;", "drop(result);")],
+  ];
+  for (const [name, source] of mutations) if (interactivityDatabaseCatalogBootstrapFailures(source).length === 0) throw new Error(`[verify interactivity p1w] hostile mutation ${name} was falsely accepted.`);
+  const failures = interactivityDatabaseCatalogBootstrapFailures(good);
+  if (failures.length !== 0) throw new Error(`[verify interactivity p1w] faithful source fixture was falsely rejected: ${failures.join("; ")}`);
+}
+//#endregion 🗄️P1wCatalogBootstrapCas
+
 function interactivityArtifactHistoryFailures(engineSource: string, artifactSource: string, walSource: string): string[] {
   const engine = interactivityProductionSource(engineSource);
   const artifact = interactivityProductionSource(artifactSource);
@@ -8997,7 +9994,7 @@ function interactivityArtifactHistoryFailures(engineSource: string, artifactSour
   const terminalClose = terminalHandle.slice(terminalCloseStart, terminalHandle.indexOf("pub fn terminal_is_empty(&self)", terminalCloseStart));
   const productionWaits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
   const failures: string[] = [];
-  if (productionWaits !== 4 || engine.includes("async fn replay_history") || engine.includes("db_wal::replay_document(&storage.wal")) failures.push("DB engine retained history route does not preserve the four post-catalog-read residual waits");
+  if (productionWaits !== 3 || engine.includes("async fn replay_history") || engine.includes("db_wal::replay_document(&storage.wal")) failures.push("DB engine retained history route does not preserve the three post-P1w residual waits");
   for (const forbidden of ["block_on(", "ask_blocking", "submit_blocking", "thread::spawn", "WorkerPool::new(", "loop {", "while "])
     if (history.includes(forbidden) || replay.includes(forbidden)) failures.push(`retained history route contains ${forbidden}`);
   if (!history.includes("const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8") || !history.includes("const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024") || !history.includes("const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048") || !history.includes("const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481") || !history.includes("ArtifactHistoryAdmission::try_claim()")) failures.push("history operation lacks fixed item/page/operation/process admission");
@@ -9108,8 +10105,8 @@ function interactivityArtifactHistoryFailures(engineSource: string, artifactSour
 
 function interactivityArtifactHistorySelfTests(): void {
   const fixtures = `artifact_history_empty_one_cap_plus_one_admission_returns_exact_request artifact_history_empty_and_two_batch_replay_are_deterministic artifact_history_nested_derived_item_and_byte_caps_precede_materialization artifact_history_segment_cap_plus_one_reads_only_one_admitted_page artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant artifact_history_quiet_late_wake_and_retry_are_generation_coalesced artifact_history_cancel_before_during_after_retains_actor_and_result_owners artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation artifact_history_replay_ordering_is_segment_frame_then_result_fifo artifact_history_terminal_job_work_result_take_resume_and_close_one_owner artifact_history_one_grant_advances_one_retained_phase_without_blocking artifact_history_drop_after_complete_moves_result_to_public_terminal_registry artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each artifact_history_scratch_result_boundary_plus_one_preserves_exact_owner artifact_history_runner_close_mid_turn_retains_replay_until_terminal_empty artifact_history_future_handle_drop_and_terminal_take_resume_are_exact artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_retire_one_owner artifact_history_panic_at_each_phase_transition_retains_then_fault_retires artifact_history_fixed_owner_accounting_has_no_capacity_scan`;
-  const fourWaits = "db_actor::block_on(entry)\n".repeat(4);
-  const goodEngine = `${fourWaits} const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8 const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024 const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048 const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481 ArtifactHistoryAdmission::try_claim() reservation: Option<db_artifact::HistoryReplayReservation> assert!(self.reservation.is_none() HistoryView::new(view, Some(admission) terminal_reservation: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>> pub struct ArtifactHistoryTerminalReservation begin_unhanded_reservation_close terminalize_unhanded_request pub fn take_terminal_reservation terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFaultCursor>> construction_checked_out pub struct ArtifactHistoryTerminalConstructionFault pub fn take_terminal_construction_fault impl ArtifactHistoryTerminalConstructionFault { pub fn resume(mut self) -> Result<(), Self> fn terminal_roots_are_empty(&self) -> bool fn terminal_is_empty(&self) -> bool { self.finished.load(std::sync::atomic::Ordering::Acquire) self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() } impl std::task::Wake for ArtifactHistoryWake self.generation == state.generation self.scheduled.compare_exchange(false, true self.pool.callback_at retry_generation error.into_job() ArtifactHistoryWorkOwner::Request ArtifactHistoryWorkOwner::Actor pub fn take_terminal_job pub fn take_terminal_work pub fn take_terminal_result pub fn take_actor_terminal_job impl ArtifactHistoryTerminalHandle { pub fn close_step(&self) -> bool { if self.state.close_one() { return true; } if self.state.authority.close_step() { return true; } self.state.finish_if_terminal_empty() } pub fn terminal_is_empty(&self) -> bool impl ArtifactHistoryTerminalJob impl ArtifactHistoryTerminalWork fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } if self.authority.generation() != self.authority_generation {} self.authority.history_retained std::pin::Pin::new(future).poll(&mut context) self.complete(Ok(HistoryView::new } pub struct ArtifactHandle ${fixtures}`;
+  const threeWaits = "db_actor::block_on(entry)\n".repeat(3);
+  const goodEngine = `${threeWaits} const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8 const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024 const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048 const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481 ArtifactHistoryAdmission::try_claim() reservation: Option<db_artifact::HistoryReplayReservation> assert!(self.reservation.is_none() HistoryView::new(view, Some(admission) terminal_reservation: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>> pub struct ArtifactHistoryTerminalReservation begin_unhanded_reservation_close terminalize_unhanded_request pub fn take_terminal_reservation terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFaultCursor>> construction_checked_out pub struct ArtifactHistoryTerminalConstructionFault pub fn take_terminal_construction_fault impl ArtifactHistoryTerminalConstructionFault { pub fn resume(mut self) -> Result<(), Self> fn terminal_roots_are_empty(&self) -> bool fn terminal_is_empty(&self) -> bool { self.finished.load(std::sync::atomic::Ordering::Acquire) self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() } impl std::task::Wake for ArtifactHistoryWake self.generation == state.generation self.scheduled.compare_exchange(false, true self.pool.callback_at retry_generation error.into_job() ArtifactHistoryWorkOwner::Request ArtifactHistoryWorkOwner::Actor pub fn take_terminal_job pub fn take_terminal_work pub fn take_terminal_result pub fn take_actor_terminal_job impl ArtifactHistoryTerminalHandle { pub fn close_step(&self) -> bool { if self.state.close_one() { return true; } if self.state.authority.close_step() { return true; } self.state.finish_if_terminal_empty() } pub fn terminal_is_empty(&self) -> bool impl ArtifactHistoryTerminalJob impl ArtifactHistoryTerminalWork fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } if self.authority.generation() != self.authority_generation {} self.authority.history_retained std::pin::Pin::new(future).poll(&mut context) self.complete(Ok(HistoryView::new } pub struct ArtifactHandle ${fixtures}`;
   const goodArtifact = `//#region 🔖️HistoryReplay HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024 HISTORY_REPLAY_RESULT_BYTES pub struct HistoryReplayReservation impl HistoryReplayReservation { source_page_count retained_operation_bytes retained_result_bytes source_pages.try_reserve_exact(HISTORY_REPLAY_SEGMENT_PAGES result_pages.try_reserve_exact(HISTORY_REPLAY_RESULT_PAGES) operation_ids.try_reserve_exact(HISTORY_REPLAY_MAX_OPERATION_IDS) entries.try_reserve_exact(HISTORY_REPLAY_MAX_ENTRIES) HistoryReplayReservationConstructionFault::new try_new_with_result_page_failure result_len.checked_add(len) retained_bytes } pub struct HistoryReplayReservationCloseCursor pub struct HistoryReplayReservationConstructionFaultCursor self.source_page_count -= 1 self.operation_ids.as_mut().is_some_and self.entries.as_mut().is_some_and self.result_pages.as_mut().and_then(Vec::pop) HistoryEnvelopeField::Dependency HistoryEnvelopeField::DiffPayload HistoryEnvelopeField::InversePayload self.dependencies -= 1 self.pos != self.end enum HistoryFrameToken { Command { offset: u64, len: u64 } } enum HistoryReplayPhase { PageRead, Retire } enum HistoryReplayTransition { InProgress FaultRetire Complete } phase: Option<HistoryReplayPhase> self.transition = HistoryReplayTransition::FaultRetire if this.phase.take().is_some() let requested = remaining.min(HISTORY_REPLAY_PAGE_BYTES); pack::ByteRange { offset, len: requested } page.capacity() as u64 > HISTORY_REPLAY_PAGE_BYTES protocol::codec::Crc32cCursor let maximum = self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES); self.crc.update_page(page) HistoryReplayPhase::Retire HistoryReplayTransition::FaultRetire self.page_count -= 1 fn next() { retained_step } impl Future for HistoryReplayFuture assert!(self.terminal_is_empty() //#endregion 🔖️HistoryReplay //#region 🔖️Actor ArtifactMessage::History ArtifactTurn::History engine.history_replay(operation_generation, cancelled, reservation) Pin::new(&mut *replay).poll(&mut context) replay.request_close !replay.terminal_is_empty() replay.request_close history replay cursor panicked self.schedule() pub fn history_retained future.as_mut().poll(&mut context) //#endregion 🔖️Actor`;
   const registeredEngine = `${goodEngine.replace("terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFaultCursor>>", "terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>")} artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_exact_pages artifact_history_construction_unwind_hands_partial_owner_to_registry_without_bulk_drop artifact_history_construction_registry_saturation_rejects_before_partial_owner_and_reuses_with_fresh_generation artifact_history_construction_handback_rejects_stale_duplicate_and_aba_without_owner_overwrite`;
   const constructionRegistry = `const HISTORY_REPLAY_CONSTRUCTION_SLOTS: usize = 64 struct HistoryReplayReservationConstructionToken { slot: usize, generation: u64 } pub(crate) struct HistoryReplayReservationConstructionHandbackRejection struct HistoryReplayReservationConstructionSlot fn claim_history_replay_reservation_construction { cursor: Some(HistoryReplayReservationCloseCursor } fn handback_history_replay_reservation_construction(token: &HistoryReplayReservationConstructionToken) -> Result<(), HistoryReplayReservationConstructionHandbackRejection> { registry.slots.get_mut(token.slot) !slot.occupied !slot.checked_out slot.generation != token.generation slot.cursor.is_none() HistoryReplayReservationConstructionHandbackRejection slot.checked_out = false } fn release_history_replay_reservation_construction struct HistoryReplayReservationConstructionBuilder impl Drop for HistoryReplayReservationConstructionBuilder { handback_history_replay_reservation_construction(&token) } pub(crate) struct HistoryReplayReservationConstructionFault impl HistoryReplayReservationConstructionFault { release_history_replay_reservation_construction(token) } impl Drop for HistoryReplayReservationConstructionFault { handback_history_replay_reservation_construction(&token) } take_history_replay_reservation_construction_fault impl Drop for HistoryReplayReservationCloseCursor`;

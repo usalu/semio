@@ -117,9 +117,10 @@ pub(crate) fn hit_test(tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<No
 
 fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32) -> Option<NodeId> {
     let node = tree.node(id)?;
-    let abs_x = origin_x + node.layout.x;
-    let abs_y = origin_y + node.layout.y;
-    let inside = Rect::new(abs_x, abs_y, node.layout.width, node.layout.height).contains(x, y);
+    let layout = tree.accepted_layout(id)?;
+    let abs_x = origin_x + layout.x;
+    let abs_y = origin_y + layout.y;
+    let inside = Rect::new(abs_x, abs_y, layout.width, layout.height).contains(x, y);
     if node.flags.contains(NodeFlags::CLIPS_CHILDREN) && !inside {
         return None;
     }
@@ -211,11 +212,12 @@ fn find_item_in_items<'a>(items: &'a [UiTreeItemNode], id: &str) -> Option<&'a U
 fn node_abs_origin(tree: &UiTree, id: NodeId) -> (f32, f32) {
     match tree.node(id) {
         Some(node) => {
+            let layout = tree.accepted_layout(id).unwrap_or_default();
             let (parent_x, parent_y) = match node.parent {
                 Some(parent) => node_abs_origin(tree, parent),
                 None => (0.0, 0.0),
             };
-            (parent_x + node.layout.x, parent_y + node.layout.y)
+            (parent_x + layout.x, parent_y + layout.y)
         }
         None => (0.0, 0.0),
     }
@@ -224,8 +226,9 @@ fn node_abs_origin(tree: &UiTree, id: NodeId) -> (f32, f32) {
 /// 📐️ `node_abs_origin` plus the node's own size, as a `Rect` — `None` if `id` isn't in `tree`.
 pub(crate) fn node_abs_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
     let node = tree.node(id)?;
+    let layout = tree.accepted_layout(id)?;
     let (x, y) = node_abs_origin(tree, id);
-    Some(Rect::new(x, y, node.layout.width, node.layout.height))
+    Some(Rect::new(x, y, layout.width, layout.height))
 }
 
 /// 🎯️ `hit_test`, but `subtree_root` need not be the window's true tree root (an overlay root
@@ -1332,17 +1335,19 @@ impl EventRouter {
     /// `UiCommand::Scene` the host should route into that surface's per-`SurfaceKind` input handler.
     fn scene_command(&self, tree: &UiTree, id: NodeId, event: &UiEvent) -> Option<UiCommand> {
         let node = tree.node(id)?;
+        let layout = tree.accepted_layout(id)?;
         let UiNode::ComponentScene(scene) = &node.spec.0 else { return None };
-        let mut x = node.layout.x;
-        let mut y = node.layout.y;
+        let mut x = layout.x;
+        let mut y = layout.y;
         let mut current = node.parent;
         while let Some(parent_id) = current {
             let parent = tree.node(parent_id)?;
-            x += parent.layout.x;
-            y += parent.layout.y;
+            let parent_layout = tree.accepted_layout(parent_id)?;
+            x += parent_layout.x;
+            y += parent_layout.y;
             current = parent.parent;
         }
-        Some(UiCommand::Scene { window_id: self.window_id.clone(), node: id, surface_id: scene.surface_id.clone(), kind: scene.component_kind, rect: Rect::new(x, y, node.layout.width, node.layout.height), event: event.clone() })
+        Some(UiCommand::Scene { window_id: self.window_id.clone(), node: id, surface_id: scene.surface_id.clone(), kind: scene.component_kind, rect: Rect::new(x, y, layout.width, layout.height), event: event.clone() })
     }
 }
 //#endregion 🔖️UiCommand

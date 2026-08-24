@@ -526,7 +526,7 @@ pub struct AssemblyPreview {
     pub assembled_element_ids: Vec<String>,
 }
 
-#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 struct AssemblyTriplet {
     sequence: u64,
     row: u32,
@@ -556,8 +556,10 @@ struct PendingElementAssembly {
 enum PendingElementBuildStage {
     ReserveIndices,
     Indices,
+    PublishIndex,
     ReservePositions,
     Positions,
+    PublishPosition,
     ReserveStiffnessCredit,
     AllocateStiffness,
     ReferenceQuadraturePoint,
@@ -579,8 +581,10 @@ impl PendingElementBuildStage {
         match self {
             Self::ReserveIndices => "fem.element.reserve-indices",
             Self::Indices => "fem.element.local-to-global-index",
+            Self::PublishIndex => "fem.element.publish-global-index",
             Self::ReservePositions => "fem.element.reserve-positions",
             Self::Positions => "fem.element.position",
+            Self::PublishPosition => "fem.element.publish-position",
             Self::ReserveStiffnessCredit => "fem.element.reserve-stiffness-credit",
             Self::AllocateStiffness => "fem.element.allocate-stiffness",
             Self::ReferenceQuadraturePoint => "fem.element.reference-quadrature-point",
@@ -605,6 +609,8 @@ struct PendingElementBuild {
     node_count: usize,
     dof_count: usize,
     scalar_cursor: usize,
+    lookup_cursor: usize,
+    lookup_match: Option<usize>,
     stage: PendingElementBuildStage,
     indices_new: Vec<usize>,
     positions: Vec<[f64; 3]>,
@@ -630,6 +636,8 @@ struct AssemblyCheckpoint {
     checkpoint_due: bool,
     preview_due: bool,
     resume_target: usize,
+    merge_scan_partition: usize,
+    merge_candidate: Option<(usize, AssemblyTriplet)>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -1063,6 +1071,7 @@ impl AssemblyJobConstruction {
                             stage: AssemblyJobStage::ElementTriplets,
                             total_elements: model.elements.len(),
                             element_cursor: 0,
+                            pending_build: None,
                             pending: None,
                             partitions: std::mem::take(&mut self.partitions),
                             full_merge_cursors: std::mem::take(&mut self.full_merge_cursors),
@@ -1072,6 +1081,8 @@ impl AssemblyJobConstruction {
                             checkpoint_due: false,
                             preview_due: false,
                             resume_target: 0,
+                            merge_scan_partition: 0,
+                            merge_candidate: None,
                         },
                         model: AnalysisModelOwner::Owned(model),
                         operation: self.operation,
@@ -1246,6 +1257,8 @@ impl<'model> AssemblyJob<'model> {
                 checkpoint_due: false,
                 preview_due: false,
                 resume_target: 0,
+                merge_scan_partition: 0,
+                merge_candidate: None,
             },
             close_lane: 0,
             model_close: AnalysisModelCloseCursor::default(),
@@ -1474,6 +1487,8 @@ impl<'model> AssemblyJob<'model> {
                 node_count,
                 dof_count,
                 scalar_cursor: 0,
+                lookup_cursor: 0,
+                lookup_match: None,
                 stage: PendingElementBuildStage::ReserveIndices,
                 indices_new: Vec::new(),
                 positions: Vec::new(),
@@ -1501,13 +1516,25 @@ impl<'model> AssemblyJob<'model> {
                     let node_index = build.scalar_cursor / build.dof_count;
                     let dof_index = build.scalar_cursor % build.dof_count;
                     let node_id = element.mounted_node_id(node_index).ok_or(FemError::Singular)?;
-                    let old = self.plan.dof_map.get(node_id, element.dofs_per_node()[dof_index]).ok_or(FemError::Singular)?;
-                    build.indices_new.push(self.plan.inv_perm[old]);
-                    build.scalar_cursor += 1;
+                    let Some((current, current_dof)) = self.plan.dof_map.order.get(build.lookup_cursor) else { return Err(FemError::Singular) };
+                    if current == node_id && *current_dof == element.dofs_per_node()[dof_index] {
+                        build.lookup_match = Some(build.lookup_cursor);
+                        build.stage = PendingElementBuildStage::PublishIndex;
+                    } else {
+                        build.lookup_cursor += 1;
+                    }
                 } else {
                     build.scalar_cursor = 0;
+                    build.lookup_cursor = 0;
                     build.stage = PendingElementBuildStage::ReservePositions;
                 }
+            }
+            PendingElementBuildStage::PublishIndex => {
+                let old = build.lookup_match.take().ok_or(FemError::Singular)?;
+                build.indices_new.push(self.plan.inv_perm[old]);
+                build.scalar_cursor += 1;
+                build.lookup_cursor = 0;
+                build.stage = PendingElementBuildStage::Indices;
             }
             PendingElementBuildStage::ReservePositions => {
                 if !reserve_exact_owner_page(&mut build.positions, build.node_count) {
@@ -1518,12 +1545,23 @@ impl<'model> AssemblyJob<'model> {
             PendingElementBuildStage::Positions => {
                 if build.scalar_cursor < build.node_count {
                     let node_id = element.mounted_node_id(build.scalar_cursor).ok_or(FemError::Singular)?;
-                    let position = self.model.nodes.iter().find(|node| node.id == node_id).map(|node| node.pos).ok_or(FemError::Singular)?;
-                    build.positions.push(position);
-                    build.scalar_cursor += 1;
+                    let Some(node) = self.model.nodes.get(build.lookup_cursor) else { return Err(FemError::Singular) };
+                    if node.id == node_id {
+                        build.lookup_match = Some(build.lookup_cursor);
+                        build.stage = PendingElementBuildStage::PublishPosition;
+                    } else {
+                        build.lookup_cursor += 1;
+                    }
                 } else {
                     build.stage = PendingElementBuildStage::ReserveStiffnessCredit;
                 }
+            }
+            PendingElementBuildStage::PublishPosition => {
+                let node = build.lookup_match.take().and_then(|index| self.model.nodes.get(index)).ok_or(FemError::Singular)?;
+                build.positions.push(node.pos);
+                build.scalar_cursor += 1;
+                build.lookup_cursor = 0;
+                build.stage = PendingElementBuildStage::Positions;
             }
             PendingElementBuildStage::ReserveStiffnessCredit => {
                 let side = build.indices_new.len();
@@ -1680,21 +1718,21 @@ impl<'model> AssemblyJob<'model> {
         true
     }
 
-    fn next_partition_triplet(&self, full: bool) -> Option<(usize, AssemblyTriplet)> {
-        let cursors = if full { &self.state.full_merge_cursors } else { &self.state.free_merge_cursors };
-        self.state
-            .partitions
-            .iter()
-            .enumerate()
-            .filter_map(|(partition_index, partition)| {
-                let entries = if full { &partition.full } else { &partition.free };
-                entries.get(cursors[partition_index]).copied().map(|entry| (partition_index, entry))
-            })
-            .min_by_key(|(_, entry)| entry.sequence)
-    }
-
-    fn merge_triplet(&mut self, full: bool) -> bool {
-        let Some((partition_index, entry)) = self.next_partition_triplet(full) else { return false };
+    fn advance_partition_merge(&mut self, full: bool) -> Option<bool> {
+        if self.state.merge_scan_partition < self.state.partitions.len() {
+            let partition_index = self.state.merge_scan_partition;
+            let partition = &self.state.partitions[partition_index];
+            let cursor = if full { self.state.full_merge_cursors[partition_index] } else { self.state.free_merge_cursors[partition_index] };
+            let entry = if full { partition.full.get(cursor) } else { partition.free.get(cursor) }.copied();
+            if let Some(entry) = entry {
+                if self.state.merge_candidate.is_none_or(|(_, candidate)| entry.sequence < candidate.sequence) {
+                    self.state.merge_candidate = Some((partition_index, entry));
+                }
+            }
+            self.state.merge_scan_partition += 1;
+            return Some(false);
+        }
+        let Some((partition_index, entry)) = self.state.merge_candidate.take() else { return None };
         if full {
             self.state.full_merge_cursors[partition_index] += 1;
             self.state.merged_full.push(entry);
@@ -1702,7 +1740,8 @@ impl<'model> AssemblyJob<'model> {
             self.state.free_merge_cursors[partition_index] += 1;
             self.state.merged_free.push(entry);
         }
-        true
+        self.state.merge_scan_partition = 0;
+        Some(true)
     }
 
     fn finish(self) -> Option<UnfactoredSystem> {
@@ -1970,12 +2009,14 @@ impl InteractiveJob for AssemblyJob<'_> {
                 }
             }
             AssemblyJobStage::MergeFull => {
-                if !self.merge_triplet(true) {
+                if self.advance_partition_merge(true).is_none() {
+                    self.state.merge_scan_partition = 0;
+                    self.state.merge_candidate = None;
                     self.state.stage = AssemblyJobStage::MergeFree;
                 }
             }
             AssemblyJobStage::MergeFree => {
-                if !self.merge_triplet(false) {
+                if self.advance_partition_merge(false).is_none() {
                     self.state.stage = AssemblyJobStage::Complete;
                 }
             }
@@ -2689,6 +2730,10 @@ mod tests {
             let mut job = construction.take_complete().expect("owned construction transfers mounted job");
             assert!(matches!(&job.model, AnalysisModelOwner::Owned(_)));
             let required = [
+                PendingElementBuildStage::Indices,
+                PendingElementBuildStage::PublishIndex,
+                PendingElementBuildStage::Positions,
+                PendingElementBuildStage::PublishPosition,
                 PendingElementBuildStage::ReferenceQuadraturePoint,
                 PendingElementBuildStage::ShapeFunctionDerivativeScalar,
                 PendingElementBuildStage::JacobianCell,
@@ -2703,20 +2748,20 @@ mod tests {
             let mut sequence = 0;
             let mut maximum_micros = 0;
             for _ in 0..1_024 {
-                let before = job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.stiffness.len()));
-                if let Some((stage, _, _)) = before.filter(|(stage, _, _)| required.contains(stage)) {
+                let before = job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len()));
+                if let Some((stage, ..)) = before.filter(|(stage, ..)| required.contains(stage)) {
                     seen.insert(stage);
                     let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
                     assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
-                    assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.stiffness.len())), before);
+                    assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
                     let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
                     assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
-                    assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.stiffness.len())), before);
+                    assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
                     let token = semio_framework_job::root_cancel_token();
                     semio_framework_async::block_on(token.cancel());
                     let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
                     assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
-                    assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.stiffness.len())), before);
+                    assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
                 }
                 let started = std::time::Instant::now();
                 let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
@@ -2772,6 +2817,75 @@ mod tests {
             triangle_expected,
             assembly_operation(306),
         );
+    }
+
+    /// 🔀️ Owned lookup and partition-min cursors interrupt and replay without hidden scans.
+    #[test]
+    fn p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing() {
+        fn model() -> AnalysisModel {
+            let nodes = (0..=4).map(|index| Node { id: format!("n{index}"), pos: [index as f64, (index % 2) as f64 * 0.25, 0.0] }).collect::<Vec<_>>();
+            let elements = (0..4).map(|index| Bar2 { id: format!("b{index}"), start: format!("n{index}"), end: format!("n{}", index + 1), e: 200e9, area: 0.01, density: 0.0 }.into()).collect();
+            AnalysisModel { nodes, elements, supports: Vec::new() }
+        }
+
+        fn run(operation: Operation) -> (Vec<f64>, Vec<f64>, u128) {
+            let mut construction = AssemblyJobConstruction::new_owned(Arc::new(model()), operation, 4);
+            while !construction.step_one().expect("owned assembly construction") {}
+            let mut job = construction.take_complete().expect("owned assembly job");
+            let mut sequence = 0;
+            let mut maximum_micros = 0;
+            for _ in 0..100_000 {
+                let merge = matches!(job.state.stage, AssemblyJobStage::MergeFull | AssemblyJobStage::MergeFree);
+                let lookup = job
+                    .state
+                    .pending_build
+                    .as_ref()
+                    .is_some_and(|build| matches!(build.stage, PendingElementBuildStage::Indices | PendingElementBuildStage::PublishIndex | PendingElementBuildStage::Positions | PendingElementBuildStage::PublishPosition));
+                if merge || lookup {
+                    let before = (
+                        job.state.stage,
+                        job.state.merge_scan_partition,
+                        job.state.merge_candidate,
+                        job.state.full_merge_cursors.clone(),
+                        job.state.free_merge_cursors.clone(),
+                        job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match)),
+                    );
+                    let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                    assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
+                    assert_eq!(
+                        (
+                            job.state.stage,
+                            job.state.merge_scan_partition,
+                            job.state.merge_candidate,
+                            job.state.full_merge_cursors.clone(),
+                            job.state.free_merge_cursors.clone(),
+                            job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match)),
+                        ),
+                        before
+                    );
+                    let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                    assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
+                    let token = semio_framework_job::root_cancel_token();
+                    semio_framework_async::block_on(token.cancel());
+                    let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+                    assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+                }
+                let started = std::time::Instant::now();
+                let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                if matches!(job.step(&mut context), StepOutcome::Complete(_)) {
+                    maximum_micros = maximum_micros.max(started.elapsed().as_micros());
+                    let system = job.finish().expect("owned assembly completes");
+                    return (system.k_full_coo.to_dense().data, system.k_ff_coo.to_dense().data, maximum_micros);
+                }
+                maximum_micros = maximum_micros.max(started.elapsed().as_micros());
+            }
+            panic!("owned assembly cursor law did not complete")
+        }
+
+        let first = run(assembly_operation(307));
+        let second = run(assembly_operation(307));
+        assert_eq!((first.0, first.1), (second.0, second.1));
+        assert!(first.2.max(second.2) < 8_000);
     }
 
     /// 🧮️ Cross-validates `solve_multi_case`'s sparse RCM-ordered pipeline (single case) against

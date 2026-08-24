@@ -209,29 +209,35 @@ impl StateEntry {
             Ok(reservation) => reservation,
             Err(error) => return Err(StateEntryRejected { source: Some(source), writer: Some(writer), error }),
         };
-        if let Err(error) = reservation.observe_capacity(source.capacity()) {
-            return Err(StateEntryRejected { source: Some(source), writer: Some(writer), error });
+        let mut source = db_storage::DbIoExternalBytes::new(source);
+        if let Err(error) = source.capacity().and_then(|capacity| reservation.observe_capacity(capacity)) {
+            return Err(StateEntryRejected { source: source.into_value().ok(), writer: Some(writer), error });
         }
         let mut offset = 0;
-        while offset < source.len() {
+        while offset < source.as_slice().map_err(|error| StateEntryRejected { source: None, writer: None, error })?.len() {
             if let Err(error) = control.grant() {
-                return Err(StateEntryRejected { source: Some(source), writer: Some(writer), error });
+                return Err(StateEntryRejected { source: source.into_value().ok(), writer: Some(writer), error });
             }
-            match writer.write_fragment(&source[offset..]) {
+            match source.as_slice().and_then(|source| writer.write_fragment(&source[offset..])) {
                 Ok(written) => offset += written,
-                Err(error) => return Err(StateEntryRejected { source: Some(source), writer: Some(writer), error }),
+                Err(error) => return Err(StateEntryRejected { source: source.into_value().ok(), writer: Some(writer), error }),
             }
-            std::future::poll_fn(|context| {
-                context.waker().wake_by_ref();
-                std::task::Poll::Ready(())
-            })
-            .await;
+            semio_framework_async::yield_once().await;
         }
-        drop(source);
+        while !source.terminal_is_empty() {
+            if let Err(error) = control.grant() {
+                return Err(StateEntryRejected { source: None, writer: Some(writer), error });
+            }
+            let _ = source.close_step();
+            semio_framework_async::yield_once().await;
+        }
         if let Err(error) = reservation.close_step() {
             return Err(StateEntryRejected { source: None, writer: Some(writer), error });
         }
-        writer.finish().map(|value| Self { key, value }).map_err(|error| StateEntryRejected { source: None, writer: Some(writer), error })
+        writer.seal_retained().await.map(|value| Self { key, value }).map_err(|rejected| {
+            let (error, writer) = rejected.into_parts();
+            StateEntryRejected { source: None, writer, error }
+        })
     }
 
     pub fn close_step(&mut self) -> Result<bool, DbError> {
@@ -251,8 +257,8 @@ impl StateEntryRejected {
         self.source.as_ref()
     }
 
-    pub fn into_source(self) -> Option<Vec<u8>> {
-        self.source
+    pub fn into_source(mut self) -> Option<Vec<u8>> {
+        self.source.take()
     }
 
     pub fn error(&self) -> &DbError {
@@ -267,6 +273,14 @@ impl StateEntryRejected {
         }
         self.writer = None;
         Ok(false)
+    }
+}
+
+impl Drop for StateEntryRejected {
+    fn drop(&mut self) {
+        if let Some(source) = self.source.take() {
+            drop(db_storage::DbIoExternalBytes::new(source));
+        }
     }
 }
 
@@ -337,11 +351,7 @@ impl RetainedStateMap {
             for fragment in entry.value().fragments() {
                 control.grant()?;
                 hash.update(fragment);
-                std::future::poll_fn(|context| {
-                    context.waker().wake_by_ref();
-                    std::task::Poll::Ready(())
-                })
-                .await;
+                semio_framework_async::yield_once().await;
             }
         }
         Ok(pack::ContentHash(*hash.finalize().as_bytes()))
@@ -1771,6 +1781,15 @@ mod tests {
         while cancelled_rejection.close_step().unwrap() {
             control.grant().unwrap();
         }
+
+        let mut deadline_control = StateCursorControl::new(cancelled, std::time::Instant::now(), 16).unwrap();
+        let mut source = Vec::with_capacity(2);
+        source.push(0x44);
+        let pointer = source.as_ptr();
+        let mut deadline_rejection = StateEntry::try_admit("deadline", source, 2, &mut deadline_control).await.unwrap_err();
+        assert!(matches!(deadline_rejection.error(), DbError::Unavailable(message) if message == "state cursor deadline reached"));
+        while deadline_rejection.close_step().unwrap() {}
+        assert_eq!(deadline_rejection.into_source().unwrap().as_ptr(), pointer);
     }
 
     #[semio_framework_async_macros::async_test]

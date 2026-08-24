@@ -17,9 +17,11 @@
 //! reporting the stamp the file actually has (`AC1024`) rather than the standard the case is filed
 //! under. A case that claimed `AC1018` there would be asserting a fiction.
 //!
-//! The vocabulary is shared with AC1024 by CONSTRUCTION, not by copy: the ODA `.dwg` specification
-//! gives R2004 and R2010 the same file-header layout — six ASCII version characters at `0x00`, the
-//! application maintenance-release byte at `0x12`, the codepage `RS` at `0x13`-`0x14` — so
+//! The vocabulary is shared with AC1024 by CONSTRUCTION, not by copy: the plain file-header
+//! PREAMBLE — `0x00`..`0x15`: six ASCII version characters at `0x00`, the application
+//! maintenance-release byte at `0x12`, the codepage `RS` at `0x13`-`0x14` — is shared by every
+//! AC1015+ DWG file, which is what this repository's own production conformance code says in
+//! `DwgSnapshot`'s doc comments, sourced there to LibreDWG's `header.spec` field order. So
 //! `../../🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` re-exports the
 //! AC1024 `DwgMutation` rather than restating it, and the AC1024 oracle module's
 //! `every_ac1018_facet_is_a_re_export_of_this_one` test fails the moment that stops being true.

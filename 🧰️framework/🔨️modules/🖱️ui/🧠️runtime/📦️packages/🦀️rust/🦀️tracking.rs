@@ -119,10 +119,14 @@ impl DependencyTracker {
 mod tests {
     use super::*;
 
+    fn surface(value: &str) -> ui_contract::SurfaceId {
+        ui_contract::SurfaceId::try_from(value).expect("bounded fixture surface")
+    }
+
     #[test]
     fn presenter_reading_a_not_b_wakes_only_on_a() {
         let mut tracker = DependencyTracker::default();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let a = EntityId(1);
         let b = EntityId(2);
         tracker.begin(surface.clone());
@@ -139,7 +143,7 @@ mod tests {
     #[test]
     fn stale_edge_disappears_after_next_present_without_the_read() {
         let mut tracker = DependencyTracker::default();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let a = EntityId(1);
         tracker.begin(surface.clone());
         tracker.record_read(a);
@@ -154,7 +158,7 @@ mod tests {
     #[test]
     fn n_notifications_of_one_surface_coalesce_to_one_dirty_mark() {
         let mut tracker = DependencyTracker::default();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let a = EntityId(1);
         let b = EntityId(2);
         tracker.begin(surface.clone());
@@ -172,8 +176,8 @@ mod tests {
     #[test]
     fn nested_present_scopes_attribute_reads_to_the_right_surface() {
         let mut tracker = DependencyTracker::default();
-        let outer = ui_contract::SurfaceId::from("outer");
-        let inner = ui_contract::SurfaceId::from("inner");
+        let outer = surface("outer");
+        let inner = surface("inner");
         let x = EntityId(1);
         let y = EntityId(2);
         let z = EntityId(3);
@@ -203,8 +207,8 @@ mod tests {
     #[should_panic(expected = "present scope nesting mismatch")]
     fn finish_rejects_mismatched_surface() {
         let mut tracker = DependencyTracker::default();
-        tracker.begin(ui_contract::SurfaceId::from("a"));
-        tracker.finish(ui_contract::SurfaceId::from("b"));
+        tracker.begin(surface("a"));
+        tracker.finish(surface("b"));
     }
 }
 //#endregion 🧪️Tests

@@ -163,8 +163,8 @@ impl ShellFindItemSink {
         ShellFindItemSinkBinding(std::marker::PhantomData)
     }
 
-    fn clear(&self) {
-        self.0.lock().unwrap_or_else(|error| error.into_inner()).clear();
+    fn retire_step(&self) -> bool {
+        self.0.lock().unwrap_or_else(|error| error.into_inner()).pop().is_none()
     }
 
     fn take(&self) -> Vec<ShellFindItem> {
@@ -9326,38 +9326,52 @@ mod tutorial_tests {
 }
 //#endregion 🎬️Tutorial
 
-impl ShellState {
-    /// 🎭️ Runs present-side synchronization around the owned chrome construction phase.
-    pub fn render_chrome(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut DrawList,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
-        world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) {
-        let close_consumed = self.close_document_one();
-        begin_ui_document_opportunity(close_consumed);
-        self.load_ui_prefs_once();
-        if let Some(app_id) = self.session.as_ref().map(|session| session.app.id.clone()) {
-            self.chrome_build.introduction_seen.entry(app_id.clone()).or_insert_with(|| read_stored_introduction_seen(&app_id));
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        self.publish_presence_heartbeat();
-        self.persist_panel_layout_if_changed();
-        self.render_chrome_build(draw, overlay, atlas, icons, input, theme, engine_resources, world_resources);
-        for app_id in std::mem::take(&mut self.chrome_build.introduction_seen_writes) {
-            write_stored_introduction_seen(&app_id);
-        }
-        self.persist_ui_prefs_if_changed();
-    }
+pub(crate) struct ShellChromeFrameCursor {
+    phase: ShellChromeFramePhase,
+    setup: u8,
+}
 
-    /// 🧱️ Builds chrome exclusively from explicit owned state and caller-provided rendering resources.
-    fn render_chrome_build(
+#[derive(Clone, Copy, Default)]
+enum ShellChromeFramePhase {
+    #[default]
+    CloseDocument,
+    LoadPreferences,
+    IntroductionRead,
+    Presence,
+    PersistLayout,
+    FrameSetup,
+    MainWindow,
+    LeftPanel,
+    RightPanel,
+    Navbar,
+    TutorialBar,
+    Footer,
+    Overlay,
+    TreeDrag,
+    TutorialGesture,
+    Error,
+    IntroductionWrite,
+    PersistPreferences,
+    Complete,
+}
+
+impl Default for ShellChromeFrameCursor {
+    fn default() -> Self {
+        Self { phase: ShellChromeFramePhase::default(), setup: 0 }
+    }
+}
+
+impl ShellChromeFrameCursor {
+    pub(crate) fn terminal_is_complete(&self) -> bool {
+        matches!(self.phase, ShellChromeFramePhase::Complete)
+    }
+}
+
+impl ShellState {
+    /// 🎭️ Advances one retained chrome child per worker opportunity.
+    pub(crate) fn render_chrome_step(
         &mut self,
+        cursor: &mut ShellChromeFrameCursor,
         draw: &mut DrawList,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
@@ -9366,62 +9380,216 @@ impl ShellState {
         theme: &Theme,
         engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
         world_resources: &mut infinite_world::world::World3dBuildContext,
-    ) {
+    ) -> bool {
         let w = self.screen_w;
         let h = self.screen_h;
-        draw.set_screen_height(h);
-        overlay.set_screen_height(h);
-        overlay.clear();
-        draw.push_solid([0.0, 0.0, w, h], theme.background);
         let body = self.body_rect(theme);
-        let find_items = self.chrome_build.find_items.clone();
-        find_items.clear();
-        self.chrome_build.tooltip_titles.clear();
-        self.chrome_build.element_rects.clear();
-        self.chrome_build.compute_click_edge(input.pointer_down);
-        self.chrome_tour_frame_begin();
-        clear_graph_node_context();
-        self.node_graph_states.clear();
-        self.tiled_map_states.clear();
-        self.board2d_states.clear();
-        self.widget_maps.clear_frame();
-        let mut overlay_slot = Some(overlay);
-        {
-            let _find_items_binding = find_items.bind();
-            self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, engine_resources, world_resources);
-        }
-        self.find_items = find_items.take();
-        if self.left_panel_open && self.has_left_tabs() {
-            if let Some(panel_draw) = overlay_slot.as_deref_mut() {
-                self.render_left_panel(panel_draw, None, atlas, icons, input, theme, body, engine_resources, world_resources);
-            } else {
-                self.render_left_panel(draw, None, atlas, icons, input, theme, body, engine_resources, world_resources);
+        match cursor.phase {
+            ShellChromeFramePhase::CloseDocument => {
+                let close_consumed = self.close_document_one();
+                begin_ui_document_opportunity(close_consumed);
+                cursor.phase = ShellChromeFramePhase::LoadPreferences;
             }
-        }
-        if self.right_panel_open && self.has_right_tabs() {
-            if let Some(panel_draw) = overlay_slot.as_deref_mut() {
-                self.render_right_panel(panel_draw, None, atlas, icons, input, theme, body, engine_resources, world_resources);
-            } else {
-                self.render_right_panel(draw, None, atlas, icons, input, theme, body, engine_resources, world_resources);
+            ShellChromeFramePhase::LoadPreferences => {
+                self.load_ui_prefs_once();
+                cursor.phase = ShellChromeFramePhase::IntroductionRead;
             }
+            ShellChromeFramePhase::IntroductionRead => {
+                if let Some(app_id) = self.session.as_ref().map(|session| session.app.id.clone()) {
+                    self.chrome_build.introduction_seen.entry(app_id.clone()).or_insert_with(|| read_stored_introduction_seen(&app_id));
+                }
+                cursor.phase = ShellChromeFramePhase::Presence;
+            }
+            ShellChromeFramePhase::Presence => {
+                #[cfg(not(target_arch = "wasm32"))]
+                self.publish_presence_heartbeat();
+                cursor.phase = ShellChromeFramePhase::PersistLayout;
+            }
+            ShellChromeFramePhase::PersistLayout => {
+                self.persist_panel_layout_if_changed();
+                cursor.phase = ShellChromeFramePhase::FrameSetup;
+            }
+            ShellChromeFramePhase::FrameSetup => {
+                match cursor.setup {
+                    0 => {
+                        draw.set_screen_height(h);
+                    }
+                    1 => overlay.set_screen_height(h),
+                    2 => draw.push_solid([0.0, 0.0, w, h], theme.background),
+                    3 if !self.chrome_build.find_items.retire_step() => return false,
+                    4 if self.find_items.pop().is_some() => return false,
+                    5 => {
+                        let key = self.chrome_build.tooltip_titles.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.chrome_build.tooltip_titles.remove(&key);
+                            return false;
+                        }
+                    }
+                    6 => {
+                        let key = self.chrome_build.element_rects.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.chrome_build.element_rects.remove(&key);
+                            return false;
+                        }
+                    }
+                    7 => {
+                        let key = self.widget_maps.input_metas.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.input_metas.remove(&key);
+                            return false;
+                        }
+                    }
+                    8 => {
+                        let key = self.widget_maps.select_metas.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.select_metas.remove(&key);
+                            return false;
+                        }
+                    }
+                    9 => {
+                        let key = self.widget_maps.toggle_metas.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.toggle_metas.remove(&key);
+                            return false;
+                        }
+                    }
+                    10 => {
+                        let key = self.widget_maps.slider_metas.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.slider_metas.remove(&key);
+                            return false;
+                        }
+                    }
+                    11 => {
+                        let key = self.widget_maps.stepper_metas.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.stepper_metas.remove(&key);
+                            return false;
+                        }
+                    }
+                    12 => {
+                        let key = self.widget_maps.ring_metas.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.ring_metas.remove(&key);
+                            return false;
+                        }
+                    }
+                    13 => {
+                        let key = self.widget_maps.slider_live_values.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.slider_live_values.remove(&key);
+                            return false;
+                        }
+                    }
+                    14 => {
+                        let key = self.widget_maps.ring_live_values.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.ring_live_values.remove(&key);
+                            return false;
+                        }
+                    }
+                    15 => {
+                        let key = self.widget_maps.tree_hover_commands.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.tree_hover_commands.remove(&key);
+                            return false;
+                        }
+                    }
+                    16 => {
+                        let key = self.widget_maps.tree_unhover_commands.keys().next().cloned();
+                        if let Some(key) = key {
+                            self.widget_maps.tree_unhover_commands.remove(&key);
+                            return false;
+                        }
+                    }
+                    17 => {
+                        self.widget_maps.tree_selection_change = None;
+                    }
+                    18 => {
+                        self.chrome_build.compute_click_edge(input.pointer_down);
+                    }
+                    19 => {
+                        self.chrome_tour_frame_begin();
+                    }
+                    20 => {
+                        clear_graph_node_context();
+                        cursor.phase = ShellChromeFramePhase::MainWindow;
+                        return false;
+                    }
+                    _ => return false,
+                }
+                cursor.setup += 1;
+            }
+            ShellChromeFramePhase::MainWindow => {
+                let find_items = self.chrome_build.find_items.clone();
+                let mut overlay_slot = Some(overlay);
+                {
+                    let _find_items_binding = find_items.bind();
+                    self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, engine_resources, world_resources);
+                }
+                self.find_items = find_items.take();
+                cursor.phase = ShellChromeFramePhase::LeftPanel;
+            }
+            ShellChromeFramePhase::LeftPanel => {
+                if self.left_panel_open && self.has_left_tabs() {
+                    self.render_left_panel(overlay, None, atlas, icons, input, theme, body, engine_resources, world_resources);
+                }
+                cursor.phase = ShellChromeFramePhase::RightPanel;
+            }
+            ShellChromeFramePhase::RightPanel => {
+                if self.right_panel_open && self.has_right_tabs() {
+                    self.render_right_panel(overlay, None, atlas, icons, input, theme, body, engine_resources, world_resources);
+                }
+                cursor.phase = ShellChromeFramePhase::Navbar;
+            }
+            ShellChromeFramePhase::Navbar => {
+                self.render_navbar(overlay, atlas, icons, input, theme, w);
+                cursor.phase = ShellChromeFramePhase::TutorialBar;
+            }
+            ShellChromeFramePhase::TutorialBar => {
+                self.render_tutorial_bar(overlay, atlas, icons, input, theme, w);
+                cursor.phase = ShellChromeFramePhase::Footer;
+            }
+            ShellChromeFramePhase::Footer => {
+                self.render_footer(overlay, atlas, icons, input, theme, w, h);
+                cursor.phase = ShellChromeFramePhase::Overlay;
+            }
+            ShellChromeFramePhase::Overlay => {
+                self.render_overlay(overlay, atlas, icons, input, theme, w, h);
+                cursor.phase = ShellChromeFramePhase::TreeDrag;
+            }
+            ShellChromeFramePhase::TreeDrag => {
+                self.render_tree_drag_overlay(overlay, input, theme);
+                cursor.phase = ShellChromeFramePhase::TutorialGesture;
+            }
+            ShellChromeFramePhase::TutorialGesture => {
+                render_tutorial_gesture_overlay(self, overlay, theme);
+                cursor.phase = ShellChromeFramePhase::Error;
+            }
+            ShellChromeFramePhase::Error => {
+                if let Some(error) = &self.error {
+                    let scroll_offsets = &mut self.scroll_offsets;
+                    let collapsed_sections = &mut self.collapsed_sections;
+                    let open_selects = &mut self.open_selects;
+                    let mut ctx = framework_widget_context(draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
+                    draw_text(&mut ctx, error, 12.0, h - theme.footer_height - 24.0, theme.font_size_small, theme.error);
+                }
+                cursor.phase = ShellChromeFramePhase::IntroductionWrite;
+            }
+            ShellChromeFramePhase::IntroductionWrite => {
+                if let Some(app_id) = self.chrome_build.introduction_seen_writes.pop() {
+                    write_stored_introduction_seen(&app_id);
+                } else {
+                    cursor.phase = ShellChromeFramePhase::PersistPreferences;
+                }
+            }
+            ShellChromeFramePhase::PersistPreferences => {
+                self.persist_ui_prefs_if_changed();
+                cursor.phase = ShellChromeFramePhase::Complete;
+            }
+            ShellChromeFramePhase::Complete => return true,
         }
-        with_chrome_sink(draw, &mut overlay_slot, |chrome, _select_overlay| {
-            self.render_navbar(chrome, atlas, icons, input, theme, w);
-            self.render_tutorial_bar(chrome, atlas, icons, input, theme, w);
-            self.render_footer(chrome, atlas, icons, input, theme, w, h);
-        });
-        if let Some(overlay) = overlay_slot.as_deref_mut() {
-            self.render_overlay(overlay, atlas, icons, input, theme, w, h);
-            self.render_tree_drag_overlay(overlay, input, theme);
-            render_tutorial_gesture_overlay(self, overlay, theme);
-        }
-        if let Some(error) = &self.error {
-            let scroll_offsets = &mut self.scroll_offsets;
-            let collapsed_sections = &mut self.collapsed_sections;
-            let open_selects = &mut self.open_selects;
-            let mut ctx = framework_widget_context(draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-            draw_text(&mut ctx, error, 12.0, h - theme.footer_height - 24.0, theme.font_size_small, theme.error);
-        }
+        cursor.terminal_is_complete()
     }
 
     fn body_rect(&self, theme: &Theme) -> Rect {

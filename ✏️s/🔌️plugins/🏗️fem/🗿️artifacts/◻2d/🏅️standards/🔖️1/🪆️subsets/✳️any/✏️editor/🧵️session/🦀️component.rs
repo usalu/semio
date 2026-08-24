@@ -2,7 +2,7 @@
 
 use crate::analyses::{AnalysisModel, AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, FemJobGraph, FemJobStage, FemStagePlan};
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement, FemLoad};
-use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, Fem2dMountedVisualBuild, Fem2dMountedVisualLease, RegionVisualQuality};
+use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, Fem2dMountedVisualBuild, Fem2dMountedVisualLease, Fem2dVisualFreshness, Fem2dVisualJob, FemVisualState, RegionVisualQuality};
 use crate::mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
 use crate::model::Element;
 use crate::sparse::{PcgJob, PcgJobConstruction};
@@ -27,6 +27,7 @@ const SESSION_MAXIMUM_MESH_TRIANGLES: usize = 2;
 const SESSION_MAXIMUM_REGION_HOLES: usize = 16;
 const SESSION_MAXIMUM_BOUNDARY_POINTS: usize = 64;
 const SESSION_MAXIMUM_OUTPUT_BYTES: usize = 16 * 1_024;
+const SESSION_MAXIMUM_VISUAL_LOADS: usize = 64;
 const SESSION_MAXIMUM_FAULT_BYTES: usize = 4_096;
 const SESSION_OWNER_PAGE_BYTES: usize = 4_096;
 const SESSION_MAXIMUM_STRING_BYTES: usize = SESSION_OWNER_PAGE_BYTES;
@@ -212,6 +213,7 @@ enum MountedStage {
     BuildCsr,
     PreparePcg,
     Pcg,
+    SyncPcgVisual,
     CommitReady,
     PublishFinalVisual,
     Complete,
@@ -921,9 +923,13 @@ struct MountedState {
     visual: Fem2dLiveVisual,
     visual_region_owner: Option<(String, RegionVisualQuality)>,
     visual_candidate: Option<Fem2dMountedVisualBuild>,
+    visual_job_candidate: Option<Fem2dVisualJob>,
+    visual_rejected: Option<Fem2dVisualJob>,
     visual_current: Option<Fem2dMountedVisualLease>,
     visual_displaced: Option<Fem2dMountedVisualLease>,
     visual_dirty: bool,
+    visual_field_cursor: usize,
+    visual_pcg_complete: bool,
     preview_sequence: u64,
     close_cursor: u8,
     fault: Option<Vec<u8>>,
@@ -956,9 +962,13 @@ impl MountedState {
             visual: Fem2dLiveVisual::default(),
             visual_region_owner: None,
             visual_candidate: None,
+            visual_job_candidate: None,
+            visual_rejected: None,
             visual_current: None,
             visual_displaced: None,
             visual_dirty: true,
+            visual_field_cursor: 0,
+            visual_pcg_complete: false,
             preview_sequence: 0,
             close_cursor: 0,
             fault: None,
@@ -971,6 +981,7 @@ impl MountedState {
             detail = b"fem2d.session-fault-capacity".to_vec();
         }
         self.fault = Some(detail.clone());
+        self.visual.state = FemVisualState::FaultedCancelled;
         self.stage = MountedStage::Fault;
         JobStep::Failed(detail)
     }
@@ -1030,44 +1041,73 @@ impl MountedState {
         Ok(())
     }
 
+    fn visual_freshness(&self) -> Fem2dVisualFreshness {
+        Fem2dVisualFreshness {
+            app_instance_id: self.identity.app_instance_id,
+            model_revision: self.identity.base_revision.0,
+            document_generation: self.identity.generation.0,
+            operation: self.identity.operation.0,
+            numerical_preview_sequence: self.preview_sequence,
+            surface_generation: self.identity.generation.0,
+            renderer_scene_generation: self.identity.generation.0,
+        }
+    }
+
     fn drive_visual_one(&mut self, cx: &mut StepContext<'_>) -> Option<JobStep> {
+        if cx.should_yield() {
+            return Some(JobStep::Running(None));
+        }
+        if let Some(rejected) = self.visual_rejected.as_mut() {
+            cx.consume_fuel(1);
+            let (terminal, _, _) = rejected.close_step(SESSION_OWNER_PAGE_BYTES);
+            if terminal {
+                self.visual_rejected = None;
+            }
+            return Some(self.progress(b"fem2d.visual-rejected-close"));
+        }
         if let Some(displaced) = self.visual_displaced.as_mut() {
+            cx.consume_fuel(1);
             let (terminal, _, _) = displaced.close_step(SESSION_OWNER_PAGE_BYTES);
             if terminal {
                 self.visual_displaced = None;
             }
-            cx.consume_fuel(1);
             return Some(self.progress(b"fem2d.visual-displaced-close"));
         }
-        if self.visual_dirty && self.visual_candidate.is_none() {
-            self.visual_candidate = Some(Fem2dMountedVisualBuild::new(self.identity.app_instance_id, self.identity.base_revision.0, self.identity.generation.0, self.identity.operation.0, self.preview_sequence));
-            self.visual_dirty = false;
+        if self.visual_dirty && self.visual_job_candidate.is_some() {
             cx.consume_fuel(1);
+            self.visual_rejected = self.visual_job_candidate.take();
+            return Some(self.progress(b"fem2d.visual-candidate-displaced"));
+        }
+        if self.visual_dirty && self.visual_job_candidate.is_none() {
+            cx.consume_fuel(1);
+            self.visual_job_candidate = Some(Fem2dVisualJob::new(self.visual_freshness()));
+            self.visual_dirty = false;
             return Some(self.progress(b"fem2d.visual-candidate-open"));
         }
-        let candidate = self.visual_candidate.as_mut()?;
-        let snapshot = self.snapshot.as_ref().expect("visual construction retains snapshot");
-        match candidate.step_one(snapshot, &self.visual) {
-            Ok(false) => {
-                cx.consume_fuel(1);
-                Some(self.progress(b"fem2d.visual-candidate"))
-            }
+        let freshness = self.visual_freshness();
+        let candidate = self.visual_job_candidate.as_mut()?;
+        let Some(snapshot) = self.snapshot.as_ref() else { return Some(self.fail(b"fem2d.visual-snapshot-owner".to_vec())) };
+        cx.consume_fuel(1);
+        match candidate.step_one(snapshot, &self.visual, freshness) {
+            Ok(false) => Some(self.progress(b"fem2d.visual-candidate")),
             Ok(true) => {
-                let lease = candidate.take_complete().expect("complete visual candidate transfers exactly once");
+                let Some(lease) = candidate.take_complete() else { return Some(self.fail(b"fem2d.visual-complete-owner".to_vec())) };
                 let live = current_identity(self.identity.app_instance_id) == Some(self.identity) && snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision) && !self.cancel.is_cancelled_now();
                 if !live {
                     self.visual_displaced = Some(lease);
-                    self.visual_candidate = None;
-                    cx.consume_fuel(1);
+                    self.visual_job_candidate = None;
                     return Some(self.progress(b"fem2d.visual-stale-close"));
+                }
+                if !lease.matches_freshness(freshness) {
+                    self.visual_displaced = Some(lease);
+                    self.visual_job_candidate = None;
+                    return Some(self.progress(b"fem2d.visual-generation-stale-close"));
                 }
                 if let Err(exact_candidate) = self.publish_visual_candidate(lease) {
                     self.visual_displaced = Some(exact_candidate);
-                    cx.consume_fuel(1);
                     return Some(self.progress(b"fem2d.visual-publication-full"));
                 }
-                self.visual_candidate = None;
-                cx.consume_fuel(1);
+                self.visual_job_candidate = None;
                 Some(self.progress(b"fem2d.visual-published"))
             }
             Err(detail) => Some(self.fail(detail)),
@@ -1142,6 +1182,7 @@ impl MountedState {
                         if self.visual.region_quality.insert(region.id.clone(), RegionVisualQuality::Unmeshed).is_err() {
                             return self.fail(b"fem2d.visual-region-capacity".to_vec());
                         }
+                        self.visual.state = FemVisualState::Unmeshed;
                         self.visual_dirty = true;
                         self.mesh = Some(MeshJob::new_bounded(domain, MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 }, self.identity.operation(), SESSION_MAXIMUM_MESH_POINTS, SESSION_MAXIMUM_MESH_TRIANGLES));
                         self.stage = MountedStage::Mesh;
@@ -1159,6 +1200,7 @@ impl MountedState {
                         if !self.visual.region_quality.update(&region.id, RegionVisualQuality::Final) {
                             return self.fail(b"fem2d.visual-region-capacity".to_vec());
                         }
+                        self.visual.state = FemVisualState::Refined;
                         self.visual_dirty = true;
                     }
                     self.model_build = Some(MountedModelBuild::new(self.mesh.as_mut().and_then(MeshJob::take_completed_mesh)));
@@ -1180,6 +1222,11 @@ impl MountedState {
                         if !self.visual.region_quality.update(&region.id, quality) {
                             return self.fail(b"fem2d.visual-region-capacity".to_vec());
                         }
+                        self.visual.state = match quality {
+                            RegionVisualQuality::Unmeshed => FemVisualState::Unmeshed,
+                            RegionVisualQuality::Coarse => FemVisualState::Coarse,
+                            RegionVisualQuality::Refined | RegionVisualQuality::Final => FemVisualState::Refined,
+                        };
                         self.visual_dirty = true;
                     }
                     if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
@@ -1209,6 +1256,7 @@ impl MountedState {
                         let model = std::sync::Arc::new(self.model_build.as_mut().and_then(MountedModelBuild::take_complete).expect("complete model transfers exactly once"));
                         self.assembly_build = Some(AssemblyJobConstruction::new_owned(model, self.identity.operation(), 1));
                         self.stage = MountedStage::PrepareAssembly;
+                        self.visual.state = FemVisualState::Assembling;
                         cx.consume_fuel(1);
                         self.progress(b"fem2d.model-built")
                     }
@@ -1286,20 +1334,71 @@ impl MountedState {
             },
             MountedStage::Pcg => match self.pcg.as_mut().expect("pcg stage owns pcg").step(&mut cx) {
                 StepOutcome::Complete(candidate) => {
-                    self.visual.converged = self.pcg.as_ref().is_some_and(|job| job.solution().1.converged);
-                    self.visual_dirty = true;
-                    self.stage = MountedStage::CommitReady;
+                    if let Some(job) = self.pcg.as_ref() {
+                        let (completed, total, residual, tolerance, converged) = job.visual_progress();
+                        self.visual.progress_completed = completed;
+                        self.visual.progress_total = total;
+                        self.visual.residual_norm = residual;
+                        self.visual.tolerance = tolerance;
+                        self.visual.converged = converged;
+                        self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
+                    }
+                    self.visual_field_cursor = 0;
+                    self.visual_pcg_complete = true;
+                    self.stage = MountedStage::SyncPcgVisual;
                     if candidate.output.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
                         JobStep::Running(Some(candidate.output))
                     } else {
                         self.progress(b"fem2d.pcg-complete")
                     }
                 }
-                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(bytes)),
+                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => {
+                    if let Some(job) = self.pcg.as_ref() {
+                        let (completed, total, residual, tolerance, converged) = job.visual_progress();
+                        self.visual.progress_completed = completed;
+                        self.visual.progress_total = total;
+                        self.visual.residual_norm = residual;
+                        self.visual.tolerance = tolerance;
+                        self.visual.converged = converged;
+                        self.visual.state = if converged { FemVisualState::SolvingConverged } else { FemVisualState::SolvingUnconverged };
+                    }
+                    self.visual_field_cursor = 0;
+                    self.visual_pcg_complete = false;
+                    self.stage = MountedStage::SyncPcgVisual;
+                    JobStep::Running(Some(bytes))
+                }
                 StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) | StepOutcome::Yield => self.progress(b"fem2d.pcg-yield"),
                 StepOutcome::Cancelled => self.fail(b"fem2d.pcg-cancelled".to_vec()),
                 StepOutcome::Fault(fault) => self.fail(fault.detail),
             },
+            MountedStage::SyncPcgVisual => {
+                let Some(snapshot) = self.snapshot.as_ref() else { return self.fail(b"fem2d.visual-snapshot-owner".to_vec()) };
+                let Some(node) = snapshot.nodes.get(self.visual_field_cursor) else {
+                    self.visual_dirty = true;
+                    self.stage = if self.visual_pcg_complete { MountedStage::CommitReady } else { MountedStage::Pcg };
+                    cx.consume_fuel(1);
+                    return self.progress(b"fem2d.visual-field-page-complete");
+                };
+                let base = self.visual_field_cursor * 3;
+                let Some(tx) = self.pcg.as_ref().and_then(|job| job.visual_scalar(base)) else { return self.fail(b"fem2d.visual-tx-scalar".to_vec()) };
+                let Some(ty) = self.pcg.as_ref().and_then(|job| job.visual_scalar(base + 1)) else { return self.fail(b"fem2d.visual-ty-scalar".to_vec()) };
+                let field = crate::editor::fem2d::modes::edit::windows::model::NodeLiveField {
+                    node_id: node.id.clone(),
+                    displacement: [tx.displacement, ty.displacement],
+                    residual: [tx.residual, ty.residual],
+                    reaction: [tx.reaction, ty.reaction],
+                    contour: tx.contour.max(ty.contour),
+                    mode_shape: [tx.mode_estimate, ty.mode_estimate],
+                };
+                if let Some(target) = self.visual.fields.get_mut(self.visual_field_cursor) {
+                    *target = field;
+                } else {
+                    self.visual.fields.push(field);
+                }
+                self.visual_field_cursor += 1;
+                cx.consume_fuel(1);
+                self.progress(b"fem2d.visual-field-entry")
+            }
             MountedStage::CommitReady => {
                 let validation = current_identity(self.identity.app_instance_id);
                 let store_is_current = self.snapshot.as_ref().is_some_and(|snapshot| snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision));
@@ -1307,6 +1406,7 @@ impl MountedState {
                     return self.fail(b"fem2d.session-stale-commit".to_vec());
                 }
                 self.visual.validated_final = self.visual.converged;
+                self.visual.state = if self.visual.validated_final { FemVisualState::ValidatedFinal } else { FemVisualState::SolvingUnconverged };
                 self.visual_dirty = true;
                 self.stage = MountedStage::PublishFinalVisual;
                 cx.consume_fuel(1);
@@ -1554,6 +1654,28 @@ impl MountedState {
                     self.close_cursor += 1;
                 }
                 12 => {
+                    if let Some(candidate) = self.visual_rejected.as_mut() {
+                        let (terminal, released_items, released_bytes) = candidate.close_step(maximum_bytes);
+                        if !terminal {
+                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        }
+                        if !candidate.terminal_is_empty() {
+                            return PluginCloseStep::Blocked { reason: "mounted FEM rejected visual reported false terminal" };
+                        }
+                        self.visual_rejected = None;
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                    if let Some(candidate) = self.visual_job_candidate.as_mut() {
+                        let (terminal, released_items, released_bytes) = candidate.close_step(maximum_bytes);
+                        if !terminal {
+                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        }
+                        if !candidate.terminal_is_empty() {
+                            return PluginCloseStep::Blocked { reason: "mounted FEM live visual candidate reported false terminal" };
+                        }
+                        self.visual_job_candidate = None;
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
                     if let Some(candidate) = self.visual_candidate.as_mut() {
                         let (terminal, released_items, released_bytes) = candidate.close_step(maximum_bytes);
                         if !terminal {
@@ -1653,6 +1775,8 @@ impl MountedState {
             && self.visual.assembling_element_ids.is_empty()
             && self.visual.fields.is_empty()
             && self.visual_candidate.is_none()
+            && self.visual_job_candidate.is_none()
+            && self.visual_rejected.is_none()
             && self.visual_current.is_none()
             && self.visual_displaced.is_none()
             && self.fault.is_none()
@@ -1684,11 +1808,12 @@ struct SnapshotAdmissionCursor {
     owner_opened: bool,
     items: usize,
     bytes: usize,
+    visual_loads: usize,
 }
 
 impl SnapshotAdmissionCursor {
     fn new() -> Self {
-        Self { lane: 0, outer: 0, inner: 0, deep: 0, owner_opened: false, items: 1, bytes: std::mem::size_of::<Fem2dSnapshot>() }
+        Self { lane: 0, outer: 0, inner: 0, deep: 0, owner_opened: false, items: 1, bytes: std::mem::size_of::<Fem2dSnapshot>(), visual_loads: 0 }
     }
 
     fn charge(&mut self, items: usize, bytes: usize) -> Result<(), &'static [u8]> {
@@ -1838,6 +1963,10 @@ impl SnapshotAdmissionCursor {
                     return Ok(false);
                 }
                 if let Some(load) = case.loads.get(self.inner) {
+                    self.visual_loads = self.visual_loads.checked_add(1).ok_or(b"fem2d.visual-load-count-overflow" as &'static [u8])?;
+                    if self.visual_loads > SESSION_MAXIMUM_VISUAL_LOADS {
+                        return Err(b"fem2d.visual-load-maximum-plus-one");
+                    }
                     self.inner += 1;
                     Some(match load {
                         FemLoad::Nodal { id, node_id, .. } => bounded_string_capacities(&[id, node_id])?,

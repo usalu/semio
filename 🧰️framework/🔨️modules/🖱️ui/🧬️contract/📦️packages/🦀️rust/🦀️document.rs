@@ -618,7 +618,8 @@ impl UiDocumentArena {
                 continue;
             }
             self.close_cursor = (index + 1) % UI_DOCUMENT_LEASE_SLOTS;
-            if let Some(id) = self.slots[index].nodes.keys().next().copied() {
+            let id = self.slots[index].nodes.keys().next().copied();
+            if let Some(id) = id {
                 return self.slots[index].nodes.remove(&id);
             }
             match self.slots[index].retire_scalar {

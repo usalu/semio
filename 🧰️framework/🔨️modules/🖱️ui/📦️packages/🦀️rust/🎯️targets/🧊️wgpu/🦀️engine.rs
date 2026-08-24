@@ -7,14 +7,15 @@
 //! path stays the only pipeline actually driving pixels until a later workstream proves this façade
 //! out (via the golden `tests` module below) and cuts over.
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 
 use crate::wgpu::component::layout::WindowLayout;
 #[cfg(test)]
 use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
-use crate::wgpu::flex::{LayoutEngine, LayoutJob, LayoutJobStage, LayoutJobStep};
+use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
+use crate::wgpu::mounted_layout::{MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
 use crate::wgpu::paint::paint_tree;
 use crate::wgpu::scene_slots::{collect_scene_slots, SceneHost};
 use crate::wgpu::shell::{Shell, ShellEvent};
@@ -23,7 +24,7 @@ use crate::wgpu::theme::Theme;
 use crate::wgpu::tree::{NodeFlags, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree};
 use crate::wgpu::IconName;
 use semio_framework_job::StepContext;
-use ui_contract::{UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedList, UiNodeId, UI_DOCUMENT_NODES};
+use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedList, UiNodeId, UI_DOCUMENT_NODES};
 
 //#region 🔖️UiWindow
 /// 🪟️ One window's retained pipeline state: its `UiTree` (`reconcile`'s diff target), the taffy
@@ -33,14 +34,21 @@ use ui_contract::{UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedList, UiNode
 /// per-window pipeline the same way, not just the tree.
 struct UiWindow {
     tree: UiTree,
-    layout: LayoutEngine,
     router: EventRouter,
     draw: DrawList,
     viewport: (f32, f32),
-    layout_job: Option<LayoutJob>,
+    layout_job: Option<MountedLayoutJob>,
+    layout_session: Option<semio_framework_job::MountedWorkerJobSession<MountedLayoutJob>>,
+    layout_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<MountedLayoutJob>>,
+    layout_closing: bool,
+    layout_preview: Option<MountedLayoutResult>,
+    glyph_preview: Option<RetainedGlyphPreview>,
     lane: SurfaceLane,
     queued: bool,
     revision: u64,
+    theme_revision: u64,
+    viewport_revision: u64,
+    layout_generation: u64,
     document_ingress: Option<UiDocumentIngress>,
     retiring_document: Option<UiDocumentTree>,
 }
@@ -49,14 +57,21 @@ impl UiWindow {
     fn new(window_id: &str) -> Self {
         Self {
             tree: UiTree::new(),
-            layout: LayoutEngine::new(),
             router: EventRouter::new(window_id),
             draw: DrawList::default(),
             viewport: (0.0, 0.0),
             layout_job: None,
+            layout_session: None,
+            layout_rejected: None,
+            layout_closing: false,
+            layout_preview: None,
+            glyph_preview: None,
             lane: SurfaceLane::UserVisible,
             queued: false,
             revision: 1,
+            theme_revision: 1,
+            viewport_revision: 1,
+            layout_generation: 1,
             document_ingress: None,
             retiring_document: None,
         }
@@ -66,6 +81,95 @@ impl UiWindow {
     /// `UiTree::mark_dirty`'s bubbling) still needs a layout or paint pass.
     fn is_dirty(&self) -> bool {
         self.tree.root.and_then(|root| self.tree.node(root)).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY))
+    }
+}
+pub const UI_LAYOUT_SURFACE_SLOTS: usize = 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UiSurfaceToken {
+    slot: u8,
+    generation: u64,
+}
+
+impl UiSurfaceToken {
+    pub(crate) const fn new(slot: u8, generation: u64) -> Self {
+        Self { slot, generation }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct UiSurfaceAdmissionRejected {
+    pub id: SurfaceId,
+}
+
+struct UiSurfaceSlot {
+    id: SurfaceId,
+    generation: u64,
+    window: UiWindow,
+}
+
+struct UiSurfaceRegistry {
+    slots: [Option<UiSurfaceSlot>; UI_LAYOUT_SURFACE_SLOTS],
+    generations: [u64; UI_LAYOUT_SURFACE_SLOTS],
+}
+
+impl Default for UiSurfaceRegistry {
+    fn default() -> Self {
+        Self { slots: std::array::from_fn(|_| None), generations: [0; UI_LAYOUT_SURFACE_SLOTS] }
+    }
+}
+
+impl UiSurfaceRegistry {
+    fn token(&self, id: &str) -> Option<UiSurfaceToken> {
+        let slot = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.id.as_ref() == id))?;
+        Some(UiSurfaceToken { slot: slot as u8, generation: self.slots[slot].as_ref()?.generation })
+    }
+
+    fn try_admit(&mut self, id: SurfaceId) -> Result<UiSurfaceToken, UiSurfaceAdmissionRejected> {
+        if let Some(token) = self.token(id.as_ref()) {
+            return Ok(token);
+        }
+        let Some(slot) = self.slots.iter().position(Option::is_none) else { return Err(UiSurfaceAdmissionRejected { id }) };
+        let Some(generation) = self.generations[slot].checked_add(1) else { return Err(UiSurfaceAdmissionRejected { id }) };
+        self.generations[slot] = generation;
+        let token = UiSurfaceToken { slot: slot as u8, generation };
+        self.slots[slot] = Some(UiSurfaceSlot { window: UiWindow::new(id.as_ref()), id, generation });
+        Ok(token)
+    }
+
+    fn get(&self, id: &str) -> Option<&UiWindow> {
+        self.get_token(self.token(id)?)
+    }
+
+    fn get_mut(&mut self, id: &str) -> Option<&mut UiWindow> {
+        self.get_token_mut(self.token(id)?)
+    }
+
+    fn get_token(&self, token: UiSurfaceToken) -> Option<&UiWindow> {
+        let slot = self.slots.get(token.slot as usize)?.as_ref()?;
+        (slot.generation == token.generation).then_some(&slot.window)
+    }
+
+    fn get_token_mut(&mut self, token: UiSurfaceToken) -> Option<&mut UiWindow> {
+        let slot = self.slots.get_mut(token.slot as usize)?.as_mut()?;
+        (slot.generation == token.generation).then_some(&mut slot.window)
+    }
+
+    fn id(&self, token: UiSurfaceToken) -> Option<&SurfaceId> {
+        let slot = self.slots.get(token.slot as usize)?.as_ref()?;
+        (slot.generation == token.generation).then_some(&slot.id)
+    }
+
+    fn values(&self) -> impl Iterator<Item = &UiWindow> {
+        self.slots.iter().filter_map(|slot| slot.as_ref().map(|slot| &slot.window))
+    }
+
+    fn values_mut(&mut self) -> impl Iterator<Item = &mut UiWindow> {
+        self.slots.iter_mut().filter_map(|slot| slot.as_mut().map(|slot| &mut slot.window))
+    }
+
+    fn ids(&self) -> impl Iterator<Item = &SurfaceId> {
+        self.slots.iter().filter_map(|slot| slot.as_ref().map(|slot| &slot.id))
     }
 }
 //#endregion 🔖️UiWindow
@@ -120,15 +224,54 @@ impl SurfaceLane {
     }
 }
 
+struct SurfaceLaneRing {
+    slots: [Option<UiSurfaceToken>; UI_LAYOUT_SURFACE_SLOTS],
+    head: usize,
+    len: usize,
+}
+
+impl Default for SurfaceLaneRing {
+    fn default() -> Self {
+        Self { slots: [None; UI_LAYOUT_SURFACE_SLOTS], head: 0, len: 0 }
+    }
+}
+
+impl SurfaceLaneRing {
+    fn try_push(&mut self, token: UiSurfaceToken) -> Result<(), UiSurfaceToken> {
+        if self.len == UI_LAYOUT_SURFACE_SLOTS {
+            return Err(token);
+        }
+        let tail = (self.head + self.len) % UI_LAYOUT_SURFACE_SLOTS;
+        self.slots[tail] = Some(token);
+        self.len += 1;
+        Ok(())
+    }
+
+    fn pop(&mut self) -> Option<UiSurfaceToken> {
+        if self.len == 0 {
+            return None;
+        }
+        let token = self.slots[self.head].take();
+        self.head = (self.head + 1) % UI_LAYOUT_SURFACE_SLOTS;
+        self.len -= 1;
+        token
+    }
+
+    #[cfg(test)]
+    fn len(&self) -> usize {
+        self.len
+    }
+}
+
 const LANE_WHEEL: [SurfaceLane; 6] = [SurfaceLane::Interactive, SurfaceLane::Interactive, SurfaceLane::UserVisible, SurfaceLane::Interactive, SurfaceLane::UserVisible, SurfaceLane::Background];
 
 /// 🧭️Observable result of exactly one bounded surface-layout scheduling call.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UiLayoutStep {
     Idle,
-    Yielded { window_id: String, lane: SurfaceLane, stage: &'static str, nodes: usize, glyphs: usize },
-    Ready { window_id: String, lane: SurfaceLane },
-    Cancelled { window_id: String, lane: SurfaceLane },
+    Yielded { window_id: SurfaceId, lane: SurfaceLane, stage: &'static str, nodes: usize, glyphs: usize },
+    Ready { window_id: SurfaceId, lane: SurfaceLane },
+    Cancelled { window_id: SurfaceId, lane: SurfaceLane },
 }
 
 fn stage_label(stage: LayoutJobStage) -> &'static str {
@@ -144,6 +287,18 @@ fn stage_label(stage: LayoutJobStage) -> &'static str {
         LayoutJobStage::PublishResults => "Layout.PublishResults",
     }
 }
+
+fn theme_layout_identity(theme: &Theme) -> [u32; 4] {
+    [theme.gap_standard.to_bits(), theme.padding_standard.to_bits(), theme.font_size_small.to_bits(), theme.font_size_body.to_bits()]
+}
+
+fn worker_lane(lane: SurfaceLane) -> semio_framework_async::Lane {
+    match lane {
+        SurfaceLane::Interactive => semio_framework_async::Lane::Interactive,
+        SurfaceLane::UserVisible => semio_framework_async::Lane::UserVisible,
+        SurfaceLane::Background => semio_framework_async::Lane::Background,
+    }
+}
 //#endregion 🚦️SurfaceScheduling
 
 //#region 🔖️Ui
@@ -157,11 +312,12 @@ fn stage_label(stage: LayoutJobStage) -> &'static str {
 /// existing `gpu::GpuContext::render_frame`, exactly like the immediate-mode `widgets` path's callers
 /// already do; wiring that hand-off into a real host event loop is later, renderer-thinning work.
 pub struct Ui {
-    windows: HashMap<String, UiWindow>,
+    windows: UiSurfaceRegistry,
     shell: Shell,
     theme: Theme,
     pending_commands: Vec<UiCommand>,
-    layout_queues: [VecDeque<String>; 3],
+    layout_queues: [SurfaceLaneRing; 3],
+    layout_pressure: Option<UiSurfaceToken>,
     lane_cursor: usize,
 }
 
@@ -173,36 +329,57 @@ const _: fn() = || {
 
 impl Ui {
     pub fn new() -> Self {
-        Self { windows: HashMap::new(), shell: Shell::new(), theme: Theme::default(), pending_commands: Vec::new(), layout_queues: std::array::from_fn(|_| VecDeque::new()), lane_cursor: 0 }
+        Self { windows: UiSurfaceRegistry::default(), shell: Shell::new(), theme: Theme::default(), pending_commands: Vec::new(), layout_queues: std::array::from_fn(|_| SurfaceLaneRing::default()), layout_pressure: None, lane_cursor: 0 }
     }
 
     pub fn set_theme(&mut self, theme: Theme) {
+        let layout_changed = theme_layout_identity(&self.theme) != theme_layout_identity(&theme);
+        if !layout_changed {
+            self.theme = theme;
+            return;
+        }
+        if self.windows.values().any(|window| window.layout_generation == u64::MAX || window.theme_revision == u64::MAX) {
+            return;
+        }
         self.theme = theme;
-        let ids: Vec<String> = self.windows.keys().cloned().collect();
+        let ids: UiFixedList<SurfaceId, UI_LAYOUT_SURFACE_SLOTS> = self.windows.ids().cloned().fold(UiFixedList::default(), |mut ids, id| {
+            let _ = ids.try_push(id);
+            ids
+        });
         for id in ids {
-            if let Some(window) = self.windows.get_mut(&id) {
-                window.layout_job = None;
+            if let Some(window) = self.windows.get_mut(id.as_ref()) {
+                window.layout_generation += 1;
+                window.theme_revision += 1;
                 if let Some(root) = window.tree.root {
                     window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
                 }
             }
-            self.enqueue_layout(&id);
+            self.enqueue_layout(id.as_ref());
         }
     }
 
-    fn window_mut(&mut self, window_id: &str) -> &mut UiWindow {
-        self.windows.entry(window_id.to_string()).or_insert_with(|| UiWindow::new(window_id))
+    pub fn try_admit_surface(&mut self, window_id: &str) -> Result<UiSurfaceToken, UiSurfaceAdmissionRejected> {
+        let id = SurfaceId::try_from(window_id).map_err(|_| UiSurfaceAdmissionRejected { id: SurfaceId::default() })?;
+        self.windows.try_admit(id)
+    }
+
+    fn window_mut(&mut self, window_id: &str) -> Option<&mut UiWindow> {
+        let token = self.try_admit_surface(window_id).ok()?;
+        self.windows.get_token_mut(token)
     }
 
     /// 📐️ Stores the viewport a later `frame` call lays out against for `window_id`, creating that
     /// window's retained state on first use.
     pub fn set_viewport(&mut self, window_id: &str, width: f32, height: f32) {
-        let window = self.window_mut(window_id);
+        let Some(window) = self.window_mut(window_id) else { return };
         if window.viewport == (width, height) {
             return;
         }
+        let Some(next_generation) = window.layout_generation.checked_add(1) else { return };
+        let Some(next_viewport_revision) = window.viewport_revision.checked_add(1) else { return };
         window.viewport = (width, height);
-        window.layout_job = None;
+        window.layout_generation = next_generation;
+        window.viewport_revision = next_viewport_revision;
         if let Some(root) = window.tree.root {
             window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
         }
@@ -213,17 +390,18 @@ impl Ui {
     /// creating that window's tree/layout-engine/event-router on first use.
     #[cfg(test)]
     pub fn apply_tree(&mut self, window_id: &str, ui_node: &UiNode) {
-        let window = self.window_mut(window_id);
+        let Some(window) = self.window_mut(window_id) else { return };
         let unchanged = window.tree.root.and_then(|root| window.tree.node(root)).is_some_and(|node| node.spec.0 == *ui_node);
+        if !unchanged && (window.revision == u64::MAX || window.layout_generation == u64::MAX) {
+            return;
+        }
         window.tree.apply_tree(ui_node);
         if !unchanged {
-            window.revision = window.revision.wrapping_add(1).max(1);
+            window.revision += 1;
+            window.layout_generation += 1;
         }
         let needs_layout = window.tree.root.and_then(|root| window.tree.node(root)).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
         if needs_layout {
-            if !unchanged {
-                window.layout_job = None;
-            }
             self.enqueue_layout(window_id);
         }
     }
@@ -251,7 +429,7 @@ impl Ui {
         if cx.generation().0 != header.generation {
             return Err((UiDocumentIngressFault::StaleGeneration, header));
         }
-        let window = self.window_mut(window_id);
+        let Some(window) = self.window_mut(window_id) else { return Err((UiDocumentIngressFault::StaleGeneration, header)) };
         if let Some(retiring) = window.retiring_document.as_mut() {
             if !retiring.close_step() {
                 return Err((UiDocumentIngressFault::InterruptedClose, header));
@@ -279,7 +457,9 @@ impl Ui {
     }
 
     pub fn apply_document_page(&mut self, window_id: &str, page: UiDocumentNodePage, cx: &mut StepContext<'_>) -> Result<usize, UiDocumentPageRejection> {
-        let window = self.window_mut(window_id);
+        let Some(window) = self.window_mut(window_id) else {
+            return Err(UiDocumentPageRejection { fault: UiDocumentTreeFault::Generation, generation: page.generation(), revision: page.revision(), index: page.index(), record: page.into_record() });
+        };
         let Some(ingress) = window.document_ingress.as_mut() else {
             return Err(UiDocumentPageRejection { fault: UiDocumentTreeFault::Generation, generation: page.generation(), revision: page.revision(), index: page.index(), record: page.into_record() });
         };
@@ -302,7 +482,7 @@ impl Ui {
         if cx.generation().0 != generation {
             return Err(UiDocumentIngressFault::StaleGeneration);
         }
-        let window = self.window_mut(window_id);
+        let Some(window) = self.window_mut(window_id) else { return Err(UiDocumentIngressFault::StaleGeneration) };
         let Some(ingress) = window.document_ingress.as_mut() else { return Err(UiDocumentIngressFault::StaleGeneration) };
         if ingress.document.generation() != generation || ingress.next_page != ingress.node_count {
             return Err(UiDocumentIngressFault::StaleGeneration);
@@ -332,9 +512,16 @@ impl Ui {
         if ingress.validation_seen.len() != ingress.node_count {
             return Err(UiDocumentIngressFault::Invalid(UiDocumentTreeFault::Cycle));
         }
-        let ingress = window.document_ingress.take().expect("validated document ingress");
+        let Some(next_revision) = window.revision.checked_add(1) else { return Err(UiDocumentIngressFault::StaleGeneration) };
+        let Some(next_layout_generation) = window.layout_generation.checked_add(1) else { return Err(UiDocumentIngressFault::StaleGeneration) };
+        let Some(ingress) = window.document_ingress.take() else { return Err(UiDocumentIngressFault::StaleGeneration) };
         window.retiring_document = window.tree.publish_document(ingress.document);
-        window.revision = window.revision.checked_add(1).unwrap_or(u64::MAX);
+        window.revision = next_revision;
+        window.layout_generation = next_layout_generation;
+        if let Some(root) = window.tree.root {
+            window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+        }
+        self.enqueue_layout(window_id);
         Ok(())
     }
 
@@ -364,67 +551,187 @@ impl Ui {
 
     /// 🚦️Changes a surface lane without duplicating its pending queue entry.
     pub fn set_surface_lane(&mut self, window_id: &str, lane: SurfaceLane) {
-        let window = self.window_mut(window_id);
+        let Some(window) = self.window_mut(window_id) else { return };
         if window.lane == lane {
             return;
         }
         window.lane = lane;
-        if window.queued {
-            for queue in &mut self.layout_queues {
-                queue.retain(|queued| queued != window_id);
-            }
-            self.layout_queues[lane.index()].push_back(window_id.to_string());
-        }
     }
 
     /// 🧵️Advances one surface layout by one cursor unit under the caller's fuel/deadline and
     /// cancellation context. Completed geometry publishes only after the whole job is consistent.
-    pub fn step_layouts(&mut self, atlas: &mut FontAtlas, cx: &mut semio_framework_job::StepContext<'_>) -> UiLayoutStep {
+    pub fn step_layouts(&mut self, pool: &semio_framework_async::WorkerPool, atlas: &mut FontAtlas, cx: &mut semio_framework_job::StepContext<'_>) -> UiLayoutStep {
+        let _ = atlas;
         if cx.should_yield() {
             return UiLayoutStep::Idle;
         }
-        let Some((window_id, lane)) = self.next_layout() else { return UiLayoutStep::Idle };
+        if let Some(token) = self.layout_pressure.take() {
+            let lane = self.windows.get_token(token).map_or(SurfaceLane::Background, |window| window.lane);
+            if let Err(token) = self.layout_queues[lane.index()].try_push(token) {
+                self.layout_pressure = Some(token);
+            }
+            return UiLayoutStep::Idle;
+        }
+        let Some((token, window_id, lane)) = self.next_layout() else { return UiLayoutStep::Idle };
         let theme = self.theme;
-        let window = self.windows.get_mut(&window_id).expect("queued layout surface exists");
+        let Some(window) = self.windows.get_token_mut(token) else { return UiLayoutStep::Idle };
         window.queued = false;
         let Some(root) = window.tree.root else { return UiLayoutStep::Idle };
-        if window.layout_job.is_none() {
-            window.layout_job = LayoutJob::new(&window.tree, root, theme, window.viewport.0, window.viewport.1);
+        if cx.is_cancelled() {
+            if let Some(session) = window.layout_session.as_mut() {
+                session.begin_close();
+            }
+            if let Some(job) = window.layout_job.as_mut() {
+                job.begin_close();
+            }
+            window.layout_closing = window.layout_session.is_some() || window.layout_job.is_some();
+            self.enqueue_layout(window_id.as_ref());
+            return UiLayoutStep::Cancelled { window_id, lane };
         }
-        let Some(job) = window.layout_job.as_mut() else { return UiLayoutStep::Ready { window_id, lane } };
-        let outcome = job.step(&mut window.layout, &mut window.tree, atlas, cx);
-        match outcome {
-            LayoutJobStep::Yield { stage, nodes, glyphs } => {
-                self.enqueue_layout(&window_id);
-                UiLayoutStep::Yielded { window_id, lane, stage: stage_label(stage), nodes, glyphs }
+        if let Some(rejected) = window.layout_rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                window.layout_rejected = None;
             }
-            LayoutJobStep::Complete => {
-                window.layout_job = None;
-                UiLayoutStep::Ready { window_id, lane }
+            self.enqueue_layout(window_id.as_ref());
+            return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseRejected", nodes: 1, glyphs: 0 };
+        }
+        if let Some(session) = window.layout_session.as_mut() {
+            if session.generation().0 != window.layout_generation {
+                session.begin_close();
+                window.layout_closing = true;
             }
-            LayoutJobStep::Cancelled => {
-                window.layout_job = None;
-                UiLayoutStep::Cancelled { window_id, lane }
+            if window.layout_closing {
+                let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if session.terminal_is_empty() {
+                    window.layout_session = None;
+                    window.layout_closing = false;
+                }
+                self.enqueue_layout(window_id.as_ref());
+                return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseSession", nodes: 1, glyphs: 0 };
             }
+            if session.poll() == semio_framework_job::WorkerJobPoll::CheckedOut {
+                let terminal = session.checked_out_outcome().is_some_and(semio_framework_job::StepOutcome::is_terminal);
+                let _ = session.take_checked_out_outcome();
+                let identity = (token, window.layout_generation, window.revision, window.theme_revision, window.viewport_revision, window.viewport.0, window.viewport.1);
+                let layout_preview = session.checked_out_job_mut().and_then(MountedLayoutJob::take_preview_one);
+                let glyph_preview = session.checked_out_job_mut().and_then(|job| job.latest_glyph_preview());
+                if let Some(preview) = layout_preview {
+                    window.layout_preview = Some(preview);
+                }
+                if let Some(preview) = glyph_preview.filter(|preview| preview.generation == window.layout_generation && preview.revision == window.revision) {
+                    window.glyph_preview = Some(preview);
+                }
+                let publish = session.checked_out_job_mut().filter(|job| job.stage() == LayoutJobStage::PublishResults).map(|job| job.publish_one(&mut window.tree, identity));
+                if terminal || matches!(publish, Some(LayoutJobStep::Complete | LayoutJobStep::Fault(_))) {
+                    session.begin_close();
+                    window.layout_closing = true;
+                } else if session.resume().is_err() {
+                    session.begin_close();
+                    window.layout_closing = true;
+                }
+                self.enqueue_layout(window_id.as_ref());
+                return match publish {
+                    Some(LayoutJobStep::Complete) => UiLayoutStep::Ready { window_id, lane },
+                    Some(LayoutJobStep::Fault(_)) => UiLayoutStep::Cancelled { window_id, lane },
+                    _ if terminal => UiLayoutStep::Cancelled { window_id, lane },
+                    _ => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerOutcome", nodes: usize::from(publish.is_some()), glyphs: 0 },
+                };
+            }
+            let poll = session.pump_one(pool, worker_lane(lane));
+            self.enqueue_layout(window_id.as_ref());
+            return UiLayoutStep::Yielded {
+                window_id,
+                lane,
+                stage: if matches!(poll, Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) { "Layout.WorkerTake" } else { "Layout.WorkerPool.UserVisible" },
+                nodes: 0,
+                glyphs: 0,
+            };
+        }
+        if let Some(job) = window.layout_job.as_mut() {
+            let identity = (token, window.layout_generation, window.revision, window.theme_revision, window.viewport_revision, window.viewport.0, window.viewport.1);
+            if job.identity() != identity {
+                job.begin_close();
+                window.layout_closing = true;
+            }
+            if window.layout_closing {
+                if job.close_one() && job.terminal_is_empty() {
+                    window.layout_job = None;
+                    window.layout_closing = false;
+                }
+                self.enqueue_layout(window_id.as_ref());
+                return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseUnadmitted", nodes: 1, glyphs: 0 };
+            }
+            if job.is_admitted() {
+                let Some(job) = window.layout_job.take() else {
+                    self.enqueue_layout(window_id.as_ref());
+                    return UiLayoutStep::Cancelled { window_id, lane };
+                };
+                let generation = window.layout_generation;
+                let params = semio_framework_job::BatchJobParams {
+                    operation: cx.operation(),
+                    generation: semio_framework_job::Generation(generation),
+                    cancel: cx.cancel_token(),
+                    config: semio_framework_job::BatchDriveConfig { site: "ui.layout-text.worker", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
+                    now_ms: semio_framework_job::default_now_ms,
+                };
+                match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
+                    Ok(session) => window.layout_session = Some(session),
+                    Err(rejected) => window.layout_rejected = Some(rejected),
+                }
+                self.enqueue_layout(window_id.as_ref());
+                return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Mount", nodes: 0, glyphs: 0 };
+            }
+            let outcome = job.admit_one(&window.tree, cx);
+            match outcome {
+                LayoutJobStep::Yield { stage, nodes, glyphs } => {
+                    self.enqueue_layout(window_id.as_ref());
+                    return UiLayoutStep::Yielded { window_id, lane, stage: stage_label(stage), nodes, glyphs };
+                }
+                LayoutJobStep::Cancelled | LayoutJobStep::Fault(_) => {
+                    job.begin_close();
+                    window.layout_closing = true;
+                    self.enqueue_layout(window_id.as_ref());
+                    return UiLayoutStep::Cancelled { window_id, lane };
+                }
+                LayoutJobStep::Complete => {}
+            }
+        }
+        window.layout_job = MountedLayoutJob::try_new(&window.tree, root, token, window.layout_generation, window.revision, window.theme_revision, window.viewport_revision, theme, window.viewport.0, window.viewport.1).ok();
+        if window.layout_job.is_some() {
+            self.enqueue_layout(window_id.as_ref());
+            UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Preadmit", nodes: 0, glyphs: 0 }
+        } else {
+            UiLayoutStep::Ready { window_id, lane }
         }
     }
 
     fn enqueue_layout(&mut self, window_id: &str) {
-        let Some(window) = self.windows.get_mut(window_id) else { return };
+        let Some(token) = self.windows.token(window_id) else { return };
+        let Some(window) = self.windows.get_token_mut(token) else { return };
         if window.queued {
             return;
         }
         window.queued = true;
-        self.layout_queues[window.lane.index()].push_back(window_id.to_string());
+        if let Err(token) = self.layout_queues[window.lane.index()].try_push(token) {
+            self.layout_pressure = Some(token);
+        }
     }
 
-    fn next_layout(&mut self) -> Option<(String, SurfaceLane)> {
+    fn next_layout(&mut self) -> Option<(UiSurfaceToken, SurfaceId, SurfaceLane)> {
         for _ in 0..LANE_WHEEL.len() {
             let lane = LANE_WHEEL[self.lane_cursor];
             self.lane_cursor = (self.lane_cursor + 1) % LANE_WHEEL.len();
-            if let Some(window_id) = self.layout_queues[lane.index()].pop_front() {
-                return Some((window_id, lane));
+            let Some(token) = self.layout_queues[lane.index()].pop() else { continue };
+            let Some(window) = self.windows.get_token(token) else { continue };
+            if window.lane != lane {
+                if let Err(token) = self.layout_queues[window.lane.index()].try_push(token) {
+                    self.layout_pressure = Some(token);
+                }
+                continue;
             }
+            let id = self.windows.id(token)?.clone();
+            return Some((token, id, lane));
         }
         None
     }
@@ -557,7 +864,7 @@ impl Ui {
     /// 🪟️ Every window id this façade currently tracks retained state for (`HashMap` iteration
     /// order — not insertion order; a caller needing a deterministic pick must sort/filter itself).
     pub fn window_ids(&self) -> impl Iterator<Item = &str> {
-        self.windows.keys().map(String::as_str)
+        self.windows.ids().map(AsRef::as_ref)
     }
 
     /// 📐️ `window_id`'s last `set_viewport`/`frame` viewport, if that window has any retained state.
@@ -573,6 +880,14 @@ impl Ui {
     /// 🧬️ Returns the retained tree identity revision used to reject stale interactive intents.
     pub fn tree_revision(&self, window_id: &str) -> Option<u64> {
         self.windows.get(window_id).map(|window| window.revision)
+    }
+
+    pub(crate) fn progressive_layout_preview(&self, window_id: &str) -> Option<MountedLayoutResult> {
+        self.windows.get(window_id).and_then(|window| window.layout_preview)
+    }
+
+    pub(crate) fn progressive_glyph_preview(&self, window_id: &str) -> Option<RetainedGlyphPreview> {
+        self.windows.get(window_id).and_then(|window| window.glyph_preview)
     }
 
     /// 🎨️ The theme this façade last painted every window with (`Theme` is `Copy`).
@@ -628,14 +943,19 @@ mod tests {
         0
     }
 
+    fn test_layout_pool() -> semio_framework_async::WorkerPool {
+        semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1))
+    }
+
     fn drive_layout(ui: &mut Ui, window_id: &str, width: f32, height: f32, atlas: &mut FontAtlas) {
         ui.set_viewport(window_id, width, height);
         let operation = semio_framework_job::allocate_operation_id();
         let cancel = semio_framework_job::CancelToken::root_now();
+        let pool = test_layout_pool();
         let mut preview_sequence = 0;
         loop {
             let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
-            if matches!(ui.step_layouts(atlas, &mut cx), UiLayoutStep::Idle) {
+            if matches!(ui.step_layouts(&pool, atlas, &mut cx), UiLayoutStep::Idle) {
                 break;
             }
         }
@@ -707,11 +1027,11 @@ mod tests {
         for width in 1..=2_000 {
             ui.set_viewport("resize", width as f32, 480.0);
         }
-        assert_eq!(ui.layout_queues.iter().map(VecDeque::len).sum::<usize>(), 1, "a resize storm must retain one coalesced surface entry");
+        assert_eq!(ui.layout_queues.iter().map(SurfaceLaneRing::len).sum::<usize>(), 1, "a resize storm must retain one coalesced surface entry");
 
         drive_layout(&mut ui, "resize", 2_000.0, 480.0, &mut atlas);
         let root = ui.tree("resize").and_then(|tree| tree.root).expect("root");
-        assert_eq!(ui.tree("resize").and_then(|tree| tree.node(root)).expect("root node").layout.width, 2_000.0);
+        assert_eq!(ui.tree("resize").and_then(|tree| tree.accepted_layout(root)).expect("accepted root").width, 2_000.0);
     }
 
     #[test]
@@ -727,13 +1047,14 @@ mod tests {
 
         let operation = semio_framework_job::allocate_operation_id();
         let cancel = semio_framework_job::CancelToken::root_now();
+        let pool = test_layout_pool();
         let mut preview_sequence = 0;
         let mut background_progress_at = None;
         for slice in 0..12 {
             ui.set_viewport("interactive", 401.0 + slice as f32, 400.0);
             let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
-            let step = ui.step_layouts(&mut atlas, &mut cx);
-            if matches!(step, UiLayoutStep::Yielded { ref window_id, .. } | UiLayoutStep::Ready { ref window_id, .. } if window_id == "background") {
+            let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
+            if matches!(step, UiLayoutStep::Yielded { ref window_id, .. } | UiLayoutStep::Ready { ref window_id, .. } if window_id.as_ref() == "background") {
                 background_progress_at = Some(slice);
                 break;
             }
@@ -751,13 +1072,14 @@ mod tests {
 
         let operation = semio_framework_job::allocate_operation_id();
         let cancel = semio_framework_job::CancelToken::root_now();
+        let pool = test_layout_pool();
         let mut preview_sequence = 0;
         let mut slices = 0;
         let mut max_slice = std::time::Duration::ZERO;
         loop {
             let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
             let started = std::time::Instant::now();
-            let step = ui.step_layouts(&mut atlas, &mut cx);
+            let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
             max_slice = max_slice.max(started.elapsed());
             slices += 1;
             if matches!(step, UiLayoutStep::Idle) {
@@ -769,8 +1091,121 @@ mod tests {
         let children: Vec<_> = tree.children(root).collect();
         assert!(slices > 10_000, "the 1,025-node/text workload must be observably chunked, got {slices} slices");
         assert!(max_slice < std::time::Duration::from_millis(8), "largest observed layout slice was {max_slice:?}");
-        assert_eq!(tree.node(root).expect("root node").layout.width, 1_920.0);
-        assert!(tree.node(*children.last().expect("last child")).expect("last child node").layout.y > tree.node(children[0]).expect("first child node").layout.y);
+        assert_eq!(tree.accepted_layout(root).expect("accepted root").width, 1_920.0);
+        assert!(tree.accepted_layout(*children.last().expect("last child")).expect("accepted last child").y > tree.accepted_layout(children[0]).expect("accepted first child").y);
+    }
+
+    #[test]
+    fn mounted_layout_surface_max_plus_one_returns_exact_owner_without_mutation() {
+        let mut ui = Ui::new();
+        for index in 0..UI_LAYOUT_SURFACE_SLOTS {
+            let id = SurfaceId::try_from(format!("mounted-{index}")).unwrap_or_else(|_| panic!("bounded mounted surface"));
+            assert!(ui.windows.try_admit(id).is_ok());
+        }
+        let before: UiFixedList<SurfaceId, UI_LAYOUT_SURFACE_SLOTS> = ui.windows.ids().cloned().fold(UiFixedList::default(), |mut ids, id| {
+            assert_eq!(ids.try_push(id), Ok(()));
+            ids
+        });
+        let owner = SurfaceId::try_from("mounted-max-plus-one").unwrap_or_else(|_| panic!("bounded rejected surface"));
+        let rejected = ui.windows.try_admit(owner.clone()).unwrap_err();
+        assert_eq!(rejected.id, owner);
+        assert_eq!(ui.windows.ids().cloned().collect::<Vec<_>>(), before.iter().cloned().collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn mounted_layout_equal_theme_does_not_invalidate_or_requeue() {
+        let mut ui = Ui::new();
+        ui.apply_tree("theme", &stack_ui(vec![button_ui("same", "Same")]));
+        let before_generation = ui.windows.get("theme").map(|window| window.layout_generation);
+        let before_theme_revision = ui.windows.get("theme").map(|window| window.theme_revision);
+        let before_queue = ui.layout_queues.iter().map(SurfaceLaneRing::len).sum::<usize>();
+        ui.set_theme(ui.theme());
+        assert_eq!(ui.windows.get("theme").map(|window| window.layout_generation), before_generation);
+        assert_eq!(ui.windows.get("theme").map(|window| window.theme_revision), before_theme_revision);
+        assert_eq!(ui.layout_queues.iter().map(SurfaceLaneRing::len).sum::<usize>(), before_queue);
+    }
+
+    #[test]
+    fn mounted_layout_atomic_snapshot_keeps_last_valid_geometry_until_fresh_swap() {
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        ui.apply_tree("atomic", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("atomic"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }), button_ui("target", "Target")]));
+        drive_layout(&mut ui, "atomic", 320.0, 200.0, &mut atlas);
+        let tree = ui.tree("atomic").unwrap_or_else(|| panic!("atomic tree"));
+        let root = tree.root.unwrap_or_else(|| panic!("atomic root"));
+        let old_generation = tree.accepted_layout_generation();
+        let old_layout = tree.accepted_layout(root).unwrap_or_default();
+        ui.set_viewport("atomic", 960.0, 540.0);
+        let pool = test_layout_pool();
+        let cancel = semio_framework_job::CancelToken::root_now();
+        let operation = semio_framework_job::allocate_operation_id();
+        let mut preview_sequence = 0;
+        let mut swaps = 0;
+        for _ in 0..100_000 {
+            let before = ui.tree("atomic").map(UiTree::accepted_layout_generation).unwrap_or_default();
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+            let step = ui.step_layouts(&pool, &mut atlas, &mut cx);
+            let tree = ui.tree("atomic").unwrap_or_else(|| panic!("atomic retained tree"));
+            let after = tree.accepted_layout_generation();
+            swaps += usize::from(before != after);
+            if matches!(step, UiLayoutStep::Ready { .. }) {
+                assert_eq!(tree.accepted_layout(root).unwrap_or_default().width, 960.0);
+                break;
+            }
+            assert_eq!(after, old_generation);
+            assert_eq!(tree.accepted_layout(root).unwrap_or_default(), old_layout);
+        }
+        assert_eq!(swaps, 1);
+        assert!(ui.progressive_layout_preview("atomic").is_some());
+        assert!(ui.progressive_glyph_preview("atomic").is_some());
+    }
+
+    #[test]
+    fn mounted_layout_revision_max_refuses_theme_tree_and_viewport_without_alias() {
+        let mut ui = Ui::new();
+        let original = stack_ui(vec![button_ui("original", "Original")]);
+        ui.apply_tree("max", &original);
+        let original_theme = ui.theme();
+        if let Some(window) = ui.windows.get_mut("max") {
+            window.theme_revision = u64::MAX;
+        }
+        let mut changed_theme = original_theme;
+        changed_theme.gap_standard += 1.0;
+        ui.set_theme(changed_theme);
+        assert_eq!(theme_layout_identity(&ui.theme()), theme_layout_identity(&original_theme));
+        if let Some(window) = ui.windows.get_mut("max") {
+            window.theme_revision = 1;
+            window.viewport_revision = u64::MAX;
+            window.layout_generation = u64::MAX - 1;
+        }
+        let before_viewport = ui.viewport("max");
+        ui.set_viewport("max", 777.0, 333.0);
+        assert_eq!(ui.viewport("max"), before_viewport);
+        if let Some(window) = ui.windows.get_mut("max") {
+            window.viewport_revision = 1;
+            window.layout_generation = 7;
+            window.revision = u64::MAX;
+        }
+        ui.apply_tree("max", &stack_ui(vec![button_ui("changed", "Changed")]));
+        assert_eq!(ui.tree_revision("max"), Some(u64::MAX));
+        assert!(ui.tree("max").and_then(|tree| tree.root).and_then(|root| ui.tree("max").and_then(|tree| tree.node(root))).is_some_and(|node| node.spec.0 == original));
+    }
+
+    #[test]
+    fn mounted_layout_replay_and_resize_supersede_are_deterministic() {
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        let input = stack_ui(vec![button_ui("replay", "Replay")]);
+        ui.apply_tree("replay", &input);
+        drive_layout(&mut ui, "replay", 640.0, 480.0, &mut atlas);
+        let root = ui.tree("replay").and_then(|tree| tree.root).unwrap_or_else(|| panic!("replay root"));
+        let first = ui.tree("replay").and_then(|tree| tree.accepted_layout(root)).unwrap_or_default();
+        ui.set_viewport("replay", 641.0, 480.0);
+        ui.set_viewport("replay", 640.0, 480.0);
+        drive_layout(&mut ui, "replay", 640.0, 480.0, &mut atlas);
+        let second = ui.tree("replay").and_then(|tree| tree.accepted_layout(root)).unwrap_or_default();
+        assert_eq!(first, second);
+        assert_eq!(second.width, 640.0);
     }
     //#endregion 🔖️FacadeTests
 
@@ -1921,7 +2356,7 @@ mod retained_document_hostile_fixtures {
                 Err(fault) => panic!("first publish failed: {fault:?}"),
             }
         }
-        assert_eq!(ui.windows["window"].tree.document().map(UiDocumentTree::generation), Some(101));
+        assert_eq!(ui.windows.get("window").and_then(|window| window.tree.document()).map(UiDocumentTree::generation), Some(101));
 
         let aba = lease(100, &[(1, &[])]);
         let aba_rejected = ui.begin_document("window", aba.header().expect("aba header"), &mut step(100, &mut preview));
@@ -1936,7 +2371,7 @@ mod retained_document_hostile_fixtures {
         let stale = lease(103, &[(1, &[])]);
         let interrupted = ui.begin_document("window", stale.header().expect("stale header"), &mut step(103, &mut preview));
         assert!(matches!(interrupted, Err((UiDocumentIngressFault::InterruptedClose, _))));
-        assert_eq!(ui.windows["window"].tree.document().map(UiDocumentTree::generation), Some(101));
+        assert_eq!(ui.windows.get("window").and_then(|window| window.tree.document()).map(UiDocumentTree::generation), Some(101));
         drop(aba);
         drop(cancelled);
         drop(first);
@@ -1944,7 +2379,7 @@ mod retained_document_hostile_fixtures {
         drop(stale);
         while !ui.close_document_step("window") {}
         while !ui_contract::close_ui_document_page_one() {}
-        assert!(ui.windows["window"].tree.document().is_none());
+        assert!(ui.windows.get("window").and_then(|window| window.tree.document()).is_none());
     }
 }
 //#endregion 🧪️RetainedDocumentHostileFixtures

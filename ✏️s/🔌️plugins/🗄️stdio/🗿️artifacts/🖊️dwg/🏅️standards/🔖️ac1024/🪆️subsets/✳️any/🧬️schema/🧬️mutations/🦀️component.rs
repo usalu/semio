@@ -113,6 +113,30 @@ impl OpBinary for DwgMutation {
 }
 //#endregion Codecs
 
+//#region 🔖️Kinds
+impl DwgMutation {
+    /// 🏷️ Kebab-case kind spelling — the exact vocabulary BOTH DWG catalogs declare
+    /// (`../../🧪️oracle/🔣️component.json` and `../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/
+    /// 🔣️component.json`), and the row ids of both cases' Scenario Outlines. Hand-matched rather
+    /// than derived, so [`KINDS`] is checked against something with its own reason to be right; and
+    /// exhaustive, so a variant added to the enum is a COMPILE error here rather than a silently
+    /// uncatalogued kind.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn kind(&self) -> &'static str {
+        match self {
+            DwgMutation::NoMutation => "no-mutation",
+            DwgMutation::SetSnapshot { .. } => "set-snapshot",
+            DwgMutation::SetVersionInfo { .. } => "set-version-info",
+        }
+    }
+}
+
+/// 🏷️ Every declared kind, kebab-case, in the enum's own declaration order. ⚠️ It mirrors TWO
+/// catalogs, not one: `🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` is a `pub use`
+/// of this module, so AC1018 declares this same vocabulary and both manifests must list it.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-version-info"];
+//#endregion 🔖️Kinds
+
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
@@ -125,6 +149,23 @@ mod tests {
     use super::*;
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
+
+    /// 🧪️ Keeps the declaration honest, which nothing else can: the framework never parses Rust, so
+    /// the CATALOGS are what the contract gate counts against, and this is the only check that ties
+    /// them to the enum. BOTH are read, because AC1018 re-exports this vocabulary rather than
+    /// declaring one — a kind added here and catalogued under only one standard fails here.
+    #[test]
+    fn kinds_matches_every_variant_and_both_catalogs() {
+        let from_variants: std::collections::BTreeSet<&str> = demo_mutation_cases().iter().map(DwgMutation::kind).collect();
+        let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
+        assert_eq!(from_variants, from_kinds, "KINDS must equal every DwgMutation variant's kind()");
+        assert_eq!(KINDS.len(), 3, "KINDS must list exactly the declared 3 kinds");
+        for manifest in [include_str!("../../🧪️oracle/🔣️component.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️component.json")] {
+            for kind in KINDS {
+                assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
+            }
+        }
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn logical_mutations_obey_diff_and_inverse_laws() {

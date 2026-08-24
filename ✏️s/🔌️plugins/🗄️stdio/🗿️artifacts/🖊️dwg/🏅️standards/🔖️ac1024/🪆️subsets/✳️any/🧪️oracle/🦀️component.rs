@@ -46,16 +46,22 @@
 use semio_repo_test_host::Json;
 
 //#region 🔖️Kinds
-/// 🏷️ The declared vocabulary of this subset, mirroring `DwgMutation`'s own variants
-/// (`../🧬️schema/🧬️mutations/🦀️component.rs`) in declaration order. Duplicated rather than
-/// imported: the oracle crate must never link the production crate.
+/// 🏷️ The declared vocabulary of this subset, mirroring the production `KINDS`
+/// (`../🧬️schema/🧬️mutations/🦀️component.rs`, itself checked there against `DwgMutation::kind()`
+/// and against BOTH DWG catalogs) in declaration order. Duplicated rather than imported: the oracle
+/// crate must never link the production crate, so this side can only compare STRINGS; the check
+/// that a kind exists as a real enum variant is the production-side test's.
 pub const KINDS: [&str; 3] = ["no-mutation", "set-snapshot", "set-version-info"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Preamble
-/// 📐️ Byte offsets of the R2004+ file-header prefix, per the ODA `.dwg` specification §4.1 and
-/// LibreDWG's `header.spec`. ALL of them, not only the three this subset's vocabulary addresses —
-/// see [`Preamble`] for why that distinction matters.
+/// 📐️ Byte offsets of the plain file-header preamble, sourced from LibreDWG's `header.spec` field
+/// order — the same source this subset's own production `DwgSnapshot` doc comments already cite,
+/// where `parse_version_header_fields` calls it "the plain file-header preamble shared by every
+/// AC1015+ DWG file". ALL of it, not only the three fields this subset's vocabulary addresses — see
+/// [`Preamble`] for why that distinction matters — but no further than `0x15`, which is exactly as
+/// far as that citation reaches; see
+/// [`the_shared_layout_claim_stops_where_the_modelled_preamble_stops`](tests::the_shared_layout_claim_stops_where_the_modelled_preamble_stops).
 const VERSION_RANGE: std::ops::Range<usize> = 0..6;
 const RESERVED_RANGE: std::ops::Range<usize> = 0x06..0x0B;
 const RELEASE_MAINTENANCE_OFFSET: usize = 0x0B;
@@ -358,6 +364,31 @@ mod tests {
         let demo = include_bytes!("../../../../🔖️ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🖊️example.dwg").to_vec();
         let built = oracle_apply_mutation(&fixture(), &spec("set-snapshot", object(vec![("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))]))).unwrap();
         assert_eq!(built, demo, "the stub must reproduce the committed preamble-only example, including the fields no mutation kind addresses");
+    }
+
+    /// 🚧 WHERE the shared-layout claim stops, pinned as bytes rather than left as prose. The two
+    /// DWG cases rest on AC1018 and AC1024 sharing a header layout, and that claim is made ONLY for
+    /// `0x00..0x15` — the region [`Preamble`] models — because that is the region this repository's
+    /// own production conformance code cites a source for: `DwgSnapshot`'s doc comments name
+    /// LibreDWG's `header.spec` field order (`dwg_version@0x11`, `maint_version@0x12`,
+    /// `codepage@0x13`) and `parse_version_header_fields` calls it "the plain file-header preamble
+    /// shared by every AC1015+ DWG file".
+    ///
+    /// Immediately past it the ground is NOT established, and this test records why rather than
+    /// letting a wider claim ride along unchecked. The R2004 file header is customarily documented
+    /// with three `0x00` bytes at `0x15`; the real AC1024 fixture carries `00 1d 02` there, which
+    /// repeats the application version/maintenance pair from `0x11`-`0x12`. Whatever those bytes
+    /// are, they are not three zeros, so nothing here is entitled to say the two releases share a
+    /// header layout BEYOND the preamble — and the oracle deliberately stops at `PREAMBLE_LEN`
+    /// instead. If a future revision widens the modelled region, this test fails first and the
+    /// claim has to be re-sourced before the code can move.
+    #[test]
+    fn the_shared_layout_claim_stops_where_the_modelled_preamble_stops() {
+        let input = fixture();
+        assert_eq!(PREAMBLE_LEN, 0x15, "the modelled region ends immediately after the codepage");
+        assert_eq!(&input[0x15..0x18], &[0x00, 0x1d, 0x02], "the real AC1024 fixture does not carry the three 0x00 bytes the R2004 header layout is customarily documented with");
+        assert_eq!(input[0x16], input[0x11], "0x16 repeats the application version byte");
+        assert_eq!(input[0x17], input[0x12], "0x17 repeats the application maintenance byte");
     }
 
     #[test]

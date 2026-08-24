@@ -19,6 +19,8 @@ This report is the deliverable; the chat message points here.
 | Reference-library defects found, reproduced standalone, documented | **1** new (`ruststep` 0.4 cannot parse an empty aggregate) |
 | Existing cases upgraded from "asserts nothing" to an in-role observability law | **8** |
 | Templated feature files rewritten | **2** (the two DWG cases were a 4-line diff of each other) |
+| Subsets in scope covered end to end | **16 / 16** (was 10 / 16 — six had nothing, two had no adapter) |
+| Scenarios executed green in this scope | **250** across 14 cases (74 of them new) |
 
 ---
 
@@ -353,8 +355,25 @@ $ bun ./📜️script.ts contract --owner 🗄️stdio          # exit 1
 ```
 
 Both are another session's in-flight edit to `mutate-png-1-2`. Every case in this scope reports
-**0 breaches** individually, including the six new ones and the two DWG ones that could not report
-anything at all before this work.
+**0 breaches** individually — run one at a time,
+`bun ./📜️script.ts contract --owner 🗄️stdio --case <case>`, all 16 of them:
+
+```
+mutate-ifc-4               0 high-priority breach(es) across 0 rule(s):
+mutate-ifc-2x3             0 high-priority breach(es) across 0 rule(s):
+mutate-ifc-2x3-cobie       0 high-priority breach(es) across 0 rule(s):
+mutate-ifc-2x3-cv20        0 high-priority breach(es) across 0 rule(s):
+mutate-ifc-2x3-sav         0 high-priority breach(es) across 0 rule(s):
+mutate-step-ap214          0 high-priority breach(es) across 0 rule(s):
+mutate-step-ap214-cc1..cc6 0 high-priority breach(es) across 0 rule(s):   (each)
+mutate-dxf-r12             0 high-priority breach(es) across 0 rule(s):
+mutate-bcf-2-1             0 high-priority breach(es) across 0 rule(s):
+mutate-dwg-ac1018          0 high-priority breach(es) across 0 rule(s):
+mutate-dwg-ac1024          0 high-priority breach(es) across 0 rule(s):
+```
+
+A later whole-owner run picked up 10 more breaches in `🖼️bmp/mutate-bmp-v3` — also a concurrent
+session, also not this scope.
 
 ### 5.3 Dependency purity
 
@@ -370,9 +389,49 @@ $ bun ./📜️script.ts dependency                        # exit 0
 Six new registrations, all `testOnly: true`, no new `production-debt` record — the three that print
 are the pre-existing `png`/`zip`/`image` ones.
 
-### 5.4 Oracle phase, per case
+### 5.4 Oracle phase, per case — all 16 subsets in scope
 
-*(the sweep's own output, appended verbatim below)*
+`bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case <case>`, one run each, copied verbatim:
+
+```
+mutate-ifc-4                 [test] level=exhaustive cases=1 executed=23 passed=23 failed=0 errored=0 parity=0/0
+mutate-ifc-2x3               [test] level=exhaustive cases=1 executed=11 passed=11 failed=0 errored=0 parity=0/0
+mutate-ifc-2x3-cobie         [test] level=exhaustive cases=1 executed=15 passed=15 failed=0 errored=0 parity=0/0
+mutate-ifc-2x3-cv20          [test] level=exhaustive cases=1 executed=13 passed=13 failed=0 errored=0 parity=0/0
+mutate-ifc-2x3-sav           [test] level=exhaustive cases=1 executed=13 passed=13 failed=0 errored=0 parity=0/0
+mutate-step-ap214            [test] level=exhaustive cases=1 executed=23 passed=23 failed=0 errored=0 parity=0/0
+mutate-step-ap214-cc1        [test] level=exhaustive cases=1 executed=11 passed=11 failed=0 errored=0 parity=0/0
+mutate-step-ap214-cc2        [test] level=exhaustive cases=1 executed=13 passed=13 failed=0 errored=0 parity=0/0
+mutate-step-ap214-cc3        [test] level=exhaustive cases=1 executed=13 passed=13 failed=0 errored=0 parity=0/0
+mutate-step-ap214-cc4        [test] level=exhaustive cases=1 executed=13 passed=13 failed=0 errored=0 parity=0/0
+mutate-step-ap214-cc5        [test] level=exhaustive cases=1 executed=13 passed=13 failed=0 errored=0 parity=0/0
+mutate-step-ap214-cc6        [test] level=exhaustive cases=1 executed=11 passed=11 failed=0 errored=0 parity=0/0
+mutate-dxf-r12               [test] level=exhaustive cases=1 executed=39 passed=39 failed=0 errored=0 parity=0/0
+mutate-bcf-2-1               [test] level=exhaustive cases=1 executed=29 passed=29 failed=0 errored=0 parity=0/0
+mutate-dwg-ac1018            [test] level=exhaustive cases=1 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=1
+mutate-dwg-ac1024            [test] level=exhaustive cases=1 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=1
+```
+
+**250 scenarios executed, 250 passed, 0 failed** across 14 cases; the two DWG cases are correctly
+`not-exercised` because they carry recorded `noOracleDecisions` (there is no permissively licensed
+Rust DWG reader to dispatch), and the runner says so rather than printing a green. Their evidence
+today is the eleven oracle-module unit tests in §5.1 plus the two adapters' subject halves, which
+wait on the same blocker as everything else. The adapters themselves were compiled and type-checked
+against the real host crate in a scratch crate in this ticket's folder (`dwgcheck`, `cargo check`
+exit 0) so that "no adapter" cannot silently become "an adapter that does not build".
+
+The six `✳️ccN` cases are new: those 74 scenarios did not exist before this work, and neither did the
+two DWG adapters that make their cases runnable at all.
+
+### 5.5 The contract's remaining breaches are not in this scope
+
+```
+$ bun ./📜️script.ts contract --owner 🗄️stdio | grep "testing/contract" | ... | uniq -c
+  2 📷️png
+ 10 🖼️bmp
+```
+
+Both belong to concurrent sessions mid-edit on those artifacts. Every case in this scope is 0.
 
 ---
 

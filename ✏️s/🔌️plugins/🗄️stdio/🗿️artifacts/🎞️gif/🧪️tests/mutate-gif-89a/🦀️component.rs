@@ -7,7 +7,7 @@
 //! implementation, which cannot build right now (an unrelated, in-progress os-kernel refactor).
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project};
+use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, project};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
@@ -52,6 +52,15 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 fn no_mutation_spec() -> Json {
     Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(Vec::new()))])
 }
+
+/// 🎬️ The document a kind actually acts on. The real animation carries a genuine comment extension
+/// and a genuine NETSCAPE2.0 loop extension and nothing else, and the NETSCAPE one is the loop-count
+/// axis rather than an `appExtensions` entry — so `remove-app-extension` is handed the real document
+/// with its target inserted first, by the reference implementation. Every other kind gets the
+/// committed bytes untouched.
+fn arranged_input(ctx: &Context, spec: &Json) -> Result<Vec<u8>, String> {
+    oracle_arrange(&mutable_input(ctx)?, spec)
+}
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
@@ -63,7 +72,7 @@ fn no_mutation_spec() -> Json {
 /// resets to `false` on every read, making the kind invisible).
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
-    let input = mutable_input(ctx)?;
+    let input = arranged_input(ctx, &spec)?;
     let before = project(&input)?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project(&bytes)?;
@@ -75,7 +84,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// projection is fully recovered — the algebraic law every mutation kind must satisfy.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
-    let input = mutable_input(ctx)?;
+    let input = arranged_input(ctx, &spec)?;
     let original_projection = project(&input)?;
     let mutated = oracle_apply_mutation(&input, &spec)?;
     let restored = oracle_apply_mutation_inverse(&input, &spec, &mutated)?;
@@ -101,7 +110,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, KINDS};
+    use super::{arranged_input, mutable_input, KINDS};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::project;
     use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
@@ -254,7 +263,7 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
-        let mut snapshot = decode_through_text(&mutable_input(ctx)?)?;
+        let mut snapshot = decode_through_text(&arranged_input(ctx, &spec)?)?;
         let mutation = mutation_from_spec(&snapshot, &spec)?;
         apply_gif_mutation(&mut snapshot, &mutation);
         let bytes = encode_gif(&snapshot).map_err(|error| format!("encode_gif failed: {error}"))?;
@@ -264,7 +273,7 @@ mod subject {
 
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
-        let original = decode_through_text(&mutable_input(ctx)?)?;
+        let original = decode_through_text(&arranged_input(ctx, &spec)?)?;
         let original_projection = project(&encode_gif(&original).map_err(|error| format!("encode_gif failed: {error}"))?)?;
         let mutation = mutation_from_spec(&original, &spec)?;
         let mut mutated = original.clone();

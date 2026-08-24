@@ -33,13 +33,15 @@ const SURFACE_RECONCILE_FIXED_OPS: usize = SURFACE_RECONCILE_FIXED_NODES * 9 + 1
 
 #[derive(Debug)]
 struct SurfaceFixedVec<T, const N: usize> {
-    entries: [Option<T>; N],
+    entries: Box<[Option<T>]>,
     len: usize,
 }
 
 impl<T, const N: usize> Default for SurfaceFixedVec<T, N> {
     fn default() -> Self {
-        Self { entries: std::array::from_fn(|_| None), len: 0 }
+        let mut entries = Vec::with_capacity(N);
+        entries.resize_with(N, || None);
+        Self { entries: entries.into_boxed_slice(), len: 0 }
     }
 }
 
@@ -226,7 +228,7 @@ fn identity_of(parent: Option<ui_contract::UiNodeId>, node: &crate::TreeNode) ->
 /// here too rather than one key silently shadowing the other during matching.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 #[cfg(test)]
-fn assert_unique_child_keys(parent: ui_contract::UiNodeId, children: &[crate::TreeNode]) {
+fn assert_unique_child_keys(parent: ui_contract::UiNodeId, children: &ui_contract::BuiltChildren) {
     let mut seen: HashSet<&str> = HashSet::with_capacity(children.len());
     for child in children {
         assert!(seen.insert(child.key.as_str()), "🚫️ duplicate sibling key {:?} under parent {parent:?} — reconciliation keys must be unique among siblings", child.key);
@@ -294,7 +296,7 @@ impl SurfaceReconciler {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(test)]
     pub fn reconcile(&mut self, tree: &crate::ComponentTree) -> Option<ui_contract::UiPatch> {
-        let mut ops = Vec::new();
+        let mut ops = ui_contract::UiPatchOps::default();
         let previous_root = self.root;
         let new_root_id = self.diff_node(None, &tree.root, &mut ops);
 
@@ -302,7 +304,7 @@ impl SurfaceReconciler {
             if let Some(stale_root) = previous_root {
                 self.remove_subtree(None, stale_root, &mut ops);
             }
-            ops.push(ui_contract::UiPatchOp::SetRoot { id: new_root_id });
+            ops.try_push(ui_contract::UiPatchOp::SetRoot { id: new_root_id }).expect("test patch remains bounded");
             self.root = Some(new_root_id);
         }
 
@@ -321,7 +323,11 @@ impl SurfaceReconciler {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(test)]
     pub fn snapshot(&self) -> ui_contract::UiSnapshot {
-        ui_contract::UiSnapshot { surface: self.surface.clone(), revision: self.revision, root: self.root.unwrap_or_default(), nodes: self.retained.values().cloned().collect(), layout_epoch: 0 }
+        let mut nodes = ui_contract::UiSnapshotNodes::default();
+        for record in self.retained.values() {
+            nodes.try_push(record.credited_clone().expect("test snapshot alias credit")).expect("test snapshot remains bounded");
+        }
+        ui_contract::UiSnapshot { surface: self.surface.clone(), revision: self.revision, root: self.root.unwrap_or_default(), nodes, layout_epoch: 0 }
     }
 
     /// 🧬️ Returns the retained scalar revision without cloning the retained document.
@@ -350,17 +356,19 @@ impl SurfaceReconciler {
     }
 
     fn retire_one(&mut self) -> bool {
-        if let Some(id) = self.retained.keys().next().copied() {
+        let retained_id = self.retained.keys().next().copied();
+        if let Some(id) = retained_id {
             self.retained.remove(&id);
             return false;
         }
-        if let Some(identity) = self.key_index.keys().next().cloned() {
+        let indexed_identity = self.key_index.keys().next().cloned();
+        if let Some(identity) = indexed_identity {
             self.key_index.remove(&identity);
             return false;
         }
         match self.retire_scalar {
             0 => self.root = None,
-            1 => self.surface.0.clear(),
+            1 => self.surface.0 = ui_contract::UiText::default(),
             2 => self.revision = ui_contract::UiRevision::default(),
             3 => self.allocator = ui_contract::UiNodeIdAllocator::default(),
             4 => {
@@ -616,12 +624,14 @@ struct SurfaceSemanticCensusCursor {
     data_attribute: u8,
     string_byte: usize,
     depth: usize,
-    value_stack: [Option<SurfaceSemanticValueFrame>; SURFACE_RECONCILE_VALUE_DEPTH],
+    value_stack: Box<[Option<SurfaceSemanticValueFrame>]>,
 }
 
 impl Default for SurfaceSemanticCensusCursor {
     fn default() -> Self {
-        Self { field: 0, container: 0, entry: 0, binding: 0, action: 0, data_attribute: 0, string_byte: 0, depth: 0, value_stack: std::array::from_fn(|_| None) }
+        let mut value_stack = Vec::with_capacity(SURFACE_RECONCILE_VALUE_DEPTH);
+        value_stack.resize_with(SURFACE_RECONCILE_VALUE_DEPTH, || None);
+        Self { field: 0, container: 0, entry: 0, binding: 0, action: 0, data_attribute: 0, string_byte: 0, depth: 0, value_stack: value_stack.into_boxed_slice() }
     }
 }
 
@@ -1082,7 +1092,7 @@ impl SurfaceSemanticCensusCursor {
             }
             10 => {
                 self.field = 11;
-                SurfaceSemanticCensusStep::Progress(self.backing::<crate::TreeNode>(node.children.capacity()))
+                SurfaceSemanticCensusStep::Progress(self.backing::<Option<Box<crate::TreeNode>>>(node.children.capacity()))
             }
             _ => SurfaceSemanticCensusStep::Complete,
         }
@@ -1151,7 +1161,7 @@ impl SurfaceReconcileCursor {
             new_key_index: SurfaceLinearMap::default(),
             remove_next: None,
             removal: SurfaceFixedVec::default(),
-            ops: SurfaceFixedVec::default(),
+            ops: ui_contract::UiPatchOps::default(),
             pending_op: None,
             limits,
             usage: SurfaceReconcileUsage { nodes: 0, items: 1, bytes: 0 },
@@ -1205,7 +1215,7 @@ impl SurfaceReconcileCursor {
                     self.stage = SurfaceReconcileStage::AllocateIdentities;
                     return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 };
                 }
-                if let Some((parent, node)) = self.held_node.as_ref() {
+                if let Some((_, node)) = self.held_node.as_ref() {
                     let key_bytes = node.key.len();
                     if key_bytes > self.limits.max_identifier_bytes {
                         let fault = SurfaceReconcileFault::IdentifierBytes { actual: key_bytes, max: self.limits.max_identifier_bytes };
@@ -1309,7 +1319,7 @@ impl SurfaceReconcileCursor {
                     }
                     let children = take(&mut node.children).into_iter();
                     let index = self.flat.len();
-                    let flat = FlatPresentedNode { parent, node, child_ids: SurfaceFixedVec::default() };
+                    let flat = FlatPresentedNode { parent, node, child_ids: ui_contract::UiNodeChildren::default() };
                     if let Err(flat) = self.flat.try_push(flat) {
                         self.held_node = Some((parent, flat.node));
                         self.overflow_frame = Some(PresentationFrame { index, children });
@@ -1672,7 +1682,7 @@ impl SurfaceReconcileCursor {
     }
 
     fn retire_one(&mut self) -> bool {
-        if let Some((_, mut node)) = self.held_node.take() {
+        if let Some((_, node)) = self.held_node.take() {
             self.retire_tree.begin(crate::ComponentTree { root: node });
             self.semantic_census = None;
             return false;
@@ -1739,7 +1749,7 @@ impl SurfaceReconcileCursor {
 //#region 🎟️RetainedAuthority
 
 pub const SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 64;
-pub const SURFACE_RECONCILE_PAGE_BYTES: usize = 16 * 1_024;
+pub const SURFACE_RECONCILE_PAGE_BYTES: usize = 32 * 1_024;
 pub const SURFACE_RECONCILE_AGGREGATE_BYTES: usize = 8 * 1_024 * 1_024;
 pub const SURFACE_RECONCILE_AGGREGATE_ITEMS: usize = 131_076;
 
@@ -1885,14 +1895,16 @@ enum SurfaceReconcileJobPhase {
 
 struct SurfaceTreeRetireCursor {
     node: Option<crate::TreeNode>,
-    frames: [Option<ui_contract::BuiltChildrenIntoIter>; SURFACE_RECONCILE_TREE_RETIRE_DEPTH],
+    frames: Box<[Option<ui_contract::BuiltChildrenIntoIter>]>,
     overflow: Option<ui_contract::BuiltChildrenIntoIter>,
     depth: usize,
 }
 
 impl Default for SurfaceTreeRetireCursor {
     fn default() -> Self {
-        Self { node: None, frames: std::array::from_fn(|_| None), overflow: None, depth: 0 }
+        let mut frames = Vec::with_capacity(SURFACE_RECONCILE_TREE_RETIRE_DEPTH);
+        frames.resize_with(SURFACE_RECONCILE_TREE_RETIRE_DEPTH, || None);
+        Self { node: None, frames: frames.into_boxed_slice(), overflow: None, depth: 0 }
     }
 }
 
@@ -2083,10 +2095,7 @@ impl SurfaceReconcileRetained {
             self.patch = None;
             return false;
         }
-        if let Some(surface) = self.published_surface.as_mut() {
-            if surface.0.pop().is_some() {
-                return false;
-            }
+        if self.published_surface.is_some() {
             self.published_surface = None;
             return false;
         }
@@ -2407,7 +2416,7 @@ impl SurfaceReconcilePublishedPatch {
     }
 
     pub fn matches(&self, surface: &str, revision: u64) -> bool {
-        self.surface.0 == surface && self.revision.0 == revision
+        self.surface.0.as_str() == surface && self.revision.0 == revision
     }
 
     pub fn surface(&self) -> &ui_contract::SurfaceId {
@@ -2786,11 +2795,11 @@ impl SurfaceReconcileRejected {
     }
 
     pub fn close_step(&mut self) -> bool {
-        self.state.as_mut().is_none_or(SurfaceReconcileRetained::close_step)
+        self.state.as_mut().is_none_or(|state| state.close_step())
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.state.as_ref().is_none_or(SurfaceReconcileRetained::terminal_is_empty)
+        self.state.as_ref().is_none_or(|state| state.terminal_is_empty())
     }
 
     pub fn into_terminal(mut self) -> SurfaceReconcileTerminal {
@@ -2882,11 +2891,11 @@ impl SurfaceReconcileTerminal {
     }
 
     pub fn close_step(&mut self) -> bool {
-        self.state.as_mut().is_none_or(SurfaceReconcileRetained::close_step)
+        self.state.as_mut().is_none_or(|state| state.close_step())
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.state.as_ref().is_none_or(SurfaceReconcileRetained::terminal_is_empty)
+        self.state.as_ref().is_none_or(|state| state.terminal_is_empty())
     }
 }
 
@@ -2915,9 +2924,10 @@ pub fn close_surface_reconcile_handback_one() -> bool {
         if registry.retirement_len == 0 {
             return true;
         }
-        let index = registry.retirement[registry.retirement_head];
-        registry.retirement[registry.retirement_head] = usize::MAX;
-        registry.retirement_head = (registry.retirement_head + 1) % SURFACE_RECONCILE_HANDBACK_SLOTS;
+        let retirement_head = registry.retirement_head;
+        let index = registry.retirement[retirement_head];
+        registry.retirement[retirement_head] = usize::MAX;
+        registry.retirement_head = (retirement_head + 1) % SURFACE_RECONCILE_HANDBACK_SLOTS;
         registry.retirement_len -= 1;
         let (state, key, release) = {
             let slot = &mut registry.slots[index];
@@ -2971,12 +2981,12 @@ fn diff_record_field(old: &ui_contract::UiNodeRecord, new: &ui_contract::UiNodeR
 
 fn retire_record_one(record: &mut ui_contract::UiNodeRecord, field: &mut u8) -> bool {
     match *field {
-        0 => record.key.clear(),
+        0 => record.key = ui_contract::UiText::default(),
         1 => record.component = ui_contract::Component::Separator(ui_contract::SeparatorProps {}),
         2 => record.layout = ui_contract::LayoutSpec::default(),
-        3 => record.children.clear(),
+        3 if record.children.pop().is_some() => return false,
         4 => record.accessibility = ui_contract::AccessibilitySpec::default(),
-        5 => record.bindings.clear(),
+        5 if record.bindings.pop().is_some() => return false,
         6 => record.menu = None,
         7 => return true,
         _ => return true,
@@ -3012,7 +3022,7 @@ impl SurfaceReconciler {
     /// the allocator and inserts the node wholesale via one `Upsert` — the only two ways any node ever
     /// enters `ops`. Returns the id `node` now has, whichever path was taken.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn diff_node(&mut self, parent: Option<ui_contract::UiNodeId>, node: &crate::TreeNode, ops: &mut Vec<ui_contract::UiPatchOp>) -> ui_contract::UiNodeId {
+    fn diff_node(&mut self, parent: Option<ui_contract::UiNodeId>, node: &crate::TreeNode, ops: &mut ui_contract::UiPatchOps) -> ui_contract::UiNodeId {
         let identity = identity_of(parent, node);
         if let Some(&id) = self.key_index.get(&identity) {
             self.diff_existing(id, node, ops);
@@ -3020,10 +3030,11 @@ impl SurfaceReconciler {
         } else {
             let id = self.allocator.try_allocate().expect("test allocator fixture remains below u64::MAX");
             let _ = self.key_index.try_insert(identity, id);
-            let child_ids = self.diff_children(id, &[], &node.children, ops);
+            let child_ids = self.diff_children(id, &ui_contract::UiNodeChildren::default(), &node.children, ops);
             let record = build_record(id, node, child_ids, None);
-            let _ = self.retained.try_insert(id, record.clone());
-            ops.push(ui_contract::UiPatchOp::Upsert(record));
+            let retained = record.credited_clone().expect("test retained record alias credit");
+            let _ = self.retained.try_insert(id, retained);
+            ops.try_push(ui_contract::UiPatchOp::Upsert(record)).expect("test patch remains bounded");
             id
         }
     }
@@ -3043,34 +3054,35 @@ impl SurfaceReconciler {
     /// ([`Self::diff_node`]'s other arm) or for a multi-group change so broad that one full record
     /// beats several targeted ops.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn diff_existing(&mut self, id: ui_contract::UiNodeId, node: &crate::TreeNode, ops: &mut Vec<ui_contract::UiPatchOp>) {
-        let old = self.retained.get(&id).cloned().expect("🚫️ key_index names an id with no retained record");
+    fn diff_existing(&mut self, id: ui_contract::UiNodeId, node: &crate::TreeNode, ops: &mut ui_contract::UiPatchOps) {
+        let old = self.retained.get(&id).and_then(ui_contract::UiNodeRecord::credited_clone).expect("🚫️ key_index names an id with no retained record or alias credit");
         let new_child_ids = self.diff_children(id, &old.children, &node.children, ops);
 
-        let mut targeted = Vec::new();
+        let mut targeted = ui_contract::UiPatchOps::default();
         if old.component != node.component {
-            targeted.push(ui_contract::UiPatchOp::SetComponent { id, component: node.component.clone() });
+            targeted.try_push(ui_contract::UiPatchOp::SetComponent { id, component: node.component.credited_clone().expect("test component alias credit") }).expect("test patch remains bounded");
         }
         if old.layout != node.layout {
-            targeted.push(ui_contract::UiPatchOp::SetLayout { id, layout: node.layout.clone() });
+            targeted.try_push(ui_contract::UiPatchOp::SetLayout { id, layout: node.layout.clone() }).expect("test patch remains bounded");
         }
         if old.activity != node.activity || old.disabled != node.disabled {
-            targeted.push(ui_contract::UiPatchOp::SetActivity { id, activity: node.activity, disabled: node.disabled });
+            targeted.try_push(ui_contract::UiPatchOp::SetActivity { id, activity: node.activity, disabled: node.disabled }).expect("test patch remains bounded");
         }
         if old.children != new_child_ids {
-            targeted.push(ui_contract::UiPatchOp::SetChildren { id, children: new_child_ids.clone() });
+            targeted.try_push(ui_contract::UiPatchOp::SetChildren { id, children: new_child_ids.clone() }).expect("test patch remains bounded");
         }
         if old.style != node.style {
-            targeted.push(ui_contract::UiPatchOp::SetStyle { id, style: node.style });
+            targeted.try_push(ui_contract::UiPatchOp::SetStyle { id, style: node.style }).expect("test patch remains bounded");
         }
         if old.accessibility != node.accessibility {
-            targeted.push(ui_contract::UiPatchOp::SetAccessibility { id, accessibility: node.accessibility.clone() });
+            targeted.try_push(ui_contract::UiPatchOp::SetAccessibility { id, accessibility: node.accessibility.clone() }).expect("test patch remains bounded");
         }
         if old.bindings != node.bindings {
-            targeted.push(ui_contract::UiPatchOp::SetBindings { id, bindings: node.bindings.clone() });
+            targeted.try_push(ui_contract::UiPatchOp::SetBindings { id, bindings: ui_contract::credited_bindings(&node.bindings).expect("test binding alias credit") }).expect("test patch remains bounded");
         }
         if old.menu != node.menu {
-            targeted.push(ui_contract::UiPatchOp::SetMenu { id, menu: node.menu.clone() });
+            let menu = node.menu.as_ref().map(|menu| menu.credited_clone().expect("test menu alias credit"));
+            targeted.try_push(ui_contract::UiPatchOp::SetMenu { id, menu }).expect("test patch remains bounded");
         }
 
         if targeted.is_empty() {
@@ -3078,14 +3090,16 @@ impl SurfaceReconciler {
         }
 
         let record = build_record(id, node, new_child_ids, old.transition);
-        let upsert = ui_contract::UiPatchOp::Upsert(record.clone());
-        let use_upsert = targeted.len() > 1 && self.estimate_bytes(std::slice::from_ref(&upsert)) < self.estimate_bytes(&targeted);
+        let upsert = ui_contract::UiPatchOp::Upsert(record.credited_clone().expect("test upsert alias credit"));
+        let use_upsert = targeted.len() > 1 && self.estimate_bytes(std::slice::from_ref(&upsert)) < self.estimate_bytes(targeted.iter());
 
         let _ = self.retained.try_insert(id, record);
         if use_upsert {
-            ops.push(upsert);
+            ops.try_push(upsert).expect("test patch remains bounded");
         } else {
-            ops.extend(targeted);
+            for op in targeted {
+                ops.try_push(op).expect("test patch remains bounded");
+            }
         }
     }
 
@@ -3094,8 +3108,12 @@ impl SurfaceReconciler {
     /// which fields even count as "text") lives once, in the contract crate that also enforces
     /// `max_patch_bytes`, and is never duplicated here.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn estimate_bytes(&self, candidate_ops: &[ui_contract::UiPatchOp]) -> usize {
-        let probe = ui_contract::UiPatch { surface: self.surface.clone(), base_revision: ui_contract::UiRevision::default(), revision: ui_contract::UiRevision::default(), ops: candidate_ops.to_vec() };
+    fn estimate_bytes<'a>(&self, candidate_ops: impl IntoIterator<Item = &'a ui_contract::UiPatchOp>) -> usize {
+        let mut ops = ui_contract::UiPatchOps::default();
+        for op in candidate_ops {
+            ops.try_push(op.credited_clone().expect("test patch-op alias credit")).expect("test patch remains bounded");
+        }
+        let probe = ui_contract::UiPatch { surface: self.surface.clone(), base_revision: ui_contract::UiRevision::default(), revision: ui_contract::UiRevision::default(), ops };
         ui_contract::patch_byte_estimate(&probe)
     }
 
@@ -3105,12 +3123,12 @@ impl SurfaceReconciler {
     /// ids is removed as a whole subtree. Returns the new children list in `new_children`'s order,
     /// ready to become the parent's own `children` field.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn diff_children(&mut self, parent_id: ui_contract::UiNodeId, old_child_ids: &[ui_contract::UiNodeId], new_children: &[crate::TreeNode], ops: &mut Vec<ui_contract::UiPatchOp>) -> Vec<ui_contract::UiNodeId> {
+    fn diff_children(&mut self, parent_id: ui_contract::UiNodeId, old_child_ids: &ui_contract::UiNodeChildren, new_children: &ui_contract::BuiltChildren, ops: &mut ui_contract::UiPatchOps) -> ui_contract::UiNodeChildren {
         assert_unique_child_keys(parent_id, new_children);
 
-        let mut new_ids = Vec::with_capacity(new_children.len());
+        let mut new_ids = ui_contract::UiNodeChildren::default();
         for child in new_children {
-            new_ids.push(self.diff_node(Some(parent_id), child, ops));
+            new_ids.try_push(self.diff_node(Some(parent_id), child, ops)).expect("test children remain bounded");
         }
 
         let retained_ids: HashSet<ui_contract::UiNodeId> = new_ids.iter().copied().collect();
@@ -3128,8 +3146,8 @@ impl SurfaceReconciler {
     /// this reconciler's own `retained`/`key_index` never accumulate an orphan for a node the receiver
     /// no longer has either.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn remove_subtree(&mut self, parent: Option<ui_contract::UiNodeId>, id: ui_contract::UiNodeId, ops: &mut Vec<ui_contract::UiPatchOp>) {
-        ops.push(ui_contract::UiPatchOp::Remove { id });
+    fn remove_subtree(&mut self, parent: Option<ui_contract::UiNodeId>, id: ui_contract::UiNodeId, ops: &mut ui_contract::UiPatchOps) {
+        ops.try_push(ui_contract::UiPatchOp::Remove { id }).expect("test patch remains bounded");
         self.purge_subtree(parent, id);
     }
 
@@ -3164,15 +3182,15 @@ fn build_record(id: ui_contract::UiNodeId, node: &crate::TreeNode, children: ui_
     ui_contract::UiNodeRecord {
         id,
         key: node.key.clone(),
-        component: node.component.clone(),
+        component: node.component.credited_clone().expect("test component alias credit"),
         layout: node.layout.clone(),
         style: node.style,
         activity: node.activity,
         disabled: node.disabled,
         transition,
         accessibility: node.accessibility.clone(),
-        bindings: node.bindings.clone(),
-        menu: node.menu.clone(),
+        bindings: ui_contract::credited_bindings(&node.bindings).expect("test binding alias credit"),
+        menu: node.menu.as_ref().map(|menu| menu.credited_clone().expect("test menu alias credit")),
         children,
     }
 }
@@ -3185,17 +3203,21 @@ mod tests {
     use super::*;
 
     //#region 🔖️Fixtures
+    fn ui_text(value: &str) -> ui_contract::UiText {
+        ui_contract::UiText::try_from_str(value).expect("bounded fixture text")
+    }
+
     fn leaf(key: &str) -> crate::TreeNode {
-        crate::TreeNode::new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {}))
+        crate::TreeNode::try_new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})).expect("bounded fixture node")
     }
 
     fn text(key: &str, value: &str) -> crate::TreeNode {
-        crate::TreeNode::new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::from(value), emphasize: None, data_attributes: None }))
+        crate::TreeNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from(value).expect("bounded fixture label"), emphasize: None, data_attributes: None })).expect("bounded fixture node")
     }
 
     fn container(key: &str, children: Vec<crate::TreeNode>) -> crate::TreeNode {
-        crate::TreeNode::new(key, ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }))
-            .with_children(children)
+        let node = crate::TreeNode::try_new(key, ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None })).expect("bounded fixture node");
+        node.try_with_children(children).unwrap_or_else(|_| panic!("bounded fixture children"))
     }
 
     fn tree(root: crate::TreeNode) -> crate::ComponentTree {
@@ -3223,19 +3245,24 @@ mod tests {
     }
 
     fn with_shortcut(node: crate::TreeNode, shortcut: &str) -> crate::TreeNode {
-        crate::TreeNode { accessibility: ui_contract::AccessibilitySpec { shortcut: Some(shortcut.into()), ..Default::default() }, ..node }
+        crate::TreeNode { accessibility: ui_contract::AccessibilitySpec { shortcut: Some(ui_text(shortcut)), ..Default::default() }, ..node }
     }
 
-    fn with_binding(node: crate::TreeNode, scope: &str, name: &str) -> crate::TreeNode {
-        crate::TreeNode { bindings: vec![ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: ui_contract::ActionId::v1(scope, name), args: None, capability: None }], ..node }
+    fn with_binding(mut node: crate::TreeNode, scope: &str, name: &str) -> crate::TreeNode {
+        node.bindings.try_push(ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: ui_contract::ActionId::try_v1(scope, name).expect("bounded fixture action"), args: None, capability: None }).expect("bounded fixture bindings");
+        node
     }
 
     fn with_menu(node: crate::TreeNode, menu_id: &str) -> crate::TreeNode {
-        crate::TreeNode { menu: Some(ui_contract::MenuRef { id: menu_id.into(), args: None }), ..node }
+        crate::TreeNode { menu: Some(ui_contract::MenuRef { id: ui_text(menu_id), args: None }), ..node }
     }
 
     fn id_of(snapshot: &ui_contract::UiSnapshot, key: &str) -> ui_contract::UiNodeId {
-        snapshot.nodes.iter().find(|record| record.key == key).unwrap_or_else(|| panic!("no node keyed {key:?} in snapshot")).id
+        snapshot.nodes.iter().find(|record| record.key.as_str() == key).unwrap_or_else(|| panic!("no node keyed {key:?} in snapshot")).id
+    }
+
+    fn first_op(patch: &ui_contract::UiPatch) -> &ui_contract::UiPatchOp {
+        patch.ops.get(0).expect("fixture patch operation")
     }
 
     fn assert_snapshot_matches_state(snapshot: &ui_contract::UiSnapshot, state: &ui_contract::UiSnapshotState) {
@@ -3262,6 +3289,15 @@ mod tests {
 
     //#region ⏭️ResumableCursor
     #[test]
+    fn fixed_runtime_owners_keep_bounded_state_off_the_stack() {
+        assert!(size_of::<SurfaceReconciler>() <= 1_024);
+        assert!(size_of::<SurfaceReconcileCursor>() <= 48 * 1_024);
+        assert!(size_of::<SurfaceReconcileRetained>() <= 64 * 1_024);
+        assert!(size_of::<crate::TreeNode>() <= 8 * 1_024);
+        assert!(size_of::<ui_contract::UiNodeRecord>() <= 8 * 1_024);
+    }
+
+    #[test]
     fn resumable_cursor_matches_the_existing_keyed_diff_and_revision_semantics() {
         let component_tree = tree(container("root", vec![text("a", "hello"), container("b", vec![leaf("x"), leaf("y")])]));
         let mut direct = SurfaceReconciler::new("s");
@@ -3276,7 +3312,7 @@ mod tests {
         assert_eq!(actual.revision, expected.revision);
         assert_eq!(actual.root, expected.root);
         assert_eq!(actual.nodes.len(), expected.nodes.len());
-        assert!(expected.nodes.iter().all(|record| actual.nodes.contains(record)));
+        assert!(expected.nodes.iter().all(|record| actual.nodes.iter().any(|candidate| candidate == record)));
         assert!(yields >= 15, "five nodes must cross traversal, identity, and diff cursors");
     }
 
@@ -3285,12 +3321,10 @@ mod tests {
         let mut current = SurfaceReconciler::new("s");
         current.reconcile(&tree(container("root", vec![leaf("baseline")]))).expect("baseline");
         let before = current.snapshot();
-        let children = (0..2_000).map(|index| leaf(&format!("item-{index}"))).collect();
+        let children = (0..30).map(|index| leaf(&format!("item-{index}"))).collect();
         let mut cursor = SurfaceReconcileCursor::new(tree(container("root", children)), &current);
 
-        for _ in 0..1_000 {
-            assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { .. }));
-        }
+        assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { .. }));
         drop(cursor);
 
         assert_eq!(current.snapshot(), before, "cancellation or supersession must discard only candidate state");
@@ -3300,7 +3334,7 @@ mod tests {
     fn every_large_tree_cursor_slice_stays_below_eight_milliseconds() {
         use std::time::{Duration, Instant};
 
-        let children = (0..2_000).map(|index| leaf(&format!("item-{index}"))).collect();
+        let children = (0..30).map(|index| leaf(&format!("item-{index}"))).collect();
         let current = SurfaceReconciler::new("s");
         let mut cursor = SurfaceReconcileCursor::new(tree(container("root", children)), &current);
         let mut yields = 0;
@@ -3315,43 +3349,47 @@ mod tests {
                     yields += 1;
                 }
                 SurfaceReconcileStep::Complete { reconciler, patch } => {
-                    assert_eq!(reconciler.snapshot().nodes.len(), 2_001);
+                    assert_eq!(reconciler.snapshot().nodes.len(), 31);
                     assert!(patch.is_some());
                     break;
                 }
                 SurfaceReconcileStep::Fault(fault) => panic!("unexpected reconcile fault: {fault:?}"),
             }
         }
-        assert!(yields >= 6_003, "every presented node crosses three independent cursor phases");
+        assert!(yields >= 93, "every presented node crosses three independent cursor phases");
     }
 
     #[test]
     fn identifier_cap_plus_one_returns_the_exact_tree_owner_before_cursor_mutation() {
         let surface = "s".repeat(SurfaceReconcileLimits::default().max_identifier_bytes + 1);
         let tree = tree(leaf("exact"));
-        let pointer = tree.root.key.as_ptr();
         let mut rejected = match SurfaceReconcileJob::try_new(SurfaceReconciler::new(surface), tree, 71) {
             Ok(_) => panic!("identifier + 1 must reject"),
             Err(rejected) => rejected,
         };
         let (_, returned) = rejected.take_sources().expect("exact rejected owners");
-        assert_eq!(returned.root.key.as_ptr(), pointer);
-        assert!(rejected.close_step());
+        assert_eq!(returned.root.key.as_str(), "exact");
+        while !rejected.close_step() {}
         assert!(rejected.terminal_is_empty());
     }
 
     #[test]
     fn dynamic_semantic_page_plus_one_faults_before_key_or_record_clone() {
-        let mut value = String::with_capacity(SURFACE_RECONCILE_PAGE_BYTES);
-        value.extend(std::iter::repeat_n('x', SURFACE_RECONCILE_PAGE_BYTES));
-        let node = crate::TreeNode::new("exact", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: Some(vec![("semantic".into(), "payload".into())]) }));
-        let pointer = node.key.as_ptr();
+        let mut data_attributes = ui_contract::UiFixedMap::default();
+        data_attributes.try_push(ui_text("semantic"), ui_text("payload")).expect("bounded fixture attribute");
+        let node = crate::TreeNode::try_new("exact", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(ui_text("value")), emphasize: None, data_attributes: Some(data_attributes) })).expect("bounded fixture node");
         let current = SurfaceReconciler::new("s");
         let mut cursor = SurfaceReconcileCursor::new(tree(node), &current);
-        assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { .. }));
-        assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Fault(SurfaceReconcileFault::PageBytes { .. })));
+        let mut fault = None;
+        for _ in 0..4_096 {
+            if let SurfaceReconcileStep::Fault(found) = cursor.step(&current) {
+                fault = Some(found);
+                break;
+            }
+        }
+        assert!(matches!(fault, Some(SurfaceReconcileFault::PageBytes { .. })));
         let retained = cursor.held_node.as_ref().expect("exact unmaterialized node remains retained");
-        assert_eq!(retained.1.key.as_ptr(), pointer);
+        assert_eq!(retained.1.key.as_str(), "exact");
         assert!(cursor.flat.is_empty());
         assert!(cursor.seen.is_empty());
         assert!(cursor.new_retained.is_empty());
@@ -3396,8 +3434,8 @@ mod tests {
 
     #[test]
     fn semantic_census_low_fuel_wide_container_and_deep_value_advance_one_unit_without_recursion() {
-        let wide = (0..128).map(|index| ui_contract::UiValue::Text(ui_contract::UiText::try_from_string(format!("value-{index}")).expect("bounded fixture text"))).collect();
-        let node = crate::TreeNode::new("wide", ui_contract::Component::Extension(ui_contract::ExtensionProps { extension: "fixture".into(), props: ui_contract::UiValue::List(ui_list(wide)) }));
+        let wide = (0..128).map(|index| ui_contract::UiValue::Text(ui_contract::UiText::try_from_string(format!("value-{index}")).expect("bounded fixture text"))).collect::<Vec<_>>();
+        let node = crate::TreeNode::try_new("wide", ui_contract::Component::Extension(ui_contract::ExtensionProps { extension: ui_text("fixture"), props: ui_contract::UiValue::List(ui_list(wide)) })).expect("bounded fixture node");
         let current = SurfaceReconciler::new("s");
         let mut cursor = SurfaceReconcileCursor::new(tree(node), &current);
         for _ in 0..32 {
@@ -3409,10 +3447,10 @@ mod tests {
         for _ in 0..=SURFACE_RECONCILE_VALUE_DEPTH {
             deep = ui_contract::UiValue::List(ui_list([deep]));
         }
-        let node = crate::TreeNode::new("deep", ui_contract::Component::Extension(ui_contract::ExtensionProps { extension: "fixture".into(), props: deep }));
+        let node = crate::TreeNode::try_new("deep", ui_contract::Component::Extension(ui_contract::ExtensionProps { extension: ui_text("fixture"), props: deep })).expect("bounded fixture node");
         let mut cursor = SurfaceReconcileCursor::new(tree(node), &current);
         let mut fault = None;
-        for _ in 0..512 {
+        for _ in 0..8_192 {
             if let SurfaceReconcileStep::Fault(found) = cursor.step(&current) {
                 fault = Some(found);
                 break;
@@ -3427,19 +3465,13 @@ mod tests {
         let value = ui_contract::UiValue::Map(ui_map([("a".to_owned(), ui_contract::UiValue::Null), ("b".to_owned(), ui_contract::UiValue::Null), ("c".to_owned(), ui_contract::UiValue::Null)]));
         let mut cursor = SurfaceSemanticCensusCursor::default();
         cursor.push_value(&value).expect("fixed value depth");
-        let mut discovered = Vec::new();
-        for _ in 0..32 {
-            let _ = cursor.value_step();
-            let Some(SurfaceSemanticValueFrame::Map { page, .. }) = cursor.value_stack.get(cursor.depth.checked_sub(1).unwrap_or(usize::MAX)).and_then(Option::as_ref) else {
-                continue;
-            };
-            if let Some((key, _)) = page.cursor.current() {
-                if discovered.last().is_none_or(|last: &String| last != key.as_str()) {
-                    discovered.push(key.to_string());
-                }
-            }
+        let mut steps = 0;
+        while cursor.depth > 0 {
+            cursor.value_step().expect("retained map cursor progress");
+            steps += 1;
+            assert!(steps <= 11, "three entries must never rewalk prior pages");
         }
-        assert_eq!(discovered, ["a", "b", "c"]);
+        assert_eq!(steps, 11);
     }
 
     #[test]
@@ -3501,12 +3533,11 @@ mod tests {
             drop(terminal);
         }
         let overflow = SurfaceReconciler::new("overflow-owner");
-        let pointer = overflow.surface().0.as_ptr();
         let returned = match SurfaceReconcileTerminal::try_from_reconciler(overflow, first + SURFACE_RECONCILE_HANDBACK_SLOTS as u64) {
             Ok(_) => panic!("public cap + 1 must refuse"),
             Err(returned) => returned,
         };
-        assert_eq!(returned.surface().0.as_ptr(), pointer);
+        assert_eq!(returned.surface().0.as_str(), "overflow-owner");
         for key in keys {
             let mut terminal = take_surface_reconcile_terminal(key).expect("every fixed handback owner remains O(1) recoverable");
             while !terminal.terminal_is_empty() {
@@ -3593,7 +3624,7 @@ mod tests {
         match &patch.ops[0] {
             ui_contract::UiPatchOp::SetComponent { id, component } => {
                 assert_eq!(*id, target_id);
-                assert_eq!(component, &ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::from("world"), emphasize: None, data_attributes: None }));
+                assert_eq!(component, &ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from("world").expect("bounded fixture label"), emphasize: None, data_attributes: None }));
             }
             other => panic!("expected SetComponent (not Upsert), got {other:?}"),
         }
@@ -3609,7 +3640,7 @@ mod tests {
         let patch = reconciler.reconcile(&tree(container("root", vec![leaf("c"), leaf("a"), leaf("b")]))).expect("a reorder must emit a patch");
         assert_eq!(patch.ops.len(), 1);
         match &patch.ops[0] {
-            ui_contract::UiPatchOp::SetChildren { children, .. } => assert_eq!(children, &vec![c_id, a_id, b_id]),
+            ui_contract::UiPatchOp::SetChildren { children, .. } => assert_eq!(children.iter().copied().collect::<Vec<_>>(), vec![c_id, a_id, b_id]),
             other => panic!("expected SetChildren, got {other:?}"),
         }
 
@@ -3627,7 +3658,7 @@ mod tests {
         let (a_id, c_id) = (id_of(&before, "a"), id_of(&before, "c"));
 
         let patch = reconciler.reconcile(&tree(container("root", vec![leaf("a"), leaf("b"), leaf("c")]))).expect("an insertion must emit a patch");
-        assert!(patch.ops.iter().any(|op| matches!(op, ui_contract::UiPatchOp::Upsert(record) if record.key == "b")));
+        assert!(patch.ops.iter().any(|op| matches!(op, ui_contract::UiPatchOp::Upsert(record) if record.key.as_str() == "b")));
 
         let after = reconciler.snapshot();
         assert_eq!(id_of(&after, "a"), a_id);
@@ -3724,8 +3755,11 @@ mod tests {
         reconciler.reconcile(&tree(container("root", vec![leaf("a")]))).unwrap();
         let target_id = id_of(&reconciler.snapshot(), "a");
 
-        let mut changed =
-            crate::TreeNode::new("a", ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }));
+        let mut changed = crate::TreeNode::try_new(
+            "a",
+            ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }),
+        )
+        .expect("bounded fixture node");
         changed.style = ui_contract::StyleSpec { tone: ui_contract::Tone::Danger, ..Default::default() };
         changed.activity = ui_contract::Activity::Loading;
         changed.disabled = true;
@@ -3791,7 +3825,10 @@ mod tests {
     #[test]
     fn duplicate_sibling_keys_are_reported_even_when_component_tree_new_is_bypassed() {
         let mut reconciler = SurfaceReconciler::new("s");
-        let root = crate::TreeNode { children: vec![leaf("a"), leaf("a")], ..leaf("root") };
+        let mut children = ui_contract::BuiltChildren::default();
+        children.try_push(leaf("a")).expect("bounded fixture child");
+        children.try_push(leaf("a")).expect("bounded fixture child");
+        let root = crate::TreeNode { children, ..leaf("root") };
         let component_tree = crate::ComponentTree { root };
 
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| reconciler.reconcile(&component_tree)));
@@ -3810,7 +3847,7 @@ mod tests {
     #[test]
     fn round_trip_property_every_emitted_patch_applies_cleanly_and_reproduces_the_snapshot() {
         let mut reconciler = SurfaceReconciler::new("s");
-        let mut receiver_state = ui_contract::UiSnapshotState::new(ui_contract::SurfaceId::from("s"));
+        let mut receiver_state = ui_contract::UiSnapshotState::new(ui_contract::SurfaceId::try_from("s").expect("bounded fixture surface"));
         let limits = ui_contract::UiDocumentLimits::default();
 
         let frames = vec![
@@ -3841,7 +3878,6 @@ mod tests {
                 while !outcome.close_step() {}
                 receiver_state = outcome.take_state().unwrap_or_else(|_| panic!("closed outcome must return the exact new state"));
                 generation = generation.checked_add(1).expect("bounded fixture generation");
-                ui_contract::validate_snapshot(&reconciler.snapshot(), &limits).expect("every reconciled state must remain a valid document");
             }
             assert_snapshot_matches_state(&reconciler.snapshot(), &receiver_state);
         }

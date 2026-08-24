@@ -1767,8 +1767,9 @@ impl<'a> db_query::QuerySource for StateQuerySource<'a> {
         let mut rows = db_query::QueryRows::new();
         for (index, entry) in self.0.iter().enumerate() {
             control.grant()?;
+            rows.preflight_push()?;
             let row = db_query::QueryRow::new(db_query::RowId(index as u64), path_row_value(entry.key(), entry.value(), control).await?);
-            rows.push(row).map_err(|_| DbError::LimitExceeded("artifact query row slots"))?;
+            rows.push_preflighted(row);
         }
         Ok(rows)
     }
@@ -4149,7 +4150,10 @@ mod tests {
         }
         let mut state = DocumentState::new();
         let entries = [("exact-all-tier-state-refusal".to_string(), None)];
-        let refusal = state.apply_entries(&protocol::MutationId("exact-all-tier-state-refusal".to_string()), &[], &entries).await.unwrap_err();
+        let refusal = match state.apply_entries(&protocol::MutationId("exact-all-tier-state-refusal".to_string()), &[], &entries).await {
+            Err(error) => error,
+            Ok(_) => panic!("all-tier artifact retirement saturation admitted a state mutation"),
+        };
         assert!(matches!(refusal, DbError::Unavailable(message) if message == "artifact state retirement pressure refused admission"));
         for tier in [&ARTIFACT_STATE_RETIREMENT, &ARTIFACT_STATE_RETIREMENT_OVERFLOW, &ARTIFACT_STATE_RETIREMENT_QUARANTINE] {
             let mut owners = tier.lock().unwrap_or_else(std::sync::PoisonError::into_inner);

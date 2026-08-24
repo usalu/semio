@@ -81,11 +81,10 @@ impl SurfaceSlot {
     }
 
     /// 🔢️ The revision `crate::dispatch::is_stale_intent` compares an incoming intent against. Reads
-    /// through `crate::SurfaceReconciler::snapshot`, the only accessor its landed API exposes for
-    /// this — see this packet's report for the cheaper accessor this leaves as a registrar-request.
+    /// through the reconciler's allocation-free revision accessor.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn current_revision(&self) -> ui_contract::UiRevision {
-        self.reconciler.snapshot().revision
+        self.reconciler.revision()
     }
 }
 
@@ -449,7 +448,7 @@ impl FrameTransaction {
 
     fn route_intent<S: crate::CommandSink, D: crate::ProjectionDelta>(&mut self, runtime: &mut UiRuntime<S, D>) -> bool {
         if let Some(command) = self.route_commands.pop_front() {
-            if runtime.gateway.try_submit(command.clone()).is_ok() {
+            if command.credited_clone().is_some_and(|outbound| runtime.gateway.try_submit(outbound).is_ok()) {
                 self.transacted.commands.push(command);
             }
             self.charge(1, 0, size_of::<crate::Command>());
@@ -696,6 +695,14 @@ mod tests {
 
     //#region 🔖️Fixtures
 
+    fn surface(value: &str) -> ui_contract::SurfaceId {
+        ui_contract::SurfaceId::try_from(value).expect("bounded fixture surface")
+    }
+
+    fn ui_text(value: &str) -> ui_contract::UiText {
+        ui_contract::UiText::try_from_str(value).expect("bounded fixture text")
+    }
+
     struct Model {
         value: i32,
     }
@@ -709,7 +716,7 @@ mod tests {
         fn present(&self, cx: &mut crate::PresentCx<'_>) -> crate::ComponentTree {
             let model = cx.read(&self.model);
             let label = format!("{}:{}", self.count, model.value);
-            crate::ComponentTree::new(crate::TreeNode::new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::from(label), emphasize: None, data_attributes: None })))
+            crate::ComponentTree::new(crate::TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label::try_from(label).expect("bounded fixture label"), emphasize: None, data_attributes: None })).expect("bounded fixture node"))
         }
     }
 
@@ -727,7 +734,7 @@ mod tests {
                         commands: vec![],
                         deferred: vec![crate::DeferredOp::PublishPresence(ui_contract::PresenceUpdate {
                             surface: intent.surface.clone(),
-                            node_key: intent.node_key.clone(),
+                            node_key: intent.node_key.to_string(),
                             own: ui_contract::OwnPresence { hovered: true, ..Default::default() },
                             peers: vec![],
                             ttl_ms: 4_000,
@@ -788,7 +795,7 @@ mod tests {
     }
 
     fn test_intent(surface: ui_contract::SurfaceId, node: &crate::Entity<FakePresenter>, revision: ui_contract::UiRevision, trigger: ui_contract::Trigger, seq: u64) -> ui_contract::UiIntent {
-        ui_contract::UiIntent { surface, revision, node: ui_contract::UiNodeId(node.id().0), node_key: "root".into(), trigger, action: ui_contract::ActionId::v1("test", "act"), args: None, input: None, seq }
+        ui_contract::UiIntent { surface, revision, node: ui_contract::UiNodeId(node.id().0), node_key: ui_text("root"), trigger, action: ui_contract::ActionId::try_v1("test", "act").expect("bounded fixture action"), args: None, input: None, seq }
     }
 
     fn test_runtime() -> UiRuntime<AlwaysAcceptsSink, FakeDelta> {
@@ -835,7 +842,7 @@ mod tests {
     #[test]
     fn an_intent_mutates_entity_state_and_the_following_transact_emits_a_patch() {
         let mut runtime = test_runtime();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0); // 🌱️ unconditional first present, baseline revision 1
 
@@ -853,7 +860,7 @@ mod tests {
     #[test]
     fn a_stale_revision_intent_is_dropped_and_produces_no_patch_and_no_command() {
         let mut runtime = test_runtime();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let (presenter, model) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0); // revision 1
 
@@ -882,7 +889,7 @@ mod tests {
     #[test]
     fn a_bulk_projection_update_touching_one_surface_many_times_yields_exactly_one_patch() {
         let mut runtime = test_runtime();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let (_presenter, model) = register_test_surface(&mut runtime, surface);
         runtime.transact(0); // baseline
 
@@ -899,7 +906,7 @@ mod tests {
     #[test]
     fn an_entity_notified_but_not_read_by_any_surface_produces_no_patch() {
         let mut runtime = test_runtime();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         register_test_surface(&mut runtime, surface);
         runtime.transact(0); // baseline: establishes the surface's real read set
 
@@ -940,7 +947,7 @@ mod tests {
     #[test]
     fn a_full_command_mailbox_surfaces_backpressure_without_blocking_the_transaction() {
         let mut runtime: UiRuntime<FailsAfterSink, FakeDelta> = UiRuntime::new(crate::CommandGateway::new(10, FailsAfterSink { calls: Cell::new(0), accepts: 1 }), 16, apply_fake_delta);
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0);
 
@@ -970,7 +977,7 @@ mod tests {
     #[test]
     fn presence_flushes_on_its_own_channel_and_never_appears_in_a_patch() {
         let mut runtime = test_runtime();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0);
 
@@ -987,8 +994,8 @@ mod tests {
     #[test]
     fn two_surfaces_are_independent_dirtying_one_does_not_re_present_the_other() {
         let mut runtime = test_runtime();
-        let surface_a = ui_contract::SurfaceId::from("a");
-        let surface_b = ui_contract::SurfaceId::from("b");
+        let surface_a = surface("a");
+        let surface_b = surface("b");
         let (_presenter_a, model_a) = register_test_surface(&mut runtime, surface_a.clone());
         let (_presenter_b, _model_b) = register_test_surface(&mut runtime, surface_b);
         let baseline = runtime.transact(0);
@@ -1009,7 +1016,7 @@ mod tests {
     #[test]
     fn one_fuel_slices_bound_an_intent_storm_and_preserve_fifo_output() {
         let mut runtime: UiRuntime<AlwaysAcceptsSink, FakeDelta> = UiRuntime::new(crate::CommandGateway::new(128, AlwaysAcceptsSink), 16, apply_fake_delta);
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let (presenter, _) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0);
         for seq in 0..32 {
@@ -1041,7 +1048,7 @@ mod tests {
     #[test]
     fn repeated_new_input_supersedes_staged_presentation_without_losing_an_accepted_command() {
         let mut runtime = test_runtime();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         let (presenter, model) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0);
         runtime.submit_intent(test_intent(surface.clone(), &presenter, ui_contract::UiRevision(1), ui_contract::Trigger::Delta, 7));
@@ -1069,7 +1076,7 @@ mod tests {
             0
         }
         let mut runtime = test_runtime();
-        let surface = ui_contract::SurfaceId::from("s");
+        let surface = surface("s");
         register_test_surface(&mut runtime, surface.clone());
         let mut transaction = FrameTransaction::new(FrameTransactionLimits::default());
         while transaction.active_reconcile.is_none() {
@@ -1094,7 +1101,7 @@ mod tests {
         fn build(order: [&str; 2]) -> UiRuntime<AlwaysAcceptsSink, FakeDelta> {
             let mut runtime = test_runtime();
             for surface in order {
-                register_test_surface(&mut runtime, surface.into());
+                register_test_surface(&mut runtime, ui_contract::SurfaceId::try_from(surface).expect("bounded fixture surface"));
             }
             runtime
         }
@@ -1134,13 +1141,13 @@ mod tests {
     #[test]
     fn hard_credits_fault_before_any_candidate_snapshot_is_published() {
         let mut runtime = test_runtime();
-        register_test_surface(&mut runtime, "s".into());
+        register_test_surface(&mut runtime, surface("s"));
         let mut transaction = FrameTransaction::new(FrameTransactionLimits { max_items: 0, max_nodes: 0, max_bytes: 0 });
         let (output, _) = drive_stepped(&mut transaction, &mut runtime, 1);
 
         assert!(output.patches.is_empty());
         assert!(matches!(output.faults.as_slice(), [TransactFault::CreditsExceeded { .. }]));
-        assert_eq!(runtime.surfaces.get(&ui_contract::SurfaceId::from("s")).unwrap().current_revision(), ui_contract::UiRevision(0));
+        assert_eq!(runtime.surfaces.get(&surface("s")).unwrap().current_revision(), ui_contract::UiRevision(0));
     }
     //#endregion 🔖️ResumableStress
 }

@@ -23,8 +23,7 @@ pub const MODE_SHAPE_AMPLITUDE_RATIO: f64 = 0.1;
 /// 🎬️ Encodes one Canvas2d scene into the semantic UI contract.
 pub fn canvas_2d_surface(id: impl Into<String>, scene: semio_framework_ui_scene::Canvas2dScene) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let id = id.into();
-    let props = semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "Canvas2d scene admission failed"))?;
+    let props = semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "Canvas2d scene admission failed"))?;
     semio_framework_ui_contract::surface(props)
         .try_id(&id)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.id", "Canvas2d surface id admission failed"))?
@@ -35,8 +34,7 @@ pub fn canvas_2d_surface(id: impl Into<String>, scene: semio_framework_ui_scene:
 /// 🌍️ Encodes one World3d scene into the semantic UI contract.
 pub fn world_3d_surface(id: impl Into<String>, scene: semio_framework_ui_scene::World3dScene) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let id = id.into();
-    let props = semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::World3d, &scene)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "World3d scene admission failed"))?;
+    let props = semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::World3d, &scene).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "World3d scene admission failed"))?;
     semio_framework_ui_contract::surface(props)
         .try_id(&id)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.id", "World3d surface id admission failed"))?

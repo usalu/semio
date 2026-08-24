@@ -284,7 +284,7 @@ pub mod board_host {
 
         fn get(&self, index: usize) -> Option<BrushCandidateRef<'_>> {
             let entry = self.entries.get(index)?.as_ref()?;
-            Some(BrushCandidateRef { node_kind_id: Self::id_from(&self.bytes, entry.node_kind_id), target_handle_index: usize::from(entry.target_handle_index) })
+            Some(BrushCandidateRef { node_kind_id: Self::id_from(self.bytes.as_ref(), entry.node_kind_id), target_handle_index: usize::from(entry.target_handle_index) })
         }
 
         fn first(&self) -> Option<BrushCandidateRef<'_>> {
@@ -292,7 +292,7 @@ pub mod board_host {
         }
 
         fn iter(&self) -> impl Iterator<Item = BrushCandidateRef<'_>> {
-            self.entries[..usize::from(self.len)].iter().flatten().map(|entry| BrushCandidateRef { node_kind_id: Self::id_from(&self.bytes, entry.node_kind_id), target_handle_index: usize::from(entry.target_handle_index) })
+            self.entries[..usize::from(self.len)].iter().flatten().map(|entry| BrushCandidateRef { node_kind_id: Self::id_from(self.bytes.as_ref(), entry.node_kind_id), target_handle_index: usize::from(entry.target_handle_index) })
         }
 
         fn len(&self) -> usize {

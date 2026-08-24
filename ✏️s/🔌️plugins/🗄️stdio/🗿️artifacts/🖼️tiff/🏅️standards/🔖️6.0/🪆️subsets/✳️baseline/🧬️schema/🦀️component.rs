@@ -13,6 +13,18 @@
 //! See `🧐️analyzer` for the full accounting.
 
 pub use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::*;
+//#region 🧬️Mutations
+// 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
+// `📦️glue.rs` — the same placement, and the same rationale, the ✳️strict/✳️transitional OOXML
+// subsets already use for theirs: that file is one wiring file for every stdio artifact at once,
+// and an artifact owns the subtree it owns. `#[path]` on a non-inline module resolves against this
+// file's own directory. The explicit declaration shadows the glob re-export of ✳️any's `mutations`
+// above, which is what puts this subset's own vocabulary at
+// `subsets::baseline::schema::mutations` while ✳️any's document vocabulary stays reachable at its
+// own address.
+#[path = "🧬️mutations/🦀️component.rs"]
+pub mod mutations;
+//#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::{diff::TiffDiff, mutations::TiffMutation, snapshot::TiffSnapshot};

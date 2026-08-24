@@ -174,29 +174,35 @@ impl IndexBytes {
             Ok(reservation) => reservation,
             Err(error) => return Err(IndexBytesRejected { source: Some(source), writer: Some(writer), error }),
         };
-        if let Err(error) = reservation.observe_capacity(source.capacity()) {
-            return Err(IndexBytesRejected { source: Some(source), writer: Some(writer), error });
+        let mut source = db_storage::DbIoExternalBytes::new(source);
+        if let Err(error) = source.capacity().and_then(|capacity| reservation.observe_capacity(capacity)) {
+            return Err(IndexBytesRejected { source: source.into_value().ok(), writer: Some(writer), error });
         }
         let mut offset = 0;
-        while offset < source.len() {
+        while offset < source.as_slice().map_err(|error| IndexBytesRejected { source: None, writer: None, error })?.len() {
             if let Err(error) = control.grant() {
-                return Err(IndexBytesRejected { source: Some(source), writer: Some(writer), error });
+                return Err(IndexBytesRejected { source: source.into_value().ok(), writer: Some(writer), error });
             }
-            match writer.write_fragment(&source[offset..]) {
+            match source.as_slice().and_then(|source| writer.write_fragment(&source[offset..])) {
                 Ok(written) => offset += written,
-                Err(error) => return Err(IndexBytesRejected { source: Some(source), writer: Some(writer), error }),
+                Err(error) => return Err(IndexBytesRejected { source: source.into_value().ok(), writer: Some(writer), error }),
             }
-            std::future::poll_fn(|context| {
-                context.waker().wake_by_ref();
-                std::task::Poll::Ready(())
-            })
-            .await;
+            semio_framework_async::yield_once().await;
         }
-        drop(source);
+        while !source.terminal_is_empty() {
+            if let Err(error) = control.grant() {
+                return Err(IndexBytesRejected { source: None, writer: Some(writer), error });
+            }
+            let _ = source.close_step();
+            semio_framework_async::yield_once().await;
+        }
         if let Err(error) = reservation.close_step() {
             return Err(IndexBytesRejected { source: None, writer: Some(writer), error });
         }
-        writer.finish().map(|pages| Self { pages }).map_err(|error| IndexBytesRejected { source: None, writer: Some(writer), error })
+        writer.seal_retained().await.map(|pages| Self { pages }).map_err(|rejected| {
+            let (error, writer) = rejected.into_parts();
+            IndexBytesRejected { source: None, writer, error }
+        })
     }
 
     pub fn operation(&self) -> u64 {
@@ -254,8 +260,8 @@ impl IndexBytesRejected {
         self.source.as_ref()
     }
 
-    pub fn into_source(self) -> Option<Vec<u8>> {
-        self.source
+    pub fn into_source(mut self) -> Option<Vec<u8>> {
+        self.source.take()
     }
 
     pub fn error(&self) -> &DbError {
@@ -273,13 +279,35 @@ impl IndexBytesRejected {
     }
 }
 
+impl Drop for IndexBytesRejected {
+    fn drop(&mut self) {
+        if let Some(source) = self.source.take() {
+            drop(db_storage::DbIoExternalBytes::new(source));
+        }
+    }
+}
+
 async fn admit_generated_index_bytes(source: Vec<u8>, maximum: u64, control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
     match IndexBytes::try_admit(source, maximum, control).await {
         Ok(bytes) => Ok(bytes),
         Err(mut rejected) => {
-            control.grant()?;
-            let _ = rejected.close_step()?;
-            Err(rejected.error)
+            let error = std::mem::replace(&mut rejected.error, DbError::Closed);
+            loop {
+                control.grant()?;
+                if !rejected.close_step()? {
+                    break;
+                }
+                semio_framework_async::yield_once().await;
+            }
+            if let Some(source) = rejected.source.take() {
+                let mut source = db_storage::DbIoExternalBytes::new(source);
+                while !source.terminal_is_empty() {
+                    control.grant()?;
+                    let _ = source.close_step();
+                    semio_framework_async::yield_once().await;
+                }
+            }
+            Err(error)
         }
     }
 }
@@ -568,11 +596,7 @@ async fn run_write(writer: &mut db_storage::DbIoPageWriter, checksum: &mut pack:
         let written = writer.write_fragment(&bytes[cursor..])?;
         checksum.update_page(&bytes[cursor..cursor + written]);
         cursor += written;
-        std::future::poll_fn(|context| {
-            context.waker().wake_by_ref();
-            std::task::Poll::Ready(())
-        })
-        .await;
+        semio_framework_async::yield_once().await;
     }
     Ok(())
 }
@@ -581,11 +605,7 @@ async fn run_write_trailer(writer: &mut db_storage::DbIoPageWriter, bytes: &[u8]
     let mut cursor = 0;
     while cursor < bytes.len() {
         cursor += writer.write_fragment(&bytes[cursor..])?;
-        std::future::poll_fn(|context| {
-            context.waker().wake_by_ref();
-            std::task::Poll::Ready(())
-        })
-        .await;
+        semio_framework_async::yield_once().await;
     }
     Ok(())
 }
@@ -620,11 +640,7 @@ async fn encode_run_pages(kind: IndexKind, entries: &RunEntries, control: &mut I
                 encoded_len = encoded_len.checked_add(varint_len(value.len() as u64)).and_then(|len| len.checked_add(value.len())).ok_or(DbError::LimitExceeded("db_index encoded run bytes"))?;
             }
         }
-        std::future::poll_fn(|context| {
-            context.waker().wake_by_ref();
-            std::task::Poll::Ready(())
-        })
-        .await;
+        semio_framework_async::yield_once().await;
     }
     let mut writer = db_storage::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
     let mut checksum = pack::codec::Crc32cCursor::new();
@@ -663,7 +679,7 @@ async fn index_bytes_from_reader(operation: u64, reader: &mut RunPageReader<'_>,
         let written = writer.write_fragment(&fragment[..count])?;
         reader.position += written;
     }
-    writer.finish().map(|pages| IndexBytes { pages })
+    writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
 }
 
 async fn index_bytes_from_slice_for_operation(operation: u64, bytes: &[u8], control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
@@ -673,7 +689,7 @@ async fn index_bytes_from_slice_for_operation(operation: u64, bytes: &[u8], cont
         control.grant()?;
         offset += writer.write_fragment(&bytes[offset..])?;
     }
-    writer.finish().map(|pages| IndexBytes { pages })
+    writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
 }
 
 async fn decode_run_pages_inner(pages: &db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
@@ -784,11 +800,7 @@ async fn merge_run_entries(mut older: RunEntries, mut newer: RunEntries, drop_to
             close_run_entry(entry, control).await?;
             return Err(DbError::LimitExceeded("index merged fixed entry owner"));
         }
-        std::future::poll_fn(|context| {
-            context.waker().wake_by_ref();
-            std::task::Poll::Ready(())
-        })
-        .await;
+        semio_framework_async::yield_once().await;
     }
     Ok(output)
 }
@@ -868,9 +880,11 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
                 output.push(*id)?;
             }
         }
-        control.grant()?;
-        let _ = source.close_step();
-        drop(source);
+        while !source.terminal_is_empty() {
+            control.grant()?;
+            let _ = source.close_step();
+            semio_framework_async::yield_once().await;
+        }
         Ok(output)
     }
 
@@ -1660,7 +1674,7 @@ async fn encode_blob_list(blobs: &IndexBlobList, control: &mut IndexCursorContro
             index_write_unchecked(fragment, &mut writer, control).await?;
         }
     }
-    writer.finish().map(|pages| IndexBytes { pages })
+    writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
 }
 
 async fn index_write_unchecked(bytes: &[u8], writer: &mut db_storage::DbIoPageWriter, control: &mut IndexCursorControl) -> Result<(), DbError> {
@@ -2433,6 +2447,16 @@ mod retained_tests {
         source.push(1);
         let pointer = source.as_ptr();
         let mut rejected = IndexBytes::try_admit(source, 8, &mut control).await.unwrap_err();
+        while rejected.close_step().unwrap() {}
+        assert_eq!(rejected.into_source().unwrap().as_ptr(), pointer);
+
+        cancelled.store(false, std::sync::atomic::Ordering::Release);
+        let mut deadline_control = IndexCursorControl::new(cancelled, std::time::Instant::now(), 16).unwrap();
+        let mut source = Vec::with_capacity(2);
+        source.push(0x33);
+        let pointer = source.as_ptr();
+        let mut rejected = IndexBytes::try_admit(source, 2, &mut deadline_control).await.unwrap_err();
+        assert!(matches!(rejected.error(), DbError::Unavailable(message) if message == "index cursor deadline reached"));
         while rejected.close_step().unwrap() {}
         assert_eq!(rejected.into_source().unwrap().as_ptr(), pointer);
     }

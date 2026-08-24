@@ -15,6 +15,22 @@ Feature: Apply every typed GIF87a mutation to a real derived document
   reference it without carrying its own. Every scenario copies the immutable fixture into the case
   work directory before touching it; the fixture itself is never written to.
 
+  All twelve declared kinds move the compared projection, and the oracle FAILS any scenario whose
+  kind leaves it untouched — there is no exemption list. Getting there took three fixes to what the
+  reference crate hands back, each recorded against its source in the subset's own oracle module:
+
+    – `gif::Encoder`'s `write_screen_desc` emits `b"GIF89a"`, then a hard-coded `0` background index
+      and a hard-coded `0` pixel-aspect-ratio, and offers no setter for any of them. All three are
+      patched back onto its output at their fixed Logical Screen Descriptor offsets. Before that,
+      set-background-color-index and set-pixel-aspect-ratio were accepted and silently discarded.
+    – `gif::Decoder` de-interlaces every image on read and then reports `Frame::interlaced` as false
+      regardless of what the file said, so the interlace flag is read off the Image Descriptor's own
+      packed byte instead. Trusting the decoder made set-image-interlace invisible: the round trip
+      erased both the flag and the row permutation and landed back where it started.
+    – The projection is this subset's own, not the shared raster one, which reports screen geometry,
+      per-frame rectangles and an opaque-sample count only — leaving the Global Color Table, both
+      screen scalars, the interlace flag and the raw index buffers outside the compared surface.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

@@ -1,6 +1,6 @@
 //! 🦀️ MP3 mpeg1-layer3 mutation case — Rust adapter.
 //!
-//! Every scenario copies the artifact's own committed 1,725-byte stream into the case work
+//! Every scenario copies the committed 193,275-byte real stream into the case work
 //! directory first; the committed file is never written to. `oracle` drives the registered `id3`
 //! 1.17 reference composed with a hand-written ISO/IEC 11172-3 frame walker
 //! (`../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`), `subject` drives
@@ -37,7 +37,7 @@ const MP3_TOLERANCE: f64 = 0.0;
 //#endregion 🔖️Profile
 
 //#region 🔖️Input
-const INPUT: &str = "asset://🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎵️example.mp3";
+const INPUT: &str = "shared://🎵️bauen-mit-bestand-ausschnitt.mp3";
 
 /// 🧫️ Copies the immutable committed asset into the work directory and returns the copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
@@ -233,7 +233,8 @@ mod subject {
     /// 🔁️ The identity law for the SUBJECT's own encoder, which is bound by the opposite byte law
     /// to the reference's: `encode_mp3` re-emits each frame's retained payload verbatim and
     /// recomputes the ID3v2 sizes from the frame data, and this fixture's tag is already canonical
-    /// under that rule (47-byte body = TIT2's 10+14 plus TPE1's 10+13, no padding), so its own
+    /// under that rule (169-byte body = TSSE's 10+47 plus TIT2's 10+63 plus TPE1's 10+13 plus
+    /// TLEN's 10+6, no trailing padding — LAME wrote it tight), so its own
     /// `codec_retention_law` says the output reproduces the input exactly. Demanding a byte
     /// DIFFERENCE here would be a fabricated law; [`carrier_is_exact`] is the one that actually
     /// binds, and it still fails loudly the moment either half drifts.

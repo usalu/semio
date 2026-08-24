@@ -534,6 +534,8 @@
   ],
   "_testContributionComment": "🧩️ Open/closed extension point. An owner that needs a reference implementation, an oracle crate or a format-specific comparison profile declares them in `<owner>/🧪️oracle/🔣️component.json`. The framework test domain DISCOVERS those manifests; it never names an owner, a plugin or a format. Adding PDF, PNG or any future artifact therefore requires zero framework edits.",
   "testContributionDirName": "🧪️oracle",
+  "_testMutationVocabularyComment": "🦠️ The directory an implementation puts a mutation vocabulary in. Named here as VOCABULARY so the contract can ask 'is this declared vocabulary claimed by a catalog?' without the framework learning any format, language or plugin. A subset that declares a vocabulary and no catalog is invisible to the completeness gate — that gap let two subsets ship handcrafted mutations with no test at all.",
+  "testMutationVocabularyDirName": "🧬️mutations",
   "testContributionFilename": "🔣️component.json",
   "testDomainPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
   "testPhases": [

@@ -12,6 +12,22 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
   asset is never written to. The reference implementation is used only by the test oracle, and its
   result is read back by an independent decoder before projection.
 
+  All 21 declared kinds move the compared projection and the oracle FAILS any scenario whose kind
+  leaves it untouched — there is no exemption list. Two things had to be true for that:
+
+    – The NETSCAPE2.0 extension the animation carries is the loop-count axis, modelled as
+      `loopCount` and deliberately not an `appExtensions` entry, so the file has no application
+      extension for remove-app-extension to remove. That row is exercised on the real document after
+      the reference implementation has inserted a named target first — the same arrange step the
+      OOXML conformance cases and the PNG case use for their own removal kinds. Without it the row
+      addressed nothing and passed for that reason.
+    – `gif::Decoder` de-interlaces every frame on read and then reports `Frame::interlaced` as false
+      regardless of what the file said, while `Encoder::write_frame` writes the buffer verbatim and
+      only flips the descriptor bit. Reading the flag back off the Image Descriptor's own packed
+      byte, and re-interleaving the rows on encode, is what makes set-frame-interlace visible:
+      trusting the decoder meant the round trip erased both the flag and the row permutation and
+      landed back exactly where it started.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

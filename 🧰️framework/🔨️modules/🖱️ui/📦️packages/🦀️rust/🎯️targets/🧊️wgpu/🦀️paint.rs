@@ -97,8 +97,9 @@ fn find_child_by_key(tree: &UiTree, parent: NodeId, key: &NodeKey) -> Option<Nod
 }
 
 fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
+    let accepted = tree.accepted_layout(id);
     let select_open: Option<(Vec<UiSelectItem>, f32, f32)> = tree.node(id).and_then(|node| match &node.spec.0 {
-        UiNode::Select(select) if node.state.open => Some((select.items.clone(), node.layout.width, node.layout.height)),
+        UiNode::Select(select) if node.state.open => accepted.map(|layout| (select.items.clone(), layout.width, layout.height)),
         _ => None,
     });
     if let Some((items, select_w, select_h)) = select_open {
@@ -160,7 +161,7 @@ fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId) {
     }) else {
         return;
     };
-    let width = tree.node(tree_id).map_or(0.0, |node| node.layout.width);
+    let width = tree.accepted_layout(tree_id).map_or(0.0, |layout| layout.width);
     let mut section_y = 0.0;
     for section in &tree_node.sections {
         let Some(section_id) = find_child_by_key(tree, tree_id, &NodeKey::Explicit(section.id.clone())) else { continue };
@@ -256,13 +257,14 @@ fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: 
 
 pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     let Some(node) = tree.node(id) else { return };
+    let Some(layout) = tree.accepted_layout(id) else { return };
     let presence = node.spec.0.presence();
     if !presence.visible() {
         return;
     }
-    let abs_x = origin_x + node.layout.x;
-    let abs_y = origin_y + node.layout.y;
-    let bounds = Rect::new(abs_x, abs_y, node.layout.width, node.layout.height);
+    let abs_x = origin_x + layout.x;
+    let abs_y = origin_y + layout.y;
+    let bounds = Rect::new(abs_x, abs_y, layout.width, layout.height);
     if matches!(presence.status, UiStatus::Loading | UiStatus::Waiting) {
         draw.push_solid([bounds.x + theme.padding_standard, bounds.y + theme.padding_standard, (bounds.w - theme.padding_standard * 2.0).max(0.0), (bounds.h - theme.padding_standard * 2.0).max(0.0)], theme.button_hover);
         presence_overlay(draw, bounds, theme, presence);

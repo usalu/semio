@@ -5953,7 +5953,7 @@ pub mod app {
     /// hand-assembled; `actions` takes already-built nodes (`Vec<BuiltNode>`) rather than a bare props
     /// struct, since a `Component::Button`'s `action`/`style` now live on the node, not `ButtonProps`.
     pub async fn entity_detail<L: TryInto<Label>, E: IntoIterator<Item = KeyValueEntry>, A: IntoIterator<Item = BuiltNode>>(title: L, subtitle: Option<Label>, entries: E, actions: A) -> UiAssemblyResult<BuiltNode> {
-        let mut children = UiFixedList::default();
+        let mut children = BuiltChildren::default();
         let title = ui::text(ui_label(title, "entity-detail.title")?).try_build().map_err(|_| ui_assembly_error("entity-detail.title-build"))?;
         children.try_push(title).map_err(|_| ui_assembly_error("entity-detail.children"))?;
         if let Some(subtitle) = subtitle {
@@ -11694,17 +11694,17 @@ pub mod app {
         type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
         type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         /// @emoji 📝️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
-        type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static;
+        type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         /// @emoji 📝️ Draft-lane operations applied to {@link store::DraftStore}.
         type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         /// @emoji 👥️ Shared live presence — use {@link NoPresence} when the app has no shareable live state.
-        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static;
+        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         /// @emoji 👥️ Presence-lane operations applied to the app's typed presence snapshot.
         type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         /// @emoji 🫧️ Ephemeral LOCAL-ONLY UI state — use {@link NoTransient} when the app has none.
         /// The fourth and last state mechanism; see `NoTransient`'s doc for how it differs from a
         /// draft (which is ephemeral *artifact* content, not UI state).
-        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static;
+        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         /// @emoji 🫧️ Transient-lane operations applied to {@link store::TransientStore}.
         type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
 
@@ -11724,7 +11724,7 @@ pub mod app {
         /// via `OpBinary::decode_op`; framework-reserved verbs (undo/redo/checkpoint/alternative/clipboard/
         /// revert/history-filter/noteShellCommand) never reach here — the wrapper intercepts those itself
         /// (see `VcsArtifactApp::dispatch_framework_action`) since they are host mechanics, not app behavior.
-        type Command: ::protocol::OpBinary + Send + 'static;
+        type Command: ::protocol::OpBinary + Send + Sync + 'static;
 
         async fn config_schema() -> &'static str {
             "config.empty"
@@ -15832,6 +15832,7 @@ pub mod app {
         registry: AppActionRegistry,
         tool_job_controller_id: String,
         tool_jobs: semio_framework::ActionBus,
+        bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>,
         bounded_tool_contracts: Vec<ArtifactToolPublicContract>,
         app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>,
         tool_cancellations: ToolCancellationHandle,
@@ -16204,8 +16205,8 @@ pub mod app {
         }
 
         fn qualified_tool_proof(&self, verb: &str) -> Result<QualifiedToolProof, Fault> {
-            if let Some(proof) = bounded_first_step_proof::<A>(&self.tool_job_controller_id, BOUNDED_FIRST_STEP_FACTORY, verb, A::DOCUMENT_SCHEMA) {
-                return Ok(QualifiedToolProof::Bounded(proof));
+            if let Some(proof) = self.bounded_tool_proofs.get(verb) {
+                return Ok(QualifiedToolProof::Bounded(proof.clone()));
             }
             self.app_tool_registrations
                 .get(verb)
@@ -16282,9 +16283,23 @@ pub mod app {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
             }
             let dispatch_report = protocol::DispatchReport { policy: store.merge_policy().await, worst: None, messages: Vec::new() };
-            let (tool_job_controller_id, _tool_job_registrations) =
+            let (tool_job_controller_id, tool_job_registrations) =
                 registry.tool_job_registration::<A>(&app_id, A::DOCUMENT_SCHEMA, <A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS).expect("bounded reducer proof catalog must exactly match migrated generated declarations");
-            let bounded_tool_contracts = Vec::new();
+            let mut bounded_tool_proofs = BTreeMap::new();
+            let mut bounded_tool_contracts = Vec::with_capacity(tool_job_registrations.len());
+            for proof in tool_job_registrations {
+                let tool_id = proof.row.tool_id.to_string();
+                bounded_tool_contracts.push(ArtifactToolPublicContract {
+                    owner: proof.owner,
+                    controller_id: proof.row.controller_id.to_string(),
+                    tool_id: tool_id.clone(),
+                    schema_id: proof.schema_id(),
+                    max_raw_wire_bytes: proof.contract().max_raw_wire_bytes,
+                });
+                let factory = BoundedFirstStepCommandJobFactory::<A>::from_proof(proof.clone()).expect("validated bounded reducer proof must retain its concrete owner authority");
+                tool_jobs.register_once(factory).expect("validated bounded reducer factory must register exactly once");
+                assert!(bounded_tool_proofs.insert(tool_id, proof).is_none(), "validated bounded reducer proofs must remain unique by tool id");
+            }
             let mut app_tool_registry = ArtifactToolFactoryRegistry::<A>::new(&tool_jobs, &app_id);
             A::register_tool_job_factories(&mut app_tool_registry).expect("app-owned tool factories must preserve exact owner/controller/schema/tool authority");
             let app_tool_registrations = app_tool_registry.finish();
@@ -16317,6 +16332,7 @@ pub mod app {
                 registry,
                 tool_job_controller_id,
                 tool_jobs,
+                bounded_tool_proofs,
                 bounded_tool_contracts,
                 app_tool_registrations,
                 tool_cancellations: ToolCancellationHandle::default(),
@@ -21835,17 +21851,17 @@ pub mod app {
         const DIALECT: Dialect;
         /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
-        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack;
-        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ConfigRecord + ArtifactPack;
-        type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
-        type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
-        type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
-        type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        type Command: ::protocol::OpBinary + Send;
+        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
+        type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Command: ::protocol::OpBinary + Send + Sync + 'static;
 
         /// 📜️ Exact owner-local bounded reducer proofs forwarded by `EditorApp<Self>`.
         fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
@@ -22087,17 +22103,17 @@ pub mod app {
         const ROLE: AppRole = AppRole::Viewer;
         const DIALECT: Dialect;
         const DOCUMENT_SCHEMA: &'static str;
-        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack;
+        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         /// 📜️ Decode-only — never constructed by `handle`, but the store's op log must still decode
         /// past edits made by an `ArtifactEditor` sharing this dialect.
-        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ConfigRecord + ArtifactPack;
-        type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
-        type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack;
-        type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-        type Command: ::protocol::OpBinary + Send;
+        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
+        type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Command: ::protocol::OpBinary + Send + Sync + 'static;
 
         /// 👥️🫧️ See `ArtifactEditor::ephemeral` for why this returns a tuple, not `EphemeralEmit<Self>`.
         async fn ephemeral(
@@ -26511,33 +26527,33 @@ pub mod plugin_runtime {
                     let args = envelope.get("args").cloned();
                     if !DOCUMENT_COMMAND_ACTION_IDS.contains(&action.as_str()) {
                         push_os_fault(&mut frames, Some(seq), "unsupported", format!("ArtifactCommand action {action:?} not supported (Wave 1: history verbs only)")).await;
-                        continue;
-                    }
-                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id };
-                    let dispatched = with_instances_mut(runtime, |list| {
-                        let mut instance = find_instance(list, instance_id)?;
-                        resolve_ready(instance.app.handle_action(&action, args.as_ref(), &meta))
-                    });
-                    match dispatched.await {
-                        Ok(result) => {
-                            // 🔀️ Same proposal check as `AppCommand::Command` above — the six
-                            // history verbs never carry foreign steps in practice, but
-                            // `dispatch_emit` is the shared choke point, so this arm is covered too.
-                            let proposal = with_instances_mut(runtime, |list| {
-                                let mut instance = find_instance(list, instance_id)?;
-                                Ok(resolve_ready(instance.app.take_pending_transaction_proposal()))
-                            })
-                            .await
-                            .unwrap_or(None);
-                            if let Some(proposal) = proposal {
-                                frames.push(transaction_proposal_frame(instance_id, seq, proposal).await);
-                            } else {
-                                mutated = true;
-                                frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                    } else {
+                        let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id };
+                        let dispatched = with_instances_mut(runtime, |list| {
+                            let mut instance = find_instance(list, instance_id)?;
+                            resolve_ready(instance.app.handle_action(&action, args.as_ref(), &meta))
+                        });
+                        match dispatched.await {
+                            Ok(result) => {
+                                // 🔀️ Same proposal check as `AppCommand::Command` above — the six
+                                // history verbs never carry foreign steps in practice, but
+                                // `dispatch_emit` is the shared choke point, so this arm is covered too.
+                                let proposal = with_instances_mut(runtime, |list| {
+                                    let mut instance = find_instance(list, instance_id)?;
+                                    Ok(resolve_ready(instance.app.take_pending_transaction_proposal()))
+                                })
+                                .await
+                                .unwrap_or(None);
+                                if let Some(proposal) = proposal {
+                                    frames.push(transaction_proposal_frame(instance_id, seq, proposal).await);
+                                } else {
+                                    mutated = true;
+                                    frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                                }
+                                push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
                             }
-                            push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
+                            Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                         }
-                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                     }
                 }
                 protocol::AppCommand::ApplyEnvelopes { seq, envelopes } => {
@@ -26703,33 +26719,32 @@ pub mod plugin_runtime {
                 // full frame/rejection-code table.
                 protocol::AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
                     let decoded_origin = if origin.is_empty() {
-                        None
+                        Ok(None)
                     } else {
-                        match decode_wire_serialized::<protocol::MutationOrigin>(&origin).await {
-                            Ok(value) => Some(value),
-                            Err(fault) => {
-                                push_app_fault(&mut frames, Some(seq), fault).await;
-                                continue;
-                            }
-                        }
+                        decode_wire_serialized::<protocol::MutationOrigin>(&origin).await.map(Some)
                     };
-                    let outcome = with_instances_mut(runtime, |list| {
-                        let mut instance = find_instance(list, instance_id)?;
-                        Ok(resolve_ready(instance.app.transaction_prepare(&txn_id, &mutation_id, &payload, &prepared_ops, &label, decoded_origin)))
-                    });
-                    match outcome.await {
-                        Ok(outcome) => {
-                            let mut foreign = Vec::with_capacity(outcome.foreign.len());
-                            for step in outcome.foreign.iter() {
-                                foreign.push(encode_wire_serialized(step));
-                            }
-                            let rejection = match outcome.rejection {
-                                Some(fault) => encode_wire_serialized(&fault),
-                                None => Vec::new(),
-                            };
-                            frames.push(protocol::AppFrame::TransactionPrepared { txn_id, foreign, rejection });
-                        }
+                    match decoded_origin {
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                        Ok(decoded_origin) => {
+                            let outcome = with_instances_mut(runtime, |list| {
+                                let mut instance = find_instance(list, instance_id)?;
+                                Ok(resolve_ready(instance.app.transaction_prepare(&txn_id, &mutation_id, &payload, &prepared_ops, &label, decoded_origin)))
+                            });
+                            match outcome.await {
+                                Ok(outcome) => {
+                                    let mut foreign = Vec::with_capacity(outcome.foreign.len());
+                                    for step in outcome.foreign.iter() {
+                                        foreign.push(encode_wire_serialized(step));
+                                    }
+                                    let rejection = match outcome.rejection {
+                                        Some(fault) => encode_wire_serialized(&fault),
+                                        None => Vec::new(),
+                                    };
+                                    frames.push(protocol::AppFrame::TransactionPrepared { txn_id, foreign, rejection });
+                                }
+                                Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
+                            }
+                        }
                     }
                 }
                 protocol::AppCommand::TransactionCommit { seq, txn_id } => {

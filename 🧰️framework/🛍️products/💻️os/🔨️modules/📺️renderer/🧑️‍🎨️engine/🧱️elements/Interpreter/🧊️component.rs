@@ -1134,6 +1134,25 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
     }
 }
 
+fn drive_mounted_layout_text_one(engine: &mut ui_wgpu::wgpu::Ui, window_id: &str, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> ui_wgpu::wgpu::UiLayoutStep {
+    let generation = engine.tree_revision(window_id).unwrap_or(1);
+    let now = semio_framework_job::default_now_ms();
+    let mut preview_sequence = 0;
+    let mut context = semio_framework_job::StepContext::new(
+        semio_framework_job::OperationId(generation),
+        semio_framework_job::Generation(generation),
+        semio_framework_job::StepBudget::new(1, now.saturating_add(1)),
+        semio_framework_job::CancelToken::root_now(),
+        semio_framework_job::default_now_ms,
+        &mut preview_sequence,
+    );
+    let pool = crate::renderer_worker_pool();
+    let progress = engine.step_layouts(&pool, atlas, &mut context);
+    #[cfg(target_arch = "wasm32")]
+    let _ = pool.pump(now);
+    progress
+}
+
 /** 🔁️ The live cutover entry point (was `ui_node_to_widget`+`render_widget`, now
  * `ui_wgpu::wgpu::Ui::apply_tree`/`frame`/`dispatch_event`). `window_id` identifies which retained window
  * bucket this call's `node`/`bounds` belong to — see `RetainedEngineCutover`'s doc comment for why
@@ -1175,6 +1194,7 @@ pub fn render_ui_node(
         engine.set_theme(theme);
         engine.apply_tree(window_id, node);
         engine.set_viewport(window_id, viewport_w, viewport_h);
+        let _ = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
         let commands = dispatch_pointer_events(&mut engine, window_id, bounds, ctx.input);
         let mut scene_host = FrameworkSceneHost {
             engine_resources,
@@ -1260,6 +1280,7 @@ pub fn render_ui_document(
             }
         }
         engine.set_viewport(window_id, viewport_w, viewport_h);
+        let _ = drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas);
         let commands = dispatch_pointer_events(&mut engine, window_id, bounds, ctx.input);
         let mut scene_host = FrameworkSceneHost {
             engine_resources,

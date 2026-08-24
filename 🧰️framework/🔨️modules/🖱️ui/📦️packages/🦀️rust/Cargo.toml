@@ -43,6 +43,7 @@ wgpu-engine = [
     "dep:arboard",
     "dep:semio-framework-geometry",
     "dep:semio-framework-job",
+    "dep:semio-framework-async",
 ]
 # 🧬️ Enables the owned TypeScript schema projection for the `wgpu` boundary types.
 typegen = ["wgpu"]
