@@ -727,14 +727,8 @@ impl Future for ArtifactWalEnvelopeAdapter<'_> {
                     document_id: owner.document_id.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost document identity".to_string()))?,
                     actor: owner.actor.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost actor identity".to_string()))?,
                     dependencies: std::mem::take(&mut owner.dependencies),
-                    diff: protocol::ArtifactDiff {
-                        schema: owner.diff_schema.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost diff schema".to_string()))?,
-                        payload: std::mem::take(&mut owner.diff_payload),
-                    },
-                    inverse: protocol::InverseMutation {
-                        schema: owner.inverse_schema.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost inverse schema".to_string()))?,
-                        payload: std::mem::take(&mut owner.inverse_payload),
-                    },
+                    diff: protocol::ArtifactDiff { schema: owner.diff_schema.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost diff schema".to_string()))?, payload: std::mem::take(&mut owner.diff_payload) },
+                    inverse: protocol::InverseMutation { schema: owner.inverse_schema.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost inverse schema".to_string()))?, payload: std::mem::take(&mut owner.inverse_payload) },
                     timestamp: retained.timestamp,
                 }));
             }
@@ -767,6 +761,10 @@ impl ArtifactStateRetirementCursor {
     fn entry(retirement: ArtifactStateRetirementReservation, entry: db_state::StateEntry) -> Self {
         let mut staged = std::array::from_fn(|_| None);
         staged[0] = Some(entry);
+        Self { rejected: None, staged, phase: 2, slot: 0, retirement: Some(retirement) }
+    }
+
+    fn staged(retirement: ArtifactStateRetirementReservation, staged: [Option<db_state::StateEntry>; 64]) -> Self {
         Self { rejected: None, staged, phase: 2, slot: 0, retirement: Some(retirement) }
     }
 
@@ -859,6 +857,12 @@ fn release_artifact_state_retirement(reservation: &mut Option<ArtifactStateRetir
     }
 }
 
+fn release_artifact_state_retirements(reservations: &mut [Option<ArtifactStateRetirementReservation>; 64]) {
+    for reservation in reservations {
+        release_artifact_state_retirement(reservation);
+    }
+}
+
 fn artifact_state_vacant_retirement_slot(tier: usize, slots: &[Option<ArtifactStateRetirementCursor>]) -> Option<usize> {
     let reserved = ARTIFACT_STATE_RETIREMENT_RESERVATIONS[tier].load(std::sync::atomic::Ordering::Acquire);
     slots.iter().enumerate().position(|(index, slot)| slot.is_none() && reserved & (1u64 << index) == 0)
@@ -907,18 +911,28 @@ pub fn artifact_state_retirement_maintenance_step() -> Result<bool, DbError> {
             drop(overflow);
             let mut quarantine = ARTIFACT_STATE_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
-            let owner = quarantine[index].take().ok_or_else(|| DbError::Internal("artifact quarantine retirement changed owner".to_string()))?;
-            drop(quarantine);
             let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let index = artifact_state_vacant_retirement_slot(0, &retired).ok_or_else(|| DbError::Internal("artifact retirement primary refilled before quarantine recovery".to_string()))?;
-            retired[index] = Some(owner);
+            let Some(target) = artifact_state_vacant_retirement_slot(0, &retired) else {
+                drop(retired);
+                let owner = quarantine[index].as_mut().ok_or_else(|| DbError::Internal("artifact quarantine retirement changed owner".to_string()))?;
+                if !owner.close_step()? {
+                    quarantine[index] = None;
+                }
+                return Ok(true);
+            };
+            retired[target] = quarantine[index].take();
             return Ok(true);
         };
-        let owner = overflow[index].take().ok_or_else(|| DbError::Internal("artifact overflow retirement changed owner".to_string()))?;
-        drop(overflow);
         let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let index = artifact_state_vacant_retirement_slot(0, &retired).ok_or_else(|| DbError::Internal("artifact retirement primary refilled before overflow recovery".to_string()))?;
-        retired[index] = Some(owner);
+        let Some(target) = artifact_state_vacant_retirement_slot(0, &retired) else {
+            drop(retired);
+            let owner = overflow[index].as_mut().ok_or_else(|| DbError::Internal("artifact overflow retirement changed owner".to_string()))?;
+            if !owner.close_step()? {
+                overflow[index] = None;
+            }
+            return Ok(true);
+        };
+        retired[target] = overflow[index].take();
         return Ok(true);
     };
     let owner = slot.as_mut().ok_or_else(|| DbError::Internal("artifact retirement changed owner".to_string()))?;
@@ -973,24 +987,23 @@ impl DocumentState {
         let mut control = db_state::StateCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
         let mut staged: [Option<db_state::StateEntry>; 64] = std::array::from_fn(|_| None);
         let mut retirements: [Option<ArtifactStateRetirementReservation>; 64] = [None; 64];
-        for (index, (path, value)) in entries.iter().enumerate() {
-            let Some(dsl_value) = value else { continue };
-            let Some(retirement) = reserve_artifact_state_retirement() else {
+        for index in 0..entries.len() {
+            let Some(reservation) = reserve_artifact_state_retirement() else {
+                release_artifact_state_retirements(&mut retirements);
                 return Err(DbError::Unavailable("artifact state retirement pressure refused admission".to_string()));
             };
+            retirements[index] = Some(reservation);
+        }
+        for (index, (path, value)) in entries.iter().enumerate() {
+            let Some(dsl_value) = value else { continue };
             let bytes = store::pack_rt::encode_wire_value(dsl_value);
             match db_state::StateEntry::try_admit(path, bytes, MAX_STATE_PAGE_VALUE_BYTES, &mut control).await {
-                Ok(entry) => {
-                    staged[index] = Some(entry);
-                    retirements[index] = Some(retirement);
-                }
+                Ok(entry) => staged[index] = Some(entry),
                 Err(rejected) => {
                     let error = format!("retained state admission failed: {}", rejected.error());
-                    for reservation in &mut retirements {
-                        release_artifact_state_retirement(reservation);
-                    }
+                    let retirement = retirements[index].take().ok_or_else(|| DbError::Internal("retained state refusal lost retirement preflight".to_string()))?;
+                    release_artifact_state_retirements(&mut retirements);
                     install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::rejected(retirement, rejected, staged));
-                    let _ = artifact_state_retirement_maintenance_step()?;
                     return Err(DbError::InvalidArgument(error));
                 }
             }
@@ -1010,26 +1023,23 @@ impl DocumentState {
                     let replaced = match self.values.insert(entry) {
                         Ok(replaced) => replaced,
                         Err(rejected) => {
-                            install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::entry(retirement, rejected));
-                            let _ = artifact_state_retirement_maintenance_step()?;
+                            staged[index] = Some(rejected);
+                            release_artifact_state_retirements(&mut retirements);
+                            install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::staged(retirement, staged));
                             return Err(DbError::LimitExceeded("retained state entries"));
                         }
                     };
                     if let Some(replaced) = replaced {
                         install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::entry(retirement, replaced));
-                        let _ = artifact_state_retirement_maintenance_step()?;
                     } else {
                         let mut unused = Some(retirement);
                         release_artifact_state_retirement(&mut unused);
                     }
                 }
                 None => {
-                    let Some(retirement) = reserve_artifact_state_retirement() else {
-                        return Err(DbError::Unavailable("artifact state retirement pressure refused removal".to_string()));
-                    };
+                    let retirement = retirements[index].take().ok_or_else(|| DbError::Internal("retained state removal lost retirement preflight".to_string()))?;
                     if let Some(removed) = self.values.remove(path) {
                         install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::entry(retirement, removed));
-                        let _ = artifact_state_retirement_maintenance_step()?;
                     } else {
                         let mut unused = Some(retirement);
                         release_artifact_state_retirement(&mut unused);
@@ -4130,6 +4140,23 @@ mod tests {
         let deadline_retirement = reserve_artifact_state_retirement().expect("deadline artifact retirement preflight");
         assert!(retire_artifact_state_owner(ArtifactStateRetirementCursor::rejected(deadline_retirement, deadline, std::array::from_fn(|_| None))).is_ok());
         while artifact_state_retirement_maintenance_step().unwrap() {}
+
+        for tier in [&ARTIFACT_STATE_RETIREMENT, &ARTIFACT_STATE_RETIREMENT_OVERFLOW, &ARTIFACT_STATE_RETIREMENT_QUARANTINE] {
+            let mut owners = tier.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in owners.iter_mut() {
+                *slot = Some(ArtifactStateRetirementCursor::empty());
+            }
+        }
+        let mut state = DocumentState::new();
+        let entries = [("exact-all-tier-state-refusal".to_string(), None)];
+        let refusal = state.apply_entries(&protocol::MutationId("exact-all-tier-state-refusal".to_string()), &[], &entries).await.unwrap_err();
+        assert!(matches!(refusal, DbError::Unavailable(message) if message == "artifact state retirement pressure refused admission"));
+        for tier in [&ARTIFACT_STATE_RETIREMENT, &ARTIFACT_STATE_RETIREMENT_OVERFLOW, &ARTIFACT_STATE_RETIREMENT_QUARANTINE] {
+            let mut owners = tier.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in owners.iter_mut() {
+                *slot = None;
+            }
+        }
     }
 
     struct HistoryReplayTestWake;

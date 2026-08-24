@@ -1196,10 +1196,7 @@ impl SurfaceReconcileCursor {
                         };
                         if self.postorder.try_push(complete.index).is_err() {
                             self.overflow_frame = Some(complete);
-                            let fault = SurfaceReconcileFault::Credits {
-                                usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                                limits: self.limits,
-                            };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -1305,10 +1302,7 @@ impl SurfaceReconcileCursor {
                         }
                         Err(_) => {
                             self.held_node = Some((parent, node));
-                            let fault = SurfaceReconcileFault::Credits {
-                                usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                                limits: self.limits,
-                            };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -1319,19 +1313,13 @@ impl SurfaceReconcileCursor {
                     if let Err(flat) = self.flat.try_push(flat) {
                         self.held_node = Some((parent, flat.node));
                         self.overflow_frame = Some(PresentationFrame { index, children });
-                        let fault = SurfaceReconcileFault::Credits {
-                            usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                            limits: self.limits,
-                        };
+                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
                     }
                     if let Err(frame) = self.traversal.try_push(PresentationFrame { index, children }) {
                         self.overflow_frame = Some(frame);
-                        let fault = SurfaceReconcileFault::ValueDepth {
-                            actual: SURFACE_RECONCILE_VALUE_DEPTH.checked_add(1).unwrap_or(usize::MAX),
-                            max: SURFACE_RECONCILE_VALUE_DEPTH,
-                        };
+                        let fault = SurfaceReconcileFault::ValueDepth { actual: SURFACE_RECONCILE_VALUE_DEPTH.checked_add(1).unwrap_or(usize::MAX), max: SURFACE_RECONCILE_VALUE_DEPTH };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
                     }
@@ -1359,27 +1347,18 @@ impl SurfaceReconcileCursor {
                         }
                     };
                     if self.new_key_index.try_insert(identity, id).is_err() {
-                        let fault = SurfaceReconcileFault::Credits {
-                            usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                            limits: self.limits,
-                        };
+                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
                     }
                     if self.ids.try_push(id).is_err() {
-                        let fault = SurfaceReconcileFault::Credits {
-                            usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                            limits: self.limits,
-                        };
+                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
                     }
                     if let Some(parent) = parent_index {
                         if self.flat[parent].child_ids.try_push(id).is_err() {
-                            let fault = SurfaceReconcileFault::Credits {
-                                usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                                limits: self.limits,
-                            };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -1528,10 +1507,7 @@ impl SurfaceReconcileCursor {
                                 if let Err(op) = self.ops.try_push(op) {
                                     self.pending_op = Some(op);
                                     self.record_diff = Some(diff);
-                                    let fault = SurfaceReconcileFault::Credits {
-                                        usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                                        limits: self.limits,
-                                    };
+                                    let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                                     self.fault = Some(fault.clone());
                                     return SurfaceReconcileStep::Fault(fault);
                                 }
@@ -1567,10 +1543,7 @@ impl SurfaceReconcileCursor {
                                 self.pending_op = Some(op);
                                 diff.field -= 1;
                                 self.record_diff = Some(diff);
-                                let fault = SurfaceReconcileFault::Credits {
-                                    usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                                    limits: self.limits,
-                                };
+                                let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                                 self.fault = Some(fault.clone());
                                 return SurfaceReconcileStep::Fault(fault);
                             }
@@ -1581,10 +1554,7 @@ impl SurfaceReconcileCursor {
                     if let Err((_, record)) = self.new_retained.try_insert(diff.id, diff.record) {
                         diff.record = record;
                         self.record_diff = Some(diff);
-                        let fault = SurfaceReconcileFault::Credits {
-                            usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                            limits: self.limits,
-                        };
+                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                         self.fault = Some(fault.clone());
                         return SurfaceReconcileStep::Fault(fault);
                     }
@@ -1595,10 +1565,7 @@ impl SurfaceReconcileCursor {
                     let id = self.ids[index];
                     let children = take(&mut self.flat[index].child_ids);
                     let transition = current.retained.get(&id).and_then(|record| record.transition);
-                    let node = std::mem::replace(
-                        &mut self.flat[index].node,
-                        crate::TreeNode::empty_separator(),
-                    );
+                    let node = std::mem::replace(&mut self.flat[index].node, crate::TreeNode::empty_separator());
                     let record = build_record_owned(id, node, children, transition);
                     let fresh = (!current.retained.contains_key(&id)).then(FreshRecordClone::default);
                     self.record_diff = Some(RecordDiffCursor { id, record, field: 0, fresh });
@@ -1614,10 +1581,7 @@ impl SurfaceReconcileCursor {
                     if self.new_retained.contains_key(&id) {
                         if self.removal.try_push(RemovalFrame { id, next_child: 0 }).is_err() {
                             self.remove_next = Some(id);
-                            let fault = SurfaceReconcileFault::Credits {
-                                usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                                limits: self.limits,
-                            };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -1626,10 +1590,7 @@ impl SurfaceReconcileCursor {
                         if let Err(op) = self.ops.try_push(op) {
                             self.pending_op = Some(op);
                             self.remove_next = Some(id);
-                            let fault = SurfaceReconcileFault::Credits {
-                                usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                                limits: self.limits,
-                            };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -1656,10 +1617,7 @@ impl SurfaceReconcileCursor {
                         let op = ui_contract::UiPatchOp::SetRoot { id };
                         if let Err(op) = self.ops.try_push(op) {
                             self.pending_op = Some(op);
-                            let fault = SurfaceReconcileFault::Credits {
-                                usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage },
-                                limits: self.limits,
-                            };
+                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
                             self.fault = Some(fault.clone());
                             return SurfaceReconcileStep::Fault(fault);
                         }
@@ -2090,11 +2048,7 @@ fn acquire_surface_reconcile_handback(owner: &mut Option<SurfaceReconcileHandbac
     }
 }
 
-fn acquire_reserved_surface_reconcile_handback(
-    owner: &mut Option<SurfaceReconcileHandbackReservation>,
-    reserved: &mut Option<SurfaceReconcileHandbackReservation>,
-    generation: u64,
-) -> Option<SurfaceReconcileHandbackReservation> {
+fn acquire_reserved_surface_reconcile_handback(owner: &mut Option<SurfaceReconcileHandbackReservation>, reserved: &mut Option<SurfaceReconcileHandbackReservation>, generation: u64) -> Option<SurfaceReconcileHandbackReservation> {
     if owner.is_none() {
         return reserved.take();
     }
@@ -2253,17 +2207,7 @@ impl SurfaceDocumentProducer {
     pub fn try_new(current: &SurfaceReconciler, generation: u64, layout_epoch: u64) -> Result<Self, (ui_contract::UiDocumentBuildError, ui_contract::SurfaceId)> {
         let surface = current.surface.clone();
         let builder = ui_contract::UiDocumentBuilder::try_new(generation, surface.clone(), current.revision, current.root, layout_epoch)?;
-        Ok(Self {
-            generation,
-            surface,
-            revision: current.revision,
-            root: current.root,
-            node_count: current.retained.len(),
-            next_node: 0,
-            builder: Some(builder),
-            ready: false,
-            fault: None,
-        })
+        Ok(Self { generation, surface, revision: current.revision, root: current.root, node_count: current.retained.len(), next_node: 0, builder: Some(builder), ready: false, fault: None })
     }
 
     pub fn generation(&self) -> u64 {
@@ -2402,13 +2346,7 @@ impl SurfaceReconcileReadyPatch {
 
     pub fn publish(mut self) -> Option<(ui_contract::UiPatch, SurfaceReconcilePublishedPatch)> {
         let patch = self.patch.take()?;
-        let published = SurfaceReconcilePublishedPatch {
-            generation: self.generation,
-            surface: patch.surface.clone(),
-            revision: patch.revision,
-            credit: self.credit.take(),
-            handback: self.handback.take(),
-        };
+        let published = SurfaceReconcilePublishedPatch { generation: self.generation, surface: patch.surface.clone(), revision: patch.revision, credit: self.credit.take(), handback: self.handback.take() };
         Some((patch, published))
     }
 
@@ -2549,22 +2487,24 @@ impl SurfaceReconcileJob {
         let credit = if surface_bytes <= limits.max_identifier_bytes { reserve_surface_reconcile(limits) } else { None };
         let (credit, handback) = match (credit, handback) {
             (Some(credit), Some(handback)) => (credit, handback),
-            (credit, handback) => return Err(SurfaceReconcileRejected {
-                state: Some(Box::new(SurfaceReconcileRetained {
-                    generation,
-                    phase: SurfaceReconcileJobPhase::Fault,
-                    current: Some(current),
-                    source: Some(tree),
-                    cursor: None,
-                    candidate: None,
-                    patch: None,
-                    published_surface: None,
-                    retire_tree: SurfaceTreeRetireCursor::default(),
-                    fault: Some(SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: 0, items: 1, bytes: surface_bytes }, limits }),
-                    credit,
-                    handback,
-                })),
-            }),
+            (credit, handback) => {
+                return Err(SurfaceReconcileRejected {
+                    state: Some(Box::new(SurfaceReconcileRetained {
+                        generation,
+                        phase: SurfaceReconcileJobPhase::Fault,
+                        current: Some(current),
+                        source: Some(tree),
+                        cursor: None,
+                        candidate: None,
+                        patch: None,
+                        published_surface: None,
+                        retire_tree: SurfaceTreeRetireCursor::default(),
+                        fault: Some(SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: 0, items: 1, bytes: surface_bytes }, limits }),
+                        credit,
+                        handback,
+                    })),
+                })
+            }
         };
         let cursor = SurfaceReconcileCursor::new_with_limits(tree, &current, limits);
         Ok(Self {
@@ -2872,11 +2812,7 @@ pub struct SurfaceReconcileTerminal {
 }
 
 impl SurfaceReconcileTerminal {
-    pub fn try_from_reserved_sources(
-        mut current: SurfaceReconciler,
-        tree: crate::ComponentTree,
-        mut reservation: SurfaceReconcileReservation,
-    ) -> Result<Self, (SurfaceReconciler, crate::ComponentTree, SurfaceReconcileReservation)> {
+    pub fn try_from_reserved_sources(mut current: SurfaceReconciler, tree: crate::ComponentTree, mut reservation: SurfaceReconcileReservation) -> Result<Self, (SurfaceReconciler, crate::ComponentTree, SurfaceReconcileReservation)> {
         let generation = reservation.generation;
         let Some(handback) = acquire_reserved_surface_reconcile_handback(&mut current.handback, &mut reservation.handback, generation) else {
             return Err((current, tree, reservation));
@@ -3009,13 +2945,7 @@ pub fn close_surface_reconcile_handback_one() -> bool {
 //#endregion 🎟️RetainedAuthority
 
 fn estimate_record_bytes(record: &ui_contract::UiNodeRecord) -> usize {
-    record
-        .children
-        .len()
-        .checked_mul(size_of::<ui_contract::UiNodeId>())
-        .and_then(|bytes| bytes.checked_add(record.key.len()))
-        .and_then(|bytes| bytes.checked_add(size_of::<ui_contract::UiNodeRecord>()))
-        .unwrap_or(usize::MAX)
+    record.children.len().checked_mul(size_of::<ui_contract::UiNodeId>()).and_then(|bytes| bytes.checked_add(record.key.len())).and_then(|bytes| bytes.checked_add(size_of::<ui_contract::UiNodeRecord>())).unwrap_or(usize::MAX)
 }
 
 fn diff_record_field(old: &ui_contract::UiNodeRecord, new: &ui_contract::UiNodeRecord, field: u8) -> Result<Option<ui_contract::UiPatchOp>, SurfaceReconcileFault> {
@@ -3217,12 +3147,7 @@ impl SurfaceReconciler {
     }
 }
 
-fn build_record_owned(
-    id: ui_contract::UiNodeId,
-    node: crate::TreeNode,
-    children: ui_contract::UiNodeChildren,
-    transition: Option<ui_contract::TransitionHint>,
-) -> ui_contract::UiNodeRecord {
+fn build_record_owned(id: ui_contract::UiNodeId, node: crate::TreeNode, children: ui_contract::UiNodeChildren, transition: Option<ui_contract::TransitionHint>) -> ui_contract::UiNodeRecord {
     let crate::TreeNode { key, component, layout, style, activity, disabled, accessibility, bindings, menu, children: _, rejected_children: _ } = node;
     ui_contract::UiNodeRecord { id, key, component, layout, style, activity, disabled, transition, accessibility, bindings, menu, children }
 }
@@ -3471,13 +3396,8 @@ mod tests {
 
     #[test]
     fn semantic_census_low_fuel_wide_container_and_deep_value_advance_one_unit_without_recursion() {
-        let wide = (0..128)
-            .map(|index| ui_contract::UiValue::Text(ui_contract::UiText::try_from_string(format!("value-{index}")).expect("bounded fixture text")))
-            .collect();
-        let node = crate::TreeNode::new("wide", ui_contract::Component::Extension(ui_contract::ExtensionProps {
-            extension: "fixture".into(),
-            props: ui_contract::UiValue::List(ui_list(wide)),
-        }));
+        let wide = (0..128).map(|index| ui_contract::UiValue::Text(ui_contract::UiText::try_from_string(format!("value-{index}")).expect("bounded fixture text"))).collect();
+        let node = crate::TreeNode::new("wide", ui_contract::Component::Extension(ui_contract::ExtensionProps { extension: "fixture".into(), props: ui_contract::UiValue::List(ui_list(wide)) }));
         let current = SurfaceReconciler::new("s");
         let mut cursor = SurfaceReconcileCursor::new(tree(node), &current);
         for _ in 0..32 {
@@ -3504,11 +3424,7 @@ mod tests {
 
     #[test]
     fn retained_map_page_advances_each_key_once_without_rewalking_prior_entries() {
-        let value = ui_contract::UiValue::Map(ui_map([
-            ("a".to_owned(), ui_contract::UiValue::Null),
-            ("b".to_owned(), ui_contract::UiValue::Null),
-            ("c".to_owned(), ui_contract::UiValue::Null),
-        ]));
+        let value = ui_contract::UiValue::Map(ui_map([("a".to_owned(), ui_contract::UiValue::Null), ("b".to_owned(), ui_contract::UiValue::Null), ("c".to_owned(), ui_contract::UiValue::Null)]));
         let mut cursor = SurfaceSemanticCensusCursor::default();
         cursor.push_value(&value).expect("fixed value depth");
         let mut discovered = Vec::new();

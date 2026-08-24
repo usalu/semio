@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ PDF 1.4/✳️a's own contribution to the repository test platform: the ISO 19005-1 (PDF/A-1) conformance vocabulary this subset owns, and the reference implementation that performs it independently. The ✳️any subset owns the document vocabulary and registers `lopdf` under `pdf-1-4-mutate`; this file registers the same package under a distinct id and the `pdf-1-4-a-mutate` capability the conformance case (`mutate-pdf-1-4-a`) tags, because reusing a neighbour's entry fails the contract with `oracle-capability-mismatch`.",
+  "oracles": [
+    {
+      "id": "lopdf-pdf-1-4-a-mutate",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": [
+        "pdf-1-4-a-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-1-4-conformance-a-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "`lopdf` both READS and WRITES the one axis check_pdf_a_conformance can honestly check on PDF 1.4's object-graph-less snapshot (page.text — whether the document has any extractable text at all), on a real document, which makes it a genuine second producer rather than a parser standing in for one — so every scenario is @mode-differential. Registered under its own id and capability so this subset's 4-kind conformance catalog is measured against a reference surveyed for that capability rather than borrowing the ✳️any subset's document-vocabulary entry.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "pdf-1-4-a",
+      "capability": "pdf-1-4-a-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-page-text",
+        "clear-page-text"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-pdf-1-4-conformance-a-v1",
+      "description": "A PDF 1.4 document compared by the CONFORMANCE surface check_pdf_a_conformance actually reads, every field read back out of the bytes by the independent `lopdf` reader: page 1's extractable text, the emptiness verdict the checker computes from it, the page count as a stability anchor, and the unconditional schema-gap flag. Page CONTENT beyond that axis is deliberately absent — it belongs to the ✳️any subset's own profile, and this conformance check says nothing about it. `schemaGapUnverifiable` is the constant `true` the checker genuinely raises on every PDF 1.4 document; it is recorded as honest bookkeeping of an axis no mutation can move, never as evidence. No numeric field carries evidence, hence no tolerance.",
+      "tolerance": 0,
+      "ignoreKeys": []
+    }
+  ]
+}

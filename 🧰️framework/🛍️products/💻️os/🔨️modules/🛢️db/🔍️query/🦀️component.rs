@@ -725,17 +725,27 @@ impl QueryRows {
         self.len == 0
     }
 
-    pub fn push(&mut self, row: QueryRow) -> Result<(), QueryRow> {
+    fn preflight_push(&mut self) -> Result<(), DbError> {
         if self.len() == QUERY_ROW_SLOTS {
-            return Err(row);
+            return Err(DbError::LimitExceeded("query row slots"));
         }
         if self.len == 0 && self.retirement.is_none() {
-            let Some(retirement) = reserve_query_rows_retirement() else { return Err(row) };
-            self.retirement = Some(retirement);
+            self.retirement = Some(reserve_query_rows_retirement().ok_or_else(|| DbError::Unavailable("query row retirement pressure refused admission".to_string()))?);
         }
+        Ok(())
+    }
+
+    fn push_preflighted(&mut self, row: QueryRow) {
         let index = self.len();
         self.slots[index] = Some(row);
         self.len += 1;
+    }
+
+    pub fn push(&mut self, row: QueryRow) -> Result<(), QueryRow> {
+        if self.preflight_push().is_err() {
+            return Err(row);
+        }
+        self.push_preflighted(row);
         Ok(())
     }
 
@@ -914,18 +924,28 @@ pub fn query_rows_maintenance_step() -> Result<bool, DbError> {
             drop(overflow);
             let mut quarantine = QUERY_RETIRED_ROWS_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
-            let owner = quarantine[index].take().ok_or_else(|| DbError::Internal("query quarantine retirement changed row owner".to_string()))?;
-            drop(quarantine);
             let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let index = query_rows_vacant_retirement_slot(0, &retired).ok_or_else(|| DbError::Internal("query retirement primary refilled before quarantine recovery".to_string()))?;
-            retired[index] = Some(owner);
+            let Some(target) = query_rows_vacant_retirement_slot(0, &retired) else {
+                drop(retired);
+                let owner = quarantine[index].as_mut().ok_or_else(|| DbError::Internal("query quarantine retirement changed row owner".to_string()))?;
+                if !owner.close_step()? {
+                    quarantine[index] = None;
+                }
+                return Ok(true);
+            };
+            retired[target] = quarantine[index].take();
             return Ok(true);
         };
-        let owner = overflow[index].take().ok_or_else(|| DbError::Internal("query overflow retirement changed row owner".to_string()))?;
-        drop(overflow);
         let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let index = query_rows_vacant_retirement_slot(0, &retired).ok_or_else(|| DbError::Internal("query primary retirement refilled before overflow recovery".to_string()))?;
-        retired[index] = Some(owner);
+        let Some(target) = query_rows_vacant_retirement_slot(0, &retired) else {
+            drop(retired);
+            let owner = overflow[index].as_mut().ok_or_else(|| DbError::Internal("query overflow retirement changed row owner".to_string()))?;
+            if !owner.close_step()? {
+                overflow[index] = None;
+            }
+            return Ok(true);
+        };
+        retired[target] = overflow[index].take();
         return Ok(true);
     };
     let owner = slot.as_mut().ok_or_else(|| DbError::Internal("query retired row set changed owner".to_string()))?;
@@ -939,6 +959,7 @@ pub fn query_rows_maintenance_step() -> Result<bool, DbError> {
 impl Drop for QueryRows {
     fn drop(&mut self) {
         if self.terminal_is_empty() {
+            release_query_rows_retirement(&mut self.retirement);
             return;
         }
         install_reserved_query_rows(std::mem::replace(self, Self::new()));
@@ -1224,10 +1245,12 @@ pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<
     check_len(matched.len() as u64, limits.max_result_rows, "db_query::result_rows")?;
 
     let mut projected = QueryRows::new();
-    while let Some(row) = matched.take(0) {
+    while !matched.is_empty() {
         control.grant()?;
+        projected.preflight_push()?;
+        let row = matched.take(0).ok_or_else(|| DbError::Internal("query projection lost its preflighted row".to_string()))?;
         let (id, value) = row.into_parts();
-        projected.push(QueryRow::new(id, query.select.project(value))).map_err(|_| DbError::LimitExceeded("query result row slots"))?;
+        projected.push_preflighted(QueryRow::new(id, query.select.project(value)));
     }
     let result_bytes = projected.iter().map(|row| 8 + value_byte_estimate(row.value())).sum();
     check_len(result_bytes, limits.max_result_bytes, "db_query::result_bytes")?;
@@ -1387,24 +1410,25 @@ impl LiveQuery {
         let mut next_len = 0;
         while !result.rows.is_empty() {
             control.grant()?;
-            let retirement = reserve_query_rows_retirement().ok_or_else(|| DbError::Unavailable("query row retirement pressure refused refresh".to_string()))?;
-            let mut row = result.rows.take(0).ok_or_else(|| DbError::Internal("live query refresh lost preflighted row".to_string()))?;
-            let hash = query_value_hash(row.value());
-            let previous = self.snapshot[..self.snapshot_len as usize].iter().flatten().find(|(id, _)| *id == row.id()).map(|(_, hash)| *hash);
-            next[next_len] = Some((row.id(), hash));
+            let (row_id, hash, previous) = {
+                let row = result.rows.get(0).ok_or_else(|| DbError::Internal("live query refresh lost source row".to_string()))?;
+                let hash = query_value_hash(row.value());
+                let previous = self.snapshot[..self.snapshot_len as usize].iter().flatten().find(|(id, _)| *id == row.id()).map(|(_, hash)| *hash);
+                (row.id(), hash, previous)
+            };
+            match previous {
+                None => diff.added.preflight_push()?,
+                Some(previous) if previous != hash => diff.updated.preflight_push()?,
+                Some(_) => {}
+            }
+            let retirement = if previous == Some(hash) { Some(reserve_query_rows_retirement().ok_or_else(|| DbError::Unavailable("query row retirement pressure refused refresh".to_string()))?) } else { None };
+            let row = result.rows.take(0).ok_or_else(|| DbError::Internal("live query refresh lost preflighted row".to_string()))?;
+            next[next_len] = Some((row_id, hash));
             next_len += 1;
             match previous {
-                None => {
-                    let mut unused = Some(retirement);
-                    release_query_rows_retirement(&mut unused);
-                    diff.added.push(row).map_err(|_| DbError::LimitExceeded("live query added slots"))?;
-                }
-                Some(previous) if previous != hash => {
-                    let mut unused = Some(retirement);
-                    release_query_rows_retirement(&mut unused);
-                    diff.updated.push(row).map_err(|_| DbError::LimitExceeded("live query updated slots"))?;
-                }
-                Some(_) => retire_query_row_with_reservation(row, retirement),
+                None => diff.added.push_preflighted(row),
+                Some(previous) if previous != hash => diff.updated.push_preflighted(row),
+                Some(_) => retire_query_row_with_reservation(row, retirement.ok_or_else(|| DbError::Internal("live query refresh lost unchanged-row retirement".to_string()))?),
             }
         }
         for (id, _) in self.snapshot[..self.snapshot_len as usize].iter().flatten() {
@@ -1479,6 +1503,8 @@ mod tests {
         exact.push(QueryRow::new(RowId(0x5155_4552_59), Value::Null)).unwrap();
         let mut second = QueryRows::new();
         second.push(QueryRow::new(RowId(0x5155_4552_5a), Value::Null)).unwrap();
+        assert_eq!(exact.retirement.map(|reservation| reservation.tier), Some(2));
+        assert_eq!(second.retirement.map(|reservation| reservation.tier), Some(2));
         assert!(retire_query_rows(exact).is_ok());
         assert!(retire_query_rows(second).is_ok());
         assert!(QUERY_RETIREMENT_PRESSURE_FAULT.load(std::sync::atomic::Ordering::Acquire));
@@ -1502,6 +1528,24 @@ mod tests {
             assert_eq!(retired.iter().flatten().find_map(|rows| rows.get(0).map(QueryRow::id)), Some(RowId(0x5155_4552_59)));
         }
         while query_rows_maintenance_step().unwrap() {}
+
+        for tier in [&QUERY_RETIRED_ROWS, &QUERY_RETIRED_ROWS_OVERFLOW, &QUERY_RETIRED_ROWS_QUARANTINE] {
+            let mut owners = tier.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in owners.iter_mut() {
+                *slot = Some(QueryRows::new());
+            }
+        }
+        let exact_refusal = QueryRow::new(RowId(0x5155_4552_5b), Value::Null);
+        let mut refused = QueryRows::new();
+        let exact_refusal = refused.push(exact_refusal).unwrap_err();
+        assert_eq!(exact_refusal.id(), RowId(0x5155_4552_5b));
+        for tier in [&QUERY_RETIRED_ROWS, &QUERY_RETIRED_ROWS_OVERFLOW, &QUERY_RETIRED_ROWS_QUARANTINE] {
+            let mut owners = tier.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in owners.iter_mut() {
+                *slot = None;
+            }
+        }
+        assert!(refused.terminal_is_empty());
     }
 
     //#region 🔖️Value

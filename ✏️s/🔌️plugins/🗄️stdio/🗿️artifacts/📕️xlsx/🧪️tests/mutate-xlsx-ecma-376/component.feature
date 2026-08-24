@@ -25,16 +25,34 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
   declared kinds are fully representable as "read the whole workbook into a grid, change the grid,
   rebuild the whole workbook from it", which is a genuine second producer, so they stay
   `@mode-differential`: `no-mutation`, `set-snapshot`, `insert-sheet`, `remove-sheet`,
-  `rename-sheet`, `set-cell`, `remove-cell`. The remaining three — `insert-shared-string`,
-  `remove-shared-string`, `set-shared-string` — address the shared-string pool by an INDEX
-  independent of any cell reference, exactly the axis neither reference crate exposes, so this
-  reference pairing cannot independently reproduce them; their `mutate` scenario is `@mode-round-trip`
-  rather than `@mode-differential` (the oracle honestly returns the input unchanged — the correct
-  answer this pairing can give, since no cell is affected either way — and the comparison instead
-  carries `sharedStringCount` as adapter-tracked arithmetic on the oracle side, mirrored against the
-  subject's own real `XlsxWorkbook::shared_strings.len()` on the subject side). Every scenario copies
-  the fixture into the case work directory before touching it; the committed file is never written
-  to.
+  `rename-sheet`, `set-cell`, `remove-cell`.
+
+  THE REMAINING THREE HAVE A SECOND PRODUCER TOO, AND IT IS NOT THAT PAIRING. `insert-shared-string`,
+  `remove-shared-string` and `set-shared-string` address the pool by an INDEX independent of any cell
+  reference — the axis neither `calamine` nor `rust_xlsxwriter` exposes. The conclusion once drawn
+  from that was that no second producer existed and the oracle had to return the input unchanged.
+  That conclusion was wrong. `xl/sharedStrings.xml` is a PART of an OPC package, and the second
+  producer for a part is the container codec plus an XML reader/writer: `zip` 6 + `quick-xml` 0.42,
+  which this owner has linked all along and which the six ECMA-376 conformance-class subsets already
+  run on. The three pool kinds now read the real 229-entry pool out of the package, edit it by index,
+  rewrite the part and reassemble the whole container from its parts — and the projection reads the
+  result back out of the bytes, entry by entry. Nothing about the pool is adapter-tracked any more,
+  and all ten kinds are `@mode-differential`.
+
+  ONE INVERSE GENUINELY DOES NOT EXIST, AND THE CASE SAYS SO RATHER THAN DODGING IT.
+  `XlsxMutation::InsertSharedString` carries only a `value` and appends at `shared_strings.len()`
+  (`../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:145`), so no
+  declared kind can put a string back at an INTERIOR position: `remove-shared-string {"index": 7}` of
+  a 229-entry pool is not invertible in this vocabulary at all, and the production `inverse()` at that
+  file's line 173 answers `SetSharedString`, which restores neither the pool's length nor the entry
+  that shifted into the hole. That is a real gap in the vocabulary, reported here rather than papered
+  over, and the oracle refuses such a request outright instead of returning a wrong undo. The
+  Examples row therefore removes index 228 — the LAST entry of the real pool, the German header
+  "Anzahl" — which append genuinely restores. Widening the vocabulary (an `insert-shared-string` that
+  carries an index) is the fix, and it belongs to whoever owns that enum.
+
+  Every scenario copies the fixture into the case work directory before touching it; the committed
+  file is never written to.
 
   THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because the reference
   pairing did not error. `inverse-<kind>` applies the mutation, applies its own independently
@@ -82,7 +100,7 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
     Examples:
       | id                    | params                                                        |
       | insert-shared-string  | {"value": "Ökobau Referenzquelle 2024"}                       |
-      | remove-shared-string  | {"index": 0}                                                  |
+      | remove-shared-string  | {"index": 228}                                                  |
       | set-shared-string     | {"index": 0, "value": "Aktualisierter Quellwert"}             |
 
   @id-inverse
@@ -106,7 +124,7 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
       | set-cell              | {"sheetName": "Marktplätze", "row": 3, "col": 2, "value": "Restado (überarbeitet)"}                                                                            |
       | remove-cell           | {"sheetName": "Marktplätze", "row": 6, "col": 7}                                                                                                                |
       | insert-shared-string  | {"value": "Ökobau Referenzquelle 2024"}                                                                                                                        |
-      | remove-shared-string  | {"index": 0}                                                                                                                                                    |
+      | remove-shared-string  | {"index": 228}                                                                                                                                                    |
       | set-shared-string     | {"index": 0, "value": "Aktualisierter Quellwert"}                                                                                                              |
 
   @id-identity-round-trip

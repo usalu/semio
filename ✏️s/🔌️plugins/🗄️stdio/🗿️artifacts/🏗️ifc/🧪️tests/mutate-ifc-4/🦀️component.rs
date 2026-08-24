@@ -156,14 +156,22 @@ fn no_mutation() -> Json {
     json_spec("no-mutation", json_obj(vec![]))
 }
 
-/// 🔮️ One handler shared by every `mutate-<kind>` scenario id. This handler asserts nothing BY
-/// DESIGN: it produces the reference result, and the parity phase is what compares it against the
-/// subject.
+/// 🔮️ One handler shared by every `mutate-<kind>` scenario id. It asserts ONE thing in role, before
+/// any parity comparison exists: every kind other than `no-mutation` must MOVE the semantic
+/// projection. A row whose parameters make the mutation a no-op is not a test -- it passes whenever
+/// the reference library declined to error, which is exactly the failure this platform exists to
+/// prevent. The baseline runs one `no-mutation` cycle so the comparison isolates the mutation
+/// rather than the writer's own normal form.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let kind = spec.str("kind");
+    let baseline = project_ifc_4_any(&oracle_apply_mutation(&input, &no_mutation())?)?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_ifc_4_any(&bytes)?;
+    if kind != "no-mutation" && projection == baseline {
+        return Err(format!("{kind:?} left the semantic projection of the IFC4 exchange structure unchanged -- a mutation that is not observable proves nothing, so this row's parameters do not exercise the kind they name"));
+    }
     Ok(Outcome::with_raw(bytes, projection))
 }
 

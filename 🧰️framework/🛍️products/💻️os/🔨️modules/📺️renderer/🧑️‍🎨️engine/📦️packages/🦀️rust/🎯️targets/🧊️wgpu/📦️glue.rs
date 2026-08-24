@@ -4596,6 +4596,149 @@ pub(crate) mod kernel_runtime {
         }
     }
 
+    //#region 📦️CommandDocumentRetirement
+    const COMMAND_DOCUMENT_RETIREMENT_CAPACITY: usize = UI_DOCUMENT_LEASE_SLOTS * ui_contract::UI_DOCUMENT_LEASE_ALIASES as usize;
+
+    #[derive(Clone, Copy)]
+    struct CommandDocumentReservationToken {
+        index: usize,
+        epoch: u64,
+        batch: u64,
+        generation: u64,
+    }
+
+    struct CommandDocumentPageReservation {
+        tokens: UiFixedList<CommandDocumentReservationToken, UI_DOCUMENT_LEASE_SLOTS>,
+    }
+
+    enum CommandDocumentRetirementState {
+        Reserved { epoch: u64, batch: u64, generation: u64 },
+        Pending { epoch: u64, batch: u64, generation: u64, surface: SurfaceId, document: UiDocumentLease },
+        Closing { epoch: u64, batch: u64, generation: u64, surface: SurfaceId, document: UiDocumentLease },
+    }
+
+    struct CommandDocumentRetirementRegistry {
+        slots: [Option<CommandDocumentRetirementState>; COMMAND_DOCUMENT_RETIREMENT_CAPACITY],
+        epochs: [u64; COMMAND_DOCUMENT_RETIREMENT_CAPACITY],
+        cursor: usize,
+    }
+
+    impl CommandDocumentRetirementRegistry {
+        fn new() -> Self {
+            Self { slots: std::array::from_fn(|_| None), epochs: [0; COMMAND_DOCUMENT_RETIREMENT_CAPACITY], cursor: 0 }
+        }
+
+        fn try_reserve_page(&mut self, batch: u64, generation: u64) -> Result<CommandDocumentPageReservation, ()> {
+            let mut candidates = UiFixedList::<CommandDocumentReservationToken, UI_DOCUMENT_LEASE_SLOTS>::default();
+            for index in 0..COMMAND_DOCUMENT_RETIREMENT_CAPACITY {
+                if self.slots[index].is_some() {
+                    continue;
+                }
+                let Some(epoch) = self.epochs[index].checked_add(1) else { continue };
+                candidates.try_push(CommandDocumentReservationToken { index, epoch, batch, generation }).map_err(|_| ())?;
+                if candidates.len() == UI_DOCUMENT_LEASE_SLOTS {
+                    break;
+                }
+            }
+            if candidates.len() != UI_DOCUMENT_LEASE_SLOTS {
+                return Err(());
+            }
+            for token in &candidates {
+                self.epochs[token.index] = token.epoch;
+                self.slots[token.index] = Some(CommandDocumentRetirementState::Reserved { epoch: token.epoch, batch, generation });
+            }
+            Ok(CommandDocumentPageReservation { tokens: candidates })
+        }
+
+        fn admit(&mut self, reservation: &mut CommandDocumentPageReservation, owner: ExchangeSurfaceDocument) {
+            let token = reservation.tokens.pop().expect("one fixed command-document destination is reserved for every fixed turn-result surface");
+            self.slots[token.index] = Some(CommandDocumentRetirementState::Pending { epoch: token.epoch, batch: token.batch, generation: token.generation, surface: owner.surface, document: owner.document });
+        }
+
+        fn release(&mut self, reservation: &mut CommandDocumentPageReservation) {
+            while let Some(token) = reservation.tokens.pop() {
+                let matches =
+                    self.slots[token.index].as_ref().is_some_and(|state| matches!(state, CommandDocumentRetirementState::Reserved { epoch, batch, generation } if *epoch == token.epoch && *batch == token.batch && *generation == token.generation));
+                if matches {
+                    self.slots[token.index] = None;
+                }
+            }
+        }
+
+        fn begin_close_batch(&mut self, batch: u64, generation: u64) {
+            for slot in &mut self.slots {
+                let Some(state) = slot.take() else { continue };
+                *slot = match state {
+                    CommandDocumentRetirementState::Reserved { batch: owner_batch, generation: owner_generation, .. } if owner_batch == batch && owner_generation == generation => None,
+                    CommandDocumentRetirementState::Pending { epoch, batch: owner_batch, generation: owner_generation, surface, document } if owner_batch == batch && owner_generation == generation => {
+                        Some(CommandDocumentRetirementState::Closing { epoch, batch: owner_batch, generation: owner_generation, surface, document })
+                    }
+                    state => Some(state),
+                };
+            }
+        }
+
+        fn begin_close_instance(&mut self, batch: u64) {
+            for slot in &mut self.slots {
+                let Some(state) = slot.take() else { continue };
+                *slot = match state {
+                    CommandDocumentRetirementState::Reserved { batch: owner_batch, .. } if owner_batch == batch => None,
+                    CommandDocumentRetirementState::Pending { epoch, batch: owner_batch, generation, surface, document } if owner_batch == batch => {
+                        Some(CommandDocumentRetirementState::Closing { epoch, batch: owner_batch, generation, surface, document })
+                    }
+                    state => Some(state),
+                };
+            }
+        }
+
+        fn publish_batch(&mut self, batch: u64, generation: u64, output: &mut UiFixedList<ExchangeSurfaceDocument, UI_DOCUMENT_LEASE_SLOTS>) {
+            for slot in &mut self.slots {
+                let Some(state) = slot.take() else { continue };
+                *slot = match state {
+                    CommandDocumentRetirementState::Pending { epoch, batch: owner_batch, generation: owner_generation, surface, document } if owner_batch == batch && owner_generation == generation => {
+                        let owner = ExchangeSurfaceDocument { surface, document };
+                        match output.try_push(owner) {
+                            Ok(()) => None,
+                            Err(owner) => Some(CommandDocumentRetirementState::Closing { epoch, batch: owner_batch, generation: owner_generation, surface: owner.surface, document: owner.document }),
+                        }
+                    }
+                    state => Some(state),
+                };
+            }
+        }
+
+        fn close_one(&mut self) -> bool {
+            let index = self.cursor;
+            self.cursor = (self.cursor + 1) % COMMAND_DOCUMENT_RETIREMENT_CAPACITY;
+            let Some(CommandDocumentRetirementState::Closing { document, .. }) = self.slots[index].as_mut() else { return false };
+            let terminal = document.close_step() && document.terminal_is_empty();
+            if terminal {
+                let terminal = self.slots[index].take().expect("terminal command document retirement slot");
+                assert!(matches!(&terminal, CommandDocumentRetirementState::Closing { document, .. } if document.terminal_is_empty()), "command document retirement witness changed before removal");
+            }
+            true
+        }
+
+        fn has_close_work(&self) -> bool {
+            self.slots.iter().flatten().any(|state| matches!(state, CommandDocumentRetirementState::Closing { .. }))
+        }
+
+        fn batch_is_empty(&self, batch: u64, generation: u64) -> bool {
+            !self.slots.iter().flatten().any(|state| match state {
+                CommandDocumentRetirementState::Reserved { batch: owner_batch, generation: owner_generation, .. }
+                | CommandDocumentRetirementState::Pending { batch: owner_batch, generation: owner_generation, .. }
+                | CommandDocumentRetirementState::Closing { batch: owner_batch, generation: owner_generation, .. } => *owner_batch == batch && *owner_generation == generation,
+            })
+        }
+
+        fn instance_is_empty(&self, batch: u64) -> bool {
+            !self.slots.iter().flatten().any(|state| match state {
+                CommandDocumentRetirementState::Reserved { batch: owner_batch, .. } | CommandDocumentRetirementState::Pending { batch: owner_batch, .. } | CommandDocumentRetirementState::Closing { batch: owner_batch, .. } => *owner_batch == batch,
+            })
+        }
+    }
+    //#endregion 📦️CommandDocumentRetirement
+
     struct KernelPoolState {
         guest_runtime: Arc<GuestRuntimes>,
         /// 🎠️ terra-kernel-loop: the real multi-shard engine — replaces the single physical
@@ -4625,6 +4768,7 @@ pub(crate) mod kernel_runtime {
         pending_rejections: PendingSurfaceRejectionRegistry,
         retained_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
         queued_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
+        command_document_closes: CommandDocumentRetirementRegistry,
         rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
         rejected_events: Option<RejectedKernelEvents>,
         job_progress: JobProgressOverlayStore,
@@ -4658,6 +4802,7 @@ pub(crate) mod kernel_runtime {
                 pending_rejections: PendingSurfaceRejectionRegistry::new(),
                 retained_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
                 queued_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
+                command_document_closes: CommandDocumentRetirementRegistry::new(),
                 rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
                 rejected_events: None,
                 job_progress: JobProgressOverlayStore::new(),
@@ -4710,6 +4855,10 @@ pub(crate) mod kernel_runtime {
                 }
                 return !self.command_maintenance_pending();
             }
+            if self.command_document_closes.has_close_work() {
+                let _ = self.command_document_closes.close_one();
+                return !self.command_maintenance_pending();
+            }
             if self.retained_command_closes.has_close_work() {
                 let _ = self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
                 return !self.retained_command_closes.has_close_work() && !self.queued_command_closes.has_close_work() && self.rejected_command_builds.terminal_is_empty();
@@ -4742,6 +4891,7 @@ pub(crate) mod kernel_runtime {
                 || self.rejected_job_progress.iter().any(Option::is_some)
                 || self.retained_command_closes.has_close_work()
                 || self.queued_command_closes.has_close_work()
+                || self.command_document_closes.has_close_work()
                 || !self.rejected_command_builds.terminal_is_empty()
                 || self.rejected_events.is_some()
         }
@@ -5024,6 +5174,7 @@ pub(crate) mod kernel_runtime {
         async fn destroy_app_step(&mut self, instance: u32) -> bool {
             let _ = self.retained_command_closes.begin_close_key(u64::from(instance));
             let _ = self.queued_command_closes.begin_close_key(u64::from(instance));
+            self.command_document_closes.begin_close_instance(u64::from(instance));
             let close_index = self.closing_apps.iter().position(|slot| slot.as_ref().is_some_and(|close| close.instance == instance));
             let close_index = match close_index {
                 Some(index) => index,
@@ -5075,6 +5226,11 @@ pub(crate) mod kernel_runtime {
                 return false;
             }
             if closing.actors[..closing.actor_count].iter().any(|actor| !self.job_progress.actor_terminal_is_empty(*actor)) {
+                let _ = self.command_maintenance_step();
+                self.closing_apps[close_index] = Some(closing);
+                return false;
+            }
+            if !self.command_document_closes.instance_is_empty(u64::from(instance)) {
                 let _ = self.command_maintenance_step();
                 self.closing_apps[close_index] = Some(closing);
                 return false;
@@ -5156,35 +5312,100 @@ pub(crate) mod kernel_runtime {
             };
             let mut combined = ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
             loop {
-                let events = match self.retained_command_closes.with_driver_mut(key, generation, |driver| driver.next_page()).map_err(|fault| fault.to_string())?.map_err(|fault| fault.to_string())? {
+                let mut destinations = match self.command_document_closes.try_reserve_page(key, generation) {
+                    Ok(destinations) => destinations,
+                    Err(()) => {
+                        self.command_document_closes.begin_close_batch(key, generation);
+                        let _ = self.retained_command_closes.begin_close(key, generation);
+                        let _ = self.command_maintenance_step();
+                        return Err("kernel: command document destinations saturated before the next turn; retained batch and exact documents entered bounded close".to_string());
+                    }
+                };
+                let page = self.retained_command_closes.with_driver_mut(key, generation, |driver| driver.next_page());
+                let page = match page {
+                    Ok(Ok(page)) => page,
+                    Ok(Err(fault)) => {
+                        self.command_document_closes.release(&mut destinations);
+                        self.command_document_closes.begin_close_batch(key, generation);
+                        let _ = self.retained_command_closes.begin_close(key, generation);
+                        let _ = self.command_maintenance_step();
+                        return Err(fault.to_string());
+                    }
+                    Err(fault) => {
+                        self.command_document_closes.release(&mut destinations);
+                        self.command_document_closes.begin_close_batch(key, generation);
+                        let _ = self.retained_command_closes.begin_close(key, generation);
+                        let _ = self.command_maintenance_step();
+                        return Err(fault.to_string());
+                    }
+                };
+                let events = match page {
                     Some((cursor, bytes)) => vec![Event::CommandIngressPage { cursor, bytes }],
                     None => vec![Event::Wake],
                 };
-                self.retained_command_closes.prepare_suspend(key, generation).map_err(|fault| fault.to_string())?;
-                let outcome = self.run_turn(actor, instance, events).await?;
-                self.retained_command_closes.resume(key, generation).map_err(|fault| fault.to_string())?;
-                let progress = self
-                    .retained_command_closes
-                    .with_driver_mut(key, generation, |driver| driver.observe(&outcome.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
-                    .map_err(|fault| fault.to_string())?
-                    .map_err(|fault| fault.to_string())?;
-                combined.frames.extend(outcome.frames);
-                for surface in outcome.surfaces {
-                    if let Err(mut rejected) = combined.surfaces.try_push(surface) {
-                        let _ = rejected.document.close_step();
-                    }
+                if let Err(fault) = self.retained_command_closes.prepare_suspend(key, generation) {
+                    self.command_document_closes.release(&mut destinations);
+                    self.command_document_closes.begin_close_batch(key, generation);
+                    let _ = self.retained_command_closes.begin_close(key, generation);
+                    let _ = self.command_maintenance_step();
+                    return Err(fault.to_string());
                 }
-                combined.effects.extend(outcome.effects);
-                combined.command_ingress = outcome.command_ingress;
+                let outcome = match self.run_turn(actor, instance, events).await {
+                    Ok(outcome) => outcome,
+                    Err(fault) => {
+                        self.command_document_closes.release(&mut destinations);
+                        let _ = self.retained_command_closes.resume(key, generation);
+                        self.command_document_closes.begin_close_batch(key, generation);
+                        let _ = self.retained_command_closes.begin_close(key, generation);
+                        let _ = self.command_maintenance_step();
+                        return Err(fault);
+                    }
+                };
+                let ExchangeOutcome { frames, surfaces, effects, command_ingress } = outcome;
+                for surface in surfaces {
+                    self.command_document_closes.admit(&mut destinations, surface);
+                }
+                self.command_document_closes.release(&mut destinations);
+                if let Err(fault) = self.retained_command_closes.resume(key, generation) {
+                    self.command_document_closes.begin_close_batch(key, generation);
+                    let _ = self.retained_command_closes.begin_close(key, generation);
+                    let _ = self.command_maintenance_step();
+                    return Err(fault.to_string());
+                }
+                let progress = match self.retained_command_closes.with_driver_mut(key, generation, |driver| driver.observe(&command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)) {
+                    Ok(Ok(progress)) => progress,
+                    Ok(Err(fault)) => {
+                        self.command_document_closes.begin_close_batch(key, generation);
+                        let _ = self.retained_command_closes.begin_close(key, generation);
+                        let _ = self.command_maintenance_step();
+                        return Err(fault.to_string());
+                    }
+                    Err(fault) => {
+                        self.command_document_closes.begin_close_batch(key, generation);
+                        let _ = self.retained_command_closes.begin_close(key, generation);
+                        let _ = self.command_maintenance_step();
+                        return Err(fault.to_string());
+                    }
+                };
+                combined.frames.extend(frames);
+                combined.effects.extend(effects);
+                combined.command_ingress = command_ingress;
                 match progress {
                     semio_framework::kernel::CommandBatchProgress::Complete => {
-                        self.retained_command_closes.remove_terminal(key, generation).map_err(|fault| fault.to_string())?;
+                        if let Err(fault) = self.retained_command_closes.remove_terminal(key, generation) {
+                            self.command_document_closes.begin_close_batch(key, generation);
+                            let _ = self.retained_command_closes.begin_close(key, generation);
+                            let _ = self.command_maintenance_step();
+                            return Err(fault.to_string());
+                        }
+                        self.command_document_closes.publish_batch(key, generation, &mut combined.surfaces);
                         return Ok(combined);
                     }
                     semio_framework::kernel::CommandBatchProgress::Faulted => {
+                        self.command_document_closes.begin_close_batch(key, generation);
                         self.retained_command_closes.begin_close(key, generation).map_err(|fault| fault.to_string())?;
-                        let (complete, _, _) = self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
-                        return Err(if complete { "kernel: command ingress faulted after terminal exact-owner cleanup".to_string() } else { "kernel: command ingress faulted; retained owner closed one exact page and awaits retry".to_string() });
+                        let _ = self.command_maintenance_step();
+                        return Err("kernel: command ingress faulted; exact driver and surface-document owners entered incremental close".to_string());
                     }
                     semio_framework::kernel::CommandBatchProgress::PageReady | semio_framework::kernel::CommandBatchProgress::Waiting => {}
                 }
@@ -5457,11 +5678,13 @@ pub(crate) mod kernel_runtime {
                     retained.advance_document_one();
                 }
             }
-            if let Some(document) = retained.try_alias() {
-                if let Err(rejected) = out.try_push(ExchangeSurfaceDocument { surface: surface.clone(), document }) {
-                    retained.exchange_closing = Some(rejected.document);
-                    if requested.is_some() {
-                        return Err("retained surface exchange capacity exhausted".to_string());
+            if retained.exchange_closing.is_none() {
+                if let Some(document) = retained.try_alias() {
+                    if let Err(rejected) = out.try_push(ExchangeSurfaceDocument { surface: surface.clone(), document }) {
+                        retained.exchange_closing = Some(rejected.document);
+                        if requested.is_some() {
+                            return Err("retained surface exchange capacity exhausted".to_string());
+                        }
                     }
                 }
             }
@@ -5756,6 +5979,29 @@ pub(crate) mod kernel_runtime {
     mod semantic_document_tests {
         use super::*;
 
+        fn document(generation: u64, surface: &str) -> UiDocumentLease {
+            let id = ui_contract::UiNodeId(1);
+            let surface = SurfaceId::try_from(surface).expect("bounded command retirement surface");
+            let mut builder = UiDocumentBuilder::try_new(generation, surface, UiRevision(generation), Some(id), generation).expect("command retirement document slot");
+            builder
+                .try_push(ui_contract::UiNodeRecord {
+                    id,
+                    key: ui_contract::UiText::try_from_str("root").expect("bounded command retirement key"),
+                    component: ui_contract::Component::Separator(ui_contract::SeparatorProps {}),
+                    layout: Default::default(),
+                    style: Default::default(),
+                    activity: Default::default(),
+                    disabled: false,
+                    transition: None,
+                    accessibility: Default::default(),
+                    bindings: Default::default(),
+                    menu: None,
+                    children: Default::default(),
+                })
+                .expect("command retirement root");
+            builder.finish().expect("command retirement document")
+        }
+
         fn retained_patch(surface: SurfaceId, base: u64, revision: u64) -> KernelUiPatch {
             let id = ui_contract::UiNodeId(1);
             let record = ui_contract::UiNodeRecord {
@@ -5834,6 +6080,64 @@ pub(crate) mod kernel_runtime {
                 let _ = rejections.take_any_one();
             }
             while !retained.advance_realm_close_one() {}
+        }
+
+        #[test]
+        fn command_batch_ninth_document_is_retained_after_nonterminal_close_and_exactly_returned_or_retired() {
+            let first = document(91_001, "command.retirement.first");
+            let mut owners = UiFixedList::<ExchangeSurfaceDocument, 9>::default();
+            for ordinal in 0..7 {
+                owners
+                    .try_push(ExchangeSurfaceDocument { surface: SurfaceId::try_from(format!("command.retirement.alias-{ordinal}")).expect("bounded alias surface"), document: first.try_alias().expect("fixed command document alias") })
+                    .unwrap_or_else(|_| panic!("command alias owner"));
+            }
+            owners.try_push(ExchangeSurfaceDocument { surface: SurfaceId::try_from("command.retirement.primary").expect("bounded primary surface"), document: first }).unwrap_or_else(|_| panic!("command primary owner"));
+            owners
+                .try_push(ExchangeSurfaceDocument { surface: SurfaceId::try_from("command.retirement.ninth").expect("bounded ninth surface"), document: document(91_002, "command.retirement.ninth-document") })
+                .unwrap_or_else(|_| panic!("command ninth owner"));
+            let mut registry = CommandDocumentRetirementRegistry::new();
+            let mut first_page = registry.try_reserve_page(7, 91_101).expect("first fixed page destinations");
+            for _ in 0..UI_DOCUMENT_LEASE_SLOTS {
+                registry.admit(&mut first_page, owners.swap_remove(0).expect("first page owner"));
+            }
+            registry.release(&mut first_page);
+            let mut second_page = registry.try_reserve_page(7, 91_101).expect("second fixed page destinations");
+            registry.admit(&mut second_page, owners.swap_remove(0).expect("ninth page owner"));
+            registry.release(&mut second_page);
+            registry.begin_close_batch(7, 91_100);
+            assert!(!registry.has_close_work(), "stale batch generation cannot mutate pending document owners");
+            let mut output = UiFixedList::default();
+            registry.publish_batch(7, 91_101, &mut output);
+            assert_eq!(output.len(), UI_DOCUMENT_LEASE_SLOTS);
+            assert!(!registry.batch_is_empty(7, 91_101), "the ninth owner remains qualified in the close lane");
+            while !registry.close_one() {}
+            assert!(!registry.batch_is_empty(7, 91_101), "one nonterminal close opportunity cannot discard the ninth owner");
+            let mut cleanup = registry.try_reserve_page(8, 91_102).expect("output cleanup destinations");
+            for owner in output {
+                registry.admit(&mut cleanup, owner);
+            }
+            registry.release(&mut cleanup);
+            registry.begin_close_batch(8, 91_102);
+            let mut opportunities = 1;
+            while !registry.batch_is_empty(7, 91_101) || !registry.batch_is_empty(8, 91_102) {
+                let _ = registry.close_one();
+                opportunities += 1;
+                assert!(opportunities < 16_384, "command document retirement must converge");
+            }
+        }
+
+        #[test]
+        fn command_document_page_saturation_refuses_before_turn_owner_production() {
+            let mut registry = CommandDocumentRetirementRegistry::new();
+            let mut reservations = UiFixedList::<CommandDocumentPageReservation, { COMMAND_DOCUMENT_RETIREMENT_CAPACITY / UI_DOCUMENT_LEASE_SLOTS }>::default();
+            for generation in 1..=COMMAND_DOCUMENT_RETIREMENT_CAPACITY / UI_DOCUMENT_LEASE_SLOTS {
+                reservations.try_push(registry.try_reserve_page(17, generation as u64).expect("absolute command document page credit")).unwrap_or_else(|_| panic!("fixed reservation owner"));
+            }
+            assert!(registry.try_reserve_page(17, 999).is_err(), "max plus one refuses before a guest turn can produce another document owner");
+            for mut reservation in reservations {
+                registry.release(&mut reservation);
+            }
+            assert!(registry.instance_is_empty(17));
         }
 
         #[test]

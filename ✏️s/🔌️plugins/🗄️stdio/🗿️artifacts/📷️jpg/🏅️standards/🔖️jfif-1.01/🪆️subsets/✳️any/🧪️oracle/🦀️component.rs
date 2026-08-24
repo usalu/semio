@@ -370,10 +370,24 @@ mod oracles {
         format!("{hash:016x}")
     }
 
-    /// 👁️ The surface every scenario compares through: geometry plus an 8-bucket luma histogram for
-    /// the LOSSY raster half, and exact JFIF fields plus exact per-segment digests for the metadata
-    /// half. The histogram carries the case's tolerance; the metadata does not need any, because a
-    /// marker segment is copied byte for byte or it is wrong.
+    /// 👁️ The surface every scenario compares through.
+    ///
+    /// ⚠️ Every EXACT claim here is spelled as a STRING, deliberately. `semantic-jpg-mutate-v1`
+    /// declares a single absolute per-NUMBER slack of 400 000, sized for the lossy raster; the
+    /// comparison engine applies it to every number in the projection, so a numeric member cannot
+    /// carry an exact claim at all. Measured on this fixture, `width` as a number meant the real
+    /// 2275x2560 scan and a 3x2 stub compared EQUAL (|2275-3| is inside the slack), and the JFIF
+    /// version, density unit and both densities were equally unobservable. Strings are compared by
+    /// equality and no tolerance touches them. Only `lumaHistogram` stays numeric, because it is
+    /// the one member that genuinely needs the slack.
+    ///
+    /// `quantTables` is the DQT payload each side actually wrote, in zigzag order. It is a shared,
+    /// encoder-independent witness of the re-encode quality: `image`'s `new_with_quality` and this
+    /// subset's own `scale_quality` implement the SAME IJG mapping (`q < 50 ? 5000/q : 200 - 2q`,
+    /// `clamp((base * scale + 50) / 100, 1, 255)`) over the SAME Annex K.1 base tables, and both
+    /// emit them through the same §B.2.4.1 zigzag. Without it `set-re-encode-quality` was not
+    /// observable at all: measured on this fixture, a pass through quality 50 moves at most 10 014
+    /// pixels between luma buckets and quality 5 at most 55 570 — both far inside the slack.
     pub fn project(input: &[u8]) -> Result<Json, String> {
         let doc = decode(input)?;
         let mut buckets = [0u32; 8];
@@ -381,22 +395,20 @@ mod oracles {
             let luma = (u32::from(pixel[0]) * 299 + u32::from(pixel[1]) * 587 + u32::from(pixel[2]) * 114) / 1000;
             buckets[(luma / 32).min(7) as usize] += 1;
         }
-        let segments: Vec<Json> = doc
-            .other_segments
+        let segments: Vec<Json> = doc.other_segments.iter().map(|(marker, payload)| Json::String(format!("{marker:02x}:{}:{}", payload.len(), digest_hex(payload)))).collect();
+        let quant: Vec<Json> = scan_segments(input)?
             .iter()
-            .map(|(marker, payload)| Json::Object(vec![("marker".to_string(), Json::Number(*marker as f64)), ("bytes".to_string(), Json::Number(payload.len() as f64)), ("digest".to_string(), Json::String(digest_hex(payload)))]))
+            .filter(|(marker, _)| *marker == 0xDB)
+            .flat_map(|(_, payload)| payload.chunks(65).filter(|table| table.len() == 65).map(|table| Json::String(format!("{:x}:{}", table[0], digest_hex(&table[1..])))).collect::<Vec<_>>())
             .collect();
         Ok(Json::Object(vec![
             ("format".to_string(), Json::String("jpg".to_string())),
-            ("width".to_string(), Json::Number(doc.width as f64)),
-            ("height".to_string(), Json::Number(doc.height as f64)),
+            ("dimensions".to_string(), Json::String(format!("{}x{}", doc.width, doc.height))),
             ("lossy".to_string(), Json::Bool(true)),
-            ("jfifVersion".to_string(), Json::Array(vec![Json::Number(doc.version.0 as f64), Json::Number(doc.version.1 as f64)])),
-            ("jfifDensityUnits".to_string(), Json::Number(doc.density_units as f64)),
-            ("jfifXDensity".to_string(), Json::Number(doc.x_density as f64)),
-            ("jfifYDensity".to_string(), Json::Number(doc.y_density as f64)),
-            ("otherSegmentCount".to_string(), Json::Number(segments.len() as f64)),
+            ("jfifVersion".to_string(), Json::String(format!("{}.{}", doc.version.0, doc.version.1))),
+            ("jfifDensity".to_string(), Json::String(format!("unit{}:{}x{}", doc.density_units, doc.x_density, doc.y_density))),
             ("otherSegments".to_string(), Json::Array(segments)),
+            ("quantTables".to_string(), Json::Array(quant)),
             ("lumaHistogram".to_string(), Json::Array(buckets.iter().map(|count| Json::Number(*count as f64)).collect())),
         ]))
     }

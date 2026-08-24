@@ -265,12 +265,26 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 /// the comparison engine reads projections) — keys keep whatever order `json::object::Object`'s
 /// hash-ordered tree iterates in, which is IGNORED at comparison time by the `ordered-json-v1`
 /// profile (see the module doc comment: `json` does not preserve insertion order at all).
+/// 🔢️ WORKED_AROUND_DEFECT, the mirror of [`library_number`] — `json` 0.12's `as_f64()` is not
+/// exact either. It recomputes `mantissa * 10^exponent` in floating point, so a value the crate
+/// parsed and stores correctly comes back rounded: the real fixture's
+/// `-1.3283902924697095e-17` surface normal reads out as `…097e-17`. Reproduced standalone against
+/// the crate alone. The crate's own `dump()` of the same value is exact — it prints the stored
+/// decimal — so the conversion goes through that text and the standard library's correctly-rounded
+/// `str::parse::<f64>`, falling back to the crate's accessor only if the text is not a Rust float
+/// literal at all. Left as `as_f64()`, the reading drifts by one ULP per cycle and the inverse law
+/// fails on a defect that is not this repository's.
+#[cfg(feature = "oracles")]
+fn host_number(value: &json::JsonValue) -> f64 {
+    value.dump().parse::<f64>().unwrap_or_else(|_| value.as_f64().unwrap_or(f64::NAN))
+}
+
 #[cfg(feature = "oracles")]
 pub fn project_value(value: &json::JsonValue) -> Json {
     match value {
         json::JsonValue::Null => Json::Null,
         json::JsonValue::Boolean(flag) => Json::Bool(*flag),
-        json::JsonValue::Number(_) => Json::Number(value.as_f64().unwrap_or(f64::NAN)),
+        json::JsonValue::Number(_) => Json::Number(host_number(value)),
         json::JsonValue::Short(_) | json::JsonValue::String(_) => Json::String(value.as_str().unwrap_or("").to_string()),
         json::JsonValue::Array(items) => Json::Array(items.iter().map(project_value).collect()),
         json::JsonValue::Object(object) => Json::Object(object.iter().map(|(key, value)| (key.to_string(), project_value(value))).collect()),
@@ -332,6 +346,18 @@ mod tests {
             assert_eq!(library_number(value).as_f64().unwrap().to_bits(), value.to_bits(), "and exact for {value:?} as well");
         }
         assert!(library_number(f64::NAN).is_null(), "a non-finite double is not a JSON number");
+    }
+
+    /// 🔢️ The mirror defect and its fix: reading a real fixture coordinate back out of the crate.
+    #[test]
+    fn the_host_number_reading_is_exact_where_the_crates_own_accessor_is_not() {
+        let document = json::parse("{\"v\": -1.3283902924697095e-17}").unwrap();
+        assert_ne!(document["v"].as_f64().unwrap(), -1.3283902924697095e-17_f64, "json 0.12's own as_f64 is documented here as lossy for this real fixture coordinate");
+        assert_eq!(host_number(&document["v"]), -1.3283902924697095e-17_f64, "the workaround has to read it back exactly");
+        for text in ["0.1", "1", "-0.0", "1e300", "3.141592653589793", "4503599627370497"] {
+            let probe = json::parse(&format!("{{\"v\": {text}}}")).unwrap();
+            assert_eq!(host_number(&probe["v"]).to_bits(), text.parse::<f64>().unwrap().to_bits(), "and stay exact for {text}");
+        }
     }
     fn obj(pairs: Vec<(&str, Json)>) -> Json {
         Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())

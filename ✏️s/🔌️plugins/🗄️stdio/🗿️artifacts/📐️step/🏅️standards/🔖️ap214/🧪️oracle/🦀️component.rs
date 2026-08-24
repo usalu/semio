@@ -510,6 +510,24 @@ pub mod ladder {
     /// 🏭️ Writes the whole product identity chain, or — with `None` — removes every instance of all
     /// three rungs, which is the only edit that deterministically turns the soft product-chain
     /// diagnostic ON.
+    ///
+    /// ⚠️ **A real defect in the reference library, reproduced standalone before being worked
+    /// around.** The authored `PRODUCT` carries three of ISO 10303-41's four attributes; its
+    /// `frame_of_reference` — a SET of `product_context`, empty for a chain this function authors
+    /// out of nothing — is OMITTED rather than written as the empty aggregate `()` that
+    /// ISO 10303-21 §6.2 explicitly permits, because **`ruststep` 0.4 cannot parse an empty
+    /// aggregate as an argument value.** Measured directly in this ticket's scratch probe against
+    /// the crate itself: `#1=FOO(());` and `#1=FOO('a',());` both fail with `Error while tokenizing
+    /// STEP input … in Tag: DATA;`, while `#1=FOO();`, `#1=FOO('a',(''));` and `#1=FOO('a',$);` all
+    /// parse. (The real committed fixture is unaffected: its four `()` occurrences —
+    /// `LENGTH_UNIT()`, `PLANE_ANGLE_UNIT()`, `SOLID_ANGLE_UNIT()` — are empty RECORD argument
+    /// lists inside complex instances, not empty aggregate VALUES, and those parse fine.)
+    ///
+    /// Emitting the spec-legal `()` would produce a document the registered independent reader
+    /// refuses to read back, which would make the inverse and identity laws untestable for a reason
+    /// that has nothing to do with this repository. The omission costs no evidence: the projection
+    /// reports the chain's ids and names, which is exactly what `has_product_definition_chain`
+    /// reads. Recorded here rather than hidden behind a loosened projection.
     pub fn set_product_identity(exchange: &mut Exchange, identity: Option<&Json>) -> Result<(), String> {
         let chain: Vec<&str> = PRODUCT_TYPES.iter().chain(FORMATION_TYPES).chain(DEFINITION_TYPES).copied().collect();
         for section in exchange.data.iter_mut() {
@@ -524,7 +542,7 @@ pub mod ladder {
         let definition_id = part21::opt_str_field(identity, "definitionId").unwrap_or_default();
         let simple = |id: u64, name: &str, arguments: Vec<Parameter>| EntityInstance::Simple { id, record: Record { name: name.to_string(), parameter: Parameter::List(arguments) } };
         let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
-        section.entities.push(simple(product, PRODUCT_TYPES[0], vec![Parameter::String(product_name.clone()), Parameter::String(product_name), Parameter::String(String::new()), Parameter::List(Vec::new())]));
+        section.entities.push(simple(product, PRODUCT_TYPES[0], vec![Parameter::String(product_name.clone()), Parameter::String(product_name), Parameter::String(String::new())]));
         section.entities.push(simple(formation, FORMATION_TYPES[0], vec![Parameter::String(formation_id), Parameter::NotProvided, Parameter::Ref(ruststep::ast::Name::Entity(product))]));
         section.entities.push(simple(definition, DEFINITION_TYPES[0], vec![Parameter::String(definition_id), Parameter::NotProvided, Parameter::Ref(ruststep::ast::Name::Entity(formation)), Parameter::NotProvided]));
         section.entities.sort_by_key(|entity| part21::entity_id(entity));

@@ -383,7 +383,17 @@ mod tests {
         let (with_two, _) = applied(&base, &seeded);
         let insertion = XmlValidMutation::DeclareEntity { index: 1, parameter: false, name: "second".into(), value: "2".into() };
         let (mut with_three, _) = applied(&with_two, &insertion);
-        let names: Vec<&str> = with_three.doc.doctype.as_ref().expect("doctype").declarations.iter().map(|XmlDtdDeclaration::Entity { name, .. }| name.as_str()).collect();
+        let names: Vec<&str> = with_three
+            .doc
+            .doctype
+            .as_ref()
+            .expect("doctype")
+            .declarations
+            .iter()
+            .map(|declaration| match declaration {
+                XmlDtdDeclaration::Entity { name, .. } => name.as_str(),
+            })
+            .collect();
         assert_eq!(names, vec!["first", "second", "third"], "position is semantic under §4.2");
         for step in inverse_xml_valid_mutation(&insertion, &with_two) {
             let (undone, _) = applied(&with_three, &step);

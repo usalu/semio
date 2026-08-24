@@ -104,14 +104,22 @@ fn no_mutation() -> Json {
 }
 
 /// 🔮️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
-/// spec is carried in its doc string, not in the function it dispatches to. This handler asserts
-/// nothing BY DESIGN: it produces the reference result, and the parity phase is what compares it
-/// against the subject.
+/// spec is carried in its doc string, not in the function it dispatches to. It asserts ONE thing in
+/// role, before any parity comparison exists: every kind other than `no-mutation` must MOVE the
+/// semantic projection. A row whose parameters make the mutation a no-op is not a test -- it passes
+/// whenever the reference library declined to error, which is exactly the failure this platform
+/// exists to prevent. The baseline runs one `no-mutation` cycle so the comparison isolates the
+/// mutation rather than the writer's own normal form.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let kind = spec.str("kind");
+    let baseline = project_dxf_r12(&oracle_apply_mutation(&input, &no_mutation())?)?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_dxf_r12(&bytes)?;
+    if kind != "no-mutation" && projection == baseline {
+        return Err(format!("{kind:?} left the semantic projection of the R12 drawing unchanged -- a mutation that is not observable proves nothing, so this row's parameters do not exercise the kind they name"));
+    }
     Ok(Outcome::with_raw(bytes, projection))
 }
 

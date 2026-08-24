@@ -15,7 +15,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::mp3::standards::v_mpeg1_layer3::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_mp3};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, reparsed_not_copied, round_trip_preserves_within};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Kinds
 /// 🧾️ Mirrors `Mp3Mutation`'s declared vocabulary
@@ -50,11 +50,17 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 /// 🔮️ The forward reference answer. Correct by design that it asserts nothing beyond the
 /// reference's own success: this handler PRODUCES the reference result, and the comparison against
 /// the subject is the parity phase's job.
+/// 👁️ `@id-mutate`: applies the row's kind with the registered reference implementation and ASSERTS
+/// the result is distinguishable from the untouched fixture. The exemption list is empty — every
+/// kind this vocabulary declares reaches the compared projection — so a kind that stops moving it
+/// fails here rather than reporting a green identical to `no-mutation`'s.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let before = project_mp3(&input)?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_mp3(&bytes)?;
+    mutation_is_observable(&spec.str("kind"), &projection, &before, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 

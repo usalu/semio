@@ -11,7 +11,10 @@ pub use crate::artifacts::xml::standards::v1_0::subsets::any::schema::*;
 /// 🧬️ THIS subset's own mutation vocabulary — `XmlValidMutation`, not the `✳️any` subset's
 /// `XmlMutation` the glob re-export above would otherwise supply. Declared here rather than in the
 /// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
-/// over the glob import, which is exactly the intent.
+/// over the glob import, which is exactly the intent. Its own gate (a `SetSnapshot` that would land
+/// a hard §2.8 violation is refused outright) is tested inside that module;
+/// `derived_construction`'s tests below cover the SECOND, independent layer — `build()`, which
+/// catches a snapshot that arrived around the vocabulary entirely.
 #[path = "🧬️mutations/🦀️component.rs"]
 pub mod valid_mutations;
 pub use valid_mutations::{apply_xml_valid_mutation, inverse_xml_valid_mutation, XmlValidMutation, KINDS as VALID_MUTATION_KINDS};
@@ -105,20 +108,6 @@ pub mod derived_construction {
             mismatched.doc.doctype = Some("<!DOCTYPE somethingElse>".into());
             let err = XmlValidBuilderConstruction::from_snapshot(mismatched).build().expect_err("a doctype/root name mismatch must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.xml.valid.root-name-mismatch"));
-        }
-
-        /// 🛡️ The vocabulary's own gate, one layer earlier than `build()`: `✳️any`'s ungated
-        /// `SetSnapshot` would let a desynchronised DOCTYPE Name land in the snapshot and leave
-        /// `build()` to catch it. This subset's `SetSnapshot` refuses it outright and leaves the
-        /// document untouched, which is what makes the vocabulary subset-closed rather than merely
-        /// subset-checked.
-        #[semio_framework_async_macros::async_test]
-        async fn the_vocabularys_own_gate_refuses_a_mismatched_replacement() {
-            let mut mismatched = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("clean build");
-            mismatched.doc.doctype = Some("<!DOCTYPE somethingElse>".into());
-            let (kept, outcome) = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").mutate(XmlValidMutation::SetSnapshot { snapshot: mismatched });
-            assert!(outcome.messages().iter().any(|message| message.code.0 == super::super::valid_mutations::CODE_REJECTED), "got {:?}", outcome.messages());
-            assert_eq!(kept.build().expect("the refused mutation must leave a still-valid document").doc.doctype.as_ref().map(|doctype| doctype.name.as_str()), Some("root"));
         }
     }
 }

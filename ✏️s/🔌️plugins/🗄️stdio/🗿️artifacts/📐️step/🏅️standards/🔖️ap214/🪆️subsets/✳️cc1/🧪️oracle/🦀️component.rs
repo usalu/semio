@@ -6,7 +6,7 @@
 //! subsets so no classification or serialization step is copied per class.
 //!
 //! 🎯️ This dispatcher performs the vocabulary of a CONFORMANCE CLASS, not of the Part-21 grammar.
-//! `../../🪆️subsets/✳️any` declares eleven grammar verbs (insert an entity, set an argument…) that
+//! The sibling `../../✳️any` subset declares eleven grammar verbs (insert an entity, set an argument…) that
 //! would read the same for any ISO 10303-21 file on earth; the 5 kinds here are one per axis
 //! `check_cc1_conformance` actually reads, and the projection reports those axes and nothing else.
 //!
@@ -23,7 +23,7 @@
 //! that asked the code under test how to classify would compare an implementation with itself.
 //!
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the vocabulary this module is measured against.
-//! @see ../🧪️oracle/🔣️component.json — the `step-ap214-cc1` catalog and its no-oracle-free entry.
+//! @see 🔣️component.json — the `step-ap214-cc1` catalog and the `ruststep` registration it carries.
 
 use semio_repo_test_host::Json;
 
@@ -253,7 +253,23 @@ mod tests {
     fn exercised_specs() -> Vec<Json> {
         vec![
             spec("no-mutation", Json::Object(Vec::new())),
-            spec("set-snapshot", object(vec![("fileSchema", Json::Array(vec![Json::String("AUTOMOTIVE_DESIGN".to_string())]))])),
+            spec(
+                "set-snapshot",
+                object(vec![
+                    ("fileSchema", Json::Array(vec![Json::String("AUTOMOTIVE_DESIGN".to_string())])),
+                    (
+                        "productIdentity",
+                        object(vec![
+                            ("product", Json::Number(1.0)),
+                            ("productName", Json::String("Document".to_string())),
+                            ("formation", Json::Number(2.0)),
+                            ("formationId", Json::String("A".to_string())),
+                            ("definition", Json::Number(3.0)),
+                            ("definitionId", Json::String("A".to_string())),
+                        ]),
+                    ),
+                ]),
+            ),
             spec("set-file-schema", object(vec![("schemas", Json::Array(vec![Json::String("CONFIG_CONTROL_DESIGN".to_string())]))])),
             spec("set-product-identity", object(vec![("identity", Json::Null)])),
             spec("remove-shape-representation", object(vec![("id", Json::Number(13.0))])),

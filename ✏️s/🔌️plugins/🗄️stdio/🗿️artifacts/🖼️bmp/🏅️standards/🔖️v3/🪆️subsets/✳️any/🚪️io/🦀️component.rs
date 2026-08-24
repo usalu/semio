@@ -368,7 +368,10 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
 /// the sign of the on-disk `height` field and the row-write direction), and round-trip
 /// `x_pixels_per_meter`/`y_pixels_per_meter`/`colors_used`/`colors_important` verbatim from the
 /// snapshot. `pixels` is always canonical 8-bit RGBA (row 0 = image top); both paths drop the
-/// alpha channel (neither `BI_RGB` variant carries one).
+/// alpha channel (neither `BI_RGB` variant carries one). The indexed path is the one exception to
+/// "verbatim": it writes `palette.len()` as `biClrUsed` rather than `snap.colors_used`, because
+/// that header field states the size of the colour table immediately following it and this encoder
+/// writes exactly as many entries as the snapshot holds — see the comment at the write site.
 ///
 /// The indexed path can genuinely fail: `pixels` and `palette` are independent fields (a
 /// `SetPaletteEntry`/`RemovePaletteEntry` mutation only ever touches `palette`, never remaps
@@ -430,7 +433,12 @@ fn encode_bmp_indexed(snap: &BmpSnapshot, w: u32, h: u32) -> Result<Vec<u8>, Str
     out.extend_from_slice(&(pixel_bytes as u32).to_le_bytes());
     out.extend_from_slice(&snap.x_pixels_per_meter.to_le_bytes());
     out.extend_from_slice(&snap.y_pixels_per_meter.to_le_bytes());
-    out.extend_from_slice(&snap.colors_used.to_le_bytes());
+    // 🧾 `biClrUsed` states how many entries the colour table that follows actually has (BMP v3
+    // BITMAPINFOHEADER). This path writes exactly `snap.palette.len()` of them, so any other value
+    // — including a `snap.colors_used` an InsertPaletteEntry/RemovePaletteEntry mutation left
+    // behind, since neither maintains that field — would describe a table this encoder did not
+    // write, and every reader that sizes the table from the header would then misread the palette.
+    out.extend_from_slice(&(snap.palette.len() as u32).to_le_bytes());
     out.extend_from_slice(&snap.colors_important.to_le_bytes());
     for entry in &snap.palette {
         out.push(entry.b);

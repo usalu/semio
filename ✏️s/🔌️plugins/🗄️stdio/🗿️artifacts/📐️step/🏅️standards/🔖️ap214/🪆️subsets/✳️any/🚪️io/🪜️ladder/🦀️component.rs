@@ -274,13 +274,21 @@ pub fn product_identity(doc: &Part21Document) -> Option<ProductIdentity> {
 /// `product-definition-chain` diagnostic ON. Writing keeps each rung's supertype name, because a
 /// chain this function AUTHORS has no source to specify and `product_definition_formation` is the
 /// form the specification names.
+///
+/// ⚠️ The authored `PRODUCT` carries three of ISO 10303-41's four attributes: `frame_of_reference`
+/// is omitted rather than written as the empty aggregate `()` ISO 10303-21 §6.2 permits, so that
+/// this function and the AP214 reference oracle author the SAME shape. The reason is recorded where
+/// it was measured — `../../../../🧪️oracle/🦀️component.rs`'s `set_product_identity` — and it is a
+/// defect in `ruststep` 0.4, reproduced standalone: that reader cannot parse an empty aggregate as
+/// an argument value at all, so emitting the spec-legal `()` would produce a document the registered
+/// independent reader refuses to read back.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn set_product_identity(doc: &mut Part21Document, identity: Option<&ProductIdentity>) {
     let chain: Vec<&str> = PRODUCT_TYPES.iter().chain(PRODUCT_DEFINITION_FORMATION_TYPES).chain(PRODUCT_DEFINITION_TYPES).copied().collect();
     doc.instances.retain(|instance| !chain.iter().any(|name| instance.is_type(name)));
     let Some(identity) = identity else { return };
     let rung = |id: u64, type_name: &str, args: Vec<Part21Value>| Part21Instance { id, entities: vec![(type_name.to_string(), args)] };
-    doc.instances.push(rung(identity.product, PRODUCT_TYPES[0], vec![Part21Value::Str(identity.product_name.clone()), Part21Value::Str(identity.product_name.clone()), Part21Value::Str(String::new()), Part21Value::List(Vec::new())]));
+    doc.instances.push(rung(identity.product, PRODUCT_TYPES[0], vec![Part21Value::Str(identity.product_name.clone()), Part21Value::Str(identity.product_name.clone()), Part21Value::Str(String::new())]));
     doc.instances.push(rung(identity.formation, PRODUCT_DEFINITION_FORMATION_TYPES[0], vec![Part21Value::Str(identity.formation_id.clone()), Part21Value::Unset, Part21Value::Ref(identity.product)]));
     doc.instances.push(rung(identity.definition, PRODUCT_DEFINITION_TYPES[0], vec![Part21Value::Str(identity.definition_id.clone()), Part21Value::Unset, Part21Value::Ref(identity.formation), Part21Value::Unset]));
     doc.instances.sort_by_key(|instance| instance.id);

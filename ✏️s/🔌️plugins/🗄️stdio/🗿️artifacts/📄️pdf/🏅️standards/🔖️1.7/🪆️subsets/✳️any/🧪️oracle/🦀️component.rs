@@ -113,6 +113,15 @@ mod oracles {
     /// ✏️️ A minimal `BT ... Tj ET` content stream carrying `text` as one `Tj`-shown string — the
     /// same operator `document::project_pdf`'s independent reader already scans for.
     fn text_content_stream(text: &str) -> Vec<u8> {
+        // 🕳️ A page with NO extractable text gets a text object with no text-showing operator, not a
+        // `() Tj` showing the empty string. Found by asserting the inverse law: the real thesis sets
+        // its type with `TJ` (the positioned-array form), so `page_text` — which reads `Tj`, the only
+        // form this writer emits — extracts nothing from it, and re-encoding an empty `text` as
+        // `() Tj` turned a page the independent reader projects as `text: []` into one it projects
+        // as `text: [""]`. Writing no operator is the faithful reconstruction of "no text".
+        if text.is_empty() {
+            return b"BT ET".to_vec();
+        }
         let mut out = Vec::new();
         out.extend_from_slice(b"BT /F1 12 Tf 72 720 Td (");
         for byte in text.as_bytes() {

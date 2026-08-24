@@ -734,16 +734,7 @@ impl Future for DbIoPageWriterSeal {
             _ => {
                 let mut writer = owner.writer.take().ok_or_else(|| DbIoPageWriterRejected { error: DbError::Internal("DB I/O retained writer publication lost its owner".to_string()), writer: None })?;
                 let pages = std::mem::replace(&mut writer.pages, std::array::from_fn(|_| None));
-                let published = DbIoPages {
-                    operation: writer.operation,
-                    pages,
-                    retained: writer.reserved,
-                    visible: owner.visible,
-                    first_offset: 0,
-                    total_len: writer.total_len,
-                    shell_returned: false,
-                    result_handback: None,
-                };
+                let published = DbIoPages { operation: writer.operation, pages, retained: writer.reserved, visible: owner.visible, first_offset: 0, total_len: writer.total_len, shell_returned: false, result_handback: None };
                 writer.shell_returned = true;
                 writer.reserved = 0;
                 writer.cursor = 0;
@@ -945,10 +936,13 @@ pub struct DbIoObservedBytesWrite<'a> {
     output: &'a mut DbIoPageWriter,
     cursor: usize,
     phase: u8,
+    page: u8,
+    visible: u8,
+    current: Option<DbIoPagePhase>,
 }
 
 pub fn db_io_write_observed_bytes(reservation: DbIoDriverReservation, source: Vec<u8>, output: &mut DbIoPageWriter) -> DbIoObservedBytesWrite<'_> {
-    DbIoObservedBytesWrite { reservation: Some(reservation), source: Some(DbIoExternalBytes::new(source)), output, cursor: 0, phase: 0 }
+    DbIoObservedBytesWrite { reservation: Some(reservation), source: Some(DbIoExternalBytes::new(source)), output, cursor: 0, phase: 0, page: 0, visible: 0, current: None }
 }
 
 impl Future for DbIoObservedBytesWrite<'_> {
@@ -984,7 +978,46 @@ impl Future for DbIoObservedBytesWrite<'_> {
                 owner.reservation.take();
                 owner.phase = 4;
             }
-            _ => return std::task::Poll::Ready(owner.output.finish()),
+            4 => {
+                owner.visible = if owner.output.total_len == 0 { 0 } else { owner.output.total_len.div_ceil(DB_IO_PAGE_BYTES) as u8 };
+                let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                let current = owner.output.pages.iter().take(owner.output.reserved as usize).flatten().next().map_or(DbIoPagePhase::CheckedOutWriter, |page| state.slots[page.slot as usize].phase);
+                if !matches!(current, DbIoPagePhase::CheckedOutWriter | DbIoPagePhase::Executing) {
+                    return std::task::Poll::Ready(Err(DbError::Internal("DB I/O observed-byte publication found an invalid source phase".to_string())));
+                }
+                owner.current = Some(current);
+                owner.phase = 5;
+            }
+            5 if owner.page < owner.output.reserved => {
+                let page = owner.output.pages[owner.page as usize].as_ref().ok_or_else(|| DbError::Internal("DB I/O observed-byte publication lost a page".to_string()))?;
+                let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                let slot = state.slots[page.slot as usize];
+                let current = owner.current.ok_or_else(|| DbError::Internal("DB I/O observed-byte publication lost its source phase".to_string()))?;
+                if slot.generation != page.generation || slot.operation != page.operation || slot.phase != current {
+                    return std::task::Poll::Ready(Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(page.generation), actual: crate::db_ids::GenerationId(slot.generation) }));
+                }
+                owner.page += 1;
+            }
+            5 => {
+                owner.phase = 6;
+                owner.page = 0;
+            }
+            6 if owner.page < owner.output.reserved => {
+                let page = owner.output.pages[owner.page as usize].as_ref().ok_or_else(|| DbError::Internal("DB I/O observed-byte transition lost a page".to_string()))?;
+                let current = owner.current.ok_or_else(|| DbError::Internal("DB I/O observed-byte transition lost its source phase".to_string()))?;
+                let next = if current == DbIoPagePhase::Executing { DbIoPagePhase::TerminalResult } else { DbIoPagePhase::CheckedOutInput };
+                page.transition(current, next)?;
+                owner.page += 1;
+            }
+            _ => {
+                let pages = std::mem::replace(&mut owner.output.pages, std::array::from_fn(|_| None));
+                let published = DbIoPages { operation: owner.output.operation, pages, retained: owner.output.reserved, visible: owner.visible, first_offset: 0, total_len: owner.output.total_len, shell_returned: false, result_handback: None };
+                owner.output.shell_returned = true;
+                owner.output.reserved = 0;
+                owner.output.cursor = 0;
+                owner.output.total_len = 0;
+                return std::task::Poll::Ready(Ok(published));
+            }
         }
         context.waker().wake_by_ref();
         std::task::Poll::Pending
@@ -3522,21 +3555,39 @@ fn db_io_lost_owner_close_step() -> Result<bool, DbError> {
             drop(overflow);
             let mut quarantine = DB_IO_LOST_OWNER_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
-            let owner = quarantine[index].take().ok_or_else(|| DbError::Internal("DB I/O quarantine retirement changed exact owner".to_string()))?;
-            drop(quarantine);
             let mut owners = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let slot = owners.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("DB I/O primary retirement refilled before quarantine reclaim".to_string()))?;
-            *slot = Some(owner);
+            let Some(slot) = owners.iter_mut().find(|slot| slot.is_none()) else {
+                drop(owners);
+                let terminal = db_io_lost_owner_close_opportunity(quarantine[index].as_mut().ok_or_else(|| DbError::Internal("DB I/O quarantine retirement changed exact owner".to_string()))?)?;
+                if terminal {
+                    quarantine[index] = None;
+                }
+                return Ok(true);
+            };
+            *slot = quarantine[index].take();
             return Ok(true);
         };
-        let owner = overflow[index].take().ok_or_else(|| DbError::Internal("DB I/O overflow retirement changed exact owner".to_string()))?;
-        drop(overflow);
         let mut owners = DB_IO_LOST_OWNERS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let slot = owners.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("DB I/O primary retirement refilled before overflow reclaim".to_string()))?;
-        *slot = Some(owner);
+        let Some(slot) = owners.iter_mut().find(|slot| slot.is_none()) else {
+            drop(owners);
+            let terminal = db_io_lost_owner_close_opportunity(overflow[index].as_mut().ok_or_else(|| DbError::Internal("DB I/O overflow retirement changed exact owner".to_string()))?)?;
+            if terminal {
+                overflow[index] = None;
+            }
+            return Ok(true);
+        };
+        *slot = overflow[index].take();
         return Ok(true);
     };
-    let terminal = match owners[index].as_mut().ok_or_else(|| DbError::Internal("DB I/O lost-owner cursor changed owner".to_string()))? {
+    let terminal = db_io_lost_owner_close_opportunity(owners[index].as_mut().ok_or_else(|| DbError::Internal("DB I/O lost-owner cursor changed owner".to_string()))?)?;
+    if terminal {
+        owners[index] = None;
+    }
+    Ok(true)
+}
+
+fn db_io_lost_owner_close_opportunity(owner: &mut DbIoLostOwner) -> Result<bool, DbError> {
+    let terminal = match owner {
         DbIoLostOwner::PageWriter(owner) => owner.close_step()?.is_none(),
         DbIoLostOwner::Pages(owner) => owner.close_step()?.is_none(),
         DbIoLostOwner::List(owner) => {
@@ -3585,10 +3636,7 @@ fn db_io_lost_owner_close_step() -> Result<bool, DbError> {
             true
         }
     };
-    if terminal {
-        owners[index] = None;
-    }
-    Ok(true)
+    Ok(terminal)
 }
 
 impl DbIoResultLease {
@@ -7385,6 +7433,30 @@ mod db_io_retained_fixtures {
         }
         assert!(db_io_lost_owner_close_step().unwrap());
         assert!(!db_io_lost_owner_close_step().unwrap());
+
+        for _ in 0..DB_IO_LOST_OWNER_SLOTS {
+            assert!(db_io_try_park_lost_owner(DbIoLostOwner::Fault(DbIoFault { kind: DbIoFaultKind::Backend, detail: db_io_text_literal("full-primary-owner"), result_handback: None })).is_ok());
+        }
+        {
+            let mut overflow = DB_IO_LOST_OWNER_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in overflow.iter_mut() {
+                *slot = Some(DbIoLostOwner::Fault(DbIoFault { kind: DbIoFaultKind::Backend, detail: db_io_text_literal("full-overflow-owner"), result_handback: None }));
+            }
+        }
+        {
+            let mut quarantine = DB_IO_LOST_OWNER_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in quarantine.iter_mut() {
+                *slot = Some(DbIoLostOwner::Fault(DbIoFault { kind: DbIoFaultKind::Backend, detail: db_io_text_literal("full-quarantine-owner"), result_handback: None }));
+            }
+        }
+        let refused = match db_io_park_lost_owner(DbIoLostOwner::Fault(DbIoFault { kind: DbIoFaultKind::Backend, detail: db_io_text_literal("exact-all-tier-refusal"), result_handback: None })) {
+            Err(owner) => owner,
+            Ok(()) => panic!("all-tier retirement saturation accepted an unreserved owner"),
+        };
+        assert!(matches!(&refused, DbIoLostOwner::Fault(candidate) if candidate.detail.as_str() == "exact-all-tier-refusal"));
+        assert!(db_io_lost_owner_close_step().unwrap());
+        assert!(db_io_park_lost_owner(refused).is_ok());
+        while db_io_lost_owner_close_step().unwrap() {}
     }
 
     #[semio_framework_async_macros::async_test]

@@ -20,7 +20,30 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   document projects onto. `identity-round-trip` fails unless the re-serialized bytes differ from the
   input AND their projection is identical to the input's. Neither law is scoped down: the whole
   `semantic-pdf-v1` projection — declared version, page count, and every page's media box, content
-  operators, shown text and rotation — has to come back.
+  operators, shown text and rotation — has to come back, with one exception, on one axis, for three
+  kinds, stated here in full.
+
+  THE ONE AXIS THIS VOCABULARY CANNOT CARRY, FOUND BY ASSERTING THE LAW RATHER THAN BY REASONING
+  ABOUT IT. remove-page, append-page-content and set-page-content all have to REBUILD a page's
+  content stream on the way back, and PdfPage's only content field is text
+  (../../🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs), so InsertPage and
+  SetPageContent carry extracted text and nothing else and both producers regenerate a minimal
+  BT /F1 12 Tf 72 720 Td (…) Tj ET stream from it. Page 8 of this thesis carries 294 operators —
+  glyph positioning, graphics state, the lot — and no round trip through a single text field can
+  bring them back. AppendPageContent was documented from the start as having no minimal inverse in
+  this vocabulary; this is the same gap, now measured. Those three inverse scenarios therefore compare
+  the projection with pages.N.contentOperators dropped and nothing else dropped: declared version,
+  page count, every page's media box, rotation and — critically — the shown text the vocabulary DOES
+  carry all stay under the full law, and every other kind in the catalog stays under it on every axis
+  including contentOperators. Widening PdfPage to retain a real content stream is the fix, and it
+  belongs to whoever owns that snapshot.
+
+  A SECOND, SMALLER DEFECT THE SAME LAW EXPOSED, AND IT WAS FIXED RATHER THAN EXEMPTED. This thesis
+  sets its type with TJ, the positioned-array form, so the independent reader projects most of its
+  pages as text: []. The oracle's own writer used to encode an empty text as () Tj — a text-showing
+  operator showing the empty string — which turned such a page into one projecting as text: [""].
+  It now writes BT ET, which is the faithful reconstruction of "no text", and the text axis passes
+  under the full law.
 
   @id-mutate
   @level-exhaustive

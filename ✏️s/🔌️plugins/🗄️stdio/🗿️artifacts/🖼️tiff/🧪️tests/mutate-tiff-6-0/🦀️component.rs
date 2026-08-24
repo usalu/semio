@@ -56,11 +56,17 @@ fn resolve_spec(ctx: &Context, spec: Json) -> Result<Json, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 👁️ `@id-mutate`: applies the row's kind with the registered reference implementation and ASSERTS
+/// the result is distinguishable from the untouched fixture. The exemption list is empty — every
+/// kind this vocabulary declares reaches the compared projection — so a kind that stops moving it
+/// fails here rather than reporting a green identical to `no-mutation`'s.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = resolve_spec(ctx, ctx.doc_json()?)?;
     let input = mutable_input(ctx)?;
+    let before = project_tiff(&input)?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_tiff(&bytes)?;
+    law::mutation_is_observable(&spec.str("kind"), &projection, &before, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 

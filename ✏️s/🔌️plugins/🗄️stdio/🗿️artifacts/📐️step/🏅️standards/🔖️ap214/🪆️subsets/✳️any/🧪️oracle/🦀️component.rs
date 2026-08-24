@@ -272,6 +272,34 @@ mod oracles {
     }
     //#endregion 🔖️Dispatch
 
+    //#region 🔖️HeaderProjection
+    /// 📇️ The seven attributes ISO 10303-21 §8.2.3 fixes for `FILE_NAME`, in its own order.
+    const FILE_NAME_ATTRIBUTES: &[&str] = &["name", "timestamp", "author", "organization", "preprocessorVersion", "originatingSystem", "authorization"];
+    /// 📇️ The two attributes ISO 10303-21 §8.2.2 fixes for `FILE_DESCRIPTION`.
+    const FILE_DESCRIPTION_ATTRIBUTES: &[&str] = &["description", "implementationLevel"];
+
+    /// 👁️ One header record projected under the attribute NAMES the standard fixes for it, rather
+    /// than as a positional array.
+    ///
+    /// ⚠️ This exists because of a real defect the observability law caught: the projection used to
+    /// report `FILE_SCHEMA` and the entity graph and NOTHING ELSE, so every mutation kind that edits
+    /// `FILE_DESCRIPTION` or `FILE_NAME` — kinds this subset declares by name — was invisible to it.
+    /// Those scenarios passed because the reference library did not error, not because anything was
+    /// checked. Naming the attributes rather than indexing them is what lets a comparison profile's
+    /// writer-freedom list (`timestamp`, `preprocessorVersion`, `originatingSystem`,
+    /// `authorization`) actually address the header; against a positional array that declaration
+    /// would silently stop applying.
+    fn header_object(exchange: &Exchange, record_name: &str, attributes: &[&str]) -> Json {
+        let arguments = header_record(exchange, record_name)
+            .and_then(|record| match &record.parameter {
+                Parameter::List(items) => Some(items.clone()),
+                _ => None,
+            })
+            .unwrap_or_default();
+        Json::Object(attributes.iter().enumerate().map(|(index, name)| ((*name).to_string(), arguments.get(index).map(value_to_json).unwrap_or(Json::Null))).collect())
+    }
+    //#endregion 🔖️HeaderProjection
+
     //#region 🔖️Projection
     fn entity_to_json(entity: &EntityInstance) -> Result<Json, String> {
         let record = primary_record(entity);
@@ -312,6 +340,8 @@ mod oracles {
         entities.sort_by(|a, b| json_number(a, "id").partial_cmp(&json_number(b, "id")).unwrap_or(std::cmp::Ordering::Equal));
         Ok(Json::Object(vec![
             ("fileSchema".to_string(), Json::Array(file_schema.unwrap_or_default().into_iter().map(Json::String).collect())),
+            ("fileDescription".to_string(), header_object(&exchange, "FILE_DESCRIPTION", FILE_DESCRIPTION_ATTRIBUTES)),
+            ("fileName".to_string(), header_object(&exchange, "FILE_NAME", FILE_NAME_ATTRIBUTES)),
             ("entityCount".to_string(), Json::Number(entities.len() as f64)),
             ("entities".to_string(), Json::Array(entities)),
         ]))
@@ -526,6 +556,7 @@ mod tests {
     fn set_file_description_name_and_schema_round_trip() {
         let d = oracle_apply_mutation(FIXTURE, &spec("set-file-description", obj(vec![("fileDescription", obj(vec![("description", Json::Array(vec![text("ticket 26/08/23 wave-7 mutation")])), ("implementationLevel", text("2;1"))]))])))
             .expect("set-file-description");
+        assert_ne!(project_step_ap214_any(&d).unwrap(), project_step_ap214_any(FIXTURE).unwrap(), "set-file-description must MOVE the projection -- this assertion is what caught the projection being blind to FILE_DESCRIPTION entirely");
         let d_restored = oracle_apply_mutation(&d, &spec("set-file-description", obj(vec![("fileDescription", obj(vec![("description", Json::Array(vec![text("")])), ("implementationLevel", text("2;1"))]))]))).expect("inverse");
         assert_eq!(project_step_ap214_any(&d_restored).unwrap(), project_step_ap214_any(FIXTURE).unwrap());
 
@@ -548,6 +579,7 @@ mod tests {
             ),
         )
         .expect("set-file-name");
+        assert_ne!(project_step_ap214_any(&n).unwrap(), project_step_ap214_any(FIXTURE).unwrap(), "set-file-name must MOVE the projection");
         let n_restored = oracle_apply_mutation(
             &n,
             &spec(

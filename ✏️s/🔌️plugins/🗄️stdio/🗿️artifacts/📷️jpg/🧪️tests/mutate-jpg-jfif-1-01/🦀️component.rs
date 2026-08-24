@@ -63,15 +63,28 @@ const UNOBSERVABLE: &[&str] = &["set-quant-table", "remove-quant-table", "set-hu
 //#endregion 🔖️Lossy
 
 //#region 🔖️Oracle
+/// 🧭️ The document as `no-mutation` leaves it — one full decode and re-encode by the reference
+/// codec, and the baseline both the observability and the inverse law are stated against.
+///
+/// It is deliberately NOT the committed bytes. JPEG is lossy and both encoders regenerate their
+/// quantization tables from `re_encode_quality` rather than preserving the scanner's, so a single
+/// decode/re-encode already moves the raster and replaces the DQT. Measuring "did this mutation
+/// change anything" or "did the inverse restore it" against the untouched scan would fold that
+/// unavoidable normalization into every scenario — making every kind look observable and every
+/// inverse look broken, both for the same reason and neither about the mutation.
+fn unmutated_baseline(original: &[u8]) -> Result<semio_repo_test_host::Json, String> {
+    project_jpg_mutation(&oracle_identity_round_trip(original)?)
+}
+
 /// 🔮️ Applies the scenario's declared mutation with the reference `image` codec and ASSERTS the
-/// result is distinguishable from the untouched scan, under the same slack the case is measured by.
-/// Without that assertion a kind whose effect lands outside the projection passes exactly as
-/// `no-mutation` does — which is what all eight non-raster kinds did while this case compared only
-/// geometry and a luma histogram.
+/// result is distinguishable from that same codec's own untouched output, under the slack the case
+/// is measured by. Without that assertion a kind whose effect lands outside the projection passes
+/// exactly as `no-mutation` does — which is what all eight non-raster kinds did while this case
+/// compared only geometry and a luma histogram.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let before = project_jpg_mutation(&original)?;
+    let before = unmutated_baseline(&original)?;
     let bytes = oracle_apply_mutation(&original, &spec)?;
     let projection = project_jpg_mutation(&bytes)?;
     law::mutation_is_observable_within(&spec.str("kind"), &projection, &before, UNOBSERVABLE, &[], JPG_TOLERANCE)?;
@@ -87,7 +100,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let before = project_jpg_mutation(&original)?;
+    let before = unmutated_baseline(&original)?;
     let forward = oracle_apply_mutation(&original, &spec)?;
     let restored = oracle_apply_mutation_inverse(&original, &spec, &forward)?;
     let projection = project_jpg_mutation(&restored)?;
@@ -99,13 +112,21 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// reference `image` codec must move the bytes — a second encoder's Annex K tables and entropy
 /// coding are not this scan's — and must leave the semantic projection where it was, within
 /// `semantic-jpg-mutate-v1`'s own declared slack for lossy re-quantization.
+///
+/// `quantTables` is the one member excluded, and it is the one member a round trip provably cannot
+/// preserve: BOTH codecs regenerate the DQT from `re_encode_quality` over the Annex K.1 base
+/// tables rather than carrying the source's forward, so the committed scan's own tables (written by
+/// whatever produced it) are gone by construction. Excluding it here is the same writer-freedom
+/// statement the histogram's slack makes, named rather than absorbed — and the member still carries
+/// its full weight in the observability law, where it is what makes `set-re-encode-quality` visible
+/// at all.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let bytes = oracle_identity_round_trip(&original)?;
     law::reparsed_not_copied(&bytes, &original)?;
     let before = project_jpg_mutation(&original)?;
     let projection = project_jpg_mutation(&bytes)?;
-    law::round_trip_preserves_within(&projection, &before, &[], JPG_TOLERANCE)?;
+    law::round_trip_preserves_within(&projection, &before, &["quantTables"], JPG_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

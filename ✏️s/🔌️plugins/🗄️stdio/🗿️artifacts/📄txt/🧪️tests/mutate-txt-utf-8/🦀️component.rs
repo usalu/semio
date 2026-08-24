@@ -123,7 +123,7 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::mutations::apply_txt_mutation;
     use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
     use semio_s_plugin_stdio::artifacts::txt::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
-    use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::project_txt;
+    use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{oracle_inverse_spec, project_txt};
 
     fn json_usize(params: &Json, key: &str) -> Result<usize, String> {
         match params.get(key) {

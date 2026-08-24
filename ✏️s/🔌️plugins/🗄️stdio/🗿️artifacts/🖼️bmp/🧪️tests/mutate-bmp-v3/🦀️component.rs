@@ -44,11 +44,18 @@ fn no_mutation_spec() -> Json {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 👁️ `@id-mutate`: applies the row's kind with the reference `image` codec and ASSERTS the result
+/// is distinguishable from the untouched fixture. BMP v3 is lossless and every one of this
+/// vocabulary's seven kinds reaches the compared projection, so the exemption list is empty and
+/// stays empty: a kind that stops moving it is a regression in the oracle or the projection, not a
+/// fact about the format.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let before = project_bmp_mutation(&input)?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_bmp_mutation(&bytes)?;
+    law::mutation_is_observable(&spec.str("kind"), &projection, &before, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -68,17 +75,24 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔁️ The no-byte-pass-through law on the ORACLE side: the reference `image` codec decodes the real
-/// document and re-encodes it from its own RGBA buffer alone, so the bytes must move (its header
-/// form, row order and per-row padding are not this fixture's) while the semantic projection —
-/// geometry plus the decoded-sample digest — must not.
+/// 🔁️ The identity law on the ORACLE side, in its EXACT-BYTES form rather than its
+/// no-pass-through form — the two are mirrors, and which one applies is a property of the carrier.
+///
+/// An uncompressed BMP v3 leaves a writer no freedom at all: a 14-byte BITMAPFILEHEADER and a
+/// 40-byte BITMAPINFOHEADER whose every field is determined by the image, a colour table that is
+/// the palette verbatim, and a pixel array that is the index buffer padded to a 4-byte row stride.
+/// There is no filter choice, no compression level, no chunk ordering. On top of that, the
+/// committed fixture was AUTHORED by this same reference encoder (see the subset oracle's
+/// `fixture_derivation`), so anything other than a byte-for-byte reproduction is a defect in the
+/// reader or the writer, not writer freedom — and `carrier_is_exact` is a strictly stronger claim
+/// than "the bytes moved" would be. `law::reparsed_not_copied` would be exactly backwards here.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_apply_mutation(&input, &no_mutation_spec())?;
-    law::reparsed_not_copied(&bytes, &input)?;
     let before = project_bmp_mutation(&input)?;
     let projection = project_bmp_mutation(&bytes)?;
     law::round_trip_preserves(&projection, &before)?;
+    law::carrier_is_exact(&bytes, &input)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -87,11 +101,11 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::mutable_input;
-    use protocol::Mutation;
+    use semio_s_plugin_stdio_test_oracle::law;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::project_bmp_mutation;
     use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
-    use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, BmpMutation};
+    use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, inverse_bmp_mutation, BmpMutation};
     use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
     use semio_s_plugin_stdio::artifacts::bmp::BmpSnapshot;
 
@@ -166,21 +180,24 @@ mod subject {
                 };
                 Ok(BmpMutation::SetSnapshot { snapshot })
             }
-            // 🧾️ `header_size`/`planes`/`bits_per_pixel`/`compression` are FORCED by `encode_bmp`
-            // regardless of the snapshot (its own documented `EncodeScopeNote`) — `row_order` is
-            // the one field here with a real, honoured effect (drives the on-disk row direction),
-            // so it is the one this kind exercises.
+            // 🧾️ Of the eleven BITMAPINFOHEADER fields this kind can patch, `header_size`,
+            // `planes`, `bits_per_pixel`, `compression`, `image_size` and `colors_used` are FORCED
+            // by `encode_bmp` regardless of the snapshot (its own documented `EncodeScopeNote`, and
+            // the colour-table size it actually writes), and `width`/`height` cannot move without
+            // `pixels` moving with them. The three that survive to the bytes are `row_order` — the
+            // sign of the on-disk `biHeight` and the row-write direction — and the two
+            // pixels-per-metre fields, so those three are what this kind exercises.
             "set-header-fields" => Ok(BmpMutation::SetHeaderFields {
                 header_size: None,
                 width: None,
                 height: None,
-                row_order: as_str(params, "row_order").map(|value| if value == "top-down" { BmpRowOrder::TopDown } else { BmpRowOrder::BottomUp }),
+                row_order: as_str(params, "rowOrder").map(|value| if value == "top-down" { BmpRowOrder::TopDown } else { BmpRowOrder::BottomUp }),
                 planes: None,
                 bits_per_pixel: None,
                 compression: None,
                 image_size: None,
-                x_pixels_per_meter: None,
-                y_pixels_per_meter: None,
+                x_pixels_per_meter: num(params, "xPixelsPerMeter").map(|value| value as i32),
+                y_pixels_per_meter: num(params, "yPixelsPerMeter").map(|value| value as i32),
                 colors_used: None,
                 colors_important: None,
             }),
@@ -213,7 +230,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec.str("kind"), spec.get("params").unwrap_or(&Json::Null), &base)?;
         let mut snapshot = base.clone();
         let _ = apply_bmp_mutation(&mut snapshot, &mutation);
-        for inverse in <BmpMutation as Mutation<BmpSnapshot>>::inverse(&mutation, &base) {
+        for inverse in inverse_bmp_mutation(&mutation, &base) {
             let _ = apply_bmp_mutation(&mut snapshot, &inverse);
         }
         let bytes = encode_bmp(&snapshot).map_err(|error| format!("encode_bmp failed: {error}"))?;
@@ -221,20 +238,25 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// 🚫️ The no-byte-pass-through tripwire: `decode_bmp` → `print_dsl` (the DSL hex-dump text
-    /// codec — BMP has no separate textual format of its own, see `../../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`)
-    /// → `parse_dsl` → `encode_bmp` is the ONLY channel from input to output; identical output
-    /// bytes would mean the input was smuggled through rather than parsed.
+    /// 🔁️ `decode_bmp` → `print_dsl` (the DSL hex-dump text codec — BMP has no separate textual
+    /// format of its own, see
+    /// `../../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`) → `parse_dsl`
+    /// → `encode_bmp` is the ONLY channel from input to output.
+    ///
+    /// The law asserted is EXACT bytes, not "the bytes moved" — see `identity_round_trip_oracle`'s
+    /// own doc comment for why an uncompressed BMP v3 leaves a writer no freedom to differ in. A
+    /// pass-through tripwire would be meaningless here (the correct answer and the cheat answer are
+    /// the same bytes) whereas exactness fails the moment either codec drifts, which is the real
+    /// risk. The channel above is what rules the cheat out structurally: nothing but the typed
+    /// snapshot, printed to text and reparsed, reaches `encode_bmp`.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_bmp(&input).map_err(|error| format!("decode_bmp failed: {error}"))?;
         let text = <BmpSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
         let reparsed = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error:?}"))?;
         let output = encode_bmp(&reparsed).map_err(|error| format!("encode_bmp failed: {error}"))?;
-        if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".into());
-        }
         let projection = project_bmp_mutation(&output)?;
+        law::carrier_is_exact(&output, &input)?;
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Handlers

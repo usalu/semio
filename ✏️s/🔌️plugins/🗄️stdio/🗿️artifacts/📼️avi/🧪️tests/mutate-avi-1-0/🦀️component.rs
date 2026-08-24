@@ -51,11 +51,17 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#region 🔖️Oracle
 /// 🔮️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
 /// spec is carried in its doc string, not in the function it dispatches to.
+/// 👁️ `@id-mutate`: applies the row's kind with the registered reference implementation and ASSERTS
+/// the result is distinguishable from the untouched fixture. The exemption list is empty — every
+/// kind this vocabulary declares reaches the compared projection — so a kind that stops moving it
+/// fails here rather than reporting a green identical to `no-mutation`'s.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let before = project_avi_1_0(&input)?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_avi_1_0(&bytes)?;
+    law::mutation_is_observable(&spec.str("kind"), &projection, &before, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 

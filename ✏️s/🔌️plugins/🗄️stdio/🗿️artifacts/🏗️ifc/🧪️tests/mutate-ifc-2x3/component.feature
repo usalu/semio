@@ -57,6 +57,12 @@ Feature: Apply every typed IFC2X3 mutation to a real-world building model
   sees them -- but it cannot discharge a byte-level differential claim, which every scenario below is
   typed to reflect honestly rather than claim.
 
+
+  📌️ Every Examples row below other than `no-mutation` is required to MOVE the semantic projection,
+  and the adapter fails the scenario in role when it does not: a row whose parameters make the
+  mutation a no-op passes whenever the reference library merely declined to error, which is not a
+  test. The baseline it is measured against runs one `no-mutation` cycle first, so the comparison
+  isolates the mutation rather than the writer's own normal form.
   @id-mutate
   @level-exhaustive
   @mode-property

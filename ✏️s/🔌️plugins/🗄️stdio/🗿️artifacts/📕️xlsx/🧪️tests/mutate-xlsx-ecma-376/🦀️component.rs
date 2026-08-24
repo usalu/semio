@@ -9,7 +9,7 @@
 //! oracle-only run never compiles the local implementation — see §5.3 of the fleet brief.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::any::{oracle_apply_mutation, oracle_round_trip, project_xlsx_workbook};
+use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::any::{oracle_apply_mutation, oracle_round_trip, project_shared_string_pool, project_xlsx_workbook, shared_string_inverse_spec};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `xlsx-ecma-376-any` catalog. Duplicated, not imported, from
@@ -59,10 +59,19 @@ fn kind_spec(kind: &str, params: Json) -> Json {
 fn shared_string_count_after(current: usize, kind: &str) -> usize {
     match kind {
         "set-snapshot" => 0,
-        "insert-shared-string" => current + 1,
-        "remove-shared-string" => current.saturating_sub(1),
         _ => current,
     }
+}
+
+/// 📑️ The three kinds that address the raw `xl/sharedStrings.xml` pool by INDEX rather than the
+/// sheet grid. They are projected through [`project_shared_string_pool`], which reads the real pool
+/// out of the package with `zip` + `quick-xml`, instead of through the `calamine` grid projection
+/// and its caller-tracked count — the pool is a storage-layer part, and a part has a real
+/// independent reader. Every other declared kind runs through the `calamine` + `rust_xlsxwriter`
+/// grid pairing, which legitimately renormalises the pool while preserving every cell value, so
+/// holding those to a pool they never claimed to preserve would report a false divergence.
+fn is_pool_kind(kind: &str) -> bool {
+    matches!(kind, "insert-shared-string" | "remove-shared-string" | "set-shared-string")
 }
 
 fn sheets_array(projection: &Json) -> Vec<Json> {
@@ -132,9 +141,10 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
             let value = cell_json(&cells, row, col).and_then(|cell| cell.get("value").cloned()).ok_or_else(|| format!("remove-cell inverse: no cell at ({row},{col}) on {sheet_name:?} in the original"))?;
             Ok(kind_spec("set-cell", json_object(vec![("sheetName", Json::String(sheet_name)), ("row", Json::Number(row)), ("col", Json::Number(col)), ("value", value)])))
         }
-        "insert-shared-string" => Ok(kind_spec("remove-shared-string", json_object(vec![("index", Json::Number(0.0))]))),
-        "remove-shared-string" => Ok(kind_spec("insert-shared-string", json_object(vec![("value", Json::String(String::new()))]))),
-        "set-shared-string" => Ok(kind_spec("set-shared-string", json_object(vec![("index", Json::Number(number("index").unwrap_or(0.0))), ("value", Json::String(String::new()))]))),
+        // 📑️ The three pool kinds compute their undo from the REAL pool read out of the base by the
+        // independent implementation — see `shared_string_inverse_spec`, which also refuses an
+        // interior `remove-shared-string` outright rather than pretending an inverse exists for it.
+        kind if is_pool_kind(kind) => shared_string_inverse_spec(original, forward),
         other => Err(format!("no inverse rule for kind {other:?}")),
     }
 }
@@ -185,12 +195,25 @@ fn brief(value: &Json) -> String {
 //#endregion 🔖️Law
 
 //#region 🔖️Oracle
+/// 🔮️ One handler shared by every `mutate-<kind>` scenario id — and the place the OBSERVABILITY law
+/// is asserted in-role: a mutation that leaves the projection it claims to move untouched proves
+/// nothing, whatever the reference implementation returned.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let kind = spec.str("kind");
     let output = oracle_apply_mutation(&input, &spec)?;
-    let count = shared_string_count_after(BASELINE_SHARED_STRING_COUNT, &spec.str("kind"));
-    let projection = project_xlsx_workbook(&output, count)?;
+    let project = |bytes: &[u8]| -> Result<Json, String> {
+        if is_pool_kind(&kind) {
+            project_shared_string_pool(bytes)
+        } else {
+            project_xlsx_workbook(bytes, shared_string_count_after(BASELINE_SHARED_STRING_COUNT, &kind))
+        }
+    };
+    let projection = project(&output)?;
+    if kind != "no-mutation" && projection == project(&input)? {
+        return Err(format!("mutate-{kind}: the mutation left the projection unchanged — a mutation that is not observable proves nothing"));
+    }
     Ok(Outcome::with_raw(output, projection))
 }
 
@@ -198,14 +221,19 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// role: the restored workbook must project onto exactly what the real input projects onto.
 ///
 /// ⚖️ `set-snapshot` is the ONE documented exception, and only on the `sharedStringCount` axis. That
-/// number is adapter-tracked arithmetic, never observed (`calamine` cannot read the pool — the
-/// oracle module's own doc comment), and this case's `set-snapshot` target is always built with an
-/// EMPTY pool because the JSON `sheets` shape carries no pool at all, on the oracle side and on the
-/// subject's `XlsxWorkbook { shared_strings: vec![] }` alike (see `shared_string_count_after`). Both
-/// sides therefore genuinely land on 0 rather than back on the real workbook's 229: the mutation is
-/// not invertible on that axis, by the vocabulary's own shape, and saying so is honest where
-/// exempting the whole comparison would not be. The sheet grid — every sheet, every cell, every
-/// value — is still held to the full law for `set-snapshot` too.
+/// number is adapter-tracked arithmetic for the GRID kinds (the `calamine` read model does not
+/// expose the pool, and `rust_xlsxwriter` rebuilds one of its own from the cell values it is
+/// given), and this case's `set-snapshot` target is always built with an EMPTY pool because the JSON
+/// `sheets` shape carries no pool at all, on the oracle side and on the subject's
+/// `XlsxWorkbook { shared_strings: vec![] }` alike. Both sides therefore genuinely land on 0 rather
+/// than back on the real workbook's 229: the mutation is not invertible on that axis, by the
+/// vocabulary's own shape. The sheet grid — every sheet, every cell, every value — is still held to
+/// the full law for `set-snapshot` too.
+///
+/// 📑️ The three POOL kinds carry no exception at all any more. They are projected through
+/// `project_shared_string_pool`, which reads the real 229-entry `xl/sharedStrings.xml` out of the
+/// package with `zip` + `quick-xml`, so their forward result and their restored result are both
+/// observed rather than tracked, and the law is the whole pool, entry by entry.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -215,8 +243,11 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let restored = oracle_apply_mutation(&mutated, &undo)?;
     let count_after_forward = shared_string_count_after(BASELINE_SHARED_STRING_COUNT, &kind);
     let count_after_inverse = shared_string_count_after(count_after_forward, &undo.str("kind"));
-    let projection = project_xlsx_workbook(&restored, count_after_inverse)?;
-    let original = project_xlsx_workbook(&input, BASELINE_SHARED_STRING_COUNT)?;
+    let (projection, original) = if is_pool_kind(&kind) {
+        (project_shared_string_pool(&restored)?, project_shared_string_pool(&input)?)
+    } else {
+        (project_xlsx_workbook(&restored, count_after_inverse)?, project_xlsx_workbook(&input, BASELINE_SHARED_STRING_COUNT)?)
+    };
     let divergence = match kind.as_str() {
         "set-snapshot" => first_divergence("sheets", original.get("sheets").unwrap_or(&Json::Null), projection.get("sheets").unwrap_or(&Json::Null)),
         _ => first_divergence("", &original, &projection),

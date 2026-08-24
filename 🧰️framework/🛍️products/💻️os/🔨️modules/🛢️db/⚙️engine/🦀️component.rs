@@ -2509,18 +2509,28 @@ pub fn engine_query_maintenance_step() -> Result<bool, DbError> {
             drop(overflow);
             let mut quarantine = ENGINE_QUERY_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
-            let owner = quarantine[index].take().ok_or_else(|| DbError::Internal("engine query quarantine changed stream owner".to_string()))?;
-            drop(quarantine);
             let mut retired = ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let index = engine_query_vacant_retirement_slot(0, &retired).ok_or_else(|| DbError::Internal("engine query retirement primary refilled before quarantine recovery".to_string()))?;
-            retired[index] = Some(owner);
+            let Some(target) = engine_query_vacant_retirement_slot(0, &retired) else {
+                drop(retired);
+                let owner = quarantine[index].as_mut().ok_or_else(|| DbError::Internal("engine query quarantine changed stream owner".to_string()))?;
+                if !owner.close_step()? {
+                    quarantine[index] = None;
+                }
+                return Ok(true);
+            };
+            retired[target] = quarantine[index].take();
             return Ok(true);
         };
-        let owner = overflow[index].take().ok_or_else(|| DbError::Internal("engine query overflow retirement changed stream owner".to_string()))?;
-        drop(overflow);
         let mut retired = ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let index = engine_query_vacant_retirement_slot(0, &retired).ok_or_else(|| DbError::Internal("engine query primary retirement refilled before overflow recovery".to_string()))?;
-        retired[index] = Some(owner);
+        let Some(target) = engine_query_vacant_retirement_slot(0, &retired) else {
+            drop(retired);
+            let owner = overflow[index].as_mut().ok_or_else(|| DbError::Internal("engine query overflow retirement changed stream owner".to_string()))?;
+            if !owner.close_step()? {
+                overflow[index] = None;
+            }
+            return Ok(true);
+        };
+        retired[target] = overflow[index].take();
         return Ok(true);
     };
     let owner = slot.as_mut().ok_or_else(|| DbError::Internal("engine query retirement changed owner".to_string()))?;
@@ -5692,6 +5702,8 @@ mod tests {
         exact.push(QueryResultEntry { path: db_storage::DbIoText::try_from_str("exact-overflow-stream").unwrap(), value: None }).unwrap();
         let mut second = QueryStream::new();
         second.push(QueryResultEntry { path: db_storage::DbIoText::try_from_str("second-overflow-stream").unwrap(), value: None }).unwrap();
+        assert_eq!(exact.retirement.map(|reservation| reservation.tier), Some(2));
+        assert_eq!(second.retirement.map(|reservation| reservation.tier), Some(2));
         assert!(retire_engine_query_stream(exact).is_ok());
         assert!(retire_engine_query_stream(second).is_ok());
         assert!(ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT.load(std::sync::atomic::Ordering::Acquire));
@@ -5715,6 +5727,25 @@ mod tests {
             assert_eq!(retired.iter().flatten().find_map(|stream| stream.get(0).map(QueryResultEntry::path)), Some("exact-overflow-stream"));
         }
         while engine_query_maintenance_step().unwrap() {}
+
+        for tier in [&ENGINE_QUERY_RETIREMENT, &ENGINE_QUERY_RETIREMENT_OVERFLOW, &ENGINE_QUERY_RETIREMENT_QUARANTINE] {
+            let mut owners = tier.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in owners.iter_mut() {
+                *slot = Some(QueryStream::new());
+            }
+        }
+        let exact_refusal = QueryResultEntry { path: db_storage::DbIoText::try_from_str("exact-all-tier-stream-refusal").unwrap(), value: None };
+        let mut refused = QueryStream::new();
+        let mut exact_refusal = refused.push(exact_refusal).unwrap_err();
+        assert_eq!(exact_refusal.path(), "exact-all-tier-stream-refusal");
+        assert!(exact_refusal.close_step().unwrap());
+        for tier in [&ENGINE_QUERY_RETIREMENT, &ENGINE_QUERY_RETIREMENT_OVERFLOW, &ENGINE_QUERY_RETIREMENT_QUARANTINE] {
+            let mut owners = tier.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in owners.iter_mut() {
+                *slot = None;
+            }
+        }
+        assert!(refused.terminal_is_empty());
     }
 
     async fn decode_query_json(mut stream: QueryStream) -> serde_json::Value {

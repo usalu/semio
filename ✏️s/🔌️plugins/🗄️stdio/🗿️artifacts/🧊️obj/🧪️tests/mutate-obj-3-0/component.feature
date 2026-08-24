@@ -38,14 +38,19 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   ⚠️ `inverse-remove-face` is a known, reproduced FAILURE and is left asserting. Both roles apply
   the forward mutation, serialize, re-read and then apply the inverse — the wire is deliberately in
   the middle, because that is what this ticket tests. Face 16127 belongs to `g band-2` and to
-  `o pattern-sphere`; `RemoveFace` drops it from both, and `InsertFace`, the inverse `ObjMutation`
-  declares, carries a face but no membership, so the restored face lands in no band and no object.
-  `tobj` then reads it as a fourth model and the projection reports 8,577 vertices where the real
-  mesh has 8,576. The defect is ours, not `tobj`'s and not the fixture's: `ObjMutation::inverse`
-  returns `Vec<Self>` and could return `[InsertFace, SetGroup, SetObject]`, but
+  `o pattern-sphere`. Removing it necessarily drops it from both (a membership list keyed by face
+  index cannot keep a member the document no longer has), and `InsertFace` — the whole of the
+  inverse `ObjMutation` declares — carries a face but no membership, so the restored face lands in
+  no band and no object. `tobj` reads that as a fourth model and the projection reports 8,577
+  vertices where the real mesh has 8,576.
+
+  The defect is ours: not `tobj`'s, and not the fixture's. Two places could hold the fix and neither
+  does today. `Mutation::inverse` returns `Vec<Self>`, so `RemoveFace`'s inverse is entitled to be
+  `[InsertFace, SetGroup, SetObject]` — restoring the bands the removed face belonged to — yet
   `../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` returns the single
-  `InsertFace`. Weakening the assertion would hide it, so the scenario stays red until the
-  vocabulary restores membership.
+  `InsertFace`. Alternatively `RemoveFace`/`InsertFace` could carry the membership itself. Until one
+  of them lands, `remove-face` is the one declared kind of the twenty-two whose inverse cannot exist,
+  and the honest report of that is a red scenario rather than a softened assertion.
 
   @id-mutate
   @level-exhaustive

@@ -26,6 +26,14 @@ Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at t
 
 ---
 
+Extend/Refactor/Change clean mechanisms to properly achieve this.
+Exhaustively plan for work fleets of maximum possible parallel agents.
+Plan for a main GPT 5.6 Sol Extra-High agent for plan coordination, use multiple GPT 5.6 Terra Extra-High agents for task execution, use multiple GPT 5.6 Luna Extra-High agents for read-only exploration and audits.
+Everything end to end (ignore everything inside ./compose folder).
+Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
+
+---
+
 ### Local
 
 ---
@@ -61,6 +69,20 @@ Everything end to end.
 # 🔍️ Web
 
 ##
+
+---
+
+The files and folders of our current monorepo are not consistent.
+Our repository is a polyglot, multi-implementation (the same code will be reimplemented in different languages) that uses a language agnostic domain-driven folder and file taxonomy tree.
+All trees names hold the actual semantic and the file names shouldnt carry any specific meaning.
+All files should only have their file kind emoji as file name e.g. 🦀️.rs, 🟦️.ts, etc
+All files and folders must start with an emoi if possible.
+
+Current violations:
+components, glue, test etc must all be removed from the file names
+a lot lof rust code uses specific file names (turn them to named folder e.g. g)
+under package must only be glue code and no implementation e.g. 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust/🦀️backend.rs violates this and should be at 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🪟️d3d12/⚙️backend/🦀️.rs
+a lot of folders are missing their emoji prefix e.g. ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7/🦀️component.rs
 
 ---
 

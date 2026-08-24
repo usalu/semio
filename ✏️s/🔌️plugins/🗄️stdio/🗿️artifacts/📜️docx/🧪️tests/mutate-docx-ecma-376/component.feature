@@ -44,6 +44,17 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   and both results are read back through the SAME independent `project_docx_ecma_376` before
   comparison.
 
+  ONE INVERSE GENUINELY DOES NOT EXIST, AND THE CASE SAYS SO RATHER THAN DODGING IT. The committed
+  fixture's word/styles.xml declares seven styles in order — Normal, Title, Heading1, Heading2,
+  Heading3, Code, TableCell — and DocxMutation::InsertStyle carries only a style and APPENDS
+  (../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:181), so no
+  declared kind can put a style back at an interior position. remove-style {"id": "Title"} is
+  therefore not invertible in this vocabulary at all: undoing it leaves Heading1 where Title was, and
+  the inverse law caught exactly that. The oracle now refuses such a request outright instead of
+  returning an undo that does not undo, and the Examples row removes TableCell — the LAST style,
+  which append genuinely restores. Widening the vocabulary (an insert-style that carries a position)
+  is the fix, and it belongs to whoever owns that enum.
+
   THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because the reference
   composition did not error. `inverse-<kind>` applies the mutation, applies its own independently
   computed inverse, and fails with the first diverging field unless the result projects onto exactly
@@ -72,7 +83,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       | set-run-text        | {"path": {"segments": [], "index": 177}, "runIndex": 0, "text": "Wave 7 mutation replaced this run's text entirely, still real."}                                                                                                                                                |
       | set-run-formatting  | {"path": {"segments": [], "index": 177}, "runIndex": 0, "bold": false, "italic": true, "underline": true}                                                                                                                                                                        |
       | insert-style        | {"style": {"id": "Callout", "name": "Callout", "basedOn": "Normal"}}                                                                                                                                                                                                              |
-      | remove-style        | {"id": "Title"}                                                                                                                                                                                                                                                                    |
+      | remove-style        | {"id": "TableCell"}                                                                                                                                                                                                                                                                    |
       | set-style-name      | {"id": "Heading2", "name": "Section Heading"}                                                                                                                                                                                                                                     |
       | set-style-based-on  | {"id": "Heading3", "basedOn": "Heading1"}                                                                                                                                                                                                                                         |
       | set-part            | {"path": "docProps/app.xml", "contentType": "application/vnd.openxmlformats-officedocument.extended-properties+xml", "content": "<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\"><Application>semio-wave7-mutation-test</Application></Properties>"} |
@@ -98,7 +109,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       | set-run-text        | {"path": {"segments": [], "index": 177}, "runIndex": 0, "text": "Wave 7 mutation replaced this run's text entirely, still real."}                                                                                                                                                |
       | set-run-formatting  | {"path": {"segments": [], "index": 177}, "runIndex": 0, "bold": false, "italic": true, "underline": true}                                                                                                                                                                        |
       | insert-style        | {"style": {"id": "Callout", "name": "Callout", "basedOn": "Normal"}}                                                                                                                                                                                                              |
-      | remove-style        | {"id": "Title"}                                                                                                                                                                                                                                                                    |
+      | remove-style        | {"id": "TableCell"}                                                                                                                                                                                                                                                                    |
       | set-style-name      | {"id": "Heading2", "name": "Section Heading"}                                                                                                                                                                                                                                     |
       | set-style-based-on  | {"id": "Heading3", "basedOn": "Heading1"}                                                                                                                                                                                                                                         |
       | set-part            | {"path": "docProps/app.xml", "contentType": "application/vnd.openxmlformats-officedocument.extended-properties+xml", "content": "<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\"><Application>semio-wave7-mutation-test</Application></Properties>"} |

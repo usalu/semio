@@ -38,6 +38,20 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
   decimal point, so that precision boundary costs nothing here — a genuine information-loss risk for
   a future fixture with 19+ digit integers, recorded rather than exercised.
 
+  Two REAL DEFECTS in that reference's number handling were found by this case's own inverse law and
+  are worked around rather than hidden, each reproduced standalone against `json` 0.12 alone and each
+  pinned by a unit test in the oracle module so a later release that fixes it makes the test fail.
+  Neither is the precision boundary above: both move values that ARE exactly representable as `f64`.
+  `impl From<f64> for JsonValue` rounds going INTO the decimal pair — the fixture's
+  `2.7000102824824506` vertex coordinate dumps back as `…507`, and `-8.881784197001252e-16` as
+  `…253e-16` (2 of 9 probed values moved) — and `as_f64()` rounds coming back OUT of it, recomputing
+  `mantissa * 10^exponent` in floating point, so the fixture's `-1.3283902924697095e-17` surface
+  normal reads out as `…097e-17`. The crate's own parser and `dump()` are exact on every probed
+  value, so the oracle reaches the same `Number` through those halves instead. Before the workaround
+  `inverse-set-snapshot` failed on exactly those two coordinates: an inverse that carries the whole
+  424 KB model back through the reference drifts one ULP per cycle. That failure was a true report
+  about the reference library, not about this repository's codec and not about the fixture.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

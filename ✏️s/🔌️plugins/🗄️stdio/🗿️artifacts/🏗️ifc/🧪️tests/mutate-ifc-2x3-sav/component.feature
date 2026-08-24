@@ -51,6 +51,12 @@ Feature: Apply every typed Structural Analysis View mutation to an IFC2X3 buildi
   `step::engine::part21` writer, which would compare the implementation against itself) is read back
   through a FRESH `ruststep::ast::Exchange::from_str` call before `semantic-ifc-v1` compares it.
 
+
+  📌️ Every Examples row below other than `no-mutation` is required to MOVE the semantic projection,
+  and the adapter fails the scenario in role when it does not: a row whose parameters make the
+  mutation a no-op passes whenever the reference library merely declined to error, which is not a
+  test. The baseline it is measured against runs one `no-mutation` cycle first, so the comparison
+  isolates the mutation rather than the writer's own normal form.
   @id-mutate
   @level-exhaustive
   @mode-property

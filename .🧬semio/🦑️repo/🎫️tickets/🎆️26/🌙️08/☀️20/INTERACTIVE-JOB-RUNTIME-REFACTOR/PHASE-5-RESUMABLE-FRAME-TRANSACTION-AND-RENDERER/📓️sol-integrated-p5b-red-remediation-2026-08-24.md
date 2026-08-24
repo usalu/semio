@@ -51,3 +51,58 @@ p5b-live-reconcile-selftest=green
 
 Scoped edition-2021 rustfmt was applied only to the touched Rust sources. Broad compilation and
 runtime evidence remain deferred to the one-owner final matrix as required by the packet.
+
+## Post-remediation Terra RED Closure
+
+The follow-up Terra reaudit found two independent B3/B5 escapes left outside the first retained
+surface repair. Both live callers are now covered.
+
+| Post-remediation counterexample | End-to-end repair | Hostile production law |
+|---|---|---|
+| P5b-R1 Shell removed index zero after one `close_step`, and its ninth lease received one step before scope-exit Drop | `ShellDocumentRetirementRegistry` owns 64 fixed absolute lease credits. Every slot is epoch/generation/surface qualified. Its cursor advances one slot per opportunity and removes a lease only after `close_step() && terminal_is_empty()`. Window and panel map transfer returns the exact refused map tail; spawned transfer restores the exact option owner before returning the error. | `shell_ninth_document_and_nonterminal_first_close_remain_in_qualified_retirement` crosses the former eight-slot boundary and proves the first false close keeps all nine owners. `shell_absolute_refusal_returns_the_exact_max_plus_one_owner_before_mutation` exhausts the only vacant slot epoch, verifies identity-preserving refusal, retries that same owner, and drains terminally. |
+| P5b-R2 command aggregation one-stepped and dropped the ninth surface document | `CommandDocumentRetirementRegistry` pre-reserves eight epoch/batch/generation-qualified destinations before every guest turn. Turn documents move into pending slots before driver resume/observation. Completion moves at most eight exact owners into the public outcome and promotes every remaining slot to `Closing`; fault, stale, suspension, observation, destination saturation, and instance close do the same. The worker maintenance lane advances one close cursor and removes only a terminal witness. | `command_batch_ninth_document_is_retained_after_nonterminal_close_and_exactly_returned_or_retired` stages nine real leases across pages, rejects a stale batch generation, returns eight, retains the ninth after its first nonterminal close, then converges all exact owners. `command_document_page_saturation_refuses_before_turn_owner_production` fills all 64 reservation credits and proves maximum + 1 refuses before another guest turn can create a document owner. |
+
+The equivalent retained-surface exchange caller now refuses to mint another alias while its one
+qualified `exchange_closing` owner is still nonterminal, preventing the previously unreachable
+overwrite seam from becoming lossy if a future caller supplies a saturated output list.
+
+The permanent P5b predicate now reads the exact Shell and command-batch production regions. It
+requires both fixed registries, qualifiers, page pre-reservation order, exact map/option restoration,
+batch promotion/close transitions, terminal gates, and the four hostile laws. New ordered mutations
+erase each terminal guard, drop Shell refusal owners, make the Shell registry dynamic, remove command
+preflight, restore the ninth-owner one-step Drop, and remove each new law; every mutation is rejected.
+
+Final scoped evidence:
+
+~~~text
+bun -e 'import {interactivityLiveReconcileSelfTests as t} from "./📜️script.ts"; t(process.cwd()); console.log("p5b-live-reconcile-selftest=green")'
+p5b-live-reconcile-selftest=green
+
+rustfmt --edition 2021 --check <Shell component.rs> <renderer glue.rs>
+# no output
+
+git diff --check -- <P5b script/Shell/renderer paths>
+# no output
+~~~
+
+No Cargo, Nx, Wasm, browser, network, or broad build command was run.
+
+## Final Formatting-gate Closure
+
+The final Terra reaudit found no functional B1–B5 counterexample and requested one mechanical repair:
+edition-2021 Rustfmt on the existing UI runtime `reconcile.rs`. Rustfmt was applied to that exact file
+without a logic edit. The complete scoped P5b formatter set is now clean: runtime reconciler, mounted
+tracker, reactor, document contract, renderer glue, Shell, UI-WGPU component, and widgets.
+
+~~~text
+rustfmt --edition 2021 --check <eight exact P5b Rust sources>
+# no output
+
+bun -e 'import {interactivityLiveReconcileSelfTests as t} from "./📜️script.ts"; t(process.cwd()); console.log("p5b-live-reconcile-selftest=green")'
+p5b-live-reconcile-selftest=green
+
+git diff --check -- <exact P5b source, verifier, and remediation-report paths>
+# no output
+~~~
+
+This final pass ran no Cargo, Nx, Wasm, browser, network, runtime, or broad build command.

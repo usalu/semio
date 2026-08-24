@@ -346,6 +346,34 @@ mod oracles {
     }
     //#endregion 🔖️Dispatch
 
+    //#region 🔖️HeaderProjection
+    /// 📇️ The seven attributes ISO 10303-21 §8.2.3 fixes for `FILE_NAME`, in its own order.
+    const FILE_NAME_ATTRIBUTES: &[&str] = &["name", "timestamp", "author", "organization", "preprocessorVersion", "originatingSystem", "authorization"];
+    /// 📇️ The two attributes ISO 10303-21 §8.2.2 fixes for `FILE_DESCRIPTION`.
+    const FILE_DESCRIPTION_ATTRIBUTES: &[&str] = &["description", "implementationLevel"];
+
+    /// 👁️ One header record projected under the attribute NAMES the standard fixes for it, rather
+    /// than as a positional array.
+    ///
+    /// ⚠️ This exists because of a real defect the observability law caught: the projection used to
+    /// report `FILE_SCHEMA` and the entity graph and NOTHING ELSE, so every mutation kind that edits
+    /// `FILE_DESCRIPTION` or `FILE_NAME` — kinds this subset declares by name — was invisible to it.
+    /// Those scenarios passed because the reference library did not error, not because anything was
+    /// checked. Naming the attributes rather than indexing them is what lets a comparison profile's
+    /// writer-freedom list (`timestamp`, `preprocessorVersion`, `originatingSystem`,
+    /// `authorization`) actually address the header; against a positional array that declaration
+    /// would silently stop applying.
+    fn header_object(exchange: &Exchange, record_name: &str, attributes: &[&str]) -> Json {
+        let arguments = header_record(exchange, record_name)
+            .and_then(|record| match &record.parameter {
+                Parameter::List(items) => Some(items.clone()),
+                _ => None,
+            })
+            .unwrap_or_default();
+        Json::Object(attributes.iter().enumerate().map(|(index, name)| ((*name).to_string(), arguments.get(index).map(value_to_json).unwrap_or(Json::Null))).collect())
+    }
+    //#endregion 🔖️HeaderProjection
+
     //#region 🔖️Projection
     fn entity_to_json(entity: &EntityInstance) -> Json {
         let entities = records(entity)
@@ -404,7 +432,13 @@ mod oracles {
             }
         }
         entities.sort_by(|a, b| json_number(a, "id").partial_cmp(&json_number(b, "id")).unwrap_or(std::cmp::Ordering::Equal));
-        Ok(Json::Object(vec![("fileSchema".to_string(), Json::Array(file_schema.into_iter().map(Json::String).collect())), ("entityCount".to_string(), Json::Number(entities.len() as f64)), ("entities".to_string(), Json::Array(entities))]))
+        Ok(Json::Object(vec![
+            ("fileSchema".to_string(), Json::Array(file_schema.into_iter().map(Json::String).collect())),
+            ("fileDescription".to_string(), header_object(&exchange, "FILE_DESCRIPTION", FILE_DESCRIPTION_ATTRIBUTES)),
+            ("fileName".to_string(), header_object(&exchange, "FILE_NAME", FILE_NAME_ATTRIBUTES)),
+            ("entityCount".to_string(), Json::Number(entities.len() as f64)),
+            ("entities".to_string(), Json::Array(entities)),
+        ]))
     }
     //#endregion 🔖️Projection
 }
@@ -542,9 +576,16 @@ mod tests {
 
     #[test]
     fn set_header_renames_the_model_and_inverts() {
+        let before = project_ifc_2x3_any(FIXTURE).expect("project the real fixture");
         let mutated = oracle_apply_mutation(FIXTURE, &spec("set-header", obj(vec![("header", wellness_header_json("wellness-center-sama-street-level-wave8"))]))).expect("set-header");
         let projection = project_ifc_2x3_any(&mutated).expect("project");
         assert_eq!(entity_count(&projection), 3464.0, "set-header must not touch the entity graph");
+        assert_ne!(projection, before, "set-header must MOVE the projection -- this assertion is the one that caught the projection being blind to FILE_NAME entirely");
+        assert_eq!(
+            projection.get("fileName").and_then(|value| value.get("name")).and_then(|value| value.get("v")).cloned(),
+            Some(Json::String("wellness-center-sama-street-level-wave8".to_string())),
+            "the renamed model must be readable back through the independent parser"
+        );
         let restored = oracle_apply_mutation(&mutated, &spec("set-header", obj(vec![("header", wellness_header_json("0001"))]))).expect("inverse set-header");
         let restored_projection = project_ifc_2x3_any(&restored).expect("project restored");
         assert_eq!(restored_projection, project_ifc_2x3_any(FIXTURE).unwrap());

@@ -8,6 +8,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project};
+use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `GifMutation::KINDS` (`.../🧬️schema/🧬️mutations/🦀️component.rs`) as an adapter-local
@@ -54,12 +55,19 @@ fn no_mutation_spec() -> Json {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
-/// 🔮️ `@id-mutate`: applies the row's kind and projects the result. One handler serves all 21
-/// scenario ids — the kind and its params come from the scenario's own doc string.
+/// 🔮️ `@id-mutate`: applies the row's kind, projects the result, and ASSERTS it is distinguishable
+/// from the untouched animation. One handler serves all 21 scenario ids — the kind and its params
+/// come from the scenario's own doc string. The exemption list is empty: every declared kind of this
+/// vocabulary reaches the projection, including `set-frame-interlace`, whose flag the projection now
+/// reads off the Image Descriptor rather than from `Frame::interlaced` (which the reference decoder
+/// resets to `false` on every read, making the kind invisible).
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
-    let bytes = oracle_apply_mutation(&mutable_input(ctx)?, &spec)?;
+    let input = mutable_input(ctx)?;
+    let before = project(&input)?;
+    let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project(&bytes)?;
+    law::mutation_is_observable(&spec.str("kind"), &projection, &before, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -72,9 +80,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let mutated = oracle_apply_mutation(&input, &spec)?;
     let restored = oracle_apply_mutation_inverse(&input, &spec, &mutated)?;
     let restored_projection = project(&restored)?;
-    if restored_projection != original_projection {
-        return Err(format!("inverse of {:?} did not recover the original semantic projection", spec.str("kind")));
-    }
+    law::inverse_restores(&spec.str("kind"), &restored_projection, &original_projection)?;
     Ok(Outcome::with_raw(restored, restored_projection))
 }
 
@@ -84,14 +90,10 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = oracle_apply_mutation(&input, &no_mutation_spec())?;
-    if output == input {
-        return Err("byte pass-through: output is bit-identical to the input".to_string());
-    }
+    law::reparsed_not_copied(&output, &input)?;
     let before = project(&input)?;
     let after = project(&output)?;
-    if before != after {
-        return Err("decode/re-encode round trip changed the semantic projection".to_string());
-    }
+    law::round_trip_preserves(&after, &before)?;
     Ok(Outcome::with_raw(output, after))
 }
 //#endregion 🔖️Oracle

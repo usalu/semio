@@ -1,0 +1,63 @@
+{
+  "$id": "https://semio.tech/schema/s.stdio.xml.valid/mutation.xml",
+  "title": "XmlValidMutation",
+  "description": "📐️ The XML 1.0 ✳️valid mutation vocabulary — subset-closed operations derived rule by rule from this subset's own §2.8/§2.9/§4.2 conformance checks, NOT the ✳️any subset's XmlMutation. declareDoctype carries no name (it is derived from the document element, so §2.8 holds by construction) and renameDocumentElement retags the DOCTYPE Name in the same step; setSnapshot is refused when the replacement carries a hard violation.",
+  "oneOf": [
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "noMutation" } } },
+    { "type": "object", "required": ["mutation", "snapshot"], "properties": { "mutation": { "const": "setSnapshot" }, "snapshot": { "type": "object" } } },
+    {
+      "type": "object",
+      "required": ["mutation"],
+      "properties": { "mutation": { "const": "declareDoctype" }, "externalId": {
+        "description": "🔗️ An XML 1.0 §4.2.2 external identifier, or null to clear it.",
+        "oneOf": [
+          { "type": "null" },
+          { "type": "object", "required": ["kind", "systemId"], "properties": { "kind": { "const": "system" }, "systemId": { "type": "string" } } },
+          { "type": "object", "required": ["kind", "publicId", "systemId"], "properties": { "kind": { "const": "public" }, "publicId": { "type": "string" }, "systemId": { "type": "string" } } }
+        ]
+      } }
+    },
+    { "type": "object", "required": ["mutation", "name"], "properties": { "mutation": { "const": "renameDocumentElement" }, "name": { "type": "string", "minLength": 1 } } },
+    {
+      "type": "object",
+      "required": ["mutation"],
+      "properties": { "mutation": { "const": "setExternalSubset" }, "externalId": {
+        "description": "🔗️ An XML 1.0 §4.2.2 external identifier, or null to clear it.",
+        "oneOf": [
+          { "type": "null" },
+          { "type": "object", "required": ["kind", "systemId"], "properties": { "kind": { "const": "system" }, "systemId": { "type": "string" } } },
+          { "type": "object", "required": ["kind", "publicId", "systemId"], "properties": { "kind": { "const": "public" }, "publicId": { "type": "string" }, "systemId": { "type": "string" } } }
+        ]
+      } }
+    },
+    { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "setStandalone" }, "standalone": { "type": "boolean" } } },
+    {
+      "type": "object",
+      "required": ["mutation", "index", "parameter", "name", "value"],
+      "properties": {
+        "mutation": { "const": "declareEntity" },
+        "index": { "type": "integer", "minimum": 0 },
+        "parameter": { "type": "boolean" },
+        "name": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "declarations"],
+      "properties": {
+        "mutation": { "const": "setInternalSubset" },
+        "declarations": {
+          "description": "🏷️ The internal subset's §4.2 entity declarations, in wire order — the FIRST declaration of a name binds, so position is semantic.",
+          "type": "array",
+          "items": { "type": "object", "required": ["kind", "parameter", "name", "value"], "properties": { "kind": { "const": "entity" }, "parameter": { "type": "boolean" }, "name": { "type": "string", "minLength": 1 }, "value": { "type": "string" } } }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["mutation", "path", "text"],
+      "properties": { "mutation": { "const": "setText" }, "path": { "type": "array", "items": { "type": "integer", "minimum": 0 } }, "text": { "type": "string" } }
+    }
+  ]
+}

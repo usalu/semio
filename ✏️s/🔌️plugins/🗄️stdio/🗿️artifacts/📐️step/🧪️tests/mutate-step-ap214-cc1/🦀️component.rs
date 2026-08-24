@@ -225,7 +225,7 @@ mod subject {
                     None => None,
                 },
             },
-            "remove-shape-representation" => StepCc1Mutation::RemoveShapeRepresentation {{ id: u64_field(&params, "id")? }},
+            "remove-shape-representation" => StepCc1Mutation::RemoveShapeRepresentation { id: u64_field(&params, "id")? },
             other => return Err(format!("unrecognised mutation kind {other:?}")),
         })
     }

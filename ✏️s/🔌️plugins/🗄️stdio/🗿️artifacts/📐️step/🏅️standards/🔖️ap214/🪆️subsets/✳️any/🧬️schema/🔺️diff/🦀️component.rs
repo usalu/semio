@@ -1673,7 +1673,7 @@ mod handcrafted_diff_codec_tests {
             },
             entities: vec![
                 entity(1, "CARTESIAN_POINT", vec![StepValue::String("".into()), StepValue::Aggregate(vec![StepValue::Real(0.0), StepValue::Real(1.5), StepValue::Integer(-3)])]),
-                entity(2, "COMPLEX", vec![StepValue::Unset, StepValue::Derived, StepValue::Reference(7), StepValue::Enum("T".into()), StepValue::TypedValue { type_name: "IFCLENGTHMEASURE".into(), value: Box::new(StepValue::Real(3000.0)) }]),
+                entity(2, "COMPLEX", vec![StepValue::Unset, StepValue::Derived, StepValue::Reference(7), StepValue::Enum("T".into()), StepValue::TypedValue { type_name: "LENGTH_MEASURE".into(), value: Box::new(StepValue::Real(3000.0)) }]),
             ],
         }
     }

@@ -20,7 +20,7 @@ use std::collections::{BTreeMap, HashMap};
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::PresencePeer;
-use ui_contract::{UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_LEASE_SLOTS};
+use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
 // re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
@@ -1247,6 +1247,142 @@ struct PendingShellIo {
     task: Option<std::sync::Arc<ShellPoolFuture>>,
 }
 
+//#region 📄️ShellDocumentRetirement
+const SHELL_DOCUMENT_RETIREMENT_CAPACITY: usize = UI_DOCUMENT_LEASE_SLOTS * UI_DOCUMENT_LEASE_ALIASES as usize;
+
+struct ShellDocumentRetirementSlot {
+    epoch: u64,
+    generation: u64,
+    surface: Option<SurfaceId>,
+    document: UiDocumentLease,
+}
+
+struct ShellDocumentRetirementRegistry {
+    slots: [Option<ShellDocumentRetirementSlot>; SHELL_DOCUMENT_RETIREMENT_CAPACITY],
+    epochs: [u64; SHELL_DOCUMENT_RETIREMENT_CAPACITY],
+    cursor: usize,
+}
+
+impl Default for ShellDocumentRetirementRegistry {
+    fn default() -> Self {
+        Self { slots: std::array::from_fn(|_| None), epochs: [0; SHELL_DOCUMENT_RETIREMENT_CAPACITY], cursor: 0 }
+    }
+}
+
+impl ShellDocumentRetirementRegistry {
+    fn try_admit(&mut self, document: UiDocumentLease) -> Result<(), UiDocumentLease> {
+        let Some(index) = self.slots.iter().position(Option::is_none) else { return Err(document) };
+        let Some(epoch) = self.epochs[index].checked_add(1) else { return Err(document) };
+        let generation = document.generation();
+        let surface = document.header().ok().map(|header| header.surface);
+        self.epochs[index] = epoch;
+        self.slots[index] = Some(ShellDocumentRetirementSlot { epoch, generation, surface, document });
+        Ok(())
+    }
+
+    fn close_one(&mut self) -> bool {
+        let index = self.cursor;
+        self.cursor = (self.cursor + 1) % SHELL_DOCUMENT_RETIREMENT_CAPACITY;
+        let Some(slot) = self.slots[index].as_mut() else { return false };
+        let terminal = slot.document.close_step() && slot.document.terminal_is_empty();
+        if terminal {
+            let terminal = self.slots[index].take().expect("terminal shell document retirement slot");
+            assert!(terminal.document.terminal_is_empty(), "shell document retirement witness changed before removal");
+        }
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.slots.iter().all(Option::is_none)
+    }
+
+    #[cfg(test)]
+    fn qualified_owners(&self) -> impl Iterator<Item = (u64, u64, Option<&SurfaceId>)> {
+        self.slots.iter().flatten().map(|slot| (slot.epoch, slot.generation, slot.surface.as_ref()))
+    }
+}
+
+#[cfg(test)]
+mod shell_document_retirement_tests {
+    use super::*;
+
+    fn document(generation: u64, surface: &str) -> UiDocumentLease {
+        let id = ui_contract::UiNodeId(1);
+        let surface = SurfaceId::try_from(surface).expect("bounded shell retirement surface");
+        let mut builder = ui_contract::UiDocumentBuilder::try_new(generation, surface, ui_contract::UiRevision(generation), Some(id), generation).expect("shell retirement document slot");
+        builder
+            .try_push(ui_contract::UiNodeRecord {
+                id,
+                key: UiText::try_from_str("root").expect("bounded shell retirement key"),
+                component: ui_contract::Component::Separator(ui_contract::SeparatorProps {}),
+                layout: Default::default(),
+                style: Default::default(),
+                activity: Default::default(),
+                disabled: false,
+                transition: None,
+                accessibility: Default::default(),
+                bindings: Default::default(),
+                menu: None,
+                children: Default::default(),
+            })
+            .expect("shell retirement root");
+        builder.finish().expect("shell retirement document")
+    }
+
+    #[test]
+    fn shell_ninth_document_and_nonterminal_first_close_remain_in_qualified_retirement() {
+        let first = document(90_001, "shell.retirement.first");
+        let mut owners = UiFixedList::<UiDocumentLease, 9>::default();
+        for _ in 0..7 {
+            owners.try_push(first.try_alias().expect("fixed shell document alias")).expect("shell alias owner");
+        }
+        owners.try_push(first).expect("shell primary owner");
+        owners.try_push(document(90_002, "shell.retirement.ninth")).expect("shell ninth owner");
+        let mut registry = ShellDocumentRetirementRegistry::default();
+        for owner in owners {
+            registry.try_admit(owner).expect("absolute lease credits retain the ninth owner");
+        }
+        assert_eq!(registry.qualified_owners().count(), 9);
+        assert!(registry.close_one());
+        assert_eq!(registry.qualified_owners().count(), 9, "a false-returning first close opportunity cannot remove its exact owner");
+        let mut opportunities = 1;
+        while !registry.terminal_is_empty() {
+            let _ = registry.close_one();
+            opportunities += 1;
+            assert!(opportunities < 8_192, "fixed shell document retirement must converge");
+        }
+    }
+
+    #[test]
+    fn shell_absolute_refusal_returns_the_exact_max_plus_one_owner_before_mutation() {
+        let mut owners = UiFixedList::<UiDocumentLease, SHELL_DOCUMENT_RETIREMENT_CAPACITY>::default();
+        for ordinal in 0..UI_DOCUMENT_LEASE_SLOTS {
+            let primary = document(90_100 + ordinal as u64, &format!("shell.retirement.absolute-{ordinal}"));
+            for _ in 1..UI_DOCUMENT_LEASE_ALIASES {
+                owners.try_push(primary.try_alias().expect("absolute fixed shell alias")).expect("absolute shell alias owner");
+            }
+            owners.try_push(primary).expect("absolute shell primary owner");
+        }
+        let expected = owners.pop().expect("absolute shell refusal owner");
+        let generation = expected.generation();
+        let mut registry = ShellDocumentRetirementRegistry::default();
+        for owner in owners {
+            registry.try_admit(owner).expect("absolute shell retirement owner");
+        }
+        let vacancy = registry.slots.iter().position(Option::is_none).expect("one exact refusal vacancy");
+        registry.epochs[vacancy] = u64::MAX;
+        let refused = registry.try_admit(expected).expect_err("exhausted vacancy refuses before transfer");
+        assert_eq!(refused.generation(), generation);
+        assert_eq!(registry.qualified_owners().count(), SHELL_DOCUMENT_RETIREMENT_CAPACITY - 1);
+        registry.epochs[vacancy] = 0;
+        registry.try_admit(refused).expect("exact refused owner retries without reconstruction");
+        while !registry.terminal_is_empty() {
+            let _ = registry.close_one();
+        }
+    }
+}
+//#endregion 📄️ShellDocumentRetirement
+
 pub struct ShellState {
     pub plugins: Vec<ProgramBridgeEntry>,
     pub plugin_filter: String,
@@ -1255,7 +1391,7 @@ pub struct ShellState {
     pub window_ui: HashMap<String, UiDocumentLease>,
     pub panel_documents: HashMap<String, UiDocumentLease>,
     pub spawned_ui: Option<UiDocumentLease>,
-    closing_documents: UiFixedList<UiDocumentLease, UI_DOCUMENT_LEASE_SLOTS>,
+    closing_documents: ShellDocumentRetirementRegistry,
     pub active_window_id: Option<String>,
     pub left_panel_open: bool,
     pub right_panel_open: bool,
@@ -1700,7 +1836,7 @@ impl ShellState {
             window_ui: HashMap::new(),
             panel_documents: HashMap::new(),
             spawned_ui: None,
-            closing_documents: UiFixedList::default(),
+            closing_documents: ShellDocumentRetirementRegistry::default(),
             active_window_id: None,
             left_panel_open: false,
             right_panel_open: false,
@@ -2053,8 +2189,9 @@ impl ShellState {
         };
         self.close_document_one();
         self.sync_dock();
-        for (_, document) in std::mem::take(&mut self.window_ui) {
-            self.retain_document_for_close(document);
+        if let Err(documents) = Self::retain_document_map_for_close(&mut self.closing_documents, std::mem::take(&mut self.window_ui)) {
+            self.window_ui = documents;
+            return Err("shell: window document retirement registry refused the exact prior owners".to_string());
         }
         let mut view_state = session.view_state.clone();
         view_state.contributions_json = Some(Self::contributions_json_from_plugins(&self.plugins));
@@ -2067,8 +2204,9 @@ impl ShellState {
                 self.window_ui.insert(kind.id.clone(), document);
             }
         }
-        for (_, document) in std::mem::take(&mut self.panel_documents) {
-            self.retain_document_for_close(document);
+        if let Err(documents) = Self::retain_document_map_for_close(&mut self.closing_documents, std::mem::take(&mut self.panel_documents)) {
+            self.panel_documents = documents;
+            return Err("shell: panel document retirement registry refused the exact prior owners".to_string());
         }
         let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
         for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
@@ -2104,14 +2242,20 @@ impl ShellState {
                                 active_utility_by_window_id: HashMap::new(),
                             };
                             if let Some(document) = self.spawned_ui.take() {
-                                self.retain_document_for_close(document);
+                                if let Err(document) = self.retain_document_for_close(document) {
+                                    self.spawned_ui = Some(document);
+                                    return Err("shell: spawned document retirement registry refused the exact prior owner".to_string());
+                                }
                             }
                             self.spawned_ui = Some(spawn_plugin.render(spawned.instance_id, &body_key, &view_state).await?);
                         }
                     }
                 } else {
                     if let Some(document) = self.spawned_ui.take() {
-                        self.retain_document_for_close(document);
+                        if let Err(document) = self.retain_document_for_close(document) {
+                            self.spawned_ui = Some(document);
+                            return Err("shell: spawned document retirement registry refused the exact prior owner".to_string());
+                        }
                     }
                 }
             }
@@ -2120,19 +2264,27 @@ impl ShellState {
         Ok(())
     }
 
-    fn retain_document_for_close(&mut self, document: UiDocumentLease) {
-        if let Err(mut rejected) = self.closing_documents.try_push(document) {
-            let _ = rejected.close_step();
+    fn retain_document_map_for_close(registry: &mut ShellDocumentRetirementRegistry, documents: HashMap<String, UiDocumentLease>) -> Result<(), HashMap<String, UiDocumentLease>> {
+        let mut owners = documents.into_iter();
+        while let Some((id, document)) = owners.next() {
+            if let Err(document) = registry.try_admit(document) {
+                let mut refused = HashMap::from([(id, document)]);
+                refused.extend(owners);
+                return Err(refused);
+            }
         }
+        Ok(())
+    }
+
+    fn retain_document_for_close(&mut self, document: UiDocumentLease) -> Result<(), UiDocumentLease> {
+        self.closing_documents.try_admit(document)
     }
 
     fn close_document_one(&mut self) -> bool {
-        if self.closing_documents.is_empty() {
+        if self.closing_documents.terminal_is_empty() {
             return !ui_contract::close_ui_document_page_one();
         }
-        let _ = self.closing_documents.get_mut(0).map(UiDocumentLease::close_step);
-        drop(self.closing_documents.swap_remove(0));
-        true
+        self.closing_documents.close_one()
     }
 
     fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework::kernel::Effect>) {
