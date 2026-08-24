@@ -28,7 +28,7 @@ pub fn render(labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssembly
     PanelTreeBuilder::new("procedural2d-play-catalogue")?
         .section(
             "procedural2d-play-catalogue.sources",
-            Some(labels.sources.as_str().into()),
+            Some(crate::ui_label(labels.sources.as_str())?),
             true,
             crate::ui_node_list(sources.iter().map(|(kind, label)| {
                 let args = crate::ui_value_map([("kind", crate::ui_value_text(kind)?)])?;
@@ -37,7 +37,7 @@ pub fn render(labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssembly
         )?
         .section(
             "procedural2d-play-catalogue.components",
-            Some(labels.components.as_str().into()),
+            Some(crate::ui_label(labels.components.as_str())?),
             true,
             crate::ui_node_list(components.iter().map(|(kind, label)| {
                 let args = crate::ui_value_map([("kind", crate::ui_value_text("neuron")?), ("neuronKind", crate::ui_value_text(kind)?)])?;
@@ -46,7 +46,7 @@ pub fn render(labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssembly
         )?
         .section(
             "procedural2d-play-catalogue.sinks",
-            Some(labels.sinks.as_str().into()),
+            Some(crate::ui_label(labels.sinks.as_str())?),
             true,
             crate::ui_node_list(sinks.iter().map(|(kind, label)| {
                 let args = crate::ui_value_map([("kind", crate::ui_value_text(kind)?)])?;
@@ -55,7 +55,7 @@ pub fn render(labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssembly
         )?
         .section(
             "procedural2d-play-catalogue.modes",
-            Some(labels.show_mode_section.as_str().into()),
+            Some(crate::ui_label(labels.show_mode_section.as_str())?),
             false,
             crate::ui_node_list(["preview", "generate", "wire"].iter().map(|mode| {
                 let args = crate::ui_value_map([("value", crate::ui_value_text(mode)?)])?;

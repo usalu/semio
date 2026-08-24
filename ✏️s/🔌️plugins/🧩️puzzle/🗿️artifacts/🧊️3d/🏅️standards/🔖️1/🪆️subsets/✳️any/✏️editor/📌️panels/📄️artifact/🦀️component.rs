@@ -5,7 +5,7 @@
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{
-    puzzle3d_vortex_full_id, Puzzle3dFixture, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN,
+    puzzle3d_vortex_full_id, ui_label, Puzzle3dFixture, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN,
     PUZZLE3D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, HasChildren, Label, RowAction, RowActionPlacement, Trigger};
@@ -106,10 +106,9 @@ fn binding(action: UiAssemblyResult<(semio_framework_ui_contract::ActionId, Opti
     Ok(ActionBinding { trigger: Trigger::Activate, action, args, capability: None })
 }
 
-fn selectable_item<L: TryInto<Label>>(id: impl AsRef<str>, label: L, icon: &str, action: UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<UiValue>)>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
+fn selectable_item(id: impl AsRef<str>, label: impl AsRef<str>, icon: &str, action: UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<UiValue>)>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
     let (action_id, args) = action?;
-    let label = label.try_into().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document label admission failed"))?;
-    let builder = ui::tree_item(label)
+    let builder = ui::tree_item(ui_label(label)?)
         .try_id(id.as_ref())
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document id admission failed"))?
         .icon(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document icon admission failed"))?);
@@ -133,13 +132,13 @@ fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity
     Ok([
         RowAction {
             icon: UiText::try_from_str(if hidden { "eye-off" } else { "eye" }).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d visibility icon admission failed"))?,
-            label: Some(if hidden { labels.show.as_str().into() } else { labels.hide.as_str().into() }),
+            label: Some(ui_label(if hidden { labels.show.as_str() } else { labels.hide.as_str() })?),
             action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "hidden")?)))?,
             placement: RowActionPlacement::Row,
         },
         RowAction {
             icon: UiText::try_from_str(if locked { "lock" } else { "lock-open" }).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d lock icon admission failed"))?,
-            label: Some(if locked { labels.unlock.as_str().into() } else { labels.lock.as_str().into() }),
+            label: Some(ui_label(if locked { labels.unlock.as_str() } else { labels.lock.as_str() })?),
             action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "locked")?)))?,
             placement: RowActionPlacement::Row,
         },
@@ -204,10 +203,10 @@ pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> semio_frame
         attraction_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d attraction list admission failed"))?;
     }
     PanelTreeBuilder::new("puzzle3d-play-document")?
-        .section("puzzle3d-play-document.objects", Some(labels.objects.as_str().into()), true, object_items)?
-        .section("puzzle3d-play-document.references", Some(labels.references.as_str().into()), false, reference_items)?
-        .section("puzzle3d-play-document.target-volumes", Some(labels.target_volumes.as_str().into()), false, target_volume_items)?
-        .section("puzzle3d-play-document.attractions", Some(labels.attractions.as_str().into()), false, attraction_items)?
+        .section("puzzle3d-play-document.objects", Some(ui_label(labels.objects.as_str())?), true, object_items)?
+        .section("puzzle3d-play-document.references", Some(ui_label(labels.references.as_str())?), false, reference_items)?
+        .section("puzzle3d-play-document.target-volumes", Some(ui_label(labels.target_volumes.as_str())?), false, target_volume_items)?
+        .section("puzzle3d-play-document.attractions", Some(ui_label(labels.attractions.as_str())?), false, attraction_items)?
         .interaction_domain(PUZZLE3D_INTERACTION_DOMAIN)?
         .build()
 }

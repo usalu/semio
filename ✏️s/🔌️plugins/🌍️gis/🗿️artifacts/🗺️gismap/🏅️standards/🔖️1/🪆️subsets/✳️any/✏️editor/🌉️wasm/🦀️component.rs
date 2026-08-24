@@ -7,7 +7,7 @@ mod wasm_bridge {
 
     use wasm_bindgen::prelude::*;
 
-    use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
+    use semio_framework_plugin::{resolve_ready, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
 
     use crate::editor::gis2d::Gis2dPlayApp;
 
@@ -16,8 +16,8 @@ mod wasm_bridge {
     const GIS_MAP_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
     const GIS_MAP_ENVELOPE_MAXIMUM_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
-    fn js_fault(error: impl ToString) -> JsValue {
-        JsValue::from_str(&error.to_string())
+    fn js_fault(error: impl std::fmt::Debug) -> JsValue {
+        JsValue::from_str(&format!("{error:?}"))
     }
 
     #[wasm_bindgen]
@@ -54,7 +54,7 @@ mod wasm_bridge {
     impl GisMapSnapshotVcs {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Result<GisMapSnapshotVcs, JsValue> {
-            let app = VcsArtifactApp::new(EditorApp::<Gis2dPlayApp>::default()).await;
+            let app = resolve_ready(VcsArtifactApp::new(EditorApp::<Gis2dPlayApp>::default()));
             Ok(Self { app: RefCell::new(app) })
         }
 

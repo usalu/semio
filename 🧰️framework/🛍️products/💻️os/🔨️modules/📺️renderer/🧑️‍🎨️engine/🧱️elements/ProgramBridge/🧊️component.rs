@@ -10,7 +10,7 @@
 use semio_framework::kernel::Effect;
 use semio_framework::{PluginManifest, ViewModel};
 use std::collections::HashMap;
-use ui_contract::{SurfaceId, UiDocumentLease, UI_DOCUMENT_LEASE_SLOTS, UI_DOCUMENT_NODES, UI_DOCUMENT_PATCH_OPS};
+use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_SLOTS, UI_DOCUMENT_NODES, UI_DOCUMENT_PATCH_OPS, UiDocumentLease};
 use ui_wgpu::wgpu::{WindowEngagement, WindowMeasure};
 
 #[cfg(target_arch = "wasm32")]
@@ -18,9 +18,9 @@ use js_sys::{Array, Function, Reflect};
 #[cfg(target_arch = "wasm32")]
 use std::rc::Rc;
 #[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen_futures::JsFuture;
 
@@ -30,11 +30,11 @@ use crate::kernel_runtime::KernelClient;
 #[cfg(not(target_arch = "wasm32"))]
 mod wasm_program_exchange {
     use super::*;
-    use dsl::{from_dsl_value, to_dsl_value, DslValue};
+    use dsl::{DslValue, from_dsl_value, to_dsl_value};
     use protocol::{AppCommand, AppFrame};
     use semio_framework::kernel::{AppEvent, Effect, InvocationId, InvocationResult, UndoGroup};
-    use serde::de::DeserializeOwned;
     use serde::Serialize;
+    use serde::de::DeserializeOwned;
     use std::sync::atomic::{AtomicU64, Ordering};
     use store::pack_rt;
 
@@ -664,7 +664,7 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<ProgramBridgeEntry>,
 // lexically cancelled out) to actually exist; no number of `..`s fixes that. Declaring it at the crate
 // root instead (where `program_bridge/`'s directory is real) and re-exporting preserves the
 // `crate::program_bridge::{PluginHostConfig, ...}` path every call site already depends on.
-pub use crate::generated_plugin_hosts::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
+pub use crate::generated_plugin_hosts::{PluginHostConfig, is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id};
 //#endregion 🏠️🧳️PluginHostConfig
 
 pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) -> Vec<ProgramBridgeEntry> {

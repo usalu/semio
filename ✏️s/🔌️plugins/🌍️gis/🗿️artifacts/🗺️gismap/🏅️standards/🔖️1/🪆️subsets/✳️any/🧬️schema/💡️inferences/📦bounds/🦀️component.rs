@@ -75,7 +75,7 @@ mod tests {
     use super::*;
     use crate::artifacts::gismap::MapFeature;
 
-    async fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
+    fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
         dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)
     }
 

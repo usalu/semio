@@ -137,7 +137,7 @@ fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, Strin
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay, real evaluated
 /// preview geometry — not a fallback placeholder: procedural3d's whole purpose is generated geometry,
 /// and the pure evaluate+tessellate path needs no session/config to run once.
-pub fn render(document: &Procedural3dSnapshot) -> BuiltNode {
+pub fn render(document: &Procedural3dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = evaluated_meshes_and_instances(&document.fixture);
     let view = MeshView {
         camera_json: world3d_camera_json(PROCEDURAL3D_VIEW_DEFAULT_CAMERA_POSITION, PROCEDURAL3D_VIEW_DEFAULT_CAMERA_TARGET, PROCEDURAL3D_VIEW_DEFAULT_CAMERA_FOV),

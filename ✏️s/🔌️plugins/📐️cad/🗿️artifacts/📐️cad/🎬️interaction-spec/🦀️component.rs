@@ -109,7 +109,7 @@ pub struct ExprEnv<'a> {
     pub event: Option<&'a Value>,
 }
 
-async fn expr_path_get(root_value: Option<&Value>, segments: &[ExprPathSegment]) -> Option<Value> {
+fn expr_path_get(root_value: Option<&Value>, segments: &[ExprPathSegment]) -> Option<Value> {
     let mut current = root_value?.clone();
     for segment in segments {
         current = match segment {
@@ -120,7 +120,7 @@ async fn expr_path_get(root_value: Option<&Value>, segments: &[ExprPathSegment])
     Some(current)
 }
 
-async fn expr_value_truthy(value: &Value) -> bool {
+fn expr_value_truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,
         Value::Bool(b) => *b,
@@ -131,7 +131,7 @@ async fn expr_value_truthy(value: &Value) -> bool {
     }
 }
 
-async fn expr_value_not_empty(value: Option<&Value>) -> bool {
+fn expr_value_not_empty(value: Option<&Value>) -> bool {
     match value {
         None => false,
         Some(Value::Null) => false,
@@ -142,7 +142,7 @@ async fn expr_value_not_empty(value: Option<&Value>) -> bool {
     }
 }
 
-async fn expr_as_f64(value: &Value) -> f64 {
+fn expr_as_f64(value: &Value) -> f64 {
     value.as_f64().unwrap_or(0.0)
 }
 
@@ -636,7 +636,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn every_interaction_asset_on_disk_parses_as_interaction_spec() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions");
-        async fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+        fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
             let Ok(entries) = std::fs::read_dir(dir) else { return };
             for entry in entries.flatten() {
                 let path = entry.path();

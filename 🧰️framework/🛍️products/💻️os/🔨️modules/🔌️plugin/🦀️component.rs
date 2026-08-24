@@ -239,6 +239,16 @@ pub mod app {
         ComponentTree { root: built_to_tree(node) }
     }
 
+    /// 🎬️ Encodes a typed product scene behind the semantic surface contract.
+    pub fn scene_surface<T: semio_framework_ui_scene::SceneDoc>(id: &str, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
+        let props = semio_framework_ui_scene::encode(kind, scene).map_err(|_| ui_assembly_error("scene-surface.encode"))?;
+        ui::surface(props)
+            .try_id(id)
+            .map_err(|_| ui_assembly_error("scene-surface.id"))?
+            .try_build()
+            .map_err(|_| ui_assembly_error("scene-surface.build"))
+    }
+
     /// 🏷️ Builds one semantic text node from the SDK's retained non-node label type.
     pub fn built_text_node(label: ui_wgpu::wgpu::Label) -> Result<BuiltNode, ui_wgpu::wgpu::Label> {
         let value = label.to_string();
@@ -31020,7 +31030,7 @@ pub mod world3d_host {
     }
 
     /** 📐️ Serializes mode ⊗ orientation — the `WorldProjectionSpec` shape the JS world layer parses. */
-    pub async fn world3d_projection_spec_json(p: &WorldProjectionConfig) -> Value {
+    pub fn world3d_projection_spec_json(p: &WorldProjectionConfig) -> Value {
         let mode = match p.kind.as_str() {
             "orthographic" => json!({ "kind": "orthographic" }),
             "axonometric" => {
@@ -31056,12 +31066,12 @@ pub mod world3d_host {
     }
 
     /** 📐️ `camera_json` with `position`/`target`/`up`/`zoom` plus the active-kind `projection` spec object — replaces the plain `world3d_camera_json` for worlds that carry the full taxonomy. */
-    pub async fn world3d_camera_projection_json(position: [f64; 3], target: [f64; 3], up: Option<[f64; 3]>, zoom: f64, p: &WorldProjectionConfig) -> String {
+    pub fn world3d_camera_projection_json(position: [f64; 3], target: [f64; 3], up: Option<[f64; 3]>, zoom: f64, p: &WorldProjectionConfig) -> String {
         let mut value = json!({
             "position": position,
             "target": target,
             "zoom": zoom,
-            "projection": world3d_projection_spec_json(p).await,
+            "projection": world3d_projection_spec_json(p),
         });
         if let Some(object) = value.as_object_mut() {
             if let Some(up) = up {
@@ -31073,7 +31083,7 @@ pub mod world3d_host {
 
     /** 📐️ Canonical camera pose (`position`, `up`) for a projection config, orbiting `target` at `distance` — mirrors
      * `computeWorldProjectionPose` in `infinite/world/r3f/index.tsx`; used to snap the viewport on kind/view changes. */
-    pub async fn world3d_projection_pose(p: &WorldProjectionConfig, target: [f64; 3], distance: f64) -> ([f64; 3], [f64; 3]) {
+    pub fn world3d_projection_pose(p: &WorldProjectionConfig, target: [f64; 3], distance: f64) -> ([f64; 3], [f64; 3]) {
         let [tx, ty, tz] = target;
         match p.kind.as_str() {
             "orthographic" => match p.orthographic_view.as_str() {
@@ -31085,7 +31095,7 @@ pub mod world3d_host {
                 _ => ([tx, ty, tz + distance], [0.0, 1.0, 0.0]), // "plan" | "top"
             },
             "axonometric" => {
-                let spec = world3d_projection_spec_json(p).await;
+                let spec = world3d_projection_spec_json(p);
                 let angle_a = spec.get("angleA").and_then(Value::as_f64).unwrap_or(30.0).to_radians();
                 let angle_b = spec.get("angleB").and_then(Value::as_f64).unwrap_or(30.0).to_radians();
                 let elevation = (angle_a.tan() * angle_b.tan()).sqrt().asin();
@@ -31122,7 +31132,7 @@ pub mod world3d_host {
 
     /** 📐️ Shared "Projection" window-measures tree: Parallel > Orthographic/Axonometric/Oblique, Perspective > 1/2/3-Point/Curvilinear —
      * every leaf targets `action`, parameter sliders gated to the kind/variant they apply to (see `puzzle3d_fill_utility_options` for the sibling gating pattern). */
-    pub async fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
+    pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
         let select = |id: String, value: String, items: Vec<(&str, &str)>, field: &str| WindowMeasure::Select {
             id,
             label: None,
@@ -31225,7 +31235,7 @@ pub mod world3d_host {
     }
 
     /** 📐️ Applies `setProjection`/`setProjectionParam` to `p`, returning whether the action was handled. */
-    pub async fn apply_world3d_projection_action(p: &mut WorldProjectionConfig, action_id: &str, args: Option<&Value>) -> bool {
+    pub fn apply_world3d_projection_action(p: &mut WorldProjectionConfig, action_id: &str, args: Option<&Value>) -> bool {
         let field = args.and_then(|v| v.get("field")).and_then(Value::as_str);
         let value_str = args.and_then(|v| v.get("value")).and_then(Value::as_str);
         let value_f64 = args.and_then(|v| v.get("value")).and_then(Value::as_f64);
@@ -31282,7 +31292,7 @@ pub mod world3d_host {
     }
 
     /** 📐️ Whether a `setProjection`/`setProjectionParam` action requires a pose recompute (kind/view/variant changes) vs. a pure in-place parameter tweak that keeps the current pose (oblique shear / two-point shift / fov / curvilinear re-shade live). */
-    pub async fn world3d_projection_action_moves_pose(action_id: &str, args: Option<&Value>) -> bool {
+    pub fn world3d_projection_action_moves_pose(action_id: &str, args: Option<&Value>) -> bool {
         if action_id != "setProjection" {
             return false;
         }
@@ -31596,7 +31606,7 @@ pub mod world3d_host {
         async fn isometric_pose_matches_the_classic_35_264_45_direction() {
             let mut p = WorldProjectionConfig { kind: "axonometric".into(), axonometric_variant: "isometric".into(), ..WorldProjectionConfig::default() };
             p.axonometric_quadrant = "ne".into();
-            let (position, up) = world3d_projection_pose(&p, [0.0, 0.0, 0.0], 10.0).await;
+            let (position, up) = world3d_projection_pose(&p, [0.0, 0.0, 0.0], 10.0);
             assert!((position[2] / 10.0 - 35.264_f64.to_radians().sin()).abs() < 1e-3);
             assert_eq!(up, [0.0, 0.0, 1.0]);
             let azimuth = (position[0] / position[1]).atan();
@@ -31606,7 +31616,7 @@ pub mod world3d_host {
         #[semio_framework_async_macros::async_test]
         async fn projection_spec_json_projects_only_active_kind_fields() {
             let p = WorldProjectionConfig { kind: "oblique".into(), oblique_variant: "cabinet".into(), oblique_angle: 45.0, oblique_depth: 0.5, ..WorldProjectionConfig::default() };
-            let spec = world3d_projection_spec_json(&p).await;
+            let spec = world3d_projection_spec_json(&p);
             let mode = spec.get("mode").expect("mode object");
             assert_eq!(mode.get("kind").and_then(Value::as_str), Some("oblique"));
             assert_eq!(mode.get("depthScale").and_then(Value::as_f64), Some(0.5));
@@ -31617,20 +31627,20 @@ pub mod world3d_host {
         async fn apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall() {
             let mut p = WorldProjectionConfig::default();
             p.axonometric_angle_a = 22.0;
-            assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&json!({ "field": "obliqueVariant", "value": "military" }))).await);
+            assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&json!({ "field": "obliqueVariant", "value": "military" }))));
             assert_eq!(p.kind, "oblique");
             assert_eq!(p.oblique_variant, "military");
             assert_eq!(p.axonometric_angle_a, 22.0);
-            assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&json!({ "param": "obliqueAngle", "value": 30.0 }))).await);
+            assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&json!({ "param": "obliqueAngle", "value": 30.0 }))));
             assert_eq!(p.oblique_angle, 30.0);
-            assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&json!({ "param": "obliqueAngle" }))).await);
-            assert!(world3d_projection_action_moves_pose("setProjection", Some(&json!({ "field": "obliqueVariant" }))).await);
+            assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&json!({ "param": "obliqueAngle" }))));
+            assert!(world3d_projection_action_moves_pose("setProjection", Some(&json!({ "field": "obliqueVariant" }))));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn projection_measures_tree_matches_the_requested_taxonomy() {
             let p = WorldProjectionConfig::default();
-            let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }).await;
+            let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) });
             let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
             assert_eq!(families.len(), 2);
             let WindowMeasure::Group { label: parallel_label, children: parallel_children, .. } = &families[0] else { panic!("expected parallel group") };
@@ -31760,6 +31770,7 @@ pub use app::{
     node_graph_delete_selection_spec,
     register_artifact_inference_service,
     resolve_ready,
+    scene_surface,
     selection_count_phrase,
     selection_domains_from_surface,
     serializer_entry_of,
@@ -31815,8 +31826,10 @@ pub use app::{
     ArtifactMediaExportResult,
     ArtifactMime,
     ArtifactOutputChunks,
+    ArtifactOwnedDisposer,
     ArtifactOwnedToolJobFactory,
     ArtifactOwnedToolJobRequest,
+    ArtifactDocumentStoreDisposer,
     ArtifactReservedJob,
     ArtifactReservedToolInput,
     ArtifactReservedToolJob,
@@ -31825,6 +31838,8 @@ pub use app::{
     ArtifactSerializer,
     ArtifactSnapshotCloseLease,
     ArtifactSnapshotDisposer,
+    ArtifactStoreInitializationAuthority,
+    ArtifactStoreInitializationJob,
     ArtifactToolCompletion,
     ArtifactToolFactoryRegistry,
     ArtifactView,

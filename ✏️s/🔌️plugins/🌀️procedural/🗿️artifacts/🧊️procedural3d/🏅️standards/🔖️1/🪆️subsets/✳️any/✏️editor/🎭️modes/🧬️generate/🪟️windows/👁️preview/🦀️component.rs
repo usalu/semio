@@ -45,7 +45,7 @@ pub fn window_measures(config: &Procedural3dConfig, procedural_action: impl Fn(&
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Procedural3dConfig, labels: &Procedural3dLabels, active_utility: &str) -> BuiltNode {
+pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Procedural3dConfig, labels: &Procedural3dLabels, active_utility: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = match selected_generation(generation) {
         Some(_) => {
             let gen_fixture = generation_fixture_for(fixture, generation);

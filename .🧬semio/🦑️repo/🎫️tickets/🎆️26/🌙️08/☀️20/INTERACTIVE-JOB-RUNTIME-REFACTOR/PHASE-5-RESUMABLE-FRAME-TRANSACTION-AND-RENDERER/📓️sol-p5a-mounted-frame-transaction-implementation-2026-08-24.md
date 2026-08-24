@@ -216,3 +216,79 @@ the repository's Nx/Bun entrypoints, then the native and browser-worker mounted 
 1/2/4/default workers. Those gates must confirm every worker opportunity remains below 8 ms and the
 already-present callback p99 laws remain at or below 2 ms. This report deliberately makes no runtime
 pass claim before those executable gates run.
+
+## Coordinator Third Pre-acceptance Remediation
+
+The third coordinator counterexample was valid. This remediation replaces the remaining blocking
+find sink, frame-local platform work, complete text/scene leaves, and byte-only atlas ledger with
+retained authorities in the mounted call graph. The result is source-audit-ready for an independent
+acceptance pass; it is not self-accepted and makes no broad compile, runtime, or timing claim.
+
+### Exact Third-remediation Inventory
+
+| File | Exact third-remediation change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs` | Replaced the dynamic blocking find sink with a generation-qualified fixed 256-item/1 MiB collector, non-nesting worker-local binding, exact owner refusal, one-item transfer/close, and terminal witness. Frame chrome now only coalesces bounded preference, introduction, layout, presence, and persistence requests; one maintenance field/page advances outside the frame opportunity. |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs` | Mounted Shell maintenance on the shared pool's typed I/O lane, retained/coalesced unfinished maintenance, and mounted one abandoned-atlas close opportunity in `FrameBuildPhase::Deferred` before new candidate work. |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs` | Added `RetainedNodePaintCursor` byte/glyph/line/pen/chrome state. Text advances one UTF-8 scalar and at most one pre-admitted glyph per grant, checks the 4 MiB cap before layout/product work, advances its byte only after output admission, and closes the bound node explicitly. Non-text nodes receive one fixed 256-output child admission. |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs` | Retains the exact paint node and scene leaf plus their child cursors across `frame_into_step`; no mounted opportunity calls the legacy complete paint/tree or complete scene collection oracle. |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs` | Added exact scene-node binding plus checked phase/item/page/single-byte state, stale-owner refusal, incremental close, and terminal witness. The byte API can advance only one scalar per call. |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs` | `FrameworkSceneHost` resumes `render_component_scene_step` or `render_ui_image_step`. Image identifiers and sources advance one byte per opportunity, data decoding fails closed, URL assets use the admitted request/cache boundary, and one raster output item crosses the draw boundary. The complete image renderer is test-only. |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs` | Added the retained component-scene scalar/item consumer and made the complete component-scene renderer a test-only oracle. |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️prepared.rs` | Replaced the atlas mutex/byte counter with one packed nonblocking `AtomicU64` permit covering item, page, payload, and backing units before allocation. Fixed 2,048 page slots retain the exact permit. Close releases one page, one backing owner, or one permit dimension per grant. `Drop` moves unfinished owners into one of 64 pre-reserved abandonment slots for the same incremental close authority. |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs` | Preserved one-page atlas upload as the only mounted GPU transfer boundary. |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs` | Re-exported the retained scene cursor/step boundary directly, without an adapter or alternate authority. |
+| `📜️script.ts` | Expanded the P5a verifier to 16 live sources and 69 faithful mutations, including direct find sink/binding/push/take, every synchronous maintenance restoration, paint byte/output/whole-wrap, complete scene/image restoration, scene scalar/stale-owner, all four atlas permit dimensions, allocation order, Drop recovery, mounted abandonment drain, and hostile-law removal. |
+
+### Exact Owner, Refusal, and Close Laws
+
+| Authority | Admission/refusal | Resume and close |
+|---|---|---|
+| Shell find generation | Fixed slots and aggregate payload bytes are checked before move; stale generation and MAX + 1 return the same `ShellFindItem` pointer identity | One `pop_front` or `close_step` releases one owned item; empty slots plus zero payload bytes form the terminal witness; the worker-local binding cannot nest |
+| Shell maintenance | Frame work only sets/coalesces request state; identifiers and stored fields have 4 KiB caps, aggregate configuration has a 64 KiB cap | The shared-pool I/O child advances one preference field, introduction owner, layout page, presence page, or persistence field, then re-enqueues only if work remains |
+| Retained text node | A node over 4 MiB faults before layout/glyph/output work and the retained tree owner pointer is unchanged | Each accepted call consumes one UTF-8 scalar and emits at most one glyph; cancellation closes the exact bound node before terminal empty |
+| Scene/image leaf | `bind` accepts one `NodeId`; a different live node is rejected without changing the active owner | Checked phase/item/page/byte cursors remain parked until `finish`; one close grant removes the bound owner and the next witnesses terminal empty |
+| Atlas process permit | One CAS attempt jointly checks item, page, payload, and backing limits; contention refuses without waiting and allocation occurs only after permit transfer | Normal close and Drop recovery share one page/backing/permit-dimension close authority; the mounted deferred phase drains one abandonment unit before candidate work |
+
+### Hostile Laws and Verifier Evidence
+
+The added direct Rust laws cover:
+
+1. fixed find MAX + 1 pointer identity, stale-generation identity, one-item close, and terminal empty;
+2. one-glyph-per-grant text progress, 4 MiB + 1 tree-owner identity, and cancellation close;
+3. stale scene-node refusal, one-byte progress, and exact bound-owner close;
+4. atlas page-cap refusal before permit transfer, exact one-page close, process item MAX + 1,
+   allocation refusal with unchanged packed ledger, concurrent nonblocking/poison-free permit
+   attempts, ordinary abandonment, and interruption after a partial close.
+
+The isolated verifier rejects **69 / 69** mutations. The 25 third-remediation additions restore each
+counterexample directly in its live source or remove its hostile law; the earlier 44 mounted-stage,
+Shell child, document, packet, world, atlas-upload, and publication mutations remain rejected.
+
+### Third-remediation Residual Census
+
+| Census | Result |
+|---|---:|
+| Dynamic `Arc<Mutex<Vec<ShellFindItem>>>`, whole find take, or unowned find push in the admitted find authority | **0** |
+| Synchronous complete preference/introduction/layout/presence calls in `render_chrome_step` | **0** |
+| Mounted text `wrap_text`, all-line loop, recursive child call, or byte advance before output admission | **0** |
+| Mounted Framework host calls to complete `render_component_scene` / `render_ui_image` | **0** |
+| Complete scene/image functions retained as production alternatives | **0**; one of each remains under `cfg(test)` as a legacy oracle |
+| Atlas `Mutex<usize>`, byte-only ledger, dynamic page slots, allocation before permit, bulk page clear, or missing Drop recovery in the atlas authority | **0** |
+| Mounted `PreparedAtlasPages::close_abandoned_step` sites | **1**, `FrameBuildPhase::Deferred` |
+| P5a verifier production sources | **16** |
+| Faithful P5a mutations | **69 / 69 rejected** |
+
+### Third-remediation Validation
+
+| Gate | Result |
+|---|---|
+| `rustfmt --edition 2024` on the 10 touched Rust files | **PASS** |
+| Isolated Bun invocation of `interactivityMountedFrameTransactionSelfTests(process.cwd())` after rustfmt | **PASS** — `P5a isolated verifier passed` |
+| Scoped unstaged and staged `git diff --check` across the 11 source/verifier files | **PASS** |
+| Exact live-boundary residual census above | **PASS** |
+| Cargo/Nx/Wasm/browser/native timing matrix | **DEFERRED by coordinator instruction**; not run and not claimed |
+
+The broad renderer/UI compile, hostile Rust test execution, worker-count matrix, browser-worker
+replay, and measured under-8 ms opportunity gates remain for the coordinator after overlapping
+source work is quiescent.

@@ -65,7 +65,7 @@ fn computers_manifest() -> CadComputersManifest {
 }
 
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
-// plain sync fn). `.mode`/`.contributes_topic` are still `async fn` in
+// plain sync fn). `.mode`/`.contributes_topic` are still `fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's path_scope);
 // bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request. See R9.
 fn bundle() -> ExtensionBundle {

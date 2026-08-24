@@ -32,7 +32,10 @@
 
 use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::*;
-use db_storage::SnapshotStorage as _;
+use db_storage::{IndexStorage as _, LeaseStorage as _, PayloadStorage as _, SnapshotStorage as _, WalStorage as _};
+use semio_framework_async::{Lane, WorkerPool};
+use std::future::Future;
+use std::sync::Arc;
 
 //#region 🔖️Budget
 /// @emoji 💰️ Bounds how much work one `Compactor::run` pass does across every subsystem — the
@@ -125,6 +128,7 @@ pub struct SegmentHorizon {
 /// the shared traversal `segment_horizons`/`sweep_payloads` both build on.
 /// @emoji 📊️ Computes every segment's `SegmentHorizon` from a document's full replayed record
 /// stream.
+#[cfg(test)]
 pub async fn segment_horizons<'record>(records: impl IntoIterator<Item = &'record db_wal::WalRecord>) -> Vec<SegmentHorizon> {
     let mut horizons = Vec::new();
     let mut current: Option<SegmentHorizon> = None;
@@ -155,6 +159,7 @@ pub async fn segment_horizons<'record>(records: impl IntoIterator<Item = &'recor
 /// doc), with a known `max_head_seq` at or below `floor_head_seq`, capped at
 /// `budget.max_wal_segments`. Ascending order (oldest first).
 // 🚫️async: E1 pure accessor consumed synchronously by `run_under_lease` and tests — see R9
+#[cfg(test)]
 pub fn plan_wal_retention(horizons: &[SegmentHorizon], floor_head_seq: u64, budget: &CompactionBudget) -> Vec<u64> {
     let Some(max_index) = horizons.iter().map(|horizon| horizon.segment_index).max() else {
         return Vec::new();
@@ -168,6 +173,7 @@ pub fn plan_wal_retention(horizons: &[SegmentHorizon], floor_head_seq: u64, budg
 /// @emoji 🗑️ Applies `plan_wal_retention`'s output: deletes each selected segment from `storage`.
 /// Idempotent (`WalStorage::delete_segment` already is). Returns how many were selected (and thus
 /// attempted).
+#[cfg(test)]
 pub async fn apply_wal_retention(storage: &impl db_storage::WalStorage, document: &ArtifactId, segments: &[u64]) -> Result<u64, DbError> {
     for &index in segments {
         storage.delete_segment(document, index).await?;
@@ -193,6 +199,7 @@ pub struct PayloadGcReport {
 /// stores don't need one for `put`/`get`/`delete`), so this crate cannot do a full mark-and-sweep
 /// over every payload ever stored; it can only trace liveness for a caller-supplied candidate set,
 /// which is exactly what `Compactor::run` derives from its own WAL retention pass.
+#[cfg(test)]
 pub async fn sweep_payloads<'record>(payload_storage: &impl db_storage::PayloadStorage, records: impl IntoIterator<Item = &'record db_wal::WalRecord>, deleted_segments: &[u64], budget: &CompactionBudget) -> Result<PayloadGcReport, DbError> {
     let deleted_set: std::collections::HashSet<u64> = deleted_segments.iter().copied().collect();
     let mut candidates = std::collections::HashSet::new();
@@ -229,19 +236,70 @@ pub struct IndexKindReport {
     pub stats: db_index::IndexStats,
 }
 
+const COMPACTION_INDEX_REPORTS: usize = db_index::IndexKind::ALL.len();
+
+/// 🗂️ Fixed admitted index-report owner returned by one compaction generation.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CompactionIndexReports {
+    slots: [Option<IndexKindReport>; COMPACTION_INDEX_REPORTS],
+    len: u8,
+}
+
+impl CompactionIndexReports {
+    pub fn len(&self) -> usize {
+        usize::from(self.len)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &IndexKindReport> {
+        self.slots[..self.len()].iter().flatten()
+    }
+
+    fn push(&mut self, report: IndexKindReport) -> Result<(), DbError> {
+        let index = self.len();
+        let slot = self.slots.get_mut(index).ok_or(DbError::LimitExceeded("db_compact fixed index reports"))?;
+        *slot = Some(report);
+        self.len = self.len.checked_add(1).ok_or(DbError::LimitExceeded("db_compact index report cursor"))?;
+        Ok(())
+    }
+
+    fn close_step(&mut self) -> bool {
+        if self.len == 0 {
+            return false;
+        }
+        self.len -= 1;
+        self.slots[usize::from(self.len)] = None;
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.slots.iter().all(Option::is_none)
+    }
+}
+
+impl Default for CompactionIndexReports {
+    fn default() -> Self {
+        Self { slots: [None; COMPACTION_INDEX_REPORTS], len: 0 }
+    }
+}
+
 /// @emoji 🧹️ Compacts every `db_index::IndexKind` for `document`: merges all live runs into one
 /// per kind, physically dropping tombstones shadowed beneath them (`db_index::IndexHandle::
 /// compact`'s own law) — the mechanism behind the contract's "index merge" and, for
 /// `IndexKind::Preview`/`Conflict` specifically, its share of "tombstone/preview GC": once a
 /// withdrawn preview key or a resolved conflict marker is the only thing a tombstone shadows,
 /// compacting reclaims it for good.
-pub async fn compact_all_indexes(storage: &impl db_storage::IndexStorage, document: &ArtifactId) -> Result<Vec<IndexKindReport>, DbError> {
-    let mut reports = Vec::with_capacity(db_index::IndexKind::ALL.len());
+#[cfg(test)]
+pub async fn compact_all_indexes(storage: &impl db_storage::IndexStorage, document: &ArtifactId) -> Result<CompactionIndexReports, DbError> {
+    let mut reports = CompactionIndexReports::default();
     for kind in db_index::IndexKind::ALL {
         let handle = db_index::IndexHandle::new(storage, document.clone(), kind).await;
         let mut control = handle.operation_control(65_536)?;
         let stats = handle.compact(&mut control).await?;
-        reports.push(IndexKindReport { kind, stats });
+        reports.push(IndexKindReport { kind, stats })?;
     }
     Ok(reports)
 }
@@ -503,6 +561,7 @@ impl std::future::Future for MountedCompactionPageClose<'_> {
 /// @emoji 🌳️ Walks the snapshot chain from `through_generation` back to its full-baseline root,
 /// returning the latest generation's own descriptor plus every page introduced anywhere in the
 /// chain, deduplicated by content hash — `SnapshotConsolidator::consolidate`'s input.
+#[cfg(test)]
 async fn collect_chain_pages<S: db_storage::SnapshotStorage>(
     manager: &db_snapshot::SnapshotManager<'_, S>,
     document: &ArtifactId,
@@ -539,10 +598,12 @@ async fn collect_chain_pages<S: db_storage::SnapshotStorage>(
 /// @emoji 🧑️‍💼️ Rolls up a document's incremental snapshot chain into a fresh, self-sufficient
 /// full baseline — the responsibility `db_snapshot`'s own module doc explicitly defers to this
 /// crate (see that crate's "Scope boundary" note).
+#[cfg(test)]
 pub struct SnapshotConsolidator<'storage, S: db_storage::SnapshotStorage> {
     manager: db_snapshot::SnapshotManager<'storage, S>,
 }
 
+#[cfg(test)]
 impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S> {
     pub async fn new(storage: &'storage S) -> SnapshotConsolidator<'storage, S> {
         SnapshotConsolidator { manager: db_snapshot::SnapshotManager::new(storage).await }
@@ -600,6 +661,7 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
 /// 🎯️ Scope boundary: `db_storage` defines no `ColdStorage` trait, so this crate returns the
 /// archive bytes rather than inventing a storage seam unilaterally in a crate that isn't
 /// `db_storage`'s own.
+#[cfg(test)]
 pub async fn build_cold_archive(storage: &impl db_storage::SnapshotStorage, document: &ArtifactId, through_generation: u64) -> Result<db_storage::DbIoPages, DbError> {
     let manager = db_snapshot::SnapshotManager::new(storage).await;
     let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -617,7 +679,7 @@ pub async fn build_cold_archive(storage: &impl db_storage::SnapshotStorage, docu
 pub struct CompactionReport {
     pub wal_segments_deleted: u64,
     pub payloads_deleted: u64,
-    pub index_reports: Vec<IndexKindReport>,
+    pub index_reports: CompactionIndexReports,
     pub snapshot_consolidated_generation: Option<u64>,
     pub snapshot_generations_pruned: u64,
 }
@@ -625,10 +687,12 @@ pub struct CompactionReport {
 /// @emoji 🧑️‍💼️ The top-level, fenced, budgeted orchestrator gluing every subsystem in this crate
 /// together over one `db_storage::DbStorage` backend — "online compaction with manifest CAS +
 /// fencing" (see module doc's design-choice note on the fencing mechanism).
+#[cfg(test)]
 pub struct Compactor<'storage> {
     storage: &'storage db_storage::DbBackend,
 }
 
+#[cfg(test)]
 impl<'storage> Compactor<'storage> {
     pub async fn new(storage: &'storage db_storage::DbBackend) -> Compactor<'storage> {
         Compactor { storage }
@@ -756,6 +820,1121 @@ impl<'storage> Compactor<'storage> {
     }
 }
 //#endregion 🔖️Compactor
+
+//#region 🧵️RetainedCompactionJob
+const DATABASE_COMPACTION_SLOTS: usize = 32;
+const DATABASE_COMPACTION_MAX_SEGMENTS: usize = 64;
+const DATABASE_COMPACTION_MAX_HASHES: usize = 4_096;
+const DATABASE_COMPACTION_OPERATION_ITEMS: u64 = 16_768;
+const DATABASE_COMPACTION_OPERATION_BYTES: u64 = 2 * 1024 * 1024;
+const DATABASE_COMPACTION_TOTAL_ITEMS: u64 = DATABASE_COMPACTION_OPERATION_ITEMS * DATABASE_COMPACTION_SLOTS as u64;
+const DATABASE_COMPACTION_TOTAL_BYTES: u64 = DATABASE_COMPACTION_OPERATION_BYTES * DATABASE_COMPACTION_SLOTS as u64;
+const DATABASE_COMPACTION_RETRY_LIMIT: u8 = 8;
+const DATABASE_COMPACTION_DEADLINE_MS: u64 = 30_000;
+
+fn database_compaction_observe_backing(items: usize, bytes: usize, label: &'static str) -> Result<(), DbError> {
+    let items = u64::try_from(items).map_err(|_| DbError::LimitExceeded(label))?;
+    let bytes = u64::try_from(bytes).map_err(|_| DbError::LimitExceeded(label))?;
+    if items > DATABASE_COMPACTION_OPERATION_ITEMS || bytes > DATABASE_COMPACTION_OPERATION_BYTES {
+        return Err(DbError::LimitExceeded(label));
+    }
+    Ok(())
+}
+
+fn database_compaction_descriptor_backing(descriptor: &db_snapshot::SnapshotDescriptor) -> Result<(usize, usize), DbError> {
+    let items = descriptor
+        .roots
+        .capacity()
+        .checked_add(descriptor.new_pages.capacity())
+        .and_then(|value| value.checked_add(usize::from(descriptor.vcs_head.is_some())))
+        .and_then(|value| value.checked_add(1))
+        .ok_or(DbError::LimitExceeded("database compaction snapshot backing items"))?;
+    let hash_bytes =
+        descriptor.roots.capacity().checked_add(descriptor.new_pages.capacity()).and_then(|value| value.checked_mul(std::mem::size_of::<pack::ContentHash>())).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
+    let bytes = hash_bytes.checked_add(descriptor.document.0.capacity()).and_then(|value| value.checked_add(descriptor.vcs_head.as_ref().map_or(0, String::capacity))).ok_or(DbError::LimitExceeded("database compaction snapshot backing bytes"))?;
+    Ok((items, bytes))
+}
+
+async fn close_compaction_descriptor(mut descriptor: db_snapshot::SnapshotDescriptor) {
+    let new_pages = std::mem::take(&mut descriptor.new_pages);
+    semio_framework_async::yield_once().await;
+    drop(new_pages);
+    let roots = std::mem::take(&mut descriptor.roots);
+    semio_framework_async::yield_once().await;
+    drop(roots);
+    if let Some(vcs_head) = descriptor.vcs_head.take() {
+        semio_framework_async::yield_once().await;
+        drop(vcs_head);
+    }
+    let document = std::mem::take(&mut descriptor.document.0);
+    semio_framework_async::yield_once().await;
+    drop(document);
+}
+
+async fn database_compaction_admit_descriptor(descriptor: db_snapshot::SnapshotDescriptor) -> Result<db_snapshot::SnapshotDescriptor, DbError> {
+    let observed = database_compaction_descriptor_backing(&descriptor).and_then(|(items, bytes)| database_compaction_observe_backing(items, bytes, "database compaction snapshot backing"));
+    if let Err(error) = observed {
+        close_compaction_descriptor(descriptor).await;
+        return Err(error);
+    }
+    Ok(descriptor)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DatabaseCompactionProgress {
+    Admitted,
+    SnapshotFloor,
+    LeaseAcquire,
+    WalHorizon,
+    PayloadTrace,
+    WalDelete,
+    PayloadDelete,
+    IndexMerge,
+    SnapshotCollect,
+    SnapshotPublish,
+    SnapshotRetain,
+    LeaseRelease,
+    Completed,
+    Cancelled,
+    Fault,
+}
+
+impl DatabaseCompactionProgress {
+    fn from_u8(value: u8) -> Self {
+        match value {
+            0 => Self::Admitted,
+            1 => Self::SnapshotFloor,
+            2 => Self::LeaseAcquire,
+            3 => Self::WalHorizon,
+            4 => Self::PayloadTrace,
+            5 => Self::WalDelete,
+            6 => Self::PayloadDelete,
+            7 => Self::IndexMerge,
+            8 => Self::SnapshotCollect,
+            9 => Self::SnapshotPublish,
+            10 => Self::SnapshotRetain,
+            11 => Self::LeaseRelease,
+            12 => Self::Completed,
+            13 => Self::Cancelled,
+            _ => Self::Fault,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct DatabaseCompactionAdmissionSlot {
+    generation: u64,
+    occupied: bool,
+}
+
+const EMPTY_DATABASE_COMPACTION_SLOT: DatabaseCompactionAdmissionSlot = DatabaseCompactionAdmissionSlot { generation: 0, occupied: false };
+
+struct DatabaseCompactionAdmissionState {
+    slots: [DatabaseCompactionAdmissionSlot; DATABASE_COMPACTION_SLOTS],
+    items: u64,
+    bytes: u64,
+    next_generation: u64,
+}
+
+impl DatabaseCompactionAdmissionState {
+    fn try_claim(&mut self, document: &ArtifactId) -> Result<(usize, u64), DbError> {
+        if document.0.len() > db_storage::DbIoText::maximum_capacity() || document.0.capacity() > db_storage::DbIoText::maximum_capacity() {
+            return Err(DbError::LimitExceeded("database compaction document backing"));
+        }
+        let slot = self.slots.iter().position(|entry| !entry.occupied).ok_or(DbError::LimitExceeded("database compaction admission slots"))?;
+        let items = self.items.checked_add(DATABASE_COMPACTION_OPERATION_ITEMS).ok_or(DbError::LimitExceeded("database compaction aggregate items"))?;
+        let bytes = self.bytes.checked_add(DATABASE_COMPACTION_OPERATION_BYTES).ok_or(DbError::LimitExceeded("database compaction aggregate bytes"))?;
+        if items > DATABASE_COMPACTION_TOTAL_ITEMS || bytes > DATABASE_COMPACTION_TOTAL_BYTES {
+            return Err(DbError::LimitExceeded("database compaction aggregate capacity"));
+        }
+        let generation = self.next_generation;
+        self.next_generation = generation.checked_add(1).ok_or(DbError::LimitExceeded("database compaction generation"))?;
+        self.slots[slot] = DatabaseCompactionAdmissionSlot { generation, occupied: true };
+        self.items = items;
+        self.bytes = bytes;
+        Ok((slot, generation))
+    }
+
+    fn is_current(&self, slot: usize, generation: u64) -> bool {
+        self.slots.get(slot).is_some_and(|entry| entry.occupied && entry.generation == generation)
+    }
+
+    fn release(&mut self, slot: usize, generation: u64) -> bool {
+        if !self.is_current(slot, generation) {
+            return false;
+        }
+        let Some(items) = self.items.checked_sub(DATABASE_COMPACTION_OPERATION_ITEMS) else { return false };
+        let Some(bytes) = self.bytes.checked_sub(DATABASE_COMPACTION_OPERATION_BYTES) else { return false };
+        self.slots[slot] = EMPTY_DATABASE_COMPACTION_SLOT;
+        self.items = items;
+        self.bytes = bytes;
+        true
+    }
+}
+
+static DATABASE_COMPACTION_ADMISSION: std::sync::Mutex<DatabaseCompactionAdmissionState> =
+    std::sync::Mutex::new(DatabaseCompactionAdmissionState { slots: [EMPTY_DATABASE_COMPACTION_SLOT; DATABASE_COMPACTION_SLOTS], items: 0, bytes: 0, next_generation: 1 });
+
+struct DatabaseCompactionAdmission {
+    slot: usize,
+    generation: u64,
+}
+
+impl DatabaseCompactionAdmission {
+    fn try_claim(document: &ArtifactId) -> Result<Self, DbError> {
+        let (slot, generation) = DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).try_claim(document)?;
+        Ok(Self { slot, generation })
+    }
+
+    fn is_current(&self) -> bool {
+        DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_current(self.slot, self.generation)
+    }
+}
+
+impl Drop for DatabaseCompactionAdmission {
+    fn drop(&mut self) {
+        DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).release(self.slot, self.generation);
+    }
+}
+
+struct DatabaseCompactionSegmentOwners {
+    slots: [Option<SegmentHorizon>; DATABASE_COMPACTION_MAX_SEGMENTS],
+    len: u8,
+}
+
+impl DatabaseCompactionSegmentOwners {
+    fn new() -> Self {
+        Self { slots: [None; DATABASE_COMPACTION_MAX_SEGMENTS], len: 0 }
+    }
+
+    fn push(&mut self, value: SegmentHorizon) -> Result<(), DbError> {
+        let index = usize::from(self.len);
+        *self.slots.get_mut(index).ok_or(DbError::LimitExceeded("database compaction WAL segment owners"))? = Some(value);
+        self.len = self.len.checked_add(1).ok_or(DbError::LimitExceeded("database compaction WAL segment cursor"))?;
+        Ok(())
+    }
+
+    fn get(&self, index: usize) -> Option<SegmentHorizon> {
+        self.slots.get(index).copied().flatten()
+    }
+
+    fn len(&self) -> usize {
+        usize::from(self.len)
+    }
+}
+
+struct DatabaseCompactionHashOwners {
+    slots: [Option<pack::ContentHash>; DATABASE_COMPACTION_MAX_HASHES],
+    len: u16,
+}
+
+impl DatabaseCompactionHashOwners {
+    fn new() -> Self {
+        Self { slots: [None; DATABASE_COMPACTION_MAX_HASHES], len: 0 }
+    }
+
+    async fn contains(&self, hash: pack::ContentHash, cancelled: &std::sync::atomic::AtomicBool) -> Result<bool, DbError> {
+        for slot in self.slots.iter().take(usize::from(self.len)) {
+            compaction_opportunity(cancelled).await?;
+            if *slot == Some(hash) {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    async fn insert(&mut self, hash: pack::ContentHash, cancelled: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
+        if self.contains(hash, cancelled).await? {
+            return Ok(());
+        }
+        let index = usize::from(self.len);
+        *self.slots.get_mut(index).ok_or(DbError::LimitExceeded("database compaction payload hash owners"))? = Some(hash);
+        self.len = self.len.checked_add(1).ok_or(DbError::LimitExceeded("database compaction payload hash cursor"))?;
+        Ok(())
+    }
+
+    fn get(&self, index: usize) -> Option<pack::ContentHash> {
+        self.slots.get(index).copied().flatten()
+    }
+
+    fn len(&self) -> usize {
+        usize::from(self.len)
+    }
+}
+
+async fn compaction_opportunity(cancelled: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
+    semio_framework_async::yield_once().await;
+    if cancelled.load(std::sync::atomic::Ordering::Acquire) {
+        return Err(DbError::Closed);
+    }
+    Ok(())
+}
+
+fn compaction_resource(document: &ArtifactId) -> Result<db_storage::DbIoText, DbError> {
+    use std::fmt::Write as _;
+    let mut resource = db_storage::DbIoText::try_from_str("compact:")?;
+    write!(&mut resource, "{}", document.0).map_err(|_| DbError::LimitExceeded("database compaction lease resource"))?;
+    Ok(resource)
+}
+
+async fn close_compaction_record(mut record: db_wal::WalRecord) -> Result<(), DbError> {
+    close_compaction_owner(|| record.close_step()).await
+}
+
+async fn close_compaction_replay<S: db_storage::WalStorage>(replay: &mut db_wal::WalReplayCursor<'_, S>) -> Result<(), DbError> {
+    close_compaction_owner(|| replay.close_owner_step()).await
+}
+
+async fn close_compaction_owner(mut close: impl FnMut() -> Result<bool, DbError>) -> Result<(), DbError> {
+    std::future::poll_fn(move |context| match close() {
+        Ok(true) => {
+            context.waker().wake_by_ref();
+            std::task::Poll::Pending
+        }
+        Ok(false) => std::task::Poll::Ready(Ok(())),
+        Err(error) => std::task::Poll::Ready(Err(error)),
+    })
+    .await
+}
+
+async fn retained_compaction_under_lease(
+    storage: &db_storage::DbBackend,
+    document: &ArtifactId,
+    floor_head_seq: u64,
+    consolidate_snapshots: bool,
+    budget: CompactionBudget,
+    cancelled: &std::sync::atomic::AtomicBool,
+    progress: &std::sync::atomic::AtomicU8,
+) -> Result<CompactionReport, DbError> {
+    let mut report = CompactionReport::default();
+    let wal = storage.wal().await;
+    let control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+    let mut replay = db_wal::WalReplayCursor::open(&wal, document, control).await?;
+    let mut horizons = DatabaseCompactionSegmentOwners::new();
+    let mut current = None;
+    progress.store(DatabaseCompactionProgress::WalHorizon as u8, std::sync::atomic::Ordering::Release);
+    loop {
+        compaction_opportunity(cancelled).await?;
+        let step = replay.next_step().await?;
+        match step {
+            db_wal::WalReplayStep::Record(record) => {
+                match &record {
+                    db_wal::WalRecord::SegmentHeader { segment_index, .. } => {
+                        if let Some(previous) = current.replace(SegmentHorizon { segment_index: *segment_index, max_head_seq: None }) {
+                            horizons.push(previous)?;
+                        }
+                    }
+                    db_wal::WalRecord::Frontier(frontier) | db_wal::WalRecord::SnapshotPub { frontier, .. } => {
+                        if let Some(horizon) = current.as_mut() {
+                            horizon.max_head_seq = Some(horizon.max_head_seq.map_or(frontier.head_seq, |head| head.max(frontier.head_seq)));
+                        }
+                    }
+                    _ => {}
+                }
+                close_compaction_record(record).await?;
+            }
+            db_wal::WalReplayStep::Yield => {}
+            db_wal::WalReplayStep::Done => break,
+        }
+    }
+    if let Some(current) = current {
+        horizons.push(current)?;
+    }
+    close_compaction_replay(&mut replay).await?;
+    let active_segment = horizons.get(horizons.len().saturating_sub(1)).map(|horizon| horizon.segment_index);
+    let mut selected = DatabaseCompactionSegmentOwners::new();
+    for index in 0..horizons.len() {
+        compaction_opportunity(cancelled).await?;
+        let horizon = horizons.get(index).ok_or_else(|| DbError::Internal("database compaction horizon owner lost".to_string()))?;
+        if Some(horizon.segment_index) != active_segment && horizon.max_head_seq.is_some_and(|head| head <= floor_head_seq) && selected.len() < usize::try_from(budget.max_wal_segments).unwrap_or(usize::MAX) {
+            selected.push(horizon)?;
+        }
+    }
+
+    progress.store(DatabaseCompactionProgress::PayloadTrace as u8, std::sync::atomic::Ordering::Release);
+    let control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+    let mut replay = db_wal::WalReplayCursor::open(&wal, document, control).await?;
+    let mut segment = 0;
+    let mut candidates = DatabaseCompactionHashOwners::new();
+    let mut live = DatabaseCompactionHashOwners::new();
+    loop {
+        compaction_opportunity(cancelled).await?;
+        let step = replay.next_step().await?;
+        match step {
+            db_wal::WalReplayStep::Record(record) => {
+                match &record {
+                    db_wal::WalRecord::SegmentHeader { segment_index, .. } => segment = *segment_index,
+                    db_wal::WalRecord::Payload(db_wal::WalPayloadRef::CasRef(hash)) => {
+                        let mut deleted = false;
+                        for index in 0..selected.len() {
+                            compaction_opportunity(cancelled).await?;
+                            deleted |= selected.get(index).is_some_and(|candidate| candidate.segment_index == segment);
+                        }
+                        if deleted {
+                            candidates.insert(*hash, cancelled).await?;
+                        } else {
+                            live.insert(*hash, cancelled).await?;
+                        }
+                    }
+                    _ => {}
+                }
+                close_compaction_record(record).await?;
+            }
+            db_wal::WalReplayStep::Yield => {}
+            db_wal::WalReplayStep::Done => break,
+        }
+    }
+    close_compaction_replay(&mut replay).await?;
+
+    progress.store(DatabaseCompactionProgress::WalDelete as u8, std::sync::atomic::Ordering::Release);
+    for index in 0..selected.len() {
+        compaction_opportunity(cancelled).await?;
+        let segment = selected.get(index).ok_or_else(|| DbError::Internal("database compaction selected segment owner lost".to_string()))?;
+        wal.delete_segment(document, segment.segment_index).await?;
+        report.wal_segments_deleted = report.wal_segments_deleted.checked_add(1).ok_or(DbError::LimitExceeded("database compaction deleted segments"))?;
+    }
+    drop(wal);
+
+    progress.store(DatabaseCompactionProgress::PayloadDelete as u8, std::sync::atomic::Ordering::Release);
+    let payload = storage.payload().await;
+    for index in 0..candidates.len().min(usize::try_from(budget.max_payloads).unwrap_or(usize::MAX)) {
+        compaction_opportunity(cancelled).await?;
+        let hash = candidates.get(index).ok_or_else(|| DbError::Internal("database compaction candidate hash owner lost".to_string()))?;
+        if !live.contains(hash, cancelled).await? {
+            payload.delete(&hash).await?;
+            report.payloads_deleted = report.payloads_deleted.checked_add(1).ok_or(DbError::LimitExceeded("database compaction deleted payloads"))?;
+        }
+    }
+    drop(payload);
+
+    progress.store(DatabaseCompactionProgress::IndexMerge as u8, std::sync::atomic::Ordering::Release);
+    let index_storage = storage.index().await;
+    for kind in db_index::IndexKind::ALL {
+        compaction_opportunity(cancelled).await?;
+        let index_document = document.clone();
+        database_compaction_observe_backing(1, index_document.0.capacity(), "database compaction index document backing")?;
+        let handle = db_index::IndexHandle::new(&index_storage, index_document, kind).await;
+        let mut control = handle.operation_control(65_536)?;
+        let stats = handle.compact(&mut control).await?;
+        report.index_reports.push(IndexKindReport { kind, stats })?;
+    }
+    drop(index_storage);
+
+    if consolidate_snapshots {
+        retained_compaction_snapshot(storage, document, budget, cancelled, progress, &mut report).await?;
+    }
+    Ok(report)
+}
+
+async fn retained_compaction_snapshot(
+    storage: &db_storage::DbBackend,
+    document: &ArtifactId,
+    budget: CompactionBudget,
+    cancelled: &std::sync::atomic::AtomicBool,
+    progress: &std::sync::atomic::AtomicU8,
+    report: &mut CompactionReport,
+) -> Result<(), DbError> {
+    let snapshot = storage.snapshot().await;
+    let manager = db_snapshot::SnapshotManager::new(&snapshot).await;
+    let Some((latest_generation, latest_descriptor)) = manager.load_latest(document).await? else { return Ok(()) };
+    let latest_descriptor = database_compaction_admit_descriptor(latest_descriptor).await?;
+    let control = db_snapshot::SnapshotCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+    let mut cursor = manager.chain_cursor(document, latest_generation, control);
+    let mut descriptor = database_compaction_admit_descriptor(cursor.descriptor(latest_generation).await?).await?;
+    let mut pages = CompactionRetainedPages::new();
+    let mut generations = 0u64;
+    progress.store(DatabaseCompactionProgress::SnapshotCollect as u8, std::sync::atomic::Ordering::Release);
+    loop {
+        generations = generations.checked_add(1).ok_or(DbError::LimitExceeded("database compaction snapshot generations"))?;
+        check_len(generations, budget.max_snapshot_generations, "database compaction snapshot generations")?;
+        for hash in descriptor.new_pages.iter().copied() {
+            compaction_opportunity(cancelled).await?;
+            if !pages.contains(hash) {
+                pages.preflight_push()?;
+                let source = cursor.read_page(hash).await?;
+                let page = db_state::Page::try_from_pages(source).await?;
+                pages.push_preflighted(page);
+            }
+        }
+        match descriptor.parent_generation {
+            Some(parent) => {
+                let next = database_compaction_admit_descriptor(cursor.descriptor(parent).await?).await?;
+                close_compaction_descriptor(descriptor).await;
+                descriptor = next;
+            }
+            None => {
+                close_compaction_descriptor(descriptor).await;
+                break;
+            }
+        }
+    }
+    close_compaction_owner(|| cursor.close_step()).await?;
+    progress.store(DatabaseCompactionProgress::SnapshotPublish as u8, std::sync::atomic::Ordering::Release);
+    compaction_opportunity(cancelled).await?;
+    let observed_generation = snapshot.latest_generation(document).await?;
+    if observed_generation != Some(latest_generation) {
+        close_compaction_descriptor(latest_descriptor).await;
+        return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(latest_generation), actual: crate::db_ids::GenerationId(observed_generation.unwrap_or(0)) });
+    }
+    let expected_generation = latest_generation.checked_add(1).ok_or(DbError::LimitExceeded("database compaction snapshot generation"))?;
+    let db_snapshot::SnapshotDescriptor { document: ArtifactId(latest_document), head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, new_pages: latest_new_pages, created_at_ms, .. } = latest_descriptor;
+    semio_framework_async::yield_once().await;
+    drop(latest_new_pages);
+    semio_framework_async::yield_once().await;
+    drop(latest_document);
+    let body = db_snapshot::SnapshotBody { head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, created_at_ms };
+    let new_generation = manager.publish_retained(document, db_snapshot::SnapshotOrigin::FullBaseline, pages.slots(), pages.len(), body).await?;
+    if new_generation != expected_generation {
+        return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(expected_generation), actual: crate::db_ids::GenerationId(new_generation) });
+    }
+    report.snapshot_consolidated_generation = Some(new_generation);
+    progress.store(DatabaseCompactionProgress::SnapshotRetain as u8, std::sync::atomic::Ordering::Release);
+    let mut generations = snapshot.list_generations(document).await?;
+    for generation in generations.as_slice().iter().copied() {
+        compaction_opportunity(cancelled).await?;
+        if generation < new_generation {
+            snapshot.delete_generation(document, generation).await?;
+            report.snapshot_generations_pruned = report.snapshot_generations_pruned.checked_add(1).ok_or(DbError::LimitExceeded("database compaction pruned generations"))?;
+        }
+    }
+    close_compaction_owner(|| Ok(generations.close_step())).await?;
+    close_compaction_owner(|| pages.close_step()).await?;
+    Ok(())
+}
+
+struct DatabaseCompactionExecution {
+    storage: Arc<db_storage::DbBackend>,
+    document: ArtifactId,
+    holder: db_storage::DbIoText,
+    result: Result<CompactionReport, DbError>,
+}
+
+async fn retained_compaction_execute(
+    storage: Arc<db_storage::DbBackend>,
+    document: ArtifactId,
+    holder: db_storage::DbIoText,
+    consolidate_snapshots: bool,
+    budget: CompactionBudget,
+    now_ms: u64,
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+    expired: Arc<std::sync::atomic::AtomicBool>,
+    progress: Arc<std::sync::atomic::AtomicU8>,
+) -> DatabaseCompactionExecution {
+    let mut result = async {
+        compaction_opportunity(cancelled.as_ref()).await?;
+        progress.store(DatabaseCompactionProgress::SnapshotFloor as u8, std::sync::atomic::Ordering::Release);
+        let snapshot = storage.snapshot().await;
+        let floor = match db_snapshot::SnapshotManager::new(&snapshot).await.load_latest(&document).await? {
+            Some((_, descriptor)) => {
+                let descriptor = database_compaction_admit_descriptor(descriptor).await?;
+                let floor = descriptor.head_seq;
+                close_compaction_descriptor(descriptor).await;
+                floor
+            }
+            None => 0,
+        };
+        drop(snapshot);
+        compaction_opportunity(cancelled.as_ref()).await?;
+        progress.store(DatabaseCompactionProgress::LeaseAcquire as u8, std::sync::atomic::Ordering::Release);
+        let mut resource = compaction_resource(&document)?;
+        let lease = storage.lease().await;
+        let fence = lease.acquire(resource.as_str(), holder.as_str(), DEFAULT_LEASE_TTL_MS, now_ms).await?;
+        drop(lease);
+        let run = retained_compaction_under_lease(storage.as_ref(), &document, floor, consolidate_snapshots, budget, cancelled.as_ref(), progress.as_ref()).await;
+        progress.store(DatabaseCompactionProgress::LeaseRelease as u8, std::sync::atomic::Ordering::Release);
+        let release = storage.lease().await.release(resource.as_str(), holder.as_str(), fence).await;
+        resource.close_step();
+        match (run, release) {
+            (Ok(report), Ok(())) => Ok(report),
+            (Err(error), _) => Err(error),
+            (Ok(_), Err(error)) => Err(error),
+        }
+    }
+    .await;
+    if matches!(result, Err(DbError::Closed)) && expired.load(std::sync::atomic::Ordering::Acquire) {
+        result = Err(DbError::Timeout("database compaction deadline".to_string()));
+    }
+    progress.store(
+        match result {
+            Ok(_) => DatabaseCompactionProgress::Completed,
+            Err(DbError::Closed) => DatabaseCompactionProgress::Cancelled,
+            Err(_) => DatabaseCompactionProgress::Fault,
+        } as u8,
+        std::sync::atomic::Ordering::Release,
+    );
+    DatabaseCompactionExecution { storage, document, holder, result }
+}
+
+type DatabaseCompactionExecutionFuture = std::pin::Pin<Box<dyn Future<Output = DatabaseCompactionExecution> + Send + 'static>>;
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DatabaseCompactionDriverAuthority {
+    Idle,
+    Queued,
+    Driving,
+    Retry,
+}
+
+struct DatabaseCompactionTerminalOwners {
+    storage: Option<Arc<db_storage::DbBackend>>,
+    document: Option<ArtifactId>,
+    holder: Option<db_storage::DbIoText>,
+    result: Option<Result<CompactionReport, DbError>>,
+}
+
+impl DatabaseCompactionTerminalOwners {
+    fn from_execution(execution: DatabaseCompactionExecution) -> Self {
+        Self { storage: Some(execution.storage), document: Some(execution.document), holder: Some(execution.holder), result: Some(execution.result) }
+    }
+
+    fn close_one(&mut self) -> bool {
+        if let Some(Ok(report)) = self.result.as_mut() {
+            if report.index_reports.close_step() {
+                return true;
+            }
+        }
+        if self.result.take().is_some() {
+            return true;
+        }
+        if self.holder.as_mut().is_some_and(db_storage::DbIoText::close_step) {
+            return true;
+        }
+        if self.holder.take().is_some() {
+            return true;
+        }
+        self.document.take().is_some() || self.storage.take().is_some()
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.storage.is_none() && self.document.is_none() && self.holder.is_none() && self.result.is_none()
+    }
+}
+
+struct DatabaseCompactionCore {
+    future: Option<DatabaseCompactionExecutionFuture>,
+    output: Option<DatabaseCompactionExecution>,
+    quarantined: Option<DatabaseCompactionExecutionFuture>,
+}
+
+struct DatabaseCompactionState {
+    pool: Arc<WorkerPool>,
+    slot: usize,
+    generation: u64,
+    admission: std::sync::Mutex<Option<DatabaseCompactionAdmission>>,
+    core: std::sync::Mutex<DatabaseCompactionCore>,
+    terminal: std::sync::Mutex<Option<DatabaseCompactionTerminalOwners>>,
+    driver: std::sync::atomic::AtomicU8,
+    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: std::sync::Mutex<Option<semio_framework_async::Job>>,
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+    expired: Arc<std::sync::atomic::AtomicBool>,
+    deadline_ms: std::sync::atomic::AtomicU64,
+    progress: Arc<std::sync::atomic::AtomicU8>,
+    abandoned: std::sync::atomic::AtomicBool,
+    wake_requested: std::sync::atomic::AtomicBool,
+    callback_close: std::sync::atomic::AtomicBool,
+    callback_armed: std::sync::atomic::AtomicBool,
+    waker: std::sync::Mutex<Option<std::task::Waker>>,
+}
+
+fn database_compaction_registry() -> &'static std::sync::Mutex<[Option<Arc<DatabaseCompactionState>>; DATABASE_COMPACTION_SLOTS]> {
+    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<Arc<DatabaseCompactionState>>; DATABASE_COMPACTION_SLOTS]>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))
+}
+
+impl std::task::Wake for DatabaseCompactionState {
+    fn wake(self: Arc<Self>) {
+        self.wake_requested.store(true, std::sync::atomic::Ordering::Release);
+        self.schedule();
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        self.wake_requested.store(true, std::sync::atomic::Ordering::Release);
+        self.schedule();
+    }
+}
+
+impl DatabaseCompactionState {
+    fn current(&self) -> bool {
+        self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(DatabaseCompactionAdmission::is_current)
+    }
+
+    fn observed_generation(&self) -> u64 {
+        DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots.get(self.slot).map_or(0, |slot| slot.generation)
+    }
+
+    fn schedule(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        let execution_terminal = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).future.is_none();
+        if self.callback_close.load(Ordering::Acquire) && execution_terminal {
+            self.arm_callback_close();
+            return;
+        }
+        if self.driver.compare_exchange(DatabaseCompactionDriverAuthority::Idle as u8, DatabaseCompactionDriverAuthority::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let state = self.clone();
+        self.submit_exact(Box::new(move || state.drive_one()), 0);
+    }
+
+    fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
+        match self.pool.try_submit(Lane::Io, job) {
+            Ok(()) => {}
+            Err(error) => {
+                let next = attempt.checked_add(1).map_or(DATABASE_COMPACTION_RETRY_LIMIT, |value| value.min(DATABASE_COMPACTION_RETRY_LIMIT));
+                *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), next));
+                if self.driver.compare_exchange(DatabaseCompactionDriverAuthority::Queued as u8, DatabaseCompactionDriverAuthority::Retry as u8, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok() {
+                    let state = self.clone();
+                    self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.retry());
+                }
+            }
+        }
+    }
+
+    fn retry(self: Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else { return };
+        if self.pool.now_ms() >= self.deadline_ms.load(Ordering::Acquire) {
+            self.expired.store(true, Ordering::Release);
+            self.cancelled.store(true, Ordering::Release);
+        }
+        if attempt >= DATABASE_COMPACTION_RETRY_LIMIT {
+            self.cancelled.store(true, Ordering::Release);
+        }
+        if self.cancelled.load(Ordering::Acquire) && self.driver.compare_exchange(DatabaseCompactionDriverAuthority::Retry as u8, DatabaseCompactionDriverAuthority::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+            self.submit_exact(job, attempt);
+            return;
+        }
+        if self.cancelled.load(Ordering::Acquire) {
+            *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
+            return;
+        }
+        if self.driver.compare_exchange(DatabaseCompactionDriverAuthority::Retry as u8, DatabaseCompactionDriverAuthority::Queued as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+            self.submit_exact(job, attempt);
+        } else {
+            *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt));
+        }
+    }
+
+    fn drive_one(self: Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.driver.compare_exchange(DatabaseCompactionDriverAuthority::Queued as u8, DatabaseCompactionDriverAuthority::Driving as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let pending = self.poll_one();
+        let wake = self.wake_requested.swap(false, Ordering::AcqRel);
+        self.driver.store(DatabaseCompactionDriverAuthority::Idle as u8, Ordering::Release);
+        if pending || wake {
+            self.schedule();
+        }
+    }
+
+    fn poll_one(self: &Arc<Self>) -> bool {
+        if !self.current() {
+            self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+            self.progress.store(DatabaseCompactionProgress::Fault as u8, std::sync::atomic::Ordering::Release);
+        }
+        let mut future = {
+            let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            match core.future.take() {
+                Some(future) => future,
+                None => return false,
+            }
+        };
+        let waker = std::task::Waker::from(self.clone());
+        let mut context = std::task::Context::from_waker(&waker);
+        let polled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| future.as_mut().poll(&mut context)));
+        let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        match polled {
+            Ok(std::task::Poll::Pending) => {
+                core.future = Some(future);
+                true
+            }
+            Ok(std::task::Poll::Ready(output)) => {
+                core.output = Some(output);
+                drop(core);
+                if self.abandoned.load(std::sync::atomic::Ordering::Acquire) || self.callback_close.load(std::sync::atomic::Ordering::Acquire) {
+                    self.move_output_to_terminal();
+                    self.arm_callback_close();
+                } else if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                    waker.wake();
+                }
+                false
+            }
+            Err(_) => {
+                core.quarantined = Some(future);
+                self.progress.store(DatabaseCompactionProgress::Fault as u8, std::sync::atomic::Ordering::Release);
+                if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                    waker.wake();
+                }
+                false
+            }
+        }
+    }
+
+    fn move_output_to_terminal(&self) {
+        let output = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take();
+        if let Some(output) = output {
+            *self.terminal.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCompactionTerminalOwners::from_execution(output));
+        }
+    }
+
+    fn drive_close_claimed(self: Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        let pending = if self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+            true
+        } else {
+            self.move_output_to_terminal();
+            self.close_terminal_one()
+        };
+        self.driver.store(DatabaseCompactionDriverAuthority::Idle as u8, Ordering::Release);
+        if pending || !self.terminal_is_empty() {
+            self.arm_callback_close();
+        } else {
+            self.callback_close.store(false, Ordering::Release);
+        }
+    }
+
+    fn close_terminal_one(&self) -> bool {
+        let mut terminal = self.terminal.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if terminal.as_mut().is_some_and(DatabaseCompactionTerminalOwners::close_one) {
+            return true;
+        }
+        if terminal.as_ref().is_some_and(DatabaseCompactionTerminalOwners::terminal_is_empty) {
+            terminal.take();
+            drop(terminal);
+            self.release_terminal();
+        }
+        false
+    }
+
+    fn arm_callback_close(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.callback_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let state = self.clone();
+        self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.callback_close_one());
+    }
+
+    fn callback_close_one(self: Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        self.callback_armed.store(false, Ordering::Release);
+        if self.driver.compare_exchange(DatabaseCompactionDriverAuthority::Idle as u8, DatabaseCompactionDriverAuthority::Driving as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            self.arm_callback_close();
+            return;
+        }
+        self.drive_close_claimed();
+    }
+
+    fn release_terminal(&self) {
+        let mut registry = database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
+            registry[self.slot] = None;
+        }
+        drop(registry);
+        self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        let core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let terminal_empty = self.terminal.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_none_or(DatabaseCompactionTerminalOwners::terminal_is_empty);
+        core.future.is_none()
+            && core.output.is_none()
+            && core.quarantined.is_none()
+            && terminal_empty
+            && self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+    }
+}
+
+/// 🧹 Retained completion carrying exact storage, document, holder and report owners.
+pub struct DatabaseCompactionResult {
+    state: Option<Arc<DatabaseCompactionState>>,
+    execution: Option<DatabaseCompactionExecution>,
+}
+
+impl std::fmt::Debug for DatabaseCompactionResult {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("DatabaseCompactionResult").field("generation", &self.state.as_ref().map(|state| state.generation)).field("execution", &self.execution.is_some()).finish()
+    }
+}
+
+impl DatabaseCompactionResult {
+    pub fn into_parts(mut self) -> Result<(Arc<db_storage::DbBackend>, ArtifactId, db_storage::DbIoText, Result<CompactionReport, DbError>), Self> {
+        let execution = self.execution.take();
+        match execution {
+            Some(execution) => {
+                if let Some(state) = self.state.take() {
+                    state.release_terminal();
+                }
+                Ok((execution.storage, execution.document, execution.holder, execution.result))
+            }
+            None => Err(self),
+        }
+    }
+
+    pub fn close_and_take_report(mut self) -> Result<CompactionReport, DbError> {
+        let Some(execution) = self.execution.take() else { return Err(DbError::Internal("database compaction result owner missing".to_string())) };
+        let DatabaseCompactionExecution { storage, document, holder, result } = execution;
+        if let Some(state) = self.state.take() {
+            *state.terminal.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCompactionTerminalOwners { storage: Some(storage), document: Some(document), holder: Some(holder), result: None });
+            state.callback_close.store(true, std::sync::atomic::Ordering::Release);
+            state.arm_callback_close();
+        }
+        result
+    }
+}
+
+impl Drop for DatabaseCompactionResult {
+    fn drop(&mut self) {
+        let Some(state) = self.state.take() else { return };
+        if let Some(execution) = self.execution.take() {
+            *state.terminal.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCompactionTerminalOwners::from_execution(execution));
+        }
+        state.abandoned.store(true, std::sync::atomic::Ordering::Release);
+        state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        state.callback_close.store(true, std::sync::atomic::Ordering::Release);
+        state.arm_callback_close();
+    }
+}
+
+/// 🚦 Future facade for the generation-qualified compaction registry authority.
+pub struct DatabaseCompactionFuture {
+    state: Option<Arc<DatabaseCompactionState>>,
+    completed: bool,
+}
+
+impl std::fmt::Debug for DatabaseCompactionFuture {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("DatabaseCompactionFuture").field("generation", &self.generation()).field("completed", &self.completed).finish()
+    }
+}
+
+impl DatabaseCompactionFuture {
+    pub fn try_submit(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, document: ArtifactId, holder: db_storage::DbIoText, consolidate_snapshots: bool, budget: CompactionBudget, now_ms: u64) -> Result<Self, DatabaseCompactionRejected> {
+        let admission = match DatabaseCompactionAdmission::try_claim(&document) {
+            Ok(admission) => admission,
+            Err(error) => return Err(DatabaseCompactionRejected::new(pool, error, storage, document, holder)),
+        };
+        let slot = admission.slot;
+        let generation = admission.generation;
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let expired = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let progress = Arc::new(std::sync::atomic::AtomicU8::new(DatabaseCompactionProgress::Admitted as u8));
+        let future = Box::pin(retained_compaction_execute(storage, document, holder, consolidate_snapshots, budget, now_ms, cancelled.clone(), expired.clone(), progress.clone()));
+        let deadline_ms = pool.now_ms().saturating_add(DATABASE_COMPACTION_DEADLINE_MS);
+        let state = Arc::new(DatabaseCompactionState {
+            pool: pool.clone(),
+            slot,
+            generation,
+            admission: std::sync::Mutex::new(Some(admission)),
+            core: std::sync::Mutex::new(DatabaseCompactionCore { future: Some(future), output: None, quarantined: None }),
+            terminal: std::sync::Mutex::new(None),
+            driver: std::sync::atomic::AtomicU8::new(DatabaseCompactionDriverAuthority::Idle as u8),
+            retry_job: std::sync::Mutex::new(None),
+            terminal_job: std::sync::Mutex::new(None),
+            cancelled,
+            expired,
+            deadline_ms: std::sync::atomic::AtomicU64::new(deadline_ms),
+            progress,
+            abandoned: std::sync::atomic::AtomicBool::new(false),
+            wake_requested: std::sync::atomic::AtomicBool::new(false),
+            callback_close: std::sync::atomic::AtomicBool::new(false),
+            callback_armed: std::sync::atomic::AtomicBool::new(false),
+            waker: std::sync::Mutex::new(None),
+        });
+        database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[slot] = Some(state.clone());
+        let deadline = state.clone();
+        pool.callback_at(deadline_ms, move || deadline.deadline_callback());
+        state.schedule();
+        Ok(Self { state: Some(state), completed: false })
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.state.as_ref().map_or(0, |state| state.generation)
+    }
+
+    pub fn progress(&self) -> DatabaseCompactionProgress {
+        self.state.as_ref().map_or(DatabaseCompactionProgress::Fault, |state| state.progress())
+    }
+
+    pub fn cancel(&self) {
+        if let Some(state) = self.state.as_ref() {
+            state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+            state.schedule();
+        }
+    }
+}
+
+impl DatabaseCompactionState {
+    fn progress(&self) -> DatabaseCompactionProgress {
+        DatabaseCompactionProgress::from_u8(self.progress.load(std::sync::atomic::Ordering::Acquire))
+    }
+
+    fn deadline_callback(self: &Arc<Self>) {
+        if self.current() && !matches!(self.progress(), DatabaseCompactionProgress::Completed | DatabaseCompactionProgress::Cancelled | DatabaseCompactionProgress::Fault) {
+            self.expired.store(true, std::sync::atomic::Ordering::Release);
+            self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+            self.schedule();
+        }
+    }
+}
+
+impl Future for DatabaseCompactionFuture {
+    type Output = Result<DatabaseCompactionResult, DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        if self.completed {
+            return std::task::Poll::Ready(Err(DbError::Closed));
+        }
+        let Some(state) = self.state.as_ref().cloned() else { return std::task::Poll::Ready(Err(DbError::Closed)) };
+        if !state.current() {
+            self.completed = true;
+            state.abandoned.store(true, std::sync::atomic::Ordering::Release);
+            state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+            state.callback_close.store(true, std::sync::atomic::Ordering::Release);
+            state.schedule();
+            return std::task::Poll::Ready(Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(state.generation), actual: crate::db_ids::GenerationId(state.observed_generation()) }));
+        }
+        if let Some(execution) = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take() {
+            self.completed = true;
+            self.state.take();
+            return std::task::Poll::Ready(Ok(DatabaseCompactionResult { state: Some(state), execution: Some(execution) }));
+        }
+        if state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).quarantined.is_some() {
+            self.completed = true;
+            return std::task::Poll::Ready(Err(DbError::Internal("database compaction worker panic retained exact owner in quarantine".to_string())));
+        }
+        *state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
+        if let Some(execution) = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take() {
+            self.completed = true;
+            self.state.take();
+            return std::task::Poll::Ready(Ok(DatabaseCompactionResult { state: Some(state), execution: Some(execution) }));
+        }
+        state.schedule();
+        std::task::Poll::Pending
+    }
+}
+
+impl Drop for DatabaseCompactionFuture {
+    fn drop(&mut self) {
+        if self.completed {
+            return;
+        }
+        if let Some(state) = self.state.take() {
+            state.abandoned.store(true, std::sync::atomic::Ordering::Release);
+            state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+            state.callback_close.store(true, std::sync::atomic::Ordering::Release);
+            state.schedule();
+        }
+    }
+}
+
+struct DatabaseCompactionRejectedClose {
+    pool: Arc<WorkerPool>,
+    owners: std::sync::Mutex<Option<DatabaseCompactionTerminalOwners>>,
+    queued: std::sync::atomic::AtomicBool,
+    retries: std::sync::atomic::AtomicU8,
+}
+
+impl DatabaseCompactionRejectedClose {
+    fn schedule(self: &Arc<Self>) {
+        if self.queued.swap(true, std::sync::atomic::Ordering::AcqRel) {
+            return;
+        }
+        let close = self.clone();
+        match self.pool.try_submit(Lane::Io, Box::new(move || close.drive_one())) {
+            Ok(()) => {}
+            Err(error) => {
+                drop(error.into_job());
+                self.queued.store(false, std::sync::atomic::Ordering::Release);
+                let attempt = self.retries.fetch_add(1, std::sync::atomic::Ordering::AcqRel).saturating_add(1);
+                let close = self.clone();
+                self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || {
+                    if attempt >= DATABASE_COMPACTION_RETRY_LIMIT {
+                        close.drive_one();
+                    } else {
+                        close.schedule();
+                    }
+                });
+            }
+        }
+    }
+
+    fn drive_one(self: Arc<Self>) {
+        self.queued.store(false, std::sync::atomic::Ordering::Release);
+        let mut owners = self.owners.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let pending = owners.as_mut().is_some_and(DatabaseCompactionTerminalOwners::close_one);
+        if owners.as_ref().is_some_and(DatabaseCompactionTerminalOwners::terminal_is_empty) {
+            owners.take();
+        }
+        drop(owners);
+        if pending {
+            self.schedule();
+        }
+    }
+}
+
+/// ⛔ Lossless pre-admission refusal carrying exact compaction input identities.
+pub struct DatabaseCompactionRejected {
+    error: Option<DbError>,
+    close: Arc<DatabaseCompactionRejectedClose>,
+}
+
+impl std::fmt::Debug for DatabaseCompactionRejected {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("DatabaseCompactionRejected").field("error", &self.error).finish()
+    }
+}
+
+impl DatabaseCompactionRejected {
+    fn new(pool: Arc<WorkerPool>, error: DbError, storage: Arc<db_storage::DbBackend>, document: ArtifactId, holder: db_storage::DbIoText) -> Self {
+        Self {
+            error: Some(error),
+            close: Arc::new(DatabaseCompactionRejectedClose {
+                pool,
+                owners: std::sync::Mutex::new(Some(DatabaseCompactionTerminalOwners { storage: Some(storage), document: Some(document), holder: Some(holder), result: None })),
+                queued: std::sync::atomic::AtomicBool::new(false),
+                retries: std::sync::atomic::AtomicU8::new(0),
+            }),
+        }
+    }
+
+    pub fn into_parts(mut self) -> Result<(DbError, Arc<db_storage::DbBackend>, ArtifactId, db_storage::DbIoText), Self> {
+        let error = self.error.take();
+        let mut owners = self.close.owners.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let storage = owners.as_mut().and_then(|owners| owners.storage.take());
+        let document = owners.as_mut().and_then(|owners| owners.document.take());
+        let holder = owners.as_mut().and_then(|owners| owners.holder.take());
+        drop(owners);
+        match (error, storage, document, holder) {
+            (Some(error), Some(storage), Some(document), Some(holder)) => Ok((error, storage, document, holder)),
+            (error, storage, document, holder) => {
+                self.error = error;
+                *self.close.owners.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(DatabaseCompactionTerminalOwners { storage, document, holder, result: None });
+                Err(self)
+            }
+        }
+    }
+
+    pub fn close_and_take_error(mut self) -> DbError {
+        let error = self.error.take().unwrap_or(DbError::LimitExceeded("database compaction refusal error"));
+        self.close.schedule();
+        error
+    }
+}
+
+impl Drop for DatabaseCompactionRejected {
+    fn drop(&mut self) {
+        if self.close.owners.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+            self.close.schedule();
+        }
+    }
+}
+//#endregion 🧵️RetainedCompactionJob
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -820,6 +1999,175 @@ mod tests {
         assert_eq!(unlimited.max_wal_segments, u64::MAX);
         assert_eq!(unlimited.max_snapshot_generations, u64::MAX);
         assert_eq!(unlimited.max_payloads, u64::MAX);
+    }
+
+    fn held_compaction_worker_pool() -> (Arc<WorkerPool>, Arc<std::sync::atomic::AtomicBool>) {
+        let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let entered = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let held = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let worker_entered = entered.clone();
+        let worker_held = held.clone();
+        pool.try_submit(
+            Lane::Maintenance,
+            Box::new(move || {
+                worker_entered.store(true, std::sync::atomic::Ordering::Release);
+                while worker_held.load(std::sync::atomic::Ordering::Acquire) {
+                    std::thread::yield_now();
+                }
+            }),
+        )
+        .unwrap();
+        while !entered.load(std::sync::atomic::Ordering::Acquire) {
+            std::thread::yield_now();
+        }
+        (pool, held)
+    }
+
+    async fn retained_compaction_storage() -> Arc<db_storage::DbBackend> {
+        Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()))
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_handoff_to_first_poll_cancel_uses_real_io_lane_and_releases_exact_owners_under_eight_ms() {
+        let (pool, held) = held_compaction_worker_pool();
+        let storage = retained_compaction_storage().await;
+        let storage_identity = Arc::as_ptr(&storage) as usize;
+        let document = ArtifactId(String::from("p1y-handoff-cancel"));
+        let document_identity = document.0.as_ptr();
+        let holder = db_storage::DbIoText::try_from_str("p1y-holder").unwrap();
+        let started = std::time::Instant::now();
+        let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, document, holder, false, CompactionBudget::default(), 0).unwrap();
+        assert!(started.elapsed() < std::time::Duration::from_millis(8));
+        let generation = future.generation();
+        let state = future.state.as_ref().unwrap().clone();
+        assert_eq!(state.driver.load(std::sync::atomic::Ordering::Acquire), DatabaseCompactionDriverAuthority::Queued as u8);
+        future.cancel();
+        held.store(false, std::sync::atomic::Ordering::Release);
+        let result = future.await.unwrap();
+        let (storage, document, mut holder, report) = result.into_parts().unwrap();
+        assert_eq!(Arc::as_ptr(&storage) as usize, storage_identity);
+        assert_eq!(document.0.as_ptr(), document_identity);
+        assert_eq!(holder.as_str(), "p1y-holder");
+        assert_eq!(report, Err(DbError::Closed));
+        assert!(holder.close_step());
+        assert_eq!(state.progress(), DatabaseCompactionProgress::Cancelled);
+        assert!(!database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().flatten().any(|owner| owner.generation == generation));
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_actual_deadline_callback_lost_wake_and_drop_close_release_lease_once() {
+        let (pool, held) = held_compaction_worker_pool();
+        let storage = retained_compaction_storage().await;
+        let storage_identity = Arc::as_ptr(&storage) as usize;
+        let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-deadline")), db_storage::DbIoText::try_from_str("deadline-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+        let state = future.state.as_ref().unwrap().clone();
+        state.deadline_ms.store(0, std::sync::atomic::Ordering::Release);
+        state.deadline_callback();
+        std::task::Wake::wake_by_ref(&state);
+        held.store(false, std::sync::atomic::Ordering::Release);
+        let result = future.await.unwrap();
+        let (storage, document, mut holder, report) = result.into_parts().unwrap();
+        assert_eq!(Arc::as_ptr(&storage) as usize, storage_identity);
+        assert_eq!(document.0, "p1y-deadline");
+        assert_eq!(report, Err(DbError::Timeout("database compaction deadline".to_string())));
+        assert!(holder.close_step());
+        assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert_eq!(state.driver.load(std::sync::atomic::Ordering::Acquire), DatabaseCompactionDriverAuthority::Idle as u8);
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority() {
+        let (pool, held) = held_compaction_worker_pool();
+        let mut admitted = Vec::with_capacity(DATABASE_COMPACTION_SLOTS);
+        for index in 0..DATABASE_COMPACTION_SLOTS {
+            admitted.push(
+                DatabaseCompactionFuture::try_submit(pool.clone(), retained_compaction_storage().await, ArtifactId(format!("p1y-max-{index}")), db_storage::DbIoText::try_from_str("max-holder").unwrap(), false, CompactionBudget::default(), 0)
+                    .unwrap(),
+            );
+        }
+        let slot_storage = retained_compaction_storage().await;
+        let slot_storage_identity = Arc::as_ptr(&slot_storage) as usize;
+        let slot_document = ArtifactId(String::from("p1y-slot-max-plus-one"));
+        let slot_document_identity = slot_document.0.as_ptr();
+        let slot_rejected = DatabaseCompactionFuture::try_submit(pool.clone(), slot_storage, slot_document, db_storage::DbIoText::try_from_str("slot-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap_err();
+        let (slot_error, slot_storage, slot_document, mut slot_holder) = slot_rejected.into_parts().unwrap();
+        assert_eq!(slot_error, DbError::LimitExceeded("database compaction admission slots"));
+        assert_eq!(Arc::as_ptr(&slot_storage) as usize, slot_storage_identity);
+        assert_eq!(slot_document.0.as_ptr(), slot_document_identity);
+        assert!(slot_holder.close_step());
+        let storage = retained_compaction_storage().await;
+        let storage_identity = Arc::as_ptr(&storage) as usize;
+        let mut external = String::with_capacity(db_storage::DbIoText::maximum_capacity() + 1);
+        external.push_str("p1y-max-plus-one");
+        let document_identity = external.as_ptr();
+        let rejected = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(external), db_storage::DbIoText::try_from_str("exact-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap_err();
+        let (error, storage, document, mut holder) = rejected.into_parts().unwrap();
+        assert_eq!(error, DbError::LimitExceeded("database compaction document backing"));
+        assert_eq!(Arc::as_ptr(&storage) as usize, storage_identity);
+        assert_eq!(document.0.as_ptr(), document_identity);
+        assert_eq!(holder.as_str(), "exact-holder");
+        assert!(holder.close_step());
+        let cancelled = std::sync::atomic::AtomicBool::new(false);
+        let mut hashes = DatabaseCompactionHashOwners { slots: [Some([7; 32]); DATABASE_COMPACTION_MAX_HASHES], len: DATABASE_COMPACTION_MAX_HASHES as u16 };
+        assert_eq!(hashes.insert([9; 32], &cancelled).await, Err(DbError::LimitExceeded("database compaction payload hash owners")));
+        let descriptor = db_snapshot::SnapshotDescriptor {
+            document: ArtifactId(String::from("p1y-observed-backing")),
+            generation: 1,
+            parent_generation: None,
+            head_seq: 1,
+            commit_seq: 1,
+            epoch: 1,
+            chain_hash: [0; 32],
+            protocol_version: 1,
+            vcs_head: None,
+            base_pack_hash: None,
+            roots: Vec::with_capacity(DATABASE_COMPACTION_OPERATION_ITEMS as usize),
+            new_pages: Vec::new(),
+            created_at_ms: 1,
+        };
+        assert_eq!(database_compaction_admit_descriptor(descriptor).await.unwrap_err(), DbError::LimitExceeded("database compaction snapshot backing"));
+        for future in &admitted {
+            future.cancel();
+        }
+        drop(admitted);
+        held.store(false, std::sync::atomic::Ordering::Release);
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_stale_aba_drop_and_partial_terminal_close_keep_one_generation_owner_per_opportunity() {
+        let (pool, held) = held_compaction_worker_pool();
+        let future =
+            DatabaseCompactionFuture::try_submit(pool.clone(), retained_compaction_storage().await, ArtifactId(String::from("p1y-stale")), db_storage::DbIoText::try_from_str("stale-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+        let state = future.state.as_ref().unwrap().clone();
+        let replacement = state.generation.checked_add(1).unwrap();
+        DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots[state.slot].generation = replacement;
+        assert_eq!(future.await.unwrap_err(), DbError::StaleGeneration { expected: crate::db_ids::GenerationId(state.generation), actual: crate::db_ids::GenerationId(replacement) });
+        assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_some());
+        DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots[state.slot].generation = state.generation;
+        held.store(false, std::sync::atomic::Ordering::Release);
+        while state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+            std::thread::yield_now();
+        }
+        let mut reports = CompactionIndexReports::default();
+        for kind in db_index::IndexKind::ALL {
+            reports.push(IndexKindReport { kind, stats: db_index::IndexStats { run_count: 0, entry_count: 0, total_bytes: 0 } }).unwrap();
+        }
+        let mut owners = DatabaseCompactionTerminalOwners {
+            storage: Some(retained_compaction_storage().await),
+            document: Some(ArtifactId(String::from("p1y-close"))),
+            holder: Some(db_storage::DbIoText::try_from_str("close-holder").unwrap()),
+            result: Some(Ok(CompactionReport { index_reports: reports, ..CompactionReport::default() })),
+        };
+        let before = owners.result.as_ref().and_then(Result::as_ref().ok).map(|report| report.index_reports.len()).unwrap();
+        assert!(owners.close_one());
+        let after = owners.result.as_ref().and_then(Result::as_ref().ok).map(|report| report.index_reports.len()).unwrap();
+        assert_eq!(before - after, 1);
+        while owners.close_one() {}
+        assert!(owners.terminal_is_empty());
+        pool.shutdown();
     }
 
     #[semio_framework_async_macros::async_test]

@@ -5264,6 +5264,10 @@ struct DatabaseCreateCatalogRejectedClose {
     callback_armed: std::sync::atomic::AtomicBool,
     #[cfg(test)]
     submission_refusals: std::sync::atomic::AtomicUsize,
+    #[cfg(test)]
+    callback_worker_thread: std::sync::atomic::AtomicBool,
+    #[cfg(test)]
+    terminal_job_retirements: std::sync::atomic::AtomicUsize,
 }
 
 impl DatabaseCreateCatalogRejectedClose {
@@ -5280,6 +5284,10 @@ impl DatabaseCreateCatalogRejectedClose {
             callback_armed: std::sync::atomic::AtomicBool::new(false),
             #[cfg(test)]
             submission_refusals: std::sync::atomic::AtomicUsize::new(0),
+            #[cfg(test)]
+            callback_worker_thread: std::sync::atomic::AtomicBool::new(false),
+            #[cfg(test)]
+            terminal_job_retirements: std::sync::atomic::AtomicUsize::new(0),
         })
     }
 
@@ -5314,6 +5322,8 @@ impl DatabaseCreateCatalogRejectedClose {
 
     fn retry(self: Arc<Self>) {
         use std::sync::atomic::Ordering;
+        #[cfg(test)]
+        self.callback_worker_thread.store(std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-")), Ordering::Release);
         let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else { return };
         if attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT || self.pool.now_ms() >= self.deadline_ms {
             if self.driver.compare_exchange(DatabaseCreateCatalogDriverAuthority::Retry as u8, DatabaseCreateCatalogDriverAuthority::Driving as u8, Ordering::AcqRel, Ordering::Acquire).is_ok() {
@@ -5346,6 +5356,8 @@ impl DatabaseCreateCatalogRejectedClose {
 
     fn close_one(&self) -> bool {
         if self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+            #[cfg(test)]
+            self.terminal_job_retirements.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
             return true;
         }
         let mut owner = self.owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -5378,6 +5390,8 @@ impl DatabaseCreateCatalogRejectedClose {
 
     fn callback_close_one(self: Arc<Self>) {
         use std::sync::atomic::Ordering;
+        #[cfg(test)]
+        self.callback_worker_thread.store(std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-")), Ordering::Release);
         self.callback_armed.store(false, Ordering::Release);
         if !self.callback_close.load(Ordering::Acquire) {
             return;
@@ -5745,6 +5759,10 @@ struct DatabaseCreateCatalogState {
     #[cfg(test)]
     backend_polls: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
+    callback_worker_thread: std::sync::atomic::AtomicBool,
+    #[cfg(test)]
+    terminal_job_retirements: std::sync::atomic::AtomicUsize,
+    #[cfg(test)]
     controlled_capacity_overage: std::sync::atomic::AtomicUsize,
     #[cfg(test)]
     controlled_driver_hook: std::sync::Mutex<Option<Arc<dyn Fn(DatabaseCreateCatalogPhase) + Send + Sync>>>,
@@ -5860,6 +5878,8 @@ impl DatabaseCreateCatalogState {
 
     fn retry(self: Arc<Self>) {
         use std::sync::atomic::Ordering;
+        #[cfg(test)]
+        self.callback_worker_thread.store(std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-")), Ordering::Release);
         let Some((job, attempt)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else { return };
         let terminal = if !self.is_current() {
             Some((DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(self.observed_generation()) }, DatabaseCreateCatalogProgress::Fault))
@@ -5901,6 +5921,8 @@ impl DatabaseCreateCatalogState {
 
     fn callback_close_one(self: Arc<Self>) {
         use std::sync::atomic::Ordering;
+        #[cfg(test)]
+        self.callback_worker_thread.store(std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-")), Ordering::Release);
         self.callback_close_armed.store(false, Ordering::Release);
         if !self.retry_closing.load(Ordering::Acquire) || self.finished.load(Ordering::Acquire) {
             return;
@@ -6508,6 +6530,8 @@ impl DatabaseCreateCatalogState {
 
     fn retire_intermediate_one(&self) {
         if self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+            #[cfg(test)]
+            self.terminal_job_retirements.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
             self.wake_requested.store(true, std::sync::atomic::Ordering::Release);
             return;
         }
@@ -6857,6 +6881,10 @@ impl DatabaseCreateCatalogFuture {
             submission_refusals: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
             backend_polls: std::sync::atomic::AtomicUsize::new(0),
+            #[cfg(test)]
+            callback_worker_thread: std::sync::atomic::AtomicBool::new(false),
+            #[cfg(test)]
+            terminal_job_retirements: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
             controlled_capacity_overage: std::sync::atomic::AtomicUsize::new(0),
             #[cfg(test)]
@@ -7341,15 +7369,21 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         self.storage.clone()
     }
 
-    /// @emoji 🧹️ A real, bounded `db_compact::Compactor` pass over `document` — WAL segment
-    /// retention below its latest snapshot's `head_seq`, ref-traced payload GC, index compaction,
-    /// and (if `consolidate_snapshots`) snapshot chain consolidation. See module doc: this IS a
-    /// genuine `db_compact` integration, just document-at-a-time rather than a background scheduler
-    /// (deferred — this wave's instructions ask for a lighter, documented cluster/compact/sync
-    /// surface, not a full online scheduler).
+    /// 🧵️ Admits the exact compaction identities before mounting its generation-qualified I/O job.
+    pub fn compact_document_retained(&self, document: ArtifactId, holder: db_storage::DbIoText, consolidate_snapshots: bool, now_ms: u64) -> Result<db_compact::DatabaseCompactionFuture, db_compact::DatabaseCompactionRejected> {
+        db_compact::DatabaseCompactionFuture::try_submit(self.pool.clone(), self.storage.clone(), document, holder, consolidate_snapshots, db_compact::CompactionBudget::default(), now_ms)
+    }
+
+    /// 🧹️ Mounts one retained compaction authority and awaits only its terminal witness.
     pub async fn compact_document(&self, document: &protocol::ArtifactId, holder: &str, consolidate_snapshots: bool) -> Result<db_compact::CompactionReport, DbError> {
+        let holder = db_storage::DbIoText::try_from_str(holder)?;
         let core_document = to_core_document_id(document).await;
-        db_actor::block_on(db_compact::Compactor::new(self.storage.as_ref()).await.run_from_latest_snapshot(&core_document, holder, consolidate_snapshots, &db_compact::CompactionBudget::default(), now_ms().await))
+        let requested_at_ms = now_ms().await;
+        let compaction = match self.compact_document_retained(core_document, holder, consolidate_snapshots, requested_at_ms) {
+            Ok(compaction) => compaction,
+            Err(rejected) => return Err(rejected.close_and_take_error()),
+        };
+        compaction.await?.close_and_take_report()
     }
 
     /// @emoji 👋️ A real `db_sync::handle_hello` call for `document` — the server-side half of the
@@ -10465,11 +10499,98 @@ mod tests {
         (pool, gate)
     }
 
-    fn release_held_create_catalog_io_pool(pool: &Arc<WorkerPool>, gate: &Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>) {
+    fn replenishing_create_catalog_io_job(pool: Arc<WorkerPool>, active: Arc<std::sync::atomic::AtomicBool>) -> semio_framework_async::Job {
+        Box::new(move || {
+            if active.load(std::sync::atomic::Ordering::Acquire) {
+                let next = replenishing_create_catalog_io_job(pool.clone(), active.clone());
+                if let Err(error) = pool.try_submit(Lane::Io, next) {
+                    drop(error.into_job());
+                }
+            }
+        })
+    }
+
+    fn replenishing_held_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>, Arc<std::sync::atomic::AtomicBool>) {
+        let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let active = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
+        let worker_gate = gate.clone();
+        pool.try_submit(
+            Lane::Io,
+            Box::new(move || {
+                started_tx.send(()).unwrap();
+                let (lock, ready) = &*worker_gate;
+                let mut released = lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                while !*released {
+                    released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
+                }
+            }),
+        )
+        .unwrap();
+        started_rx.recv().unwrap();
+        loop {
+            let job = replenishing_create_catalog_io_job(pool.clone(), active.clone());
+            if let Err(error) = pool.try_submit(Lane::Io, job) {
+                assert_eq!(error.kind(), semio_framework_async::WorkerSubmitErrorKind::Saturated);
+                drop(error.into_job());
+                break;
+            }
+        }
+        (pool, gate, active)
+    }
+
+    fn reserved_replenishing_create_catalog_io_pool() -> (Arc<WorkerPool>, Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>, Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>, Arc<std::sync::atomic::AtomicBool>) {
+        let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
+        assert_eq!(pool.worker_count(), 2);
+        let maintenance_gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let service_gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let active = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let (maintenance_tx, maintenance_rx) = std::sync::mpsc::sync_channel(1);
+        let held_maintenance = maintenance_gate.clone();
+        pool.try_submit(
+            Lane::Maintenance,
+            Box::new(move || {
+                maintenance_tx.send(()).unwrap();
+                let (lock, ready) = &*held_maintenance;
+                let mut released = lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                while !*released {
+                    released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
+                }
+            }),
+        )
+        .unwrap();
+        maintenance_rx.recv().unwrap();
+        let (service_tx, service_rx) = std::sync::mpsc::sync_channel(1);
+        let held_service = service_gate.clone();
+        pool.try_submit(
+            Lane::UserVisible,
+            Box::new(move || {
+                service_tx.send(()).unwrap();
+                let (lock, ready) = &*held_service;
+                let mut released = lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                while !*released {
+                    released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
+                }
+            }),
+        )
+        .unwrap();
+        service_rx.recv().unwrap();
+        loop {
+            let job = replenishing_create_catalog_io_job(pool.clone(), active.clone());
+            if let Err(error) = pool.try_submit(Lane::Io, job) {
+                assert_eq!(error.kind(), semio_framework_async::WorkerSubmitErrorKind::Saturated);
+                drop(error.into_job());
+                break;
+            }
+        }
+        (pool, maintenance_gate, service_gate, active)
+    }
+
+    fn release_held_create_catalog_worker(gate: &Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>) {
         let (lock, ready) = &**gate;
         *lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = true;
         ready.notify_one();
-        pool.shutdown();
     }
     //#endregion 🧸️Fixtures
 
@@ -10742,73 +10863,73 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn database_create_catalog_held_saturation_exhaustion_cancel_deadline_and_rejection_close_are_bounded() {
+    async fn database_create_catalog_real_worker_loop_services_finite_saturation_cancel_deadline_exhaustion_and_close() {
         let (cancel_storage, cancel_catalog, _) = create_catalog_fixture(Vec::new()).await;
         let (deadline_storage, deadline_catalog, _) = create_catalog_fixture(Vec::new()).await;
         let (exhaust_storage, exhaust_catalog, _) = create_catalog_fixture(Vec::new()).await;
-        let (pool, gate) = held_create_catalog_io_pool();
 
+        let (pool, gate, active) = replenishing_held_create_catalog_io_pool();
         let cancel_pointer = Arc::as_ptr(&cancel_storage) as usize;
         let cancel = DatabaseCreateCatalogFuture::try_submit(pool.clone(), cancel_catalog, cancel_storage, protocol::ArtifactId(String::from("saturation-cancel"))).unwrap();
         let cancel_state = cancel.state.clone();
         cancel.cancel();
-        for _ in 0..32 {
-            pool.timer_wheel().fire_due(u64::MAX);
-            if cancel_state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
-                break;
-            }
-        }
+        release_held_create_catalog_worker(&gate);
         let (storage, document, _, actual) = cancel.await.unwrap().into_parts().unwrap();
         assert_eq!(Arc::as_ptr(&storage) as usize, cancel_pointer);
         assert_eq!(document.0, "saturation-cancel");
         assert_eq!(actual, Err(DbError::Closed));
         assert_eq!(cancel_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), 1);
         assert_eq!(cancel_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
+        assert!(cancel_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(cancel_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
         assert!(cancel_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        active.store(false, std::sync::atomic::Ordering::Release);
+        pool.shutdown();
 
+        let (pool, gate, active) = replenishing_held_create_catalog_io_pool();
         let deadline_pointer = Arc::as_ptr(&deadline_storage) as usize;
         let deadline = DatabaseCreateCatalogFuture::try_submit(pool.clone(), deadline_catalog, deadline_storage, protocol::ArtifactId(String::from("saturation-deadline"))).unwrap();
         let deadline_state = deadline.state.clone();
         deadline_state.deadline_ms.store(0, std::sync::atomic::Ordering::Release);
-        for _ in 0..32 {
-            pool.timer_wheel().fire_due(u64::MAX);
-            if deadline_state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
-                break;
-            }
-        }
+        release_held_create_catalog_worker(&gate);
         let (storage, document, _, actual) = deadline.await.unwrap().into_parts().unwrap();
         assert_eq!(Arc::as_ptr(&storage) as usize, deadline_pointer);
         assert_eq!(document.0, "saturation-deadline");
         assert!(matches!(actual, Err(DbError::Timeout(_))));
         assert_eq!(deadline_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), 1);
         assert_eq!(deadline_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
+        assert!(deadline_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(deadline_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
         assert!(deadline_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        active.store(false, std::sync::atomic::Ordering::Release);
+        pool.shutdown();
 
+        let (pool, gate, active) = replenishing_held_create_catalog_io_pool();
         let exhaust_pointer = Arc::as_ptr(&exhaust_storage) as usize;
         let exhaust = DatabaseCreateCatalogFuture::try_submit(pool.clone(), exhaust_catalog, exhaust_storage, protocol::ArtifactId(String::from("saturation-exhaust"))).unwrap();
         let exhaust_state = exhaust.state.clone();
         let exhaust_generation = exhaust.generation();
-        for _ in 0..64 {
-            pool.timer_wheel().fire_due(u64::MAX);
-            if exhaust_state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
-                break;
-            }
-        }
+        release_held_create_catalog_worker(&gate);
         let (storage, document, _, actual) = exhaust.await.unwrap().into_parts().unwrap();
         assert_eq!(Arc::as_ptr(&storage) as usize, exhaust_pointer);
         assert_eq!(document.0, "saturation-exhaust");
         assert_eq!(actual, Err(DbError::LimitExceeded("database create-catalog retry exhausted")));
         assert_eq!(exhaust_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
         assert_eq!(exhaust_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
+        assert!(exhaust_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(exhaust_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
         assert!(exhaust_state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
         assert!(exhaust_state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
         assert!(exhaust_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
         assert!(!database_create_catalog_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter_map(Option::as_ref).any(|state| state.generation == exhaust_generation));
-        for _ in 0..8 {
-            pool.timer_wheel().fire_due(u64::MAX);
+        for _ in 0..32 {
+            std::thread::yield_now();
         }
         assert_eq!(exhaust_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+        active.store(false, std::sync::atomic::Ordering::Release);
+        pool.shutdown();
 
+        let (pool, gate, active) = replenishing_held_create_catalog_io_pool();
         let rejection_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
         let rejection_pointer = Arc::as_ptr(&rejection_storage) as usize;
         let oversized = protocol::ArtifactId(String::with_capacity(DATABASE_CREATE_CATALOG_MAX_ID_BYTES + 1));
@@ -10819,15 +10940,151 @@ mod tests {
         let close = rejected.close.clone();
         assert_eq!(close.owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().and_then(|owner| owner.storage.as_ref()).map(|storage| Arc::as_ptr(storage) as usize), Some(rejection_pointer));
         assert_eq!(rejected.close_and_take_error(), DbError::LimitExceeded("database create-catalog document bytes"));
-        for _ in 0..32 {
-            pool.timer_wheel().fire_due(u64::MAX);
-            if close.terminal_is_empty() {
-                break;
-            }
+        release_held_create_catalog_worker(&gate);
+        while !close.terminal_is_empty() {
+            std::thread::yield_now();
         }
         assert!(close.terminal_is_empty());
         assert_eq!(close.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
-        release_held_create_catalog_io_pool(&pool, &gate);
+        assert!(close.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(close.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
+        active.store(false, std::sync::atomic::Ordering::Release);
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held() {
+        let (cancel_storage, cancel_catalog, _) = create_catalog_fixture(Vec::new()).await;
+        let (deadline_storage, deadline_catalog, _) = create_catalog_fixture(Vec::new()).await;
+        let (exhaust_storage, exhaust_catalog, _) = create_catalog_fixture(Vec::new()).await;
+
+        let (pool, maintenance_gate, service_gate, active) = reserved_replenishing_create_catalog_io_pool();
+        let cancel_pointer = Arc::as_ptr(&cancel_storage) as usize;
+        let cancel = DatabaseCreateCatalogFuture::try_submit(pool.clone(), cancel_catalog, cancel_storage, protocol::ArtifactId(String::from("reserved-cancel"))).unwrap();
+        let cancel_state = cancel.state.clone();
+        assert_eq!(cancel_state.driver_authority.load(std::sync::atomic::Ordering::Acquire), DatabaseCreateCatalogDriverAuthority::Retry as u8);
+        assert!(cancel_state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
+        cancel.cancel();
+        release_held_create_catalog_worker(&service_gate);
+        let (storage, document, _, actual) = cancel.await.unwrap().into_parts().unwrap();
+        assert_eq!(Arc::as_ptr(&storage) as usize, cancel_pointer);
+        assert_eq!(document.0, "reserved-cancel");
+        assert_eq!(actual, Err(DbError::Closed));
+        assert!(!*maintenance_gate.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+        assert_eq!(cancel_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), 1);
+        assert_eq!(cancel_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
+        assert!(cancel_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(cancel_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
+        assert!(cancel_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        active.store(false, std::sync::atomic::Ordering::Release);
+        release_held_create_catalog_worker(&maintenance_gate);
+        pool.shutdown();
+
+        let (pool, maintenance_gate, service_gate, active) = reserved_replenishing_create_catalog_io_pool();
+        let deadline_pointer = Arc::as_ptr(&deadline_storage) as usize;
+        let deadline = DatabaseCreateCatalogFuture::try_submit(pool.clone(), deadline_catalog, deadline_storage, protocol::ArtifactId(String::from("reserved-deadline"))).unwrap();
+        let deadline_state = deadline.state.clone();
+        assert_eq!(deadline_state.driver_authority.load(std::sync::atomic::Ordering::Acquire), DatabaseCreateCatalogDriverAuthority::Retry as u8);
+        deadline_state.deadline_ms.store(0, std::sync::atomic::Ordering::Release);
+        release_held_create_catalog_worker(&service_gate);
+        let (storage, document, _, actual) = deadline.await.unwrap().into_parts().unwrap();
+        assert_eq!(Arc::as_ptr(&storage) as usize, deadline_pointer);
+        assert_eq!(document.0, "reserved-deadline");
+        assert!(matches!(actual, Err(DbError::Timeout(_))));
+        assert!(!*maintenance_gate.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+        assert_eq!(deadline_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), 1);
+        assert_eq!(deadline_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
+        assert!(deadline_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(deadline_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
+        assert!(deadline_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        active.store(false, std::sync::atomic::Ordering::Release);
+        release_held_create_catalog_worker(&maintenance_gate);
+        pool.shutdown();
+
+        let (pool, maintenance_gate, service_gate, active) = reserved_replenishing_create_catalog_io_pool();
+        let exhaust_pointer = Arc::as_ptr(&exhaust_storage) as usize;
+        let exhaust = DatabaseCreateCatalogFuture::try_submit(pool.clone(), exhaust_catalog, exhaust_storage, protocol::ArtifactId(String::from("reserved-exhaust"))).unwrap();
+        let exhaust_state = exhaust.state.clone();
+        let generation = exhaust.generation();
+        assert_eq!(exhaust_state.driver_authority.load(std::sync::atomic::Ordering::Acquire), DatabaseCreateCatalogDriverAuthority::Retry as u8);
+        release_held_create_catalog_worker(&service_gate);
+        let (storage, document, _, actual) = exhaust.await.unwrap().into_parts().unwrap();
+        assert_eq!(Arc::as_ptr(&storage) as usize, exhaust_pointer);
+        assert_eq!(document.0, "reserved-exhaust");
+        assert_eq!(actual, Err(DbError::LimitExceeded("database create-catalog retry exhausted")));
+        assert!(!*maintenance_gate.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+        assert_eq!(exhaust_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+        assert_eq!(exhaust_state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
+        assert!(exhaust_state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(exhaust_state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
+        assert!(exhaust_state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert!(exhaust_state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert!(exhaust_state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert!(!database_create_catalog_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter_map(Option::as_ref).any(|state| state.generation == generation));
+        for _ in 0..32 {
+            std::thread::yield_now();
+        }
+        assert_eq!(exhaust_state.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+        active.store(false, std::sync::atomic::Ordering::Release);
+        release_held_create_catalog_worker(&maintenance_gate);
+        pool.shutdown();
+
+        let (pool, maintenance_gate, service_gate, active) = reserved_replenishing_create_catalog_io_pool();
+        let rejection_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
+        let rejection_pointer = Arc::as_ptr(&rejection_storage) as usize;
+        let oversized = protocol::ArtifactId(String::with_capacity(DATABASE_CREATE_CATALOG_MAX_ID_BYTES + 1));
+        let rejected = match DatabaseCreateCatalogFuture::try_submit(pool.clone(), Arc::new(Mutex::new(CatalogState { epoch: EpochFence::INITIAL, revision: 1, entries: Arc::new(Vec::new()), pending: None })), rejection_storage, oversized) {
+            Ok(_) => panic!("oversized reserved create-catalog rejection was admitted"),
+            Err(rejected) => rejected,
+        };
+        let close = rejected.close.clone();
+        assert_eq!(close.owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().and_then(|owner| owner.storage.as_ref()).map(|storage| Arc::as_ptr(storage) as usize), Some(rejection_pointer));
+        assert_eq!(rejected.close_and_take_error(), DbError::LimitExceeded("database create-catalog document bytes"));
+        assert_eq!(close.driver.load(std::sync::atomic::Ordering::Acquire), DatabaseCreateCatalogDriverAuthority::Retry as u8);
+        assert!(close.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
+        release_held_create_catalog_worker(&service_gate);
+        while !close.terminal_is_empty() {
+            std::thread::yield_now();
+        }
+        assert!(!*maintenance_gate.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+        assert_eq!(close.submission_refusals.load(std::sync::atomic::Ordering::Acquire), usize::from(DATABASE_CREATE_CATALOG_RETRY_LIMIT));
+        assert!(close.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(close.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
+        active.store(false, std::sync::atomic::Ordering::Release);
+        release_held_create_catalog_worker(&maintenance_gate);
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim() {
+        let (storage, catalog, _) = create_catalog_fixture(Vec::new()).await;
+        let storage_pointer = Arc::as_ptr(&storage) as usize;
+        let (pool, gate) = held_create_catalog_io_pool();
+        let probe = DatabaseCreateCatalogFuture::try_submit(pool.clone(), catalog, storage, protocol::ArtifactId(String::from("nonreturning-retained"))).unwrap();
+        let state = probe.state.clone();
+        let generation = probe.generation();
+        probe.cancel();
+        drop(probe);
+        assert_eq!(state.driver_authority.load(std::sync::atomic::Ordering::Acquire), DatabaseCreateCatalogDriverAuthority::Retry as u8);
+        assert!(state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
+        assert!(state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert_eq!(state.storage.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().map(|storage| Arc::as_ptr(storage) as usize), Some(storage_pointer));
+        assert_eq!(state.document.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().map(|document| document.0.as_str()), Some("nonreturning-retained"));
+        assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
+        assert_eq!(state.backend_polls.load(std::sync::atomic::Ordering::Acquire), 0);
+        assert!(!state.callback_worker_thread.load(std::sync::atomic::Ordering::Acquire));
+        assert!(database_create_catalog_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter_map(Option::as_ref).any(|retained| retained.generation == generation && Arc::ptr_eq(retained, &state)));
+        let terminal = take_database_create_catalog_terminal(generation).unwrap();
+        assert!(!terminal.witness().terminal_empty);
+        assert!(terminal.witness().retained_owners > 0);
+        assert_eq!(terminal.close_step(), DatabaseCreateCatalogCloseStep::Blocked);
+        assert!(!terminal.terminal_is_empty());
+        release_held_create_catalog_worker(&gate);
+        while !terminal.terminal_is_empty() {
+            std::thread::yield_now();
+        }
+        assert_eq!(state.terminal_job_retirements.load(std::sync::atomic::Ordering::Acquire), 1);
+        pool.shutdown();
     }
 
     #[semio_framework_async_macros::async_test]
@@ -10921,14 +11178,12 @@ mod tests {
         claim.cancel();
         revalidate.cancel();
         retire.cancel();
-        for _ in 0..64 {
-            pool.timer_wheel().fire_due(u64::MAX);
-            if claim_state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
-                && revalidate_state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
-                && retire_state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
-            {
-                break;
-            }
+        release_held_create_catalog_worker(&gate);
+        while claim_state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            || revalidate_state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            || retire_state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+        {
+            std::thread::yield_now();
         }
         assert_eq!(claim.await.unwrap().into_parts().unwrap().3, Err(DbError::Closed));
         assert_eq!(revalidate.await.unwrap().into_parts().unwrap().3, Err(DbError::Closed));
@@ -10937,7 +11192,7 @@ mod tests {
         let catalog = &source[source.find("pub async fn catalog(&self)").unwrap()..source.find("pub async fn health(&self)").unwrap()];
         assert!(catalog.find("Arc::clone(&catalog.entries)").unwrap() < catalog.find("entries.as_ref().clone()").unwrap());
         assert!(!catalog.contains("catalog.entries.as_ref().clone()"));
-        release_held_create_catalog_io_pool(&pool, &gate);
+        pool.shutdown();
     }
 
     #[semio_framework_async_macros::async_test]

@@ -607,7 +607,7 @@ pub fn register_assembly_inference_factory(bus: &semio_framework::ActionBus) -> 
 /// 🏁 Explicit headless adapter over the same complete parent job used by the public factory.
 fn solve_with_job(snapshot: &AssemblySnapshot) -> Result<AssemblyInferenceCommit, String> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
-    let mut job = AssemblyInferenceJob::new(operation, AssemblyInferenceRequest { snapshot: snapshot.clone(), checkpoint: None })?;
+    let job = AssemblyInferenceJob::new(operation, AssemblyInferenceRequest { snapshot: snapshot.clone(), checkpoint: None })?;
     let params = semio_framework_job::BatchJobParams {
         operation: operation.operation,
         generation: operation.generation,
@@ -615,11 +615,46 @@ fn solve_with_job(snapshot: &AssemblySnapshot) -> Result<AssemblyInferenceCommit
         config: semio_framework_job::BatchDriveConfig { site: "assembly.wfc.inference.headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 2 },
         now_ms: semio_framework_job::default_now_ms,
     };
-    match semio_framework_job::run_to_completion(&mut job, &params) {
-        semio_framework_job::StepOutcome::Complete(candidate) => serde_json::from_slice(&candidate.output).map_err(|error| format!("assembly-invalid-commit:{error}")),
-        semio_framework_job::StepOutcome::Cancelled => Err("assembly-inference-cancelled".into()),
-        semio_framework_job::StepOutcome::Fault(fault) => Err(String::from_utf8_lossy(&fault.detail).into_owned()),
-        outcome => Err(format!("assembly-inference-headless-nonterminal:{outcome:?}")),
+    let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
+        Ok(session) => session,
+        Err(mut rejected) => {
+            rejected.begin_close();
+            while !rejected.terminal_is_empty() {
+                let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            return Err("assembly-inference-headless-admission-rejected".into());
+        }
+    };
+    loop {
+        session.step().map_err(|error| format!("assembly-inference-headless-contention:{error:?}"))?;
+        let Some(mut outcome) = session.take_outcome() else { continue };
+        let terminal = outcome.is_terminal();
+        let payload_bytes = |payload: &semio_framework_job::RetainedJobPayload| {
+            let mut bytes = Vec::with_capacity(payload.len());
+            for index in 0..payload.page_count() {
+                if let Some(page) = payload.page(index) {
+                    bytes.extend_from_slice(page);
+                }
+            }
+            bytes
+        };
+        let result = match &outcome {
+            semio_framework_job::StepOutcome::Complete(candidate) => Some(serde_json::from_slice(&payload_bytes(&candidate.output)).map_err(|error| format!("assembly-invalid-commit:{error}"))),
+            semio_framework_job::StepOutcome::Cancelled => Some(Err("assembly-inference-cancelled".into())),
+            semio_framework_job::StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&payload_bytes(&fault.detail)).into_owned())),
+            semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => None,
+        };
+        while !outcome.terminal_is_empty() {
+            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        if terminal {
+            session.begin_close();
+            while !session.terminal_is_empty() {
+                let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            return result.expect("terminal assembly inference outcome has result");
+        }
+        session.resume().map_err(|error| format!("assembly-inference-headless-resume:{error:?}"))?;
     }
 }
 //#endregion 🔖️Compile
@@ -849,7 +884,7 @@ mod tests {
         serde_json::to_vec(&request).expect("cold route request")
     }
 
-    async fn drive_cold_route(job: u64) -> WireArtifactInferenceResult {
+    fn drive_cold_route(job: u64) -> WireArtifactInferenceResult {
         for _ in 0..200_000 {
             match step_job(job, JobBudget { fuel: 1, deadline_ms: 2 }).await {
                 JobStep::Running(_) => {}
@@ -1219,7 +1254,7 @@ mod tests {
         assert!(matches!(step_job(8_102, JobBudget { fuel: 1, deadline_ms: 2 }).await, JobStep::Failed(_)));
     }
 
-    async fn run_exact_factory_on_pool(workers: usize) -> Vec<u8> {
+    fn run_exact_factory_on_pool(workers: usize) -> Vec<u8> {
         let bus = semio_framework::ActionBus::new();
         register_assembly_inference_factory(&bus).expect("assembly registration");
         let operation = operation(177);

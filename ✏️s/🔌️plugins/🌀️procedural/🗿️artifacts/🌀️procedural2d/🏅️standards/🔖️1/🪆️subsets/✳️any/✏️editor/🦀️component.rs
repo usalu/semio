@@ -42,7 +42,7 @@ fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, categor
 /// `.artifact_kind(...)` document schema/media type verbatim, plus two workflow ports: `params:in`
 /// (generic Data×Value parametric input) and `drawing:out` (TwoD×Vector, tagged with draw's already-
 /// registered `2d.drawing` kind id).
-pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
+pub async fn procedural2d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         "procedural.2d",
         MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
@@ -266,11 +266,11 @@ impl ArtifactEditor for Procedural2dPlayApp {
         })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> semio_framework_plugin::ComponentTree {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Procedural2dSnapshot>, cfg: &ConfigView<'_, Procedural2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = procedural2d_labels(config);
-        semio_framework_plugin::built_to_component_tree(with_process_flow_eval_session(|session| match body_key {
+        let node = with_process_flow_eval_session(|session| match body_key {
             flow_window::PROCEDURAL2D_PLAY_BODY_MAIN => flow_window::render(document, config, session),
             edit_preview::PROCEDURAL2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, session),
             generations::PROCEDURAL2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native),
@@ -279,8 +279,10 @@ impl ArtifactEditor for Procedural2dPlayApp {
             document_panel::PROCEDURAL2D_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
             catalogue_panel::PROCEDURAL2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::PROCEDURAL2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        }))
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
+        })?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode

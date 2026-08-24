@@ -1143,7 +1143,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                         semio_framework_job::StepOutcome::Cancelled
                     } else {
                         self.phase = GisMapStoreInitializationPhase::Fault;
-                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.take().unwrap_or_else(|| b"gis-map-store.initializer-fault".to_vec()) })
+                        let fault = self.fault.take().unwrap_or_else(|| b"gis-map-store.initializer-fault".to_vec());
+                        let detail = cx
+                            .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &fault)
+                            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
                     }
                 }
                 Err(error) => {
@@ -1156,7 +1160,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                 output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
             }),
             GisMapStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
-            GisMapStoreInitializationPhase::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.clone().unwrap_or_else(|| b"gis-map-store.initializer-fault".to_vec()) }),
+            GisMapStoreInitializationPhase::Fault => {
+                let fault = self.fault.as_deref().unwrap_or(b"gis-map-store.initializer-fault");
+                let detail = cx
+                    .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, fault)
+                    .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
+            }
         }
     }
 
@@ -1230,11 +1240,11 @@ mod tests {
     use crate::artifacts::gismap::GIS_MAP_SCHEMA;
     use serde_json::json;
 
-    async fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
+    fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
         dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
     }
 
-    async fn sample_feature(id: &str) -> crate::artifacts::gismap::MapFeature {
+    fn sample_feature(id: &str) -> crate::artifacts::gismap::MapFeature {
         crate::artifacts::gismap::MapFeature { id: id.into(), data: dsl_of(&json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
     }
 

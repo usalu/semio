@@ -57,6 +57,29 @@ pub enum Procedural2dMutation {
     RenameGeneration(super::rename_generation::mutation::RenameGeneration),
     ChangeGenerationValue(super::change_generation_value::mutation::ChangeGenerationValue),
 }
+
+//#region 🏷️Kinds
+/// 🏷️ The kebab-case spelling of every [`Procedural2dMutation`] variant, in declaration order — the exact
+/// vocabulary the `procedural-2d-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// the `mutate-procedural-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
+pub const KINDS: &[&str] = &[
+    "create-widget",
+    "replace-widget",
+    "delete-widget",
+    "connect-synapse",
+    "replace-synapse",
+    "disconnect-synapse",
+    "move-widget",
+    "clear-widget-layout",
+    "update-camera",
+    "change-schema",
+    "create-generation",
+    "delete-generation",
+    "rename-generation",
+    "change-generation-value",
+];
+//#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
 //#region 🔖️GenerationBridge
@@ -417,5 +440,24 @@ mod tests {
         assert_eq!(synapses[0].to, "c");
     }
     //#endregion 🔖️FixtureOpsTests
+
+    //#region 🧪️KindsCatalog
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed oracle
+    /// manifest's catalog — the framework never parses Rust, so this is the only thing that keeps the
+    /// declared vocabulary and the measured one from drifting apart.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Procedural2dMutation as protocol::SemanticMutation<Procedural2dSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Procedural2dMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 }
 //#endregion 🧪️Tests

@@ -119,7 +119,7 @@ pub fn gumball_active(_runtime: &Puzzle3dRuntime, _active_utility: &str) -> bool
 //#region 🔖️SceneJson
 pub fn camera_json(runtime: &Puzzle3dRuntime) -> String {
     let camera = &runtime.camera;
-    semio_framework::io::resolve_ready(world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &camera.projection))
+    world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &camera.projection)
 }
 
 /// 🙈️ Hidden objects stay in the emitted array — `worldPick`'s `id` arg is the array index into it — but render at zero scale so they're effectively invisible without shifting any other object's index.
@@ -466,7 +466,7 @@ pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
 //#region 🔖️Render
 /// 🖼️ The world-3d surface node for this window — `instances_json`/`meshes_json` come pre-computed
 /// from `Puzzle3dPlayApp`'s geometry cache (they only change with the fixture's geometry fingerprint).
-pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, instances_json: String, meshes_json: String) -> BuiltNode {
+pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, instances_json: String, meshes_json: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let brush_preview = world_fill_preview_json(precompute, envelope).or_else(|| world_brush_preview_json(precompute, envelope));
     let scene = world3d_scene_extended(
         camera_json(&envelope.runtime),
@@ -497,7 +497,7 @@ pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, 
         None,
         None,
     );
-    semio_framework_ui_contract::surface(semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::World3d, &scene)).id(SURFACE_VIEWPORT).build()
+    semio_framework_plugin::scene_surface(SURFACE_VIEWPORT, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
 }
 
 /// 🤝️ The engagement HUD for this window: the select/brush/fill switcher lives in the framework

@@ -31,7 +31,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(generation: &GenerationPlayState, locale: Locale, terminology: Terminology) -> BuiltNode {
+pub fn render(generation: &GenerationPlayState, locale: Locale, terminology: Terminology) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     crate::generation_tree(PROCEDURAL_3D_PLAY_APP_ID, "procedural3d-play-generate", generation, locale, terminology)
 }
 //#endregion 🔖️Render

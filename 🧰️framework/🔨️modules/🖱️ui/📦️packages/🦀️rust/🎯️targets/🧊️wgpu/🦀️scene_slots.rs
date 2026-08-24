@@ -33,6 +33,99 @@ pub struct SceneSlot<'tree> {
     pub content: SlotContent<'tree>,
 }
 
+/// 🎞️ Retained producer-consumer cursor for one scene or image leaf.
+#[derive(Default)]
+pub struct ScenePaintCursor {
+    node: Option<NodeId>,
+    phase: u16,
+    item: usize,
+    page: usize,
+    byte: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ScenePaintStep {
+    Pending,
+    Complete,
+    Fault,
+}
+
+impl ScenePaintCursor {
+    pub fn bind(&mut self, node: NodeId) -> Result<bool, ()> {
+        match self.node {
+            None => {
+                self.node = Some(node);
+                Ok(false)
+            }
+            Some(active) if active == node => Ok(true),
+            Some(_) => Err(()),
+        }
+    }
+
+    pub const fn phase(&self) -> u16 {
+        self.phase
+    }
+
+    pub fn advance_phase(&mut self) -> Result<(), ()> {
+        self.phase = self.phase.checked_add(1).ok_or(())?;
+        self.item = 0;
+        self.page = 0;
+        self.byte = 0;
+        Ok(())
+    }
+
+    pub const fn item(&self) -> usize {
+        self.item
+    }
+
+    pub fn advance_item(&mut self) -> Result<(), ()> {
+        self.item = self.item.checked_add(1).ok_or(())?;
+        Ok(())
+    }
+
+    pub const fn page(&self) -> usize {
+        self.page
+    }
+
+    pub fn advance_page(&mut self) -> Result<(), ()> {
+        self.page = self.page.checked_add(1).ok_or(())?;
+        Ok(())
+    }
+
+    pub const fn byte(&self) -> usize {
+        self.byte
+    }
+
+    pub fn advance_byte(&mut self) -> Result<(), ()> {
+        self.byte = self.byte.checked_add(1).ok_or(())?;
+        Ok(())
+    }
+
+    pub fn finish(&mut self) -> ScenePaintStep {
+        self.node = None;
+        self.phase = 0;
+        self.item = 0;
+        self.page = 0;
+        self.byte = 0;
+        ScenePaintStep::Complete
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.node.take().is_some() {
+            self.phase = 0;
+            self.item = 0;
+            self.page = 0;
+            self.byte = 0;
+            return false;
+        }
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.node.is_none()
+    }
+}
+
 impl<'tree> SceneSlot<'tree> {
     /// 🪪️ `(surface_id, SurfaceKind)` when this slot is a `ComponentScene` — `None` for `Image`,
     /// which carries no `SurfaceKind` (it's routed by `SlotContent`'s own variant instead).
@@ -57,7 +150,13 @@ pub trait SceneHost {
     /// retained-paint call). `atlas`/`icons` are the SAME instances the frame's caller passed into
     /// `Ui::frame`, reborrowed fresh per slot so a host that draws text/icons shares the one real,
     /// GPU-uploaded glyph/icon texture instead of needing (or clobbering) its own.
-    fn paint_slot(&mut self, slot: &SceneSlot<'_>, draw: &mut DrawList, atlas: &mut FontAtlas, icons: Option<&IconAtlas>);
+    fn paint_slot_step(&mut self, slot: &SceneSlot<'_>, cursor: &mut ScenePaintCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: Option<&IconAtlas>) -> ScenePaintStep;
+
+    #[cfg(test)]
+    fn paint_slot(&mut self, slot: &SceneSlot<'_>, draw: &mut DrawList, atlas: &mut FontAtlas, icons: Option<&IconAtlas>) {
+        let mut cursor = ScenePaintCursor::default();
+        while matches!(self.paint_slot_step(slot, &mut cursor, draw, atlas, icons), ScenePaintStep::Pending) {}
+    }
 }
 
 /// 📥️ Walks `tree` from `root`, collecting every `ComponentScene`/`Image` leaf's absolute rect
@@ -106,10 +205,10 @@ fn collect_scene_slots_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f3
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::wgpu::Label;
     use crate::wgpu::component::ui::{UiComponentSceneNode, UiGroupNode, UiPresence, UiStackNode, UiTextNode};
     use crate::wgpu::flex::LayoutEngine;
     use crate::wgpu::theme::Theme;
-    use crate::wgpu::Label;
 
     fn text(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
@@ -222,5 +321,35 @@ mod tests {
         assert_eq!(slots.len(), 1);
         assert_eq!(slots[0].surface(), Some(("surface.nested", SurfaceKind::World3d)));
     }
+
+    //#region 🎞️RetainedSceneLaws
+    #[test]
+    fn scene_paint_cursor_rejects_stale_node_without_consuming_owner() {
+        let tree = layout(&stack(vec![scene("surface.a"), image("image.b")]));
+        let Some(root) = tree.root else { panic!("scene root") };
+        let mut children = tree.children(root);
+        let Some(first) = children.next() else { panic!("first scene child") };
+        let Some(second) = children.next() else { panic!("second scene child") };
+        let mut cursor = ScenePaintCursor::default();
+        assert_eq!(cursor.bind(first), Ok(false));
+        assert_eq!(cursor.bind(second), Err(()));
+        assert_eq!(cursor.bind(first), Ok(true));
+        assert!(!cursor.terminal_is_empty());
+    }
+
+    #[test]
+    fn scene_paint_cursor_advances_one_scalar_and_closes_one_bound_owner() {
+        let tree = layout(&scene("surface.scalar"));
+        let Some(root) = tree.root else { panic!("scene root") };
+        let mut cursor = ScenePaintCursor::default();
+        assert_eq!(cursor.bind(root), Ok(false));
+        assert_eq!(cursor.byte(), 0);
+        assert_eq!(cursor.advance_byte(), Ok(()));
+        assert_eq!(cursor.byte(), 1);
+        assert!(!cursor.close_step());
+        assert!(cursor.terminal_is_empty());
+        assert!(cursor.close_step());
+    }
+    //#endregion 🎞️RetainedSceneLaws
 }
 // #endregion scene_slots

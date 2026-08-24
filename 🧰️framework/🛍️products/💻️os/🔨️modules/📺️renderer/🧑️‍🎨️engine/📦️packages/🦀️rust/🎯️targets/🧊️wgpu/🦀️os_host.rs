@@ -18,7 +18,7 @@
 //! waiting on the Element migration to land first.
 
 use crate::deadlines::{CaretBlink, HotSwapPoll};
-use crate::kernel_seam::{default_intent_exchange, AppKernelSeam};
+use crate::kernel_seam::{AppKernelSeam, default_intent_exchange};
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
 use crate::{AppPresenter, RuntimeMailbox};
 use ui_render::{CursorRequest, FrameScheduler};

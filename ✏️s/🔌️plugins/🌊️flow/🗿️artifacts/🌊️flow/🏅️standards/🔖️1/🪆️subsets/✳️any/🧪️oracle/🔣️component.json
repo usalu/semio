@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. The `kinds` are the kebab spelling of `FlowMutation`'s variants in declaration order; `../🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "flow-widget-graph-mutation-semantics",
+      "capabilities": [
+        "flow-1-mutate"
+      ],
+      "rationale": "`s.flow.flow` is a semio-NATIVE artifact. Its persisted document is the `flow.flow` envelope (`semio flow.flow.dsl v1` followed by a JSON body) and its widget graph lives in a composed `s.stdio.semio.flow` CHILD addressed by a content-derived handle. No package in any ecosystem reads or writes that envelope — the preamble and the child-handle addressing are defined by this repository alone — so there is nothing to register, and no library is authoritative over `FlowMutation`: that vocabulary IS this subset's own specification. The nearest candidates were surveyed and DECLINED rather than merely absent, and the first one is unusually close, which is why the decision has to be argued rather than assumed. (1) This document's BODY is plain JSON and json-rust 0.12 is already linked into the stdio oracle crate, so a json-rust-mediated differential is technically reachable. It would still be a weak oracle of exactly the kind the wave brief forbids: json-rust supplies a generic DOM and no knowledge of a widget discriminant, a synapse port pair, a layout entry or the cascade `delete-widget` performs on the synapses that touched the deleted widget, so all ten mutation semantics — the entire content of this catalog — would still be hand-written on top of it, and calling that hand-written code a third-party reference would overstate the evidence rather than add any. A generic container parser is not a reference implementation of the vocabulary carried inside the container. (2) The node-graph domain has real third-party readers (Graphviz DOT, GraphML, and the node-graph formats of several DCC tools), and they were rejected on a substantive point: none carries a typed widget UNION whose variant decides its own field set, and none carries `duplicate-widget`, a COMPOSITE that plans a widget insert and a synapse insert together and therefore has no framework-generic counterpart at all (see `to_framework_mutation`'s own doc comment). A differential against one would compare two different documents. Confidence comes instead from specification vectors — this subset's own committed per-kind leaf fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/`, each an independently authored `(before, mutation, after|absent, diff, outcome)` bundle — and from the metamorphic laws the case asserts in role: every kind must MOVE the semantic projection, every kind's own computed inverse must restore it exactly, and the committed real artifact must survive decode/encode byte-for-byte.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "flow-1-any",
+      "capability": "flow-1-mutate",
+      "kinds": [
+        "create-widget",
+        "delete-widget",
+        "reorder-widgets",
+        "replace-widget",
+        "connect-widgets",
+        "disconnect-widgets",
+        "reorder-synapses",
+        "update-synapse-endpoints",
+        "move-widgets",
+        "duplicate-widget"
+      ]
+    }
+  ]
+}

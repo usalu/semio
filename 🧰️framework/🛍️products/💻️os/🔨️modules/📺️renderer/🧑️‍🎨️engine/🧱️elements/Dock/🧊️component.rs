@@ -9,8 +9,8 @@
 use semio_framework::AppDefinition;
 use std::collections::HashMap;
 use ui_wgpu::wgpu::{
-    chrome_item_text, draw_text, even_window_layout, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
-    WindowLayoutWindowNode, WindowStackCorner,
+    ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner,
+    chrome_item_text, draw_text, even_window_layout,
 };
 
 pub type DockPath = Vec<usize>;
@@ -602,11 +602,7 @@ fn axis_from_children(kind: &str, children: &[WindowLayoutChild], size: Option<f
         })
         .collect();
     let normalized = normalize_sizes(parsed, size.map(|v| v as f32));
-    if kind == "column" {
-        DockNode::Column(normalized)
-    } else {
-        DockNode::Row(normalized)
-    }
+    if kind == "column" { DockNode::Column(normalized) } else { DockNode::Row(normalized) }
 }
 
 fn stack_from_node(stack: &WindowLayoutStackNode) -> DockNode {
@@ -687,11 +683,7 @@ pub fn resolve_split_side(local_x: f32, local_y: f32, width: f32, height: f32) -
     let dx = (local_x - mid_x).abs();
     let dy = (local_y - mid_y).abs();
     if dx >= dy {
-        if local_x < mid_x {
-            DockSide::Left
-        } else {
-            DockSide::Right
-        }
+        if local_x < mid_x { DockSide::Left } else { DockSide::Right }
     } else if local_y < mid_y {
         DockSide::Top
     } else {
@@ -1553,7 +1545,7 @@ mod tests {
     use crate::shell::ShellState;
     use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
     use ui_wgpu::wgpu::LocalizedLabel;
-    use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
+    use ui_wgpu::wgpu::{WindowOptions, create_default_layout};
 
     fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
         AppDefinition {
@@ -2247,7 +2239,7 @@ mod tests {
     /// absent from BOTH buckets otherwise — untagged groups always stay in the general Measures rail.
     #[test]
     fn utility_options_partition_gates_tagged_group_by_active_utility() {
-        use ui_wgpu::wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
+        use ui_wgpu::wgpu::{ActionDescriptor, WindowMeasure, partition_window_measures};
         let measures = vec![
             WindowMeasure::Group {
                 id: "brush-params".into(),

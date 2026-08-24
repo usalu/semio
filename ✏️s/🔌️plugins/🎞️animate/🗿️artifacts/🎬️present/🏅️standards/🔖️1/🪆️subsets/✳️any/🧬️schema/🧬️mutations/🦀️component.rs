@@ -263,4 +263,16 @@ pub fn inverse_present_mutation(snapshot: &PresentSnapshot, mutation: &PresentMu
 pub fn decode_present_mutation_json(text: &str) -> Result<PresentMutation, String> {
     serde_json::from_str(text).map_err(|error| error.to_string())
 }
+
+/// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, source, tiles)` read back
+/// off the composed presentation child's working scene. It belongs to the subset rather than to a
+/// test adapter, because what counts as this document's meaning is this subset's ruling, not a
+/// case's. The two child handles are deliberately absent: `presentation_child_handle`
+/// content-addresses exactly this `(source, tiles)` pair through `std`'s deliberately unspecified
+/// `DefaultHasher`, so projecting one would compare the same content twice and pin a value the
+/// standard library does not promise. `animation` carries no content at all today.
+pub fn encode_present_projection_json(snapshot: &PresentSnapshot) -> String {
+    let (source, tiles) = crate::artifacts::present::present_working_scene(snapshot);
+    serde_json::json!({ "schema": snapshot.schema, "source": source, "tiles": tiles }).to_string()
+}
 //#endregion 🔖️Apply

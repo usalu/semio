@@ -151,7 +151,7 @@ mod derive_transformation {
     //#endregion 🔖️ClassifyRules
 
     //#region 🔖️FaceAnalytics
-    async fn face_mesh_analytics(kernel: &Brep, face: &GeometryHandle) -> Option<(Vec3, Vec3)> {
+    fn face_mesh_analytics(kernel: &Brep, face: &GeometryHandle) -> Option<(Vec3, Vec3)> {
         let mesh = kernel.tessellate(face, 0.1).ok()?;
         let mut area_sum = 0.0;
         let mut centroid = [0.0, 0.0, 0.0];
@@ -212,7 +212,7 @@ mod derive_transformation {
     }
 
     #[cfg(test)]
-    async fn dominant_axis_of(normal: Vec3) -> DominantAxis {
+    fn dominant_axis_of(normal: Vec3) -> DominantAxis {
         let [nx, ny, nz] = normal;
         let abs = [nx.abs(), ny.abs(), nz.abs()];
         if abs[0] >= abs[1] && abs[0] >= abs[2] {
@@ -225,7 +225,7 @@ mod derive_transformation {
     }
 
     #[cfg(test)]
-    async fn axis_normal_component(normal: Vec3, axis: DominantAxis) -> f64 {
+    fn axis_normal_component(normal: Vec3, axis: DominantAxis) -> f64 {
         match axis {
             DominantAxis::X => normal[0].abs(),
             DominantAxis::Y => normal[1].abs(),
@@ -234,7 +234,7 @@ mod derive_transformation {
     }
 
     #[cfg(test)]
-    async fn classify_rule_matches(rule: &ClassifyRule, normal: Vec3, centroid_z: f64, z_min: f64, z_max: f64, z_tol: f64) -> bool {
+    fn classify_rule_matches(rule: &ClassifyRule, normal: Vec3, centroid_z: f64, z_min: f64, z_max: f64, z_tol: f64) -> bool {
         if rule.fallback {
             return true;
         }
@@ -300,7 +300,7 @@ mod derive_transformation {
     }
 
     #[cfg(test)]
-    async fn fuse_solids(kernel: &mut Brep, solids: &[GeometryHandle]) -> Option<GeometryHandle> {
+    fn fuse_solids(kernel: &mut Brep, solids: &[GeometryHandle]) -> Option<GeometryHandle> {
         if solids.is_empty() {
             return None;
         }
@@ -321,7 +321,7 @@ mod derive_transformation {
     }
 
     #[cfg(test)]
-    async fn next_object_id(prefix: &str, index: usize) -> String {
+    fn next_object_id(prefix: &str, index: usize) -> String {
         format!("{prefix}-{index}")
     }
 
@@ -577,11 +577,11 @@ mod construct_query {
     }
 
     impl QueryableGraph for CadTopologyGraph<'_> {
-        async fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
             None
         }
 
-        async fn node_ids(&self) -> Vec<String> {
+        fn node_ids(&self) -> Vec<String> {
             let g = self.geometry;
             g.vertices
                 .iter()
@@ -594,7 +594,7 @@ mod construct_query {
                 .collect()
         }
 
-        async fn node_kind(&self, id: &str) -> Option<String> {
+        fn node_kind(&self, id: &str) -> Option<String> {
             let g = self.geometry;
             if g.vertices.iter().any(|v| v.id == id) {
                 return Some(KIND_VERTEX.to_string());
@@ -617,11 +617,11 @@ mod construct_query {
             None
         }
 
-        async fn node_name(&self, id: &str) -> Option<String> {
+        fn node_name(&self, id: &str) -> Option<String> {
             self.node_kind(id).map(|_| id.to_string())
         }
 
-        async fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
+        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
             let g = self.geometry;
             match key {
                 "position" => g.vertices.iter().find(|v| v.id == id).map(|v| PropertyValue::Array(v.position.iter().map(|c| PropertyValue::Number(*c)).collect())),
@@ -632,7 +632,7 @@ mod construct_query {
             }
         }
 
-        async fn edges(&self) -> Vec<QueryableEdge> {
+        fn edges(&self) -> Vec<QueryableEdge> {
             let g = self.geometry;
             let mut out = Vec::new();
             let mut next_id = 0usize;
@@ -668,7 +668,7 @@ mod construct_query {
             out
         }
 
-        async fn subgraph_fixture_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
+        fn subgraph_fixture_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
             None
         }
     }
@@ -688,7 +688,7 @@ mod construct_query {
         use super::*;
         use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadEdge, CadEdgeCurve, CadFace, CadPlaneSurface, CadShell, CadSolid, CadVertex, CadWire};
 
-        async fn box_geometry() -> CadGeometry {
+        fn box_geometry() -> CadGeometry {
             let corners: [[f64; 3]; 8] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]];
             let vertices: Vec<CadVertex> = corners.iter().enumerate().map(|(i, p)| CadVertex { id: format!("v{i}"), position: *p }).collect();
             let edge_pairs: [(usize, usize); 12] = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)];
@@ -826,7 +826,7 @@ mod scene_compute {
 
     /// @emoji 📐️ Tessellates a typology's primitive sized from authored geometry (or a universal
     /// fallback extent when no geometry was captured), instead of hardcoded per-typology constants.
-    async fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Option<&str>, centroid: Option<[f64; 3]>) -> MeshData {
+    fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Option<&str>, centroid: Option<[f64; 3]>) -> MeshData {
         let mut kernel = cad_brep_kernel();
         if let Some(handle_id) = solid_handle {
             let handle = GeometryHandle(handle_id.into());
@@ -856,7 +856,7 @@ mod scene_compute {
         mesh_data
     }
 
-    async fn mesh_centroid(mesh: &MeshData) -> Option<[f32; 3]> {
+    fn mesh_centroid(mesh: &MeshData) -> Option<[f32; 3]> {
         if mesh.positions.is_empty() {
             return None;
         }
@@ -886,12 +886,12 @@ mod scene_compute {
     }
 
     /// @emoji 🖼️ Centers the concrete-forest reference and moves it forward from the authored base corner.
-    async fn forest_reference_origin(reference_z: f64) -> [f64; 3] {
+    fn forest_reference_origin(reference_z: f64) -> [f64; 3] {
         let height_world = CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX;
         [CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[0] + CAD_FOREST_REFERENCE_WIDTH_WORLD * 0.5, CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[1] + height_world * (0.5 + CAD_FOREST_REFERENCE_Y_OFFSET_RATIO), reference_z]
     }
 
-    async fn translate_mesh_positions(mesh: &mut MeshData, offset: [f32; 3]) {
+    fn translate_mesh_positions(mesh: &mut MeshData, offset: [f32; 3]) {
         for vertex in mesh.positions.as_chunks_mut::<3>().0 {
             vertex[0] += offset[0];
             vertex[1] += offset[1];
@@ -935,7 +935,7 @@ mod scene_compute {
         cad_document_pane_bundle(FOREST_LEFT_MODEL_JSON, model_index)
     }
 
-    async fn forest_references_for_model_definitions(reference_z: f64) -> std::collections::BTreeMap<String, Vec<CadReference>> {
+    fn forest_references_for_model_definitions(reference_z: f64) -> std::collections::BTreeMap<String, Vec<CadReference>> {
         CadPaneId::all()
             .into_iter()
             .map(|pane| {
@@ -996,7 +996,7 @@ mod scene_compute {
     /// is KEPT (still exercised by this module's own tests below) as the real fixture-import path a
     /// future host-level "compose the forest example" gesture will feed into freshly-minted model
     /// children; this function itself now returns nodes/references only.
-    async fn forest_play_document(source_json: &str, id: &str) -> CadSnapshot {
+    fn forest_play_document(source_json: &str, id: &str) -> CadSnapshot {
         let _ = source_json;
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
@@ -1166,7 +1166,7 @@ mod scene_compute {
     }
 
     /// 🗂️ Reads the open `TopicContribution` (`"cad.computer"` topic) shape per entry.
-    async fn cad_computer_fields(entry: &semio_framework::ProgramContributionEntry) -> Option<(String, String, String)> {
+    fn cad_computer_fields(entry: &semio_framework::ProgramContributionEntry) -> Option<(String, String, String)> {
         let topic_contribution = entry.topic_contribution.as_ref()?;
         if topic_contribution.topic != CAD_COMPUTER_TOPIC {
             return None;

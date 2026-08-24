@@ -7,7 +7,8 @@
 
 use crate::artifacts::gismap::schema::gis_map_descriptor_json;
 use crate::artifacts::gismap::GisMapSnapshot;
-use semio_framework_plugin::{build_tiled_map_scene, LocalizedLabel, SurfaceKind, TiledMapScene, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TiledMapScene, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "gis2d-view-map";
@@ -47,9 +48,9 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `GisMapSnapshot -> UiNode` read: default camera/render mode (`TiledMapScene::base`'s own
 /// defaults already match `Gis2dConfig::default()`'s render/vector/LOD mode — "combined"/"colored"/
 /// "automatic"), every layer visible, nothing selected/hovered.
-pub fn render(document: &GisMapSnapshot) -> UiNode {
+pub fn render(document: &GisMapSnapshot) -> UiAssemblyResult<BuiltNode> {
     let scene = TiledMapScene::base(gis_map_descriptor_json(document), GIS_MAP_VIEW_DEFAULT_CAMERA_JSON.into());
-    build_tiled_map_scene(SURFACE_ID, GIS_MAP_VIEW_CONTROLLER_ID, scene)
+    scene_surface(SURFACE_ID, ContractSurfaceKind::TiledMap, &scene)
 }
 //#endregion 🔖️Render
 

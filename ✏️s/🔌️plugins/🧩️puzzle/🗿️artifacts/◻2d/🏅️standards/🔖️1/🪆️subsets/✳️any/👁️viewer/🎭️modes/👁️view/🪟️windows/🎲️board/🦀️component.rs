@@ -80,7 +80,7 @@ fn world_meshes_json() -> String {
 
 /// 👁️ Pure `Puzzle2dSnapshot -> UiNode` read: default overhead camera, no selection/utility/engagement
 /// overlay, real node positions/shapes read straight off the document.
-pub fn render(document: &Puzzle2dSnapshot) -> semio_framework_plugin::plugin_app_close_prelude::BuiltNode {
+pub fn render(document: &Puzzle2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::BuiltNode> {
     let view = MeshView {
         camera_json: world3d_camera_json(PUZZLE2D_VIEW_DEFAULT_CAMERA_POSITION, PUZZLE2D_VIEW_DEFAULT_CAMERA_TARGET, PUZZLE2D_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json: world_meshes_json(),

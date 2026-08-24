@@ -245,6 +245,7 @@ enum Fem3dNumericalStage {
     PreparePcg,
     Pcg,
     ReadNodeScalar,
+    RecoverReaction,
     PublishNodeScalar,
     PrepareModal,
     Ldlt,
@@ -282,10 +283,14 @@ struct Fem3dNumericalChild {
     scalar_axis: usize,
     scalar: Fem3dSolverScalar,
     equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
+    full_equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
+    full_rhs: [f64; MAXIMUM_FIELDS * 6],
     free_order: usize,
     rhs: VecD,
     load_cursor: usize,
     load_node_cursor: usize,
+    reaction_entry: usize,
+    reaction_accumulator: f64,
 }
 
 impl Fem3dNumericalChild {
@@ -317,10 +322,14 @@ impl Fem3dNumericalChild {
             scalar_axis: 0,
             scalar: Fem3dSolverScalar::default(),
             equations: [[None; 6]; MAXIMUM_FIELDS],
+            full_equations: [[None; 6]; MAXIMUM_FIELDS],
+            full_rhs: [0.0; MAXIMUM_FIELDS * 6],
             free_order: 0,
             rhs: VecD::from_vec(Vec::new()),
             load_cursor: 0,
             load_node_cursor: 0,
+            reaction_entry: 0,
+            reaction_accumulator: 0.0,
         }
     }
 
@@ -499,11 +508,10 @@ impl Fem3dNumericalChild {
                     self.dof_cursor = 0;
                 } else {
                     let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_cursor];
-                    self.equations[self.node_cursor][self.dof_cursor] = self
-                        .assembly
-                        .as_ref()
-                        .and_then(|assembly| assembly.visual_equation_indices(&doc.nodes[self.node_cursor].id, dof))
-                        .and_then(|(_, compact)| compact);
+                    if let Some((full, compact)) = self.assembly.as_ref().and_then(|assembly| assembly.visual_equation_indices(&doc.nodes[self.node_cursor].id, dof)) {
+                        self.full_equations[self.node_cursor][self.dof_cursor] = Some(full);
+                        self.equations[self.node_cursor][self.dof_cursor] = compact;
+                    }
                     self.dof_cursor += 1;
                 }
             }
@@ -537,6 +545,9 @@ impl Fem3dNumericalChild {
                 let Some(node) = doc.nodes.get(self.load_node_cursor) else { return Err(b"fem3d.numerical-load-node".to_vec()) };
                 if &node.id == node_id {
                     let axis = Dof::from(*dof).index();
+                    if let Some(equation) = self.full_equations[self.load_node_cursor][axis] {
+                        self.full_rhs[equation] += *value;
+                    }
                     if let Some(equation) = self.equations[self.load_node_cursor][axis] {
                         self.rhs.add_at(equation, *value);
                     }
@@ -588,10 +599,32 @@ impl Fem3dNumericalChild {
                         self.scalar.residual[self.scalar_axis] = value.residual;
                         self.scalar.contour = self.scalar.contour.max(value.contour);
                     }
+                    self.reaction_entry = 0;
+                    self.reaction_accumulator = 0.0;
+                    self.stage = Fem3dNumericalStage::RecoverReaction;
+                }
+            }
+            Fem3dNumericalStage::RecoverReaction => {
+                let Some(row) = self.full_equations[self.node_cursor][self.scalar_axis] else {
                     self.scalar_axis += 1;
-                    if self.scalar_axis == 3 {
-                        self.stage = Fem3dNumericalStage::PublishNodeScalar;
+                    self.stage = if self.scalar_axis == 3 { Fem3dNumericalStage::PublishNodeScalar } else { Fem3dNumericalStage::ReadNodeScalar };
+                    return Ok(false);
+                };
+                if let Some((entry_row, entry_col, value)) = self.csr_build.as_ref().and_then(|build| build.visual_full_entry(self.reaction_entry)) {
+                    if entry_row == row {
+                        let displacement = self
+                            .csr_build
+                            .as_ref()
+                            .and_then(|build| build.visual_compact_index(entry_col))
+                            .and_then(|compact| self.pcg.as_ref().and_then(|pcg| pcg.visual_scalar(compact)))
+                            .map_or(0.0, |scalar| scalar.displacement);
+                        self.reaction_accumulator += value * displacement;
                     }
+                    self.reaction_entry += 1;
+                } else {
+                    self.scalar.reaction[self.scalar_axis] = self.reaction_accumulator - self.full_rhs[row];
+                    self.scalar_axis += 1;
+                    self.stage = if self.scalar_axis == 3 { Fem3dNumericalStage::PublishNodeScalar } else { Fem3dNumericalStage::ReadNodeScalar };
                 }
             }
             Fem3dNumericalStage::PublishNodeScalar => {

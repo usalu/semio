@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ Artifact-level contribution: the native packages this artifact's test adapters may reach. Host-package resolution walks from the CASE OWNER (this artifact root) through the contributions whose owner is a prefix of it, so a declaration made in the subset manifest would never be seen — that manifest carries the catalog and the no-oracle decision, this one carries the host wiring. `semio-s-plugin-flow` itself is not listed: the generated host discovers the subject crate on its own and links it only under its `sut` feature.",
+  "oracles": [],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ]
+}

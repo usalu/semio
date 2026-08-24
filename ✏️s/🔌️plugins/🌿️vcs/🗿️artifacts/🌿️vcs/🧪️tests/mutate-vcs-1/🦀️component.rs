@@ -234,8 +234,9 @@ mod subject {
                 return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &current, &expected));
             }
             outcome_matches(kind, &parse_json(outcome)?, &raised)?;
-            let projection = projection(&current)?;
-            only_named_member_moved(kind, &ctx.doc_json()?.str("moves"), &projection(&base)?, &projection)?;
+            let (was, now) = (projection(&base)?, projection(&current)?);
+            only_named_member_moved(kind, &ctx.doc_json()?.str("moves"), &was, &now)?;
+            let projection = now;
             Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
     }

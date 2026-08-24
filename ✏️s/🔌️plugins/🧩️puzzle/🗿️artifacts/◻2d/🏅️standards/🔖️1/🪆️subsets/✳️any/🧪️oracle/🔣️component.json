@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `Puzzle2dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "puzzle-2d-mutation-semantics",
+      "capabilities": ["puzzle-2d-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `Puzzle2dMutation` — a vocabulary in which handles live INSIDE nodes while the edges that join them are a sibling top-level collection, so `add-node-handle`, `connect-handles` and `disconnect-handles` reach across two collections at once, and in which the kind catalogs and the compatibility relation live in `meta` rather than beside the elements they govern. That is this subset's own specification, not a fact an external diagram or graph library could confirm or refute. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability (a kind must move the compared projection, or, where the committed outcome itself declares `mutation.no-op`, must provably move nothing) and footprint completeness (`before` and `after` may differ on exactly the fields the committed diff declares).",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "puzzle-2d-1-any",
+      "capability": "puzzle-2d-1-mutate",
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "move-node",
+        "replace-node-geometry",
+        "change-node-kind",
+        "edit-node-text",
+        "change-node-icon",
+        "scale-node",
+        "change-node-visible",
+        "change-node-locked",
+        "change-node-root",
+        "change-node-anchor",
+        "add-node-handle",
+        "remove-node-handle",
+        "replace-node-handle",
+        "connect-handles",
+        "disconnect-handles",
+        "replace-edge-geometry",
+        "change-edge-kind",
+        "change-edge-tips",
+        "change-edge-visible",
+        "change-edge-locked",
+        "change-manifest-id",
+        "connect-kind-compatibility",
+        "disconnect-kind-compatibility",
+        "replace-kind-catalogs"
+      ]
+    }
+  ]
+}

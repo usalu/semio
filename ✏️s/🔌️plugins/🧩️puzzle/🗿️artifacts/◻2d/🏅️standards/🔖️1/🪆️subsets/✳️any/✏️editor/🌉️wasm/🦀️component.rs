@@ -105,12 +105,12 @@ struct BoardSessionInner {
 
 #[cfg(target_arch = "wasm32")]
 impl BoardSessionInner {
-    async fn set_logical_size_and_maybe_resize_surface(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
+    fn set_logical_size_and_maybe_resize_surface(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
         self.host.set_size(lw, lh, dpr);
         self.gpu.resize_surface(pw, ph);
     }
 
-    async fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
+    fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         let scene = self.host.build_vector_scene();
         let clear = self.host.canvas_theme.raster_clear;
         self.gpu.render_frame(&scene, clear)
@@ -185,7 +185,7 @@ impl BoardSession {
         let pw = ((lw as f64 * dpr).round() as u32).max(1);
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let mut inner = self.state.borrow_mut();
-        inner.set_logical_size_and_maybe_resize_surface(lw, lh, dpr, pw, ph).await;
+        inner.set_logical_size_and_maybe_resize_surface(lw, lh, dpr, pw, ph);
     }
 
     #[wasm_bindgen(js_name = setSelectionScreenPreview)]
@@ -303,7 +303,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = drainEventsJson)]
     pub fn drain_events_json_wasm(&mut self) -> String {
-        self.state.borrow_mut().host.drain_events_json()
+        crate::editor::puzzle2d::drain_board_events_json(&mut self.state.borrow_mut().host)
     }
 
     #[wasm_bindgen(js_name = cameraJson)]
@@ -487,7 +487,7 @@ impl BoardSession {
     /// @emoji 🎨️ Presents one frame when a GPU surface is attached; otherwise no-operation `Ok`.
     #[wasm_bindgen(js_name = renderFrame)]
     pub fn render_frame(&mut self) -> Result<(), JsValue> {
-        self.state.borrow_mut().render_frame_gpu().await
+        self.state.borrow_mut().render_frame_gpu()
     }
 }
 // #endregion 🔖️WasmSession

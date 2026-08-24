@@ -50,7 +50,7 @@ mod tests {
     use serde_json::json;
     use store::{create_document_envelope, ArtifactCommand};
 
-    async fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
+    fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
         let (forward, _messages) = vcs::apply_mutation(document, operation).expect("valid mutation");
         let backwards = operation.inverse(document);
         let mut restored = forward.clone();
@@ -62,11 +62,11 @@ mod tests {
         forward
     }
 
-    async fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
+    fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {
         dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
     }
 
-    async fn feature(id: &str) -> crate::artifacts::gismap::MapFeature {
+    fn feature(id: &str) -> crate::artifacts::gismap::MapFeature {
         crate::artifacts::gismap::MapFeature { id: id.into(), data: dsl_of(&json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
     }
 
@@ -185,7 +185,7 @@ mod tests {
 //#endregion 🔹Tests
 
 pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
+    let (next, _messages) = semio_framework_plugin::resolve_ready(vcs::apply_mutation(snapshot, mutation))?;
     // 🕸️ `drawing`/`value` are pure functions of `(positions, routes, regions)` — re-derive them
     // after every mutation so the composed children never drift from what they actually describe
     // (see `crate::artifacts::gismap::🦀️component.rs`'s `🔖️Composition` region doc).
@@ -222,35 +222,45 @@ pub const KINDS: &[&str] = &[
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
 ///
 /// A generated test host links only `semio-repo-test-host` and, behind its `sut` feature, this crate —
-/// there is no `serde`, no `serde_json` and no `protocol` reachable from an adapter, and this crate's
-/// `protocol`/`store` extern-crate aliases are private — so neither `GisMapMutation` nor `GisMapSnapshot`
-/// can be named there and hand-transcribing either into a Rust literal would be a second copy of the
-/// committed specification vector, free to drift away from it. This bridge is the whole surface an
-/// adapter needs, and every type in its signature is a `str`.
-/// The committed snapshots carry readable PLACEHOLDERS in their two derived child slots — `std`'s
-/// `DefaultHasher` leaves its digest unspecified, so it is never frozen into a fixture — so the decode
-/// funnels every snapshot through `gis_map_snapshot_with_derived_children`, exactly as this subset's
-/// own committed fixture tests do, and the comparison then stays EXACT instead of exempting a field.
+/// no `serde`, no `serde_json` and no `protocol` is reachable from an adapter, and this crate's
+/// `protocol`/`store` extern-crate aliases are private — so neither `GisMapMutation` nor
+/// `GisMapSnapshot` can be named there, and hand-transcribing either into a Rust literal
+/// would be a second copy of the committed specification vector, free to drift away from it. This
+/// bridge is the whole surface an adapter needs, and every type in its signature is a `str`.
+/// Every committed snapshot is funnelled through `gis_map_snapshot_with_derived_children` on the way
+/// in — `std`'s `DefaultHasher` leaves its digest unspecified, so the two derived child handles are
+/// committed as readable placeholders rather than frozen values, and this is the same call the
+/// subset's own fixture tests make. Funnelling BOTH the base and the expected after-snapshot keeps the
+/// adapter's comparison exact instead of exempting a field.
 ///
-/// The report carries the forward half (`snapshot`, `diff`, `messages`) and the inverse half
-/// (`inverseSteps`, `inverseSnapshot`, `inverseMessages`), so the inverse law is checked against the
-/// mutation's OWN computed inverse rather than against a hand-written undo.
+///
+/// `after_json` is decoded through the SAME path as `base_json` and returned as `expectedSnapshot`,
+/// so the caller compares like with like. The report carries the forward half (`base`, `snapshot`,
+/// `diff`, `messages`) and the inverse half (`inverseSteps`, `inverseSnapshot`, `inverseMessages`),
+/// so the inverse law is checked against the mutation's OWN computed inverse rather than against a
+/// hand-written undo.
 ///
 /// @see ../../🧪️oracle/🔣️component.json — the catalog and the recorded no-oracle decision.
-pub fn gis_map_mutation_report_json(base_json: &str, mutation_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<GisMapSnapshot, String> { Ok(crate::artifacts::gismap::gis_map_snapshot_with_derived_children(serde_json::from_str(text).map_err(|error| error.to_string())?)) };
+pub fn gis_map_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    let decode_snapshot = |text: &str| -> Result<GisMapSnapshot, String> {
+        let decoded: GisMapSnapshot = serde_json::from_str(text).map_err(|error| error.to_string())?;
+        Ok(crate::artifacts::gismap::gis_map_snapshot_with_derived_children(decoded))
+    };
     let base = decode_snapshot(base_json)?;
+    let expected = decode_snapshot(after_json)?;
     let mutation: GisMapMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
-    let forward = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::inverse(&mutation, &base);
+    let forward = <GisMapMutation as Mutation<GisMapSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let inverse = <GisMapMutation as Mutation<GisMapSnapshot>>::inverse(&mutation, &base);
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
-        let outcome = <GisMapMutation as protocol::Mutation<GisMapSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+        let outcome = <GisMapMutation as Mutation<GisMapSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
     let report = serde_json::json!({
+        "base": serde_json::to_value(&base).map_err(|error| error.to_string())?,
+        "expectedSnapshot": serde_json::to_value(&expected).map_err(|error| error.to_string())?,
         "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
         "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
         "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,

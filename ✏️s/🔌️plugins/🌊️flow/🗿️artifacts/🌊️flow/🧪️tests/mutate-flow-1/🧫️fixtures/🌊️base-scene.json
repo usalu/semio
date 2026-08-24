@@ -1,0 +1,51 @@
+{
+  "_provenance": "🧫️ Derived ONCE from this vocabulary's own committed leaf fixtures, never invented here. `note-alpha` and `note-beta` are the two widgets `connect-widgets`' committed before-state seeds (🧬️schema/🧬️mutations/🔗️connect-widgets/🧪️tests/refuses-a-parallel-synapse-as-a-no-op/🦀️component.rs), carried over verbatim as `inputNote`s with their `Alpha`/`Beta` text; `note-alpha` is also the widget `create-widget` and `replace-widget` name in their own committed payloads. `synapse-1` is the synapse that same committed before-state seeds, on exactly the `out`→`in` port pair `update-synapse-endpoints`' committed payload re-declares. The layout is `move-widgets`' committed payload verbatim — 4,8 for `note-alpha` and 16,32 for `note-beta` — which is precisely why that kind's own committed fixture pins a no-op, and why this case's `move-widgets` row has to move somewhere else to be observable. `note-gamma`, `note-omega` and `synapse-3` are this case's own derivation: the committed leaf fixtures each pin a GUARD branch, so two widgets and one synapse are all they seed, while `reorder-synapses` needs a second synapse to have anywhere to move to and `delete-widget` needs one widget no synapse touches so the kind is measured on its own rather than on the cascade its diff also performs.",
+  "widgets": [
+    {
+      "kind": "inputNote",
+      "id": "note-alpha",
+      "text": "Alpha"
+    },
+    {
+      "kind": "inputNote",
+      "id": "note-beta",
+      "text": "Beta"
+    },
+    {
+      "kind": "inputNote",
+      "id": "note-gamma",
+      "text": "Gamma"
+    },
+    {
+      "kind": "inputNote",
+      "id": "note-omega",
+      "text": "Omega"
+    }
+  ],
+  "synapses": [
+    {
+      "id": "synapse-1",
+      "from": "note-alpha",
+      "to": "note-beta",
+      "fromPort": "out",
+      "toPort": "in"
+    },
+    {
+      "id": "synapse-3",
+      "from": "note-beta",
+      "to": "note-gamma",
+      "fromPort": "out",
+      "toPort": "in"
+    }
+  ],
+  "layout": {
+    "note-alpha": {
+      "x": 4.0,
+      "y": 8.0
+    },
+    "note-beta": {
+      "x": 16.0,
+      "y": 32.0
+    }
+  }
+}

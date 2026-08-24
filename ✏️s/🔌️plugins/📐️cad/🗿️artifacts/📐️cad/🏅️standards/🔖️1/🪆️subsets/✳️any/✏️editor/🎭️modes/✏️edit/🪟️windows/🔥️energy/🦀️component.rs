@@ -6,7 +6,7 @@ use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::options;
 use crate::editor::cad::terminology::CadLabels;
 use crate::editor::cad::{CadPlayRuntime, CadPlayView};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowEngagement, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowEngagement, WindowKindDefinition, WindowMeasure, WindowOptions};
 use ui_wgpu::wgpu::SurfaceKind;
 
 //#region 🔖️Constants
@@ -46,7 +46,7 @@ pub fn window_measures(runtime: &CadPlayRuntime, is_de: bool) -> Vec<WindowMeasu
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(view: &CadPlayView, active_utility: Option<&str>, options: CadDislocateOptions) -> UiNode {
+pub fn render(view: &CadPlayView, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
     edit::build_world_scene_for_pane(view, PANE, SURFACE_ID, active_utility, options)
 }
 

@@ -4,10 +4,8 @@
 //! document summary.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle_extension_id, Puzzle2dScene, PUZZLE2D_FIXTURE_SCHEMA};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasChildren};
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use semio_framework_ui_contract as ui;
+use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle_extension_id, ui_label, ui_node_list, Puzzle2dScene, PUZZLE2D_FIXTURE_SCHEMA};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_BODY_PROPERTIES: &str = "puzzle2d.play.properties";
@@ -32,14 +30,15 @@ pub fn definition() -> PanelTabDefinition {
 /// render against and always falls through to the document summary. Flagged to the coordinator as
 /// the same framework-level gap noted throughout this crate's other panels — not fixed here
 /// (framework file, out of this crate's remit).
-pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> BuiltNode {
-    ui::column()
-        .children(vec![
-            ui::text(format!("{}: {PUZZLE2D_FIXTURE_SCHEMA}", labels.schema.as_str())).build(),
-            ui::text(format!("{}: {}", labels.extension.as_str(), puzzle_extension_id())).build(),
-            ui::text(format!("{}: {}", labels.nodes.as_str(), fixture_nodes(&envelope.fixture).len())).build(),
-            ui::text(format!("{}: {}", labels.edges.as_str(), fixture_edges(&envelope.fixture).len())).build(),
-        ])
+pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let rows = ui_node_list([
+        tree_item_desc("puzzle2d-play-inspector.schema", ui_label(labels.schema.as_str())?, Some(PUZZLE2D_FIXTURE_SCHEMA.into())),
+        tree_item_desc("puzzle2d-play-inspector.extension", ui_label(labels.extension.as_str())?, Some(puzzle_extension_id().into())),
+        tree_item_desc("puzzle2d-play-inspector.nodes", ui_label(labels.nodes.as_str())?, Some(fixture_nodes(&envelope.fixture).len().to_string())),
+        tree_item_desc("puzzle2d-play-inspector.edges", ui_label(labels.edges.as_str())?, Some(fixture_edges(&envelope.fixture).len().to_string())),
+    ])?;
+    PanelTreeBuilder::new("puzzle2d-play-inspector")?
+        .section("puzzle2d-play-inspector.summary", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?
         .build()
 }
 //#endregion 🔖️Render

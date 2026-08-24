@@ -167,7 +167,7 @@ impl CadDiff {
     }
 }
 
-async fn apply_nodes_delta(nodes: &[CadNode], delta: &CadNodesDelta) -> protocol::MutationApplyResult<Vec<CadNode>> {
+fn apply_nodes_delta(nodes: &[CadNode], delta: &CadNodesDelta) -> protocol::MutationApplyResult<Vec<CadNode>> {
     for (index, id) in delta.removed.iter().enumerate() {
         if !nodes.iter().any(|node| &node.id == id) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed node does not exist").at(["removed".to_string(), index.to_string()]));

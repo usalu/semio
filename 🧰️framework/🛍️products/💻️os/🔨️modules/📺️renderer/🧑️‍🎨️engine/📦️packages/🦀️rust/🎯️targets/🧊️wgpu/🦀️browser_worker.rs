@@ -1,10 +1,10 @@
 //! 🧵️ Dedicated browser Worker owner for the complete frame transaction and OffscreenCanvas surface.
 
 use crate::kernel_seam::{HostWaker, KernelSeam};
-use crate::program_bridge::{filter_plugins, parse_plugin_entries, ProgramBridgeEntry};
+use crate::program_bridge::{ProgramBridgeEntry, filter_plugins, parse_plugin_entries};
 use crate::shell::ShellState;
 use crate::{AppInteractionState, AppPresenter, AppRuntime, RendererAssetFetchOwner, RuntimeMailbox};
-use infinite_world::world::{WorldAssetResponsePage, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES};
+use infinite_world::world::{WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WorldAssetResponsePage};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::rc::Rc;

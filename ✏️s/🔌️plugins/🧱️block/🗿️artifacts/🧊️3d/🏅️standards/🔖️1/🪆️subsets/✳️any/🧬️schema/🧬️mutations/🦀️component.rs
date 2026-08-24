@@ -67,6 +67,52 @@ pub enum Block3dMutation {
     ScaleCamera3d(ScaleCamera3d),
     ChangeMetaDescription(ChangeMetaDescription),
 }
+
+//#region 🏷️Kinds
+/// 🏷️ The kebab-case spelling of every [`Block3dMutation`] variant, in declaration order — the exact
+/// vocabulary the `block-3d-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// the `mutate-block-3d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
+pub const KINDS: &[&str] = &[
+    "rename-object-kind",
+    "change-object-kind-label",
+    "change-object-kind-variant",
+    "change-object-kind-description",
+    "change-object-kind-icon",
+    "change-object-kind-unit",
+    "create-representation",
+    "delete-representation",
+    "rename-representation",
+    "change-representation-mesh-url",
+    "change-representation-lod",
+    "change-representation-description",
+    "add-representation-tag",
+    "remove-representation-tag",
+    "add-representation-attribute",
+    "remove-representation-attribute",
+    "create-vortex-kind",
+    "delete-vortex-kind",
+    "rename-vortex-kind",
+    "change-vortex-kind-label",
+    "change-vortex-kind-color",
+    "change-vortex-kind-default-cable-kind",
+    "create-vortex",
+    "delete-vortex",
+    "move-vortex",
+    "resize-vortex",
+    "change-vortex-vortex-kind",
+    "change-vortex-label",
+    "add-compatibility-rule",
+    "remove-compatibility-rule",
+    "add-attribute",
+    "remove-attribute",
+    "add-author",
+    "remove-author",
+    "move-camera3d",
+    "scale-camera3d",
+    "change-meta-description",
+];
+//#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
 pub use super::add_attribute::mutation::{add_attribute, AddAttribute};
@@ -360,5 +406,24 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🧪️KindsCatalog
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed oracle
+    /// manifest's catalog — the framework never parses Rust, so this is the only thing that keeps the
+    /// declared vocabulary and the measured one from drifting apart.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Block3dMutation as protocol::SemanticMutation<Block3dSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Block3dMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 }
 //#endregion 🧪️Tests

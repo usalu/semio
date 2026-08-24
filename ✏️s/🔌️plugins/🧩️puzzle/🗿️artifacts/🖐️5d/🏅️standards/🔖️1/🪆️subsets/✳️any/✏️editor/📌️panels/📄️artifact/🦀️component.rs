@@ -5,7 +5,7 @@
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{
-    find_part_by_grip_full_id, puzzle5d_grip_full_id, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_INTERACTION_DOMAIN,
+    find_part_by_grip_full_id, puzzle5d_grip_full_id, ui_label, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, PUZZLE5D_INTERACTION_DOMAIN,
     PUZZLE5D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren, Trigger};
@@ -75,17 +75,16 @@ fn select_action(granularity: &str, id: &str) -> semio_framework_plugin::UiAssem
 }
 
 fn selectable_item(
-    id: impl Into<String>,
-    label: impl Into<semio_framework_ui_contract::Label>,
+    id: impl AsRef<str>,
+    label: impl AsRef<str>,
     icon: &str,
     action: semio_framework_plugin::UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
     let (action_id, args) = action?;
-    let builder = ui::tree_item(label)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.tree-item.label", "tree item label admission failed"))?
-        .try_id(id.into())
+    let builder = ui::tree_item(ui_label(label)?)
+        .try_id(id.as_ref())
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.tree-item.id", "tree item id admission failed"))?
-        .icon(icon);
+        .icon(semio_framework_plugin::UiText::try_from_str(icon).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.tree-item.icon", "tree item icon admission failed"))?);
     match args {
         Some(args) => builder.try_on_with(Trigger::Activate, action_id, args),
         None => builder.try_on(Trigger::Activate, action_id),
@@ -96,7 +95,7 @@ fn selectable_item(
 pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut part_items = semio_framework_plugin::UiFixedList::default();
     for part in &envelope.document.parts {
-        let mut grip_items = semio_framework_plugin::UiFixedList::default();
+        let mut grip_items = semio_framework_plugin::UiFixedList::<BuiltNode>::default();
         for grip in &part.grips {
             let full_id = puzzle5d_grip_full_id(&part.id, &grip.id);
             let grip_item = selectable_item(full_id.clone(), format!("{} ({})", grip.id, grip.grip_kind), "circle-dot", select_action(PUZZLE5D_GRANULARITY_GRIP, &full_id))?
@@ -107,7 +106,7 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framew
                 .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.grips", "grip list admission failed"))?;
         }
         let part_item = selectable_item(part.id.clone(), part_label(part), "box", select_action(PUZZLE5D_GRANULARITY_PART, &part.id))?
-            .description(part.part_kind.clone())
+            .description(semio_framework_plugin::UiText::try_from_string(part.part_kind.clone()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.part-description", "part description admission failed"))?)
             .try_children(grip_items)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.part-children", "part child admission failed"))?
             .try_build()
@@ -131,8 +130,8 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framew
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.fasteners", "fastener list admission failed"))?;
     }
     PanelTreeBuilder::new("puzzle5d-play-document")?
-        .section_or_placeholder("puzzle5d-play-document.parts", Some(labels.parts.as_str().into()), true, part_items, labels.none.as_str())?
-        .section_or_placeholder("puzzle5d-play-document.fasteners", Some(labels.fasteners.as_str().into()), false, fastener_items, labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-document.parts", Some(ui_label(labels.parts.as_str())?), true, part_items, ui_label(labels.none.as_str())?)?
+        .section_or_placeholder("puzzle5d-play-document.fasteners", Some(ui_label(labels.fasteners.as_str())?), false, fastener_items, ui_label(labels.none.as_str())?)?
         .interaction_domain(PUZZLE5D_INTERACTION_DOMAIN)?
         .build()
 }

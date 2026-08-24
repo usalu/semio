@@ -22,6 +22,26 @@ fn ui_assembly_error(code: &'static str) -> semio_framework_plugin::PluginAssemb
     semio_framework_plugin::PluginAssemblyError::new(code, "fixed UI admission failed")
 }
 
+pub(crate) fn ui_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiText> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).ok_or_else(|| ui_assembly_error("ui.text"))
+}
+
+pub(crate) fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| ui_assembly_error("ui.label"))
+}
+
+fn ui_id<B: HasBase>(builder: B, id: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<B> {
+    builder.try_id(id).map_err(|_| ui_assembly_error("ui.node.id"))
+}
+
+fn ui_child<B: HasChildren>(builder: B, child: impl Into<semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<B> {
+    builder.try_child(child).map_err(|_| ui_assembly_error("ui.node.child"))
+}
+
+fn ui_build<B: Buildable>(builder: B) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    builder.try_build().map_err(|_| ui_assembly_error("ui.node.build"))
+}
+
 pub(crate) fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
     semio_framework_plugin::UiText::try_from_str(value.as_ref())
         .map(semio_framework_plugin::UiValue::Text)
@@ -55,12 +75,7 @@ pub(crate) fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plug
 /// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
 pub(crate) fn scene_surface<T: ui_wgpu::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let id = id.into();
-    let props = semio_framework_ui_scene::encode(kind, scene).map_err(|_| ui_assembly_error("ui.scene.encode"))?;
-    semio_framework_ui_contract::surface(props)
-        .try_id(&id)
-        .map_err(|_| ui_assembly_error("ui.scene.id"))?
-        .try_build()
-        .map_err(|_| ui_assembly_error("ui.scene.build"))
+    semio_framework_plugin::scene_surface(&id, kind, scene)
 }
 
 /// 📖 Renders the shared generation list without routing through Flow's legacy renderer node.
@@ -90,43 +105,52 @@ pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str,
         let args = ui_value_map([("id", ui_value_text(&entry.id)? )])?;
         let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(args))?)?;
         if let Component::TreeItem(props) = &mut item.component {
-            props.icon = Some("layers".into());
+            props.icon = Some(ui_text("layers")?);
             let mut row_actions = semio_framework_plugin::UiFixedList::default();
             let rename_args = ui_value_map([("id", ui_value_text(&entry.id)?), ("name", ui_value_text(format!("{} copy", entry.name))?)])?;
             let (rename_action, rename_args) = factory.action("renameGeneration", Some(rename_args))?;
             row_actions
-                .try_push(RowAction { icon: "pencil".into(), label: Some(label("rename").into()), action: ActionBinding { trigger: Trigger::Activate, action: rename_action, args: rename_args, capability: None }, placement: RowActionPlacement::Menu })
+                .try_push(RowAction { icon: ui_text("pencil")?, label: Some(ui_label(label("rename"))?), action: ActionBinding { trigger: Trigger::Activate, action: rename_action, args: rename_args, capability: None }, placement: RowActionPlacement::Menu })
                 .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
             let remove_args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
             let (remove_action, remove_args) = factory.action("removeGeneration", Some(remove_args))?;
             row_actions
-                .try_push(RowAction { icon: "trash-2".into(), label: Some(label("remove").into()), action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None }, placement: RowActionPlacement::Menu })
+                .try_push(RowAction { icon: ui_text("trash-2")?, label: Some(ui_label(label("remove"))?), action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None }, placement: RowActionPlacement::Menu })
                 .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
             props.row_actions = row_actions;
         }
         items.try_push(item).map_err(|_| ui_assembly_error("ui.generation.items"))?;
     }
     PanelTreeBuilder::new(surface_prefix)?
-        .section_or_placeholder(format!("{surface_prefix}.generations"), Some(label("generations").into()), true, items, label("empty"))?
-        .section(format!("{surface_prefix}.actions"), Some(label("actions").into()), true, ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
+        .section_or_placeholder(format!("{surface_prefix}.generations"), Some(ui_label(label("generations"))?), true, items, label("empty"))?
+        .section(format!("{surface_prefix}.actions"), Some(ui_label(label("actions"))?), true, ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
         .build()
 }
 
-fn generation_control_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: serde_json::Value) -> B {
+fn generation_control_action<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: semio_framework_plugin::UiValue) -> semio_framework_plugin::UiAssemblyResult<B> {
     let (action, args) = ActionFactory::new(controller_id).action(action, Some(args))?;
     match args {
-        Some(args) => builder.on_with(Trigger::Change, action, args),
-        None => builder.on(Trigger::Change, action),
+        Some(args) => builder.try_on_with(Trigger::Change, action, args).map_err(|_| ui_assembly_error("ui.control.binding")),
+        None => builder.try_on(Trigger::Change, action).map_err(|_| ui_assembly_error("ui.control.binding")),
     }
+}
+
+fn generation_control_args(generation_id: &str, question_id: &str, field_index: Option<usize>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut values = vec![("generationId", ui_value_text(generation_id)?), ("questionId", ui_value_text(question_id)?)];
+    if let Some(field_index) = field_index {
+        values.push(("fieldIndex", semio_framework_plugin::UiValue::Number(field_index as f64)));
+    }
+    ui_value_map(values)
 }
 
 /// 📝 Renders generation questions as semantic controls with typed change bindings.
 pub(crate) fn generation_form(spec: &flow::playbook::PlaybookSpec, values: &serde_json::Map<String, serde_json::Value>, controller_id: &'static str, action: &str, generation_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut root = column().id("generate.form");
+    let mut root = ui_id(column(), "generate.form")?;
     let mut has_children = false;
     for step in &spec.steps {
         if !step.blocks.is_empty() {
-            root = root.child(text(step.title.clone()).id(format!("generate.step.{}", step.id)));
+            let heading = ui_build(ui_id(text(ui_label(&step.title)?), format!("generate.step.{}", step.id))?)?;
+            root = ui_child(root, heading)?;
             has_children = true;
         }
         for question in &step.blocks {
@@ -135,50 +159,66 @@ pub(crate) fn generation_form(spec: &flow::playbook::PlaybookSpec, values: &serd
             }
             let value = values.get(&question.id).cloned().unwrap_or_else(|| flow::playbook::dsl_value_to_json(flow::playbook::default_value_for_block(question)));
             let field_id = format!("generate.form.{}", question.id);
-            let args = || serde_json::json!({ "generationId": generation_id, "questionId": question.id });
+            let args = || generation_control_args(generation_id, &question.id, None);
             let control = match question.kind.as_str() {
                 "text" | "longText" => {
-                    generation_control_action(input(if question.kind == "longText" { InputKind::LongText } else { InputKind::Text }).value(value.as_str().unwrap_or_default()).id(format!("{field_id}.input")), controller_id, action, args()).build()
+                    let input = input(if question.kind == "longText" { InputKind::LongText } else { InputKind::Text }).value(ui_text(value.as_str().unwrap_or_default())?);
+                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
                 }
-                "number" => generation_control_action(input(InputKind::Number).value(value.as_f64().map(|number| number.to_string()).unwrap_or_default()).id(format!("{field_id}.input")), controller_id, action, args()).build(),
-                "slider" => generation_control_action(
-                    slider(value.as_f64().unwrap_or_else(|| question.min.unwrap_or(0.0))).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0)).id(format!("{field_id}.slider")),
-                    controller_id,
-                    action,
-                    args(),
-                )
-                .build(),
-                "boolean" => generation_control_action(toggle(value.as_bool().unwrap_or(false)).icon("toggle-left").text(question.label.clone()).id(format!("{field_id}.toggle")), controller_id, action, args()).build(),
+                "number" => {
+                    let value = value.as_f64().map(|number| number.to_string()).unwrap_or_default();
+                    let input = input(InputKind::Number).value(ui_text(value)?);
+                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
+                }
+                "slider" => {
+                    let slider = slider(value.as_f64().unwrap_or_else(|| question.min.unwrap_or(0.0))).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0));
+                    ui_build(generation_control_action(ui_id(slider, format!("{field_id}.slider"))?, controller_id, action, args()?)?)?
+                }
+                "boolean" => {
+                    let toggle = toggle(value.as_bool().unwrap_or(false)).icon(ui_text("toggle-left")?).text(ui_label(&question.label)?);
+                    ui_build(generation_control_action(ui_id(toggle, format!("{field_id}.toggle"))?, controller_id, action, args()?)?)?
+                }
                 "single" => {
-                    let items = question.options.as_ref().into_iter().flatten().map(|option| SelectItem { value: option.value.clone(), label: option.label.clone().into() });
-                    generation_control_action(select(value.as_str().unwrap_or_default()).items(items).id(format!("{field_id}.select")), controller_id, action, args()).build()
+                    let mut select = select(ui_text(value.as_str().unwrap_or_default())?);
+                    for option in question.options.as_deref().unwrap_or_default() {
+                        select = select.try_item(ui_text(&option.value)?, ui_label(&option.label)?).map_err(|_| ui_assembly_error("ui.select.item"))?;
+                    }
+                    ui_build(generation_control_action(ui_id(select, format!("{field_id}.select"))?, controller_id, action, args()?)?)?
                 }
                 "vector" => {
-                    let numbers = value.as_array().cloned().unwrap_or_else(|| question.fields.as_ref()?.map(|fields| fields.iter().map(|field| serde_json::json!(field.value.unwrap_or(0.0))).collect()).unwrap_or_default());
-                    let labels: Vec<String> = question
-                        .fields
-                        .as_ref()?
-                        .map(|fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect())
-                        .unwrap_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect());
-                    let fields = numbers.iter().enumerate().map(|(index, number)| {
-                        let args = serde_json::json!({ "generationId": generation_id, "questionId": question.id, "fieldIndex": index });
-                        let control = generation_control_action(input(InputKind::Number).value(number.as_f64().map(|entry| entry.to_string()).unwrap_or_default()).id(format!("{field_id}.vector.{index}.input")), controller_id, action, args);
-                        field(labels.get(index).cloned().unwrap_or_else(|| format!("Field {}", index + 1))).id(format!("{field_id}.vector.{index}")).child(control).build()
+                    let numbers = value.as_array().cloned().unwrap_or_else(|| {
+                        question.fields.as_deref().unwrap_or_default().iter().map(|field| serde_json::json!(field.value.unwrap_or(0.0))).collect()
                     });
-                    column().id(format!("{field_id}.vector")).children(fields).build()
+                    let labels: Vec<String> = question.fields.as_deref().map(|fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect()).unwrap_or_else(|| {
+                        numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect()
+                    });
+                    let mut vector = ui_id(column(), format!("{field_id}.vector"))?;
+                    for (index, number) in numbers.iter().enumerate() {
+                        let input = input(InputKind::Number).value(ui_text(number.as_f64().map(|entry| entry.to_string()).unwrap_or_default())?);
+                        let input = ui_id(input, format!("{field_id}.vector.{index}.input"))?;
+                        let input = ui_build(generation_control_action(input, controller_id, action, generation_control_args(generation_id, &question.id, Some(index))?)?)?;
+                        let label = labels.get(index).cloned().unwrap_or_else(|| format!("Field {}", index + 1));
+                        let field = ui_id(field(ui_label(label)?), format!("{field_id}.vector.{index}"))?;
+                        vector = ui_child(vector, ui_build(ui_child(field, input)?)?)?;
+                    }
+                    ui_build(vector)?
                 }
-                "note" => text(question.text.clone().unwrap_or_default()).id(format!("{field_id}.note")).build(),
-                "image" => text(question.src.clone().unwrap_or_else(|| "(no image)".into())).id(format!("{field_id}.image")).build(),
-                _ => generation_control_action(input(InputKind::Text).value(value.to_string()).id(format!("{field_id}.input")), controller_id, action, args()).build(),
+                "note" => ui_build(ui_id(text(ui_label(question.text.clone().unwrap_or_default())?), format!("{field_id}.note"))?)?,
+                "image" => ui_build(ui_id(text(ui_label(question.src.clone().unwrap_or_else(|| "(no image)".into()))?), format!("{field_id}.image"))?)?,
+                _ => {
+                    let input = input(InputKind::Text).value(ui_text(value.to_string())?);
+                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
+                }
             };
-            root = root.child(field(question.label.clone()).id(field_id).child(control));
+            let field = ui_id(field(ui_label(&question.label)?), field_id)?;
+            root = ui_child(root, ui_build(ui_child(field, control)?)?)?;
             has_children = true;
         }
     }
     if !has_children {
-        return text("No input widgets to generate from.").build();
+        return ui_build(text(ui_label("No input widgets to generate from.")?));
     }
-    root.build()
+    ui_build(root)
 }
 //#endregion 🖼️SemanticUi
 

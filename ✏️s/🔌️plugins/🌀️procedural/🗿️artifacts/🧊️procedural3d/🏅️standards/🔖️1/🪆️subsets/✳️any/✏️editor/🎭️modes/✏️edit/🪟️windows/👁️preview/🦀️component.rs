@@ -59,7 +59,7 @@ pub fn preview_window_measures(config: &Procedural3dConfig, procedural_action: i
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession, active_utility: &str) -> BuiltNode {
+pub fn render(document: &Procedural3dSnapshot, config: &Procedural3dConfig, session: &FlowEvalSession, active_utility: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = session.eval_json().to_string();
     let (meshes_json, instances_json) = preview_payload_from_eval_with_session(&eval_json, &document.fixture, config, Some(session));
     let preview_status = preview_status_json(&eval_json, &document.fixture);

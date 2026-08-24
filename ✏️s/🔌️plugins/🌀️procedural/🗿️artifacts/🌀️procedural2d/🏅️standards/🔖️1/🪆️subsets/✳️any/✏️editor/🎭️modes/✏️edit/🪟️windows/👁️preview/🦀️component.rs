@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Overlays evaluated draw-handle layers, plus (in `"wire"` show mode) a schematic node box per
 /// visible widget.
-pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> BuiltNode {
+pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, session: &FlowEvalSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.fixture;
     let eval_json = session.eval_json();
     let prefix = "procedural2d-preview";

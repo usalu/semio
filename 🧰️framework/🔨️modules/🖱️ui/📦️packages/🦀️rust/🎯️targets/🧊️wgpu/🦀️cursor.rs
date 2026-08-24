@@ -219,9 +219,9 @@ fn winit_cursor_icon(cursor: SemioCursor) -> winit::window::CursorIcon {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::wgpu::Label;
     use crate::wgpu::component::ui::UiPresence;
     use crate::wgpu::geometry::Rect;
-    use crate::wgpu::Label;
     use std::collections::HashMap;
 
     fn hit(kind: HitKind, axis: Option<DragAxis>) -> HitTarget<()> {

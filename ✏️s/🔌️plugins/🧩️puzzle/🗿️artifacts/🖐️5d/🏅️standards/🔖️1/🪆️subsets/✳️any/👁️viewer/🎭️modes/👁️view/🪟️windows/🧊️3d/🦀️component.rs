@@ -72,7 +72,7 @@ fn instances_json(document: &Puzzle5dSnapshot) -> String {
 /// 👁️ Pure `Puzzle5dSnapshot -> UiNode` read: default camera, no selection, no gumball, no
 /// engagement/brush-preview overlay. Grip/fastener overlays are a follow-up, not required for a
 /// first real read-only look at the document's placed parts.
-pub fn render(document: &Puzzle5dSnapshot) -> semio_framework_plugin::plugin_app_close_prelude::BuiltNode {
+pub fn render(document: &Puzzle5dSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::BuiltNode> {
     let view = MeshView { camera_json: default_camera_json(), meshes_json: meshes_json(document), instances_json: instances_json(document), selection_json: world3d_selection_json("pick", &[], None) };
     MeshWindowKit::render(&view)
 }

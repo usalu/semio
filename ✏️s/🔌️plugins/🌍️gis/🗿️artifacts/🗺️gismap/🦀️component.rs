@@ -34,7 +34,7 @@ pub struct MapFeature {
 }
 
 impl Identified<String> for MapFeature {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }
@@ -47,13 +47,13 @@ pub struct MapFeaturePatch {
 }
 
 impl Patchable<MapFeaturePatch> for MapFeature {
-    async fn apply_patch(&mut self, patch: &MapFeaturePatch) {
+    fn apply_patch(&mut self, patch: &MapFeaturePatch) {
         if let Some(data) = &patch.data {
             self.data = data.clone();
         }
     }
 
-    async fn diff_patch(&self, other: &Self) -> Option<MapFeaturePatch> {
+    fn diff_patch(&self, other: &Self) -> Option<MapFeaturePatch> {
         (self.data != other.data).then(|| MapFeaturePatch { data: Some(other.data.clone()) })
     }
 }

@@ -36,7 +36,7 @@
 //! so they share its diff. What differs is the vocabulary that produces it, which is what a subset
 //! is.
 //!
-//! # ⚠️ Why this vocabulary declares no mutation catalog and no exhaustive case
+//! # Where this vocabulary is observable, and where it is not
 //!
 //! `encode_jpg` (`../../✳️any/🚪️io/🦀️component.rs`) writes a baseline file and nothing else, by
 //! construction: `out.extend_from_slice(&[0xFF, 0xC0])` for the frame marker, `precision: 8`, a
@@ -46,18 +46,19 @@
 //! entropy-coded scan that follows it and any other value would describe bytes the encoder did not
 //! write, exactly as PNG's IHDR and TIFF's strip tags are constrained.
 //!
-//! The consequence is worth stating rather than working around: an exhaustive `mutate-*` case built
-//! on this catalog would report every one of its kinds as green while the mutation never reached a
-//! byte, because the subject's re-serialization discards all of them. That is the precise shape of
-//! shallow green that ticket 26/08/23/END-TO-END-TESTING-REFACTOR exists to remove, so a catalog is
-//! deliberately NOT declared for this subset and this note is the record of why. The finding it
-//! rests on is a real, reportable property of this repository's JPEG encoder: it can serialize a
-//! conforming baseline JPEG and no other kind of JPEG at all.
+//! That is a real and reportable property of this repository's JPEG encoder: it can serialize a
+//! conforming baseline JPEG and no other kind of JPEG at all. What follows from it is NOT that this
+//! vocabulary is untestable — it is that a BYTE-level exhaustive case built on this catalog would
+//! report every kind as green while the mutation never reached a byte, which is the precise shape of
+//! shallow green ticket 26/08/23/END-TO-END-TESTING-REFACTOR exists to remove.
 //!
-//! The vocabulary itself is real and used: the analyzer, the builder and the subset validator all
-//! read the same five axes on an already-decoded snapshot, which is where a conformance verdict
-//! actually lives, and every kind here is proven against them by the tests at the bottom of this
-//! file.
+//! The catalog `jpg-jfif-1-01-baseline` (`../../🧪️oracle/🔣️component.json`) is therefore declared
+//! and claimed by `mutate-jpg-jfif-1-01-baseline`, and that case measures this vocabulary where its
+//! axes actually live: on the DECODED SNAPSHOT, against [`check_baseline_conformance`]'s verdict.
+//! Each kind must move its own axis and raise its own diagnostic; each inverse must restore the
+//! snapshot exactly. The case states in as many words that it makes no byte-level claim, and its
+//! `identity-round-trip` is the one scenario that does touch bytes — decode, re-encode, and read
+//! both through the INDEPENDENT `image` reader the sibling `✳️any` subset registers.
 //!
 //! @see ../🦀️component.rs — this subset's conformance check, one axis per variant below.
 //! @see ../../✳️any/🧬️schema/🧬️mutations/🦀️component.rs — the DOCUMENT vocabulary this one is disjoint from.
@@ -142,12 +143,47 @@ pub enum JpgBaselineMutation {
     },
 }
 
-/// 🏷️ Kebab-case spelling of every `JpgBaselineMutation` variant, in declaration order.
-/// `kinds_match_enum_variants_in_declaration_order` below is what keeps the two honest. No
-/// `mutationCatalogs` entry mirrors this list — see the module docstring for why that is deliberate.
+/// 🏷️ Kebab-case spelling of every `JpgBaselineMutation` variant, in declaration order — the
+/// vocabulary the `jpg-jfif-1-01-baseline` mutation catalog (`../../🧪️oracle/🔣️component.json`)
+/// declares and `mutate-jpg-jfif-1-01-baseline` measures itself against.
+/// `kinds_match_enum_variants_in_declaration_order` below is what keeps the two honest against the
+/// enum, and `kinds_match_the_committed_catalog` against the manifest.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-sof-marker", "set-sample-precision", "set-arithmetic", "insert-huffman-table", "remove-huffman-table", "insert-frame-component", "remove-frame-component", "set-component-sampling"];
 
 crate::impl_serde_op_codec!(JpgBaselineMutation, "jpg-baseline-mutation");
+
+//#region 🌉️ConformanceProjection
+/// 👁️ The comparison surface `mutate-jpg-jfif-1-01-baseline` measures this vocabulary through: the
+/// five T.81 Annex F axes as they stand on the DECODED snapshot, plus
+/// [`check_baseline_conformance`]'s verdict over them. It carries no pixels and no quantization
+/// tables on purpose — this is a conformance-class vocabulary, and a class is a property of the
+/// frame header and the entropy-coding mode, not of the raster.
+///
+/// Rendered by hand rather than through `serde` because it is a PROJECTION, not the snapshot: the
+/// snapshot's own serialization carries a multi-megabyte raster that no comparison here should ever
+/// have to walk, and the axes are exactly the ten this subset's own checker reads.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_jpg_baseline_projection_json(snapshot: &JpgSnapshot) -> String {
+    let quoted = |values: Vec<String>| format!("[{}]", values.into_iter().map(|value| format!("\"{value}\"")).collect::<Vec<_>>().join(","));
+    let tables = quoted(snapshot.huffman_tables.iter().map(|table| format!("{:?}:{}", table.class, table.id).to_lowercase()).collect());
+    let components = quoted(snapshot.frame.as_ref().map(|frame| frame.components.iter().map(|component| format!("{}:{}x{}", component.id, component.h_sampling, component.v_sampling)).collect()).unwrap_or_default());
+    let verdict = quoted(crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0.to_string()).collect());
+    format!(
+        "{{\"format\":\"jpg-baseline\",\"sofMarker\":\"{:02x}\",\"precision\":{},\"arithmetic\":{},\"componentCount\":{},\"huffmanTables\":{tables},\"components\":{components},\"conformance\":{verdict}}}",
+        snapshot.sof_marker,
+        snapshot.frame.as_ref().map(|frame| frame.precision).unwrap_or(0),
+        snapshot.arithmetic,
+        snapshot.frame.as_ref().map(|frame| frame.components.len()).unwrap_or(0)
+    )
+}
+
+/// 🛡️ [`check_baseline_conformance`]'s verdict as bare diagnostic codes — what a `mutate-<kind>`
+/// scenario names when it claims a kind leaves the class by its own axis.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn jpg_baseline_conformance_codes(snapshot: &JpgSnapshot) -> Vec<String> {
+    crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0.to_string()).collect()
+}
+//#endregion 🌉️ConformanceProjection
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -332,6 +368,19 @@ mod tests {
 
     fn codes(snapshot: &JpgSnapshot) -> Vec<String> {
         check_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0.to_string()).collect()
+    }
+
+    /// 🏷️ [`KINDS`] against the committed catalog. The framework never parses Rust, so without this
+    /// the manifest could keep measuring `mutate-jpg-jfif-1-01-baseline` against a vocabulary this
+    /// subset no longer has — which is exactly the gap that left this vocabulary with no catalog at
+    /// all until the completeness gate learned to see an unregistered one.
+    #[test]
+    fn kinds_match_the_committed_catalog() {
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(manifest.contains("jpg-jfif-1-01-baseline-mutate"), "the manifest must declare this subset's OWN capability, not the ✳️any subset's");
     }
 
     #[test]

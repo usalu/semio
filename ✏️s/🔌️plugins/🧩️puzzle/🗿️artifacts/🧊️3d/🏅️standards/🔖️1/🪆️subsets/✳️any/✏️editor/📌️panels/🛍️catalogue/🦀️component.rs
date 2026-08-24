@@ -3,12 +3,11 @@
 //! rows the fixture's `meta.kindCatalogs` declares.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle3d::{ui_label, Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren, Trigger};
 use semio_framework_plugin::{ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use semio_framework_ui_contract as ui;
 use serde_json::{json, Value};
-use std::collections::HashMap;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.kinds";
@@ -61,21 +60,20 @@ fn catalog_entry_label(entry: &Value) -> String {
 }
 
 fn object_kind_vortex_items(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    entry
-        .get("vortices")
-        .and_then(|value| value.as_array())
-        .map(|templates| {
-            templates
-                .iter()
-                .enumerate()
-                .map(|(index, template)| {
-                    let vortex_kind = template.get("vortexKind").and_then(|value| value.as_str()).unwrap_or("vortex");
-                    let position = template.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0]));
-                    ui::tree_item(vortex_kind)?.id(format!("puzzle3d-kind-vortex.{index}.{vortex_kind}")).description(position.to_string()).icon("circle-dot").build()
-                })
-                .collect()
-        })
-        .unwrap_or_default()
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for (index, template) in entry.get("vortices").and_then(Value::as_array).into_iter().flatten().enumerate() {
+        let vortex_kind = template.get("vortexKind").and_then(Value::as_str).unwrap_or("vortex");
+        let position = template.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0])).to_string();
+        let node = ui::tree_item(ui_label(vortex_kind)?)
+            .try_id(format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"))
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex id admission failed"))?
+            .description(semio_framework_plugin::UiText::try_from_string(position).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex description admission failed"))?)
+            .icon(semio_framework_plugin::UiText::try_from_str("circle-dot").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex icon admission failed"))?)
+            .try_build()
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex row admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.vortex", "vortex list admission failed"))?;
+    }
+    Ok(nodes)
 }
 
 fn object_kind_item(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -89,24 +87,47 @@ fn object_kind_item(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<s
     let draggable = mesh_url.is_some();
     let action_args = ui_map_value([("objectKind", ui_text_value(&kind_id)?)])?;
     let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(action_args))?;
-    let mut builder = ui::tree_item(catalog_entry_label(entry))?.id(kind_id.clone()).description(kind_id.clone()).icon("box").default_open(false).children(object_kind_vortex_items(entry));
+    let mut builder = ui::tree_item(ui_label(catalog_entry_label(entry))?)
+        .try_id(&kind_id)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object id admission failed"))?
+        .description(semio_framework_plugin::UiText::try_from_string(kind_id.clone()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object description admission failed"))?)
+        .icon(semio_framework_plugin::UiText::try_from_str("box").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object icon admission failed"))?)
+        .default_open(false)
+        .try_children(object_kind_vortex_items(entry)?)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object children admission failed"))?;
     builder = match args {
-        Some(args) => builder.on_with(Trigger::Activate, action, args),
-        None => builder.on(Trigger::Activate, action),
-    };
+        Some(args) => builder.try_on_with(Trigger::Activate, action, args),
+        None => builder.try_on(Trigger::Activate, action),
+    }
+    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object action admission failed"))?;
     if draggable {
         let mut payload = json!({ "objectKind": kind_id });
         if let Some(url) = mesh_url {
             payload["meshUrl"] = json!(url);
         }
-        builder = builder.draggable(true).drag_data(HashMap::from([(PUZZLE3D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())]));
+        let mut drag_data = semio_framework_ui_contract::UiFixedMap::default();
+        drag_data
+            .try_push(
+                semio_framework_plugin::UiText::try_from_str(PUZZLE3D_CATALOGUE_DRAG_MIME).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag mime admission failed"))?,
+                semio_framework_plugin::UiText::try_from_string(payload.to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag payload admission failed"))?,
+            )
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag data admission failed"))?;
+        builder = builder.draggable(true).drag_data(drag_data);
     }
-    builder.build()
+    builder
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object row admission failed"))
 }
 
 fn catalog_kind_item(entry: &Value, icon_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
-    ui::tree_item(catalog_entry_label(entry))?.id(format!("puzzle3d-kind-entry:{kind_id}")).description(kind_id).icon(icon_id).build()
+    ui::tree_item(ui_label(catalog_entry_label(entry))?)
+        .try_id(format!("puzzle3d-kind-entry:{kind_id}"))
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind id admission failed"))?
+        .description(semio_framework_plugin::UiText::try_from_string(kind_id).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind description admission failed"))?)
+        .icon(semio_framework_plugin::UiText::try_from_str(icon_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind icon admission failed"))?)
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kind", "kind row admission failed"))
 }
 //#endregion 🔖️Rows
 
@@ -118,10 +139,10 @@ pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framew
     let cable_entries = entries("cables");
     let attraction_entries = entries("attractions");
     PanelTreeBuilder::new("puzzle3d-play-kinds")?
-        .section("puzzle3d-play-kinds.objects", Some(labels.objects.as_str().into()), false, fixed_nodes(object_entries.iter().map(object_kind_item))?)?
-        .section("puzzle3d-play-kinds.vortices", Some(labels.vortices.as_str().into()), false, fixed_nodes(vortex_entries.iter().map(|entry| catalog_kind_item(entry, "circle-dot")))?)?
-        .section("puzzle3d-play-kinds.cables", Some(labels.cables.as_str().into()), false, fixed_nodes(cable_entries.iter().map(|entry| catalog_kind_item(entry, "plug")))?)?
-        .section("puzzle3d-play-kinds.attractions", Some(labels.attractions.as_str().into()), false, fixed_nodes(attraction_entries.iter().map(|entry| catalog_kind_item(entry, "link")))?)?
+        .section("puzzle3d-play-kinds.objects", Some(ui_label(labels.objects.as_str())?), false, fixed_nodes(object_entries.iter().map(object_kind_item))?)?
+        .section("puzzle3d-play-kinds.vortices", Some(ui_label(labels.vortices.as_str())?), false, fixed_nodes(vortex_entries.iter().map(|entry| catalog_kind_item(entry, "circle-dot")))?)?
+        .section("puzzle3d-play-kinds.cables", Some(ui_label(labels.cables.as_str())?), false, fixed_nodes(cable_entries.iter().map(|entry| catalog_kind_item(entry, "plug")))?)?
+        .section("puzzle3d-play-kinds.attractions", Some(ui_label(labels.attractions.as_str())?), false, fixed_nodes(attraction_entries.iter().map(|entry| catalog_kind_item(entry, "link")))?)?
         .interaction_domain(crate::editor::puzzle3d::PUZZLE3D_INTERACTION_DOMAIN)?
         .build()
 }

@@ -55,7 +55,97 @@ pub enum ShootingMutation {
     ChangeSceneShadowEnabled(super::change_scene_shadow_enabled::mutation::ChangeSceneShadowEnabled),
     ChangeSceneMaterialRoughness(super::change_scene_material_roughness::mutation::ChangeSceneMaterialRoughness),
 }
+
+/// 🏷️ The kebab spelling of every [`ShootingMutation`] variant, in DECLARATION ORDER — the one list
+/// the language-neutral test platform is measured against. It is duplicated in exactly two other
+/// places on purpose: this subset's own oracle manifest catalog `shooting-1-any`
+/// (`../../🧪️oracle/🔣️component.json`), which the completeness gate counts, and the
+/// `mutate-shooting-1` case adapter, which must not link this crate in the oracle role.
+/// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
+pub const KINDS: &[&str] = &[
+    "create-asset",
+    "delete-asset",
+    "rename-asset",
+    "change-asset-url",
+    "reorder-assets",
+    "drag-assets",
+    "rotate-assets",
+    "scale-assets",
+    "create-shot",
+    "delete-shot",
+    "rename-shot",
+    "change-shot-width",
+    "change-shot-height",
+    "change-shot-format",
+    "change-shot-shape",
+    "reorder-shots",
+    "replace-shot-camera",
+    "create-saved-camera",
+    "delete-saved-camera",
+    "rename-saved-camera",
+    "replace-saved-camera-view",
+    "reorder-saved-cameras",
+    "set-active-shot",
+    "set-active-asset",
+    "change-scene-sun-enabled",
+    "change-scene-sun-azimuth",
+    "change-scene-sun-elevation",
+    "change-scene-sun-intensity",
+    "change-scene-ambient-intensity",
+    "change-scene-shadow-enabled",
+    "change-scene-material-roughness",
+];
 //#endregion 🔖️Operations
+
+//#region 🔖️Apply
+/// 📦️ Applies `mutation` onto `snapshot`, returning the resulting snapshot — the free entry point
+/// external Rust callers use when they cannot name this crate's private `protocol` extern-crate
+/// item. Same shape as `🎬️present`'s `apply_present_mutation`.
+pub fn apply_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &ShootingMutation) -> protocol::MutationApplyResult<ShootingSnapshot> {
+    semio_framework_plugin::resolve_ready(vcs::apply_mutation(snapshot, mutation)).map(|(next, _messages)| next)
+}
+
+/// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).
+pub fn inverse_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &ShootingMutation) -> Vec<ShootingMutation> {
+    <ShootingMutation as protocol::Mutation<ShootingSnapshot>>::inverse(mutation, snapshot)
+}
+//#endregion 🔖️Apply
+
+//#region 🔖️CaseBridges
+/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "createAsset", …}`) JSON projection
+/// — the shape the `mutate-shooting-1` case's `Examples` rows carry, and the shape every committed
+/// per-kind leaf fixture under `<kind>/🧪️tests/*/🦠️mutation/🔣️component.json` already is — into a real
+/// [`ShootingMutation`]. A thin `serde_json` wrapper (already a direct dependency of this crate, used
+/// behind this interface per CLAUDE.md's "external libraries behind an interface" rule, never a new
+/// one), so the case reads the committed payload instead of re-declaring it as a Rust literal.
+pub fn decode_shooting_mutation_json(text: &str) -> Result<ShootingMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📥️ Decodes a committed snapshot document — the `📸️snapshot/⬅️before/🔣️component.json` every leaf
+/// fixture of this vocabulary shares — into a real [`ShootingSnapshot`].
+pub fn decode_shooting_snapshot_json(text: &str) -> Result<ShootingSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ⚖️ The SEMANTIC PROJECTION this subset is compared through. It belongs to the subset rather than
+/// to a test adapter, because what counts as this document's meaning is this subset's ruling, not a
+/// case's. Every inline artifact-lane field is present; the composed `emblem` child handle is not,
+/// because it is a content address for an `s.stdio.semio.image` child that no kind of this
+/// vocabulary addresses.
+pub fn encode_shooting_projection_json(snapshot: &ShootingSnapshot) -> String {
+    serde_json::json!({
+        "schema": snapshot.schema,
+        "assets": snapshot.assets,
+        "savedCameras": snapshot.saved_cameras,
+        "scene": snapshot.scene,
+        "shots": snapshot.shots,
+        "activeShotId": snapshot.active_shot_id,
+        "activeAssetId": snapshot.active_asset_id
+    })
+    .to_string()
+}
+//#endregion 🔖️CaseBridges
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -474,5 +564,22 @@ mod tests {
         assert_missing_target_is_error(&base, &ShootingMutation::ChangeShotWidth(super::super::change_shot_width::mutation::ChangeShotWidth { id: "ghost".into(), new_width: 100 }));
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🔖️KindsCatalog
+    /// 🏷️ [`KINDS`] is the bridge between this enum and the language-neutral test platform, which
+    /// never parses Rust. This proves it names every variant, in declaration order, with the same
+    /// kebab spelling `#[derive(dsl::Mutations)]` derives — and that this subset's own committed
+    /// catalog declares exactly the same set, so the completeness gate cannot be measuring a
+    /// vocabulary that has drifted away from the code.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let declared: Vec<&str> = <ShootingMutation as protocol::SemanticMutation<ShootingSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
+        assert_eq!(KINDS, declared.as_slice(), "KINDS must name every ShootingMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog shooting-1-any");
+        }
+    }
+    //#endregion 🔖️KindsCatalog
 }
 //#endregion 🧪️Tests

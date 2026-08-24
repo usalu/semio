@@ -104,7 +104,7 @@ fn computers_manifest() -> CadComputersManifest {
 }
 
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
-// plain sync fn). `.mode`/`.contributes_topic`/`.contributes` are still `async fn` in
+// plain sync fn). `.mode`/`.contributes_topic`/`.contributes` are still `fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's
 // path_scope; `.contributes` is genuinely stateful registry work per that file's own doc comment,
 // but is dressed as `async` with zero real suspension — same shape `.depends_on` already bridges in
@@ -151,7 +151,7 @@ pub struct CreateBuildingStorey {
 
 impl CreateBuildingStorey {
     // 🚫️async: E1 pure — `format!` only, zero suspension points; consumed unawaited by both
-    // `CompositeMutationKind::plan`/`label` below (still `async fn` — external trait, see R9 case 1)
+    // `CompositeMutationKind::plan`/`label` below (still `fn` — external trait, see R9 case 1)
     // and this file's own tests — see R9.
     fn storey_label(&self) -> String {
         format!("Level {}: {}", self.level_index, self.storey_name)
@@ -161,7 +161,7 @@ impl CreateBuildingStorey {
 impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildingStorey {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "building-storey", kind: "create-building-storey", record: "CreatedBuildingStorey" };
 
-    async fn plan(&self, _base: &CadSnapshot, planner: &mut protocol::Planner<CadSnapshot, CadMutation>) -> Result<(), protocol::PlanError> {
+    fn plan(&self, _base: &CadSnapshot, planner: &mut protocol::Planner<CadSnapshot, CadMutation>) -> Result<(), protocol::PlanError> {
         planner.call(CadMutation::CreateNode(CreateNode { node: CadNode { id: self.storey_id.clone(), label: self.storey_label(), kind: "building-storey".into() } }))?;
         planner.call(CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() }))
     }
@@ -207,7 +207,7 @@ fn building_structure_summary_service() -> ArtifactInferenceService {
 }
 
 // 🚫️async: E4 fn-pointer slot — `semio_framework_plugin::ArtifactInference` is a plain
-// `for<'a> fn(&ArtifactInferenceExecutionRequest<'a>) -> Result<..>` type alias (an `async fn` item's
+// `for<'a> fn(&ArtifactInferenceExecutionRequest<'a>) -> Result<..>` type alias (an `fn` item's
 // pointer type is unnameable); also E1 pure (pack decode + struct literal, zero suspension) — see R9.
 fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
     let snapshot = <CadSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.snapshot-decode", error.to_string()))?;
@@ -220,7 +220,7 @@ fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<
 /// one composite mutation, one inference, both gated by the `.depends_on("cad", …)` declared above.
 // 🚫️async: E1 pure — consumed unawaited as the argument to `bundle()`'s `.contributes(...)` (which
 // itself must be sync — see that fn's own tag). `ArtifactContribution::builder`/`.mutation`/
-// `.inference_service`/`.build` are still `async fn` in
+// `.inference_service`/`.build` are still `fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this packet's
 // path_scope; that file's own `.mutation` doc comment already notes its body is "pure, no-real-
 // suspension calls" bridged via `resolve_ready`) — bridged the same way here. See R9.

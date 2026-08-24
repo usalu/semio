@@ -150,6 +150,8 @@ pub(crate) struct AssemblyTopologyBuild {
     in_sources: Vec<u32>,
     in_relations: Vec<u32>,
     regions: Vec<u32>,
+    arc_count: usize,
+    completed_units: usize,
 }
 
 impl AssemblyTopologyBuild {
@@ -259,6 +261,8 @@ impl AssemblyTopologyBuild {
                     in_sources: std::mem::take(&mut self.in_sources),
                     in_relations: std::mem::take(&mut self.in_relations),
                     regions: std::mem::take(&mut self.regions),
+                    arc_count: self.arc_count,
+                    completed_units: self.completed_units,
                 });
             }
         }
@@ -330,7 +334,7 @@ impl GraphTopologyBuilder {
 
         let regions: Vec<u32> = self.regions.iter().map(|r| r.get()).collect();
 
-        Ok(GraphTopology { node_count: self.node_count, out_starts, out_targets, out_relations, in_starts, in_sources, in_relations, regions })
+        Ok(GraphTopology { node_count: self.node_count, out_starts, out_targets, out_relations, in_starts, in_sources, in_relations, regions, arc_count: self.arcs.len(), completed_units: 0 })
     }
 }
 // #endregion 🔖️Builder

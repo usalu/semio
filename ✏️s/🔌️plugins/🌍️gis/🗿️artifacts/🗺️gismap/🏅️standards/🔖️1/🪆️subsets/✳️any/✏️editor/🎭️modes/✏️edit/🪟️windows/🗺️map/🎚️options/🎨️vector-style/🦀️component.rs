@@ -1,7 +1,7 @@
 //! 🎨️ Map window option — the colored / figure-ground / inverted-figure vector-style select.
 
 use crate::editor::gis2d::config::Gis2dConfig;
-use crate::editor::gis2d::gis2d_action;
+use crate::editor::gis2d::gis2d_window_action;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
@@ -18,7 +18,7 @@ pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
             MeasureSelectItem { id: "figureGround".into(), value: "figureGround".into(), label: labels.vector_style_figure_ground.into() },
             MeasureSelectItem { id: "invertedFigure".into(), value: "invertedFigure".into(), label: labels.vector_style_inverted_figure.into() },
         ],
-        on_change: gis2d_action("setVectorStyle", None),
+        on_change: gis2d_window_action("setVectorStyle", None),
     }
 }
 //#endregion 🔖️Option

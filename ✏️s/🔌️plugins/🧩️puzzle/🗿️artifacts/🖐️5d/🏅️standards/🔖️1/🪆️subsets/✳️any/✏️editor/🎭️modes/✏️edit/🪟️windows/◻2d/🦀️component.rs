@@ -171,9 +171,9 @@ fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
 //#endregion 🔖️BoardJson
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene) -> BuiltNode {
+pub fn render(envelope: &Puzzle5dScene) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let scene = puzzle5d_board_scene(envelope);
-    semio_framework_ui_contract::surface(semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::Board2d, &scene)).id(SURFACE_ID).build()
+    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Board2d, &scene)
 }
 //#endregion 🔖️Render
 

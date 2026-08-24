@@ -1,7 +1,7 @@
 //! 🧰️ `set-active-utility` command.
 
 use crate::editor::puzzle2d::modes::edit::windows::overview;
-use crate::editor::puzzle2d::{Puzzle2dActionCtx, PUZZLE2D_PANES};
+use crate::editor::puzzle2d::{drain_board_events_json, Puzzle2dActionCtx, PUZZLE2D_PANES};
 use serde_json::Value;
 
 pub fn set_active_utility(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
@@ -14,7 +14,7 @@ pub fn set_active_utility(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>)
     ctx.scene.runtime.fill_job_applied_count = 0;
     ctx.scene.runtime.fill_job_preview = None;
     ctx.host.borrow_mut().brush_cancel_slot();
-    let _ = ctx.host.borrow_mut().drain_events_json();
+    let _ = drain_board_events_json(&mut ctx.host.borrow_mut());
     ctx.scene.runtime.fill_count = 0;
     ctx.scene.runtime.brush_candidates.clear();
     ctx.scene.runtime.brush_candidate_index = 0;

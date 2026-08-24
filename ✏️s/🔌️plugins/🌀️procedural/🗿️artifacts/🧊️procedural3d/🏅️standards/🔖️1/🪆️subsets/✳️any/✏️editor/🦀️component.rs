@@ -369,12 +369,12 @@ impl ArtifactEditor for Procedural3dPlayApp {
         })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> semio_framework_plugin::ComponentTree {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = procedural3d_labels(config);
         let active_utility = config.active_utility_id.as_str();
-        semio_framework_plugin::built_to_component_tree(with_process_flow_eval_session(|session| match body_key {
+        let node = with_process_flow_eval_session(|session| match body_key {
             flow_window::PROCEDURAL_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session),
             edit_preview::PROCEDURAL_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, session, active_utility),
             generations::PROCEDURAL_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::default()),
@@ -387,8 +387,10 @@ impl ArtifactEditor for Procedural3dPlayApp {
             // widget-details view degrades to its "no selection" default until a future wave threads
             // interaction into render. Flagged as a discovered framework gap, not worked around here.
             inspection_panel::PROCEDURAL_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.fixture, &[], labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        }))
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
+        })?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
     async fn window_measures(_doc: &ArtifactView<'_, Procedural3dSnapshot>, cfg: &ConfigView<'_, Procedural3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -559,7 +561,7 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
 /// this app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `create_procedural3d_app` declares via `.artifact_kind(...)`; `params:in`/`geometry:out` are the
 /// workflow-specific ports beyond the implicit document in/out ports.
-pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
+pub async fn procedural3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         "procedural.3d",
         MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },

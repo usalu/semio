@@ -4,7 +4,7 @@
 //! reused verbatim by the inspector panel's matching slider fields.
 
 use crate::editor::gis2d::config::Gis2dConfig;
-use crate::editor::gis2d::gis2d_action;
+use crate::editor::gis2d::gis2d_window_action;
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
 use framework_surface::tiled_map::{clamp_map_layer_weight, gis_map_layer_weight_slider_ids_json};
 use semio_framework_plugin::WindowMeasure;
@@ -42,7 +42,7 @@ pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
             loading: None,
             disabled: None,
             reveal: None,
-            on_change: gis2d_action("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
+            on_change: gis2d_window_action("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
             waiting: None,
         })
         .collect();

@@ -56,6 +56,56 @@ pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: 
 
 pub use super::clear_default_app::mutation::{clear_default_app, ClearDefaultApp};
 pub use super::set_default_app::mutation::{set_default_app, SetDefaultApp};
+
+/// 🏷️ Kebab-case spelling of every [`OpeningConfigMutation`] variant, in declaration order — the
+/// vocabulary the `os-config-opening-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`)
+/// declares and `mutate-os-config-opening`'s exhaustive case measures itself against. Two kinds and
+/// no more: `OpeningPreferences` holds ONE list of `(dialect, role) -> app` pins, an upsert and an
+/// idempotent removal cover it completely, and there is no `set-snapshot` because a preferences
+/// document is replaced wholesale through the store's non-history path rather than through history.
+/// [`kinds_match_the_enum_and_the_catalog`] keeps this list honest against the enum, since the
+/// framework never parses Rust.
+pub const KINDS: &[&str] = &["set-default-app", "clear-default-app"];
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "setDefaultApp", …}`, camelCase payload
+/// fields) JSON projection — exactly the shape the committed
+/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification vectors carry — into a real
+/// [`OpeningConfigMutation`]. The `mutate-os-config-opening` adapter cannot reach `serde_json` (the
+/// generated test host links only `semio-repo-test-host` and the crate that mounts this facet) and
+/// cannot name the private `protocol` extern-crate alias either, so the bridge belongs here.
+pub fn decode_opening_config_mutation_json(text: &str) -> Result<OpeningConfigMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ Renders an [`OpeningPreferences`] as its own camelCase JSON projection — the comparison
+/// surface the case's scenarios are measured through, and the shape the committed
+/// `<slug>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json` vectors are written in.
+pub fn encode_opening_preferences_json(snapshot: &OpeningPreferences) -> String {
+    serde_json::to_string(snapshot).expect("OpeningPreferences serialization is infallible")
+}
+
+/// 📥️ The inverse of [`encode_opening_preferences_json`].
+pub fn decode_opening_preferences_json(text: &str) -> Result<OpeningPreferences, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// ▶️ [`apply_opening_config_mutation`]'s reporting twin: applies `mutation` in place and returns
+/// every diagnostic it raised as `(code, severity)` pairs. The plain apply discards them, and this
+/// facet's whole degenerate surface is diagnostic-only — pinning an app that is already pinned, and
+/// clearing a pin that was never set, both leave the document untouched and report
+/// `mutation.no-op` at `Warning` — so the pair is the evidence rather than a side channel.
+pub fn apply_opening_config_mutation_reporting(snapshot: &mut OpeningPreferences, mutation: &OpeningConfigMutation) -> Vec<(String, String)> {
+    let outcome = mutation.diff(snapshot).apply_to(snapshot);
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// ↩️ The mutation's OWN computed undo steps, named for symmetry with the sibling artifact bridges —
+/// what an `inverse-<kind>` scenario has to apply for the metamorphic law to mean anything.
+pub fn inverse_opening_config_mutation_steps(mutation: &OpeningConfigMutation, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {
+    mutation.inverse(base)
+}
+//#endregion 🌉️ExternalCodecBridge
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests
@@ -66,6 +116,39 @@ mod tests {
     use super::super::super::DefaultApp;
     use super::*;
     use semio_framework::{AppRef, AppRole, ArtifactDialect};
+
+    /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
+    /// — must agree, in spelling AND in order. The framework never parses Rust, so without this test
+    /// `KINDS` could drift from the enum and the catalog could keep measuring
+    /// `mutate-os-config-opening` against a vocabulary the facet no longer has.
+    ///
+    /// ⚠️ This facet's dispatch enum is HAND-WRITTEN (see the file header: its `Diff` is the whole
+    /// `OpeningPreferences` value), so there is no `#[derive(dsl::Mutations)]` descriptor table to
+    /// read `kinds()` off. The enum side is therefore checked by constructing one value per variant
+    /// and matching it exhaustively — a new variant makes the `match` non-exhaustive and fails to
+    /// compile, which is the same guarantee the derive gives elsewhere.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
+        let app = AppRef { plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() };
+        let every = [
+            OpeningConfigMutation::SetDefaultApp(SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app }),
+            OpeningConfigMutation::ClearDefaultApp(ClearDefaultApp { dialect, role: AppRole::Editor }),
+        ];
+        assert_eq!(KINDS.len(), every.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, value) in KINDS.iter().zip(every.iter()) {
+            let spelled = match value {
+                OpeningConfigMutation::SetDefaultApp(_) => "set-default-app",
+                OpeningConfigMutation::ClearDefaultApp(_) => "clear-default-app",
+            };
+            assert_eq!(*kind, spelled, "KINDS must match the enum's own declaration order and kebab-case spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(manifest.contains("change-merge-policy"), "the sibling merge-policy facet is NOT mounted in any crate's 📦️glue.rs and therefore has no case — the manifest must keep saying so rather than letting the gate read this owner as fully covered");
+    }
 
     #[test]
     fn set_default_app_and_clear_default_app_invert_each_other() {

@@ -56,6 +56,41 @@ pub enum Block2dMutation {
     ScaleCamera2d(ScaleCamera2d),
     ChangeMetaDescription(ChangeMetaDescription),
 }
+
+//#region 🏷️Kinds
+/// 🏷️ The kebab-case spelling of every [`Block2dMutation`] variant, in declaration order — the exact
+/// vocabulary the `block-2d-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// the `mutate-block-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
+pub const KINDS: &[&str] = &[
+    "rename-node-kind",
+    "change-node-kind-label",
+    "change-node-kind-variant",
+    "change-node-kind-description",
+    "change-node-kind-icon",
+    "change-node-kind-unit",
+    "update-presentation",
+    "create-handle-kind",
+    "delete-handle-kind",
+    "rename-handle-kind",
+    "change-handle-kind-label",
+    "change-handle-kind-color",
+    "change-handle-kind-default-wire-kind",
+    "create-handle",
+    "delete-handle",
+    "move-handle",
+    "change-handle-handle-kind",
+    "add-compatibility-rule",
+    "remove-compatibility-rule",
+    "add-attribute",
+    "remove-attribute",
+    "add-author",
+    "remove-author",
+    "move-camera2d",
+    "scale-camera2d",
+    "change-meta-description",
+];
+//#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
 pub use super::add_attribute::mutation::{add_attribute, AddAttribute};
@@ -312,5 +347,24 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🧪️KindsCatalog
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed oracle
+    /// manifest's catalog — the framework never parses Rust, so this is the only thing that keeps the
+    /// declared vocabulary and the measured one from drifting apart.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Block2dMutation as protocol::SemanticMutation<Block2dSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Block2dMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 }
 //#endregion 🧪️Tests

@@ -154,10 +154,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -167,7 +167,7 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <GisMapDiff as protocol::MutationDiff<GisMapSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
@@ -250,11 +250,11 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
 /// `GisMapSnapshot`/`MapFeature`, no app-state dependency — an artifact must never depend on an app.
-async fn value_to_dsl(value: &Value) -> dsl::DslValue {
+fn value_to_dsl(value: &Value) -> dsl::DslValue {
     dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
 }
 
-async fn dsl_to_value(value: &dsl::DslValue) -> Value {
+fn dsl_to_value(value: &dsl::DslValue) -> Value {
     dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null)
 }
 
@@ -309,7 +309,7 @@ pub fn default_document() -> GisMapSnapshot {
 /// `features:in` import (whole-array replacements still converge per-feature). `create`/`delete`/
 /// `replace` pick which collection's semantic-mutation triplet (positions/routes/regions) the diff
 /// belongs to.
-async fn feature_collection_operations(
+fn feature_collection_operations(
     before: &[MapFeature],
     after: &[MapFeature],
     create: impl Fn(usize, MapFeature) -> GisMapMutation,
@@ -372,7 +372,7 @@ const GIS_LINE_STYLE: &str = "gis-line";
 
 /// 📍️ Reads `{ lon, lat }` off a position feature's opaque payload (the shape both
 /// `gis_map_document_from_descriptor_json` and the reuse-map DSL fixture use).
-async fn feature_lon_lat(data: &dsl::DslValue) -> Option<(f64, f64)> {
+fn feature_lon_lat(data: &dsl::DslValue) -> Option<(f64, f64)> {
     let value = dsl_to_value(data);
     let lon = value.get("lon").and_then(Value::as_f64)?;
     let lat = value.get("lat").and_then(Value::as_f64)?;
@@ -380,7 +380,7 @@ async fn feature_lon_lat(data: &dsl::DslValue) -> Option<(f64, f64)> {
 }
 
 /// 〰️ Reads a `{ points: [[lon, lat], …] }` vertex chain off a route/region feature's payload.
-async fn feature_line(data: &dsl::DslValue) -> Option<Vec<SemioPoint2>> {
+fn feature_line(data: &dsl::DslValue) -> Option<Vec<SemioPoint2>> {
     let value = dsl_to_value(data);
     let points = value.get("points").and_then(Value::as_array)?;
     let vertices: Vec<SemioPoint2> = points
@@ -401,7 +401,7 @@ async fn feature_line(data: &dsl::DslValue) -> Option<Vec<SemioPoint2>> {
 
 /// ✏️ One open (route) or closed (region) polyline lowered to a `DrawNode::Path`, vertices shifted
 /// into canvas space by `shift`.
-async fn polyline_draw_node(vertices: &[SemioPoint2], shift: impl Fn(&SemioPoint2) -> SemioPoint2, closed: bool) -> DrawNode {
+fn polyline_draw_node(vertices: &[SemioPoint2], shift: impl Fn(&SemioPoint2) -> SemioPoint2, closed: bool) -> DrawNode {
     let mut segments: Vec<PathSegment> = vertices
         .iter()
         .enumerate()
@@ -422,7 +422,7 @@ async fn polyline_draw_node(vertices: &[SemioPoint2], shift: impl Fn(&SemioPoint
 
 /// ⚪️ One position feature lowered to a circular marker `DrawNode::Path` (two `ArcTo` halves — the
 /// standard SVG two-arc circle recipe), centered at `shift(center)`.
-async fn point_marker_draw_node(center: &SemioPoint2, radius: f64, shift: impl Fn(&SemioPoint2) -> SemioPoint2) -> DrawNode {
+fn point_marker_draw_node(center: &SemioPoint2, radius: f64, shift: impl Fn(&SemioPoint2) -> SemioPoint2) -> DrawNode {
     let c = shift(center);
     let left = SemioPoint2 { x: c.x - radius, y: c.y };
     let right = SemioPoint2 { x: c.x + radius, y: c.y };
@@ -475,7 +475,7 @@ pub fn gis_map_snapshot_to_drawing(document: &GisMapSnapshot) -> SemioDrawingSna
 /// 🔑️ The `s.stdio.semio/v1/drawing` → `s.stdio.svg/1.1/*` `IoKey`, derived from
 /// `SemioDrawingToSvg`'s own `FROM`/`INTO` dialect constants (no hardcoded coordinate strings —
 /// stays correct if stdio ever renames the dialect).
-async fn drawing_to_svg_io_key() -> IoKey {
+fn drawing_to_svg_io_key() -> IoKey {
     let from = SemioDrawingToSvg::FROM;
     let into = SemioDrawingToSvg::INTO;
     IoKey {
@@ -492,7 +492,7 @@ async fn drawing_to_svg_io_key() -> IoKey {
 /// 🌉️ Renders a `SemioDrawingSnapshot` to real SVG text + dimensions through stdio's registered
 /// `s.stdio.semio/v1/drawing` → `s.stdio.svg` bridge — the ONLY svg-producing call in this plugin
 /// (no hand-rolled `<svg>` string emission left in gis).
-async fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String, u32, u32), String> {
+fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String, u32, u32), String> {
     let width = drawing.canvas.width.round().max(1.0) as u32;
     let height = drawing.canvas.height.round().max(1.0) as u32;
     let pack_bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing);
@@ -530,7 +530,7 @@ pub fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), S
 /// registry rewrite; see `stdio_gaps` in the wave report — the drawing subset's io tree carries no
 /// dwg leaf, only svg/dxf/pdf, so there is no `io_dispatch`-reachable dwg decode to call through to
 /// here regardless of the input boundary type).
-async fn dwg_geometry_to_draw_node(geometry: &DwgGeometry) -> Option<DrawNode> {
+fn dwg_geometry_to_draw_node(geometry: &DwgGeometry) -> Option<DrawNode> {
     let vertices: Vec<[f64; 2]> = match geometry {
         DwgGeometry::Point { at } => vec![[at[0], at[1]]],
         DwgGeometry::Line { start, end } => vec![[start[0], start[1]], [end[0], end[1]]],
@@ -562,7 +562,7 @@ async fn dwg_geometry_to_draw_node(geometry: &DwgGeometry) -> Option<DrawNode> {
 
 /// 🌉️ Builds a `SemioDrawingSnapshot` from a legacy `DwgDrawing`'s entities — one `DrawNode::Path`
 /// per real (non-degenerate) entity, all under one layer.
-async fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
+fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
     let children: Vec<DrawNode> = drawing.entities.iter().filter_map(|entity| dwg_geometry_to_draw_node(&entity.geometry)).collect();
     SemioDrawingSnapshot { layers: vec![DrawLayer { id: "dwg-import".into(), name: "DWG Import".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }], ..SemioDrawingSnapshot::default() }
 }
@@ -570,7 +570,7 @@ async fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnaps
 /// 📍️ Walks a `DrawNode` tree collecting every `MoveTo`/`LineTo` endpoint — the vertex set the
 /// import path turns into position features (mirrors the old direct `DwgGeometry` vertex walk, now
 /// over the semio/drawing shape instead).
-async fn collect_draw_node_points(node: &DrawNode, out: &mut Vec<SemioPoint2>) {
+fn collect_draw_node_points(node: &DrawNode, out: &mut Vec<SemioPoint2>) {
     match node {
         DrawNode::Path { segments, .. } => {
             for segment in segments {
@@ -655,7 +655,7 @@ mod relocated_engine_tests {
     /// 🌉️ Once-guarded stdio registration so `render_drawing_to_svg`'s `io_dispatch` call can
     /// resolve the `s.stdio.semio/v1/drawing` → `s.stdio.svg` bridge in a bare `cargo test`
     /// process (production boots this via stdio's own plugin `setup()`, never gis).
-    async fn ensure_stdio_semio_registered_for_tests() {
+    fn ensure_stdio_semio_registered_for_tests() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
             semio_s_plugin_stdio::artifacts::semio::register();

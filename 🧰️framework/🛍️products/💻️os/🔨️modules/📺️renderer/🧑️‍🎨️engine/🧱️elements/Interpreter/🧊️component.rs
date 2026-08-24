@@ -7,7 +7,7 @@
 //! with zero other changes.
 //! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use crate::scenes::{AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface, queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene_step};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -17,8 +17,8 @@ use ui_contract::UiDocumentLease;
 use ui_wgpu::wgpu::UiPresence;
 #[cfg(any(target_arch = "wasm32", test))]
 use ui_wgpu::wgpu::UiState;
-use ui_wgpu::wgpu::{draw_text, render_widget, Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
 use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode};
+use ui_wgpu::wgpu::{Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode, draw_text, render_widget};
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 
@@ -584,7 +584,7 @@ thread_local! {
 
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
 fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce(Result<Option<String>, String>) + 'static) {
-    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+    use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveStage, allocate_operation_id, root_cancel_token};
     let mut complete = Some(Box::new(complete) as Box<dyn FnOnce(Result<Option<String>, String>)>);
     let mut job = Some(job);
     MOUNTED_CLIPBOARD_IO.with(|registry| {
@@ -1123,13 +1123,23 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
     /// `slot.rect` is expressed in (the caller composites/offsets the WHOLE retained `DrawList` by
     /// `bounds.x`/`bounds.y` afterward via `composite_retained_draw_list`, exactly like every other
     /// retained-paint call — so real scene/image pixels painted here land in the right place for free).
-    fn paint_slot(&mut self, slot: &ui_wgpu::wgpu::SceneSlot<'_>, draw: &mut ui_wgpu::wgpu::DrawList, atlas: &mut ui_wgpu::wgpu::FontAtlas, icons: Option<&ui_wgpu::wgpu::IconAtlas>) {
+    fn paint_slot_step(
+        &mut self,
+        slot: &ui_wgpu::wgpu::SceneSlot<'_>,
+        cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
+        draw: &mut ui_wgpu::wgpu::DrawList,
+        atlas: &mut ui_wgpu::wgpu::FontAtlas,
+        icons: Option<&ui_wgpu::wgpu::IconAtlas>,
+    ) -> ui_wgpu::wgpu::ScenePaintStep {
+        match cursor.bind(slot.node) {
+            Ok(true) => {}
+            Ok(false) => return ui_wgpu::wgpu::ScenePaintStep::Pending,
+            Err(()) => return ui_wgpu::wgpu::ScenePaintStep::Fault,
+        }
         let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None);
         match &slot.content {
-            ui_wgpu::wgpu::SlotContent::Scene(scene) => {
-                render_component_scene(scene, slot.rect, &mut ctx, self.engine_resources, self.world_resources, self.world3d_states, self.node_graph_states, self.tiled_map_states, self.icon_render_states, self.board2d_states)
-            }
-            ui_wgpu::wgpu::SlotContent::Image(image) => render_ui_image(image, slot.rect, &mut ctx),
+            ui_wgpu::wgpu::SlotContent::Scene(scene) => render_component_scene_step(scene, slot.rect, &mut ctx, cursor),
+            ui_wgpu::wgpu::SlotContent::Image(image) => render_ui_image_step(image, slot.rect, &mut ctx, cursor),
         }
     }
 }
@@ -1968,11 +1978,7 @@ fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
     let comma = rest.find(',')?;
     let params = &rest[..comma];
     let payload = &rest[comma + 1..];
-    if params.contains("base64") {
-        base64::engine::general_purpose::STANDARD.decode(payload).ok()
-    } else {
-        Some(percent_decode_basic(payload))
-    }
+    if params.contains("base64") { base64::engine::general_purpose::STANDARD.decode(payload).ok() } else { Some(percent_decode_basic(payload)) }
 }
 
 fn resolve_ui_image_svg(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
@@ -2037,6 +2043,76 @@ fn object_contain_rect(bounds: Rect, natural_w: f32, natural_h: f32) -> Rect {
 }
 //#endregion UiImageLoading
 
+const RETAINED_UI_IMAGE_SOURCE_BYTES: usize = 4 * 1024 * 1024;
+
+fn render_ui_image_step(image: &ui_wgpu::wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor) -> ui_wgpu::wgpu::ScenePaintStep {
+    match cursor.phase() {
+        0 => {
+            if image.id.len() > 256 {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            if cursor.byte() < image.id.len() {
+                if cursor.advance_byte().is_err() {
+                    return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                }
+                return ui_wgpu::wgpu::ScenePaintStep::Pending;
+            }
+            if cursor.advance_phase().is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            ui_wgpu::wgpu::ScenePaintStep::Pending
+        }
+        1 => {
+            let src = image.src.trim();
+            if src.len() > RETAINED_UI_IMAGE_SOURCE_BYTES {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            if cursor.byte() < src.len() {
+                if cursor.advance_byte().is_err() {
+                    return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                }
+                return ui_wgpu::wgpu::ScenePaintStep::Pending;
+            }
+            if cursor.advance_phase().is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            ui_wgpu::wgpu::ScenePaintStep::Pending
+        }
+        2 => {
+            let src = image.src.trim();
+            if src.starts_with("data:") {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            if !src.is_empty() {
+                queue_ui_image_url_fetch(&image.id, src);
+            }
+            if cursor.advance_phase().is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            ui_wgpu::wgpu::ScenePaintStep::Pending
+        }
+        3 => {
+            let key = UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(&image.id).filter(|key| key.len() <= 256).cloned());
+            let Some(key) = key else { return cursor.finish() };
+            if ctx.draw.try_reserve_retained_items(1).is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            let natural_size = UI_IMAGE_SIZES.with(|cell| cell.borrow().get(&image.id).copied());
+            let target = match natural_size.filter(|(width, height)| *width > 0 && *height > 0) {
+                Some((width, height)) => object_contain_rect(bounds, width as f32, height as f32),
+                None => bounds,
+            };
+            ctx.draw.push_raster_quad(&key, [target.x, target.y, target.w, target.h], [0.0, 0.0, 1.0, 1.0], 1.0);
+            if cursor.advance_item().is_err() || cursor.advance_phase().is_err() {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
+            ui_wgpu::wgpu::ScenePaintStep::Pending
+        }
+        _ => cursor.finish(),
+    }
+}
+
+#[cfg(test)]
 fn render_ui_image(image: &ui_wgpu::wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let (key, natural_size) = resolve_ui_image(&image.id, image.src.trim());
     let Some(key) = key else {
@@ -2068,7 +2144,7 @@ pub fn framework_widget_context<'a>(
 #[cfg(test)]
 mod render_plan_validator_tests {
     use super::*;
-    use ui_wgpu::wgpu::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
+    use ui_wgpu::wgpu::{TableScene, UiStackNode, World3dScene, build_table_scene, build_world_3d_scene};
 
     #[test]
     fn validate_ui_node_rejects_oversized_json_payload() {
@@ -2388,11 +2464,7 @@ fn rgba_array(color: ui_wgpu::wgpu::Rgba) -> [f32; 4] {
 
 #[cfg(any(target_arch = "wasm32", test))]
 fn dim(color: ui_wgpu::wgpu::Rgba, disabled: bool) -> ui_wgpu::wgpu::Rgba {
-    if disabled {
-        color.with_alpha(color.a * 0.5)
-    } else {
-        color
-    }
+    if disabled { color.with_alpha(color.a * 0.5) } else { color }
 }
 
 /// 🎨️ Best-effort `(text, color, bg, fontSize)` per `UiNode` kind, read straight off `theme`'s
@@ -2474,11 +2546,7 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
 #[cfg(any(target_arch = "wasm32", test))]
 fn effective_hovered(node: &ui_wgpu::wgpu::Node, presence_hover: bool, disabled: bool) -> bool {
     let live = node.flags.contains(ui_wgpu::wgpu::NodeFlags::HOVERED);
-    if disabled {
-        live
-    } else {
-        live || presence_hover
-    }
+    if disabled { live } else { live || presence_hover }
 }
 
 /// 🚶️ Depth-first walk mirroring `paint::paint_node`'s own recursion exactly (same `tree.children`

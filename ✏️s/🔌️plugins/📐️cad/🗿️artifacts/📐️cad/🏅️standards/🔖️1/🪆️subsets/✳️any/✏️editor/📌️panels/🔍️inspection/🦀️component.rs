@@ -9,9 +9,9 @@ use crate::editor::cad::terminology::typology_label;
 use crate::editor::cad::terminology::CadLabels;
 #[cfg(test)]
 use crate::editor::cad::TYPOLOGY_CATALOG;
-use crate::editor::cad::{cad_action, CadPlayView};
+use crate::editor::cad::{CadPlayView, CAD_PLAY_APP_ID};
 use semio_framework_plugin::{
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiGroupNode, UiInputNode,
+    tree_item, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiFieldNode, UiGroupNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 #[cfg(test)]
@@ -35,34 +35,28 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
+fn cad_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+}
+
 /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the object/primitive inspector
 /// branches below used to scan `CadSnapshot`'s inline object list (`cad_all_objects`), which no
 /// longer exists — object data lives inside composed `s.stdio.semio.model` CHILD documents,
 /// unresolved at this render boundary (see `🔖️Composition` in `🏪️store/🦀️component.rs`).
 /// Documented reduced-fidelity gap: those two branches fall through to the reference/node/summary
 /// panel until a resolved-child-content render path exists.
-pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> UiNode {
-    if let (Some(model_definition_id), Some(reference_id)) = (envelope.runtime.selected_reference_model_definition_id.as_deref(), envelope.runtime.selected_reference_id.as_deref()) {
-        if let Some(reference) = envelope.document.references_by_model_definition_id.get(model_definition_id).and_then(|rows| rows.iter().find(|row| row.id == reference_id)) {
-            return ui_inspector_groups_to_tree(&[reference_inspector_group(model_definition_id, reference, labels)]);
-        }
-    }
-    if let Some(node_id) = envelope.runtime.selected_node_ids.first() {
-        if let Some(node) = envelope.document.nodes.iter().find(|entry| &entry.id == node_id) {
-            return ui_inspector_groups_to_tree(&[node_inspector_group(node, labels)]);
-        }
-    }
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "cad-play-inspector.empty".into(),
-        label: Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        fields: vec![
-            ui_inspector_readonly_field("cad-play-inspector.schema", labels.schema, &envelope.document.schema),
-            ui_inspector_readonly_field("cad-play-inspector.utility", labels.utility, active_utility.unwrap_or(labels.none_placeholder.as_str())),
-            ui_inspector_readonly_field("cad-play-inspector.objects", labels.objects, "0".to_string()),
-        ],
-    }])
+pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let rows = crate::editor::cad::ui_node_list([
+        tree_item("cad-play-inspector.schema", crate::editor::cad::ui_label(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))?),
+        tree_item(
+            "cad-play-inspector.utility",
+            crate::editor::cad::ui_label(format!("{}: {}", labels.utility.as_str(), active_utility.unwrap_or(labels.none_placeholder.as_str())))?,
+        ),
+        tree_item("cad-play-inspector.objects", crate::editor::cad::ui_label(format!("{}: 0", labels.objects.as_str()))?),
+    ])?;
+    PanelTreeBuilder::new("cad-play-inspector")?
+        .section("cad-play-inspector.summary", Some(crate::editor::cad::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?
+        .build()
 }
 
 /// @emoji 🌀️ Builds an editable 4-component quaternion group (`X`/`Y`/`Z`/`W` steppers) — orientation
@@ -277,7 +271,7 @@ mod tests {
     use crate::editor::cad::terminology::cad_labels;
     use crate::editor::cad::testkit::*;
     use crate::editor::cad::{make_object_for_typology, CadPlayRuntime};
-    async fn selected_box_panel(config: &CadConfig) -> String {
+    fn selected_box_panel(config: &CadConfig) -> String {
         let runtime = CadPlayRuntime::default();
         let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(config), None);
         serde_json::to_string(&panel).unwrap()

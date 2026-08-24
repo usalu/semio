@@ -5949,6 +5949,10 @@ export class VerifyScript extends Script {
       this.runInteractivityP1x();
       return;
     }
+    if (segments[0] === "interactivity" && segments[1] === "p1y") {
+      this.runInteractivityP1y();
+      return;
+    }
     if (segments[0] === "interactivity") {
       this.runInteractivityAudit();
       return;
@@ -6106,9 +6110,24 @@ export class VerifyScript extends Script {
   /** 🌱️ Runs the isolated P1x retained create-document catalog CAS source and hostile-mutation gate. */
   private runInteractivityP1x(): void {
     interactivityDatabaseCreateCatalogSelfTests();
-    const failures = interactivityDatabaseCreateCatalogFailures(policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE));
+    const failures = interactivityDatabaseCreateCatalogFailures(
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE),
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_ASYNC_FILE),
+      policyReadFileSafe(this.root, INTERACTIVITY_P1X_CONTRACT_FILE),
+    );
     if (failures.length > 0) throw new Error(`[verify interactivity p1x] ${failures.join("; ")}`);
     console.log("[verify interactivity p1x] live-source and hostile mutations clean.");
+  }
+
+  /** 🧹 Runs the isolated P1y retained database-compaction source and hostile-mutation gate. */
+  private runInteractivityP1y(): void {
+    const compact = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_COMPACT_FILE);
+    const engine = policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
+    const contract = policyReadFileSafe(this.root, INTERACTIVITY_P1Y_CONTRACT_FILE);
+    interactivityDatabaseCompactionSelfTests(compact, engine, contract);
+    const failures = interactivityDatabaseCompactionFailures(compact, engine, contract);
+    if (failures.length > 0) throw new Error(`[verify interactivity p1y] ${failures.join("; ")}`);
+    console.log("[verify interactivity p1y] live-source and hostile mutations clean.");
   }
 
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
@@ -6567,6 +6586,9 @@ const INTERACTIVITY_AUDIT_DB_SQLITE_FILE = "🧰️framework/🛍️products/�
 const INTERACTIVITY_AUDIT_DB_POSTGRES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_NEO4J_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🌐️neo4j/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ENGINE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs";
+const INTERACTIVITY_AUDIT_ASYNC_FILE = "🧰️framework/🔨️modules/⏳️async/🦀️component.rs";
+const INTERACTIVITY_P1X_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1x-db-engine-create-document-catalog-cas-caller-census-2026-08-23.md";
+const INTERACTIVITY_P1Y_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-ONE-POOL-WORKER-RUNTIME/📓️p1y-db-compaction-retained-job-caller-census-2026-08-23.md";
 const INTERACTIVITY_AUDIT_DB_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_WAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️component.rs";
@@ -8263,6 +8285,7 @@ export function interactivityMountedFrameTransactionFailures(
   uiEngineSource: string,
   paintSource: string,
   sceneSlotsSource: string,
+  scenesSource: string,
 ): string[] {
   const glue = interactivityProductionSource(glueSource);
   const frameJob = interactivityProductionSource(frameJobSource);
@@ -8279,6 +8302,7 @@ export function interactivityMountedFrameTransactionFailures(
   const uiEngine = interactivityProductionSource(uiEngineSource);
   const paint = interactivityProductionSource(paintSource);
   const sceneSlots = interactivityProductionSource(sceneSlotsSource);
+  const scenes = interactivityProductionSource(scenesSource);
   const transaction = glue.slice(glue.indexOf("pub(crate) struct FrameTransaction"), glue.indexOf("pub(crate) struct AppFramePresentation"));
   const frameCursors = glue.slice(glue.indexOf("struct FrameBuildCursor"), glue.indexOf("struct FrameWheelCursor"));
   const buildBoundary = glue.slice(glue.indexOf("fn frame_before_input_step"), glue.indexOf("fn frame_after_input_step"));
@@ -8293,8 +8317,13 @@ export function interactivityMountedFrameTransactionFailures(
   const shellChildren = interactivityProductionSource(shellSource.slice(shellSource.indexOf("fn render_main_window_step"), shellSource.indexOf("fn render_navbar(")));
   const documentBoundary = interactivityProductionSource(interpreterSource.slice(interpreterSource.indexOf("pub struct UiDocumentFrameCursor"), interpreterSource.indexOf("pub fn render_ui_document(")));
   const uiFrameBoundary = uiEngine.slice(uiEngine.indexOf("const RETAINED_PAINT_DEPTH_CREDITS"), uiEngine.indexOf("pub fn frame<H"));
-  const paintNodeBoundary = paint.slice(paint.indexOf("pub(crate) fn paint_node_self"), paint.indexOf("fn paint_loading_border"));
-  const sceneNodeBoundary = sceneSlots.slice(sceneSlots.indexOf("pub(crate) fn scene_slot_for_node"), sceneSlots.indexOf("fn collect_scene_slots_node"));
+  const paintNodeBoundary = paint.slice(paint.indexOf("pub(crate) const RETAINED_NODE_TEXT_MAX_BYTES"), paint.indexOf("pub(crate) fn paint_tree"));
+  const sceneNodeBoundary = sceneSlots.slice(sceneSlots.indexOf("pub struct ScenePaintCursor"), sceneSlots.indexOf("fn collect_scene_slots_node"));
+  const sceneHostBoundary = interpreter.slice(interpreter.indexOf("impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost"), interpreter.indexOf("fn drive_mounted_layout_text_one"));
+  const retainedImageBoundary = interpreter.slice(interpreter.indexOf("fn render_ui_image_step"), interpreter.indexOf("fn render_ui_image("));
+  const retainedSceneBoundary = scenes.slice(scenes.indexOf("pub fn render_component_scene_step"), scenes.indexOf("pub fn render_component_scene("));
+  const findBoundary = shell.slice(shell.indexOf("pub struct ShellFindItems"), shell.indexOf("fn context_menu_action_kind_str"));
+  const maintenanceBoundary = shell.slice(shell.indexOf("struct ShellChromeMaintenance"), shell.indexOf("fn body_rect"));
   const failures: string[] = [];
   const requireAll = (source: string, needles: readonly string[], label: string) => {
     if (needles.some((needle) => !source.includes(needle))) failures.push(label);
@@ -8364,9 +8393,42 @@ export function interactivityMountedFrameTransactionFailures(
   ], "P5a post-input boundary does not page atlas work and retain draw/overlay/deferred transfers");
   for (const forbidden of ["frame_before_input(", "frame_after_input(", "drive_pending_frame_deferred", "take_packets(", "append_to(", "self.draw.clear()", "self.overlay.clear()", "self.icons.pixels.clone()", "self.atlas.pixels.clone()"])
     if (glue.includes(forbidden)) failures.push(`P5a mounted call graph retains opaque whole-work callee ${forbidden}`);
-  requireAll(deferredBoundary, ["cursor_value.take_next()", "spawn_frame_deferred_reserved", "runtime.interaction = Some(interaction)"], "P5a deferred boundary does not take and submit exactly one retained work owner");
+  requireAll(deferredBoundary, ["cursor_value.take_next()", "spawn_frame_deferred_reserved", "spawn_frame_maintenance_reserved", "advance_chrome_maintenance_step", "runtime.interaction = Some(interaction)"], "P5a deferred boundary does not take and submit exactly one retained work owner");
   for (const forbidden of [".expect(", ".unwrap(", "loop {", "while "])
     if (deferredBoundary.includes(forbidden)) failures.push(`P5a deferred boundary retains panicking or run-to-completion ${forbidden}`);
+  requireAll(findBoundary, [
+    "slots: Box<[Option<ShellFindItem>; SHELL_FIND_ITEM_CAPACITY]>",
+    "payload_bytes: usize",
+    "generation: u64",
+    "fn try_push_at(&mut self, generation: u64, item: ShellFindItem) -> Result<(), ShellFindItem>",
+    "fn pop_front(&mut self) -> Option<ShellFindItem>",
+    "fn close_step(&mut self) -> bool",
+    "std::cell::Cell<Option<ActiveShellFindItems>>",
+    "std::ptr::NonNull<ShellFindItems>",
+    "pub fn try_push_find_item(item: ShellFindItem) -> Result<(), ShellFindItem>",
+    "collector.try_push_at(active.generation, item)",
+  ], "P5a find producer is not fixed, generation-qualified, nonblocking, and exact-owner fallible");
+  for (const forbidden of ["Arc<Mutex<Vec<ShellFindItem>>>", "Vec<ShellFindItem>", ".lock()", "std::mem::take", "take_find_items", "ACTIVE_FIND_ITEM_SINKS"])
+    if (findBoundary.includes(forbidden)) failures.push(`P5a find producer retains blocking, dynamic, or whole-owner ${forbidden}`);
+  requireAll(shellSource, ["find_item_max_plus_one_returns_the_exact_owned_item", "stale_find_generation_returns_the_exact_owned_item", "assert_eq!(rejected.id.as_ptr(), identity)"], "P5a find MAX + 1, stale-generation, close, or exact-owner law is missing");
+  requireAll(maintenanceBoundary, [
+    "load_requested: bool",
+    "load_phase: u8",
+    "introduction_read: Option<String>",
+    "introduction_write: Option<String>",
+    "persist_phase: u8",
+    "request_chrome_preferences_load",
+    "request_introduction_read",
+    "request_panel_layout_persist",
+    "request_presence_preview",
+    "request_chrome_preferences_persist",
+    "pub(crate) fn advance_chrome_maintenance_step",
+    "prefs_get_bounded",
+    "prefs_set_bounded",
+  ], "P5a Shell persistence/presence work is not a retained one-field/page child");
+  for (const forbidden of ["load_ui_prefs_once()", "read_stored_introduction_seen(", "persist_panel_layout_if_changed()", "write_stored_introduction_seen(", "persist_ui_prefs_if_changed()", "publish_presence_heartbeat()"])
+    if (chromeBoundary.includes(forbidden)) failures.push(`P5a chrome frame still reaches synchronous maintenance ${forbidden}`);
+  requireAll(glue, ["FrameDeferredWork::ShellMaintenance", "shell_maintenance: bool", "semio_framework_async::Lane::Io", "PreparedAtlasPages::close_abandoned_step()"], "P5a Shell I/O or abandoned atlas close is not mounted on the shared retained boundary");
   requireAll(chromeBoundary, [
     "ShellChromeFramePhase::MainWindow",
     "ShellChromeFramePhase::LeftPanel",
@@ -8425,35 +8487,99 @@ export function interactivityMountedFrameTransactionFailures(
     "enum RetainedPaintWalkStep",
     "pub fn frame_into_step",
     "sync_interactive_state_node",
-    "paint_node_self",
+    "paint_node_step",
+    "paint_node: Option<(",
+    "node_paint: RetainedNodePaintCursor",
+    "scene_node: Option<(",
+    "scene_paint: ScenePaintCursor",
+    "host.paint_slot_step",
     "scene_slot_for_node",
     "RetainedPaintPhase::Publish",
   ], "P5a retained UI frame does not advance one fixed visit/node/scene/publication unit");
   for (const forbidden of ["paint_tree(", "collect_scene_slots(", "window.draw.clear()", "for slot in"])
     if (uiFrameBoundary.includes(forbidden)) failures.push(`P5a live UI frame reaches whole subtree ${forbidden}`);
-  requireAll(paintNodeBoundary, ["pub(crate) fn paint_node_self", "UiNode::Stack(stack)", "presence_overlay"], "P5a paint child authority is missing its non-recursive node entry");
-  for (const forbidden of ["paint_stack(tree", "paint_node(tree", "for child in"])
+  requireAll(paintNodeBoundary, [
+    "RETAINED_NODE_TEXT_MAX_BYTES: usize = 4 * 1024 * 1024",
+    "pub(crate) struct RetainedNodePaintCursor",
+    "byte: usize",
+    "line: usize",
+    "pen_x: f32",
+    "pub(crate) fn paint_node_step",
+    "draw.try_reserve_retained_items(1)",
+    "value[cursor.byte..].chars().next()",
+    "cursor.byte = next_byte",
+    "atlas.ensure_glyph(ch, size)",
+    "cursor.line.checked_add(1)",
+    "pub(crate) fn close_step",
+    "terminal_is_empty",
+  ], "P5a paint child authority is not retained by byte, glyph, line, output credit, and close state");
+  for (const forbidden of ["wrap_text(", "for (index, line)", "paint_stack(tree", "paint_node(tree", "for child in"])
     if (paintNodeBoundary.includes(forbidden)) failures.push(`P5a paint node recursively reaches child work ${forbidden}`);
-  requireAll(sceneNodeBoundary, ["pub(crate) fn scene_slot_for_node", "UiNode::ComponentScene", "UiNode::Image"], "P5a scene child authority is not one-node addressable");
+  requireAll(paintSource, ["retained_text_paint_emits_at_most_one_glyph_per_grant", "retained_text_multi_megabyte_max_plus_one_preserves_tree_owner_identity", "retained_text_cancel_close_preserves_exact_terminal_witness"], "P5a retained text one-glyph, multi-megabyte MAX + 1, or close law is missing");
+  requireAll(sceneNodeBoundary, [
+    "pub struct ScenePaintCursor",
+    "node: Option<NodeId>",
+    "phase: u16",
+    "item: usize",
+    "page: usize",
+    "byte: usize",
+    "pub fn advance_byte(&mut self) -> Result<(), ()>",
+    "fn paint_slot_step",
+    "pub(crate) fn scene_slot_for_node",
+    "UiNode::ComponentScene",
+    "UiNode::Image",
+  ], "P5a scene child authority is not one-node and producer-cursor addressable");
   if (sceneNodeBoundary.includes("collect_scene_slots(")) failures.push("P5a one-node scene authority reaches whole scene collection");
+  requireAll(sceneSlotsSource, ["scene_paint_cursor_rejects_stale_node_without_consuming_owner", "scene_paint_cursor_advances_one_scalar_and_closes_one_bound_owner"], "P5a scene stale-owner, scalar, or close law is missing");
+  requireAll(sceneHostBoundary, ["fn paint_slot_step", "cursor.bind(slot.node)", "render_component_scene_step", "render_ui_image_step"], "P5a Framework scene host does not resume exact retained scene/image consumers");
+  for (const forbidden of ["render_component_scene(", "render_ui_image(", "fn paint_slot("])
+    if (sceneHostBoundary.includes(forbidden)) failures.push(`P5a Framework scene host reaches complete leaf renderer ${forbidden}`);
+  requireAll(retainedSceneBoundary, ["cursor.phase()", "cursor.byte()", "cursor.advance_byte()", "try_reserve_retained_items(1)", "cursor.advance_item()", "cursor.finish()"], "P5a component scene consumer is not retained by scalar/item phase");
+  requireAll(retainedImageBoundary, ["cursor.phase()", "cursor.byte()", "cursor.advance_byte()", "queue_ui_image_url_fetch", "try_reserve_retained_items(1)", "cursor.advance_item()", "cursor.finish()"], "P5a image consumer is not retained by scalar, asset request, and output item phase");
+  for (const forbidden of ["resolve_ui_image(", "resolve_ui_image_svg(", "queue_canvas_image_upload_sized("])
+    if (retainedImageBoundary.includes(forbidden)) failures.push(`P5a retained image consumer reaches complete decode ${forbidden}`);
   requireAll(atlasBoundary, [
     "PREPARED_ATLAS_PAGE_BYTES: usize = 16 * 1024",
     "PREPARED_ATLAS_PAGE_CAPACITY: usize = 2_048",
-    "slots: Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>",
-    "PREPARED_ATLAS_PROCESS_LEDGER",
-    "ledger.checked_add(byte_len)",
+    "PREPARED_ATLAS_PROCESS_ITEMS: usize = 64",
+    "PREPARED_ATLAS_PROCESS_PAGES: usize = 4_096",
+    "PREPARED_ATLAS_PROCESS_PAYLOAD_BYTES: usize = 64 * 1024 * 1024",
+    "PREPARED_ATLAS_PROCESS_BACKING_BYTES: usize = 96 * 1024 * 1024",
+    "static PREPARED_ATLAS_PROCESS_PERMITS: AtomicU64",
+    "prepared_atlas_field(current, PREPARED_ATLAS_ITEM_SHIFT",
+    "prepared_atlas_field(current, PREPARED_ATLAS_PAGE_SHIFT",
+    "prepared_atlas_field(current, PREPARED_ATLAS_PAYLOAD_SHIFT",
+    "prepared_atlas_field(current, PREPARED_ATLAS_BACKING_SHIFT",
+    "struct PreparedAtlasPermit",
+    "items: usize",
+    "pages: usize",
+    "payload_bytes: usize",
+    "backing_bytes: usize",
+    "PREPARED_ATLAS_PROCESS_PERMITS.compare_exchange(current, next",
+    "slots: Option<Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>>",
+    "let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes)",
     "Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY])",
     "Box::new([0; PREPARED_ATLAS_PAGE_BYTES])",
     "pub fn close_step(&mut self) -> bool",
-    "self.slots[index] = None",
-    "ledger.checked_sub(self.reserved_bytes)",
-  ], "P5a atlas authority is not pre-admitted fixed-page storage with one-page close");
-  const atlasCredit = atlasBoundary.indexOf("*ledger = next;");
+    "slots[index] = None",
+    "permit.release_step()",
+    "pub fn close_abandoned_step() -> bool",
+    "impl Drop for PreparedAtlasPages",
+    "PreparedAtlasAbandonment",
+  ], "P5a atlas authority lacks nonblocking exact item/page/payload/backing permits or retained abandonment close");
+  const atlasCredit = atlasBoundary.indexOf("let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes)");
   const atlasSlots = atlasBoundary.indexOf("Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY])");
   const atlasPage = atlasBoundary.indexOf("Box::new([0; PREPARED_ATLAS_PAGE_BYTES])");
   if (atlasCredit < 0 || atlasSlots < atlasCredit || atlasPage < atlasCredit) failures.push("P5a atlas backing allocates before process credit transfer");
-  for (const forbidden of ["Vec::with_capacity(byte_len)", "Vec::with_capacity(source.len())", ".truncate("])
+  for (const forbidden of ["PREPARED_ATLAS_PROCESS_LEDGER", "Mutex<usize>", ".lock()", "Vec::with_capacity(byte_len)", "Vec::with_capacity(source.len())", ".truncate(", ".fill(None)", "while ", "loop {"])
     if (atlasBoundary.includes(forbidden)) failures.push(`P5a atlas authority retains whole-backing work ${forbidden}`);
+  requireAll(preparedSource, [
+    "atlas_process_item_max_plus_one_is_nonblocking_and_recovers_every_permit",
+    "abandoned_atlas_schedules_the_same_incremental_close_authority",
+    "interrupted_atlas_close_rejoins_the_same_abandonment_authority",
+    "atlas_allocation_refusal_preserves_the_packed_permit_ledger",
+    "atlas_contended_permit_attempts_are_nonblocking_and_poison_free",
+  ], "P5a atlas MAX + 1, allocation refusal, contention, abandonment, or interrupted-close law is missing");
   requireAll(atlasGpuBoundary, ["struct PreparedAtlasUploadCursor", "GlyphAtlasPages", "IconAtlasPages", "upload_glyph_atlas_page", "upload_icon_atlas_page", "cursor.page.checked_add(1)"], "P5a GPU atlas upload is not one retained page per grant");
   requireAll(atlasDrawBoundary, ["upload_glyph_atlas_page", "upload_icon_atlas_page", "origin: wgpu::Origin3d", "rows_per_image: Some(rows)"], "P5a atlas page upload boundary is incomplete");
   for (const forbidden of ["Vec::with_capacity(self.icons.pixels.len())", "Vec::with_capacity(self.atlas.pixels.len())", "keys().next().cloned()"])
@@ -8527,6 +8653,7 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs",
   ];
   const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
   const mutations: [string, number, string, string][] = [
@@ -8563,17 +8690,42 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["bulk-world-append", 7, "pub fn append_step", "pub fn append_to"],
     ["missing-atlas-page", 0, "pages.push_page(&self.atlas.pixels, pages.next_row())", "let _ = self.atlas.pixels.clone()"],
     ["deferred-run-to-completion", 0, "cursor_value.take_next()", "loop { cursor_value.take_next()"],
-    ["dynamic-atlas-slots", 8, "slots: Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>", "slots: Vec<PreparedAtlasPage>"],
-    ["atlas-credit-after-allocation", 8, "*ledger = next;", "let _ = Box::new([0; PREPARED_ATLAS_PAGE_BYTES]); *ledger = next;"],
-    ["bulk-atlas-close", 8, "self.slots[index] = None", "self.slots.fill(None)"],
+    ["dynamic-atlas-slots", 8, "slots: Option<Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>>", "slots: Vec<PreparedAtlasPage>"],
+    ["atlas-credit-after-allocation", 8, "let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes)", "let _premature = Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY]); let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes)"],
+    ["bulk-atlas-close", 8, "slots[index] = None", "slots.fill(None)"],
     ["two-atlas-pages-per-upload", 9, "cursor.page.checked_add(1)", "cursor.page.checked_add(2)"],
     ["whole-document-frame", 11, "engine.frame_into_step", "engine.frame"],
     ["dynamic-paint-stack", 12, "visits: [Option<RetainedPaintVisit>; RETAINED_PAINT_DEPTH_CREDITS]", "visits: Vec<RetainedPaintVisit>"],
-    ["recursive-paint-child", 13, "UiNode::Stack(stack) => {", "UiNode::Stack(stack) => { paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);"],
+    ["complete-text-wrap", 13, "value[cursor.byte..].chars().next()", "wrap_text(atlas, value, size, bounds.w).into_iter().next()"],
     ["whole-scene-collection", 14, "UiNode::ComponentScene", "collect_scene_slots(tree, id); UiNode::ComponentScene"],
     ["whole-context-menu", 5, "render_context_menu_step", "render_context_menu"],
     ["whole-tour", 5, "render_chrome_tour_step", "render_chrome_tour"],
     ["cloned-cleanup-key", 5, "extract_if(|_, _| true).next()", "keys().next().cloned()"],
+    ["dynamic-find-owner", 5, "slots: Box<[Option<ShellFindItem>; SHELL_FIND_ITEM_CAPACITY]>", "slots: Vec<ShellFindItem>"],
+    ["blocking-find-binding", 5, "std::cell::Cell<Option<ActiveShellFindItems>>", "std::sync::Mutex<Option<ActiveShellFindItems>>"],
+    ["unowned-find-push", 5, "pub fn try_push_find_item(item: ShellFindItem) -> Result<(), ShellFindItem>", "pub fn try_push_find_item(item: ShellFindItem)"],
+    ["whole-find-take", 5, "fn pop_front(&mut self) -> Option<ShellFindItem>", "fn take_find_items(&mut self) -> Option<ShellFindItem>"],
+    ["missing-find-max-law", 5, "find_item_max_plus_one_returns_the_exact_owned_item", "find_item_max_plus_one_smoke"],
+    ["synchronous-preferences-load", 5, "self.request_chrome_preferences_load();", "self.load_ui_prefs_once();"],
+    ["synchronous-introduction-read", 5, "self.request_introduction_read();", "self.read_stored_introduction_seen();"],
+    ["synchronous-layout-persist", 5, "self.request_panel_layout_persist();", "self.persist_panel_layout_if_changed();"],
+    ["synchronous-presence-preview", 5, "self.request_presence_preview();", "self.publish_presence_heartbeat();"],
+    ["synchronous-preferences-persist", 5, "self.request_chrome_preferences_persist();", "self.persist_ui_prefs_if_changed();"],
+    ["maintenance-on-interactive-lane", 0, "semio_framework_async::Lane::Io", "semio_framework_async::Lane::Interactive"],
+    ["missing-paint-output-credit", 13, "draw.try_reserve_retained_items(1)", "Ok::<(), ()>(())"],
+    ["missing-paint-byte-cursor", 13, "byte: usize", "bytes: Vec<u8>"],
+    ["missing-multimegabyte-text-law", 13, "retained_text_multi_megabyte_max_plus_one_preserves_tree_owner_identity", "retained_text_large_smoke"],
+    ["whole-component-scene-renderer", 11, "render_component_scene_step(scene, slot.rect, &mut ctx, cursor)", "render_component_scene(scene, slot.rect, &mut ctx)"],
+    ["whole-image-renderer", 11, "render_ui_image_step(image, slot.rect, &mut ctx, cursor)", "render_ui_image(image, slot.rect, &mut ctx)"],
+    ["missing-scene-node-owner", 14, "node: Option<NodeId>", "node: NodeId"],
+    ["bulk-scene-byte-run", 15, "cursor.advance_byte()", "cursor.advance_byte_run()"],
+    ["bulk-image-byte-run", 11, "cursor.advance_byte()", "cursor.advance_byte_run()"],
+    ["missing-scene-stale-law", 14, "scene_paint_cursor_rejects_stale_node_without_consuming_owner", "scene_paint_cursor_stale_smoke"],
+    ["blocking-atlas-ledger", 8, "static PREPARED_ATLAS_PROCESS_PERMITS: AtomicU64", "static PREPARED_ATLAS_PROCESS_PERMITS: Mutex<usize>"],
+    ["missing-atlas-backing-dimension", 8, "prepared_atlas_field(current, PREPARED_ATLAS_BACKING_SHIFT", "prepared_atlas_field(current, PREPARED_ATLAS_PAYLOAD_SHIFT"],
+    ["missing-atlas-drop-recovery", 8, "impl Drop for PreparedAtlasPages", "impl PreparedAtlasPages"],
+    ["unmounted-atlas-abandonment-drain", 0, "PreparedAtlasPages::close_abandoned_step()", "true"],
+    ["missing-atlas-interrupted-close-law", 8, "interrupted_atlas_close_rejoins_the_same_abandonment_authority", "interrupted_atlas_close_smoke"],
   ];
   for (const [name, index, needle, replacement] of mutations) {
     const mutated = [...clean];
@@ -10011,7 +10163,8 @@ function interactivityDatabaseCatalogBootstrapFailures(engineSource: string): st
   const openWith = openStart < 0 || openEnd < 0 ? "" : production.slice(openStart, openEnd);
   const failures: string[] = [];
   const waits = production.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
-  if (waits !== 2 || openWith.includes("db_actor::block_on") || openWith.includes("storage.catalog().await.cas_root") || openWith.includes("cas_root(EpochFence::INITIAL")) failures.push("P1w retained bootstrap does not preserve the two post-P1x production waits/direct-CAS cut");
+  const expectedWaits = production.includes("db_compact::DatabaseCompactionFuture::try_submit") ? 1 : 2;
+  if (waits !== expectedWaits || openWith.includes("db_actor::block_on") || openWith.includes("storage.catalog().await.cas_root") || openWith.includes("cas_root(EpochFence::INITIAL")) failures.push("P1w retained bootstrap does not preserve the exact post-P1y production-wait/direct-CAS cut");
   if (!openWith.includes("Self::open_catalog_bootstrap_retained(pool.clone(), storage, pages)") || !openWith.includes("Err(rejected) => return Err(rejected.close_and_take_error())") || !openWith.includes("let result = bootstrap.await?") || !openWith.includes("result.into_parts()") || !openWith.includes("storage = retained_storage") && !openWith.includes("(retained_storage, epoch, Vec::new())")) failures.push("fresh Database::open_with does not consume the retained P1w result and exact storage handback");
   for (const caller of ["pub async fn open(", "pub async fn open_at(", "pub async fn open_with_emit", "pub async fn open_with_authz"])
     if (!production.includes(caller)) failures.push(`P1w caller census lost ${caller}`);
@@ -10252,8 +10405,9 @@ function interactivityDatabaseCreateCatalogFixtureBody(source: string, name: str
   return open < 0 ? "" : toolJobRustBlock(source, open)?.body ?? "";
 }
 
-function interactivityDatabaseCreateCatalogFailures(engineSource: string): string[] {
+function interactivityDatabaseCreateCatalogFailures(engineSource: string, asyncSource: string, contractSource: string): string[] {
   const production = interactivityProductionSource(engineSource);
+  const asyncProduction = interactivityProductionSource(asyncSource);
   const start = production.indexOf("//#region 🔖️CreateDocumentCatalogCas");
   const end = production.indexOf("//#endregion 🔖️CreateDocumentCatalogCas", start);
   const retained = start < 0 || end < 0 ? "" : production.slice(start, end);
@@ -10289,13 +10443,38 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string): strin
   const rejection = retained.slice(retained.indexOf("struct DatabaseCreateCatalogRejectedOwner"), retained.indexOf("type DatabaseCreateCatalogBackendFuture"));
   const terminal = retained.slice(retained.indexOf("impl DatabaseCreateCatalogTerminalHandle"), retained.indexOf("impl Drop for DatabaseCreateCatalogTerminalHandle"));
   const backing = retained.slice(retained.indexOf("struct DatabaseCreateCatalogBackingLedger"), retained.indexOf("struct DatabaseCreateCatalogAdmissionSlot"));
+  const rejectionSubmitStart = rejection.indexOf("fn submit_exact(self: &Arc<Self>");
   const rejectionRetryStart = rejection.indexOf("fn retry(self: Arc<Self>)");
+  const rejectionSubmit = rejection.slice(rejectionSubmitStart, rejectionRetryStart);
   const rejectionRetry = rejection.slice(rejectionRetryStart, rejection.indexOf("fn drive_one", rejectionRetryStart));
   const catalogStart = production.indexOf("pub async fn catalog(&self)");
   const catalogEnd = production.indexOf("pub async fn health(&self)", catalogStart);
   const catalogMethod = catalogStart < 0 || catalogEnd < 0 ? "" : production.slice(catalogStart, catalogEnd);
+  const workerLoopStart = asyncProduction.indexOf("fn worker_loop(");
+  const workerLoopEnd = asyncProduction.indexOf("/// 🧵️ The native, multi-OS-thread work-stealing pool", workerLoopStart);
+  const workerLoop = workerLoopStart < 0 || workerLoopEnd < 0 ? "" : asyncProduction.slice(workerLoopStart, workerLoopEnd);
+  const callbackAtStart = asyncProduction.indexOf("pub fn callback_at(");
+  const callbackAtEnd = asyncProduction.indexOf("pub fn is_shutdown", callbackAtStart);
+  const callbackAt = callbackAtStart < 0 || callbackAtEnd < 0 ? "" : asyncProduction.slice(callbackAtStart, callbackAtEnd);
 
-  if (waits !== 2 || createDocument.includes("db_actor::block_on") || createDocument.includes("cas_root(") || createDocument.includes("target_arch = \"wasm32\"")) failures.push("P1x does not preserve the exact two-wait native/Wasm caller cut");
+  const expectedWaits = production.includes("db_compact::DatabaseCompactionFuture::try_submit") ? 1 : 2;
+  if (waits !== expectedWaits || createDocument.includes("db_actor::block_on") || createDocument.includes("cas_root(") || createDocument.includes("target_arch = \"wasm32\"")) failures.push("P1x does not preserve the exact post-P1y native/Wasm caller cut");
+  if (!workerLoop.includes("inner.wheel.fire_due_batch(inner.now_ms(), TIMER_ACTIONS_PER_POOL_TURN)") || workerLoop.indexOf("inner.wheel.fire_due_batch") > workerLoop.indexOf("select_and_pop") || !callbackAt.includes("self.inner.wheel.schedule_callback") || !callbackAt.includes("self.inner.notify_idle()")) failures.push("P1x liveness evidence is not bound to real WorkerPool worker-loop timer service");
+  for (const required of [
+    "cancellation/deadline/exhaustion latency guarantee is conditional on shared-pool service",
+    "at least one native worker must return to the head of `WorkerPool::worker_loop`",
+    "sole OS worker that permanently never returns",
+    "outside P1x's cancellation-latency guarantee",
+    "exact refused job, storage, document, cursor/backing, admission and generation registry discoverable",
+    "must not begin a backend poll",
+    "invent a timer thread",
+    "create a second pool",
+    "facade/caller execution for completion",
+    "close exactly once",
+    "never a test-task call to `TimerWheel::fire_due`",
+    "two-worker reserved-capacity law must drive actual saturated P1x and rejection-close authorities into `Retry`",
+    "exact `callback_at(... state.retry())` registrations",
+  ]) if (!contractSource.includes(required)) failures.push(`P1x liveness contract is missing narrowed shared-pool truth: ${required}`);
   if (!production.includes("entries: Arc<Vec<CatalogEntry>>") || !production.includes("revision: u64") || !production.includes("pending: Option<DatabaseCreateCatalogToken>")) failures.push("P1x catalog base lacks immutable Arc identity, revision, or pending CAS token");
   for (const required of [
     "const DATABASE_CREATE_CATALOG_SLOTS: usize = 32",
@@ -10343,9 +10522,10 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string): strin
   const queuedToRetry = "compare_exchange(DatabaseCreateCatalogDriverAuthority::Queued as u8, DatabaseCreateCatalogDriverAuthority::Retry as u8";
   const retryToQueued = "compare_exchange(DatabaseCreateCatalogDriverAuthority::Retry as u8, DatabaseCreateCatalogDriverAuthority::Queued as u8";
   const drivingToIdle = "compare_exchange(DatabaseCreateCatalogDriverAuthority::Driving as u8, DatabaseCreateCatalogDriverAuthority::Idle as u8";
+  const retryCallback = "self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.retry())";
   if (!schedule.includes(idleToQueued) || !schedule.includes("wake_requested.store(true") || !retained.includes("self.pool.try_submit(Lane::Io, job)")) failures.push("P1x driver admission is not uniquely claimed on shared Lane::Io");
-  if (!submit.includes("Some((error.into_job(), next_attempt))") || submit.indexOf("Some((error.into_job(), next_attempt))") > submit.indexOf(queuedToRetry) || !retry.includes(retryToQueued) || !retry.includes("attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT") || !retry.includes("!self.is_current()") || !retry.includes("self.cancelled.load") || !retry.includes("self.deadline_ms.load") || !retry.includes("Some(job)") || !retry.includes("self.retry_closing.store(true") || !retry.includes("self.drive_callback_close_claimed()") || !retry.includes("fn callback_close_one") || !retry.includes("self.arm_callback_close()") || !retained.includes("self.pool.callback_at")) failures.push("P1x saturation/retry lacks bounded stale/cancel/deadline/exhaustion handoff to exact callback close authority");
-  if (!rejectionRetry.includes("attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT") || !rejectionRetry.includes("self.pool.now_ms() >= self.deadline_ms") || !rejectionRetry.includes("Some(job)") || !rejectionRetry.includes("self.callback_close.store(true") || !rejectionRetry.includes("self.drive_close_claimed()") || !rejection.includes("fn callback_close_one") || !rejection.includes("terminal_job")) failures.push("P1x rejection-close saturation retry is unbounded or loses its exact job/owner close handoff");
+  if (!submit.includes("Some((error.into_job(), next_attempt))") || submit.indexOf("Some((error.into_job(), next_attempt))") > submit.indexOf(queuedToRetry) || !submit.includes(retryCallback) || submit.indexOf(retryCallback) < submit.indexOf(queuedToRetry) || !retry.includes(retryToQueued) || !retry.includes("attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT") || !retry.includes("!self.is_current()") || !retry.includes("self.cancelled.load") || !retry.includes("self.deadline_ms.load") || !retry.includes("Some(job)") || !retry.includes("self.retry_closing.store(true") || !retry.includes("self.drive_callback_close_claimed()") || !retry.includes("fn callback_close_one") || !retry.includes("self.arm_callback_close()")) failures.push("P1x saturation/retry lacks its exact refusal-branch callback_at registration or bounded stale/cancel/deadline/exhaustion close handoff");
+  if (!rejectionSubmit.includes("Some((error.into_job(), next_attempt))") || !rejectionSubmit.includes(retryCallback) || rejectionSubmit.indexOf(retryCallback) < rejectionSubmit.indexOf(queuedToRetry) || !rejectionRetry.includes("attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT") || !rejectionRetry.includes("self.pool.now_ms() >= self.deadline_ms") || !rejectionRetry.includes("Some(job)") || !rejectionRetry.includes("self.callback_close.store(true") || !rejectionRetry.includes("self.drive_close_claimed()") || !rejection.includes("fn callback_close_one") || !rejection.includes("terminal_job")) failures.push("P1x rejection-close saturation retry lacks its exact refusal-branch callback registration or exact job/owner close handoff");
   if (!drive.includes(queuedToDriving) || drive.indexOf(queuedToDriving) > drive.indexOf("self.opportunities.fetch_add") || drive.indexOf("self.drive_claimed(generation)") > drive.indexOf(drivingToIdle) || drive.indexOf(drivingToIdle) > drive.indexOf("wake_requested.swap(false")) failures.push("P1x driver claim/release/wake ordering permits a competing grant or lost wake");
   const cancellationCheck = claimed.indexOf("self.cancelled.load");
   const deadlineCheck = claimed.indexOf("self.deadline_ms.load");
@@ -10379,7 +10559,9 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string): strin
     ["database_create_catalog_handoff_cancel_claim_prevents_backend_poll_and_retires_exact_pages", ["catalog_bootstrap_pages(3)", "controlled_driver_hook", "DatabaseCreateCatalogDriverAuthority::Driving", "active_drivers", "probe.cancel()", "!state.polling.load", "Some(operation)", "Err(DbError::Closed)"]],
     ["database_create_catalog_pending_ready_and_panic_publish_work_before_driver_release", ["ControlledCreateCatalogPoll::Pending", "ControlledCreateCatalogPoll::Ready", "ControlledCreateCatalogPoll::Panic", "cancel_on_ready", "Ok(epoch.next())", "poll_worker_thread", "poll_work", "terminal_work"]],
     ["database_create_catalog_saturation_retains_exact_job_and_recovers", ["WorkerSubmitErrorKind::Saturated", "retry_job", "Some(pointer)", "actual.is_ok()"]],
-    ["database_create_catalog_held_saturation_exhaustion_cancel_deadline_and_rejection_close_are_bounded", ["held_create_catalog_io_pool", "timer_wheel().fire_due", "submission_refusals", "DATABASE_CREATE_CATALOG_RETRY_LIMIT", "backend_polls", "retry exhausted", "retry_job", "terminal_job", "database_create_catalog_registry", "close.terminal_is_empty()"]],
+    ["database_create_catalog_real_worker_loop_services_finite_saturation_cancel_deadline_exhaustion_and_close", ["replenishing_held_create_catalog_io_pool", "release_held_create_catalog_worker", "submission_refusals", "DATABASE_CREATE_CATALOG_RETRY_LIMIT", "backend_polls", "callback_worker_thread", "terminal_job_retirements", "retry exhausted", "retry_job", "terminal_job", "database_create_catalog_registry", "close.terminal_is_empty()", "pool.shutdown()"]],
+    ["database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held", ["reserved_replenishing_create_catalog_io_pool", "DatabaseCreateCatalogFuture::try_submit", "DatabaseCreateCatalogDriverAuthority::Retry", "retry_job", "reserved-cancel", "reserved-deadline", "reserved-exhaust", "release_held_create_catalog_worker(&service_gate)", "submission_refusals", "DATABASE_CREATE_CATALOG_RETRY_LIMIT", "backend_polls", "callback_worker_thread", "terminal_job_retirements", "database_create_catalog_registry", "admission", "close.terminal_is_empty()", "maintenance_gate"]],
+    ["database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim", ["held_create_catalog_io_pool", "probe.cancel()", "drop(probe)", "DatabaseCreateCatalogDriverAuthority::Retry", "retry_job", "storage_pointer", "admission", "backend_polls", "database_create_catalog_registry", "take_database_create_catalog_terminal", "DatabaseCreateCatalogCloseStep::Blocked", "!terminal.terminal_is_empty()"]],
     ["database_create_catalog_drop_terminal_close_retires_one_owner_per_lane_grant", ["take_database_create_catalog_terminal", "terminal.close_step()", "saturating_sub(current) <= 1", "state.admission"]],
     ["database_create_catalog_one_production_opportunity_is_under_eight_ms_and_native_wasm_share_source", ["drive_one(state.generation)", "from_millis(8)", "opportunities.load", "include_str!", "target_arch", "db_actor::block_on"]],
     ["database_create_catalog_maximum_catalog_claim_revalidate_and_snapshot_clone_never_hold_worker", ["DATABASE_CREATE_CATALOG_MAX_ENTRIES - 1", "DatabaseCreateCatalogPhase::Claim", "DatabaseCreateCatalogPhase::Revalidate", "DatabaseCreateCatalogPhase::Retire", "pending_owned", "catalog_contention_armed", "from_millis(8)", "Arc::clone(&catalog.entries)", "entries.as_ref().clone()"]],
@@ -10389,6 +10571,7 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string): strin
   for (const [name, tokens] of laws) {
     const body = interactivityDatabaseCreateCatalogFixtureBody(engineSource, name);
     if (body.length === 0 || tokens.some((token) => !body.includes(token))) failures.push(`P1x hostile law body is missing production-path evidence: ${name}`);
+    if (body.includes("timer_wheel().fire_due")) failures.push(`P1x hostile law uses test-task timer progress instead of WorkerPool worker_loop: ${name}`);
   }
   return failures;
 }
@@ -10403,7 +10586,7 @@ struct DatabaseCreateCatalogEncodeCursor { pending: [u8; 32] } enum DatabaseCrea
 DatabaseCreateCatalogPhase::Scan DatabaseCreateCatalogPhase::Reserve DatabaseCreateCatalogPhase::Clone DatabaseCreateCatalogPhase::Snapshot DatabaseCreateCatalogPhase::Encode DatabaseCreateCatalogPhase::Seal DatabaseCreateCatalogPhase::Claim DatabaseCreateCatalogPhase::Handoff DatabaseCreateCatalogPhase::Poll DatabaseCreateCatalogPhase::CloseWork DatabaseCreateCatalogPhase::Revalidate DatabaseCreateCatalogPhase::Retire DatabaseCreateCatalogPhase::Publish DatabaseCreateCatalogPhase::Terminal
 fn try_prepare(pool, catalog, storage, document) { DatabaseCreateCatalogAdmission::try_claim(&document); catalog.entries.len() >= DATABASE_CREATE_CATALOG_MAX_ENTRIES; DatabaseCreateCatalogBackingLedger::new(document.0.capacity(), catalog.entries.capacity()); Arc::clone(&catalog.entries); let state = Arc::new(DatabaseCreateCatalogState); database_create_catalog_registry; state.schedule(); }
 fn schedule(self: &Arc<Self>) { self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Idle as u8, DatabaseCreateCatalogDriverAuthority::Queued as u8; self.wake_requested.store(true; self.pool.try_submit(Lane::Io, job); }
-fn submit_exact { *self.retry_job.lock() = Some((error.into_job(), next_attempt)); self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Queued as u8, DatabaseCreateCatalogDriverAuthority::Retry as u8; self.pool.callback_at; }
+fn submit_exact { *self.retry_job.lock() = Some((error.into_job(), next_attempt)); self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Queued as u8, DatabaseCreateCatalogDriverAuthority::Retry as u8; let state = self.clone(); self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.retry()); }
 fn retry(self: Arc<Self>) { !self.is_current(); self.cancelled.load; self.deadline_ms.load; attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT; self.terminal_job = Some(job); self.retry_closing.store(true; self.drive_callback_close_claimed(); self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Retry as u8, DatabaseCreateCatalogDriverAuthority::Queued as u8; } fn arm_callback_close { self.arm_callback_close(); } fn callback_close_one { self.arm_callback_close(); }
 fn drive_one(self: Arc<Self>, generation: u64) { self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Queued as u8, DatabaseCreateCatalogDriverAuthority::Driving as u8; self.opportunities.fetch_add; self.drive_claimed(generation); self.driver_authority.compare_exchange(DatabaseCreateCatalogDriverAuthority::Driving as u8, DatabaseCreateCatalogDriverAuthority::Idle as u8; self.wake_requested.swap(false; }
 fn drive_claimed { generation != self.generation || !self.is_current(); self.cancelled.load; self.deadline_ms.load; DatabaseCreateCatalogPhase::CloseWork DatabaseCreateCatalogPhase::Revalidate }
@@ -10425,12 +10608,14 @@ fn publish_one {}
 impl Future for DatabaseCreateCatalogFuture { fn poll { self.state.completion.lock(); self.state.waker.lock(); self.state.completion.lock(); } }
 impl Drop for DatabaseCreateCatalogFuture {}
 impl Drop for DatabaseCreateCatalogResult { fn drop { state.terminal_completion.lock(); state.abandoned.store(true); state.begin_callback_close(); } }
-struct DatabaseCreateCatalogRejectedOwner; struct DatabaseCreateCatalogRejectedClose { terminal_job } impl DatabaseCreateCatalogRejectedClose { fn retry(self: Arc<Self>) { attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT; self.pool.now_ms() >= self.deadline_ms; self.terminal_job = Some(job); self.callback_close.store(true; self.drive_close_claimed(); } fn drive_one {} fn callback_close_one {} } impl DatabaseCreateCatalogRejected { fn new { DatabaseCreateCatalogRejectedClose::prepare(pool); } fn into_parts { self.close.take_owner(); self.close.restore_owner(owner); } }
+struct DatabaseCreateCatalogRejectedOwner; struct DatabaseCreateCatalogRejectedClose { terminal_job } impl DatabaseCreateCatalogRejectedClose { fn submit_exact(self: &Arc<Self>, job, attempt) { *self.retry_job.lock() = Some((error.into_job(), next_attempt)); self.driver.compare_exchange(DatabaseCreateCatalogDriverAuthority::Queued as u8, DatabaseCreateCatalogDriverAuthority::Retry as u8; let state = self.clone(); self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.retry()); } fn retry(self: Arc<Self>) { attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT; self.pool.now_ms() >= self.deadline_ms; self.terminal_job = Some(job); self.callback_close.store(true; self.drive_close_claimed(); } fn drive_one {} fn callback_close_one {} } impl DatabaseCreateCatalogRejected { fn new { DatabaseCreateCatalogRejectedClose::prepare(pool); } fn into_parts { self.close.take_owner(); self.close.restore_owner(owner); } }
 type DatabaseCreateCatalogBackendFuture = Future; storage.catalog().await.cas_root(expected, pages).await;
 impl DatabaseCreateCatalogTerminalHandle { fn close_step { self.state.begin_callback_close(); } }
 //#endregion 🔖️CreateDocumentCatalogCas`;
   const catalog = `struct CatalogState { revision: u64, entries: Arc<Vec<CatalogEntry>>, pending: Option<DatabaseCreateCatalogToken> }`;
   const caller = `pub async fn create_document(&self, spec: ArtifactSpec) { self.create_document_catalog_retained(spec.document); Err(rejected) => return Err(rejected.close_and_take_error()); let _published_epoch = actual?; self.spawn_authority_create(document.clone()).await?; db_engine.document_created; self.register_handle(document, authority); } pub async fn catalog(&self) { let entries = { let catalog = self.catalog.lock(); Arc::clone(&catalog.entries) }; CatalogView { artifacts: entries.as_ref().clone() } } pub async fn health(&self)`;
+  const asyncRuntime = `fn worker_loop(inner) { inner.wheel.fire_due_batch(inner.now_ms(), TIMER_ACTIONS_PER_POOL_TURN); select_and_pop(inner); } /// 🧵️ The native, multi-OS-thread work-stealing pool pub fn callback_at(&self) { self.inner.wheel.schedule_callback(deadline_ms, callback); self.inner.notify_idle(); } pub fn is_shutdown`;
+  const contract = `The cancellation/deadline/exhaustion latency guarantee is conditional on shared-pool service: at least one native worker must return to the head of \`WorkerPool::worker_loop\`. A sole OS worker that permanently never returns is outside P1x's cancellation-latency guarantee. Keep the exact refused job, storage, document, cursor/backing, admission and generation registry discoverable; must not begin a backend poll, invent a timer thread, create a second pool, or require facade/caller execution for completion. Once service resumes close exactly once. Real worker loop service, never a test-task call to \`TimerWheel::fire_due\`. The two-worker reserved-capacity law must drive actual saturated P1x and rejection-close authorities into \`Retry\` through their exact \`callback_at(... state.retry())\` registrations.`;
   const laws = [
     `fn database_create_catalog_max_plus_one_document_and_entry_caps_return_exact_owners() { DATABASE_CREATE_CATALOG_MAX_ID_BYTES + 1; document.0.capacity(); DATABASE_CREATE_CATALOG_MAX_ENTRIES; Arc::as_ptr(&storage); into_parts(); }`,
     `fn database_create_catalog_observed_vec_and_string_overallocation_faults_retire_exact_backings() { controlled_capacity_overage; DATABASE_CREATE_CATALOG_ITEMS as usize + 1; candidate.is_some(); observed backing capacity; DATABASE_CREATE_CATALOG_MAX_ID_BYTES + 1; clone_text.is_some(); cloned string capacity; admission; }`,
@@ -10440,7 +10625,9 @@ impl DatabaseCreateCatalogTerminalHandle { fn close_step { self.state.begin_call
     `fn database_create_catalog_handoff_cancel_claim_prevents_backend_poll_and_retires_exact_pages() { catalog_bootstrap_pages(3); controlled_driver_hook; DatabaseCreateCatalogDriverAuthority::Driving; active_drivers; probe.cancel(); !state.polling.load; Some(operation); Err(DbError::Closed); }`,
     `fn database_create_catalog_pending_ready_and_panic_publish_work_before_driver_release() { ControlledCreateCatalogPoll::Pending; ControlledCreateCatalogPoll::Ready; ControlledCreateCatalogPoll::Panic; cancel_on_ready; Ok(epoch.next()); poll_worker_thread; poll_work; terminal_work; }`,
     `fn database_create_catalog_saturation_retains_exact_job_and_recovers() { WorkerSubmitErrorKind::Saturated; retry_job; Some(pointer); actual.is_ok(); }`,
-    `fn database_create_catalog_held_saturation_exhaustion_cancel_deadline_and_rejection_close_are_bounded() { held_create_catalog_io_pool; timer_wheel().fire_due; submission_refusals; DATABASE_CREATE_CATALOG_RETRY_LIMIT; backend_polls; retry exhausted; retry_job; terminal_job; database_create_catalog_registry; close.terminal_is_empty(); }`,
+    `fn database_create_catalog_real_worker_loop_services_finite_saturation_cancel_deadline_exhaustion_and_close() { replenishing_held_create_catalog_io_pool; release_held_create_catalog_worker; submission_refusals; DATABASE_CREATE_CATALOG_RETRY_LIMIT; backend_polls; callback_worker_thread; terminal_job_retirements; retry exhausted; retry_job; terminal_job; database_create_catalog_registry; close.terminal_is_empty(); pool.shutdown(); }`,
+    `fn database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held() { reserved_replenishing_create_catalog_io_pool; DatabaseCreateCatalogFuture::try_submit; DatabaseCreateCatalogDriverAuthority::Retry; retry_job; reserved-cancel; reserved-deadline; reserved-exhaust; release_held_create_catalog_worker(&service_gate); submission_refusals; DATABASE_CREATE_CATALOG_RETRY_LIMIT; backend_polls; callback_worker_thread; terminal_job_retirements; database_create_catalog_registry; admission; close.terminal_is_empty(); maintenance_gate; }`,
+    `fn database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim() { held_create_catalog_io_pool; probe.cancel(); drop(probe); DatabaseCreateCatalogDriverAuthority::Retry; retry_job; storage_pointer; admission; backend_polls; database_create_catalog_registry; take_database_create_catalog_terminal; DatabaseCreateCatalogCloseStep::Blocked; !terminal.terminal_is_empty(); }`,
     `fn database_create_catalog_drop_terminal_close_retires_one_owner_per_lane_grant() { take_database_create_catalog_terminal; terminal.close_step(); saturating_sub(current) <= 1; state.admission; }`,
     `fn database_create_catalog_one_production_opportunity_is_under_eight_ms_and_native_wasm_share_source() { drive_one(state.generation); from_millis(8); opportunities.load; include_str!; target_arch; db_actor::block_on; }`,
     `fn database_create_catalog_maximum_catalog_claim_revalidate_and_snapshot_clone_never_hold_worker() { DATABASE_CREATE_CATALOG_MAX_ENTRIES - 1; DatabaseCreateCatalogPhase::Claim; DatabaseCreateCatalogPhase::Revalidate; DatabaseCreateCatalogPhase::Retire; pending_owned; catalog_contention_armed; from_millis(8); Arc::clone(&catalog.entries); entries.as_ref().clone(); }`,
@@ -10448,6 +10635,9 @@ impl DatabaseCreateCatalogTerminalHandle { fn close_step { self.state.begin_call
     `fn database_create_catalog_publication_check_register_recheck_has_no_lost_wake() { controlled_publication_before_waker_hook; hook_state.schedule(); completion.lock(); published.load; state.waker; Ok(epoch.next()); }`,
   ].join("\n");
   const good = `${waits}${catalog}${retained}${caller}${laws}`;
+  const retryRegistration = "self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.retry())";
+  const rejectionRegistrationStart = good.indexOf(retryRegistration, good.indexOf("struct DatabaseCreateCatalogRejectedOwner"));
+  const rejectionRegistrationRemoved = rejectionRegistrationStart < 0 ? good : `${good.slice(0, rejectionRegistrationStart)}drop(state)${good.slice(rejectionRegistrationStart + retryRegistration.length)}`;
   const mutations: readonly [string, string][] = [
     ["third-wait", `${good} db_actor::block_on(extra)`],
     ["caller-block-on", good.replace("self.create_document_catalog_retained(spec.document)", "db_actor::block_on(cas_root())")],
@@ -10471,6 +10661,8 @@ impl DatabaseCreateCatalogTerminalHandle { fn close_step { self.state.begin_call
     ["retry-cancel-removed", good.replace("self.cancelled.load; self.deadline_ms.load", "self.deadline_ms.load")],
     ["retry-deadline-removed", good.replace("self.deadline_ms.load; attempt >=", "attempt >=")],
     ["retry-job-not-handed-to-close", good.replace("self.terminal_job = Some(job); self.retry_closing.store(true", "drop(job); self.retry_closing.store(true")],
+    ["retry-timer-registration-removed", good.replace("self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.retry())", "drop(state)")],
+    ["rejection-retry-timer-registration-removed", rejectionRegistrationRemoved],
     ["retry-callback-close-bypassed", good.replace("self.drive_callback_close_claimed()", "drop(self)")],
     ["rejection-retry-exhaustion-removed", good.replace("attempt >= DATABASE_CREATE_CATALOG_RETRY_LIMIT; self.pool.now_ms() >= self.deadline_ms", "self.pool.now_ms() >= self.deadline_ms")],
     ["rejection-retry-deadline-removed", good.replace("self.pool.now_ms() >= self.deadline_ms; self.terminal_job", "self.terminal_job")],
@@ -10505,18 +10697,180 @@ impl DatabaseCreateCatalogTerminalHandle { fn close_step { self.state.begin_call
     ["handoff-cancel-law-shallow", good.replace("catalog_bootstrap_pages(3); controlled_driver_hook; DatabaseCreateCatalogDriverAuthority::Driving; active_drivers; probe.cancel(); !state.polling.load; Some(operation); Err(DbError::Closed);", "probe.cancel();")],
     ["poll-law-no-ready-cancel", good.replace("cancel_on_ready; Ok(epoch.next()); poll_worker_thread; poll_work; terminal_work;", "assert!(actual.is_err());")],
     ["saturation-law-no-recovery", good.replace("WorkerSubmitErrorKind::Saturated; retry_job; Some(pointer); actual.is_ok();", "WorkerSubmitErrorKind::Saturated;")],
-    ["held-saturation-law-shallow", good.replace("held_create_catalog_io_pool; timer_wheel().fire_due; submission_refusals; DATABASE_CREATE_CATALOG_RETRY_LIMIT; backend_polls; retry exhausted; retry_job; terminal_job; database_create_catalog_registry; close.terminal_is_empty();", "assert!(true);")],
+    ["finite-saturation-law-shallow", good.replace("replenishing_held_create_catalog_io_pool; release_held_create_catalog_worker; submission_refusals; DATABASE_CREATE_CATALOG_RETRY_LIMIT; backend_polls; callback_worker_thread; terminal_job_retirements; retry exhausted; retry_job; terminal_job; database_create_catalog_registry; close.terminal_is_empty(); pool.shutdown();", "assert!(true);")],
+    ["finite-saturation-law-manual-fire", good.replace("release_held_create_catalog_worker; submission_refusals", "pool.timer_wheel().fire_due(u64::MAX); submission_refusals")],
+    ["finite-saturation-law-adds-caller-fire", good.replace("release_held_create_catalog_worker; submission_refusals", "release_held_create_catalog_worker; pool.timer_wheel().fire_due(u64::MAX); submission_refusals")],
+    ["two-worker-p1x-retry-law-shallow", good.replace("reserved_replenishing_create_catalog_io_pool; DatabaseCreateCatalogFuture::try_submit; DatabaseCreateCatalogDriverAuthority::Retry; retry_job; reserved-cancel; reserved-deadline; reserved-exhaust; release_held_create_catalog_worker(&service_gate); submission_refusals; DATABASE_CREATE_CATALOG_RETRY_LIMIT; backend_polls; callback_worker_thread; terminal_job_retirements; database_create_catalog_registry; admission; close.terminal_is_empty(); maintenance_gate;", "assert!(true);")],
+    ["sole-nonreturning-law-shallow", good.replace("held_create_catalog_io_pool; probe.cancel(); drop(probe); DatabaseCreateCatalogDriverAuthority::Retry; retry_job; storage_pointer; admission; backend_polls; database_create_catalog_registry; take_database_create_catalog_terminal; DatabaseCreateCatalogCloseStep::Blocked; !terminal.terminal_is_empty();", "assert!(true);")],
     ["drop-law-no-single-owner", good.replace("terminal.close_step(); saturating_sub(current) <= 1; state.admission;", "drop(terminal);")],
     ["timing-law-no-budget", good.replace("drive_one(state.generation); from_millis(8); opportunities.load;", "assert!(true);")],
     ["contention-law-shallow", good.replace("DATABASE_CREATE_CATALOG_MAX_ENTRIES - 1; DatabaseCreateCatalogPhase::Claim; DatabaseCreateCatalogPhase::Revalidate; DatabaseCreateCatalogPhase::Retire; pending_owned; catalog_contention_armed; from_millis(8); Arc::clone(&catalog.entries); entries.as_ref().clone();", "assert!(true);")],
     ["publication-law-shallow", good.replace("create_document_catalog_retained; actual.is_ok(); open_artifacts; catalog; document;", "assert!(true);")],
     ["lost-wake-law-shallow", good.replace("controlled_publication_before_waker_hook; hook_state.schedule(); completion.lock(); published.load; state.waker; Ok(epoch.next());", "assert!(true);")],
   ];
-  for (const [name, source] of mutations) if (interactivityDatabaseCreateCatalogFailures(source).length === 0) throw new Error(`[verify interactivity p1x] hostile mutation ${name} was falsely accepted.`);
-  const failures = interactivityDatabaseCreateCatalogFailures(good);
+  for (const [name, source] of mutations) if (interactivityDatabaseCreateCatalogFailures(source, asyncRuntime, contract).length === 0) throw new Error(`[verify interactivity p1x] hostile mutation ${name} was falsely accepted.`);
+  for (const [name, source] of [
+    ["worker-loop-does-not-fire-timers", asyncRuntime.replace("inner.wheel.fire_due_batch(inner.now_ms(), TIMER_ACTIONS_PER_POOL_TURN);", "")],
+    ["worker-loop-fires-after-job-selection", asyncRuntime.replace("inner.wheel.fire_due_batch(inner.now_ms(), TIMER_ACTIONS_PER_POOL_TURN); select_and_pop(inner);", "select_and_pop(inner); inner.wheel.fire_due_batch(inner.now_ms(), TIMER_ACTIONS_PER_POOL_TURN);")],
+    ["callback-does-not-wake-idle-worker", asyncRuntime.replace("self.inner.notify_idle();", "")],
+  ] as const) if (interactivityDatabaseCreateCatalogFailures(good, source, contract).length === 0) throw new Error(`[verify interactivity p1x] async-runtime mutation ${name} was falsely accepted.`);
+  for (const [name, source] of [
+    ["contract-claims-permanent-worker-latency", contract.replace("outside P1x's cancellation-latency guarantee", "inside P1x's cancellation-latency guarantee")],
+    ["contract-omits-discoverability", contract.replace("exact refused job, storage, document, cursor/backing, admission and generation registry discoverable", "operation remains safe")],
+    ["contract-allows-caller-timer-driver", contract.replace("never a test-task call to `TimerWheel::fire_due`", "test task drives timers")],
+    ["contract-detaches-two-worker-proof", contract.replace("two-worker reserved-capacity law must drive actual saturated P1x and rejection-close authorities into `Retry`", "two-worker law runs a generic callback")],
+  ] as const) if (interactivityDatabaseCreateCatalogFailures(good, asyncRuntime, source).length === 0) throw new Error(`[verify interactivity p1x] liveness-contract mutation ${name} was falsely accepted.`);
+  const failures = interactivityDatabaseCreateCatalogFailures(good, asyncRuntime, contract);
   if (failures.length !== 0) throw new Error(`[verify interactivity p1x] faithful source fixture was falsely rejected: ${failures.join("; ")}`);
 }
 //#endregion 🌱️P1xCreateDocumentCatalogCas
+
+//#region 🧹P1yDatabaseCompaction
+function interactivityDatabaseCompactionFixtureBody(source: string, name: string): string {
+  const start = source.indexOf(`fn ${name}`);
+  if (start < 0) return "";
+  const open = source.indexOf("{", start);
+  return open < 0 ? "" : toolJobRustBlock(source, open)?.body ?? "";
+}
+
+function interactivityDatabaseCompactionFailures(compactSource: string, engineSource: string, contractSource: string): string[] {
+  const compact = interactivityProductionSource(compactSource);
+  const engine = interactivityProductionSource(engineSource);
+  const start = compact.indexOf("//#region 🧵️RetainedCompactionJob");
+  const end = compact.indexOf("//#endregion 🧵️RetainedCompactionJob", start);
+  const retained = start < 0 || end < 0 ? "" : compact.slice(start, end);
+  const facadeStart = engine.indexOf("pub fn compact_document_retained");
+  const facadeEnd = engine.indexOf("pub async fn hello", facadeStart);
+  const facade = facadeStart < 0 || facadeEnd < 0 ? "" : engine.slice(facadeStart, facadeEnd);
+  const failures: string[] = [];
+  const waits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
+  if (waits !== 1 || facade.includes("block_on(") || !facade.includes("DatabaseCompactionFuture::try_submit") || !facade.includes("let requested_at_ms = now_ms().await") || !facade.includes("compaction.await?.close_and_take_report()") || !facade.includes("Err(rejected) => return Err(rejected.close_and_take_error())")) failures.push("P1y selected facade wait was not cut over to the retained terminal witness with one remaining sync-hello wait and admitted epoch");
+  for (const required of [
+    "const DATABASE_COMPACTION_SLOTS: usize = 32",
+    "const DATABASE_COMPACTION_MAX_SEGMENTS: usize = 64",
+    "const DATABASE_COMPACTION_MAX_HASHES: usize = 4_096",
+    "DATABASE_COMPACTION_OPERATION_ITEMS",
+    "DATABASE_COMPACTION_OPERATION_BYTES",
+    "DATABASE_COMPACTION_TOTAL_ITEMS",
+    "DATABASE_COMPACTION_TOTAL_BYTES",
+    "document.0.capacity() > db_storage::DbIoText::maximum_capacity()",
+    "fn database_compaction_observe_backing",
+    "descriptor.roots.capacity()",
+    "descriptor.new_pages.capacity()",
+    "index_document.0.capacity()",
+    "async fn close_compaction_descriptor",
+    "database_compaction_admit_descriptor",
+    "generation.checked_add(1)",
+    "DatabaseCompactionAdmission::try_claim(&document)",
+    "database_compaction_registry()",
+    "struct DatabaseCompactionSegmentOwners",
+    "struct DatabaseCompactionHashOwners",
+    "CompactionRetainedPages",
+    "type DatabaseCompactionExecutionFuture",
+    "quarantined: Option<DatabaseCompactionExecutionFuture>",
+    "pub struct DatabaseCompactionResult",
+    "pub struct DatabaseCompactionRejected",
+  ]) if (!retained.includes(required)) failures.push(`P1y fixed retained authority missing ${required}`);
+  if (!compact.includes("pub struct CompactionIndexReports") || !compact.includes("slots: [Option<IndexKindReport>; COMPACTION_INDEX_REPORTS]") || compact.includes("pub struct CompactionIndexReports(Vec")) failures.push("P1y fixed index report authority is missing");
+  if ((retained.match(/close_compaction_descriptor\(/g)?.length ?? 0) < 6) failures.push("P1y admitted snapshot descriptor owners do not all use incremental backing retirement");
+  if ((retained.match(/generation\.checked_add\(1\)/g)?.length ?? 0) < 2) failures.push("P1y admission and snapshot publication generations are not both overflow-checked");
+  if (/\b(Vec|HashMap|HashSet|BTreeMap|BTreeSet)\s*</.test(retained)) failures.push("P1y retained production region contains a dynamic working-set collection");
+  for (const authority of ["Idle", "Queued", "Driving", "Retry"])
+    if (!retained.includes(`DatabaseCompactionDriverAuthority::${authority}`)) failures.push(`P1y atomic driver authority missing ${authority}`);
+  const schedule = retained.slice(retained.indexOf("fn schedule(self: &Arc<Self>)"), retained.indexOf("fn submit_exact"));
+  const submit = retained.slice(retained.indexOf("fn submit_exact"), retained.indexOf("fn retry("));
+  const retry = retained.slice(retained.indexOf("fn retry("), retained.indexOf("fn drive_one"));
+  const drive = retained.slice(retained.indexOf("fn drive_one"), retained.indexOf("fn poll_one"));
+  const poll = retained.slice(retained.indexOf("fn poll_one"), retained.indexOf("fn move_output_to_terminal"));
+  const callbackClose = retained.slice(retained.indexOf("fn drive_close_claimed"), retained.indexOf("fn close_terminal_one"));
+  if (!schedule.includes("compare_exchange(DatabaseCompactionDriverAuthority::Idle as u8, DatabaseCompactionDriverAuthority::Queued as u8") || !schedule.includes("self.submit_exact") || !schedule.includes("callback_close.load(Ordering::Acquire) && execution_terminal")) failures.push("P1y scheduling lacks the unique Idle-to-Queued owner claim or permits callback cleanup to poll a live backend future");
+  if (callbackClose.includes("poll_one(")) failures.push("P1y callback/drop cleanup can poll the live backend future outside typed Lane::Io");
+  if (!submit.includes("self.pool.try_submit(Lane::Io, job)") || !submit.includes("Some((error.into_job(), next))") || !submit.includes("DatabaseCompactionDriverAuthority::Retry") || !submit.includes("self.pool.callback_at")) failures.push("P1y Lane::Io saturation does not retain and register the exact retry closure");
+  if (!retry.includes("DATABASE_COMPACTION_RETRY_LIMIT") || !retry.includes("self.deadline_ms.load") || !retry.includes("self.cancelled.load") || !retry.includes("DatabaseCompactionDriverAuthority::Retry as u8, DatabaseCompactionDriverAuthority::Queued as u8") || !retry.includes("self.submit_exact(job, attempt)")) failures.push("P1y retry exhaustion/cancel/deadline does not retain the exact closure for eventual Lane::Io cleanup");
+  if (!drive.includes("DatabaseCompactionDriverAuthority::Queued as u8, DatabaseCompactionDriverAuthority::Driving as u8") || drive.indexOf("self.poll_one()") > drive.indexOf("self.driver.store(DatabaseCompactionDriverAuthority::Idle as u8") || drive.indexOf("self.wake_requested.swap(false") > drive.indexOf("self.driver.store(DatabaseCompactionDriverAuthority::Idle as u8")) failures.push("P1y driver can release its claim before polling and consuming the published wake");
+  if (!poll.includes("core.future = Some(future)") || !poll.includes("core.output = Some(output)") || !poll.includes("core.quarantined = Some(future)") || !poll.includes("std::panic::catch_unwind") || poll.indexOf("core.output = Some(output)") > poll.indexOf("drop(core)")) failures.push("P1y Pending/Ready/panic does not publish every exact owner before driver release");
+  const opportunity = retained.slice(retained.indexOf("async fn compaction_opportunity"), retained.indexOf("fn compaction_resource"));
+  if (!opportunity.includes("semio_framework_async::yield_once().await") || !opportunity.includes("cancelled.load")) failures.push("P1y opportunity does not yield and check cancellation once");
+  for (const body of ["contains", "retained_compaction_under_lease", "retained_compaction_snapshot"])
+    if (retained.indexOf(`${body}(`) < 0 || retained.indexOf("compaction_opportunity", retained.indexOf(`${body}(`)) < 0) failures.push(`P1y cursor ${body} lacks bounded opportunity control`);
+  if (!retained.includes("let release = storage.lease().await.release") || !retained.includes("match (run, release)") || !retained.includes("(Err(error), _) => Err(error)") || !retained.includes("DatabaseCompactionProgress::LeaseRelease")) failures.push("P1y cancellation/fault does not prioritize exact lease release with earlier-run error precedence");
+  if (!retained.includes("DEFAULT_LEASE_TTL_MS, now_ms") || !retained.includes("let observed_generation = snapshot.latest_generation(document).await?") || !retained.includes("observed_generation != Some(latest_generation)") || !retained.includes("new_generation != expected_generation")) failures.push("P1y lease/publication is not qualified by the admitted epoch and exact snapshot generation revalidation");
+  if (!retained.includes("pool.callback_at(deadline_ms, move || deadline.deadline_callback())") || !retained.includes("expired.store(true") || !retained.includes("DbError::Timeout(\"database compaction deadline\"")) failures.push("P1y deadline does not use the mounted production callback and typed terminal result");
+  const resultDrop = retained.slice(retained.indexOf("impl Drop for DatabaseCompactionResult"), retained.indexOf("pub struct DatabaseCompactionFuture"));
+  const futureDrop = retained.slice(retained.indexOf("impl Drop for DatabaseCompactionFuture"), retained.indexOf("struct DatabaseCompactionRejectedClose"));
+  if (!resultDrop.includes("DatabaseCompactionTerminalOwners::from_execution") || !resultDrop.includes("state.arm_callback_close()") || !futureDrop.includes("state.abandoned.store(true") || !futureDrop.includes("state.cancelled.store(true") || !futureDrop.includes("state.schedule()")) failures.push("P1y result/future Drop can destroy or orphan retained owners");
+  const publicPoll = retained.slice(retained.indexOf("impl Future for DatabaseCompactionFuture"), retained.indexOf("impl Drop for DatabaseCompactionFuture"));
+  const firstOutputCheck = publicPoll.indexOf("core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take()");
+  const registerWaker = publicPoll.indexOf("= Some(context.waker().clone())");
+  const secondOutputCheck = publicPoll.indexOf("core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take()", firstOutputCheck + 1);
+  if (firstOutputCheck < 0 || registerWaker < firstOutputCheck || secondOutputCheck < registerWaker || publicPoll.indexOf("state.schedule()", secondOutputCheck) < secondOutputCheck) failures.push("P1y public completion lacks check-register-recheck lost-wake closure");
+  const close = retained.slice(retained.indexOf("impl DatabaseCompactionTerminalOwners"), retained.indexOf("struct DatabaseCompactionCore"));
+  if (!close.includes("report.index_reports.close_step()") || !close.includes("holder.as_mut().is_some_and") || !close.includes("self.document.take().is_some() || self.storage.take().is_some()") || close.includes("while ") || close.includes("loop {")) failures.push("P1y terminal close is not exactly one report/holder/document/storage owner per opportunity");
+  for (const eager of ["segment_horizons", "plan_wal_retention", "apply_wal_retention", "sweep_payloads", "compact_all_indexes", "collect_chain_pages", "SnapshotConsolidator", "build_cold_archive", "Compactor<'storage>"])
+    if (!compactSource.includes(`#[cfg(test)]\n${eager === "SnapshotConsolidator" || eager === "Compactor<'storage>" ? "pub struct " : eager === "plan_wal_retention" ? "pub fn " : ""}${eager}`) && !compactSource.includes(`#[cfg(test)]\nasync fn ${eager}`) && !compactSource.includes(`#[cfg(test)]\npub async fn ${eager}`)) failures.push(`P1y eager compatibility path remains live: ${eager}`);
+  const laws: readonly [string, readonly string[]][] = [
+    ["retained_compaction_handoff_to_first_poll_cancel_uses_real_io_lane_and_releases_exact_owners_under_eight_ms", ["held_compaction_worker_pool", "DatabaseCompactionDriverAuthority::Queued", "future.cancel()", "Arc::as_ptr(&storage)", "document.0.as_ptr()", "from_millis(8)", "DbError::Closed", "database_compaction_registry"]],
+    ["retained_compaction_actual_deadline_callback_lost_wake_and_drop_close_release_lease_once", ["deadline_ms.store(0", "state.deadline_callback", "Wake::wake_by_ref", "DbError::Timeout", "admission", "DatabaseCompactionDriverAuthority::Idle"]],
+    ["retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority", ["DATABASE_COMPACTION_SLOTS", "p1y-slot-max-plus-one", "database compaction admission slots", "maximum_capacity() + 1", "document.0.as_ptr()", "DatabaseCompactionHashOwners", "DATABASE_COMPACTION_MAX_HASHES", "SnapshotDescriptor", "Vec::with_capacity(DATABASE_COMPACTION_OPERATION_ITEMS as usize)", "database_compaction_admit_descriptor", "database compaction snapshot backing"]],
+    ["retained_compaction_stale_aba_drop_and_partial_terminal_close_keep_one_generation_owner_per_opportunity", ["replacement", "DbError::StaleGeneration", "database_compaction_registry", "DatabaseCompactionTerminalOwners", "before - after, 1", "terminal_is_empty"]],
+  ];
+  for (const [law, evidence] of laws) {
+    const body = interactivityDatabaseCompactionFixtureBody(compactSource, law);
+    if (!body || evidence.some((token) => !body.includes(token))) failures.push(`P1y hostile law ${law} is missing production-path evidence`);
+  }
+  for (const required of ["Selected Production Wait", "Database::compact_document", "run_from_latest_snapshot", "explicit resumable state owner", "generation-tagged slots", "lease", "cancellation", "timing validation"])
+    if (!contractSource.includes(required)) failures.push(`P1y governing census lost ${required}`);
+  if (!contractSource.includes("The P1y facade cut is `Database::compact_document`")) failures.push("P1y governing census lost the exact selected facade cut");
+  return failures;
+}
+
+function interactivityDatabaseCompactionSelfTests(compact: string, engine: string, contract: string): void {
+  const baseline = interactivityDatabaseCompactionFailures(compact, engine, contract);
+  if (baseline.length !== 0) throw new Error(`[verify interactivity p1y] live source rejected before mutations: ${baseline.join("; ")}`);
+  const mutations: readonly [string, "compact" | "engine" | "contract", string, string][] = [
+    ["slot-cap-removed", "compact", "const DATABASE_COMPACTION_SLOTS: usize = 32", "const DATABASE_COMPACTION_SLOTS: usize = usize::MAX"],
+    ["capacity-ledger-uses-len", "compact", "document.0.capacity() > db_storage::DbIoText::maximum_capacity()", "document.0.len() > db_storage::DbIoText::maximum_capacity()"],
+    ["descriptor-capacity-ledger-uses-len", "compact", "descriptor.roots.capacity()", "descriptor.roots.len()"],
+    ["index-capacity-ledger-uses-len", "compact", "index_document.0.capacity()", "index_document.0.len()"],
+    ["descriptor-retirement-removed", "compact", "close_compaction_descriptor(descriptor).await", "drop(descriptor)"],
+    ["unchecked-generation", "compact", "generation.checked_add(1)", "generation + 1"],
+    ["dynamic-hash-set", "compact", "struct DatabaseCompactionHashOwners", "struct DatabaseCompactionHashSet(HashSet<pack::ContentHash>)"],
+    ["opportunity-no-yield", "compact", "async fn compaction_opportunity(cancelled: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {\n    semio_framework_async::yield_once().await;", "async fn compaction_opportunity(cancelled: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {\n    std::thread::yield_now();"],
+    ["wrong-lane", "compact", "self.pool.try_submit(Lane::Io, job)", "self.pool.try_submit(Lane::Maintenance, job)"],
+    ["saturation-drops-job", "compact", "Some((error.into_job(), next))", "drop(error)"],
+    ["retry-registration-removed", "compact", "self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.retry())", "drop(state)"],
+    ["retry-limit-removed", "compact", "attempt >= DATABASE_COMPACTION_RETRY_LIMIT", "false"],
+    ["driver-claim-removed", "compact", "DatabaseCompactionDriverAuthority::Queued as u8, DatabaseCompactionDriverAuthority::Driving as u8", "DatabaseCompactionDriverAuthority::Idle as u8, DatabaseCompactionDriverAuthority::Idle as u8"],
+    ["callback-polls-live-backend", "compact", "fn drive_close_claimed(self: Arc<Self>) {\n        use std::sync::atomic::Ordering;", "fn drive_close_claimed(self: Arc<Self>) {\n        let _ = self.poll_one();\n        use std::sync::atomic::Ordering;"],
+    ["terminal-schedule-bypasses-guard", "compact", "self.callback_close.load(Ordering::Acquire) && execution_terminal", "self.callback_close.load(Ordering::Acquire) || execution_terminal"],
+    ["pending-owner-dropped", "compact", "core.future = Some(future)", "drop(future)"],
+    ["ready-owner-dropped", "compact", "core.output = Some(output)", "drop(output)"],
+    ["panic-quarantine-dropped", "compact", "core.quarantined = Some(future)", "drop(future)"],
+    ["lease-release-removed", "compact", "let release = storage.lease().await.release", "let release = async { Ok(()) }.await"],
+    ["lease-admitted-epoch-removed", "compact", "let fence = lease.acquire(resource.as_str(), holder.as_str(), DEFAULT_LEASE_TTL_MS, now_ms).await?", "let fence = lease.acquire(resource.as_str(), holder.as_str(), DEFAULT_LEASE_TTL_MS, 0).await?"],
+    ["snapshot-revalidation-removed", "compact", "observed_generation != Some(latest_generation)", "false"],
+    ["snapshot-publication-generation-check-removed", "compact", "new_generation != expected_generation", "false"],
+    ["deadline-registration-removed", "compact", "pool.callback_at(deadline_ms, move || deadline.deadline_callback())", "drop(deadline)"],
+    ["future-drop-does-not-schedule", "compact", "if let Some(state) = self.state.take() {\n            state.abandoned.store(true, std::sync::atomic::Ordering::Release);\n            state.cancelled.store(true, std::sync::atomic::Ordering::Release);\n            state.callback_close.store(true, std::sync::atomic::Ordering::Release);\n            state.schedule();", "if let Some(state) = self.state.take() {\n            state.abandoned.store(true, std::sync::atomic::Ordering::Release);\n            state.cancelled.store(true, std::sync::atomic::Ordering::Release);\n            state.callback_close.store(true, std::sync::atomic::Ordering::Release);\n            drop(state);"],
+    ["lost-wake-recheck-removed", "compact", "*state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());\n        if let Some(execution) = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take()", "*state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());\n        if let Some(execution) = None"],
+    ["dynamic-report", "compact", "pub struct CompactionIndexReports", "pub struct CompactionIndexReports(Vec<IndexKindReport>)"],
+    ["eager-compactor-live", "compact", "#[cfg(test)]\npub struct Compactor<'storage>", "pub struct Compactor<'storage>"],
+    ["facade-blocking", "engine", "compaction.await?.close_and_take_report()", "db_actor::block_on(compaction).close_and_take_report()"],
+    ["handoff-law-removed", "compact", "retained_compaction_handoff_to_first_poll_cancel_uses_real_io_lane_and_releases_exact_owners_under_eight_ms", "removed_handoff_law"],
+    ["deadline-law-removed", "compact", "retained_compaction_actual_deadline_callback_lost_wake_and_drop_close_release_lease_once", "removed_deadline_law"],
+    ["max-law-removed", "compact", "retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority", "removed_max_law"],
+    ["aba-law-removed", "compact", "retained_compaction_stale_aba_drop_and_partial_terminal_close_keep_one_generation_owner_per_opportunity", "removed_aba_law"],
+    ["contract-loses-selected-wait", "contract", "The P1y facade cut is `Database::compact_document`", "The P1y facade cut is `Database::other_wait`"],
+  ];
+  for (const [name, target, from, to] of mutations) {
+    const source = target === "compact" ? compact : target === "engine" ? engine : contract;
+    if (!source.includes(from)) throw new Error(`[verify interactivity p1y] mutation ${name} did not bind live source`);
+    const mutated = source.replace(from, to);
+    const failures = interactivityDatabaseCompactionFailures(target === "compact" ? mutated : compact, target === "engine" ? mutated : engine, target === "contract" ? mutated : contract);
+    if (failures.length === 0) throw new Error(`[verify interactivity p1y] hostile mutation ${name} was falsely accepted`);
+  }
+}
+//#endregion 🧹P1yDatabaseCompaction
 
 function interactivityArtifactHistoryFailures(engineSource: string, artifactSource: string, walSource: string): string[] {
   const engine = interactivityProductionSource(engineSource);

@@ -38,6 +38,14 @@ pub enum SequenceMutation {
     DisconnectSteps(DisconnectSteps),
     DuplicateStep(DuplicateStep),
 }
+
+/// 🏷️ The kebab spelling of every [`SequenceMutation`] variant, in DECLARATION ORDER — the one list
+/// the language-neutral test platform is measured against. It is duplicated in exactly two other
+/// places on purpose: this subset's own oracle manifest catalog `sequence-1-any`
+/// (`../../🧪️oracle/🔣️component.json`), which the completeness gate counts, and the
+/// `mutate-sequence-1` case adapter, which must not link this crate in the oracle role.
+/// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
+pub const KINDS: &[&str] = &["create-step", "delete-step", "move-step", "edit-step-params", "change-step-collapsed", "connect-steps", "disconnect-steps", "duplicate-step"];
 //#endregion 🔖️Mutations
 
 pub use super::change_step_collapsed::mutation::{change_step_collapsed, ChangeStepCollapsed};
@@ -114,6 +122,45 @@ pub async fn apply_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &Seq
 pub async fn inverse_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> Vec<SequenceMutation> {
     mutation.inverse(snapshot)
 }
+
+//#region 🔖️CaseBridges
+/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "createStep", …}`) JSON projection —
+/// the shape the `mutate-sequence-1` case's `Examples` rows carry — into a real
+/// [`SequenceMutation`]. A thin `serde_json` wrapper (already a direct dependency of this crate, used
+/// behind this interface per CLAUDE.md's "external libraries behind an interface" rule, never a new
+/// one), so the case reads the committed feature row instead of re-declaring it as a Rust literal.
+pub fn decode_sequence_mutation_json(text: &str) -> Result<SequenceMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📥️ Decodes a committed `{"steps": [...], "edges": [...]}` document into the real step/edge values
+/// a composed content child is seeded with. `StepParams` wraps a `Dictionary` whose integer/decimal
+/// distinction only its own `serde` round trip preserves, so a caller outside this crate cannot
+/// rebuild a step by hand without losing exactly the fidelity `edit-step-params` exists to move.
+pub fn decode_sequence_scene_json(text: &str) -> Result<(Vec<crate::artifacts::sequence::SequenceStep>, Vec<crate::artifacts::sequence::SequenceEdge>), String> {
+    #[derive(serde::Deserialize)]
+    struct CommittedScene {
+        #[serde(default)]
+        steps: Vec<crate::artifacts::sequence::SequenceStep>,
+        #[serde(default)]
+        edges: Vec<crate::artifacts::sequence::SequenceEdge>,
+    }
+    let scene: CommittedScene = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    Ok((scene.steps, scene.edges))
+}
+
+/// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, steps, edges)` read back
+/// off the composed content child's working scene. It belongs to the subset rather than to a test
+/// adapter, because what counts as this document's meaning is this subset's ruling, not a case's.
+/// The content handle is deliberately absent: `sequence_content_child_handle` content-addresses
+/// exactly this step/edge pair through `std`'s deliberately unspecified `DefaultHasher`, so
+/// projecting it would compare the same content twice and pin a value the standard library does not
+/// promise.
+pub fn encode_sequence_projection_json(snapshot: &SequenceSnapshot) -> String {
+    let scene = crate::artifacts::sequence::sequence_working_scene(snapshot);
+    serde_json::json!({ "schema": snapshot.schema, "steps": scene.steps, "edges": scene.edges }).to_string()
+}
+//#endregion 🔖️CaseBridges
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -310,5 +357,22 @@ mod tests {
         assert_fatal_never_applies(&outcome);
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🔖️KindsCatalog
+    /// 🏷️ [`KINDS`] is the bridge between this enum and the language-neutral test platform, which
+    /// never parses Rust. This proves it names every variant, in declaration order, with the same
+    /// kebab spelling `#[derive(dsl::Mutations)]` derives — and that this subset's own committed
+    /// catalog declares exactly the same set, so the completeness gate cannot be measuring a
+    /// vocabulary that has drifted away from the code.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let declared: Vec<&str> = <SequenceMutation as SemanticMutation<SequenceSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
+        assert_eq!(KINDS, declared.as_slice(), "KINDS must name every SequenceMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog sequence-1-any");
+        }
+    }
+    //#endregion 🔖️KindsCatalog
 }
 //#endregion 🧪️Tests

@@ -9,9 +9,10 @@ use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::terminology::CadLabels;
-use crate::editor::cad::{cad_action, cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
+use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
+use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{
-    build_world_3d_scene, mesh_from_kind, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, LocalizedLabel, ModeDefinition, UiNode, WindowEngagement, WindowEngagementInput,
+    mesh_from_kind, world3d_mesh_id_from_url, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, ModeDefinition, UiAssemblyResult, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
 use serde_json::{json, Value};
@@ -25,7 +26,7 @@ pub fn definition() -> ModeDefinition {
 }
 
 /// 🪟️ One quadrant of the quad layout: a stack holding a single window kind.
-async fn cad_window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
+fn cad_window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
     WindowLayoutChild::Stack(WindowLayoutStackNode {
         kind: "stack".into(),
         size,
@@ -186,44 +187,22 @@ pub fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<
 /// `🔖️Composition` in `🏪️store/🦀️component.rs`). Renders an empty object list per pane until a
 /// resolved-child-content render path exists; `world_instances_json`/`world_meshes_json` themselves
 /// are untouched real functions, just fed an empty slice here.
-pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiNode {
+pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, _surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
     let objects: &[CadObject] = &[];
-    let preview = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane).map(preview_display_items).filter(|items| !items.is_empty()).map(|items| serde_json::to_string(&items).unwrap_or_else(|_| "[]".into()));
-    build_world_3d_scene(
-        surface_id,
-        CAD_PLAY_APP_ID,
-        world3d_scene_extended(
-            camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
-            world_meshes_json(objects, None),
-            world_instances_json(objects, &envelope.runtime),
-            world_selection_json(&envelope.document, &envelope.runtime, active_utility, options),
-            None,
-            None,
-            None,
-            world_references_json(&envelope.document, pane),
-            None,
-            None,
-            preview,
-            None,
-            Some(world3d_chunking_json(256.0, 8000.0)),
-            Some(world3d_environment_json(&envelope.runtime.sun)),
-            None,
-            None,
-            None,
-            None,
-            None,
-            // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): all four CAD panes bind the
-            // same `CAD_INTERACTION_DOMAIN` (see `create_cad_app`'s `.window_kind_interactions` calls)
-            // — a plain whole-object pick/hover on this shared world-3d surface targets that domain's
-            // `"object"` granularity, not the OS's own bare `world` board domain.
-            Some(CAD_INTERACTION_DOMAIN.into()),
-            Some("object".into()),
-        ),
-    )
+    MeshWindowKit::render(&MeshView {
+        camera_json: camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
+        meshes_json: world_meshes_json(objects, None),
+        instances_json: world_instances_json(objects, &envelope.runtime),
+        selection_json: world_selection_json(&envelope.document, &envelope.runtime, active_utility, options),
+    })
 }
 //#endregion 🔖️WorldScene
 
 //#region 🔖️Engagement
+fn cad_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+}
+
 pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is framework-owned
     // now and unreachable at this render boundary (see `instance_is_component_hovered`'s doc

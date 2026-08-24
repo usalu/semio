@@ -78,7 +78,7 @@ mod terrain_fixture_text {
     /// 🔤️ Splits one line into whitespace-separated tokens, treating a `"..."` quoted run (escapes
     /// `\\`, `\"`, `\n`) as part of the token it's glued to — so `label="Institut de Botanique"`
     /// lexes as one `label=Institut de Botanique` token even though the value contains spaces.
-    async fn line_tokens(line: &str) -> Vec<String> {
+    fn line_tokens(line: &str) -> Vec<String> {
         let mut tokens = Vec::new();
         let mut chars = line.chars().peekable();
         while let Some(&c) = chars.peek() {
@@ -122,15 +122,15 @@ mod terrain_fixture_text {
         tokens
     }
 
-    async fn kv_lookup<'a>(tokens: &'a [String], key: &str) -> Option<&'a str> {
+    fn kv_lookup<'a>(tokens: &'a [String], key: &str) -> Option<&'a str> {
         tokens.iter().find_map(|token| token.strip_prefix(&format!("{key}=")))
     }
 
-    async fn parse_project_origin(tokens: &[String]) -> Option<TerrainProjectOrigin> {
+    fn parse_project_origin(tokens: &[String]) -> Option<TerrainProjectOrigin> {
         Some(TerrainProjectOrigin { lon: kv_lookup(tokens, "lon")?.parse().ok()?, lat: kv_lookup(tokens, "lat")?.parse().ok()? })
     }
 
-    async fn parse_position(tokens: &[String]) -> Option<TerrainPositionData> {
+    fn parse_position(tokens: &[String]) -> Option<TerrainPositionData> {
         Some(TerrainPositionData {
             id: kv_lookup(tokens, "id")?.to_string(),
             lon: kv_lookup(tokens, "lon")?.parse().ok()?,
@@ -143,7 +143,7 @@ mod terrain_fixture_text {
     /// 📥️ Parses every `origin`/`position` line of the fixture text (its `gisterrain exaggeration=...`
     /// header is parsed separately, see module docs); malformed or missing lines simply contribute
     /// nothing, so a truncated/empty fixture yields the world origin with no positions rather than an error.
-    pub(super) async fn parse_descriptor(text: &str, schema: &str, exaggeration: f64) -> TerrainDescriptorJson {
+    pub(super) fn parse_descriptor(text: &str, schema: &str, exaggeration: f64) -> TerrainDescriptorJson {
         let mut project_origin = TerrainProjectOrigin { lon: 0.0, lat: 0.0 };
         let mut positions = Vec::new();
         for line in text.lines() {
@@ -169,7 +169,7 @@ mod terrain_fixture_text {
 /// 🔌️ `map:in`'s overlay pin layer (see `GisTerrainSnapshot::imported_features_json`), decoded from
 /// its `{positions:[{id,lon,lat,label?,icon?}]}` descriptor JSON — malformed/empty JSON (including the
 /// default empty string) simply contributes no extra pins.
-async fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData> {
+fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData> {
     let Ok(value) = serde_json::from_str::<serde_json::Value>(&document.imported_features_json) else {
         return Vec::new();
     };

@@ -70,7 +70,7 @@ impl store::ArtifactPack for Gis3dConfig {
 /// 🎥️ A default overview camera scaled for a real-world DEM tile patch (hundreds of meters to a
 /// few kilometers wide) — the generic `world3d_default_camera()` (position `[4,-4,3]`) assumes an
 /// object-scale scene and would sit inside the ground here.
-async fn default_gis3d_camera_json() -> String {
+fn default_gis3d_camera_json() -> String {
     serde_json::json!({ "position": [800.0, -800.0, 600.0], "target": [0.0, 0.0, 0.0], "up": [0.0, 0.0, 1.0], "fov": 45.0 }).to_string()
 }
 

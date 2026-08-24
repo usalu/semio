@@ -45,7 +45,7 @@ These Rust laws were added as source evidence but were not executed because this
 
 `bun ./📜️script.ts verify interactivity p1x` is dispatched at root script line 5949. The live semantic verifier begins at line 10255 and checks exact two-wait caller cutover, fixed admission, base identity, every retained phase, cursor granularity, typed I/O lane, atomic driver/retry ordering, Pending/Ready/panic owner publication, checked revalidation, single-owner retirement, result/refusal/Drop authority, facade ordering, forbidden constructs and every hostile law body.
 
-The self-test at line 10396 installs 62 hostile mutations. They include third wait, caller `block_on`, mutable base vector, missing revision/pending identity, len accounting, unchecked generation/revision, admission after clone, shallow scan/copy/encode/seal, missing snapshot identity, combined handoff/poll, wrong lane, dropped saturated job, removed/reordered driver claims, Ready/Pending/panic owner loss, durable-Ready cancellation regression, publication before revalidation, bulk retirement, lost completion recheck, result/rejection Drop loss, facade spawn-before-durability, bounded-retry/cancel/deadline/currentness loss, exact retry-job loss, callback-close bypass, every observed-capacity omission/reordering, blocking Claim/Revalidate/Retire locks, deep clone under lock, and a shallow mutation for each Rust law body.
+The self-test at line 10402 installs 75 hostile source/runtime/contract mutations. They include third wait, caller `block_on`, mutable base vector, missing revision/pending identity, len accounting, unchecked generation/revision, admission after clone, shallow scan/copy/encode/seal, missing snapshot identity, combined handoff/poll, wrong lane, dropped saturated job, removed/reordered driver claims, Ready/Pending/panic owner loss, durable-Ready cancellation regression, publication before revalidation, bulk retirement, lost completion recheck, result/rejection Drop loss, facade spawn-before-durability, bounded-retry/cancel/deadline/currentness loss, exact retry-job loss, exact main/rejection retry-timer registration removal, callback-close bypass, every observed-capacity omission/reordering, blocking Claim/Revalidate/Retire locks, deep clone under lock, manual caller timer driving, missing/reordered real worker-loop timer service, weakened sole-worker ownership language, detached two-worker contract evidence, and a shallow mutation for each Rust law body.
 
 ## Isolated Gates
 
@@ -66,7 +66,7 @@ The independent Terra audit `📓️codex-p1x-independent-source-static-acceptan
 
 | RED counterexample | Exact repair | Production/law evidence |
 |---|---|---|
-| A permanently saturated `Lane::Io` left both the main retry job and rejection-close job cycling forever at attempt eight; cancellation, deadline and stale generation could not reach retirement | Retry attempts are capped at eight. Main retry evaluates currentness, accepted cancellation and deadline before exhaustion, atomically claims `Retry → Driving`, publishes the refused job in `terminal_job`, stages the typed terminal result and advances one retained close opportunity from timer callback authority without another lane admission. Rejection-close performs the same exact-job terminal handoff on limit/deadline and closes one job/owner per callback opportunity. | engine lines 5315–5408 and 5861–5940; held-saturation law line 10745 proves cancel/deadline/exhaustion, no ninth refusal, zero backend polls, exact owner return, registry/admission release and rejection-close emptiness |
+| Sustained `Lane::Io` ingress saturation left both the main retry job and rejection-close job cycling forever at attempt eight whenever real worker-loop timer service was still available; cancellation, deadline and stale generation could not reach retirement | Retry attempts are capped at eight. Main retry evaluates currentness, accepted cancellation and deadline before exhaustion, atomically claims `Retry → Driving`, publishes the refused job in `terminal_job`, stages the typed terminal result and advances one retained close opportunity from timer callback authority without another lane admission. Rejection-close performs the same exact-job terminal handoff on limit/deadline and closes one job/owner per callback opportunity. | engine lines 5315–5408 and 5861–5940; real-worker-loop saturation law line 10813 proves cancel/deadline/exhaustion, no ninth refusal, zero backend polls, exactly one terminal-job retirement, registry/admission release and rejection-close emptiness after a finite held worker returns |
 | Admission bounded requested lengths but never observed allocator-returned `Vec`/`String`/page/`Arc` backing capacities | `DatabaseCreateCatalogBackingLedger` uses checked `u64::try_from` and checked item/byte addition. Preflight records input `String::capacity()` and immutable base `Vec::capacity()` before cloning. Scan records every base string allocation; Reserve and Clone store newly allocated owners before validating their observed capacities; Snapshot stores its `Arc`, writer and fixed page allocation before checked refusal. Every overage therefore remains reachable by incremental retirement. | engine lines 5016–5047, 5802–5809, 6127–6279; hostile controlled-overallocation law line 10506 proves candidate and cloned String overage faults retain then retire exact backing and release admission |
 | Claim/Revalidate could block a worker on the catalog mutex, and `Database::catalog` deep-cloned the maximum dynamic vector while holding it | Claim, Revalidate and the equivalent pending-token Retire cleanup use `try_lock`; `WouldBlock` preserves exact phase/ownership and arms one timer-wheel requeue. `Database::catalog` clones only the immutable `Arc` under the mutex, then deep-clones its view after the guard is gone. | engine lines 5811–5827, 6333–6371, 6454–6537 and 7295–7302; maximum-catalog contention law line 10871 holds the mutex across Claim, Revalidate and Retire and asserts each exact worker opportunity remains below 8 ms, retains pending ownership and rearms deterministically |
 
@@ -76,8 +76,45 @@ The remediation Rust laws are source/static evidence only. They were not execute
 
 ### Remediation Gate Rerun
 
-- `bun ./📜️script.ts verify interactivity p1x` — live source and all 62 hostile mutations clean.
+- `bun ./📜️script.ts verify interactivity p1x` — live source and all 75 hostile source/runtime/contract mutations clean.
 - `bun ./📜️script.ts verify interactivity p1w` — preserved live source and hostile mutations clean.
 - `bun ./📜️script.ts verify interactivity p1q-b1-b6` — preserved live source and hostile mutations clean.
 - scoped `rustfmt --edition 2021 --check` — clean.
 - scoped `git diff --check` over engine, root script and this report — clean.
+
+## Second Independent RED: Worker-Loop Liveness Truth
+
+The second independent report `📓️codex-p1x-post-red-independent-source-static-acceptance-reaudit-2026-08-24.md` correctly showed that `WorkerPool::callback_at` is not an independent execution source. Native callbacks run only when a shared worker returns to the head of the real `worker_loop`; the prior hostile law falsely supplied missing production progress by calling `timer_wheel().fire_due(u64::MAX)` from the test task.
+
+No timer thread, subsystem pool or caller-driven completion authority was added. The census contract now states the exact liveness precondition:
+
+- finite saturation and cancellation/deadline/exhaustion latency require at least one worker to return to the real loop;
+- with two or more workers, one retained worker can service timers while one bounded violator remains held;
+- a sole OS worker that permanently never returns is physical loss of the only execution substrate and is outside the latency guarantee, but exact job/storage/document/backing/admission/registry discoverability, zero backend polling and non-recursive Drop remain mandatory;
+- once service resumes, the retained authority closes exactly once.
+
+The old manual-fire law was replaced with three production-faithful source laws:
+
+1. `database_create_catalog_real_worker_loop_services_finite_saturation_cancel_deadline_exhaustion_and_close` holds a one-worker pool behind a finite gate while exact self-replenishing jobs keep `Lane::Io` saturated. After the worker returns, only its normal loop services timers. Cancel, deadline, retry exhaustion and rejection close all prove a pool-worker callback, exact owner identity, zero backend polls, one terminal-job retirement, eight-and-no-ninth refusal for exhaustion, and admission/registry drain.
+2. `database_create_catalog_two_worker_reserved_capacity_services_timers_while_one_violator_is_held` uses an interactive two-worker pool, holds one Maintenance violator plus a temporary setup gate, saturates both I/O queues with self-replenishing exact jobs, and drives real P1x/rejection authorities into `Retry`. Releasing only the service worker exercises their production `callback_at(... state.retry())` registrations while Maintenance remains held, proving cancel, deadline, eight-and-no-ninth exhaustion, rejection close, zero backend polls, one terminal-job retirement and registry/admission drain.
+3. `database_create_catalog_sole_permanently_nonreturning_worker_retains_discoverable_owners_without_latency_claim` holds the sole worker without supplying timer progress and proves `Retry` authority, exact refused job/storage/document/admission/registry retention, zero backend polls, a discoverable terminal witness and blocked—not recursive—close. The gate is released only for test cleanup, after the no-latency-claim evidence is complete.
+
+The verifier now reads the async runtime and P1x census contract in addition to the engine. It binds `fire_due_batch` before job selection in the live native `worker_loop`, callback registration plus idle notification, the narrowed contract phrases and all three law bodies. Mutations remove/reorder real loop timer service, remove idle notification, weaken the sole-worker limitation/ownership obligation, replace real-loop service with manual `fire_due`, add caller `fire_due` while preserving all other tokens, or shallow each new law. All are rejected.
+
+### Second RED Static Gate Rerun
+
+- `bun ./📜️script.ts verify interactivity p1x` — live engine/runtime/contract and all 75 mutations clean.
+- `bun ./📜️script.ts verify interactivity p1w` — preserved live source and mutations clean.
+- `bun ./📜️script.ts verify interactivity p1q-b1-b6` — preserved live source and mutations clean.
+- scoped engine `rustfmt --edition 2021 --check` — clean.
+- scoped engine/root-script/contract/report `git diff --check` — clean.
+
+Active peer Cargo/Nx processes existed during this source packet. No Cargo, Nx, broad build, Wasm or browser command was started here.
+
+## Third Independent RED: Exact P1x Retry Registration Evidence
+
+The third independent report `📓️codex-p1x-third-independent-worker-loop-source-static-acceptance-audit-2026-08-24.md` found that the prior two-worker law exercised only a detached generic `WorkerPool::callback_at`, and that the verifier accepted replacing P1x's refusal-branch `move || state.retry()` registration with `drop(state)` because unrelated callback sites preserved a global token.
+
+The two-worker law now mounts actual P1x create and rejection-close authorities under deterministic dual-queue saturation. It proves each authority is in `Retry` with its exact refused job before releasing only the service worker, while the Maintenance violator remains blocked. All cancel/deadline/exhaustion/rejection results therefore depend on the real P1x retry callback registration and real worker-loop timer service, not a sentinel callback.
+
+The verifier now slices each main/rejection `submit_exact` body independently. It requires exact refused-job publication before `Queued → Retry`, followed in the same refusal branch by `self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.retry())`. Focused mutations remove the main registration and the rejection-close registration independently; both fail even though catalog-contention and terminal-close callbacks remain elsewhere. A separate contract mutation replaces the actual-P1x two-worker requirement with a generic callback claim and also fails.

@@ -4,10 +4,8 @@
 //! `render`'s doc comment for why it now always renders the document summary.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::Puzzle3dScene;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase};
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use semio_framework_ui_contract as ui;
+use crate::editor::puzzle3d::{ui_label, ui_node_list, Puzzle3dScene};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.inspector";
@@ -35,11 +33,11 @@ pub fn definition() -> PanelTabDefinition {
 /// as the same framework-level gap noted on `puzzle3d_brush_target_vortex` — not fixed here
 /// (framework file, out of this crate's remit).
 pub fn render(envelope: &Puzzle3dScene, term_labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let rows = vec![
-        ui::text(format!("{}: {}", term_labels.schema.as_str(), envelope.fixture.schema)).id("puzzle3d-play-inspector.schema").build(),
-        ui::text(format!("{}: {}", term_labels.domain.as_str(), envelope.fixture.domain)).id("puzzle3d-play-inspector.domain").build(),
-        ui::text(format!("{}: {}", term_labels.objects.as_str(), envelope.fixture.objects.len())).id("puzzle3d-play-inspector.objects").build(),
-    ];
-    PanelTreeBuilder::new("puzzle3d-play-inspector")?.section("puzzle3d-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, rows)?.build()
+    let rows = ui_node_list([
+        tree_item_desc("puzzle3d-play-inspector.schema", ui_label(term_labels.schema.as_str())?, Some(envelope.fixture.schema.clone())),
+        tree_item_desc("puzzle3d-play-inspector.domain", ui_label(term_labels.domain.as_str())?, Some(envelope.fixture.domain.clone())),
+        tree_item_desc("puzzle3d-play-inspector.objects", ui_label(term_labels.objects.as_str())?, Some(envelope.fixture.objects.len().to_string())),
+    ])?;
+    PanelTreeBuilder::new("puzzle3d-play-inspector")?.section("puzzle3d-play-inspector.empty", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
 }
 //#endregion 🔖️Render

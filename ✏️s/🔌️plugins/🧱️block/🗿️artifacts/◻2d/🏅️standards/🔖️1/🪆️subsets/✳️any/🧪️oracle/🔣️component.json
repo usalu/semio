@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `Block2dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "block-2d-mutation-semantics",
+      "capabilities": ["block-2d-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `Block2dMutation`. This document is not a drawing: it is the DEFINITION of a node kind — its identity record, its 2d presentation, the handle kinds it offers, the handles it places, the compatibility rules it publishes, its attributes, its authors and its editor camera. The vocabulary is therefore about authoring a kind, not about placing instances, and that distinction IS the specification. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability (a kind must move the compared projection) and footprint completeness (`before` and `after` may differ on exactly the fields the committed diff declares).",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "block-2d-1-any",
+      "capability": "block-2d-1-mutate",
+      "kinds": [
+        "rename-node-kind",
+        "change-node-kind-label",
+        "change-node-kind-variant",
+        "change-node-kind-description",
+        "change-node-kind-icon",
+        "change-node-kind-unit",
+        "update-presentation",
+        "create-handle-kind",
+        "delete-handle-kind",
+        "rename-handle-kind",
+        "change-handle-kind-label",
+        "change-handle-kind-color",
+        "change-handle-kind-default-wire-kind",
+        "create-handle",
+        "delete-handle",
+        "move-handle",
+        "change-handle-handle-kind",
+        "add-compatibility-rule",
+        "remove-compatibility-rule",
+        "add-attribute",
+        "remove-attribute",
+        "add-author",
+        "remove-author",
+        "move-camera2d",
+        "scale-camera2d",
+        "change-meta-description"
+      ]
+    }
+  ]
+}

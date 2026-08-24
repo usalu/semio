@@ -2,12 +2,12 @@
 //! 🎨️ Theme colors and metrics for wgpu UI rendering.
 
 use crate::wgpu::geometry::Rect;
-use crate::wgpu::presence_bar::{presence_color, PresenceAppearance, PresenceHsl};
+use crate::wgpu::presence_bar::{PresenceAppearance, PresenceHsl, presence_color};
 use ui_styling::appearance::AppearanceName;
 use ui_styling::{
-    levels,
+    CHROME_DARK, CHROME_LIGHT, ChromePalette, levels,
     metrics::{chrome as chrome_metrics, dom, typography},
-    radii, strokes, ChromePalette, CHROME_DARK, CHROME_LIGHT,
+    radii, strokes,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]

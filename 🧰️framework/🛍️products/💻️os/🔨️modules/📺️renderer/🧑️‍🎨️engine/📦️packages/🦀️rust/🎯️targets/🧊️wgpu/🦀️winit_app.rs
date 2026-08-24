@@ -20,12 +20,12 @@
 //! the just-created `Window` (or an explicit two-phase `NativeHost::new_pending()` API) would let a
 //! future revision drop this file's hand-rolled `ApplicationHandler` entirely.
 
-use crate::kernel_seam::KernelSeam;
-use crate::os_host::OsHost;
 use crate::AppInteractionState;
 use crate::RuntimeMailbox;
+use crate::kernel_seam::KernelSeam;
+use crate::os_host::OsHost;
 use std::sync::Arc;
-use ui_host::{should_request_redraw, RedrawOutcome, WindowDelegate, WindowMetrics};
+use ui_host::{RedrawOutcome, WindowDelegate, WindowMetrics, should_request_redraw};
 use ui_render::{CursorRequest, DispatchEvent, EventModifiers, InvalidationReason, PhysicalSize, PointerButton, PointerInfo};
 #[cfg(target_arch = "wasm32")]
 use ui_render::{PointerId, PointerKind};

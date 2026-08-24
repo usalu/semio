@@ -72,6 +72,56 @@ pub enum Block5dMutation {
     ScaleCamera3d(ScaleCamera3d),
     ChangeMetaDescription(ChangeMetaDescription),
 }
+
+//#region 🏷️Kinds
+/// 🏷️ The kebab-case spelling of every [`Block5dMutation`] variant, in declaration order — the exact
+/// vocabulary the `block-5d-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// the `mutate-block-5d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
+pub const KINDS: &[&str] = &[
+    "rename-part-kind",
+    "change-part-kind-label",
+    "change-part-kind-variant",
+    "change-part-kind-description",
+    "change-part-kind-icon",
+    "change-part-kind-unit",
+    "update-part2d",
+    "update-part3d",
+    "create-representation",
+    "delete-representation",
+    "rename-representation",
+    "change-representation-mesh-url",
+    "change-representation-lod",
+    "change-representation-description",
+    "add-representation-tag",
+    "remove-representation-tag",
+    "add-representation-attribute",
+    "remove-representation-attribute",
+    "create-grip-kind",
+    "delete-grip-kind",
+    "rename-grip-kind",
+    "change-grip-kind-label",
+    "change-grip-kind-color",
+    "change-grip-kind-default-rope-kind",
+    "create-grip",
+    "delete-grip",
+    "move-grip2d",
+    "move-grip3d",
+    "resize-grip3d",
+    "change-grip-grip-kind",
+    "add-compatibility-rule",
+    "remove-compatibility-rule",
+    "add-attribute",
+    "remove-attribute",
+    "add-author",
+    "remove-author",
+    "move-camera2d",
+    "scale-camera2d",
+    "move-camera3d",
+    "scale-camera3d",
+    "change-meta-description",
+];
+//#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
 pub use super::add_attribute::mutation::{add_attribute, AddAttribute};
@@ -382,5 +432,24 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🧪️KindsCatalog
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed oracle
+    /// manifest's catalog — the framework never parses Rust, so this is the only thing that keeps the
+    /// declared vocabulary and the measured one from drifting apart.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Block5dMutation as protocol::SemanticMutation<Block5dSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Block5dMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 }
 //#endregion 🧪️Tests

@@ -29,7 +29,7 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Proc
         return PanelTreeBuilder::new("procedural-play-inspector")?
             .section(
                 "procedural-play-inspector.empty",
-                Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+                Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?),
                 true,
                 crate::ui_node_list([
                     tree_item("procedural-play-inspector.schema", format!("{} {}", labels.schema_prefix.as_str(), fixture.schema)),
@@ -40,7 +40,7 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Proc
     };
     let Some(widget) = fixture.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
         return PanelTreeBuilder::new("procedural-play-inspector")?
-            .section("procedural-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, crate::ui_node_list([tree_item("procedural-play-inspector.none", labels.no_selection.as_str())])?)?
+            .section("procedural-play-inspector.empty", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, crate::ui_node_list([tree_item("procedural-play-inspector.none", labels.no_selection.as_str())])?)?
             .build();
     };
     let mut fields = semio_framework_plugin::UiFixedList::default();
@@ -52,7 +52,7 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Proc
         let action_args = crate::ui_value_map([("field", crate::ui_value_text("value")?), ("widgetIds", widget_ids)])?;
         let (action, args) = ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("patchFlowWidgets", Some(action_args))?;
         let control = input(InputKind::Number)
-            .value(value.to_string())
+            .value(crate::ui_text(value.to_string())?)
             .try_id("procedural-play-inspector.value.input")
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control-id", "fixed UI inspector admission failed"))?;
         let control = match args {
@@ -63,7 +63,7 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Proc
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control-binding", "fixed UI inspector admission failed"))?
             .try_build()
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control", "fixed UI inspector admission failed"))?;
-        let field = field(labels.value_field.as_str())
+        let field = field(crate::ui_label(labels.value_field.as_str())?)
             .try_id("procedural-play-inspector.value")
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field-id", "fixed UI inspector admission failed"))?
             .try_child(control)
@@ -91,7 +91,7 @@ pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Proc
     if let Widget::OutputExport { format, .. } = widget {
         fields.try_push(tree_item("procedural-play-inspector.export-format", format!("{}: {format}", labels.value_field.as_str()))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     }
-    PanelTreeBuilder::new("procedural-play-inspector")?.section("procedural-play-inspector.widget", Some(labels.widget_group.as_str().into()), true, fields)?.build()
+    PanelTreeBuilder::new("procedural-play-inspector")?.section("procedural-play-inspector.widget", Some(crate::ui_label(labels.widget_group.as_str())?), true, fields)?.build()
 }
 //#endregion 🔖️Render
 

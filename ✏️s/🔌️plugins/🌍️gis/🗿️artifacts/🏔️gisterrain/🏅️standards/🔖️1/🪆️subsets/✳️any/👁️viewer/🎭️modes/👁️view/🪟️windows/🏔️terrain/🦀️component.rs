@@ -9,7 +9,8 @@ use crate::artifacts::gisterrain::schema::{build_terrain_scene_json, TerrainDesc
 use crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::parse_descriptor;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use framework_surface::terrain::projection;
-use semio_framework_plugin::{build_world_3d_scene, world3d_scene_extended, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, world3d_scene_extended, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -50,7 +51,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 📍️ GIS pins are emitted as plain `World3d` instances with no matching `meshesJson` entry —
 /// `WorldInstancesLayer`'s existing missing-mesh fallback renders a small colored box, so a viewer
 /// still shows every imported overlay feature, just never lets one be selected.
-async fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
+fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     let instances: Vec<Value> = descriptor
         .positions
         .iter()
@@ -74,7 +75,7 @@ async fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
 /// trailing `Option<String>` extension fields — the last two (`domain_id`/`domain_granularity_id`)
 /// bind this window to the "features"/"pin" interaction domain (read-only for a viewer, but still the
 /// correct domain so a future hover affordance is a pure addition here), every other extension `None`.
-pub fn render(document: &GisTerrainSnapshot) -> UiNode {
+pub fn render(document: &GisTerrainSnapshot) -> UiAssemblyResult<BuiltNode> {
     let descriptor = parse_descriptor(document);
     let mut scene = world3d_scene_extended(
         GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON.into(),
@@ -100,7 +101,7 @@ pub fn render(document: &GisTerrainSnapshot) -> UiNode {
         Some("pin".into()),
     );
     scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
-    build_world_3d_scene(SURFACE_ID, GIS_TERRAIN_VIEW_CONTROLLER_ID, scene)
+    scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 

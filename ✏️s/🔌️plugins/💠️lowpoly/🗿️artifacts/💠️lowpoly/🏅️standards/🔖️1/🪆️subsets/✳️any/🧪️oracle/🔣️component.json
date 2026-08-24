@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `LowpolyMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "lowpoly-mutation-semantics",
+      "capabilities": ["lowpoly-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `LowpolyMutation` — a vocabulary over a document with exactly TWO top-level fields, `schema` and an id-keyed `objects` list whose members each carry an INDEX-keyed, anonymous `paintLayers` sub-collection. That two-level addressing is the whole point of the vocabulary and it is this subset's own specification, not a fact an external mesh or scene library could confirm or refute. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability (a kind must move the compared projection) and footprint completeness (`before` and `after` may differ on exactly the fields the committed diff declares, which is the precondition that makes the mutation undoable at all).",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "lowpoly-1-any",
+      "capability": "lowpoly-1-mutate",
+      "kinds": [
+        "create-object",
+        "delete-object",
+        "reorder-objects",
+        "rename-object",
+        "change-object-smooth-shading",
+        "move-object",
+        "rotate-object",
+        "scale-object",
+        "create-mesh",
+        "delete-mesh",
+        "insert-paint-layer",
+        "remove-paint-layer",
+        "rename-paint-layer",
+        "change-paint-layer-visible",
+        "change-paint-layer-opacity",
+        "change-paint-layer-blend-mode",
+        "edit-paint-layer"
+      ]
+    }
+  ]
+}

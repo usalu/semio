@@ -2,7 +2,7 @@
 
 use crate::editor::gis2d::config::{layer_visible, Gis2dConfig};
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
-use crate::editor::gis2d::{gis2d_action, GIS_MAP_LAYER_IDS};
+use crate::editor::gis2d::{gis2d_window_action, GIS_MAP_LAYER_IDS};
 use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
@@ -18,7 +18,7 @@ pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
             label: Some(gis2d_layer_label(id, labels).into()),
             pressed: layer_visible(cfg, id),
             text: None,
-            on_change: gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id }))),
+            on_change: gis2d_window_action("toggleLayerVisibility", Some(json!({ "layerId": id }))),
         })
         .collect();
     WindowMeasure::Group {

@@ -9,5 +9,5 @@ use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 
 /// 🧭️ The projection select + its parameter sliders for the materialized window's camera.
 pub fn measure(runtime: &Puzzle3dRuntime) -> WindowMeasure {
-    semio_framework::io::resolve_ready(world3d_projection_measures("puzzle3d", &runtime.camera.projection, puzzle3d_action))
+    world3d_projection_measures("puzzle3d", &runtime.camera.projection, puzzle3d_action)
 }

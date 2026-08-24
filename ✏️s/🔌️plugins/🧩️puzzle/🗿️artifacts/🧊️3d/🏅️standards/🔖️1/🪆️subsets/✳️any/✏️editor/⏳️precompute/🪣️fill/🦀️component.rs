@@ -2028,7 +2028,7 @@ impl FillBuilderRetirementCursor {
             18 => !retire_fill_preview(&mut fill.preview),
             19 => match fill.fixed_rejection.as_mut() {
                 Some(rejected) => {
-                    if rejected.retire_one() {
+                    if retire_retained_owner(rejected) {
                         fill.fixed_rejection.take();
                     }
                     true
@@ -3347,7 +3347,11 @@ impl FillBuilder {
         self.preview.candidate_cursor = self.candidate_cursor;
         self.preview.search_count = self.transition_count;
         self.preview.rejected_count = self.rejected_count;
-        StepOutcome::PreviewReady(Vec::new())
+        let bytes = serde_json::to_vec(&self.preview).unwrap_or_default();
+        let payload = context
+            .payload_from_bytes(semio_framework_job::JobPayloadStream::Preview, &bytes)
+            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview));
+        StepOutcome::PreviewReady(payload)
     }
 
     fn complete(&self) -> StepOutcome {
@@ -3385,7 +3389,10 @@ impl InteractiveJob for FillBuilder {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: b"stale-fill-operation".to_vec() });
+            let detail = context
+                .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"stale-fill-operation")
+                .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            return StepOutcome::Fault(JobFault { detail });
         }
         if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
             if !refusal.diagnostic_published {
@@ -3394,10 +3401,16 @@ impl InteractiveJob for FillBuilder {
                 self.preview.rejection_reason = Some(format!("preparation-capacity:{}", refusal.branch.label()));
                 return self.publish_preview(context);
             }
-            return StepOutcome::Fault(JobFault { detail: b"fill-preparation-capacity".to_vec() });
+            let detail = context
+                .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"fill-preparation-capacity")
+                .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            return StepOutcome::Fault(JobFault { detail });
         }
         if self.collection_over_capacity || self.fixed_rejection.is_some() {
-            return StepOutcome::Fault(JobFault { detail: b"fill-fixed-collection-capacity".to_vec() });
+            let detail = context
+                .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"fill-fixed-collection-capacity")
+                .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            return StepOutcome::Fault(JobFault { detail });
         }
         if context.should_yield() {
             return StepOutcome::Yield;

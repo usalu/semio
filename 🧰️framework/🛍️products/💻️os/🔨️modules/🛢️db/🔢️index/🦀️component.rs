@@ -865,6 +865,11 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         IndexCursorControl::new(self.cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), fuel)
     }
 
+    /// 🧵️ Mounts a parent job's exact cancellation/deadline authority for retained index work.
+    pub fn retained_operation_control(&self, cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<IndexCursorControl, DbError> {
+        IndexCursorControl::new(cancelled, deadline, fuel)
+    }
+
     pub fn cancel(&self) {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
     }

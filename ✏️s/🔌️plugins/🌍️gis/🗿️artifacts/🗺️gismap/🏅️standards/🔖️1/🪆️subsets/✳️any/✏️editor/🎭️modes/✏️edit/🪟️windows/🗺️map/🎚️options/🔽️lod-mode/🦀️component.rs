@@ -5,7 +5,7 @@
 //! manifest's `setLodMode` arg schema.
 
 use crate::editor::gis2d::config::Gis2dConfig;
-use crate::editor::gis2d::gis2d_action;
+use crate::editor::gis2d::gis2d_window_action;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use framework_surface::tiled_map::{gis_map_lod_scale_json, GIS_MAP_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel, MeasureSelectItem, WindowMeasure};
@@ -45,7 +45,7 @@ pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
         label: Some(labels.lod_mode.into()),
         value: cfg.lod_mode.clone(),
         items: lod_select_entries(labels).into_iter().map(|(value, label)| MeasureSelectItem { id: value.clone(), value, label }).collect(),
-        on_change: gis2d_action("setLodMode", None),
+        on_change: gis2d_window_action("setLodMode", None),
     }
 }
 //#endregion 🔖️Option

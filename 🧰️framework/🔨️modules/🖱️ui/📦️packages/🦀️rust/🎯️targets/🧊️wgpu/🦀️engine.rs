@@ -9,6 +9,7 @@
 
 use std::collections::HashMap;
 
+use crate::wgpu::IconName;
 use crate::wgpu::component::layout::WindowLayout;
 #[cfg(test)]
 use crate::wgpu::component::ui::UiNode;
@@ -16,15 +17,14 @@ use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
 use crate::wgpu::mounted_layout::{MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
-use crate::wgpu::paint::{paint_node_self, paint_tree, sync_interactive_state_node};
-use crate::wgpu::scene_slots::{collect_scene_slots, scene_slot_for_node, SceneHost};
+use crate::wgpu::paint::{RetainedNodePaintCursor, RetainedNodePaintStep, paint_node_step, paint_tree, sync_interactive_state_node};
+use crate::wgpu::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, collect_scene_slots, scene_slot_for_node};
 use crate::wgpu::shell::{Shell, ShellEvent};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::Theme;
 use crate::wgpu::tree::{NodeFlags, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree};
-use crate::wgpu::IconName;
 use semio_framework_job::StepContext;
-use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedList, UiNodeId, UI_DOCUMENT_NODES};
+use ui_contract::{SurfaceId, UI_DOCUMENT_NODES, UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedList, UiNodeId};
 
 //#region 🔖️UiWindow
 /// 🪟️ One window's retained pipeline state: its `UiTree` (`reconcile`'s diff target), the taffy
@@ -157,6 +157,10 @@ struct RetainedPaintFrame {
     phase: RetainedPaintPhase,
     walk: RetainedPaintWalk,
     candidate: DrawList,
+    paint_node: Option<(crate::wgpu::arena::NodeId, f32, f32)>,
+    node_paint: RetainedNodePaintCursor,
+    scene_node: Option<(crate::wgpu::arena::NodeId, f32, f32)>,
+    scene_paint: ScenePaintCursor,
     revision: u64,
     theme_revision: u64,
     viewport_revision: u64,
@@ -907,6 +911,10 @@ impl Ui {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
                 candidate: DrawList::default(),
+                paint_node: None,
+                node_paint: RetainedNodePaintCursor::default(),
+                scene_node: None,
+                scene_paint: ScenePaintCursor::default(),
                 revision: window.revision,
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
@@ -920,6 +928,47 @@ impl Ui {
             return UiFrameStep::Pending;
         }
         let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
+        if matches!(frame.phase, RetainedPaintPhase::Paint) {
+            if let Some((node, origin_x, origin_y)) = frame.paint_node {
+                match paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), &mut frame.candidate, &mut frame.node_paint) {
+                    RetainedNodePaintStep::Pending => return UiFrameStep::Pending,
+                    RetainedNodePaintStep::Complete => {
+                        frame.paint_node = None;
+                        if let Some(node) = window.tree.node_mut(node) {
+                            node.flags.set(NodeFlags::DIRTY_PAINT, false);
+                        }
+                        return UiFrameStep::Pending;
+                    }
+                    RetainedNodePaintStep::Fault => {
+                        frame.phase = RetainedPaintPhase::Fault;
+                        return UiFrameStep::Fault;
+                    }
+                }
+            }
+        }
+        if matches!(frame.phase, RetainedPaintPhase::Scenes) {
+            if let Some((node, origin_x, origin_y)) = frame.scene_node {
+                let Some(host) = scene_host.as_deref_mut() else {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    return UiFrameStep::Fault;
+                };
+                let Some(slot) = scene_slot_for_node(&window.tree, node, origin_x, origin_y) else {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    return UiFrameStep::Fault;
+                };
+                match host.paint_slot_step(&slot, &mut frame.scene_paint, &mut frame.candidate, atlas, icons) {
+                    ScenePaintStep::Pending => return UiFrameStep::Pending,
+                    ScenePaintStep::Complete => {
+                        frame.scene_node = None;
+                        return UiFrameStep::Pending;
+                    }
+                    ScenePaintStep::Fault => {
+                        frame.phase = RetainedPaintPhase::Fault;
+                        return UiFrameStep::Fault;
+                    }
+                }
+            }
+        }
         match frame.phase {
             RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, _, _) => {
@@ -939,10 +988,7 @@ impl Ui {
             },
             RetainedPaintPhase::Paint => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
-                    paint_node_self(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), &mut frame.candidate);
-                    if let Some(node) = window.tree.node_mut(node) {
-                        node.flags.set(NodeFlags::DIRTY_PAINT, false);
-                    }
+                    frame.paint_node = Some((node, origin_x, origin_y));
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -958,8 +1004,8 @@ impl Ui {
             },
             RetainedPaintPhase::Scenes => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
-                    if let (Some(host), Some(slot)) = (scene_host.as_deref_mut(), scene_slot_for_node(&window.tree, node, origin_x, origin_y)) {
-                        host.paint_slot(&slot, &mut frame.candidate, atlas, icons);
+                    if scene_host.is_some() && scene_slot_for_node(&window.tree, node, origin_x, origin_y).is_some() {
+                        frame.scene_node = Some((node, origin_x, origin_y));
                     }
                     UiFrameStep::Pending
                 }
@@ -1013,6 +1059,10 @@ impl Ui {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
                 candidate: DrawList::default(),
+                paint_node: None,
+                node_paint: RetainedNodePaintCursor::default(),
+                scene_node: None,
+                scene_paint: ScenePaintCursor::default(),
                 revision: window.revision,
                 theme_revision: window.theme_revision,
                 viewport_revision: window.viewport_revision,
@@ -1026,6 +1076,47 @@ impl Ui {
             return UiFrameStep::Pending;
         }
         let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
+        if matches!(frame.phase, RetainedPaintPhase::Paint) {
+            if let Some((node, origin_x, origin_y)) = frame.paint_node {
+                match paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), target, &mut frame.node_paint) {
+                    RetainedNodePaintStep::Pending => return UiFrameStep::Pending,
+                    RetainedNodePaintStep::Complete => {
+                        frame.paint_node = None;
+                        if let Some(node) = window.tree.node_mut(node) {
+                            node.flags.set(NodeFlags::DIRTY_PAINT, false);
+                        }
+                        return UiFrameStep::Pending;
+                    }
+                    RetainedNodePaintStep::Fault => {
+                        frame.phase = RetainedPaintPhase::Fault;
+                        return UiFrameStep::Fault;
+                    }
+                }
+            }
+        }
+        if matches!(frame.phase, RetainedPaintPhase::Scenes) {
+            if let Some((node, origin_x, origin_y)) = frame.scene_node {
+                let Some(host) = scene_host.as_deref_mut() else {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    return UiFrameStep::Fault;
+                };
+                let Some(slot) = scene_slot_for_node(&window.tree, node, origin_x, origin_y) else {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    return UiFrameStep::Fault;
+                };
+                match host.paint_slot_step(&slot, &mut frame.scene_paint, target, atlas, icons) {
+                    ScenePaintStep::Pending => return UiFrameStep::Pending,
+                    ScenePaintStep::Complete => {
+                        frame.scene_node = None;
+                        return UiFrameStep::Pending;
+                    }
+                    ScenePaintStep::Fault => {
+                        frame.phase = RetainedPaintPhase::Fault;
+                        return UiFrameStep::Fault;
+                    }
+                }
+            }
+        }
         match frame.phase {
             RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, _, _) => {
@@ -1045,10 +1136,7 @@ impl Ui {
             },
             RetainedPaintPhase::Paint => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
-                    paint_node_self(&window.tree, node, origin_x + offset_x, origin_y + offset_y, &theme, atlas, icons, scene_host.is_some(), target);
-                    if let Some(node) = window.tree.node_mut(node) {
-                        node.flags.set(NodeFlags::DIRTY_PAINT, false);
-                    }
+                    frame.paint_node = Some((node, origin_x + offset_x, origin_y + offset_y));
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -1064,8 +1152,10 @@ impl Ui {
             },
             RetainedPaintPhase::Scenes => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
-                    if let (Some(host), Some(slot)) = (scene_host.as_deref_mut(), scene_slot_for_node(&window.tree, node, origin_x + offset_x, origin_y + offset_y)) {
-                        host.paint_slot(&slot, target, atlas, icons);
+                    let origin_x = origin_x + offset_x;
+                    let origin_y = origin_y + offset_y;
+                    if scene_host.is_some() && scene_slot_for_node(&window.tree, node, origin_x, origin_y).is_some() {
+                        frame.scene_node = Some((node, origin_x, origin_y));
                     }
                     UiFrameStep::Pending
                 }
@@ -1091,6 +1181,7 @@ impl Ui {
         }
     }
 
+    #[cfg(test)]
     pub fn frame<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, scene_host: Option<&mut H>) -> Option<&DrawList> {
         self.set_viewport(window_id, viewport_width, viewport_height);
         let window = self.windows.get_mut(window_id)?;
@@ -1107,7 +1198,8 @@ impl Ui {
         paint_tree(&mut window.tree, root, &self.theme, atlas, icons, scene_host.is_some(), &mut window.draw);
         if let Some(host) = scene_host {
             for slot in collect_scene_slots(&window.tree, root) {
-                host.paint_slot(&slot, &mut window.draw, atlas, icons);
+                let mut cursor = ScenePaintCursor::default();
+                while matches!(host.paint_slot_step(&slot, &mut cursor, &mut window.draw, atlas, icons), ScenePaintStep::Pending) {}
             }
         }
         Some(&window.draw)
@@ -1207,20 +1299,20 @@ impl Ui {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::wgpu::Label;
     use crate::wgpu::component::layout::ActionDescriptor;
     use crate::wgpu::component::ui::{
-        ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence,
-        UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+        SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence, UiRingNode,
+        UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ui_node_to_control,
     };
     use crate::wgpu::events::PointerButton;
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::input::InputState;
     use crate::wgpu::scene_slots::SceneSlot;
     use crate::wgpu::widgets::{
-        draw_text_on, draw_text_overlay_on, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext,
-        WidgetInteractionMaps, WidgetNode,
+        ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode, draw_text_on, draw_text_overlay_on, measure_widget,
+        render_scroll_region, render_widget, wrap_text,
     };
-    use crate::wgpu::Label;
     use std::collections::HashMap as StdHashMap;
 
     //#region 🔖️FacadeTests
@@ -1604,10 +1696,16 @@ mod tests {
     }
 
     impl SceneHost for RecordingSceneHost {
-        fn paint_slot(&mut self, slot: &SceneSlot<'_>, draw: &mut DrawList, _atlas: &mut FontAtlas, _icons: Option<&IconAtlas>) {
+        fn paint_slot_step(&mut self, slot: &SceneSlot<'_>, cursor: &mut ScenePaintCursor, draw: &mut DrawList, _atlas: &mut FontAtlas, _icons: Option<&IconAtlas>) -> ScenePaintStep {
+            match cursor.bind(slot.node) {
+                Ok(true) => {}
+                Ok(false) => return ScenePaintStep::Pending,
+                Err(()) => return ScenePaintStep::Fault,
+            }
             self.paint_calls += 1;
             self.last_surface_id = slot.surface().map(|(surface_id, _)| surface_id.to_string());
             draw.push_rounded([slot.rect.x, slot.rect.y, slot.rect.w, slot.rect.h], Theme::default().accent, 0.0);
+            cursor.finish()
         }
     }
 

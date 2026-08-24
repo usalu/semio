@@ -48,7 +48,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
                         AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
                     };
-                    let analysis = CadAnalyzer::analyze(&[native]);
+                    let analysis = CadAnalyzer::analyze(&[native]).await;
                     if let Some(snapshot) = analysis.parts.snapshot {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
@@ -177,13 +177,13 @@ pub mod io_registry {
     const CAD_DIALECT: Dialect = Dialect { artifact_kind: "s.cad", standard: StandardId("1"), subset: SubsetId("*") };
     const CAD_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::cad::CadSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::cad::CadSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == CAD_DIALECT) {
             let builder = match &source.payload {
-                IoPayload::Text(t) => CadAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => CadAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Text(t) => semio_framework_plugin::resolve_ready(CadAnyBuilder::from_text(t)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Binary(b) => semio_framework_plugin::resolve_ready(CadAnyBuilder::from_binary(b)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
             };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "CadComposer export: build() failed".into(), diagnostics });
+            return semio_framework_plugin::resolve_ready(builder.build()).map_err(|diagnostics| ComposeError { message: "CadComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == CAD_JSON_BRIDGE_DIALECT) {
             // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
@@ -199,7 +199,7 @@ pub mod io_registry {
     }
 
     const EXPORT_IFC_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
-    async fn compose_export_ifc(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_ifc(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::ifc::v4::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -207,7 +207,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_STEP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
-    async fn compose_export_step(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_step(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::step::v_ap214::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -215,7 +215,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    async fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -223,7 +223,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -231,7 +231,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    async fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -239,7 +239,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    async fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -247,7 +247,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
-    async fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -255,7 +255,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    async fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -325,7 +325,7 @@ pub const CAD_SOLID_EXPORT_DIALECT_STEP: &str = "s.stdio.step";
 
 /// @emoji 🧾️ File extension for a `s.stdio.<format>` dialect id, as used in `export_solids_as`'s
 /// downloaded filename.
-async fn cad_solid_export_extension(dialect_id: &str) -> Option<&'static str> {
+fn cad_solid_export_extension(dialect_id: &str) -> Option<&'static str> {
     match dialect_id {
         CAD_SOLID_EXPORT_DIALECT_OBJ => Some("obj"),
         CAD_SOLID_EXPORT_DIALECT_STL => Some("stl"),
@@ -336,7 +336,7 @@ async fn cad_solid_export_extension(dialect_id: &str) -> Option<&'static str> {
 
 /// @emoji 📎️ MIME type for a `s.stdio.<format>` dialect id, kept in parity with the retired
 /// enum's mime-type values for the three formats `export_solids_as` supports.
-async fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
+fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
     match dialect_id {
         CAD_SOLID_EXPORT_DIALECT_OBJ => Some("model/obj"),
         CAD_SOLID_EXPORT_DIALECT_STL => Some("model/stl"),
@@ -350,7 +350,7 @@ async fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
 /// left empty (the kernel's `MeshTransfer` carries neither). Solids that fail to tessellate or
 /// tessellate to zero triangles are skipped (never a fabricated triangle); `None` only when NOT A
 /// SINGLE solid produced real geometry.
-async fn semio_mesh_snapshot_from_solids(kernel: &mut Brep, solids: &[GeometryHandle], deflection: f64) -> Option<SemioMeshSnapshot> {
+fn semio_mesh_snapshot_from_solids(kernel: &mut Brep, solids: &[GeometryHandle], deflection: f64) -> Option<SemioMeshSnapshot> {
     let mut meshes = Vec::new();
     for (index, handle) in solids.iter().enumerate() {
         let Ok(transfer) = kernel.tessellate(handle, deflection) else { continue };
@@ -381,7 +381,7 @@ async fn semio_mesh_snapshot_from_solids(kernel: &mut Brep, solids: &[GeometryHa
 /// expected: "value" }`) rather than guessing. Quote-aware (a `,)` inside a real STEP string
 /// literal, e.g. a product name, is left untouched) — repairs ONLY this exact malformed shape so
 /// cad's `semio/brep` bridge can consume the kernel's real, otherwise-correct geometry today.
-async fn repair_step_trailing_comma_before_close_paren(text: &str) -> String {
+fn repair_step_trailing_comma_before_close_paren(text: &str) -> String {
     let chars: Vec<char> = text.chars().collect();
     let mut out = String::with_capacity(text.len());
     let mut in_string = false;
@@ -410,7 +410,7 @@ async fn repair_step_trailing_comma_before_close_paren(text: &str) -> String {
     out
 }
 
-async fn semio_brep_snapshot_from_step_text(text: &str) -> Option<SemioBrepSnapshot> {
+fn semio_brep_snapshot_from_step_text(text: &str) -> Option<SemioBrepSnapshot> {
     let repaired = repair_step_trailing_comma_before_close_paren(text);
     let document = parse_part21(&repaired).ok()?;
     let step_snapshot = StepSnapshot::from_part21_document(document);
@@ -419,7 +419,7 @@ async fn semio_brep_snapshot_from_step_text(text: &str) -> Option<SemioBrepSnaps
 
 /// 🌉️ Inverse of `semio_brep_snapshot_from_step_text` — real `SemioBrepToStep` serialize +
 /// stdio's own Part-21 writer.
-async fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<String> {
+fn step_text_from_semio_brep_snapshot(brep: &SemioBrepSnapshot) -> Option<String> {
     let step_snapshot = semio_framework_plugin::resolve_ready(SemioBrepToStep::serialize(brep)).ok()?;
     Some(write_part21(&step_snapshot.to_part21_document()))
 }
@@ -783,7 +783,7 @@ mod tests {
         assert_eq!(reimported_brep.faces.len(), original_brep.faces.len(), "face count geometry-equivalence");
         assert_eq!(reimported_brep.vertices.len(), original_brep.vertices.len(), "vertex count geometry-equivalence");
 
-        async fn vertex_bounds(points: impl Iterator<Item = [f64; 3]>) -> ([f64; 3], [f64; 3]) {
+        fn vertex_bounds(points: impl Iterator<Item = [f64; 3]>) -> ([f64; 3], [f64; 3]) {
             let mut min = [f64::INFINITY; 3];
             let mut max = [f64::NEG_INFINITY; 3];
             for p in points {

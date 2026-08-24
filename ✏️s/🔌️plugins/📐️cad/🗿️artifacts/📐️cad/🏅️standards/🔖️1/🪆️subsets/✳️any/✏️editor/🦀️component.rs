@@ -206,13 +206,13 @@ impl CadPlayRuntime {
 /// `cad_document_engine` for why per-window-INSTANCE keying no longer applies.
 pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
     CadPlayRuntime {
-        selected_node_ids: cfg.selected_node_ids.clone()?,
+        selected_node_ids: cfg.selected_node_ids.clone(),
         hovered_reference_id: cfg.hovered_reference_id.clone(),
         engagement_input: cfg.engagement_input.clone(),
         engagement_step: cfg.engagement_step.clone(),
         active_example_id: cfg.active_example_id.clone(),
-        selected_reference_model_definition_id: cfg.selected_reference_model_definition_id.clone()?,
-        selected_reference_id: cfg.selected_reference_id.clone()?,
+        selected_reference_model_definition_id: cfg.selected_reference_model_definition_id.clone(),
+        selected_reference_id: cfg.selected_reference_id.clone(),
         engagement_pane: cfg.engagement_pane.clone(),
         engagement_session: cfg.engagement_session_json.as_deref().and_then(|json| serde_json::from_str(json).ok()),
         engagement_preview_operation_json: cfg.engagement_preview_operation_json.clone(),
@@ -238,16 +238,16 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
 /// @emoji 🔀️ The `cad_runtime_from_config` boundary's outbound twin: repacks the (possibly mutated)
 /// `CadPlayRuntime` scratch struct back into a real `CadConfig` snapshot. Kept private so production
 /// command modules cannot bypass the checked snapshot authorities below.
-async fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
+fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
     CadConfig {
         contributions_json: base.contributions_json.clone(),
-        selected_node_ids: runtime.selected_node_ids.clone()?,
+        selected_node_ids: runtime.selected_node_ids.clone(),
         hovered_reference_id: runtime.hovered_reference_id.clone(),
         engagement_input: runtime.engagement_input.clone(),
         engagement_step: runtime.engagement_step.clone(),
         active_example_id: runtime.active_example_id.clone(),
-        selected_reference_model_definition_id: runtime.selected_reference_model_definition_id.clone()?,
-        selected_reference_id: runtime.selected_reference_id.clone()?,
+        selected_reference_model_definition_id: runtime.selected_reference_model_definition_id.clone(),
+        selected_reference_id: runtime.selected_reference_id.clone(),
         engagement_pane: runtime.engagement_pane.clone(),
         engagement_session_json: runtime.engagement_session.as_ref().map(|session| serde_json::to_string(session).unwrap_or_default()),
         engagement_preview_operation_json: base.engagement_preview_operation_json.clone(),
@@ -302,6 +302,11 @@ pub fn cad_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -
     semio_framework_plugin::ActionFactory::new(CAD_PLAY_CONTROLLER_ID).action(action, args)
 }
 
+/// 🪟️ Bridges window chrome, which still carries the retained WGPU action descriptor.
+pub fn cad_window_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: CAD_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+}
+
 /// 🧱️ Admits one fixed CAD UI text value.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
     UiText::try_from_str(value.as_ref())
@@ -343,6 +348,11 @@ pub fn ui_node_list(
     Ok(nodes)
 }
 
+/// 🏷️ Admits resolved CAD text into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI label admission failed"))
+}
+
 pub fn camera_json(camera: &CadCamera) -> String {
     world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(camera))
 }
@@ -375,11 +385,11 @@ pub fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
 /// the full `UiTreeItemNode` struct literal.
 pub fn cad_tree_item(
     id: impl Into<String>,
-    label: impl TryInto<Label>,
+    label: impl AsRef<str>,
     icon_id: Option<&str>,
     action: (semio_framework_plugin::ActionId, Option<UiValue>),
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut item = tree_item_with_action(id, label, None, action)?;
+    let mut item = tree_item_with_action(id.into(), ui_label(label)?, None, action)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = match icon_id {
             Some(value) => Some(UiText::try_from_str(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad tree icon admission failed"))?),
@@ -558,7 +568,7 @@ pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
 pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
     let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<CadSnapshot, CadMutation>(&scene.schema, &scene.id, scene.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("cad document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("cad document spr encode is infallible for a fresh, edit-free envelope");
     Effect::LoadDocument { pack, spr }
 }
 
@@ -928,7 +938,7 @@ semio_framework_plugin::app_commands! {
 
 /// 🌉️ Converts the host shell's declared action id and JSON arguments into cad's closed typed
 /// command vocabulary before the app dispatches through the binary command path.
-async fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadCommand, Fault> {
+fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadCommand, Fault> {
     let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
     let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_f64);
     let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
@@ -1122,7 +1132,7 @@ impl ArtifactEditor for CadPlayApp {
             if port != "document:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.document_media_type);
+            let media_type = Self::io().await.map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.document_media_type);
             let bytes = <CadSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
@@ -1158,7 +1168,7 @@ impl ArtifactEditor for CadPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
-        let selection = interaction.selection(CAD_INTERACTION_DOMAIN);
+        let selection = interaction.selection(CAD_INTERACTION_DOMAIN).await;
         let snapshot = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id.clone() };
         let mut ctx = CadDispatchCtx { interaction: snapshot, preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)) };
         command.dispatch(doc, cfg, &mut ctx)
@@ -1178,14 +1188,14 @@ impl ArtifactEditor for CadPlayApp {
         let active_utility = Some(cfg.snapshot.active_utility_id.as_str());
         let options = view.runtime.dislocate_options(window_kind_id);
         match body_key {
-            shape::BODY_KEY => shape::render(&view, active_utility, options),
-            building::BODY_KEY => building::render(&view, active_utility, options),
-            energy::BODY_KEY => energy::render(&view, active_utility, options),
-            structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options),
-            document::CAD_PLAY_BODY_DOCUMENT => document::build_document_tree(&view, labels),
-            catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels),
-            inspection::CAD_PLAY_BODY_PROPERTIES => inspection::build_properties_panel(&view, labels, active_utility),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            shape::BODY_KEY => shape::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            building::BODY_KEY => building::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            energy::BODY_KEY => energy::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+            document::CAD_PLAY_BODY_DOCUMENT => document::build_document_tree(&view, labels).map(semio_framework_plugin::built_to_component_tree),
+            catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels).map(semio_framework_plugin::built_to_component_tree),
+            inspection::CAD_PLAY_BODY_PROPERTIES => inspection::build_properties_panel(&view, labels, active_utility).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -1220,7 +1230,7 @@ impl ArtifactEditor for CadPlayApp {
     /// the section; a bare right-click with nothing selected is a documented reduced-fidelity gap
     /// (each action already no-ops on an empty selection at dispatch time)?.
     async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").group("create", |m| m.action("duplicateObject")).destructive("deleteObject").build()
+        Menu::of(registry).await.action("translateSelection").await.action("rotateSelection").await.action("scaleSelection").await.action("duplicateObject").await.destructive("deleteObject").await.build().await
     }
 }
 //#endregion 🔖️PlayApp
@@ -1283,13 +1293,13 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .mutation("addObject", LocalizedLabel::native("Add Object", "Objekt hinzufügen"))
             .mutation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
             .mutation("patchSelection", LocalizedLabel::native("Patch Selection", "Auswahl aktualisieren"))
-            .action_with(ActionDefinition::bounded_catalog("deleteObject", LocalizedLabel::native("Delete Object", "Objekt löschen"), ActionKind::Mutation).category("actions"))
-            .action_with(ActionDefinition::bounded_catalog("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"), ActionKind::Mutation).category("create"))
+            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("deleteObject", LocalizedLabel::native("Delete Object", "Objekt löschen"), ActionKind::Mutation).category("actions")))
+            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"), ActionKind::Mutation).category("create")))
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .mutation("renameNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"))
-            .action_with(ActionDefinition::bounded_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation).category("transform"))
-            .action_with(ActionDefinition::bounded_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation).category("transform"))
-            .action_with(ActionDefinition::bounded_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation).category("transform"))
+            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation).category("transform")))
+            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation).category("transform")))
+            .action_with(semio_framework_plugin::resolve_ready(ActionDefinition::bounded_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation).category("transform")))
             .mutation("applyTransformation", LocalizedLabel::native("Apply Transformation", "Transformation anwenden"))
             .mutation("importCadFile", LocalizedLabel::native("Import CAD File", "CAD-Datei importieren"))
             .action_with(ActionDefinition::bounded_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Mutation).in_palette(false))
@@ -1355,7 +1365,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             // this same `3d.cad`/Brep information's single source of truth, reused here rather than
             // duplicated; `config_spec()` stays empty (cad has no sticky-default settings analogous to
             // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
-            .config(CadPlayApp::config_spec())
+            .config(semio_framework_plugin::resolve_ready(CadPlayApp::config_spec()))
             .io(cad_io())
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`Viewer`/`.editor::<E>(def: AppDefinition)`
             // take a bare `AppDefinition`, not the old `App { definition, examples }` — there is no
@@ -1638,7 +1648,7 @@ mod tests {
     /// wire cases, copied out of the pre-consolidation baseline dump.
     #[test]
 
-    async fn optional_field_rows_keep_their_pre_migration_bytes() {
+    fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &CadCommand| -> String { protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect() };
         assert_eq!(hex(&CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) })), "0100011b7370617469616c2e73686170652e7072696d69746976652e626f7801000600");
         assert_eq!(hex(&CadCommand::AddObject(add_object::AddObject { typology: None })), "01000000");

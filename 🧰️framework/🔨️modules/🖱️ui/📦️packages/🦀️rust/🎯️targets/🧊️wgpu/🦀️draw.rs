@@ -293,17 +293,85 @@ pub struct DrawList {
     clip_stack: Vec<ClipRegion>,
     glass_content_stack: Vec<usize>,
     screen_h: f32,
+    retained_output: Option<RetainedOutputGrant>,
+}
+
+#[derive(Clone, Copy)]
+struct RetainedOutputGrant {
+    item_limit: usize,
+    byte_limit: usize,
+    items: usize,
+    bytes: usize,
+    faulted: bool,
 }
 
 impl Default for DrawList {
     fn default() -> Self {
-        let mut list = Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 720.0 };
+        let mut list = Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 720.0, retained_output: None };
         list.layers.push(DrawLayer::default());
         list
     }
 }
 
 impl DrawList {
+    /// 🎟️ Pre-admits fixed candidate backing before a retained paint child transfers output.
+    pub fn try_reserve_retained_items(&mut self, items: usize) -> Result<(), ()> {
+        if self.layers.is_empty() {
+            self.layers.try_reserve_exact(1).map_err(|_| ())?;
+            self.layers.push(DrawLayer::default());
+        }
+        let vertices = items.checked_mul(6).ok_or(())?;
+        let layer = self.layers.last_mut().ok_or(())?;
+        layer.ui_instances.try_reserve_exact(items).map_err(|_| ())?;
+        layer.overlay_ui_instances.try_reserve_exact(items).map_err(|_| ())?;
+        layer.vector_vertices.try_reserve_exact(vertices).map_err(|_| ())?;
+        layer.overlay_vector_vertices.try_reserve_exact(vertices).map_err(|_| ())?;
+        layer.raster_instances.try_reserve_exact(items).map_err(|_| ())?;
+        Ok(())
+    }
+
+    /// 🎫️ Starts one exact retained output grant and pre-admits all fixed container backing.
+    pub fn begin_retained_output(&mut self, item_limit: usize, byte_limit: usize) -> Result<(), ()> {
+        if self.retained_output.is_some() {
+            return Err(());
+        }
+        self.try_reserve_retained_items(item_limit)?;
+        self.layers.try_reserve_exact(item_limit).map_err(|_| ())?;
+        self.glass_regions.try_reserve_exact(item_limit).map_err(|_| ())?;
+        self.scissor_stack.try_reserve_exact(item_limit).map_err(|_| ())?;
+        self.glass_content_stack.try_reserve_exact(item_limit).map_err(|_| ())?;
+        self.retained_output = Some(RetainedOutputGrant { item_limit, byte_limit, items: 0, bytes: 0, faulted: false });
+        Ok(())
+    }
+
+    /// 🧾️ Closes the exact retained output grant and reports any attempted overflow.
+    pub fn finish_retained_output(&mut self) -> Result<(usize, usize), ()> {
+        let Some(grant) = self.retained_output.take() else { return Err(()) };
+        if grant.faulted {
+            return Err(());
+        }
+        Ok((grant.items, grant.bytes))
+    }
+
+    fn claim_retained_output(&mut self, items: usize, bytes: usize) -> bool {
+        let Some(grant) = self.retained_output.as_mut() else { return true };
+        let Some(next_items) = grant.items.checked_add(items) else {
+            grant.faulted = true;
+            return false;
+        };
+        let Some(next_bytes) = grant.bytes.checked_add(bytes) else {
+            grant.faulted = true;
+            return false;
+        };
+        if next_items > grant.item_limit || next_bytes > grant.byte_limit {
+            grant.faulted = true;
+            return false;
+        }
+        grant.items = next_items;
+        grant.bytes = next_bytes;
+        true
+    }
+
     pub(crate) fn retire_step(&mut self) -> bool {
         if let Some(pass) = self.scene_passes.last_mut() {
             if let Some(draw) = pass.textured_draws.last_mut() {
@@ -390,7 +458,7 @@ impl DrawList {
     }
 
     pub(crate) fn retirement_is_empty(&self) -> bool {
-        self.scene_passes.is_empty() && self.layers.is_empty() && self.glass_regions.is_empty() && self.scissor_stack.is_empty() && self.clip_stack.is_empty() && self.glass_content_stack.is_empty()
+        self.scene_passes.is_empty() && self.layers.is_empty() && self.glass_regions.is_empty() && self.scissor_stack.is_empty() && self.clip_stack.is_empty() && self.glass_content_stack.is_empty() && self.retained_output.is_none()
     }
 
     pub fn set_screen_height(&mut self, height: f32) {
@@ -416,9 +484,13 @@ impl DrawList {
         self.scissor_stack.clear();
         self.clip_stack.clear();
         self.glass_content_stack.clear();
+        self.retained_output = None;
     }
 
     pub fn push_scissor(&mut self, rect: crate::wgpu::geometry::Rect) {
+        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+            return;
+        }
         let mut scissor = ScissorRect::from_rect(rect, self.screen_h);
         if let Some(parent) = self.scissor_stack.last() {
             scissor = parent.intersect(&scissor);
@@ -428,6 +500,9 @@ impl DrawList {
     }
 
     pub fn pop_scissor(&mut self) {
+        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+            return;
+        }
         self.scissor_stack.pop();
         let parent = self.scissor_stack.last().copied();
         self.layers.push(DrawLayer { scissor: parent, clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
@@ -461,30 +536,48 @@ impl DrawList {
     }
 
     pub fn push_solid(&mut self, rect: [f32; 4], color: Rgba) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().ui_instances.push(UiInstance::solid(rect, color));
     }
 
     pub fn push_rounded(&mut self, rect: [f32; 4], color: Rgba, radius: f32) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().ui_instances.push(UiInstance::rounded(rect, color, radius, 0.0, color));
     }
 
     /// 🌀️ Clockwise spinning + pulsing loading ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
     pub fn push_loading_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().ui_instances.push(UiInstance::loading_border(rect, color, radius, stroke));
     }
 
     /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
     pub fn push_waiting_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().ui_instances.push(UiInstance::waiting_border(rect, color, radius, stroke));
     }
 
     /// ✅️ Solid, static at-bounds ring around `rect`, in `color` — `UiStatus::Finished`.
     pub fn push_finished_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().ui_instances.push(UiInstance::finished_border(rect, color, radius, stroke));
     }
 
     /// 💫️ Raised-cosine breathing pulse ring around `rect`, in `color` — `UiState::Introducing`.
     pub fn push_introducing_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().ui_instances.push(UiInstance::introducing_border(rect, color, radius, stroke));
     }
 
@@ -493,6 +586,9 @@ impl DrawList {
     /// `.🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
     /// picking a per-tier lookup.
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
+        if !self.claim_retained_output(1, std::mem::size_of::<GlassRegion>()) {
+            return usize::MAX;
+        }
         let index = self.glass_regions.len();
         self.glass_regions.push(GlassRegion { rect, radius, tint: style.tint, alpha: style.alpha, blur_px: style.blur_px, saturate: style.saturate });
         index
@@ -509,26 +605,48 @@ impl DrawList {
     }
 
     pub fn push_glyph(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().ui_instances.push(UiInstance::glyph(rect, color, uv_rect));
     }
 
     pub fn push_glyph_overlay(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().overlay_ui_instances.push(UiInstance::glyph(rect, color, uv_rect));
     }
 
     pub fn push_solid_overlay(&mut self, rect: [f32; 4], color: Rgba) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().overlay_ui_instances.push(UiInstance::solid(rect, color));
     }
 
     pub fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) {
+        if !self.claim_retained_output(1, std::mem::size_of::<UiInstance>()) {
+            return;
+        }
         self.active_layer().ui_instances.push(UiInstance::textured(rect, uv_rect, color));
     }
 
     pub fn push_raster_quad(&mut self, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
+        let Some(bytes) = key.len().checked_add(std::mem::size_of::<UiInstance>()) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
+        if !self.claim_retained_output(1, bytes) {
+            return;
+        }
         self.active_layer().raster_instances.push((key.to_string(), UiInstance::raster(rect, uv_rect, alpha)));
     }
 
     pub fn push_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
+        if !self.claim_retained_output(1, 6 * std::mem::size_of::<VectorVertex>()) {
+            return;
+        }
         let dx = x1 - x0;
         let dy = y1 - y0;
         let len = (dx * dx + dy * dy).sqrt().max(0.001);
@@ -547,6 +665,9 @@ impl DrawList {
     }
 
     pub fn push_line_overlay(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
+        if !self.claim_retained_output(1, 6 * std::mem::size_of::<VectorVertex>()) {
+            return;
+        }
         let dx = x1 - x0;
         let dy = y1 - y0;
         let len = (dx * dx + dy * dy).sqrt().max(0.001);
@@ -568,6 +689,13 @@ impl DrawList {
         if points.len() < 3 {
             return;
         }
+        let Some(vertices) = points.len().checked_sub(2).and_then(|triangles| triangles.checked_mul(3)) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
+        if !self.claim_retained_output(1, vertices.saturating_mul(std::mem::size_of::<VectorVertex>())) {
+            return;
+        }
         let c = [color.r, color.g, color.b, color.a];
         let layer = self.active_layer();
         for tri in 1..points.len() - 1 {
@@ -579,6 +707,13 @@ impl DrawList {
 
     pub fn push_triangle_fan_overlay(&mut self, points: &[[f32; 2]], color: Rgba) {
         if points.len() < 3 {
+            return;
+        }
+        let Some(vertices) = points.len().checked_sub(2).and_then(|triangles| triangles.checked_mul(3)) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
+        if !self.claim_retained_output(1, vertices.saturating_mul(std::mem::size_of::<VectorVertex>())) {
             return;
         }
         let c = [color.r, color.g, color.b, color.a];
@@ -3935,10 +4070,10 @@ impl UiPipelines {
 #[cfg(test)]
 mod tests {
     use super::{
-        claim_raster_stage_tuple, content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, raster_texture_bytes, raster_witness_is_stale, ClipRegion, DrawList, FixedMeshGpuRegistry,
-        FixedRasterTextureRegistry, MeshGpuEntry, MeshGpuKey, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureEntry, RasterTextureKey, RasterTextureReservation, RasterTextureReservationCloseCursor, RasterTextureReservationRetirement,
-        RasterTextureStageClaim, RasterTextureUploadCloseCursor, RasterTextureUploadCursor, RasterTextureWitness, RasterTextureWitnessSlot, ScissorRect, MESH_GPU_KEEP_VERSION_CAPACITY, MESH_GPU_TABLE_CAPACITY, RASTER_TEXTURE_ITEM_BYTE_CAPACITY,
-        RASTER_TEXTURE_KEY_BYTES, RASTER_TEXTURE_PROBE_CAPACITY, RASTER_TEXTURE_TABLE_CAPACITY, WORLD_GLOBALS_SLOT_SIZE,
+        ClipRegion, DrawList, FixedMeshGpuRegistry, FixedRasterTextureRegistry, MESH_GPU_KEEP_VERSION_CAPACITY, MESH_GPU_TABLE_CAPACITY, MeshGpuEntry, MeshGpuKey, RASTER_TEXTURE_ITEM_BYTE_CAPACITY, RASTER_TEXTURE_KEY_BYTES,
+        RASTER_TEXTURE_PROBE_CAPACITY, RASTER_TEXTURE_TABLE_CAPACITY, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureEntry, RasterTextureKey, RasterTextureReservation, RasterTextureReservationCloseCursor,
+        RasterTextureReservationRetirement, RasterTextureStageClaim, RasterTextureUploadCloseCursor, RasterTextureUploadCursor, RasterTextureWitness, RasterTextureWitnessSlot, ScissorRect, WORLD_GLOBALS_SLOT_SIZE, claim_raster_stage_tuple,
+        content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, raster_texture_bytes, raster_witness_is_stale,
     };
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::kernel_3d_scene::ScenePass3d;
@@ -4333,7 +4468,7 @@ mod tests {
 
     #[test]
     fn overlay_layers_collected_separately_from_backdrop_ui() {
-        use super::{build_layer_batches, build_overlay_layer_batches, LayerBatchFilter};
+        use super::{LayerBatchFilter, build_layer_batches, build_overlay_layer_batches};
         let mut draw = DrawList::default();
         draw.push_solid([0.0, 0.0, 100.0, 100.0], Rgba::new(0.1, 0.1, 0.1, 1.0));
         draw.push_glyph_overlay([10.0, 10.0, 20.0, 12.0], Rgba::new(1.0, 1.0, 1.0, 1.0), [0.0, 0.0, 0.1, 0.1]);
@@ -4368,7 +4503,7 @@ mod tests {
 
     #[test]
     fn glass_foreground_layers_excluded_from_backdrop_batches() {
-        use super::{build_layer_batches, LayerBatchFilter, Theme};
+        use super::{LayerBatchFilter, Theme, build_layer_batches};
         use crate::wgpu::theme::Level;
         let theme = Theme::default();
         let mut draw = DrawList::default();

@@ -1,0 +1,27 @@
+{
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This owner's contribution. ⚠️ 🎚️config carries TWO mutation vocabularies and only ONE of them is testable today: `OpeningConfigMutation` (📌️set-default-app, 🧹clear-default-app) is mounted in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📦️glue.rs and is covered by mutate-os-config-opening; `MergePolicyConfigMutation` (🛡️change-merge-policy, one kind) is a self-contained facet that is mounted in NO crate's 📦️glue.rs at all — its own file says so — so neither its own committed fixture nor any case can execute against it. It is named in noOracleDecisions below so this manifest does not read as full coverage of the owner; covering it needs a module mount, which is not this ticket's to make. The 🪪️sign-in/🚪️sign-out leaves beside them are TypeScript-only and declare no Rust vocabulary.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "os-config-opening-preferences-mutation-semantics",
+      "capabilities": ["os-config-opening-1-mutate"],
+      "rationale": "`os.config.opening` is this operating system's own preference record — a list of `(artifact dialect, role) -> app` pins, where the dialect is a semio `ArtifactDialect` triple and the app is a semio `AppRef`. There is no third-party implementation of it and no third party could hold an opinion about it: what is under test is that a pin is an UPSERT keyed on `(dialect, role)` rather than an append, that clearing a pin nobody set is a warned no-op rather than an error, and that `set` and `clear` are exact inverses of each other on that key — statements about this repository's own preference semantics, not about JSON or key-value storage. Confidence comes instead from the two committed, independently handcrafted `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the facet itself, re-exercised end to end through `apply_opening_config_mutation_reporting`; and from the inverse law as a metamorphic property. Both vectors run against the same two-pin document — a cad viewer pin and a cad editor pin — which is what lets each kind be held to the claim that it touches ONE pin and leaves its sibling alone.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    },
+    {
+      "id": "os-config-merge-policy-unmounted-facet",
+      "capabilities": ["os-config-merge-policy-1-mutate"],
+      "rationale": "⚠️ RECORDED AS AN UNCOVERED GAP, not as a discharged one. `MergePolicyConfigMutation` and its single `change-merge-policy` kind live in a deliberately self-contained file (`../🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️component.rs`) whose own module doc states it is not wired into any crate's `📦️glue.rs`. Nothing compiles it: its committed `tightens-the-authority-to-vigilant` fixture is mounted only by that same unmounted file, so even the facet's own unit tests never run, and a test case claiming a catalog for it would name a module path no crate exposes. No catalog is therefore declared for it — declaring one would make the completeness gate report a kind as covered when nothing can execute against it. The prerequisite is a module mount in the crate that will own this facet; until that lands this entry is the record that the kind exists and is untested.",
+      "substitutes": ["specification-vectors"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "os-config-opening-1-any",
+      "capability": "os-config-opening-1-mutate",
+      "kinds": ["set-default-app", "clear-default-app"]
+    }
+  ]
+}

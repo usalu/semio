@@ -7120,9 +7120,11 @@ dependencies = [
 name = "semio-s-plugin-gis"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
@@ -7362,6 +7364,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
+ "semio-framework-ui-contract",
  "semio-framework-ui-styling",
  "semio-s-plugin-stdio",
  "serde",

@@ -2,7 +2,7 @@
 //! part rows draggable onto the board (and clickable to place through `addPartKind`).
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::{Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle5d::{ui_label, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
     tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -71,13 +71,13 @@ fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&s
                 let drag_data = puzzle5d_catalog_item_drag_data(kind_id, entry);
                 tree_item_with_action_draggable(
                     format!("{section_id}.{index}.{kind_id}"),
-                    catalog_kind_label(entry),
+                    ui_label(catalog_kind_label(entry))?,
                     Some(kind_id.into()),
                     actions.action(action, Some(add_part_args(kind_id)?))?,
                     &drag_data,
                 )?
             }
-            None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), catalog_kind_label(entry), Some(kind_id.into()))?,
+            None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into()))?,
         };
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue item admission failed"))?;
     }
@@ -100,10 +100,10 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framew
     let fasteners = slice("fasteners");
     let ropes = slice("ropes");
     PanelTreeBuilder::new("puzzle5d-play-kinds")?
-        .section_or_placeholder("puzzle5d-play-kinds.parts", Some(labels.parts.as_str().into()), !part_entries.is_empty(), kind_catalog_items("puzzle5d-play-kinds.parts", &part_entries, Some("addPartKind"))?, labels.none.as_str())?
-        .section_or_placeholder("puzzle5d-play-kinds.grips", Some(labels.grips.as_str().into()), !grips.is_empty(), kind_catalog_items("puzzle5d-play-kinds.grips", &grips, None)?, labels.none.as_str())?
-        .section_or_placeholder("puzzle5d-play-kinds.fasteners", Some(labels.fasteners.as_str().into()), !fasteners.is_empty(), kind_catalog_items("puzzle5d-play-kinds.fasteners", &fasteners, None)?, labels.none.as_str())?
-        .section_or_placeholder("puzzle5d-play-kinds.ropes", Some(labels.ropes.as_str().into()), !ropes.is_empty(), kind_catalog_items("puzzle5d-play-kinds.ropes", &ropes, None)?, labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-kinds.parts", Some(ui_label(labels.parts.as_str())?), !part_entries.is_empty(), kind_catalog_items("puzzle5d-play-kinds.parts", &part_entries, Some("addPartKind"))?, ui_label(labels.none.as_str())?)?
+        .section_or_placeholder("puzzle5d-play-kinds.grips", Some(ui_label(labels.grips.as_str())?), !grips.is_empty(), kind_catalog_items("puzzle5d-play-kinds.grips", &grips, None)?, ui_label(labels.none.as_str())?)?
+        .section_or_placeholder("puzzle5d-play-kinds.fasteners", Some(ui_label(labels.fasteners.as_str())?), !fasteners.is_empty(), kind_catalog_items("puzzle5d-play-kinds.fasteners", &fasteners, None)?, ui_label(labels.none.as_str())?)?
+        .section_or_placeholder("puzzle5d-play-kinds.ropes", Some(ui_label(labels.ropes.as_str())?), !ropes.is_empty(), kind_catalog_items("puzzle5d-play-kinds.ropes", &ropes, None)?, ui_label(labels.none.as_str())?)?
         .build()
 }
 //#endregion 🔖️Render

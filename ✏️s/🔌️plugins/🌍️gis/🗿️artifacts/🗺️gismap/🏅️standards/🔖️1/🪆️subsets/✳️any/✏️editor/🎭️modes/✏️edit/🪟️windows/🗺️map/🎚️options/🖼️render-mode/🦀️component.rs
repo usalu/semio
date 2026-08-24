@@ -1,7 +1,7 @@
 //! 🖼️ Map window option — the raster/vector/combined render-mode select.
 
 use crate::editor::gis2d::config::Gis2dConfig;
-use crate::editor::gis2d::gis2d_action;
+use crate::editor::gis2d::gis2d_window_action;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
@@ -18,7 +18,7 @@ pub fn measure(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> WindowMeasure {
             MeasureSelectItem { id: "vector".into(), value: "vector".into(), label: labels.render_mode_vector.into() },
             MeasureSelectItem { id: "combined".into(), value: "combined".into(), label: labels.render_mode_combined.into() },
         ],
-        on_change: gis2d_action("setRenderMode", None),
+        on_change: gis2d_window_action("setRenderMode", None),
     }
 }
 //#endregion 🔖️Option

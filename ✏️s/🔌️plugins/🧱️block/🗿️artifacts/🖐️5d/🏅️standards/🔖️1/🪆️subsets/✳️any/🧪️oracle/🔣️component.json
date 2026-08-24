@@ -1,0 +1,66 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `Block5dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "block-5d-mutation-semantics",
+      "capabilities": ["block-5d-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `Block5dMutation` — the widest vocabulary in this plugin, defining a part kind that carries BOTH a 2d and a 3d facet at once, a representation catalogue with LODs and tags, grip kinds and placed grips in two dimensionalities (`move-grip2d`, `move-grip3d`, `resize-grip3d`), and two independent editor cameras. Its diff also renames the two facet fields — the snapshot calls them `2d` and `3d`, names no Rust identifier can carry, and the diff calls them `part2d`/`part3d`. That mapping IS this subset's specification, not a fact an external library could confirm or refute. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability and footprint completeness, the latter resolving `2d`/`3d` through the declared alias table before it decides anything.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "block-5d-1-any",
+      "capability": "block-5d-1-mutate",
+      "kinds": [
+        "rename-part-kind",
+        "change-part-kind-label",
+        "change-part-kind-variant",
+        "change-part-kind-description",
+        "change-part-kind-icon",
+        "change-part-kind-unit",
+        "update-part2d",
+        "update-part3d",
+        "create-representation",
+        "delete-representation",
+        "rename-representation",
+        "change-representation-mesh-url",
+        "change-representation-lod",
+        "change-representation-description",
+        "add-representation-tag",
+        "remove-representation-tag",
+        "add-representation-attribute",
+        "remove-representation-attribute",
+        "create-grip-kind",
+        "delete-grip-kind",
+        "rename-grip-kind",
+        "change-grip-kind-label",
+        "change-grip-kind-color",
+        "change-grip-kind-default-rope-kind",
+        "create-grip",
+        "delete-grip",
+        "move-grip2d",
+        "move-grip3d",
+        "resize-grip3d",
+        "change-grip-grip-kind",
+        "add-compatibility-rule",
+        "remove-compatibility-rule",
+        "add-attribute",
+        "remove-attribute",
+        "add-author",
+        "remove-author",
+        "move-camera2d",
+        "scale-camera2d",
+        "move-camera3d",
+        "scale-camera3d",
+        "change-meta-description"
+      ]
+    }
+  ]
+}

@@ -4,10 +4,8 @@
 //! `render`'s doc comment for why it now always renders the document summary.
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::Puzzle5dScene;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren};
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use semio_framework_ui_contract as ui;
+use crate::editor::puzzle5d::{ui_label, ui_node_list, Puzzle5dScene};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.inspector";
@@ -33,13 +31,13 @@ pub fn definition() -> PanelTabDefinition {
 /// as the same framework-level gap noted on `puzzle5d_brush_target_grip` — not fixed here (framework
 /// file, out of this crate's remit).
 pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let rows = vec![
-        ui::text(format!("{}: {}", labels.schema.as_str(), envelope.document.schema)).id("puzzle5d-play-inspector.schema").build(),
-        ui::text(format!("{}: {}", labels.parts.as_str(), envelope.document.parts.len())).id("puzzle5d-play-inspector.parts").build(),
-        ui::text(format!("{}: {}", labels.fasteners.as_str(), envelope.document.fasteners.len())).id("puzzle5d-play-inspector.fasteners").build(),
-        ui::text(format!("{}: {}", labels.utility.as_str(), envelope.active_utility)).id("puzzle5d-play-inspector.utility").build(),
-    ];
-    PanelTreeBuilder::new("puzzle5d-play-inspector")?.section("puzzle5d-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, rows)?.build()
+    let rows = ui_node_list([
+        tree_item_desc("puzzle5d-play-inspector.schema", ui_label(labels.schema.as_str())?, Some(envelope.document.schema.clone())),
+        tree_item_desc("puzzle5d-play-inspector.parts", ui_label(labels.parts.as_str())?, Some(envelope.document.parts.len().to_string())),
+        tree_item_desc("puzzle5d-play-inspector.fasteners", ui_label(labels.fasteners.as_str())?, Some(envelope.document.fasteners.len().to_string())),
+        tree_item_desc("puzzle5d-play-inspector.utility", ui_label(labels.utility.as_str())?, Some(envelope.active_utility.clone())),
+    ])?;
+    PanelTreeBuilder::new("puzzle5d-play-inspector")?.section("puzzle5d-play-inspector.empty", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
 }
 //#endregion 🔖️Render
 

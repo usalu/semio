@@ -67,14 +67,14 @@ impl ArtifactEditor for AssemblyEditor {
     const DIALECT: Dialect = ASSEMBLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ASSEMBLY_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> AssemblySnapshot {
+    fn initial_snapshot() -> AssemblySnapshot {
         AssemblySnapshot::default()
     }
 
     /// ✏️ Dispatches straight onto the real schema-tree mutation builders — one `AssemblyMutation` per
     /// command, no `ReplaceModel`-style whole-document rewrite (unlike `energy.model`, this artifact's
     /// mutations are already field/id-addressed, so no working-scene decode/re-encode step is needed).
-    async fn handle(
+    fn handle(
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -100,7 +100,7 @@ impl ArtifactEditor for AssemblyEditor {
         Ok(Emit { artifact_mutations: vec![mutation], description: Some(description), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
         semio_framework_plugin::built_to_component_tree(match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),

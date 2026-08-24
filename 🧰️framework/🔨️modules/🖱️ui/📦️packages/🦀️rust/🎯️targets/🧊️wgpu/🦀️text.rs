@@ -16,10 +16,10 @@ use std::sync::Arc;
 
 use parley::fontique::{Blob, Collection, CollectionOptions, FamilyId, FontInfoOverride, GenericFamily, SourceCache};
 use parley::{FontContext, FontStack, LayoutContext, PositionedLayoutItem, StyleProperty};
+use swash::FontRef as SwashFontRef;
 use swash::scale::image::Content as SwashContent;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use swash::zeno::Format as SwashFormat;
-use swash::FontRef as SwashFontRef;
 
 pub struct GlyphEntry {
     pub atlas_x: u32,

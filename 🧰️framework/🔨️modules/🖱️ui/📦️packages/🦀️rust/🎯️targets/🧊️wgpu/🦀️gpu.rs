@@ -391,8 +391,8 @@ impl GpuContext {
 
 #[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
 pub fn schedule_frame(window: &winit::window::Window, callback: impl FnMut() + 'static) {
-    use wasm_bindgen::closure::Closure;
     use wasm_bindgen::JsCast;
+    use wasm_bindgen::closure::Closure;
 
     let mut callback = callback;
     let closure = Closure::wrap(Box::new(move || {

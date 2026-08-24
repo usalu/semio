@@ -9,15 +9,15 @@
 //! drop-zone computation is stubbed this milestone (see `dispatch`'s doc comment): only hit-testing
 //! plus click-to-activate-tab is fully implemented.
 
-use crate::wgpu::arena::NodeId;
-use crate::wgpu::component::layout::{ActionDescriptor, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
-use crate::wgpu::component::role_chrome::{role_title_chip_text, ChromeRole};
-use crate::wgpu::component::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode};
-use crate::wgpu::events::{hit_test, UiEvent};
-use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
 use crate::wgpu::IconName;
 use crate::wgpu::Label;
 use crate::wgpu::Locale;
+use crate::wgpu::arena::NodeId;
+use crate::wgpu::component::layout::{ActionDescriptor, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use crate::wgpu::component::role_chrome::{ChromeRole, role_title_chip_text};
+use crate::wgpu::component::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode};
+use crate::wgpu::events::{UiEvent, hit_test};
+use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
 
 const SHELL_AXIS: u32 = 200;
 const SHELL_STACK: u32 = 201;

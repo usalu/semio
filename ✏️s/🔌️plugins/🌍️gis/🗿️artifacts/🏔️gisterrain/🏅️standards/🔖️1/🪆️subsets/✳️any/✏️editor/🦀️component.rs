@@ -159,7 +159,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         match port {
             "scene:out" => Ok(gis3d_scene_media(doc.snapshot)),
             "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -225,13 +225,13 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// 🧮️ Empty — gis3d's `Config` is session view state (camera), not a user-facing settings
     /// record; `ConfigSpec::empty()` (the trait default) is correct as-is.
     async fn config_spec() -> semio_framework_plugin::ConfigSpec {
-        semio_framework_plugin::ConfigSpec::empty()
+        semio_framework_plugin::ConfigSpec::empty().await
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, cfg.snapshot),
-            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, cfg.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -279,7 +279,7 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(Gis3dPlayApp::config_spec())
+            .config(semio_framework_plugin::resolve_ready(Gis3dPlayApp::config_spec()))
             .io(gis3d_io())
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder::build_definition` has no `.example(...)`/
             // `.workflow(...)` — the old `"reuse-terrain"` app-level example registration and the
@@ -334,7 +334,7 @@ mod tests {
 
     //#region 🔖️CommandSurface
     /// 🎯️ One value per `app_commands!` row, in row order.
-    async fn every_command() -> Vec<Gis3dCommand> {
+    fn every_command() -> Vec<Gis3dCommand> {
         vec![
             Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 }),
             Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }),

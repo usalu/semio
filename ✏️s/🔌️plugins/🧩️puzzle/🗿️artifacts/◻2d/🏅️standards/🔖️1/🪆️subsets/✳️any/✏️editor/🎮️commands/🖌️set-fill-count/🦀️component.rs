@@ -21,6 +21,16 @@ fn queue_next_step(ctx: &mut Puzzle2dActionCtx<'_>) {
     });
 }
 
+fn retained_payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(payload.len());
+    for index in 0..payload.page_count() {
+        if let Some(page) = payload.page(index) {
+            bytes.extend_from_slice(page);
+        }
+    }
+    bytes
+}
+
 pub fn begin_fill_job(ctx: &mut Puzzle2dActionCtx<'_>, count: u32, seed: u64) {
     let snapshot = ctx.host.borrow().board_fill_snapshot();
     let generation = ctx.scene.runtime.fill_job_generation.saturating_add(1);
@@ -78,7 +88,7 @@ pub fn step_fill_job(ctx: &mut Puzzle2dActionCtx<'_>, expected_generation: Optio
         return;
     };
     if let semio_framework_job::StepOutcome::PreviewReady(bytes) = &outcome {
-        ctx.scene.runtime.fill_job_preview = serde_json::from_slice(bytes).ok();
+        ctx.scene.runtime.fill_job_preview = serde_json::from_slice(&retained_payload_bytes(bytes)).ok();
     }
     match &outcome {
         semio_framework_job::StepOutcome::Complete(_) => {
@@ -91,7 +101,7 @@ pub fn step_fill_job(ctx: &mut Puzzle2dActionCtx<'_>, expected_generation: Optio
             ctx.scene.runtime.fill_count = 0;
         }
         semio_framework_job::StepOutcome::CheckpointReady(checkpoint) => {
-            ctx.scene.runtime.fill_job_checkpoint = Some(checkpoint.state.to_vec());
+            ctx.scene.runtime.fill_job_checkpoint = Some(retained_payload_bytes(&checkpoint.state));
             queue_next_step(ctx);
         }
         _ => {

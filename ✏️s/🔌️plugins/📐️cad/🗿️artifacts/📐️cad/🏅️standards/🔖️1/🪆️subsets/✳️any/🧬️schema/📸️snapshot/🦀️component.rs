@@ -52,7 +52,7 @@ pub struct CadSnapshot {
     pub active_model_definition_id: String,
 }
 
-async fn default_model_definition_id() -> String {
+fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
 
@@ -60,10 +60,10 @@ async fn default_model_definition_id() -> String {
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `✳️object`/`✳️kit`'s own — the working reference
 /// for a composite subset's `enc_child`/`dec_child` helpers) — a handle is exactly two strings
 /// (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`), never the child's own content.
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -85,10 +85,10 @@ pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
 /// 🔧️ Local `split_top_level`/`strip_brackets` (bracket-depth-aware split, `[...]` unwrap) — same
 /// shape as stdio's own `engine::triples` helpers, duplicated rather than imported since that
 /// module is private to the stdio crate.
-async fn strip_brackets(s: &str) -> Result<&str, String> {
+fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
-async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -147,16 +147,16 @@ pub(crate) fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>,
 /// dropped every reload), not a hypothetical gap. Fixed the same way `enc_str`/`dec_str` already
 /// hex-encode every other text field in this file: serialize to JSON, then hex-encode the JSON
 /// bytes — one more line-oriented field, no new wire primitive.
-async fn enc_json<T: Serialize>(value: &T) -> String {
+fn enc_json<T: Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("CadSnapshot structured fields are always JSON-serializable"))
 }
-async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️JsonFieldPrimitives
 
 //#region 🔖️TextPrimitives
-async fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
+fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
     format!(
         "schema={}\nid={}\nshapeModel={}\nbuildingModel={}\nenergyModel={}\nstructureClassicModel={}\ndrawings={}\nreferencesByModelDefinitionId={}\nnodes={}\nactiveModelDefinitionId={}",
         enc_str(&s.schema),
@@ -171,7 +171,7 @@ async fn print_cad_snapshot_body(s: &CadSnapshot) -> String {
         enc_str(&s.active_model_definition_id),
     )
 }
-async fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
+fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
     let mut snapshot = empty_cad_snapshot();
     let mut saw_schema = false;
     for line in body.lines() {
@@ -212,36 +212,36 @@ async fn parse_cad_snapshot_body(body: &str) -> Result<CadSnapshot, String> {
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
-async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
+fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
     write_str_lp(out, &r.to_uri());
 }
-async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
+fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
-async fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
     Ok(store::ArtifactChild::new(child_id, target))
 }
-async fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
+fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
     match c {
         Some(c) => {
             out.push(1);
@@ -250,19 +250,19 @@ async fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S
         None => out.push(0),
     }
 }
-async fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
+fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(None),
         _ => Ok(Some(read_child(reader)?)),
     }
 }
-async fn write_child_list<S>(out: &mut Vec<u8>, items: &[store::ArtifactChild<S>]) {
+fn write_child_list<S>(out: &mut Vec<u8>, items: &[store::ArtifactChild<S>]) {
     store::pack_rt::write_varint_u64(out, items.len() as u64);
     for item in items {
         write_child(out, item);
     }
 }
-async fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<store::ArtifactChild<S>>, String> {
+fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<store::ArtifactChild<S>>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut items = Vec::with_capacity(count as usize);
     for _ in 0..count {
@@ -271,7 +271,7 @@ async fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<st
     Ok(items)
 }
 
-async fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
+fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
@@ -286,7 +286,7 @@ async fn encode_cad_snapshot_binary(s: &CadSnapshot) -> Vec<u8> {
     write_str_lp(&mut out, &s.active_model_definition_id);
     out
 }
-async fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
+fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<CadSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;

@@ -34,6 +34,14 @@ pub enum FlowMutation {
     DuplicateWidget(super::duplicate_widget::mutation::DuplicateWidget),
 }
 
+/// 🏷️ The kebab spelling of every [`FlowMutation`] variant, in DECLARATION ORDER — the one list the
+/// language-neutral test platform is measured against. It is duplicated in exactly two other places
+/// on purpose: this subset's own oracle manifest catalog `flow-1-any`
+/// (`../../🧪️oracle/🔣️component.json`), which the completeness gate counts, and the `mutate-flow-1`
+/// case adapter, which must not link this crate in the oracle role.
+/// [`tests::kinds_match_the_enum_and_the_catalog`] is what keeps all three honest.
+pub const KINDS: &[&str] = &["create-widget", "delete-widget", "reorder-widgets", "replace-widget", "connect-widgets", "disconnect-widgets", "reorder-synapses", "update-synapse-endpoints", "move-widgets", "duplicate-widget"];
+
 pub type FlowEnvelope = ArtifactEnvelope<FlowSnapshot, FlowMutation>;
 pub type FlowStore = ArtifactStore<FlowSnapshot, FlowMutation>;
 
@@ -50,6 +58,47 @@ pub async fn inverse_flow_mutation(snapshot: &FlowSnapshot, mutation: &FlowMutat
     <FlowMutation as Mutation<FlowSnapshot>>::inverse(mutation, snapshot)
 }
 //#endregion 🔹Operation
+
+//#region 🔖️CaseBridges
+/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "createWidget", …}`) JSON projection
+/// — the shape the `mutate-flow-1` case's `Examples` rows carry — into a real [`FlowMutation`]. A
+/// thin `serde_json` wrapper (already a direct dependency of this crate, used behind this interface
+/// per CLAUDE.md's "external libraries behind an interface" rule, never a new one), so the case reads
+/// the committed feature row instead of re-declaring it as a Rust literal beside it.
+pub fn decode_flow_mutation_json(text: &str) -> Result<FlowMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📥️ Decodes a committed `{"widgets": [...], "synapses": [...], "layout": { … }}` document into the
+/// real values a composed content child is seeded with. `Widget` is a typed UNION whose variant
+/// decides its own field set, so a caller outside this crate cannot rebuild one by hand without
+/// re-implementing that discriminant — which is exactly the knowledge this subset owns.
+pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<flow::Widget>, Vec<flow::SynapseSpec>, std::collections::BTreeMap<String, flow::WidgetLayout>), String> {
+    #[derive(serde::Deserialize)]
+    struct CommittedScene {
+        #[serde(default)]
+        widgets: Vec<flow::Widget>,
+        #[serde(default)]
+        synapses: Vec<flow::SynapseSpec>,
+        #[serde(default)]
+        layout: std::collections::BTreeMap<String, flow::WidgetLayout>,
+    }
+    let scene: CommittedScene = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    Ok((scene.widgets, scene.synapses, scene.layout))
+}
+
+/// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, camera, widgets, synapses,
+/// layout)`, the inline document fields plus the composed content child's working scene. It belongs
+/// to the subset rather than to a test adapter, because what counts as this document's meaning is
+/// this subset's ruling, not a case's. The content handle is deliberately absent:
+/// `flow_content_child_handle` content-addresses exactly that triple through `std`'s deliberately
+/// unspecified `DefaultHasher`, so projecting it would compare the same content twice and pin a
+/// value the standard library does not promise.
+pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
+    let scene = crate::artifacts::flow::flow_working_scene(snapshot);
+    serde_json::json!({ "schema": snapshot.schema, "camera": snapshot.camera, "widgets": scene.widgets, "synapses": scene.synapses, "layout": scene.layout }).to_string()
+}
+//#endregion 🔖️CaseBridges
 
 //#region 🌉️FrameworkBridge
 /// 🌎️ Converts a framework kernel mutation into this plugin's semantic mutation vocabulary.
@@ -344,5 +393,22 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🔖️KindsCatalog
+    /// 🏷️ [`KINDS`] is the bridge between this enum and the language-neutral test platform, which
+    /// never parses Rust. This proves it names every variant, in declaration order, with the same
+    /// kebab spelling `#[derive(protocol::Mutations)]` derives — and that this subset's own committed
+    /// catalog declares exactly the same set, so the completeness gate cannot be measuring a
+    /// vocabulary that has drifted away from the code.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let declared: Vec<&str> = <FlowMutation as protocol::SemanticMutation<FlowSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
+        assert_eq!(KINDS, declared.as_slice(), "KINDS must name every FlowMutation variant, in declaration order, spelled as its own MutationKind::SEMANTICS.kind");
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in this subset's committed oracle manifest catalog flow-1-any");
+        }
+    }
+    //#endregion 🔖️KindsCatalog
 }
 //#endregion 🧪️Tests

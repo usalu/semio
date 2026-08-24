@@ -9,10 +9,10 @@
 //! `crate::wgpu::chrome`/`crate::wgpu::input` are the other top-level engine mods `widgets` itself also depends
 //! on; `crate::wgpu::IconName` is the crate-root re-export of the generated icon enum.
 
-use crate::wgpu::chrome::{item_bg, item_text, push_control_border, push_icon, ICON_TINY};
-use crate::wgpu::input::{HitKind, HitTarget};
-use crate::wgpu::widgets::{draw_text, WidgetContext};
 use crate::wgpu::IconName;
+use crate::wgpu::chrome::{ICON_TINY, item_bg, item_text, push_control_border, push_icon};
+use crate::wgpu::input::{HitKind, HitTarget};
+use crate::wgpu::widgets::{WidgetContext, draw_text};
 
 pub(crate) fn render_button<E: Clone>(id: Option<&String>, icon_id: Option<IconName>, label: &str, event: Option<E>, bounds: crate::wgpu::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let control_id = id.cloned().or_else(|| Some(label.to_string()));

@@ -488,11 +488,7 @@ pub mod layout {
         let items = context_menu_normalize_separators(recursed);
         let items = context_menu_merge_group_rows(items);
         let interactive_count = items.iter().filter(|item| item.separator != Some(true)).count();
-        if interactive_count <= CONTEXT_MENU_ROW_BUDGET {
-            context_menu_emit_within_budget(items)
-        } else {
-            context_menu_emit_over_budget(items, category_of)
-        }
+        if interactive_count <= CONTEXT_MENU_ROW_BUDGET { context_menu_emit_within_budget(items) } else { context_menu_emit_over_budget(items, category_of) }
     }
 
     /// 🗂️ Declarative input row for `build_shell_context_menu_specs` — Rust twin of the TS `ShellMenuAction`
@@ -1666,21 +1662,13 @@ pub mod role_chrome {
 
     /// 🗣️ Context-menu/palette entry — contract freeze §5: en `"Open with…"` / de `"Öffnen mit…"`.
     pub fn open_with_label_text(is_de: bool) -> &'static str {
-        if is_de {
-            "Öffnen mit…"
-        } else {
-            "Open with…"
-        }
+        if is_de { "Öffnen mit…" } else { "Open with…" }
     }
 
     /// 🗣️ "Set as default" toggle — contract freeze §5: en `"Set as default"` / de `"Als Standard
     /// festlegen"`.
     pub fn set_as_default_label_text(is_de: bool) -> &'static str {
-        if is_de {
-            "Als Standard festlegen"
-        } else {
-            "Set as default"
-        }
+        if is_de { "Als Standard festlegen" } else { "Set as default" }
     }
     //#endregion 🔖️FrozenStrings
 
@@ -1922,9 +1910,9 @@ pub mod ui {
     use std::collections::HashMap;
 
     //#region 🔖Action
-    pub use super::layout::{build_shell_context_menu_specs, organize_context_menu, ribbon_parent_label, ShellMenuAction, RIBBON_PARENT_CATEGORIES};
     pub use super::layout::{ActionDescriptor, StyleSpec, UiPeerMark, UiPresence, UiState, UiStatus};
     pub use super::layout::{ContextMenuHit, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, ContextMenuTextContext, UiMenuRef};
+    pub use super::layout::{RIBBON_PARENT_CATEGORIES, ShellMenuAction, build_shell_context_menu_specs, organize_context_menu, ribbon_parent_label};
     //#endregion 🔖Action
 
     //#region 🔖Primitives
@@ -2816,14 +2804,13 @@ pub mod ui {
     // own `🦀️scenes.rs` header for why (that crate is wasm-safe and depends on nothing beyond
     // `ui_contract`/`serde`, so it cannot carry either type).
     pub use ui_scene::{
-        canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal, canvas2d_snapshot_terminal_is_empty,
-        canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, decode as decode_surface_doc, encode as encode_surface_doc, world3d_snapshot_abort_write, world3d_snapshot_abort_write_step, world3d_snapshot_admit_page, world3d_snapshot_begin,
-        world3d_snapshot_begin_close, world3d_snapshot_close_step,
-        world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page, world3d_snapshot_write_terminal_is_empty, BlockListScene, Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene,
-        Canvas2dRejectedSnapshotPage, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord,
-        NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport,
-        Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease,
-        World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken,
+        BlockListScene, Board2dScene, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, DiffViewScene, EventFeedScene,
+        GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord,
+        NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor, World3dSnapshotFault, World3dSnapshotItem,
+        World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken, canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin,
+        canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal, canvas2d_snapshot_terminal_is_empty, canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, decode as decode_surface_doc,
+        encode as encode_surface_doc, world3d_snapshot_abort_write, world3d_snapshot_abort_write_step, world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_close_step, world3d_snapshot_seal,
+        world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page, world3d_snapshot_write_terminal_is_empty,
     };
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3367,11 +3354,7 @@ pub mod ui {
         while index < bytes.len() && is_ident(bytes[index]) {
             index += 1;
         }
-        if start == index {
-            None
-        } else {
-            Some((start, index))
-        }
+        if start == index { None } else { Some((start, index)) }
     }
 
     /// 🔎️ JSON `{selection, hover}` occurrence ranges for the identifier under `cursor`, for editor cross-highlighting.

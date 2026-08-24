@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `Puzzle5dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "puzzle-5d-mutation-semantics",
+      "capabilities": ["puzzle-5d-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `Puzzle5dMutation` — a vocabulary in which ONE part carries BOTH a 2d and a 3d facet, so `move-part2d` and `move-part3d` are different kinds addressing different halves of the same record, and in which `kindCompatibility` is a TOP-LEVEL field rather than a member of `meta` as it is in the sibling 2d and 3d subsets. That is this subset's own specification, not a fact an external library could confirm or refute. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability (a kind must move the compared projection, or, where the committed outcome itself declares `mutation.no-op`, must provably move nothing) and footprint completeness (`before` and `after` may differ on exactly the fields the committed diff declares).",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "puzzle-5d-1-any",
+      "capability": "puzzle-5d-1-mutate",
+      "kinds": [
+        "create-part",
+        "delete-part",
+        "move-part2d",
+        "replace-part2d-geometry",
+        "edit-part2d-text",
+        "change-part2d-icon",
+        "change-part2d-hidden",
+        "change-part2d-locked",
+        "move-part3d",
+        "rotate-part3d",
+        "scale-part3d",
+        "change-part3d-mesh",
+        "edit-part3d-label",
+        "change-part-kind",
+        "change-part-anchor",
+        "add-part-grip",
+        "remove-part-grip",
+        "replace-part-grip",
+        "connect-grips",
+        "disconnect-grips",
+        "replace-fastener-geometry",
+        "change-fastener-kind",
+        "rename-puzzle5d",
+        "change-domain",
+        "change-description",
+        "connect-kind-compatibility",
+        "disconnect-kind-compatibility",
+        "replace-kind-catalogs"
+      ]
+    }
+  ]
+}

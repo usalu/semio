@@ -1,0 +1,62 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `Block3dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "block-3d-mutation-semantics",
+      "capabilities": ["block-3d-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `Block3dMutation` — the definition of an object kind whose vortex-kind vocabulary is SPLIT across two places: a shared catalogue held as a child document reference in `catalog`, and this document's own additions in `vortexKindExtra`. `create-vortex-kind` and `delete-vortex-kind` move BOTH at once and the diff declares them through a single `vortexKinds` field, so a reader that assumed a diff field mirrors a snapshot field would mis-measure every one of those kinds. That split IS this subset's specification, not a fact an external library could confirm or refute. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability and footprint completeness, the latter resolving both `catalog` and `vortexKindExtra` through the declared alias table.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "block-3d-1-any",
+      "capability": "block-3d-1-mutate",
+      "kinds": [
+        "rename-object-kind",
+        "change-object-kind-label",
+        "change-object-kind-variant",
+        "change-object-kind-description",
+        "change-object-kind-icon",
+        "change-object-kind-unit",
+        "create-representation",
+        "delete-representation",
+        "rename-representation",
+        "change-representation-mesh-url",
+        "change-representation-lod",
+        "change-representation-description",
+        "add-representation-tag",
+        "remove-representation-tag",
+        "add-representation-attribute",
+        "remove-representation-attribute",
+        "create-vortex-kind",
+        "delete-vortex-kind",
+        "rename-vortex-kind",
+        "change-vortex-kind-label",
+        "change-vortex-kind-color",
+        "change-vortex-kind-default-cable-kind",
+        "create-vortex",
+        "delete-vortex",
+        "move-vortex",
+        "resize-vortex",
+        "change-vortex-vortex-kind",
+        "change-vortex-label",
+        "add-compatibility-rule",
+        "remove-compatibility-rule",
+        "add-attribute",
+        "remove-attribute",
+        "add-author",
+        "remove-author",
+        "move-camera3d",
+        "scale-camera3d",
+        "change-meta-description"
+      ]
+    }
+  ]
+}

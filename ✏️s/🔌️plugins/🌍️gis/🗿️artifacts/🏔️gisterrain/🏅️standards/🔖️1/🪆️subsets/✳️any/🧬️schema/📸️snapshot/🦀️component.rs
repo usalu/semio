@@ -49,10 +49,10 @@ impl Default for GisTerrainSnapshot {
 //#endregion 🔹Snapshot
 
 //#region 🔖️CodecPrimitives
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -96,10 +96,10 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>
 //#endregion 🔖️CodecPrimitives
 
 //#region 🔖️TextPrimitives
-async fn print_gis_terrain_snapshot_body(s: &GisTerrainSnapshot) -> String {
+fn print_gis_terrain_snapshot_body(s: &GisTerrainSnapshot) -> String {
     format!("exaggeration={}\nimportedFeaturesJson={}\nmesh={}", s.exaggeration, enc_str(&s.imported_features_json), enc_child_opt(&s.mesh))
 }
-async fn parse_gis_terrain_snapshot_body(body: &str) -> Result<GisTerrainSnapshot, String> {
+fn parse_gis_terrain_snapshot_body(body: &str) -> Result<GisTerrainSnapshot, String> {
     let mut exaggeration = None;
     let mut imported_features_json = None;
     let mut mesh = None;
@@ -129,11 +129,11 @@ async fn parse_gis_terrain_snapshot_body(body: &str) -> Result<GisTerrainSnapsho
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
@@ -177,7 +177,7 @@ pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Op
     }
 }
 
-async fn encode_gis_terrain_snapshot_binary(s: &GisTerrainSnapshot) -> Vec<u8> {
+fn encode_gis_terrain_snapshot_binary(s: &GisTerrainSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     out.extend_from_slice(&s.exaggeration.to_le_bytes());
@@ -185,7 +185,7 @@ async fn encode_gis_terrain_snapshot_binary(s: &GisTerrainSnapshot) -> Vec<u8> {
     write_child_opt(&mut out, &s.mesh);
     out
 }
-async fn decode_gis_terrain_snapshot_binary(bytes: &[u8]) -> Result<GisTerrainSnapshot, String> {
+fn decode_gis_terrain_snapshot_binary(bytes: &[u8]) -> Result<GisTerrainSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;

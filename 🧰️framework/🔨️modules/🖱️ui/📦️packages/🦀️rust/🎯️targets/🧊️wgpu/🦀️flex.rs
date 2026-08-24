@@ -784,8 +784,8 @@ impl LayoutEngine {
 mod tests {
     use super::legacy_layout_job::LayoutJob;
     use super::*;
-    use crate::wgpu::component::ui::{UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
     use crate::wgpu::Label;
+    use crate::wgpu::component::ui::{UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
 
     fn text(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })

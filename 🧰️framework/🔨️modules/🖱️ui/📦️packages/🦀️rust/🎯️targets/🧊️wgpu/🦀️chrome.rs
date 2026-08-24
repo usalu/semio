@@ -61,11 +61,7 @@ pub fn measure_action_item(atlas: &mut FontAtlas, theme: &Theme, icon: bool, lab
 
 pub fn chrome_item_bg(theme: &Theme, active: bool, hovered: bool) -> Rgba {
     if active {
-        if hovered {
-            theme.accent_hover
-        } else {
-            theme.selected
-        }
+        if hovered { theme.accent_hover } else { theme.selected }
     } else if hovered {
         theme.button_hover
     } else {

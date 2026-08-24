@@ -54,6 +54,17 @@ pub fn gis2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>)
     semio_framework_plugin::ActionFactory::new(GIS2D_PLAY_APP_ID).action(action, args)
 }
 
+/// 🪟️ Bridges semantic app actions into the retained window-measure transport.
+pub fn gis2d_window_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: GIS2D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+}
+
+/// 🏷️ Admits resolved app text into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref())
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "GIS UI label admission failed"))
+}
+
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -116,8 +127,8 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// translates clicks into injected `interactionSelect`) and the catalogue panel (`action: Some(..)` —
 /// a real, non-selection click that toggles layer visibility).
 pub fn gis2d_layer_tree_item(
-    id: String,
-    label: impl TryInto<Label>,
+    id: impl AsRef<str>,
+    label: semio_framework_plugin::plugin_app_close_prelude::Label,
     description: Option<String>,
     icon_id: &str,
     action: Option<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,
@@ -129,7 +140,7 @@ pub fn gis2d_layer_tree_item(
     if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
         if props.description.is_none() {
             props.description = match description {
-                Some(value) => Some(semio_framework_plugin::UiText::try_from_string(value).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer description admission failed"))?),
+                Some(value) => Some(semio_framework_plugin::UiText::try_from_string(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer description admission failed"))?),
                 None => None,
             };
         }
@@ -244,7 +255,7 @@ pub struct Gis2dPlayApp;
 /// 🕹️ `interactionSelect` args for a single-feature pick against the `"features"` domain's
 /// `"feature"` granularity — the generic replacement for the deleted bespoke `setFeatureSelection`
 /// action (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-async fn select_feature_action_args(feature_id: &str) -> Value {
+fn select_feature_action_args(feature_id: &str) -> Value {
     let targets = json!([{ "granularity": "feature", "id": feature_id }]).to_string();
     json!({ "domainId": "features", "targets": targets, "merge": "replace", "method": "pick" })
 }
@@ -264,13 +275,18 @@ async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRe
     let feature = hits.iter().find(|h| h.domain == "feature" || h.domain == "position" || h.domain == "route");
     if let Some(feature) = feature {
         let kind = if feature.domain == "route" { "route" } else { "position" };
-        return Menu::of(registry)
+        let mut menu = Menu::of(registry)
+            .await
             .action_args(INTERACTION_SELECT_ACTION_ID, select_feature_action_args(&feature.id))
+            .await
             .action_args("focusFeature", json!({ "featureId": feature.id, "featureKind": kind }))
-            .when(kind == "position", |m| m.group("open", |m| m.action_args("openSource", json!({ "featureId": feature.id }))))
-            .build();
+            .await;
+        if kind == "position" {
+            menu = menu.action_args("openSource", json!({ "featureId": feature.id })).await;
+        }
+        return menu.build().await;
     }
-    let mut items = Menu::of(registry).action("selectAll").action("fitWorld").destructive("clearSelection").build();
+    let mut items = Menu::of(registry).await.action("selectAll").await.action("fitWorld").await.destructive("clearSelection").await.build().await;
     if let Some(clear) = items.iter_mut().find(|entry| entry.id == "clearSelection") {
         clear.disabled = selected_ids.is_empty().then_some(true);
     }
@@ -341,7 +357,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         match port {
             "map:out" => Ok(gis2d_map_media(doc.snapshot)),
             "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -372,7 +388,7 @@ impl ArtifactEditor for Gis2dPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let snapshot = <GisMapSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                match Self::whole_document_operation(snapshot) {
+                match Self::whole_document_operation(snapshot).await {
                     Some(operation) => Ok(Emit::mutations(vec![operation])),
                     None => Err(MediaError::NotImplemented),
                 }
@@ -446,18 +462,18 @@ impl ArtifactEditor for Gis2dPlayApp {
     /// 🧮️ Empty — gis2d's `Config` is session view state (camera/render/layer visibility/…), not a
     /// user-facing settings record; `ConfigSpec::empty()` (the trait default) is correct as-is.
     async fn config_spec() -> semio_framework_plugin::ConfigSpec {
-        semio_framework_plugin::ConfigSpec::empty()
+        semio_framework_plugin::ConfigSpec::empty().await
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let config = cfg.snapshot;
         let labels = gis2d_labels(config);
         match body_key {
-            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config),
-            document_panel::GIS2D_PLAY_BODY_DOCUMENT => document_panel::render(config, labels),
-            catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(config, labels),
-            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config).map(semio_framework_plugin::built_to_component_tree),
+            document_panel::GIS2D_PLAY_BODY_DOCUMENT => document_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
+            catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels).map(semio_framework_plugin::built_to_component_tree),
+            inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -472,7 +488,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         _cfg: &ConfigView<'_, Gis2dConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        gis2d_context_menu_items(registry, request.surface.as_ref(), &[])
+        gis2d_context_menu_items(registry, request.surface.as_ref(), &[]).await
     }
 }
 //#endregion 🔖️Gis2dPlayApp
@@ -530,15 +546,15 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // 👁️ View actions — mutate ephemeral config state (camera, render config, layer
             // visibility, stroke weights), never the document.
             .view_action("toggleLayerVisibility", LocalizedLabel::native("Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"))
-            .action_with(ActionDefinition::bounded_catalog("fitWorld", LocalizedLabel::native("Fit World", "Welt einpassen"), ActionKind::View).with_category("view"))
+            .action_with(ActionDefinition { category: Some("view".into()), ..ActionDefinition::bounded_catalog("fitWorld", LocalizedLabel::native("Fit World", "Welt einpassen"), ActionKind::View) })
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .view_action("setRenderMode", LocalizedLabel::native("Set Render Mode", "Darstellungsmodus festlegen"))
             .view_action("setVectorStyle", LocalizedLabel::native("Set Vector Style", "Vektorstil festlegen"))
             .view_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"))
-            .action_with(ActionDefinition::bounded_catalog("focusFeature", LocalizedLabel::native("Focus Feature", "Objekt fokussieren"), ActionKind::View).with_category("view"))
+            .action_with(ActionDefinition { category: Some("view".into()), ..ActionDefinition::bounded_catalog("focusFeature", LocalizedLabel::native("Focus Feature", "Objekt fokussieren"), ActionKind::View) })
             .view_action("setLayerStrokeScale", LocalizedLabel::native("Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"))
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
-            .action_with(ActionDefinition::bounded_catalog("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell).with_category("open"))
+            .action_with(ActionDefinition { category: Some("open".into()), ..ActionDefinition::bounded_catalog("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell) })
             // 📝️ Argument schemas for the discrete-choice actions so the command palette can stage them
             // and the registry validates the vocabulary. The arg id matches the key each handler reads.
             .action_args("setActiveExample", vec![
@@ -565,7 +581,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .config(Gis2dPlayApp::config_spec())
+            .config(semio_framework_plugin::resolve_ready(Gis2dPlayApp::config_spec()))
             .io(gis2d_io())
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder::build_definition` has no `.example(...)`/
             // `.workflow(...)` — the old `"reuse-map"` app-level example registration and the no-op
@@ -718,7 +734,7 @@ mod tests {
     /// 🎯️ One value per `app_commands!` row, in row order — the wire-law loop below and the id
     /// uniqueness check both run off this list, so a new row that forgets to appear here fails the
     /// coverage assertion.
-    async fn every_command() -> Vec<Gis2dCommand> {
+    fn every_command() -> Vec<Gis2dCommand> {
         vec![
             Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "reuse-map".into() }),
             Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: r#"[{"id":"p1","lon":1.0,"lat":2.0}]"#.into() }),

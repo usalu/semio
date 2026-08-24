@@ -31,6 +31,24 @@ const COMMIT_FIXED_MAX_BYTES: usize = 160;
 const COMMIT_ITEM_MAX_BYTES: usize = 11;
 const MAX_COMMIT_ITEMS: usize = (MAX_COMMIT_BYTES - COMMIT_FIXED_MAX_BYTES) / COMMIT_ITEM_MAX_BYTES;
 
+fn empty_job_fault() -> JobFault {
+    JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }
+}
+
+fn retained_payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(payload.len());
+    for index in 0..payload.page_count() {
+        if let Some(page) = payload.page(index) {
+            bytes.extend_from_slice(page);
+        }
+    }
+    bytes
+}
+
+fn retained_payload(context: &mut StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
+    context.payload_from_bytes(stream, bytes).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(stream))
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum WfcStage {
     InitializeDomains,
@@ -352,12 +370,12 @@ struct CheckpointBuild {
 
 impl CheckpointBuild {
     fn new(state: &WfcState, pattern_count: usize, terminal: bool) -> Result<Self, JobFault> {
-        let capacity = CheckpointCounts::from_state(state, pattern_count).checked_bytes().ok_or_else(|| JobFault { detail: b"wfc-checkpoint-capacity-overflow".to_vec() })?;
+        let capacity = CheckpointCounts::from_state(state, pattern_count).checked_bytes().ok_or_else(empty_job_fault)?;
         if capacity > MAX_CHECKPOINT_BYTES {
-            return Err(JobFault { detail: b"wfc-checkpoint-admission-exceeded".to_vec() });
+            return Err(empty_job_fault());
         }
         let mut bytes = Vec::new();
-        bytes.try_reserve_exact(capacity).map_err(|_| JobFault { detail: b"wfc-checkpoint-allocation-failed".to_vec() })?;
+        bytes.try_reserve_exact(capacity).map_err(|_| empty_job_fault())?;
         Ok(Self { bytes, byte_limit: capacity, phase: CheckpointPhase::Header, outer: 0, inner: 0, terminal })
     }
 }
@@ -375,23 +393,24 @@ struct CommitBuild {
 impl CommitBuild {
     fn new(node_count: usize) -> Result<Self, JobFault> {
         if node_count > MAX_COMMIT_ITEMS {
-            return Err(JobFault { detail: b"wfc-commit-admission-exceeded".to_vec() });
+            return Err(empty_job_fault());
         }
-        let capacity = node_count.checked_mul(COMMIT_ITEM_MAX_BYTES).and_then(|bytes| bytes.checked_add(COMMIT_FIXED_MAX_BYTES)).ok_or_else(|| JobFault { detail: b"wfc-commit-capacity-overflow".to_vec() })?;
+        let capacity = node_count.checked_mul(COMMIT_ITEM_MAX_BYTES).and_then(|bytes| bytes.checked_add(COMMIT_FIXED_MAX_BYTES)).ok_or_else(empty_job_fault)?;
         if capacity > MAX_COMMIT_BYTES {
-            return Err(JobFault { detail: b"wfc-commit-admission-exceeded".to_vec() });
+            return Err(empty_job_fault());
         }
         let mut bytes = Vec::new();
-        bytes.try_reserve_exact(capacity).map_err(|_| JobFault { detail: b"wfc-commit-allocation-failed".to_vec() })?;
+        bytes.try_reserve_exact(capacity).map_err(|_| empty_job_fault())?;
         let mut assignment = Vec::new();
-        assignment.try_reserve_exact(node_count).map_err(|_| JobFault { detail: b"wfc-commit-assignment-allocation-failed".to_vec() })?;
+        assignment.try_reserve_exact(node_count).map_err(|_| empty_job_fault())?;
         Ok(Self { bytes, byte_limit: capacity, assignment, item_limit: node_count, cursor: 0, started: false })
     }
 }
 
 fn ensure_materialization_space(bytes: &[u8], byte_limit: usize, additional: usize, detail: &'static [u8]) -> Result<(), JobFault> {
     if bytes.len().checked_add(additional).map_or(true, |length| length > byte_limit) {
-        return Err(JobFault { detail: detail.to_vec() });
+        let _ = detail;
+        return Err(empty_job_fault());
     }
     Ok(())
 }
@@ -472,9 +491,9 @@ impl<T: Topology + Clone> WfcJob<T> {
 
     pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>, bytes: &[u8]) -> Result<Self, String>
     where
-        T: Send,
+        T: Send + 'static,
     {
-        let mut restore = WfcRestore::new(operation, model, topology, config, initial_domains, fixed, bytes.to_vec())?;
+        let restore = WfcRestore::new(operation, model, topology, config, initial_domains, fixed, bytes.to_vec())?;
         let params = semio_framework_job::BatchJobParams {
             operation: operation.operation,
             generation: operation.generation,
@@ -482,11 +501,37 @@ impl<T: Topology + Clone> WfcJob<T> {
             config: semio_framework_job::BatchDriveConfig { site: "wfc.restore.batch", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 64, step_budget_ms: 4 },
             now_ms: semio_framework_job::default_now_ms,
         };
-        match semio_framework_job::run_to_completion(&mut restore, &params) {
-            StepOutcome::Complete(_) => restore.take_job().ok_or_else(|| "wfc-restore-completed-without-job".into()),
-            StepOutcome::Cancelled => Err("wfc-restore-cancelled".into()),
-            StepOutcome::Fault(fault) => Err(String::from_utf8_lossy(&fault.detail).into_owned()),
-            outcome => Err(format!("wfc-restore-batch-nonterminal:{outcome:?}")),
+        let mut session = match semio_framework_job::BatchJobSession::try_new(restore, params) {
+            Ok(session) => session,
+            Err(mut rejected) => {
+                rejected.begin_close();
+                while !rejected.terminal_is_empty() {
+                    let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
+                return Err("wfc-restore-batch-admission-rejected".into());
+            }
+        };
+        loop {
+            session.step().map_err(|error| format!("wfc-restore-batch-contention:{error:?}"))?;
+            let Some(mut outcome) = session.take_outcome() else { continue };
+            let terminal = outcome.is_terminal();
+            let result = match &outcome {
+                StepOutcome::Complete(_) => Some(session.checked_out_job_mut().and_then(WfcRestore::take_job).ok_or_else(|| "wfc-restore-completed-without-job".into())),
+                StepOutcome::Cancelled => Some(Err("wfc-restore-cancelled".into())),
+                StepOutcome::Fault(fault) => Some(Err(String::from_utf8_lossy(&retained_payload_bytes(&fault.detail)).into_owned())),
+                StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => None,
+            };
+            while !outcome.terminal_is_empty() {
+                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            if terminal {
+                session.begin_close();
+                while !session.terminal_is_empty() {
+                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
+                return result.expect("terminal restore outcome has result");
+            }
+            session.resume().map_err(|error| format!("wfc-restore-batch-resume:{error:?}"))?;
         }
     }
 
@@ -1087,11 +1132,11 @@ impl<T: Topology + Clone> WfcJob<T> {
         }
         if build.cursor < self.state.domains.len() {
             if build.assignment.len() >= build.item_limit {
-                return Err(JobFault { detail: b"wfc-commit-item-limit-exceeded".to_vec() });
+                return Err(empty_job_fault());
             }
             let value = self.state.domains[build.cursor].first_set().expect("complete domain").get();
             let encoded = value.to_string();
-            let additional = usize::from(build.cursor != 0).checked_add(encoded.len()).ok_or_else(|| JobFault { detail: b"wfc-commit-capacity-overflow".to_vec() })?;
+            let additional = usize::from(build.cursor != 0).checked_add(encoded.len()).ok_or_else(empty_job_fault)?;
             ensure_materialization_space(&build.bytes, build.byte_limit, additional, b"wfc-commit-byte-limit-exceeded")?;
             if build.cursor != 0 {
                 build.bytes.push(b',');
@@ -1102,7 +1147,7 @@ impl<T: Topology + Clone> WfcJob<T> {
             return Ok(None);
         }
         if build.assignment.len() != build.item_limit {
-            return Err(JobFault { detail: b"wfc-commit-item-count-mismatch".to_vec() });
+            return Err(empty_job_fault());
         }
         let tail = format!("],\"observations\":{},\"compatibility_edges\":{},\"backtracks\":{}}}", self.state.observations, self.state.compatibility_edges, self.state.backtracks);
         ensure_materialization_space(&build.bytes, build.byte_limit, tail.len(), b"wfc-commit-byte-limit-exceeded")?;
@@ -1135,7 +1180,8 @@ impl<T: Topology + Clone> WfcJob<T> {
         self.reset_preview_delta();
         self.preview_units = 0;
         self.last_preview_ms = Some(now_ms);
-        StepOutcome::PreviewReady(serde_json::to_vec(&preview).expect("bounded WFC preview is serializable"))
+        let bytes = serde_json::to_vec(&preview).expect("bounded WFC preview is serializable");
+        StepOutcome::PreviewReady(retained_payload(context, semio_framework_job::JobPayloadStream::Preview, &bytes))
     }
 }
 
@@ -1536,12 +1582,12 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: b"stale-wfc-restore-operation".to_vec() });
+            return StepOutcome::Fault(JobFault { detail: retained_payload(context, semio_framework_job::JobPayloadStream::Fault, b"stale-wfc-restore-operation") });
         }
         loop {
             context.set_stage("wfc.restore");
             if let Err(error) = self.decode_one() {
-                return StepOutcome::Fault(JobFault { detail: error.into_bytes() });
+                return StepOutcome::Fault(JobFault { detail: retained_payload(context, semio_framework_job::JobPayloadStream::Fault, error.as_bytes()) });
             }
             if self.stage == RestoreStage::Complete && self.restored.is_some() {
                 return StepOutcome::Complete(CommitCandidate {
@@ -1564,7 +1610,8 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
                 let preview = RestorePreview { sequence, stage: self.stage, completed, total };
                 self.preview_units = 0;
                 self.last_preview_ms = Some(now_ms);
-                return StepOutcome::PreviewReady(serde_json::to_vec(&preview).expect("bounded restore preview"));
+                let bytes = serde_json::to_vec(&preview).expect("bounded restore preview");
+                return StepOutcome::PreviewReady(retained_payload(context, semio_framework_job::JobPayloadStream::Preview, &bytes));
             }
             if context.should_yield() {
                 return StepOutcome::Yield;
@@ -1661,7 +1708,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: b"stale-wfc-operation".to_vec() });
+            return StepOutcome::Fault(JobFault { detail: retained_payload(context, semio_framework_job::JobPayloadStream::Fault, b"stale-wfc-operation") });
         }
         loop {
             context.set_stage(self.state.stage.label());
@@ -1699,7 +1746,8 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                             self.state.stage = WfcStage::MaterializeCommit;
                         } else {
                             self.state.stage = WfcStage::FindMinimumEntropySlot;
-                            return StepOutcome::CheckpointReady(Checkpoint { state: bytes, applied_progress: self.state.observations });
+                            let state = retained_payload(context, semio_framework_job::JobPayloadStream::CheckpointState, &bytes);
+                            return StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: self.state.observations });
                         }
                     }
                 }
@@ -1710,12 +1758,14 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                     };
                     if let Some(output) = commit {
                         self.state.stage = WfcStage::Complete;
-                        return StepOutcome::Complete(CommitCandidate { state: self.final_checkpoint.take().expect("final checkpoint"), output });
+                        let state = retained_payload(context, semio_framework_job::JobPayloadStream::CommitState, &self.final_checkpoint.take().expect("final checkpoint"));
+                        let output = retained_payload(context, semio_framework_job::JobPayloadStream::CommitOutput, &output);
+                        return StepOutcome::Complete(CommitCandidate { state, output });
                     }
                 }
                 WfcStage::Complete => {
                     if self.state.contradiction.is_some() || self.state.empty_count > 0 {
-                        return StepOutcome::Fault(JobFault { detail: b"wfc-unsatisfiable".to_vec() });
+                        return StepOutcome::Fault(JobFault { detail: retained_payload(context, semio_framework_job::JobPayloadStream::Fault, b"wfc-unsatisfiable") });
                     }
                     if let Err(fault) = self.begin_checkpoint(true) {
                         return StepOutcome::Fault(fault);

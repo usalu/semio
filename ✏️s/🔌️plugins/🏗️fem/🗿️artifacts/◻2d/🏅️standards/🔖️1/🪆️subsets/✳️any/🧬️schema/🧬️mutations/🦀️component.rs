@@ -488,31 +488,39 @@ pub const KINDS: &[&str] = &[
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
 ///
 /// A generated test host links only `semio-repo-test-host` and, behind its `sut` feature, this crate —
-/// there is no `serde`, no `serde_json` and no `protocol` reachable from an adapter, and this crate's
-/// `protocol`/`store` extern-crate aliases are private — so neither `Fem2dMutation` nor `Fem2dSnapshot`
-/// can be named there and hand-transcribing either into a Rust literal would be a second copy of the
-/// committed specification vector, free to drift away from it. This bridge is the whole surface an
-/// adapter needs, and every type in its signature is a `str`.
+/// no `serde`, no `serde_json` and no `protocol` is reachable from an adapter, and this crate's
+/// `protocol`/`store` extern-crate aliases are private — so neither `Fem2dMutation` nor
+/// `Fem2dSnapshot` can be named there, and hand-transcribing either into a Rust literal
+/// would be a second copy of the committed specification vector, free to drift away from it. This
+/// bridge is the whole surface an adapter needs, and every type in its signature is a `str`.
 ///
-/// The report carries the forward half (`snapshot`, `diff`, `messages`) and the inverse half
-/// (`inverseSteps`, `inverseSnapshot`, `inverseMessages`), so the inverse law is checked against the
-/// mutation's OWN computed inverse rather than against a hand-written undo.
+/// `after_json` is decoded through the SAME path as `base_json` and returned as `expectedSnapshot`,
+/// so the caller compares like with like. The report carries the forward half (`base`, `snapshot`,
+/// `diff`, `messages`) and the inverse half (`inverseSteps`, `inverseSnapshot`, `inverseMessages`),
+/// so the inverse law is checked against the mutation's OWN computed inverse rather than against a
+/// hand-written undo.
 ///
 /// @see ../../🧪️oracle/🔣️component.json — the catalog and the recorded no-oracle decision.
-pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<Fem2dSnapshot, String> { Ok(serde_json::from_str(text).map_err(|error| error.to_string())?) };
+pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    let decode_snapshot = |text: &str| -> Result<Fem2dSnapshot, String> {
+        let decoded: Fem2dSnapshot = serde_json::from_str(text).map_err(|error| error.to_string())?;
+        Ok(decoded)
+    };
     let base = decode_snapshot(base_json)?;
+    let expected = decode_snapshot(after_json)?;
     let mutation: Fem2dMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
-    let forward = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::inverse(&mutation, &base);
+    let forward = <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let inverse = <Fem2dMutation as Mutation<Fem2dSnapshot>>::inverse(&mutation, &base);
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
-        let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+        let outcome = <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
     let report = serde_json::json!({
+        "base": serde_json::to_value(&base).map_err(|error| error.to_string())?,
+        "expectedSnapshot": serde_json::to_value(&expected).map_err(|error| error.to_string())?,
         "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
         "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
         "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,

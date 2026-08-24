@@ -35,7 +35,7 @@
 //! so they share its diff. What differs is the vocabulary that produces it, which is what a subset
 //! is.
 //!
-//! # ⚠️ Why this vocabulary declares no mutation catalog and no exhaustive case
+//! # Where this vocabulary is observable, and where it is not
 //!
 //! `encode_tiff` (`../../✳️any/🚪️io/🦀️component.rs`) REGENERATES every one of `CORE_STRIP_TAGS` on
 //! IFD 0 from the raster it is about to write — `BitsPerSample` 8, `Compression` 1 (or 32773 for the
@@ -44,17 +44,23 @@
 //! other value would describe bytes it did not write. That is correct, and it is the same
 //! constraint PNG's IHDR and JPEG's SOF0 are under.
 //!
-//! The consequence for testing is exact and worth stating rather than working around: four of the
-//! six conformance kinds below cannot survive a re-serialization by this repository's own encoder,
-//! so an exhaustive `mutate-*` case built on this catalog would report `mutate-set-compression`,
-//! `mutate-set-photometric-interpretation`, `mutate-set-bits-per-sample` and
-//! `mutate-set-strip-offsets` as green while the mutation never reached a byte — the precise shape
-//! of shallow green that ticket 26/08/23/END-TO-END-TESTING-REFACTOR exists to remove. Only the two
-//! tile kinds are byte-observable, because `TileWidth`/`TileLength` are outside `CORE_STRIP_TAGS`
-//! and are carried verbatim. A catalog is therefore deliberately NOT declared for this subset, and
-//! this note is the record of why. The vocabulary itself is real and used: the analyzer, the
-//! composer and the subset validator all read the same five axes, and every kind here is proven
-//! against them by the tests at the bottom of this file.
+//! The consequence for testing is exact. Four of the six conformance kinds below cannot survive a
+//! re-serialization by this repository's own encoder, so a BYTE-level exhaustive case built on this
+//! catalog would report `mutate-set-compression`, `mutate-set-photometric-interpretation`,
+//! `mutate-set-bits-per-sample` and `mutate-set-strip-offsets` as green while the mutation never
+//! reached a byte — the precise shape of shallow green ticket
+//! 26/08/23/END-TO-END-TESTING-REFACTOR exists to remove. Only the two tile kinds are
+//! byte-observable, because `TileWidth`/`TileLength` are outside `CORE_STRIP_TAGS` and are carried
+//! verbatim.
+//!
+//! The catalog `tiff-6-0-baseline` (`../../🧪️oracle/🔣️component.json`) is therefore declared and
+//! claimed by `mutate-tiff-6-0-baseline`, and that case measures this vocabulary where its axes
+//! actually live: on the DECODED SNAPSHOT, against [`check_tiff_baseline_conformance`]'s verdict.
+//! Each kind must move its own axis and raise its own diagnostic; each inverse must restore the
+//! snapshot exactly. The case states in as many words that it makes no byte-level claim for those
+//! four kinds, and its `identity-round-trip` is the one scenario that does touch bytes — decode,
+//! re-encode, and read both through the INDEPENDENT `image`-backed IFD reader the sibling `✳️any`
+//! subset registers.
 //!
 //! @see ../🦀️component.rs — this subset's conformance check, one axis per variant below.
 //! @see ../../✳️any/🧬️schema/🧬️mutations/🦀️component.rs — the DOCUMENT vocabulary this one is disjoint from.
@@ -111,12 +117,60 @@ pub enum TiffBaselineMutation {
     RemoveStripOffsets,
 }
 
-/// 🏷️ Kebab-case spelling of every `TiffBaselineMutation` variant, in declaration order.
-/// `kinds_match_enum_variants_in_declaration_order` below is what keeps the two honest. No
-/// `mutationCatalogs` entry mirrors this list — see the module docstring for why that is deliberate.
+/// 🏷️ Kebab-case spelling of every `TiffBaselineMutation` variant, in declaration order — the
+/// vocabulary the `tiff-6-0-baseline` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares
+/// and `mutate-tiff-6-0-baseline` measures itself against.
+/// `kinds_match_enum_variants_in_declaration_order` below keeps the two honest against the enum,
+/// and `kinds_match_the_committed_catalog` against the manifest.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-compression", "set-photometric-interpretation", "set-bits-per-sample", "insert-tile-tags", "remove-tile-tags", "set-strip-offsets", "remove-strip-offsets"];
 
 crate::impl_serde_op_codec!(TiffBaselineMutation, "tiff-baseline-mutation");
+
+//#region 🌉️ConformanceProjection
+/// 👁️ The comparison surface `mutate-tiff-6-0-baseline` measures this vocabulary through: the five
+/// Baseline TIFF axes as they stand on IFD 0 of the DECODED snapshot, plus
+/// [`check_tiff_baseline_conformance`]'s verdict over them. It carries no pixels and no other tag on
+/// purpose — this is a conformance-class vocabulary, and a Baseline class is a property of five
+/// specific fields of IFD 0, not of the raster or of the other 65 530 tag numbers `✳️any`'s
+/// `set-tag` can reach.
+///
+/// Rendered by hand rather than through `serde` because it is a PROJECTION, not the snapshot: the
+/// snapshot's own serialization carries a multi-megabyte raster no comparison here should have to
+/// walk.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_tiff_baseline_projection_json(snapshot: &TiffSnapshot) -> String {
+    let list = |tag: u16| match snapshot.ifds.first().and_then(|ifd| ifd.entries.iter().find(|entry| entry.tag == tag)) {
+        Some(entry) => match &entry.values {
+            TiffValues::Short(values) => values.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(" "),
+            TiffValues::Long(values) => values.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(" "),
+            other => format!("{other:?}"),
+        },
+        None => "absent".to_string(),
+    };
+    let verdict = crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot)
+        .into_iter()
+        .map(|finding| format!("\"{}\"", finding.code.0))
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(
+        "{{\"format\":\"tiff-baseline\",\"ifdCount\":{},\"compression\":\"{}\",\"photometric\":\"{}\",\"bitsPerSample\":\"{}\",\"tileWidth\":\"{}\",\"tileLength\":\"{}\",\"stripOffsets\":\"{}\",\"conformance\":[{verdict}]}}",
+        snapshot.ifds.len(),
+        list(TAG_COMPRESSION),
+        list(TAG_PHOTOMETRIC),
+        list(TAG_BITS_PER_SAMPLE),
+        list(TAG_TILE_WIDTH),
+        list(TAG_TILE_LENGTH),
+        list(TAG_STRIP_OFFSETS)
+    )
+}
+
+/// 🛡️ [`check_tiff_baseline_conformance`]'s verdict as bare diagnostic codes — what a
+/// `mutate-<kind>` scenario names when it claims a kind leaves the class by its own axis.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn tiff_baseline_conformance_codes(snapshot: &TiffSnapshot) -> Vec<String> {
+    crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0.to_string()).collect()
+}
+//#endregion 🌉️ConformanceProjection
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -323,6 +377,19 @@ mod tests {
 
     fn codes(snapshot: &TiffSnapshot) -> Vec<String> {
         check_tiff_baseline_conformance(snapshot).into_iter().map(|finding| finding.code.0.to_string()).collect()
+    }
+
+    /// 🏷️ [`KINDS`] against the committed catalog. The framework never parses Rust, so without this
+    /// the manifest could keep measuring `mutate-tiff-6-0-baseline` against a vocabulary this subset
+    /// no longer has — which is exactly the gap that left this vocabulary with no catalog at all
+    /// until the completeness gate learned to see an unregistered one.
+    #[test]
+    fn kinds_match_the_committed_catalog() {
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+        assert!(manifest.contains("tiff-6-0-baseline-mutate"), "the manifest must declare this subset's OWN capability, not the ✳️any subset's");
     }
 
     #[test]

@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 /// per-session camera — `Config = NoConfig`), one schematic box per widget at its stored layout
 /// position — no evaluated drawing-handle overlay (that needs a live `flow::FlowEvalSession`, an
 /// editor-dispatch-time concept a stateless viewer render never has access to).
-pub fn render(document: &Procedural2dSnapshot) -> BuiltNode {
+pub fn render(document: &Procedural2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.fixture;
     let layers: Vec<serde_json::Value> = fixture
         .widgets

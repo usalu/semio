@@ -83,15 +83,15 @@ impl store::ArtifactPack for Gis2dConfig {
 
 //#endregion 🔖️ArtifactCodec
 
-async fn default_gis2d_camera_json() -> String {
+fn default_gis2d_camera_json() -> String {
     r#"{"x":0,"y":0,"zoom":1}"#.into()
 }
 
-async fn default_gis2d_render_mode() -> String {
+fn default_gis2d_render_mode() -> String {
     "combined".into()
 }
 
-async fn default_gis2d_vector_style() -> String {
+fn default_gis2d_vector_style() -> String {
     "colored".into()
 }
 

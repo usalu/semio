@@ -1029,25 +1029,6 @@ pub fn puzzle5d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[Stri
 }
 //#endregion 🔖️Distribution
 
-//#region 🔖️Trees
-/// 📊️ `label` is always genuine runtime document content here (a part/grip/fastener/catalog name),
-/// never `app_labels!` chrome text — wrapped via `Label::data` accordingly. Shared by the document
-/// and catalogue panels.
-pub fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut item = UiTreeItemNode::base(id, Label::data(label));
-    item.icon_id = icon_id.map(IconName::from);
-    item.action = Some(action);
-    item
-}
-
-/// 📊️ See `tree_item_with_action`'s doc comment — same `Label::data` rationale.
-pub fn tree_info_item(id: impl Into<String>, label: impl Into<String>, description: Option<String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut item = UiTreeItemNode::base(id, Label::data(label));
-    item.description = description;
-    item
-}
-//#endregion 🔖️Trees
-
 //#region 🔖️CopyPaste
 /// 🧩️ The part id a `"part_id:grip_id"` full grip reference belongs to.
 fn owning_part_id_local(grip_ref: &str) -> &str {
@@ -1225,13 +1206,15 @@ fn puzzle5d_upsert_kind_compatibility(existing: &mut Vec<crate::artifacts::puzzl
 
 //#region 🧵️ReservedJobs
 fn puzzle5d_job_fault(detail: impl Into<String>) -> StepOutcome {
-    StepOutcome::Fault(JobFault { detail: detail.into().into_bytes() })
+    let _ = detail.into();
+    StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
 }
 
 fn puzzle5d_job_checkpoint(stage: u8, cursor: usize, progress: u64) -> StepOutcome {
     let mut state = vec![stage];
     state.extend_from_slice(&(cursor as u64).to_le_bytes());
-    StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: progress })
+    let _ = state;
+    StepOutcome::CheckpointReady(Checkpoint { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), applied_progress: progress })
 }
 
 fn puzzle5d_step_envelope(raw: &[u8], cursor: &mut usize, progress: &mut u64, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
@@ -1248,7 +1231,7 @@ fn puzzle5d_step_envelope(raw: &[u8], cursor: &mut usize, progress: &mut u64, cx
     Some(puzzle5d_job_checkpoint(0, *cursor, *progress))
 }
 
-fn puzzle5d_selection_ids(interaction: &semio_framework::protocol::InteractionState) -> (HashSet<String>, HashSet<String>) {
+fn puzzle5d_selection_ids(interaction: &semio_framework::InteractionState) -> (HashSet<String>, HashSet<String>) {
     match interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN) {
         Some(selection) if selection.granularity == PUZZLE5D_GRANULARITY_PART => (selection.ids.iter().cloned().collect(), HashSet::new()),
         Some(selection) if selection.granularity == PUZZLE5D_GRANULARITY_FASTENER => (HashSet::new(), selection.ids.iter().cloned().collect()),
@@ -1275,7 +1258,7 @@ struct Puzzle5dSelectionScan {
 }
 
 impl Puzzle5dSelectionScan {
-    fn new(snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>, interaction: &semio_framework::protocol::InteractionState) -> Self {
+    fn new(snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>, interaction: &semio_framework::InteractionState) -> Self {
         let (part_ids, explicit_fastener_ids) = puzzle5d_selection_ids(interaction);
         Self { snapshot: Some(snapshot), part_ids, explicit_fastener_ids, stage: Puzzle5dSelectionStage::Endpoints, cursor: 0, parts: Vec::new(), fasteners: Vec::new() }
     }
@@ -1456,7 +1439,7 @@ struct Puzzle5dClipboardWork {
 }
 
 impl Puzzle5dClipboardWork {
-    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, interaction: semio_framework::protocol::InteractionState) -> Self {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, interaction: semio_framework::InteractionState) -> Self {
         Self { raw: request.raw_wire, raw_cursor: 0, progress: 0, stage: Puzzle5dClipboardStage::Envelope, scan: Puzzle5dSelectionScan::new(request.snapshot, &interaction), encode_cursor: 0, dsl_text: String::new(), completion: Some(request.completion), closing: false }
     }
 
@@ -1711,7 +1694,10 @@ impl InteractiveJob for Puzzle5dCopyJob {
                 }
             }
         }
-        StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dClipboardStage::Complete as u8], output: self.work.raw.clone() })
+        StepOutcome::Complete(CommitCandidate {
+            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+        })
     }
 
     fn begin_close(&mut self) {}
@@ -1767,7 +1753,10 @@ impl InteractiveJob for Puzzle5dCutJob {
                 }
             }
         }
-        StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dClipboardStage::Complete as u8], output: self.work.raw.clone() })
+        StepOutcome::Complete(CommitCandidate {
+            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+        })
     }
 
     fn begin_close(&mut self) {}
@@ -1994,7 +1983,10 @@ impl InteractiveJob for Puzzle5dPasteJob {
                     }
                     self.completed = true;
                 }
-                return StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dPasteStage::Complete as u8], output: self.raw.clone() });
+                return StepOutcome::Complete(CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                });
             }
         }
         self.progress = self.progress.saturating_add(1);
@@ -2248,16 +2240,17 @@ impl InteractiveJob for Puzzle5dImportJob {
                     return puzzle5d_job_fault("puzzle5d kit:in decoded item limit exceeded");
                 }
                 self.had_catalogs = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("kindCatalogs")).is_some_and(|value| !value.is_null());
-                self.catalogs = self
-                    .snapshot
+                let Some(snapshot) = self.snapshot.as_ref() else {
+                    return puzzle5d_job_fault("puzzle5d import lost its snapshot");
+                };
+                self.catalogs = snapshot
                     .0
                     .get("kindCatalogs")
                     .cloned()
                     .and_then(|value| serde_json::from_value(value).ok())
                     .unwrap_or_default();
                 self.initial_catalogs = self.catalogs.clone();
-                self.compatibility = self
-                    .snapshot
+                self.compatibility = snapshot
                     .0
                     .get("kindCompatibility")
                     .cloned()
@@ -2416,7 +2409,10 @@ impl InteractiveJob for Puzzle5dImportJob {
                     }
                     self.completed = true;
                 }
-                return StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dImportStage::Complete as u8], output: self.raw.clone() });
+                return StepOutcome::Complete(CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                });
             }
         }
         self.progress = self.progress.saturating_add(1);
@@ -2828,13 +2824,13 @@ impl<'a> Puzzle5dActionCtx<'a> {
         if selection.granularity == granularity_id { selection.ids.clone() } else { Vec::new() }
     }
     pub fn selected_part_ids(&self) -> Vec<String> {
-        self.selected_ids(PUZZLE5D_GRANULARITY_PART)?
+        self.selected_ids(PUZZLE5D_GRANULARITY_PART)
     }
     pub fn selected_grip_ids(&self) -> Vec<String> {
-        self.selected_ids(PUZZLE5D_GRANULARITY_GRIP)?
+        self.selected_ids(PUZZLE5D_GRANULARITY_GRIP)
     }
     pub fn selected_fastener_ids(&self) -> Vec<String> {
-        self.selected_ids(PUZZLE5D_GRANULARITY_FASTENER)?
+        self.selected_ids(PUZZLE5D_GRANULARITY_FASTENER)
     }
 }
 
@@ -2848,6 +2844,20 @@ fn puzzle5d_interaction_part_and_fastener_ids(interaction: &InteractionView<'_>)
         PUZZLE5D_GRANULARITY_FASTENER => (Vec::new(), selection.ids.clone()),
         _ => (Vec::new(), Vec::new()),
     }
+}
+/// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string())
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d label admission failed"))
+}
+
+/// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d node admission failed"))?;
+    }
+    Ok(nodes)
 }
 //#endregion 🔖️ActionContext
 
@@ -3433,7 +3443,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        semio_framework_plugin::built_to_component_tree(with_puzzle5d_app(|app| {
+        let node = with_puzzle5d_app(|app| -> semio_framework_plugin::UiAssemblyResult<_> {
             let config = cfg.snapshot;
             let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
             let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
@@ -3445,9 +3455,11 @@ impl ArtifactEditor for Puzzle5dPlayApp {
                 document_panel::BODY_KEY => document_panel::render(&envelope, labels),
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels),
                 inspection::BODY_KEY => inspection::render(&envelope, labels),
-                _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+                _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
             }
-        }))
+        })?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
     async fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {

@@ -712,11 +712,7 @@ impl semio_framework_job::InteractiveJob for MountedLayoutJob {
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.close_one() {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-        }
+        if self.close_one() { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 } }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -727,8 +723,8 @@ impl semio_framework_job::InteractiveJob for MountedLayoutJob {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wgpu::component::ui::{UiPresence, UiStackNode, UiTextNode};
     use crate::wgpu::Label;
+    use crate::wgpu::component::ui::{UiPresence, UiStackNode, UiTextNode};
 
     fn clock_zero() -> u64 {
         0

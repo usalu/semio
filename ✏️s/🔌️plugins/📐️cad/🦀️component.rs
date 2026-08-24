@@ -55,7 +55,7 @@ mod surface_tests {
     /// 👁️ Local stand-in for `testkit::new_viewer::<V>()` — `ViewerApp<V>` already implements the
     /// runtime `ArtifactApp` trait (the SDK adapter, contract §2.1), so the existing generic
     /// `testkit::new_app::<A: ArtifactApp>()` harness works today without any framework change.
-    async fn new_viewer<V: ArtifactViewer>() -> semio_framework_plugin::VcsArtifactApp<ViewerApp<V>> {
+    fn new_viewer<V: ArtifactViewer>() -> semio_framework_plugin::VcsArtifactApp<ViewerApp<V>> {
         semio_framework_plugin::testkit::new_app::<ViewerApp<V>>()
     }
 
@@ -65,7 +65,7 @@ mod surface_tests {
     /// mutation — so any `V` that compiles against this trait already cannot mutate, by construction.
     /// This still exercises the type end-to-end (builds a real `ViewerApp<V>` through the SDK adapter,
     /// the same path `PluginBuilder::viewer::<V>` uses) rather than asserting on the bare trait alone.
-    async fn assert_viewer_never_mutates<V: ArtifactViewer>() {
+    fn assert_viewer_never_mutates<V: ArtifactViewer>() {
         // 🏗️ Builds a real `ViewerApp<V>` through the same SDK adapter path
         // `PluginBuilder::viewer::<V>` uses. `V::handle`'s return type,
         // `Result<ViewEmit<V::ConfigMutation>, Fault>`, is fixed by the `ArtifactViewer` trait
@@ -76,7 +76,7 @@ mod surface_tests {
     }
 
     /// ✏️👁️ Local stand-in for `testkit::assert_editor_and_viewer_share_dialect::<E, V>()`.
-    async fn assert_editor_and_viewer_share_dialect<E: ArtifactEditor, V: ArtifactViewer>() {
+    fn assert_editor_and_viewer_share_dialect<E: ArtifactEditor, V: ArtifactViewer>() {
         assert_eq!(E::DIALECT, V::DIALECT, "an editor and viewer over the same subset must share one Dialect coordinate");
     }
 

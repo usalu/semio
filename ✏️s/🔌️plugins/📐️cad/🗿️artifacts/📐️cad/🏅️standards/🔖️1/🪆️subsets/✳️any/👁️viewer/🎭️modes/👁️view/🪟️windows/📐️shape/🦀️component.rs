@@ -7,9 +7,8 @@
 
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_camera_projection_config;
 use crate::artifacts::cad::{CadCamera, CadPaneId, CadSnapshot};
-use semio_framework_plugin::{
-    build_world_3d_scene, mesh_from_kind, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_scene_extended, world3d_selection_json, LocalizedLabel, UiNode, WindowKindDefinition, WindowOptions, WorldSunConfig,
-};
+use semio_framework_plugin::app::WindowKit;
+use semio_framework_plugin::{mesh_from_kind, world3d_camera_projection_json, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use ui_wgpu::wgpu::SurfaceKind;
 
 //#region 🔖️Constants
@@ -53,46 +52,19 @@ pub fn definition() -> WindowKindDefinition {
 /// straight off the document. Objects render the same fallback-box placeholder the editor's own
 /// `world_meshes_json` falls back to while composed-child object resolution is unimplemented (ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3 gap, pre-existing, not introduced here).
-pub fn render(document: &CadSnapshot) -> UiNode {
+pub fn render(_document: &CadSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera = CadCamera::default();
-    let sun = WorldSunConfig::default();
     let camera_json = world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(&camera));
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": CAD_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(CAD_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let instances_json = "[]".to_string();
     let selection_json = world3d_selection_json("rectangle", &[], None);
-    build_world_3d_scene(
-        SURFACE_ID,
-        CAD_VIEW_CONTROLLER_ID,
-        world3d_scene_extended(
-            camera_json,
-            meshes_json,
-            instances_json,
-            selection_json,
-            None,
-            None,
-            None,
-            world_references_json(document, PANE),
-            None,
-            None,
-            None,
-            None,
-            Some(world3d_chunking_json(256.0, 8000.0)),
-            Some(world3d_environment_json(&sun)),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        ),
-    )
+    MeshWindowKit::render(&MeshView { camera_json, meshes_json, instances_json, selection_json })
 }
 
 /// 👁️ Read-only twin of the editor's `edit::world_references_json` — background reference overlays
 /// are pure document content (`CadSnapshot.references_by_model_definition_id`), safe for a viewer to
 /// render directly.
-async fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<String> {
+fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<String> {
     let references = document.references_by_model_definition_id.get(pane.model_definition_id())?;
     if references.is_empty() {
         return None;

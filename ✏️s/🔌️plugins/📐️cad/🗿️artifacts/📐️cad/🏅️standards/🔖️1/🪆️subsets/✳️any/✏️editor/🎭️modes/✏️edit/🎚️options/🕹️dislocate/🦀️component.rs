@@ -2,7 +2,7 @@
 //! while the window that owns them has the Dislocate utility active.
 
 use crate::editor::cad::config::CadDislocateOptions;
-use crate::editor::cad::{cad_action, CAD_DISLOCATE_UTILITY_ID};
+use crate::editor::cad::{cad_window_action, CAD_DISLOCATE_UTILITY_ID};
 use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
@@ -28,7 +28,7 @@ pub fn measure(options: CadDislocateOptions, is_de: bool) -> WindowMeasure {
                 label: Some(if is_de { "Verschieben" } else { "Move" }.into()),
                 pressed: options.move_enabled,
                 text: None,
-                on_change: cad_action("setDislocateOption", Some(json!({ "option": "move" }))),
+                on_change: cad_window_action("setDislocateOption", Some(json!({ "option": "move" }))),
             },
             WindowMeasure::Toggle {
                 id: "cad-dislocate-rotate".into(),
@@ -36,7 +36,7 @@ pub fn measure(options: CadDislocateOptions, is_de: bool) -> WindowMeasure {
                 label: Some(if is_de { "Drehen" } else { "Rotate" }.into()),
                 pressed: options.rotate_enabled,
                 text: None,
-                on_change: cad_action("setDislocateOption", Some(json!({ "option": "rotate" }))),
+                on_change: cad_window_action("setDislocateOption", Some(json!({ "option": "rotate" }))),
             },
         ],
     }

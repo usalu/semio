@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `Procedural3dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "procedural-3d-mutation-semantics",
+      "capabilities": ["procedural-3d-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `Procedural3dMutation` — a vocabulary over a document that is a COMPOSITION of two unrelated halves, a `fixture` (widget/synapse graph plus camera and layout) and a `generation` (a parameter-set history with a selection), so every one of its fourteen kinds lands in one of exactly TWO top-level fields. That is this subset's own specification, not a fact an external node-graph library could confirm or refute. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability (a kind must move the compared projection) and footprint completeness (`before` and `after` may differ on exactly the fields the committed diff declares).",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "procedural-3d-1-any",
+      "capability": "procedural-3d-1-mutate",
+      "kinds": [
+        "create-widget",
+        "update-widget",
+        "delete-widget",
+        "connect-synapse",
+        "update-synapse",
+        "disconnect-synapse",
+        "move-widget",
+        "delete-widget-position",
+        "update-camera",
+        "change-schema",
+        "create-generation",
+        "delete-generation",
+        "rename-generation",
+        "change-generation-value"
+      ]
+    }
+  ]
+}

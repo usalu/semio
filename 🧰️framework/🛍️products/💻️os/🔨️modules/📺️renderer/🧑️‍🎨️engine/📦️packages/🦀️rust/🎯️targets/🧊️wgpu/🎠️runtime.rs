@@ -35,7 +35,7 @@ use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, TurnR
 use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, Decision, Envelope, FailureEscalation, Kernel, KernelError, Lane, PackageId, ShardKind, WindowId};
 use semio_framework_async::WorkerPool;
 use semio_framework_plugin_host::shard::executor::{OutcomeSink, ShardExecutor};
-use semio_framework_plugin_host::shard::{to_actor_turn_result, ShardFrame, ShardOutcome};
+use semio_framework_plugin_host::shard::{ShardFrame, ShardOutcome, to_actor_turn_result};
 use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes};
 use std::sync::Arc;
 use std::time::Duration;

@@ -37,12 +37,12 @@ pub fn render(labels: &Procedural3dLabels) -> semio_framework_plugin::UiAssembly
                 ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("addWidget", Some(args))?,
             )?;
             if let Component::TreeItem(props) = &mut node.component {
-                props.icon = Some(icon.into());
+                props.icon = Some(crate::ui_text(icon)?);
             }
             items.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed UI catalogue admission failed"))?;
         }
     }
-    PanelTreeBuilder::new("procedural-play-catalogue")?.section("procedural-play-catalogue.widgets", Some(labels.widgets.as_str().into()), true, items)?.build()
+    PanelTreeBuilder::new("procedural-play-catalogue")?.section("procedural-play-catalogue.widgets", Some(crate::ui_label(labels.widgets.as_str())?), true, items)?.build()
 }
 //#endregion 🔖️Render
 

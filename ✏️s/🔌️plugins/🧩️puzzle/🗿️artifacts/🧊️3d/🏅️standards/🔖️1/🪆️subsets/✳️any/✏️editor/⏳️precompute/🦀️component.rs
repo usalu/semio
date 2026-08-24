@@ -131,7 +131,7 @@ fn fill_envelope_raw_request(bytes: &[u8]) -> Option<FillJobRequest> {
     if usize::from(slot) >= FILL_ENVELOPE_MAX_OPERATIONS {
         return None;
     }
-    let read = |start| u64::from_le_bytes(bytes[start..start + 8].try_into().ok()?);
+    let read = |start: usize| -> Option<u64> { Some(u64::from_le_bytes(bytes[start..start + 8].try_into().ok()?)) };
     Some(FillJobRequest { job: read(24)?, operation: read(32)?, generation: read(40)?, base_revision: read(48)?, slot, registry_generation: read(16)? })
 }
 

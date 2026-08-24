@@ -22,26 +22,26 @@ mod bridge {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: CadEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    CadStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+                    semio_framework_plugin::resolve_ready(CadStore::new(envelope)).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
-                None => CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+                None => semio_framework_plugin::resolve_ready(CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None))).map_err(|e| JsValue::from_str(&e.to_string()))?,
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
         pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
+            semio_framework_plugin::resolve_ready(self.store.borrow_mut().dispatch_text(command_text)).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
         pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
+            semio_framework_plugin::resolve_ready(self.store.borrow_mut().dispatch_binary(command_bytes)).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn snapshot_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
+            semio_framework_plugin::resolve_ready(self.store.borrow().snapshot_json()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }
 }

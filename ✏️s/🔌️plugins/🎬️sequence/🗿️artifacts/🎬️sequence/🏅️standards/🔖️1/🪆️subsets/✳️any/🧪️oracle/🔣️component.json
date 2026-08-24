@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `s.sequence.sequence` declares ONE mutation vocabulary across two facets — `🧬️schema/🧬️mutations` holds the dispatch enum and the per-kind triad leaves, `🚪️io/🧬️mutations` holds that same enum's text and binary wire codecs — so ONE catalog registers both. The `kinds` are the kebab spelling of `SequenceMutation`'s variants in declaration order; `../🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "sequence-step-graph-mutation-semantics",
+      "capabilities": [
+        "sequence-1-mutate"
+      ],
+      "rationale": "`s.sequence.sequence` is a semio-NATIVE artifact. Its persisted document is the `sequence.sequence.dsl` envelope — `semio sequence.sequence.dsl v1` followed by hex-encoded fields and a bracketed composed-child handle — and its step graph lives in a composed `s.stdio.semio.flow` CHILD addressed by a content-derived handle. No package in any ecosystem reads or writes that envelope: the preamble, the hex field grammar and the child-handle addressing are defined by this repository alone, so there is nothing to register and nothing authoritative over `SequenceMutation` — that vocabulary IS this subset's own specification. The nearest candidates were surveyed and DECLINED rather than merely absent. (1) A generic JSON reader (json-rust is already linked into the stdio oracle crate and every mutation here serializes as internally-tagged JSON) supplies a DOM and no knowledge of a step, an id-keyed collection, a slot or an edge cascade, so all eight mutation semantics — the entire content of this catalog — would still be hand-written on top of it; calling that a third-party reference would overstate the evidence. (2) The workflow/DAG domain has real third-party libraries (BPMN and Graphviz readers), and they were rejected on a substantive point rather than on absence: none of them models THIS graph. `delete-step` cascades every incident edge inside its own diff, `duplicate-step` mints a second step from a source id, `edit-step-params` carries an opaque `Dictionary` whose integer/decimal distinction a generic graph format erases — a differential against a BPMN or DOT reader would compare two different documents and report agreement about neither. Confidence comes instead from specification vectors — this subset's own committed per-kind leaf fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/`, each an independently authored `(before, mutation, after|absent, outcome)` quadruple — and from the metamorphic laws the case asserts in role: every kind must MOVE the semantic projection, every kind's own computed inverse must restore it exactly, and the committed real artifact must survive decode/encode byte-for-byte.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "sequence-1-any",
+      "capability": "sequence-1-mutate",
+      "kinds": [
+        "create-step",
+        "delete-step",
+        "move-step",
+        "edit-step-params",
+        "change-step-collapsed",
+        "connect-steps",
+        "disconnect-steps",
+        "duplicate-step"
+      ]
+    }
+  ]
+}

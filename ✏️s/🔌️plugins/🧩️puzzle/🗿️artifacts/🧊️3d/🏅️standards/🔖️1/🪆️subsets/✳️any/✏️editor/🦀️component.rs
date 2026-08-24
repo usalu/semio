@@ -1824,6 +1824,20 @@ impl<'a> Puzzle3dActionCtx<'a> {
         self.selected_ids(PUZZLE3D_GRANULARITY_REFERENCE)
     }
 }
+/// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string())
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d label admission failed"))
+}
+
+/// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d node admission failed"))?;
+    }
+    Ok(nodes)
+}
 //#endregion 🔖️ActionContext
 
 //#region 🔖️ContextMenu
@@ -2039,13 +2053,8 @@ impl Puzzle3dPlayApp {
         (instances.clone(), meshes.clone())
     }
 
-    fn document_tree_cached(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> BuiltNode {
-        let fingerprint = main::fixture_geometry_fingerprint(fixture);
-        let mut cache = self.document_tree_cache.lock().expect("document cache");
-        if cache.as_ref().is_none_or(|(fp, _)| *fp != fingerprint) {
-            *cache = Some((fingerprint, document::render(fixture, labels)));
-        }
-        cache.as_ref().expect("document cache populated").1.clone()
+    fn document_tree_cached(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+        document::render(fixture, labels)
     }
 
     /// 🎬️ Snapshots the live fixture as the gumball drag base and clears any prior scratch.
@@ -2111,7 +2120,7 @@ impl Puzzle3dPlayApp {
         if operations.is_empty() {
             Emit { ui_scope: puzzle3d_transform_drag_scope(), ..Default::default() }
         } else {
-            semio_framework::io::resolve_ready(Emit::commit(operations, "Transform selection"))
+            Emit::commit(operations, "Transform selection")
         }
     }
 
@@ -2174,7 +2183,7 @@ impl Puzzle3dPlayApp {
         // 🗨️ Shell-only effect (no document interaction, hence no scene/before/after scaffolding
         // below): opens the declared "addObject" dialog over a glass veil.
         if action == "openAddObjectDialog" {
-            return semio_framework::io::resolve_ready(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }));
+            return Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None });
         }
         if action == "transformBegin" {
             self.begin_transform_session(doc.snapshot.value());
@@ -2515,8 +2524,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::ComponentTree {
-        semio_framework_plugin::built_to_component_tree(with_puzzle3d_app_for(&cfg.snapshot, |app| {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let node = with_puzzle3d_app_for(&cfg.snapshot, |app| -> semio_framework_plugin::UiAssemblyResult<_> {
             let (base_body_key, window_id_from_key) = body_key.split_once(':').map(|(b, w)| (b, Some(w))).unwrap_or((body_key, None));
             let config = cfg.snapshot;
             let wid = window_id_from_key.or_else(|| config.window_ids.first().map(String::as_str)).unwrap_or(main::WINDOW_KIND_ID);
@@ -2550,9 +2559,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels),
                 inspection::BODY_KEY => inspection::render(&envelope, labels),
                 settings_panel::BODY_KEY => settings_panel::render(&envelope, labels),
-                _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+                _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d unknown-body label admission failed")),
             }
-        }))
+        })?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
     async fn window_engagements(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, WindowEngagement> {

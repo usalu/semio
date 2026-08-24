@@ -34,28 +34,28 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
     type Mutation = crate::artifacts::cad::CadMutation;
     type Inference = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::CadInference;
 
-    async fn dialect() -> store::os_io::ArtifactDialect {
+    fn dialect() -> store::os_io::ArtifactDialect {
         store::os_io::ArtifactDialect { artifact_kind: "s.cad".into(), standard: "1".into(), subset: "*".into() }
     }
 
-    async fn fidelity() -> IoFidelityClass {
+    fn fidelity() -> IoFidelityClass {
         IoFidelityClass::Semantic
     }
 
-    async fn drops() -> &'static [&'static str] {
+    fn drops() -> &'static [&'static str] {
         &[]
     }
 
-    async fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
+    fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
         let text = asset.text.ok_or_else(|| "cad demo requires dsl text".to_string())?;
         crate::artifacts::cad::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).map_err(|e| e.to_string())
     }
 
-    async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
+    fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
         Ok(<Self::Snapshot as store::ArtifactPack>::encode_pack(snapshot))
     }
 
-    async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
+    fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
         <Self::Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string())
     }
 
@@ -64,7 +64,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
         Self::Inference::infer(snapshot)
     }
 
-    async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
+    fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
         // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `RenameObject` is retired
         // — object fields now live inside composed `s.stdio.semio.model` CHILD documents, which
         // this demo fixture's `CadSnapshot` no longer carries inline. `RenameNode` is real and
@@ -78,11 +78,11 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
         vec![CadMutation::RenameNode(RenameNode { node_id: node.id.clone(), new_label: "Roundtrip Renamed".into() })]
     }
 
-    async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
+    fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
         std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::artifacts::cad::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).map_err(|e| vec![e.to_string()])).map(|_| ())
     }
 
-    async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
+    fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
         Err("SKIP:owning subset has no negative fixture".into())
     }
 }

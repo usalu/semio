@@ -1,0 +1,58 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. The `kinds` are the kebab spelling of `ShootingMutation`'s thirty-one variants in declaration order — assets, then shots, then saved cameras, then the two active-selection verbs, then the scene lighting block; `../🧬️schema/🧬️mutations/🦀️component.rs`'s `KINDS` const and its `kinds_match_the_enum_and_the_catalog` test keep this file, that const and the enum in agreement.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "shooting-render-scene-mutation-semantics",
+      "capabilities": [
+        "shooting-1-mutate"
+      ],
+      "rationale": "`s.shooting.shooting` is a semio-NATIVE artifact. Its persisted document is the `shooting.shooting.dsl` envelope — `semio shooting.shooting.dsl v1` followed by a handcrafted block/table grammar with typed columns (`[id:TEXT name:TEXT url:TEXT format:TEXT origin:CRD orientation:TUPLE scale:TUPLE]`) and `deg`-suffixed angle literals — and no package in any ecosystem reads or writes it, because that grammar is defined by this repository alone. There is therefore nothing to register, and no library is authoritative over `ShootingMutation`: that vocabulary IS this subset's own specification. The nearest candidates were surveyed and DECLINED rather than merely absent, and unlike the sibling semio-native vocabularies this one has real domain competitors, so the decision has to be argued. (1) The 3D-scene interchange formats — glTF 2.0 (`gltf`), USD, Collada — do carry an asset list, a transform per asset, a camera list and a punctual-light block, so a naive reading suggests a differential is possible. It is not, and the reason is structural rather than cosmetic: this document's `shots` collection has no counterpart in any of them. A shot is a RENDER REQUEST — width, height, output format, mask shape, background, and a reference to a saved camera — and eleven of the thirty-one kinds address it. A glTF reader asked to judge `change-shot-format` or `change-shot-shape` would have nothing to read, so eleven kinds would silently report agreement about a field the reference does not model. That is precisely the shape of green this wave exists to stop. (2) A generic JSON or YAML reader is rejected for the same reason as every other subset here: it supplies a DOM and no knowledge of an id-keyed collection, a quaternion orientation or a scene lighting block, so all thirty-one semantics would still be hand-written on top of it. Confidence comes instead from specification vectors of unusual strength: this subset's thirty-one committed per-kind leaf fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/` share ONE byte-identical committed before-snapshot (SHA-1 `6441b72754e5c649b2b07a2f2b244313467f85a0`, verified across all thirty-one), so the vocabulary comes with a complete, independently authored `(before, mutation, after)` suite already — and from the metamorphic laws the case asserts in role: every kind must MOVE the semantic projection, every kind's own computed inverse must restore it exactly, and the committed real DSL artifact must survive decode/encode byte-for-byte.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "shooting-1-any",
+      "capability": "shooting-1-mutate",
+      "kinds": [
+        "create-asset",
+        "delete-asset",
+        "rename-asset",
+        "change-asset-url",
+        "reorder-assets",
+        "drag-assets",
+        "rotate-assets",
+        "scale-assets",
+        "create-shot",
+        "delete-shot",
+        "rename-shot",
+        "change-shot-width",
+        "change-shot-height",
+        "change-shot-format",
+        "change-shot-shape",
+        "reorder-shots",
+        "replace-shot-camera",
+        "create-saved-camera",
+        "delete-saved-camera",
+        "rename-saved-camera",
+        "replace-saved-camera-view",
+        "reorder-saved-cameras",
+        "set-active-shot",
+        "set-active-asset",
+        "change-scene-sun-enabled",
+        "change-scene-sun-azimuth",
+        "change-scene-sun-elevation",
+        "change-scene-sun-intensity",
+        "change-scene-ambient-intensity",
+        "change-scene-shadow-enabled",
+        "change-scene-material-roughness"
+      ]
+    }
+  ]
+}

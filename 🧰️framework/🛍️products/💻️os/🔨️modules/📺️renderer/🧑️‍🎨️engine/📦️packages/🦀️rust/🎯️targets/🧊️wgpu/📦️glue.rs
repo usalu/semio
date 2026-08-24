@@ -88,10 +88,10 @@ mod winit_app;
 pub mod parallel_runtime;
 
 use infinite_world::world::{
-    begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response,
-    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested,
-    world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
-    WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
+    WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind,
+    WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset,
+    publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction,
+    step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation,
 };
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
@@ -103,16 +103,16 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
+use ui_wgpu::wgpu::ActionDescriptor;
 #[cfg(target_arch = "wasm32")]
 use ui_wgpu::wgpu::apply_canvas_cursor;
-use ui_wgpu::wgpu::ActionDescriptor;
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
 use ui_wgpu::wgpu::{
-    apply_window_cursor, fetch_font_bytes, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32,
-    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers,
-    SemioCursor, Theme,
+    CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, SemioCursor, Theme, apply_window_cursor, fetch_font_bytes,
+    mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3,
+    resolve_semio_cursor,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -473,11 +473,7 @@ impl GlbStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) {
-            Ok(())
-        } else {
-            Err("GLB structure ended before JSON and BIN reached terminal")
-        }
+        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) { Ok(()) } else { Err("GLB structure ended before JSON and BIN reached terminal") }
     }
 }
 
@@ -570,11 +566,7 @@ impl PngStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) {
-            Ok(())
-        } else {
-            Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal")
-        }
+        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) { Ok(()) } else { Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal") }
     }
 }
 
@@ -681,11 +673,7 @@ impl JpegStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) {
-            Ok(())
-        } else {
-            Err("JPEG structure ended before a bounded frame and EOI reached terminal")
-        }
+        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) { Ok(()) } else { Err("JPEG structure ended before a bounded frame and EOI reached terminal") }
     }
 }
 
@@ -736,11 +724,7 @@ impl TextAssetStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) {
-            Ok(())
-        } else {
-            Err("text asset structure did not reach its bounded terminal witness")
-        }
+        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) { Ok(()) } else { Err("text asset structure did not reach its bounded terminal witness") }
     }
 }
 
@@ -823,11 +807,7 @@ impl ProtobufStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) {
-            Ok(())
-        } else {
-            Err("protobuf structure did not reach a field boundary")
-        }
+        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) { Ok(()) } else { Err("protobuf structure did not reach a field boundary") }
     }
 }
 
@@ -2033,11 +2013,7 @@ fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
 
 fn glb_normalize(value: [f32; 3]) -> [f32; 3] {
     let length = value.iter().map(|value| value * value).sum::<f32>().sqrt();
-    if length <= f32::EPSILON {
-        value
-    } else {
-        value.map(|value| value / length)
-    }
+    if length <= f32::EPSILON { value } else { value.map(|value| value / length) }
 }
 
 #[derive(Clone, Copy)]
@@ -2445,43 +2421,23 @@ fn glb_read_component(owner: &RendererAssetFetchOwner, pages: &RendererAssetPage
     let value = match component {
         5120 => {
             let value = i8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized {
-                (f32::from(value) / 127.0).max(-1.0)
-            } else {
-                f32::from(value)
-            }
+            if normalized { (f32::from(value) / 127.0).max(-1.0) } else { f32::from(value) }
         }
         5121 => {
             let value = u8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized {
-                f32::from(value) / 255.0
-            } else {
-                f32::from(value)
-            }
+            if normalized { f32::from(value) / 255.0 } else { f32::from(value) }
         }
         5122 => {
             let value = i16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized {
-                (f32::from(value) / 32767.0).max(-1.0)
-            } else {
-                f32::from(value)
-            }
+            if normalized { (f32::from(value) / 32767.0).max(-1.0) } else { f32::from(value) }
         }
         5123 => {
             let value = u16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized {
-                f32::from(value) / 65535.0
-            } else {
-                f32::from(value)
-            }
+            if normalized { f32::from(value) / 65535.0 } else { f32::from(value) }
         }
         5125 => {
             let value = u32::from_le_bytes(pages.read::<4>(owner, absolute)?);
-            if normalized {
-                value as f32 / u32::MAX as f32
-            } else {
-                value as f32
-            }
+            if normalized { value as f32 / u32::MAX as f32 } else { value as f32 }
         }
         5126 if !normalized => f32::from_le_bytes(pages.read::<4>(owner, absolute)?),
         5126 => return Err("GLB FLOAT accessor could not be normalized"),
@@ -3045,7 +3001,7 @@ fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<RendererIoHandle, String> {
-    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+    use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveStage, allocate_operation_id, root_cancel_token};
     let Some((slot_index, generation)) = RENDERER_IO_SLOTS.iter().enumerate().find_map(|(index, slot)| {
         if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return None;
@@ -3149,8 +3105,8 @@ mod renderer_io_retained_tests {
 pub(crate) mod kernel_runtime {
     use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
     use semio_framework_actor::{
-        intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, JobProgressIdentity, JobProgressKind, JobProgressLiveAuthority, JobProgressOverlayStore, JobProgressReceipt, JobProgressRejected,
-        JobPublication, JobTurn, Lane, Origin, PackageHash, PackageId, Payload,
+        ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, JobProgressIdentity, JobProgressKind, JobProgressLiveAuthority, JobProgressOverlayStore, JobProgressReceipt, JobProgressRejected, JobPublication, JobTurn, Lane,
+        Origin, PackageHash, PackageId, Payload, intersect_capabilities,
     };
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
@@ -3161,7 +3117,7 @@ pub(crate) mod kernel_runtime {
     use std::sync::{Arc, Mutex, OnceLock};
     use std::task::{Context, Poll, Waker};
     use std::time::Duration;
-    use ui_contract::{SurfaceId, UiDocumentBuilder, UiDocumentLease, UiDocumentLimits, UiFixedList, UiPatchApplyOutcome, UiPatchApplyProducer, UiPatchApplyRejected, UiPatchApplyStep, UiRevision, UiSnapshotState, UI_DOCUMENT_LEASE_SLOTS};
+    use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_SLOTS, UiDocumentBuilder, UiDocumentLease, UiDocumentLimits, UiFixedList, UiPatchApplyOutcome, UiPatchApplyProducer, UiPatchApplyRejected, UiPatchApplyStep, UiRevision, UiSnapshotState};
 
     #[derive(Default)]
     struct RendererSequenceAuthority {
@@ -7922,7 +7878,8 @@ mod async_boundary_tests {
         let mut actions = FrameActionOwners::default();
         assert!(actions.try_push(ActionDescriptor { controller_id: "a".to_string(), action: "one".to_string(), args: None }).is_ok());
         assert!(actions.try_push(ActionDescriptor { controller_id: "b".to_string(), action: "two".to_string(), args: None }).is_ok());
-        let mut cursor = FrameDeferredCursor::new(actions, true, true);
+        let mut cursor = FrameDeferredCursor::new(actions, true, true, true);
+        assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::ShellMaintenance)));
         assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::PumpSync)));
         assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "one"));
         assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "two"));
@@ -7937,7 +7894,7 @@ mod async_boundary_tests {
         for index in 0..WORLD3D_DEADLINE_CAPACITY {
             assert!(actions.try_push(ActionDescriptor { controller_id: index.to_string(), action: "cancel".to_string(), args: None }).is_ok());
         }
-        let mut cursor = FrameDeferredCursor::new(actions, false, true);
+        let mut cursor = FrameDeferredCursor::new(actions, false, true, false);
         for _ in 0..WORLD3D_DEADLINE_CAPACITY {
             assert!(!cursor.close_step());
         }
@@ -8286,23 +8243,31 @@ struct FrameDeferredCursor {
     actions: FrameActionOwners,
     pump_sync: bool,
     flush_tutorial: bool,
+    shell_maintenance: bool,
     phase: u8,
 }
 
 enum FrameDeferredWork {
+    ShellMaintenance,
     PumpSync,
     Action(ActionDescriptor),
     FlushTutorial,
 }
 
 impl FrameDeferredCursor {
-    fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool) -> Self {
-        Self { actions, pump_sync, flush_tutorial, phase: 0 }
+    fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool, shell_maintenance: bool) -> Self {
+        Self { actions, pump_sync, flush_tutorial, shell_maintenance, phase: 0 }
     }
 
     fn take_next(&mut self) -> Option<FrameDeferredWork> {
         if self.phase == 0 {
             self.phase = 1;
+            if self.shell_maintenance {
+                return Some(FrameDeferredWork::ShellMaintenance);
+            }
+        }
+        if self.phase == 1 {
+            self.phase = 2;
             if self.pump_sync {
                 return Some(FrameDeferredWork::PumpSync);
             }
@@ -8310,8 +8275,8 @@ impl FrameDeferredCursor {
         if let Some(action) = self.actions.pop_front() {
             return Some(FrameDeferredWork::Action(action));
         }
-        if self.phase == 1 {
-            self.phase = 2;
+        if self.phase == 2 {
+            self.phase = 3;
             if self.flush_tutorial {
                 return Some(FrameDeferredWork::FlushTutorial);
             }
@@ -8320,16 +8285,17 @@ impl FrameDeferredCursor {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.actions.is_empty() && (self.phase > 0 || !self.pump_sync) && (self.phase > 1 || !self.flush_tutorial)
+        self.actions.is_empty() && (self.phase > 0 || !self.shell_maintenance) && (self.phase > 1 || !self.pump_sync) && (self.phase > 2 || !self.flush_tutorial)
     }
 
     fn close_step(&mut self) -> bool {
         if self.actions.pop_front().is_some() {
             return false;
         }
+        self.shell_maintenance = false;
         self.pump_sync = false;
         self.flush_tutorial = false;
-        self.phase = 2;
+        self.phase = 3;
         true
     }
 }
@@ -8402,8 +8368,19 @@ impl RuntimeApply {
             runtime.interaction = Some(interaction);
             return true;
         };
+        if matches!(work, FrameDeferredWork::ShellMaintenance) {
+            mailbox.spawn_frame_maintenance_reserved(async move {
+                cursor_value.shell_maintenance = interaction.shell.advance_chrome_maintenance_step();
+                if cursor_value.shell_maintenance {
+                    cursor_value.phase = 0;
+                }
+                (interaction, cursor_value)
+            });
+            return true;
+        }
         mailbox.spawn_frame_deferred_reserved(async move {
             match work {
+                FrameDeferredWork::ShellMaintenance => {}
                 FrameDeferredWork::PumpSync => {
                     #[cfg(not(target_arch = "wasm32"))]
                     interaction.shell.pump_sync_events().await;
@@ -9137,6 +9114,27 @@ impl RuntimeMailbox {
         });
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    fn spawn_frame_maintenance_reserved<F>(&self, future: F)
+    where
+        F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + Send + 'static,
+    {
+        let mailbox = self.clone();
+        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let _ = kernel_runtime::KernelPoolFuture::spawn(renderer_worker_pool(), semio_framework_async::Lane::Io, async move {
+            let (interaction, cursor) = future.await;
+            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
+        });
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn spawn_frame_maintenance_reserved<F>(&self, future: F)
+    where
+        F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + 'static,
+    {
+        self.spawn_frame_deferred_reserved(future);
+    }
+
     #[cfg(target_arch = "wasm32")]
     fn spawn_frame_deferred_reserved<F>(&self, future: F)
     where
@@ -9587,6 +9585,7 @@ struct FrameFinishCursor {
     cursor: SemioCursor,
     pump_sync: bool,
     flush_tutorial: bool,
+    shell_maintenance: bool,
     deferred_actions: Option<FrameActionOwners>,
     glyph_started: bool,
     glyph_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
@@ -9605,7 +9604,7 @@ enum FrameFinishPhase {
 
 impl Default for FrameFinishCursor {
     fn default() -> Self {
-        Self { phase: FrameFinishPhase::Inputs, cursor: SemioCursor::Default, pump_sync: false, flush_tutorial: false, deferred_actions: None, glyph_started: false, glyph_pages: None }
+        Self { phase: FrameFinishPhase::Inputs, cursor: SemioCursor::Default, pump_sync: false, flush_tutorial: false, shell_maintenance: false, deferred_actions: None, glyph_started: false, glyph_pages: None }
     }
 }
 
@@ -11212,11 +11211,7 @@ async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut Rend
 fn push_renderer_asset_page(_fetch: &mut RendererAssetFetchOwner, mut bytes: semio_framework_job::RetainedJobPayload) -> Result<(), String> {
     let populated = !bytes.is_empty();
     let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    if populated {
-        Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into())
-    } else {
-        Ok(())
-    }
+    if populated { Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into()) } else { Ok(()) }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -11322,6 +11317,9 @@ impl AppRuntime {
     fn frame_before_input_step(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, dpr: f32, cursor: &mut FrameBuildCursor) -> FrameBuildBoundaryStep {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
+                if !ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step() {
+                    return FrameBuildBoundaryStep::Pending;
+                }
                 cursor.phase = FrameBuildPhase::Text;
             }
             FrameBuildPhase::Text => {
@@ -11346,7 +11344,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::ThemeResolve;
             }
             FrameBuildPhase::ThemeResolve => {
-                self.theme = shell::resolve_theme_for_ids(&shell::active_theme_id(), &self.shell.appearance_id);
+                self.theme = shell::resolve_theme_for_ids(self.shell.active_theme_id_for_frame(), &self.shell.appearance_id);
                 cursor.phase = FrameBuildPhase::ThemeAppearance;
             }
             FrameBuildPhase::ThemeAppearance => {
@@ -11576,6 +11574,7 @@ impl AppRuntime {
             FrameFinishPhase::Deferred => {
                 cursor.deferred_actions = Some(std::mem::take(&mut partial.deferred_actions));
                 cursor.flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
+                cursor.shell_maintenance = self.shell.chrome_maintenance_pending();
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= 100.0;
@@ -11647,7 +11646,7 @@ impl AppRuntime {
             }
             FrameFinishPhase::Complete => {
                 let Some(deferred_actions) = cursor.deferred_actions.take() else { return FrameFinishBoundaryStep::Fault("frame completion lost deferred action owners") };
-                let has_deferred = cursor.pump_sync || !deferred_actions.is_empty() || cursor.flush_tutorial;
+                let has_deferred = cursor.pump_sync || !deferred_actions.is_empty() || cursor.flush_tutorial || cursor.shell_maintenance;
                 if has_deferred && self.pending_frame_deferred.is_some() {
                     cursor.deferred_actions = Some(deferred_actions);
                     return FrameFinishBoundaryStep::Fault("frame completion found an unclosed deferred owner");
@@ -11662,7 +11661,7 @@ impl AppRuntime {
                     return FrameFinishBoundaryStep::Fault("frame completion lost engine packets");
                 };
                 if has_deferred {
-                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial));
+                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance));
                 }
                 return FrameFinishBoundaryStep::Complete(AppFrameBuild {
                     generation: semio_framework_trace::Generation(input.preview_generation),

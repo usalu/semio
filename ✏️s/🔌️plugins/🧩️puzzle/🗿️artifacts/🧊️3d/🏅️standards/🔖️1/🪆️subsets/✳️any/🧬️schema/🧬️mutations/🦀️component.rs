@@ -63,6 +63,50 @@ pub enum Puzzle3dMutation {
     DisconnectKindCompatibility(DisconnectKindCompatibility),
     ReplaceKindCatalogs(ReplaceKindCatalogs),
 }
+
+//#region 🏷️Kinds
+/// 🏷️ The kebab-case spelling of every [`Puzzle3dMutation`] variant, in declaration order — the exact
+/// vocabulary the `puzzle-3d-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// the `mutate-puzzle-3d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
+pub const KINDS: &[&str] = &[
+    "create-object",
+    "delete-object",
+    "move-object",
+    "rotate-object",
+    "scale-object",
+    "change-object-mesh",
+    "edit-object-label",
+    "change-object-kind",
+    "change-object-anchor",
+    "change-object-hidden",
+    "change-object-locked",
+    "add-object-vortex",
+    "remove-object-vortex",
+    "replace-object-vortex",
+    "connect-vortices",
+    "disconnect-vortices",
+    "replace-attraction-geometry",
+    "create-target-volume",
+    "delete-target-volume",
+    "move-target-volume",
+    "rotate-target-volume",
+    "scale-target-volume",
+    "change-target-volume-hidden",
+    "change-target-volume-locked",
+    "create-reference",
+    "delete-reference",
+    "move-reference",
+    "resize-reference",
+    "replace-reference-source",
+    "change-reference-hidden",
+    "change-reference-locked",
+    "change-domain",
+    "connect-kind-compatibility",
+    "disconnect-kind-compatibility",
+    "replace-kind-catalogs",
+];
+//#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
 pub use super::add_object_vortex::mutation::{add_object_vortex, AddObjectVortex};
@@ -710,5 +754,24 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🧪️KindsCatalog
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed oracle
+    /// manifest's catalog — the framework never parses Rust, so this is the only thing that keeps the
+    /// declared vocabulary and the measured one from drifting apart.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Puzzle3dMutation as protocol::SemanticMutation<Puzzle3dSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Puzzle3dMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 }
 //#endregion 🧪️Tests

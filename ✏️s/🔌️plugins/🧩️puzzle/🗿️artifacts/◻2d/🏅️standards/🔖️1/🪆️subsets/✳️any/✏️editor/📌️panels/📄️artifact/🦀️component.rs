@@ -4,7 +4,7 @@
 //! presence after render.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, Puzzle2dScene, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN};
+use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, ui_label, Puzzle2dScene, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN};
 use semio_framework_plugin::{tree_item_with_action, ActionFactory, BuiltNode, InteractionTarget, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::Value;
 
@@ -67,7 +67,7 @@ pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framew
         let id = node.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d node id is required"))?;
         let item = tree_item_with_action(
             id.to_string(),
-            node_label(node),
+            ui_label(node_label(node))?,
             node.get("nodeKind").and_then(Value::as_str).map(str::to_string),
             actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(selection_args(id)?))?,
         )?;
@@ -78,15 +78,15 @@ pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framew
         let id = edge.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d edge id is required"))?;
         let item = tree_item_with_action(
             id.to_string(),
-            edge_label(edge, fixture),
+            ui_label(edge_label(edge, fixture))?,
             edge.get("edgeKind").and_then(Value::as_str).map(str::to_string),
             actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(selection_args(id)?))?,
         )?;
         edge_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d document edge admission failed"))?;
     }
     PanelTreeBuilder::new("puzzle2d-play-document")?
-        .section_or_placeholder("puzzle2d-play-document.nodes", Some(labels.nodes.as_str().into()), true, node_items, labels.none.as_str())?
-        .section_or_placeholder("puzzle2d-play-document.edges", Some(labels.edges.as_str().into()), false, edge_items, labels.none.as_str())?
+        .section_or_placeholder("puzzle2d-play-document.nodes", Some(ui_label(labels.nodes.as_str())?), true, node_items, ui_label(labels.none.as_str())?)?
+        .section_or_placeholder("puzzle2d-play-document.edges", Some(ui_label(labels.edges.as_str())?), false, edge_items, ui_label(labels.none.as_str())?)?
         .interaction_domain(PUZZLE2D_INTERACTION_DOMAIN)?
         .build()
 }

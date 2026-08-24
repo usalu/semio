@@ -46,13 +46,13 @@ impl ArtifactViewer for AssemblyViewer {
     const DIALECT: Dialect = ASSEMBLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ASSEMBLY_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> AssemblySnapshot {
+    fn initial_snapshot() -> AssemblySnapshot {
         AssemblySnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `AssemblyViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -62,7 +62,7 @@ impl ArtifactViewer for AssemblyViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
         semio_framework_plugin::built_to_component_tree(match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),

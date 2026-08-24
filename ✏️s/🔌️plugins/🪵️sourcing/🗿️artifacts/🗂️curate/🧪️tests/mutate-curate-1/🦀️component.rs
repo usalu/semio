@@ -135,8 +135,8 @@ mod subject {
     /// ids at the same indices, and exactly one count moved. All three fail an implementation that
     /// rebuilt or re-sorted the curation, which a membership comparison would let through.
     fn effect_holds(kind: &str, effect: &str, before: &CurateSnapshot, after: &CurateSnapshot) -> Result<(), String> {
-        let was: Vec<(String, u64)> = before.curated.iter().map(|item| (item.object_id.clone(), item.count)).collect();
-        let now: Vec<(String, u64)> = after.curated.iter().map(|item| (item.object_id.clone(), item.count)).collect();
+        let entries = |snapshot: &CurateSnapshot| snapshot.curated.iter().map(|item| (item.object_id.clone(), item.count)).collect::<Vec<_>>();
+        let (was, now) = (entries(before), entries(after));
         match effect {
             "append" => {
                 if now.len() != was.len() + 1 {
@@ -161,13 +161,13 @@ mod subject {
                 if now.len() != was.len() {
                     return Err(format!("mutate-{kind}: a count change must not add or drop an entry, went from {} to {}", was.len(), now.len()));
                 }
-                let moved: Vec<_> = was.iter().zip(now.iter()).filter(|(one, other)| one != other).collect();
+                let moved: Vec<usize> = (0..was.len()).filter(|&at| was[at] != now[at]).collect();
                 if moved.len() != 1 {
                     return Err(format!("mutate-{kind}: a count change must move exactly one entry, moved {}: {was:?} -> {now:?}", moved.len()));
                 }
-                let ((was_id, _), (now_id, _)) = moved[0];
-                if was_id != now_id {
-                    return Err(format!("mutate-{kind}: a count change must keep the entry at its own index, but {was_id:?} became {now_id:?}"));
+                let at = moved[0];
+                if was[at].0 != now[at].0 {
+                    return Err(format!("mutate-{kind}: a count change must keep the entry at its own index, but {:?} became {:?}", was[at].0, now[at].0));
                 }
                 Ok(())
             }

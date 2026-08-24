@@ -62,7 +62,7 @@ pub fn apply_features_delta(items: &[MapFeature], delta: &GisMapFeaturesDelta) -
     Ok(next)
 }
 
-async fn apply_map_delta<V: Clone>(target: &mut std::collections::BTreeMap<String, V>, entries: &std::collections::BTreeMap<String, Option<V>>) -> protocol::MutationApplyResult<()> {
+fn apply_map_delta<V: Clone>(target: &mut std::collections::BTreeMap<String, V>, entries: &std::collections::BTreeMap<String, Option<V>>) -> protocol::MutationApplyResult<()> {
     for (key, value) in entries {
         if value.is_none() && !target.contains_key(key) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed map entry does not exist").at([key.as_str()]));
@@ -83,7 +83,7 @@ async fn apply_map_delta<V: Clone>(target: &mut std::collections::BTreeMap<Strin
     Ok(())
 }
 
-async fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Option<GisMapFeaturesDelta>) {
+fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Option<GisMapFeaturesDelta>) {
     if let Some(src) = incoming {
         match target {
             Some(dst) => {
@@ -209,7 +209,7 @@ pub fn diff_set_snapshot(snapshot: &GisMapSnapshot) -> GisMapDiff {
 mod tests {
     use super::*;
 
-    async fn feature(id: &str) -> MapFeature {
+    fn feature(id: &str) -> MapFeature {
         MapFeature { id: id.into(), data: dsl::DslValue::String(id.into()) }
     }
 

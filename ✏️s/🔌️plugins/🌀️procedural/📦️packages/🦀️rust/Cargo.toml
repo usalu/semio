@@ -60,6 +60,7 @@ ui_styling = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-job = { workspace = true }
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 serde.workspace = true
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 

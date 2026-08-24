@@ -198,7 +198,7 @@ impl store::ArtifactPack for CadConfig {
 
 //#endregion 🔖️ArtifactCodec
 
-async fn default_contributions_json() -> String {
+fn default_contributions_json() -> String {
     "[]".into()
 }
 

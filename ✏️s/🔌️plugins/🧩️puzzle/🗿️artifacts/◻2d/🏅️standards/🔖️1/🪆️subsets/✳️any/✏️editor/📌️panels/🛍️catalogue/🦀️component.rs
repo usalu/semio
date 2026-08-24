@@ -3,7 +3,7 @@
 //! rows are drag sources for the canvas; every row also adds a node on click.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{inferred_kind_entries, kind_catalog_entries, PUZZLE2D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle2d::{inferred_kind_entries, kind_catalog_entries, ui_label, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
     tree_item_with_action, tree_item_with_action_draggable, ActionFactory, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -76,9 +76,9 @@ fn kind_catalog_items(section_id: &str, slice: &str, entries: &[Value]) -> semio
         let action = actions.action("addNode", Some(add_node_args(kind_id)?))?;
         let item = if draggable {
             let drag_data = puzzle2d_catalog_item_drag_data(slice, kind_id, entry);
-            tree_item_with_action_draggable(id, catalog_kind_label(entry), Some(kind_id.into()), action, &drag_data)?
+            tree_item_with_action_draggable(id, ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), action, &drag_data)?
         } else {
-            tree_item_with_action(id, catalog_kind_label(entry), Some(kind_id.into()), action)?
+            tree_item_with_action(id, ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), action)?
         };
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d catalogue item admission failed"))?;
     }
@@ -93,9 +93,9 @@ pub fn render(fixture: &Value, labels: &Puzzle2dLabels) -> semio_framework_plugi
     let handle_entries = kind_catalog_entries(fixture, "handles").unwrap_or(inferred_handles.as_slice());
     let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
     PanelTreeBuilder::new("puzzle2d-play-kinds")?
-        .section_or_placeholder("puzzle2d-play-kinds.nodes", Some(labels.nodes.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.nodes", "nodes", node_entries)?, labels.none.as_str())?
-        .section_or_placeholder("puzzle2d-play-kinds.handles", Some(labels.handles.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.handles", "handles", handle_entries)?, labels.none.as_str())?
-        .section_or_placeholder("puzzle2d-play-kinds.edges", Some(labels.edges.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.edges", "edges", edge_entries)?, labels.none.as_str())?
+        .section_or_placeholder("puzzle2d-play-kinds.nodes", Some(ui_label(labels.nodes.as_str())?), true, kind_catalog_items("puzzle2d-play-kinds.nodes", "nodes", node_entries)?, ui_label(labels.none.as_str())?)?
+        .section_or_placeholder("puzzle2d-play-kinds.handles", Some(ui_label(labels.handles.as_str())?), true, kind_catalog_items("puzzle2d-play-kinds.handles", "handles", handle_entries)?, ui_label(labels.none.as_str())?)?
+        .section_or_placeholder("puzzle2d-play-kinds.edges", Some(ui_label(labels.edges.as_str())?), true, kind_catalog_items("puzzle2d-play-kinds.edges", "edges", edge_entries)?, ui_label(labels.none.as_str())?)?
         .build()
 }
 //#endregion 🔖️Render

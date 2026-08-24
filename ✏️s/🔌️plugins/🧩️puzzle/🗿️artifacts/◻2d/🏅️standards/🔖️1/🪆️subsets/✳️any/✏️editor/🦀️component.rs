@@ -604,8 +604,23 @@ fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dScene) {
 /// every action that moves the camera already writes the config's camera fields directly — re-deriving
 /// it from `host.camera` here used to blindly overwrite that write with the *pre-action* host camera.
 pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
-    let events_raw = host.drain_events_json();
+    let events_raw = drain_board_events_json(host);
     apply_board_events::apply_board_events_from_json(&events_raw, envelope);
+}
+
+/// 📨️ Retires the board host's bounded owned-event queue into its public JSON envelope.
+pub fn drain_board_events_json(host: &mut BoardHost) -> String {
+    let mut output = String::from("[");
+    let mut first = true;
+    while let Some(event) = host.pop_owned_event() {
+        if !first {
+            output.push(',');
+        }
+        first = false;
+        event.write_json(&mut output);
+    }
+    output.push(']');
+    output
 }
 //#endregion 🔖️BoardHostSync
 
@@ -800,6 +815,21 @@ impl<'a> Puzzle2dActionCtx<'a> {
         semio_framework::io::resolve_ready(self.interaction.selection(PUZZLE2D_INTERACTION_DOMAIN)).ids.clone()
     }
 }
+
+/// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string())
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d label admission failed"))
+}
+
+/// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d node admission failed"))?;
+    }
+    Ok(nodes)
+}
 //#endregion 🔖️ActionContext
 
 //#region 🔖️ContextMenu
@@ -961,7 +991,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             let mut host_mut = host.borrow_mut();
             if action != "applyBoardEvents" {
                 sync_host_fixture_content(&mut host_mut, &scene);
-                let _ = host_mut.drain_events_json();
+                let _ = drain_board_events_json(&mut host_mut);
             }
             sync_host_runtime_state(&mut host_mut, &scene, &interaction.selection(PUZZLE2D_INTERACTION_DOMAIN).await.ids);
         }
@@ -1064,7 +1094,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Err(MediaError::NotImplemented)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> semio_framework_plugin::ComponentTree {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let config = cfg.snapshot;
         let document_json = doc.snapshot.0.to_string();
         // 🪟️ `body_key` already determines the pane deterministically, so the active utility resolves
@@ -1077,15 +1107,17 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         };
         let envelope = Self::scene_for(doc.snapshot.0.clone(), config, pane);
         let labels = puzzle2d_labels(config);
-        semio_framework_plugin::built_to_component_tree(match body_key {
-            overview::BODY_KEY => overview::render(&document_json, &envelope),
-            detail::BODY_KEY => detail::render(&document_json, &envelope),
-            selection::BODY_KEY => selection::render(&document_json, &envelope),
-            document::PUZZLE2D_PLAY_BODY_LAYERS => document::render(&envelope, labels),
-            catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope.fixture, labels),
-            inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        })
+        let node = match body_key {
+            overview::BODY_KEY => overview::render(&document_json, &envelope)?,
+            detail::BODY_KEY => detail::render(&document_json, &envelope)?,
+            selection::BODY_KEY => selection::render(&document_json, &envelope)?,
+            document::PUZZLE2D_PLAY_BODY_LAYERS => document::render(&envelope, labels)?,
+            catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope.fixture, labels)?,
+            inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
     async fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {

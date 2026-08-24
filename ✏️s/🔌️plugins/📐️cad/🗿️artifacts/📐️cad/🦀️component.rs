@@ -126,7 +126,7 @@ pub fn cad_model_child_handle(pane: CadPaneId, content_json: &str) -> CadModelCh
     store::ArtifactChild::new(child_id, target)
 }
 
-async fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
+fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
     match pane {
         CadPaneId::Shape => "shape",
         CadPaneId::Building => "building",
@@ -162,11 +162,11 @@ pub struct CadReference {
     pub opacity: Option<f64>,
 }
 
-async fn default_image_media_kind() -> String {
+fn default_image_media_kind() -> String {
     "image".into()
 }
 
-async fn default_width_world() -> f64 {
+fn default_width_world() -> f64 {
     10.0
 }
 
@@ -246,19 +246,19 @@ impl Default for CadCamera {
     }
 }
 
-async fn default_camera_position() -> [f64; 3] {
+fn default_camera_position() -> [f64; 3] {
     [12.0, -12.0, 8.0]
 }
 
-async fn default_camera_target() -> [f64; 3] {
+fn default_camera_target() -> [f64; 3] {
     [0.0, 0.0, 0.0]
 }
 
-async fn default_fov() -> f64 {
+fn default_fov() -> f64 {
     50.0
 }
 
-async fn one_f64() -> f64 {
+fn one_f64() -> f64 {
     1.0
 }
 
@@ -292,7 +292,7 @@ pub fn cad_pane_model_mut(scene: &mut CadSnapshot, pane: CadPaneId) -> &mut Opti
     }
 }
 
-async fn default_model_definition_id() -> String {
+fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
 
@@ -350,7 +350,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `🗒️note`'s own `pilot_languages()` convention (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// M1/W1b). Relocated from `⚙️engine/🦀️component.rs` alongside `declaration()` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — `declaration()`'s only caller, kept private.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

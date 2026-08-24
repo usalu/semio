@@ -62,6 +62,32 @@ pub enum LowpolyMutation {
     ChangePaintLayerBlendMode(super::change_paint_layer_blend_mode::mutation::ChangePaintLayerBlendMode),
     EditPaintLayer(super::edit_paint_layer::mutation::EditPaintLayer),
 }
+
+//#region 🏷️Kinds
+/// 🏷️ The kebab-case spelling of every [`LowpolyMutation`] variant, in declaration order — the exact
+/// vocabulary the `lowpoly-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// the `mutate-lowpoly-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
+pub const KINDS: &[&str] = &[
+    "create-object",
+    "delete-object",
+    "reorder-objects",
+    "rename-object",
+    "change-object-smooth-shading",
+    "move-object",
+    "rotate-object",
+    "scale-object",
+    "create-mesh",
+    "delete-mesh",
+    "insert-paint-layer",
+    "remove-paint-layer",
+    "rename-paint-layer",
+    "change-paint-layer-visible",
+    "change-paint-layer-opacity",
+    "change-paint-layer-blend-mode",
+    "edit-paint-layer",
+];
+//#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests
@@ -144,5 +170,24 @@ mod tests {
         protocol::os_spr::testkit::assert_fatal_never_applies(&outcome);
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🧪️KindsCatalog
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed oracle
+    /// manifest's catalog — the framework never parses Rust, so this is the only thing that keeps the
+    /// declared vocabulary and the measured one from drifting apart.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <LowpolyMutation as protocol::SemanticMutation<LowpolySnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared LowpolyMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 }
 //#endregion 🧪️Tests

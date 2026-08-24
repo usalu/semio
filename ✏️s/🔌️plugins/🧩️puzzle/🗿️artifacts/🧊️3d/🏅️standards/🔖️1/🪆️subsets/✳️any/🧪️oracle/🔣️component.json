@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `Puzzle3dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "puzzle-3d-mutation-semantics",
+      "capabilities": ["puzzle-3d-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `Puzzle3dMutation` — the widest vocabulary in this plugin, spanning FOUR independent top-level collections (`objects`, `attractions`, `targetVolumes`, `references`) where an attraction names its endpoints as `object:vortex` pairs and a vortex lives inside an object, so `connect-vortices` and `disconnect-vortices` join two collections that have no containment relationship at all. That is this subset's own specification, not a fact an external 3d-scene library could confirm or refute. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability (a kind must move the compared projection, or, where the committed outcome itself declares `mutation.no-op`, must provably move nothing) and footprint completeness (`before` and `after` may differ on exactly the fields the committed diff declares).",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "puzzle-3d-1-any",
+      "capability": "puzzle-3d-1-mutate",
+      "kinds": [
+        "create-object",
+        "delete-object",
+        "move-object",
+        "rotate-object",
+        "scale-object",
+        "change-object-mesh",
+        "edit-object-label",
+        "change-object-kind",
+        "change-object-anchor",
+        "change-object-hidden",
+        "change-object-locked",
+        "add-object-vortex",
+        "remove-object-vortex",
+        "replace-object-vortex",
+        "connect-vortices",
+        "disconnect-vortices",
+        "replace-attraction-geometry",
+        "create-target-volume",
+        "delete-target-volume",
+        "move-target-volume",
+        "rotate-target-volume",
+        "scale-target-volume",
+        "change-target-volume-hidden",
+        "change-target-volume-locked",
+        "create-reference",
+        "delete-reference",
+        "move-reference",
+        "resize-reference",
+        "replace-reference-source",
+        "change-reference-hidden",
+        "change-reference-locked",
+        "change-domain",
+        "connect-kind-compatibility",
+        "disconnect-kind-compatibility",
+        "replace-kind-catalogs"
+      ]
+    }
+  ]
+}

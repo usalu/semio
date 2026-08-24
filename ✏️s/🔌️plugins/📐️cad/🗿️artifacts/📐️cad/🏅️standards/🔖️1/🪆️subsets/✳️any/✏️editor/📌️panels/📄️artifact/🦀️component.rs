@@ -5,9 +5,9 @@ use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::Cad
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use crate::artifacts::cad::{CadPaneId, CadReference, CadSnapshot};
 use crate::editor::cad::terminology::{typology_label, CadLabels};
-use crate::editor::cad::{cad_action, cad_tree_item, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView};
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, RowAction, RowActionPlacement, Trigger};
-use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use crate::editor::cad::{cad_action, cad_tree_item, ui_label, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView};
+use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, Label as UiLabel, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::{LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const CAD_PLAY_BODY_DOCUMENT: &str = "cad.play.document";
@@ -38,17 +38,19 @@ pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &Cad
             let args = ui_value_map([("modelDefinitionId", ui_value_text(id_suffix)?)])?;
             cad_tree_item(
                 format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id),
-                Label::data(format!("{}: {}", primitive.slot, primitive.primitive_id)),
+                format!("{}: {}", primitive.slot, primitive.primitive_id),
                 Some("hexagon"),
                 cad_action("focusModelDefinition", Some(args))?,
             )
         }))?;
     let args = ui_value_map([("modelDefinitionId", ui_value_text(id_suffix)?)])?;
-    let mut item = cad_tree_item(format!("cad-object:{id_suffix}:{}", object.id), Label::data(object.label.clone()), Some("box"), cad_action("focusModelDefinition", Some(args))?)?;
-    item.base.children = primitive_items;
+    let mut item = cad_tree_item(format!("cad-object:{id_suffix}:{}", object.id), &object.label, Some("box"), cad_action("focusModelDefinition", Some(args))?)?;
+    for primitive in primitive_items {
+        item.children.try_push(primitive).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad primitive child admission failed"))?;
+    }
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         if !object.typology.is_empty() {
-            props.description = Some(UiText::try_from_string(typology_label(&object.typology, labels).to_string()).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad object description admission failed"))?);
+            props.description = Some(UiText::try_from_string(typology_label(&object.typology, labels).to_string()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad object description admission failed"))?);
         }
         props.dimmed = Some(!object.visible);
         props.draggable = Some(!object.locked);
@@ -64,7 +66,7 @@ pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &Cad
             let (action, args) = cad_action(action, args)?;
             let row_action = RowAction {
                 icon: UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad object row action icon admission failed"))?,
-                label: Some(label.as_str().into()),
+                label: Some(ui_label(label.as_str())?),
                 action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None },
                 placement,
             };
@@ -82,7 +84,7 @@ pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, 
     ])?;
     let mut item = cad_tree_item(
         format!("cad-reference:{model_definition_id}:{}", reference.id),
-        Label::data(reference.id.clone()),
+        &reference.id,
         Some("image"),
         cad_action("setReferenceSelection", Some(select_args))?,
     )?;
@@ -107,7 +109,7 @@ pub fn reference_tree_item(model_definition_id: &str, reference: &CadReference, 
             let (action, args) = cad_action("patchCadPlayReference", Some(args))?;
             let row_action = RowAction {
                 icon: UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad reference row action icon admission failed"))?,
-                label: Some(label.as_str().into()),
+                label: Some(ui_label(label.as_str())?),
                 action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None },
                 placement: RowActionPlacement::Row,
             };
@@ -157,12 +159,12 @@ pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRu
 
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded.
 pub(crate) fn document_pane_section(
-    label: impl Into<Label>,
+    label: LabelText,
     id_suffix: &str,
     objects: &[CadObject],
     labels: &CadLabels,
-) -> semio_framework_plugin::UiAssemblyResult<(String, Option<Label>, bool, UiFixedList<BuiltNode>)> {
-    Ok((format!("cad-play-document.{id_suffix}"), Some(label.into()), true, ui_node_list(objects.iter().map(|object| object_tree_item(id_suffix, object, labels)))?))
+) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
+    Ok((format!("cad-play-document.{id_suffix}"), Some(ui_label(label.as_str())?), true, ui_node_list(objects.iter().map(|object| object_tree_item(id_suffix, object, labels)))?))
 }
 
 /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
@@ -170,10 +172,10 @@ pub fn artifact_references_section(
     document: &CadSnapshot,
     model_definition_id: &str,
     labels: &CadLabels,
-) -> semio_framework_plugin::UiAssemblyResult<(String, Option<Label>, bool, UiFixedList<BuiltNode>)> {
+) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
     Ok((
         format!("cad-play-document.references.{model_definition_id}"),
-        Some(labels.references.into()),
+        Some(ui_label(labels.references.as_str())?),
         false,
         ui_node_list(references_for(document, model_definition_id).iter().map(|reference| reference_tree_item(model_definition_id, reference, labels)))?,
     ))
@@ -183,7 +185,7 @@ pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> semio_
     let node_items = ui_node_list(envelope.document.nodes.iter().map(|node| {
         let node_ids = ui_value_list([ui_value_text(&node.id)?])?;
         let args = ui_value_map([("nodeIds", node_ids)])?;
-        cad_tree_item(format!("cad-node:{}", node.id), Label::data(node.label.clone()), Some("git-branch"), cad_action("setNodeSelection", Some(args))?)
+        cad_tree_item(format!("cad-node:{}", node.id), &node.label, Some("git-branch"), cad_action("setNodeSelection", Some(args))?)
     }))?;
 
     // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `CadSnapshot`'s inline
@@ -201,14 +203,14 @@ pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> semio_
 
     let mut builder = PanelTreeBuilder::new("cad-play-document")?
         .section(shape_id, shape_label, shape_open, shape_items)?
-        .section_or_placeholder(shape_refs_id, shape_refs_label, shape_refs_open, shape_refs_items, labels.none_placeholder)?
+        .section_or_placeholder(shape_refs_id, shape_refs_label, shape_refs_open, shape_refs_items, ui_label(labels.none_placeholder.as_str())?)?
         .section(building_id, building_label, building_open, building_items)?
-        .section_or_placeholder(building_refs_id, building_refs_label, building_refs_open, building_refs_items, labels.none_placeholder)?
+        .section_or_placeholder(building_refs_id, building_refs_label, building_refs_open, building_refs_items, ui_label(labels.none_placeholder.as_str())?)?
         .section(energy_id, energy_label, energy_open, energy_items)?
-        .section_or_placeholder(energy_refs_id, energy_refs_label, energy_refs_open, energy_refs_items, labels.none_placeholder)?
+        .section_or_placeholder(energy_refs_id, energy_refs_label, energy_refs_open, energy_refs_items, ui_label(labels.none_placeholder.as_str())?)?
         .section(structure_id, structure_label, structure_open, structure_items)?
-        .section_or_placeholder(structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items, labels.none_placeholder)?
-        .section("cad-play-document.nodes", Some(labels.nodes.into()), true, node_items)?;
+        .section_or_placeholder(structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items, ui_label(labels.none_placeholder.as_str())?)?
+        .section("cad-play-document.nodes", Some(ui_label(labels.nodes.as_str())?), true, node_items)?;
     if let Some(ids) = document_tree_selected_ids(&envelope.document, &envelope.runtime)? {
         builder = builder.selected(ids)?;
     }

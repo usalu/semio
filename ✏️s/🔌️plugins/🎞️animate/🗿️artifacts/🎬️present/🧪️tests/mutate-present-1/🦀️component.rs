@@ -36,9 +36,9 @@ const BASE_TILES: &str = "local://🎞️base-tiles.json";
 #[cfg(feature = "sut")]
 mod subject {
     use super::{BASE_TILES, DECK_ASSET};
-    use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_animate::artifacts::present::dsl::{parse_dsl, print_dsl};
-    use semio_s_plugin_animate::artifacts::present::mutations::{apply_present_mutation, decode_present_mutation_json, inverse_present_mutation, PresentMutation};
+    use semio_s_plugin_animate::artifacts::present::mutations::{apply_present_mutation, decode_present_mutation_json, encode_present_projection_json, inverse_present_mutation, PresentMutation};
     use semio_s_plugin_animate::artifacts::present::{present_snapshot_with_tiles, present_working_scene, FigureTileDraft, FigureTileFrame, PresentSnapshot};
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
@@ -92,30 +92,12 @@ mod subject {
     //#endregion 🔖️CommittedInput
 
     //#region 🔖️Projection
-    fn frame_json(value: &FigureTileFrame) -> Json {
-        Json::Object(vec![("x".into(), Json::Number(value.x)), ("y".into(), Json::Number(value.y)), ("width".into(), Json::Number(value.width)), ("height".into(), Json::Number(value.height))])
-    }
-
-    /// ⚖️ `(schema, source, tiles)` read back through the working scene. The two child handles are
-    /// deliberately absent: `presentation_child_handle` content-addresses exactly this pair with
-    /// `std`'s unspecified `DefaultHasher`, so projecting it would compare the same content twice
-    /// and pin a value the standard library does not promise.
-    fn projection(snapshot: &PresentSnapshot) -> Json {
-        let (source, tiles) = present_working_scene(snapshot);
-        Json::Object(vec![
-            ("schema".into(), Json::String(snapshot.schema.clone())),
-            (
-                "source".into(),
-                Json::Object(vec![
-                    ("src".into(), Json::String(source.src.clone())),
-                    ("kind".into(), Json::String(source.kind.clone())),
-                    ("frame".into(), frame_json(&source.frame)),
-                    ("sourceAspect".into(), source.source_aspect.map(Json::Number).unwrap_or(Json::Null)),
-                    ("pdfPage".into(), source.pdf_page.map(|page| Json::Number(f64::from(page))).unwrap_or(Json::Null)),
-                ]),
-            ),
-            ("tiles".into(), Json::Array(tiles.iter().map(|tile| Json::Object(vec![("id".into(), Json::String(tile.id.clone())), ("name".into(), Json::String(tile.name.clone())), ("crop".into(), frame_json(&tile.crop))])).collect())),
-        ])
+    /// ⚖️ The subset's OWN semantic projection, read back through production's
+    /// `encode_present_projection_json` and reparsed with the platform's dependency-free reader.
+    /// Comparison belongs to the owner, never to an adapter, so nothing about what this document
+    /// means is decided in this file.
+    fn projection(snapshot: &PresentSnapshot) -> Result<Json, String> {
+        parse_json(&encode_present_projection_json(snapshot))
     }
     //#endregion 🔖️Projection
 
@@ -128,15 +110,15 @@ mod subject {
         let kind = spec.str("kind");
         let base = base(ctx)?;
         let mutated = apply_present_mutation(&base, &mutation(&spec)?).map_err(|error| format!("mutate-{kind}: the mutation did not apply: {error}"))?;
-        let after = projection(&mutated);
-        mutation_is_observable(&kind, &after, &projection(&base), &[])?;
+        let after = projection(&mutated)?;
+        mutation_is_observable(&kind, &after, &projection(&base)?, &[])?;
         Ok(Outcome::with_raw(after.to_string().into_bytes(), after))
     }
 
     /// ↩️ The inverse law, asserted in role: applying the kind and then its OWN computed inverse
-    /// must land back on the base document's projection exactly. The steps are applied in REVERSE
-    /// order, which is this subset's own convention (`🧬️mutations/🦀️component.rs`'s `round_trip`
-    /// test helper reverses before replaying).
+    /// must land back on the base document's projection exactly. The steps are replayed in REVERSE
+    /// order, which is this subset's own convention — `🧬️mutations/🦀️component.rs`'s `round_trip`
+    /// test helper reverses before replaying.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
@@ -148,8 +130,8 @@ mod subject {
         for step in &undo {
             current = apply_present_mutation(&current, step).map_err(|error| format!("inverse-{kind}: an inverse step did not apply: {error}"))?;
         }
-        let restored = projection(&current);
-        inverse_restores(&kind, &restored, &projection(&base))?;
+        let restored = projection(&current)?;
+        inverse_restores(&kind, &restored, &projection(&base)?)?;
         Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
     }
 
@@ -165,9 +147,9 @@ mod subject {
         let printed = print_dsl(&decoded);
         carrier_is_exact(printed.as_bytes(), &input)?;
         let reparsed = parse_dsl(&printed).map_err(|error| format!("identity-round-trip: this codec's own output does not parse back: {error:?}"))?;
-        let projection = projection(&reparsed);
-        round_trip_preserves(&projection, &self::projection(&decoded))?;
-        Ok(Outcome::with_raw(printed.into_bytes(), projection))
+        let after = projection(&reparsed)?;
+        round_trip_preserves(&after, &projection(&decoded)?)?;
+        Ok(Outcome::with_raw(printed.into_bytes(), after))
     }
     //#endregion 🔖️Handlers
 }

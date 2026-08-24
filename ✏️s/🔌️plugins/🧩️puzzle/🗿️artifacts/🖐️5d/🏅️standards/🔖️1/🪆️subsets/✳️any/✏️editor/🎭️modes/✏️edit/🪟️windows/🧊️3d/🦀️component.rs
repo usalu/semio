@@ -188,7 +188,7 @@ fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzz
 //#endregion 🔖️SceneJson
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession) -> BuiltNode {
+pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let brush_preview = world_brush_preview_json(precompute, envelope);
     let scene = world3d_scene_extended(
         camera3d_json(&envelope.runtime.camera3d),
@@ -213,7 +213,7 @@ pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession) 
         None,
         None,
     );
-    semio_framework_ui_contract::surface(semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::World3d, &scene)).id(SURFACE_ID).build()
+    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 

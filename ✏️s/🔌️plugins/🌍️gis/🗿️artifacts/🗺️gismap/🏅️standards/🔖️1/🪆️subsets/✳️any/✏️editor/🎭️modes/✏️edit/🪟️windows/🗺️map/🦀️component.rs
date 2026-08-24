@@ -6,7 +6,8 @@ use crate::editor::gis2d::config::Gis2dConfig;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::editor::gis2d::{GIS2D_PLAY_APP_ID, GIS_MAP_LAYER_IDS};
 use framework_surface::tiled_map::clamp_map_layer_weight;
-use semio_framework_plugin::{build_tiled_map_scene, LocalizedLabel, SurfaceKind, TiledMapScene, UiNode, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TiledMapScene, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -45,11 +46,11 @@ pub fn window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<Windo
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn default_layer_visibility() -> HashMap<String, bool> {
+fn default_layer_visibility() -> HashMap<String, bool> {
     GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), true)).collect()
 }
 
-async fn layer_visibility_json(cfg: &Gis2dConfig) -> String {
+fn layer_visibility_json(cfg: &Gis2dConfig) -> String {
     let mut map = default_layer_visibility();
     for (id, visible) in &cfg.layer_visibility {
         map.insert(id.clone(), *visible);
@@ -57,7 +58,7 @@ async fn layer_visibility_json(cfg: &Gis2dConfig) -> String {
     serde_json::to_string(&map).unwrap_or_else(|_| "{}".into())
 }
 
-async fn layer_stroke_scale_json(cfg: &Gis2dConfig) -> String {
+fn layer_stroke_scale_json(cfg: &Gis2dConfig) -> String {
     let mut map: HashMap<String, f64> = GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), 1.0)).collect();
     for (id, weight) in &cfg.layer_stroke_scale {
         map.insert(id.clone(), clamp_map_layer_weight(*weight));
@@ -67,7 +68,7 @@ async fn layer_stroke_scale_json(cfg: &Gis2dConfig) -> String {
 
 /// 🌐️ Rewrites the tile templates to absolute URLs when the host publishes an asset base (the
 /// `/osm` + `/vt` tile-proxy routes this plugin declares in its Cargo metadata).
-async fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
+fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
     let Ok(base) = std::env::var("SEMIO_ASSET_BASE_URL") else {
         return;
     };
@@ -76,7 +77,7 @@ async fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
     scene.vector_tile_url_template = format!("{base}/vt/{{z}}/{{x}}/{{y}}.pbf");
 }
 
-pub fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiNode {
+pub fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiAssemblyResult<BuiltNode> {
     let mut scene = TiledMapScene::base(gis_map_descriptor_json(document), cfg.camera_json.clone());
     scene.render_mode = cfg.render_mode.clone();
     scene.vector_style = cfg.vector_style.clone();
@@ -89,7 +90,7 @@ pub fn render(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> UiNode {
     // `MapHost::sync_interaction` follow-up), so `TiledMapScene::base`'s own empty-selection defaults
     // are left as-is here rather than sourced from this deleted config state.
     apply_gis_map_tile_base_url(&mut scene);
-    build_tiled_map_scene(GIS2D_PLAY_SURFACE, GIS2D_PLAY_APP_ID, scene)
+    scene_surface(GIS2D_PLAY_SURFACE, ContractSurfaceKind::TiledMap, &scene)
 }
 //#endregion 🔖️Render
 

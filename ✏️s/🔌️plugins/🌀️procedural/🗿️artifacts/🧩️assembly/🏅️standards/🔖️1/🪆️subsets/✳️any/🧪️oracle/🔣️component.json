@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution. `AssemblyMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "assembly-mutation-semantics",
+      "capabilities": ["assembly-1-mutate"],
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `AssemblyMutation` — a wave-function-collapse assembly graph whose vocabulary joins a slot lattice, an adjacency rule set and a per-module weight table under one `seed`, and whose diff is the only one in this plugin family that SPLITS every collection into a `<name>Removed`/`<name>Upserted` pair rather than a single delta record. That is this subset's own specification, not a fact an external solver or graph library could confirm or refute. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability (a kind must move the compared projection) and footprint completeness, which for this subset must resolve a snapshot field to EITHER of its two diff halves before it can decide anything.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "assembly-1-any",
+      "capability": "assembly-1-mutate",
+      "kinds": [
+        "create-slot",
+        "delete-slot",
+        "create-rule",
+        "delete-rule",
+        "change-weight",
+        "remove-weight",
+        "connect-slots",
+        "disconnect-slots",
+        "change-seed"
+      ]
+    }
+  ]
+}

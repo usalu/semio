@@ -6,6 +6,7 @@ use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, StepContext
 use std::collections::VecDeque;
 use std::mem::size_of;
 use std::rc::Rc;
+use std::sync::atomic::{AtomicPtr, AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 
 //#region 📊️Credits
@@ -177,9 +178,95 @@ pub struct PreparedRasterPages {
 
 pub const PREPARED_ATLAS_PAGE_BYTES: usize = 16 * 1024;
 pub const PREPARED_ATLAS_PAGE_CAPACITY: usize = 2_048;
-const PREPARED_ATLAS_PROCESS_BYTES: usize = 64 * 1024 * 1024;
+const PREPARED_ATLAS_PROCESS_ITEMS: usize = 64;
+const PREPARED_ATLAS_PROCESS_PAGES: usize = 4_096;
+const PREPARED_ATLAS_PROCESS_PAYLOAD_BYTES: usize = 64 * 1024 * 1024;
+const PREPARED_ATLAS_PROCESS_BACKING_BYTES: usize = 96 * 1024 * 1024;
+const PREPARED_ATLAS_ABANDONMENT_SLOTS: usize = PREPARED_ATLAS_PROCESS_ITEMS;
 
-static PREPARED_ATLAS_PROCESS_LEDGER: Mutex<usize> = Mutex::new(0);
+const PREPARED_ATLAS_ITEM_SHIFT: u32 = 0;
+const PREPARED_ATLAS_PAGE_SHIFT: u32 = 7;
+const PREPARED_ATLAS_PAYLOAD_SHIFT: u32 = 20;
+const PREPARED_ATLAS_BACKING_SHIFT: u32 = 33;
+const PREPARED_ATLAS_ITEM_MASK: u64 = 0x7f;
+const PREPARED_ATLAS_PAGE_MASK: u64 = 0x1fff;
+const PREPARED_ATLAS_PAYLOAD_MASK: u64 = 0x1fff;
+const PREPARED_ATLAS_BACKING_MASK: u64 = 0x1fff;
+static PREPARED_ATLAS_PROCESS_PERMITS: AtomicU64 = AtomicU64::new(0);
+static PREPARED_ATLAS_GENERATION: AtomicU64 = AtomicU64::new(1);
+static PREPARED_ATLAS_ABANDONMENT_STATE: [AtomicU8; PREPARED_ATLAS_ABANDONMENT_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_ATLAS_ABANDONMENT_SLOTS];
+static PREPARED_ATLAS_ABANDONMENT_OWNER: [AtomicPtr<PreparedAtlasAbandonment>; PREPARED_ATLAS_ABANDONMENT_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_ATLAS_ABANDONMENT_SLOTS];
+
+fn prepared_atlas_field(value: u64, shift: u32, mask: u64) -> usize {
+    ((value >> shift) & mask) as usize
+}
+
+fn prepared_atlas_units(bytes: usize) -> Option<usize> {
+    bytes.checked_add(PREPARED_ATLAS_PAGE_BYTES.checked_sub(1)?)?.checked_div(PREPARED_ATLAS_PAGE_BYTES)
+}
+
+fn prepared_atlas_delta(items: usize, pages: usize, payload_units: usize, backing_units: usize) -> Option<u64> {
+    let items = u64::try_from(items).ok()?;
+    let pages = u64::try_from(pages).ok()?;
+    let payload = u64::try_from(payload_units).ok()?;
+    let backing = u64::try_from(backing_units).ok()?;
+    if items > PREPARED_ATLAS_ITEM_MASK || pages > PREPARED_ATLAS_PAGE_MASK || payload > PREPARED_ATLAS_PAYLOAD_MASK || backing > PREPARED_ATLAS_BACKING_MASK {
+        return None;
+    }
+    Some((items << PREPARED_ATLAS_ITEM_SHIFT) | (pages << PREPARED_ATLAS_PAGE_SHIFT) | (payload << PREPARED_ATLAS_PAYLOAD_SHIFT) | (backing << PREPARED_ATLAS_BACKING_SHIFT))
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct PreparedAtlasPermit {
+    generation: u64,
+    items: usize,
+    pages: usize,
+    payload_bytes: usize,
+    backing_bytes: usize,
+    payload_units: usize,
+    backing_units: usize,
+    release_phase: u8,
+}
+
+impl PreparedAtlasPermit {
+    fn try_reserve(pages: usize, payload_bytes: usize, backing_bytes: usize) -> Option<Self> {
+        let payload_units = prepared_atlas_units(payload_bytes)?;
+        let backing_units = prepared_atlas_units(backing_bytes)?;
+        let current = PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire);
+        let items = prepared_atlas_field(current, PREPARED_ATLAS_ITEM_SHIFT, PREPARED_ATLAS_ITEM_MASK).checked_add(1)?;
+        let reserved_pages = prepared_atlas_field(current, PREPARED_ATLAS_PAGE_SHIFT, PREPARED_ATLAS_PAGE_MASK).checked_add(pages)?;
+        let reserved_payload = prepared_atlas_field(current, PREPARED_ATLAS_PAYLOAD_SHIFT, PREPARED_ATLAS_PAYLOAD_MASK).checked_add(payload_units)?;
+        let reserved_backing = prepared_atlas_field(current, PREPARED_ATLAS_BACKING_SHIFT, PREPARED_ATLAS_BACKING_MASK).checked_add(backing_units)?;
+        let payload_limit = prepared_atlas_units(PREPARED_ATLAS_PROCESS_PAYLOAD_BYTES)?;
+        let backing_limit = prepared_atlas_units(PREPARED_ATLAS_PROCESS_BACKING_BYTES)?;
+        if items > PREPARED_ATLAS_PROCESS_ITEMS || reserved_pages > PREPARED_ATLAS_PROCESS_PAGES || reserved_payload > payload_limit || reserved_backing > backing_limit {
+            return None;
+        }
+        let delta = prepared_atlas_delta(1, pages, payload_units, backing_units)?;
+        let next = current.checked_add(delta)?;
+        PREPARED_ATLAS_PROCESS_PERMITS.compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire).ok()?;
+        let generation = PREPARED_ATLAS_GENERATION.fetch_add(1, Ordering::AcqRel).max(1);
+        Some(Self { generation, items: 1, pages, payload_bytes, backing_bytes, payload_units, backing_units, release_phase: 0 })
+    }
+
+    fn release_step(&mut self) -> bool {
+        let delta = match self.release_phase {
+            0 => prepared_atlas_delta(0, 0, 0, self.backing_units),
+            1 => prepared_atlas_delta(0, 0, self.payload_units, 0),
+            2 => prepared_atlas_delta(0, self.pages, 0, 0),
+            3 => prepared_atlas_delta(self.items, 0, 0, 0),
+            _ => return true,
+        };
+        let Some(delta) = delta else { return false };
+        let current = PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire);
+        let Some(next) = current.checked_sub(delta) else { return false };
+        if PREPARED_ATLAS_PROCESS_PERMITS.compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return false;
+        }
+        self.release_phase = self.release_phase.saturating_add(1);
+        self.release_phase > 3
+    }
+}
 
 #[derive(Debug, PartialEq, Eq)]
 struct PreparedAtlasPage {
@@ -191,15 +278,44 @@ struct PreparedAtlasPage {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct PreparedAtlasPages {
-    slots: Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>,
+    slots: Option<Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>>,
     len: usize,
     width: u32,
     height: u32,
     channels: u8,
     byte_len: usize,
     rows_per_page: u32,
-    reserved_bytes: usize,
-    credit_released: bool,
+    permit: Option<PreparedAtlasPermit>,
+    abandonment_slot: u8,
+}
+
+struct PreparedAtlasAbandonment {
+    slots: Option<Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>>,
+    len: usize,
+    permit: Option<PreparedAtlasPermit>,
+}
+
+impl PreparedAtlasAbandonment {
+    fn close_step(&mut self) -> bool {
+        if let Some(index) = self.len.checked_sub(1) {
+            self.len = index;
+            if let Some(slots) = self.slots.as_mut() {
+                slots[index] = None;
+            }
+            return false;
+        }
+        if self.slots.take().is_some() {
+            return false;
+        }
+        if let Some(permit) = self.permit.as_mut() {
+            if !permit.release_step() {
+                return false;
+            }
+            self.permit = None;
+            return false;
+        }
+        true
+    }
 }
 
 impl PreparedAtlasPages {
@@ -212,17 +328,20 @@ impl PreparedAtlasPages {
         let rows_per_page = u32::try_from(PREPARED_ATLAS_PAGE_BYTES / row_bytes).map_err(|_| "atlas rows per page exhausted")?;
         let rows_per_page_usize = usize::try_from(rows_per_page).map_err(|_| "atlas rows per page exhausted")?;
         let pages = usize::try_from(height).ok().and_then(|height| height.checked_add(rows_per_page_usize.checked_sub(1)?)).map(|rows| rows / rows_per_page_usize).ok_or("atlas page count exhausted")?;
-        if pages > PREPARED_ATLAS_PAGE_CAPACITY || byte_len > PREPARED_ATLAS_PROCESS_BYTES {
+        if pages > PREPARED_ATLAS_PAGE_CAPACITY || byte_len > PREPARED_ATLAS_PROCESS_PAYLOAD_BYTES {
             return Err("atlas page or byte credits exceeded");
         }
-        let mut ledger = PREPARED_ATLAS_PROCESS_LEDGER.lock().map_err(|_| "atlas process ledger faulted")?;
-        let next = ledger.checked_add(byte_len).ok_or("atlas process byte credits exhausted")?;
-        if next > PREPARED_ATLAS_PROCESS_BYTES {
-            return Err("atlas process byte credits exceeded");
-        }
-        *ledger = next;
-        drop(ledger);
-        Ok(Self { slots: Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY]), len: 0, width, height, channels, byte_len, rows_per_page, reserved_bytes: byte_len, credit_released: false })
+        let slot_backing = PREPARED_ATLAS_PAGE_CAPACITY.checked_mul(size_of::<Option<PreparedAtlasPage>>()).ok_or("atlas slot backing credits exhausted")?;
+        let page_backing = pages.checked_mul(PREPARED_ATLAS_PAGE_BYTES).ok_or("atlas page backing credits exhausted")?;
+        let backing_bytes = slot_backing.checked_add(page_backing).ok_or("atlas aggregate backing credits exhausted")?;
+        let Some(abandonment_slot) = PREPARED_ATLAS_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_ok()) else {
+            return Err("atlas abandonment owner credits exhausted");
+        };
+        let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes) else {
+            PREPARED_ATLAS_ABANDONMENT_STATE[abandonment_slot].store(0, Ordering::Release);
+            return Err("atlas process permit credits exhausted");
+        };
+        Ok(Self { slots: Some(Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY])), len: 0, width, height, channels, byte_len, rows_per_page, permit: Some(permit), abandonment_slot: abandonment_slot as u8 })
     }
 
     pub fn push_page(&mut self, source: &[u8], start_row: u32) -> Result<bool, &'static str> {
@@ -237,13 +356,14 @@ impl PreparedAtlasPages {
         let slice = source.get(start..start.checked_add(bytes).ok_or("atlas page end exhausted")?).ok_or("atlas page source was truncated")?;
         let mut page = Box::new([0; PREPARED_ATLAS_PAGE_BYTES]);
         page[..bytes].copy_from_slice(slice);
-        self.slots[self.len] = Some(PreparedAtlasPage { bytes: page, len: u16::try_from(bytes).map_err(|_| "atlas page length exhausted")?, start_row, rows });
+        let slots = self.slots.as_mut().ok_or("atlas slot backing was released")?;
+        slots[self.len] = Some(PreparedAtlasPage { bytes: page, len: u16::try_from(bytes).map_err(|_| "atlas page length exhausted")?, start_row, rows });
         self.len += 1;
         Ok(start_row.checked_add(rows) == Some(self.height))
     }
 
     pub fn page(&self, index: usize) -> Option<(&[u8], u32, u32)> {
-        let page = self.slots.get(index)?.as_ref()?;
+        let page = self.slots.as_ref()?.get(index)?.as_ref()?;
         Some((&page.bytes[..usize::from(page.len)], page.start_row, page.rows))
     }
 
@@ -252,7 +372,7 @@ impl PreparedAtlasPages {
     }
 
     pub fn next_row(&self) -> u32 {
-        self.len.checked_sub(1).and_then(|index| self.slots[index].as_ref()).and_then(|page| page.start_row.checked_add(page.rows)).unwrap_or(0)
+        self.len.checked_sub(1).and_then(|index| self.slots.as_ref()?.get(index)?.as_ref()).and_then(|page| page.start_row.checked_add(page.rows)).unwrap_or(0)
     }
 
     pub fn width(&self) -> u32 {
@@ -270,22 +390,66 @@ impl PreparedAtlasPages {
     pub fn close_step(&mut self) -> bool {
         if let Some(index) = self.len.checked_sub(1) {
             self.len = index;
-            self.slots[index] = None;
+            if let Some(slots) = self.slots.as_mut() {
+                slots[index] = None;
+            }
             return false;
         }
-        if !self.credit_released {
-            let Ok(mut ledger) = PREPARED_ATLAS_PROCESS_LEDGER.lock() else { return false };
-            let Some(next) = ledger.checked_sub(self.reserved_bytes) else { return false };
-            *ledger = next;
-            self.reserved_bytes = 0;
-            self.credit_released = true;
+        if self.slots.take().is_some() {
+            return false;
+        }
+        if let Some(permit) = self.permit.as_mut() {
+            if !permit.release_step() {
+                return false;
+            }
+            self.permit = None;
+            return false;
+        }
+        let slot = usize::from(self.abandonment_slot);
+        if PREPARED_ATLAS_ABANDONMENT_STATE.get(slot).is_some_and(|state| state.compare_exchange(1, 0, Ordering::AcqRel, Ordering::Acquire).is_ok()) {
+            self.abandonment_slot = u8::MAX;
             return false;
         }
         true
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && self.slots.iter().all(Option::is_none) && self.reserved_bytes == 0 && self.credit_released
+        self.len == 0 && self.slots.is_none() && self.permit.is_none() && self.abandonment_slot == u8::MAX
+    }
+
+    /// 🧹 Advances one page, backing owner, or permit scalar from one abandoned atlas.
+    pub fn close_abandoned_step() -> bool {
+        let Some(index) = PREPARED_ATLAS_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return true };
+        let pointer = PREPARED_ATLAS_ABANDONMENT_OWNER[index].swap(std::ptr::null_mut(), Ordering::AcqRel);
+        if pointer.is_null() {
+            PREPARED_ATLAS_ABANDONMENT_STATE[index].store(2, Ordering::Release);
+            return false;
+        }
+        let mut owner = unsafe { Box::from_raw(pointer) };
+        if owner.close_step() {
+            PREPARED_ATLAS_ABANDONMENT_STATE[index].store(0, Ordering::Release);
+        } else {
+            PREPARED_ATLAS_ABANDONMENT_OWNER[index].store(Box::into_raw(owner), Ordering::Release);
+            PREPARED_ATLAS_ABANDONMENT_STATE[index].store(2, Ordering::Release);
+        }
+        false
+    }
+}
+
+impl Drop for PreparedAtlasPages {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() {
+            return;
+        }
+        let slot = usize::from(self.abandonment_slot);
+        let Some(state) = PREPARED_ATLAS_ABANDONMENT_STATE.get(slot) else { return };
+        if state.load(Ordering::Acquire) != 1 {
+            return;
+        }
+        let owner = Box::new(PreparedAtlasAbandonment { slots: self.slots.take(), len: std::mem::take(&mut self.len), permit: self.permit.take() });
+        PREPARED_ATLAS_ABANDONMENT_OWNER[slot].store(Box::into_raw(owner), Ordering::Release);
+        state.store(2, Ordering::Release);
+        self.abandonment_slot = u8::MAX;
     }
 }
 
@@ -1211,36 +1375,20 @@ impl PreparedRenderJob {
 
     fn next_after_opaque(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
         let value = &draw.scene_passes[pass];
-        if !value.line_draws.is_empty() {
-            DrawMeasureCursor::PassLine { pass, draw: 0 }
-        } else {
-            Self::next_after_lines(draw, pass)
-        }
+        if !value.line_draws.is_empty() { DrawMeasureCursor::PassLine { pass, draw: 0 } } else { Self::next_after_lines(draw, pass) }
     }
 
     fn next_after_lines(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
         let value = &draw.scene_passes[pass];
-        if !value.translucent_draws.is_empty() {
-            DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: true }
-        } else {
-            Self::next_after_translucent(draw, pass)
-        }
+        if !value.translucent_draws.is_empty() { DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: true } } else { Self::next_after_translucent(draw, pass) }
     }
 
     fn next_after_translucent(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
-        if !draw.scene_passes[pass].textured_draws.is_empty() {
-            DrawMeasureCursor::PassTextured { pass, draw: 0 }
-        } else {
-            DrawMeasureCursor::PassHeader(pass + 1)
-        }
+        if !draw.scene_passes[pass].textured_draws.is_empty() { DrawMeasureCursor::PassTextured { pass, draw: 0 } } else { DrawMeasureCursor::PassHeader(pass + 1) }
     }
 
     fn next_textured_draw(draw: &DrawList, pass: usize, draw_index: usize) -> DrawMeasureCursor {
-        if draw_index + 1 < draw.scene_passes[pass].textured_draws.len() {
-            DrawMeasureCursor::PassTextured { pass, draw: draw_index + 1 }
-        } else {
-            DrawMeasureCursor::PassHeader(pass + 1)
-        }
+        if draw_index + 1 < draw.scene_passes[pass].textured_draws.len() { DrawMeasureCursor::PassTextured { pass, draw: draw_index + 1 } } else { DrawMeasureCursor::PassHeader(pass + 1) }
     }
 
     fn measure_next(&mut self) -> Option<PreparedRenderUsage> {
@@ -1422,11 +1570,7 @@ impl InteractiveJob for PreparedRenderJob {
             self.terminal_identity = None;
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        if PreparedRenderJob::close_step(self) {
-            semio_framework_job::InteractiveJobCloseStep::Complete
-        } else {
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
-        }
+        if PreparedRenderJob::close_step(self) { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 } }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1628,7 +1772,20 @@ impl OffscreenPresentToken {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveStage, OperationId, StepBudget};
+    use semio_framework_job::{Generation, InteractiveStage, OperationId, StepBudget, drive_step, root_cancel_token};
+
+    static ATLAS_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    fn atlas_test_guard() -> std::sync::MutexGuard<'static, ()> {
+        match ATLAS_TEST_LOCK.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => poisoned.into_inner(),
+        }
+    }
+
+    fn drain_abandoned_atlases() {
+        while !PreparedAtlasPages::close_abandoned_step() {}
+    }
 
     fn now_ms() -> u64 {
         1
@@ -1706,6 +1863,8 @@ mod tests {
 
     #[test]
     fn atlas_page_cap_plus_one_faults_before_process_credit_transfer() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_atlases();
         let height = 33_554_433_u32;
         let byte_len = 33_554_433_usize;
         assert!(matches!(PreparedAtlasPages::try_new(1, height, 1, byte_len), Err("atlas page or byte credits exceeded")));
@@ -1713,13 +1872,18 @@ mod tests {
             Ok(admitted) => admitted,
             Err(fault) => panic!("fixed atlas admission faulted: {fault}"),
         };
-        assert!(!admitted.close_step());
-        assert!(admitted.close_step());
+        let mut turns = 0;
+        while !admitted.close_step() {
+            turns += 1;
+        }
+        assert!(turns >= 6, "fixed backing and four permit scalars close independently");
         assert!(admitted.terminal_is_empty());
     }
 
     #[test]
     fn atlas_close_releases_one_fixed_page_then_its_exact_credit() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_atlases();
         let source = [9_u8; 32];
         let mut pages = match PreparedAtlasPages::try_new(4, 2, 4, source.len()) {
             Ok(pages) => pages,
@@ -1730,9 +1894,105 @@ mod tests {
         assert!(!pages.close_step());
         assert_eq!(pages.len(), 0);
         assert!(!pages.terminal_is_empty());
-        assert!(!pages.close_step());
-        assert!(pages.close_step());
+        let mut turns = 0;
+        while !pages.close_step() {
+            turns += 1;
+        }
+        assert!(turns >= 6, "slot backing and permit fields each consume a distinct grant");
         assert!(pages.terminal_is_empty());
+    }
+
+    #[test]
+    fn atlas_process_item_max_plus_one_is_nonblocking_and_recovers_every_permit() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_atlases();
+        let mut owners: [Option<PreparedAtlasPages>; PREPARED_ATLAS_PROCESS_ITEMS] = std::array::from_fn(|_| None);
+        for owner in &mut owners {
+            *owner = Some(match PreparedAtlasPages::try_new(1, 1, 1, 1) {
+                Ok(owner) => owner,
+                Err(fault) => panic!("one exact process item: {fault}"),
+            });
+        }
+        assert!(matches!(PreparedAtlasPages::try_new(1, 1, 1, 1), Err("atlas process permit credits exhausted")));
+        for owner in owners.iter_mut().filter_map(Option::as_mut) {
+            while !owner.close_step() {}
+            assert!(owner.terminal_is_empty());
+        }
+        assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
+    }
+
+    #[test]
+    fn abandoned_atlas_schedules_the_same_incremental_close_authority() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_atlases();
+        let mut owner = match PreparedAtlasPages::try_new(4, 2, 4, 32) {
+            Ok(owner) => owner,
+            Err(fault) => panic!("abandonment owner: {fault}"),
+        };
+        assert!(owner.push_page(&[7; 32], 0).is_ok());
+        drop(owner);
+        let mut turns = 0;
+        while !PreparedAtlasPages::close_abandoned_step() {
+            turns += 1;
+            assert!(turns < 16, "one page, backing owner, and four permit fields must converge");
+        }
+        assert!(turns >= 7);
+        assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
+    }
+
+    #[test]
+    fn interrupted_atlas_close_rejoins_the_same_abandonment_authority() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_atlases();
+        let source = vec![3_u8; PREPARED_ATLAS_PAGE_BYTES + 1];
+        let mut owner = match PreparedAtlasPages::try_new(1, u32::try_from(source.len()).unwrap_or(u32::MAX), 1, source.len()) {
+            Ok(owner) => owner,
+            Err(fault) => panic!("two-page abandonment owner: {fault}"),
+        };
+        assert!(matches!(owner.push_page(&source, 0), Ok(false)));
+        assert!(matches!(owner.push_page(&source, owner.next_row()), Ok(true)));
+        assert!(!owner.close_step());
+        assert_eq!(owner.len(), 1);
+        drop(owner);
+        let mut turns = 0;
+        while !PreparedAtlasPages::close_abandoned_step() {
+            turns += 1;
+            assert!(turns < 16);
+        }
+        assert!(turns >= 7);
+        assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
+    }
+
+    #[test]
+    fn atlas_allocation_refusal_preserves_the_packed_permit_ledger() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_atlases();
+        let before = PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire);
+        assert!(matches!(PreparedAtlasPages::try_new(0, 1, 4, 4), Err("atlas dimensions do not fit fixed page credits")));
+        assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), before);
+    }
+
+    #[test]
+    fn atlas_contended_permit_attempts_are_nonblocking_and_poison_free() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_atlases();
+        let handles = std::array::from_fn::<_, 8, _>(|_| {
+            std::thread::spawn(|| match PreparedAtlasPages::try_new(1, 1, 1, 1) {
+                Ok(mut owner) => {
+                    while !owner.close_step() {}
+                    owner.terminal_is_empty()
+                }
+                Err("atlas process permit credits exhausted") => true,
+                Err(_) => false,
+            })
+        });
+        for handle in handles {
+            assert!(match handle.join() {
+                Ok(closed_or_refused) => closed_or_refused,
+                Err(_) => false,
+            });
+        }
+        assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
     }
 
     #[test]

@@ -60,6 +60,41 @@ pub enum Puzzle2dMutation {
     DisconnectKindCompatibility(DisconnectKindCompatibility),
     ReplaceKindCatalogs(ReplaceKindCatalogs),
 }
+
+//#region 🏷️Kinds
+/// 🏷️ The kebab-case spelling of every [`Puzzle2dMutation`] variant, in declaration order — the exact
+/// vocabulary the `puzzle-2d-1-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// the `mutate-puzzle-2d-1` exhaustive case measures itself against. The framework never parses Rust, so
+/// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against both.
+pub const KINDS: &[&str] = &[
+    "create-node",
+    "delete-node",
+    "move-node",
+    "replace-node-geometry",
+    "change-node-kind",
+    "edit-node-text",
+    "change-node-icon",
+    "scale-node",
+    "change-node-visible",
+    "change-node-locked",
+    "change-node-root",
+    "change-node-anchor",
+    "add-node-handle",
+    "remove-node-handle",
+    "replace-node-handle",
+    "connect-handles",
+    "disconnect-handles",
+    "replace-edge-geometry",
+    "change-edge-kind",
+    "change-edge-tips",
+    "change-edge-visible",
+    "change-edge-locked",
+    "change-manifest-id",
+    "connect-kind-compatibility",
+    "disconnect-kind-compatibility",
+    "replace-kind-catalogs",
+];
+//#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
 pub use super::add_node_handle::mutation::{add_node_handle, AddNodeHandle};
@@ -565,5 +600,24 @@ mod tests {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.duplicate-id"));
     }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🧪️KindsCatalog
+    /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
+    /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed oracle
+    /// manifest's catalog — the framework never parses Rust, so this is the only thing that keeps the
+    /// declared vocabulary and the measured one from drifting apart.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = <Puzzle2dMutation as protocol::SemanticMutation<Puzzle2dSnapshot>>::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Puzzle2dMutation variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 }
 //#endregion 🧪️Tests

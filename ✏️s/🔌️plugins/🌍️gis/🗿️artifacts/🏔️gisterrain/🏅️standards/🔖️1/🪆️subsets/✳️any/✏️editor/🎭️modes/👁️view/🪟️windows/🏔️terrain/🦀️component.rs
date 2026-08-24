@@ -13,7 +13,8 @@ use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use crate::editor::gis3d::config::Gis3dConfig;
 use crate::editor::gis3d::GIS3D_PLAY_APP_ID;
 use framework_surface::terrain::projection;
-use semio_framework_plugin::{build_world_3d_scene, world3d_scene_extended, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, world3d_scene_extended, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -47,7 +48,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 📍️ GIS pins are emitted as plain `World3d` instances with no matching `meshesJson` entry —
 /// `WorldInstancesLayer`'s existing missing-mesh fallback renders a small colored box, so
 /// selection/hover/context-menu all work for free without any new scene-schema surface.
-async fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
+fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     let instances: Vec<Value> = descriptor
         .positions
         .iter()
@@ -65,7 +66,7 @@ async fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiNode {
+pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiAssemblyResult<BuiltNode> {
     let descriptor = parse_descriptor(document);
     let mut scene = world3d_scene_extended(
         cfg.camera_json.clone(),
@@ -100,7 +101,7 @@ pub fn render(document: &GisTerrainSnapshot, cfg: &Gis3dConfig) -> UiNode {
         Some("pin".into()),
     );
     scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
-    build_world_3d_scene(GIS3D_PLAY_SURFACE, GIS3D_PLAY_APP_ID, scene)
+    scene_surface(GIS3D_PLAY_SURFACE, ContractSurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 
