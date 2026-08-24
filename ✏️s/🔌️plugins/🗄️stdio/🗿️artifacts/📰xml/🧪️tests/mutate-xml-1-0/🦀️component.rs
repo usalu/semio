@@ -72,7 +72,7 @@ fn projection_divergence(restored: &Json, original: &Json) -> Option<String> {
 /// `quick-xml` applies the kind and then its own computed inverse, and the restored document's
 /// independent projection must equal the REAL original's own. Without this the scenario would only
 /// prove that the reference library did not error, which is not what `@mode-property` claims -- and
-/// with the subject phase blocked, this is the only place the law can be checked today.
+/// the subject handler asserts the same law on its own side, so neither side can be vacuous.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -323,15 +323,28 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
+    /// ↩️ The inverse law, asserted on the SUBJECT side too rather than deferred to the parity
+    /// phase: apply-then-undo must restore this side's OWN reading of the original document's
+    /// projection. Mirrors `super::inverse_oracle` through the same independent `project_xml_1_0`.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = XmlSnapshot::import_utf8(&mutable_input(ctx)?).map_err(|error| format!("import_utf8 failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let spec = ctx.doc_json()?;
+        let mutation = mutation_from_spec(&spec)?;
         let undo = inverse_of(&mutation, &base);
+        let original = project_xml_1_0(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?;
         let mut snapshot = base;
-        apply_xml_mutation(&mut snapshot, &mutation);
-        apply_xml_mutation(&mut snapshot, &undo);
+        let forward = apply_xml_mutation(&mut snapshot, &mutation);
+        let backward = apply_xml_mutation(&mut snapshot, &undo);
         let bytes = snapshot.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
         let projection = project_xml_1_0(&bytes)?;
+        if let Some(divergence) = super::projection_divergence(&projection, &original) {
+            return Err(format!(
+                "inverse law violated: {:?} followed by its own inverse did not restore the original document's projection -- {divergence}; forward outcome messages {:?}, undo outcome messages {:?}",
+                spec.str("kind"),
+                forward.messages(),
+                backward.messages()
+            ));
+        }
         Ok(Outcome::with_raw(bytes, projection))
     }
 
@@ -356,6 +369,9 @@ mod subject {
             return Err(format!("byte pass-through: two byte-different renderings of the SAME document re-encoded differently ({} vs {} bytes)", from_loosened.len(), output.len()));
         }
         let projection = project_xml_1_0(&output)?;
+        if let Some(divergence) = super::projection_divergence(&projection, &project_xml_1_0(&input)?) {
+            return Err(format!("round-trip law violated: decode then re-encode did not preserve the semantic projection -- {divergence}"));
+        }
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Handlers

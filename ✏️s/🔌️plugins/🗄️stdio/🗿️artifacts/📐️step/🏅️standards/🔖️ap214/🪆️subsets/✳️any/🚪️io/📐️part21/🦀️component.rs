@@ -376,6 +376,9 @@ impl Lexer {
         }
         self.pos += 1;
         let mut out = String::new();
+        // 📖 §6.4.2's `alphabet` directive holds until the end of THIS string literal, so the
+        // selected ISO 8859 part is per-literal state rather than per-document.
+        let mut alphabet = 'A';
         loop {
             match self.bump() {
                 None => return Err(Part21Error::UnexpectedEof { at: self.pos, expected: "closing '" }),
@@ -387,31 +390,78 @@ impl Lexer {
                         break;
                     }
                 }
-                Some('\\') => self.read_escape(&mut out)?,
+                Some('\\') => self.read_escape(&mut out, &mut alphabet)?,
                 Some(c) => out.push(c),
             }
         }
         Ok(out)
     }
 
-    /// 🔤️ `\X\HH\` single byte, `\X2\HHHH(HHHH)*\X0\` UCS-2 run — the two Part-21 escape
-    /// forms this codebase's fixtures/writer actually emit; anything else is a typed error.
+    /// 🔤️ ISO 10303-21 §6.4.2's COMPLETE `control_directive` set, plus the STRING production's own
+    /// doubled reverse solidus — called with the opening `\` already consumed.
+    ///
+    /// * `\\` — one literal REVERSE SOLIDUS. The string production escapes it by doubling exactly
+    ///   as it escapes the apostrophe by doubling, and real exporters emit it: IfcOpenShell writes
+    ///   `'\\'` for a one-character backslash name at byte 138718 of the committed
+    ///   `🏗️nakagin-capsule-tower.ifc`. Rejecting it failed EVERY `mutate-ifc-4` subject scenario
+    ///   (22 of 22 executable rows) until this wave, while `ruststep` — the registered independent
+    ///   reader for that same case — read the file without complaint.
+    /// * `\X\HH` — `arbitrary`: EXACTLY two hex digits and no terminator (`arbitrary = "\X\"
+    ///   hex_one`). This lexer used to demand a trailing `\`, which would mis-parse a conformant
+    ///   `\X\41\S\A` by eating the next directive's own opener.
+    /// * `\X2\HHHH…\X0\` / `\X4\HHHHHHHH…\X0\` — `extended2`/`extended4` UCS-2 / UCS-4 runs.
+    /// * `\S\c` — `page`: the character at `code(c) + 128` in the selected alphabet.
+    /// * `\PA\`…`\PI\` — `alphabet`: which ISO 8859 part `\S\` shifts into. Only `A` (ISO 8859-1,
+    ///   the one part where `code + 128` IS the Unicode codepoint) is decoded; `B`..`I` need
+    ///   per-part mapping tables this codec does not carry, and a typed error naming the page is
+    ///   the honest answer rather than a silently wrong character.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn read_escape(&mut self, out: &mut String) -> Result<(), Part21Error> {
+    fn read_escape(&mut self, out: &mut String, alphabet: &mut char) -> Result<(), Part21Error> {
         let start = self.pos - 1;
         match self.bump() {
+            Some('\\') => {
+                out.push('\\');
+                Ok(())
+            }
+            Some('P') => {
+                let selected = match self.bump() {
+                    Some(c @ 'A'..='I') => c,
+                    other => return Err(Part21Error::UnsupportedEscape { at: start, detail: format!("bad \\P alphabet {other:?}") }),
+                };
+                if self.bump() != Some('\\') {
+                    return Err(Part21Error::UnsupportedEscape { at: start, detail: "expected \\ after \\P".into() });
+                }
+                *alphabet = selected;
+                Ok(())
+            }
+            Some('S') => {
+                if self.bump() != Some('\\') {
+                    return Err(Part21Error::UnsupportedEscape { at: start, detail: "expected \\ after \\S".into() });
+                }
+                if *alphabet != 'A' {
+                    return Err(Part21Error::UnsupportedEscape { at: start, detail: format!("\\S\\ on ISO 8859 page {alphabet} needs a mapping table this codec does not carry") });
+                }
+                match self.bump() {
+                    Some(c) if (c as u32) < 0x80 => {
+                        out.push(char::from_u32(c as u32 + 128).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: "bad \\S\\ character".into() })?);
+                        Ok(())
+                    }
+                    other => Err(Part21Error::UnsupportedEscape { at: start, detail: format!("bad \\S\\ character {other:?}") }),
+                }
+            }
             Some('X') => match self.peek() {
-                Some('2') => {
+                Some(width) if width == '2' || width == '4' => {
+                    let group = if width == '2' { 4 } else { 8 };
                     self.pos += 1;
                     if self.bump() != Some('\\') {
-                        return Err(Part21Error::UnsupportedEscape { at: start, detail: "expected \\ after \\X2".into() });
+                        return Err(Part21Error::UnsupportedEscape { at: start, detail: format!("expected \\ after \\X{width}") });
                     }
                     loop {
                         let mut hex = String::new();
-                        for _ in 0..4 {
+                        for _ in 0..group {
                             match self.bump() {
                                 Some(c) if c.is_ascii_hexdigit() => hex.push(c),
-                                _ => return Err(Part21Error::UnsupportedEscape { at: start, detail: "bad \\X2\\ hex group".into() }),
+                                _ => return Err(Part21Error::UnsupportedEscape { at: start, detail: format!("bad \\X{width}\\ hex group") }),
                             }
                         }
                         let code = u32::from_str_radix(&hex, 16).map_err(|_| Part21Error::UnsupportedEscape { at: start, detail: "bad hex".into() })?;
@@ -437,9 +487,6 @@ impl Lexer {
                             Some(c) if c.is_ascii_hexdigit() => hex.push(c),
                             _ => return Err(Part21Error::UnsupportedEscape { at: start, detail: "bad \\X\\ hex".into() }),
                         }
-                    }
-                    if self.bump() != Some('\\') {
-                        return Err(Part21Error::UnsupportedEscape { at: start, detail: "expected trailing \\ after \\X..".into() });
                     }
                     let code = u32::from_str_radix(&hex, 16).map_err(|_| Part21Error::UnsupportedEscape { at: start, detail: "bad hex".into() })?;
                     let ch = char::from_u32(code).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: format!("bad byte {code}") })?;
@@ -956,6 +1003,39 @@ mod tests {
         let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('\\X2\\4E2D6587\\X0\\');\nENDSEC;\nEND-ISO-10303-21;\n";
         let doc = parse_part21(text).expect("parse");
         assert_eq!(doc.instance(1).unwrap().entity("LABEL").unwrap()[0].as_str(), Some("中文"));
+    }
+
+    /// 🧪️ ISO 10303-21 §6.4.2's remaining control directives, each read back from a literal
+    /// spelled the way the standard spells it. The `\\` row is the one the real committed
+    /// IfcOpenShell export carries (`'\\'` at byte 138718 of `🏗️nakagin-capsule-tower.ifc`) and the
+    /// one this lexer used to reject outright, failing all 22 executable `mutate-ifc-4` subject
+    /// scenarios while `ruststep` read the same file without complaint. `\X\` carries NO
+    /// terminator per the grammar's own `arbitrary = "\X\" hex_one`, which is why the `\X\41\S\A`
+    /// row matters: demanding one would swallow the next directive's opener.
+    #[test]
+    fn every_iso_10303_21_string_directive_is_read() {
+        let label = |literal: &str| {
+            let text = format!("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('{literal}');\nENDSEC;\nEND-ISO-10303-21;\n");
+            parse_part21(&text).unwrap_or_else(|e| panic!("parse {literal:?}: {e}")).instance(1).unwrap().entity("LABEL").unwrap()[0].as_str().unwrap().to_string()
+        };
+        assert_eq!(label(r"\\"), "\\", "the doubled reverse solidus is ONE literal backslash");
+        assert_eq!(label(r"a\\b"), "a\\b");
+        assert_eq!(label(r"\X\41"), "A", "\\X\\ takes exactly two hex digits and no terminator");
+        assert_eq!(label(r"\X\41\S\A"), "A\u{00C1}", "\\X\\ must not swallow the next directive's opener");
+        assert_eq!(label(r"\S\A"), "\u{00C1}", "\\S\\ shifts the character by 128 on the default alphabet");
+        assert_eq!(label(r"\PA\\S\A"), "\u{00C1}", "\\PA\\ selects ISO 8859-1, which is the default");
+        assert_eq!(label(r"\X4\0001F600\X0\"), "\u{1F600}", "\\X4\\ reads UCS-4 groups");
+        assert_eq!(label(r"\X2\4E2D6587\X0\"), "中文");
+    }
+
+    /// 🧪️ A page this codec cannot map is a TYPED ERROR naming the page, never a wrong character:
+    /// ISO 8859-2..-9 do not place `code + 128` at the Unicode codepoint the way ISO 8859-1 does,
+    /// and guessing would corrupt a real name silently.
+    #[test]
+    fn an_unmappable_iso_8859_page_is_refused_rather_than_guessed() {
+        let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('\\PB\\\\S\\A');\nENDSEC;\nEND-ISO-10303-21;\n";
+        let error = parse_part21(text).expect_err("page B must not be decoded");
+        assert!(error.to_string().contains("ISO 8859 page B"), "the error must name the page it refused: {error}");
     }
 
     #[semio_framework_async_macros::async_test]

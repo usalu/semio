@@ -1676,8 +1676,10 @@ fn as_box(v: &PdfObject) -> Option<[f64; 4]> {
 
 /// 🌳️ Walks `/Root -> /Pages -> /Kids`, applying inherited `/Resources`/`/MediaBox`/`/CropBox`/
 /// `/Rotate` down to `/Page` leaves (requirement #5), extracting each leaf's text (requirement
-/// #6). Cycle-guarded — malformed files sometimes have self-referential kids.
-fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>, inherited: &Inherited, visited: &mut HashSet<u32>, out: &mut Vec<PdfPage>) {
+/// #6). Cycle-guarded — malformed files sometimes have self-referential kids. Each leaf is
+/// reported WITH the indirect reference it was read from, because the export side has to write
+/// the authored lanes back onto exactly those objects (@see [`retained_lanes`]).
+fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>, inherited: &Inherited, visited: &mut HashSet<u32>, out: &mut Vec<(ObjRef, PdfPage)>) {
     if !visited.insert(node_ref.num) {
         return;
     }
@@ -1738,7 +1740,7 @@ fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfOb
         }
         text = extract_text(&combined, &resources, resolve);
     }
-    out.push(PdfPage { media_box, crop_box: here.crop_box, rotate: here.rotate, text });
+    out.push((node_ref, PdfPage { media_box, crop_box: here.crop_box, rotate: here.rotate, text }));
 }
 //#endregion 🔖️PageTree
 
@@ -1773,7 +1775,7 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
     let mut resolve = |num: u32| resolver.resolve(num);
 
     let root_ref = xref.trailer.iter().find(|e| e.key == "Root").and_then(|e| e.value.as_ref());
-    let mut pages = Vec::new();
+    let mut leaves = Vec::new();
     if let Some(root_ref) = root_ref {
         if let Some(root) = resolve(root_ref.num) {
             if root.dict_get("Encrypt").is_some() {
@@ -1781,10 +1783,11 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
             }
             if let Some(pages_ref) = root.dict_get("Pages").and_then(|v| v.as_ref()) {
                 let mut visited = HashSet::new();
-                walk_page_tree(pages_ref, &mut resolve, &Inherited::default(), &mut visited, &mut pages);
+                walk_page_tree(pages_ref, &mut resolve, &Inherited::default(), &mut visited, &mut leaves);
             }
         }
     }
+    let pages = leaves.into_iter().map(|(_, page)| page).collect();
 
     let info = xref
         .trailer
@@ -1864,16 +1867,51 @@ fn pdf_text_string(s: &str) -> String {
     }
 }
 
-fn build_content_ops(text: &str) -> String {
+/// 🔤️ Whether `text` can be shown with a single-byte simple font. Anything outside printable
+/// ASCII (newlines aside) needs the two-byte `Identity-H` route and its `ToUnicode` CMap; anything
+/// inside it is written as a plain literal string, which is what every reader — including a
+/// deliberately naive one that never consults `ToUnicode` — recovers the text from.
+fn simple_shown_text(text: &str) -> bool {
+    text.chars().all(|character| character == '\n' || (character.is_ascii() && !character.is_control()))
+}
+
+/// 🔤️ One `(…)` literal string operand, escaping the three characters ISO 32000-1 §7.3.4.2 gives
+/// special meaning to.
+fn literal_shown_string(line: &str) -> String {
+    let mut out = String::from("(");
+    for character in line.chars() {
+        if matches!(character, '(' | ')' | '\\') {
+            out.push('\\');
+        }
+        out.push(character);
+    }
+    out.push(')');
+    out
+}
+
+/// ✏️️ A text-showing content stream for `text`, drawn with the resource-named font `font`.
+///
+/// Two deliberate shapes, and both matter to a reader that is not this codec: `14 TL` is emitted
+/// only when a following `T*` actually consumes it, and the shown operand is a literal string
+/// whenever [`simple_shown_text`] holds — a hex `Identity-H` operand is only recoverable through
+/// the `ToUnicode` CMap this writer pairs it with, so spending it on plain ASCII would hide the
+/// text from every reader that does not.
+fn build_content_ops(text: &str, font: &str) -> String {
     if text.is_empty() {
         return String::new();
     }
-    let mut ops = String::from("BT\n/F1 12 Tf\n14 TL\n72 740 Td\n");
-    for (i, line) in text.split('\n').enumerate() {
+    let lines: Vec<&str> = text.split('\n').collect();
+    let simple = simple_shown_text(text);
+    let mut ops = format!("BT\n/{font} 12 Tf\n");
+    if lines.len() > 1 {
+        ops.push_str("14 TL\n");
+    }
+    ops.push_str("72 740 Td\n");
+    for (i, line) in lines.iter().enumerate() {
         if i > 0 {
             ops.push_str("T*\n");
         }
-        ops.push_str(&hex_string_utf16(line));
+        ops.push_str(&if simple { literal_shown_string(line) } else { hex_string_utf16(line) });
         ops.push_str(" Tj\n");
     }
     ops.push_str("ET\n");
@@ -2328,7 +2366,327 @@ fn illustrator_object_ids(objects: &[&PdfIndirectObject]) -> HashSet<u32> {
     ids
 }
 
-fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
+//#region 🔖️AuthoredLanes
+/// 📛️ Resource name this writer parks its own font under. Deliberately not `/F1`: a page whose
+/// content is only APPENDED to keeps its original resource dictionary, and a real document's own
+/// `/F1` must not be shot out from under the operators that still reference it.
+const RECONCILED_FONT_NAME: &str = "SemioText";
+
+/// 🗂️ The page and metadata lanes as the RETAINED object graph currently spells them, read back
+/// through the very page-tree walk `decode_pdf` uses — so "has the authored lane moved away from
+/// the carrier?" is asked with one reader rather than two that could disagree.
+struct RetainedLanes {
+    pages_root: ObjRef,
+    leaves: Vec<ObjRef>,
+    pages: Vec<PdfPage>,
+    info: PdfInfo,
+    info_object: Option<ObjRef>,
+}
+
+fn retained_lanes(snap: &PdfSnapshot) -> Option<RetainedLanes> {
+    let by_number: HashMap<u32, &PdfObject> = snap.objects.iter().map(|object| (object.id.num, &object.value)).collect();
+    let mut resolve = |number: u32| by_number.get(&number).map(|value| (*value).clone());
+    let root_ref = snap.trailer.iter().find(|entry| entry.key == "Root").and_then(|entry| entry.value.as_ref())?;
+    let root = resolve(root_ref.num)?;
+    let pages_root = root.dict_get("Pages").and_then(|value| value.as_ref())?;
+    let mut visited = HashSet::new();
+    let mut walked: Vec<(ObjRef, PdfPage)> = Vec::new();
+    walk_page_tree(pages_root, &mut resolve, &Inherited::default(), &mut visited, &mut walked);
+    let info_object = snap.trailer.iter().find(|entry| entry.key == "Info").and_then(|entry| entry.value.as_ref());
+    let info = info_object
+        .and_then(|reference| resolve(reference.num))
+        .map(|dict| PdfInfo {
+            title: dict.dict_get("Title").and_then(pdf_string_to_text),
+            author: dict.dict_get("Author").and_then(pdf_string_to_text),
+            subject: dict.dict_get("Subject").and_then(pdf_string_to_text),
+            keywords: dict.dict_get("Keywords").and_then(pdf_string_to_text),
+            creator: dict.dict_get("Creator").and_then(pdf_string_to_text),
+            producer: dict.dict_get("Producer").and_then(pdf_string_to_text),
+        })
+        .unwrap_or_default();
+    let (leaves, pages) = walked.into_iter().unzip();
+    Some(RetainedLanes { pages_root, leaves, pages, info, info_object })
+}
+
+/// 🧮️ Which retained page each authored page was carried over from, or `None` where the authored
+/// lane grew a page the carrier never held.
+///
+/// `PdfSnapshot::pages` is index-keyed and carries no back-reference, so the correspondence has to
+/// be recovered rather than read. Three passes, most-certain first: a page still standing at its
+/// own index is itself; a page whose exact value moved is the nearest untaken carrier holding that
+/// value (this is what makes `MovePage`/`RemovePage`/`InsertPage` reorder rather than re-render);
+/// and only then does an authored slot nothing claimed pair with the nearest carrier nothing
+/// claimed, which is the in-place attribute or content edit.
+fn align_pages(authored: &[PdfPage], retained: &[PdfPage]) -> Vec<Option<usize>> {
+    let mut source: Vec<Option<usize>> = vec![None; authored.len()];
+    let mut taken = vec![false; retained.len()];
+    for (index, page) in authored.iter().enumerate() {
+        if retained.get(index).is_some_and(|carried| carried == page) {
+            source[index] = Some(index);
+            taken[index] = true;
+        }
+    }
+    for matching in [true, false] {
+        for (index, page) in authored.iter().enumerate() {
+            if source[index].is_some() {
+                continue;
+            }
+            let candidate = (0..retained.len()).filter(|candidate| !taken[*candidate] && (!matching || &retained[*candidate] == page)).min_by_key(|candidate| (candidate.abs_diff(index), *candidate));
+            if let Some(candidate) = candidate {
+                source[index] = Some(candidate);
+                taken[candidate] = true;
+            }
+        }
+    }
+    source
+}
+
+fn dict_slots(value: &mut PdfObject) -> Option<&mut Vec<PdfDictEntry>> {
+    match value {
+        PdfObject::Dict(entries) => Some(entries),
+        PdfObject::Stream { dict, .. } => Some(dict),
+        _ => None,
+    }
+}
+
+fn dict_put(entries: &mut Vec<PdfDictEntry>, key: &str, value: PdfObject) {
+    match entries.iter_mut().find(|entry| entry.key == key) {
+        Some(entry) => entry.value = value,
+        None => entries.push(PdfDictEntry { key: key.to_string(), value }),
+    }
+}
+
+fn dict_drop(entries: &mut Vec<PdfDictEntry>, key: &str) {
+    entries.retain(|entry| entry.key != key);
+}
+
+fn object_slot(objects: &mut [PdfIndirectObject], id: ObjRef) -> Option<&mut PdfObject> {
+    objects.iter_mut().find(|object| object.id == id).map(|object| &mut object.value)
+}
+
+fn allocate_object(objects: &mut Vec<PdfIndirectObject>, next_number: &mut u32, value: PdfObject) -> ObjRef {
+    let id = ObjRef { num: *next_number, gen: 0 };
+    *next_number += 1;
+    objects.push(PdfIndirectObject { id, value });
+    id
+}
+
+/// 🖋️ The one font every stream this writer regenerates is drawn with, created on first use.
+/// `Helvetica`/`WinAnsiEncoding` while [`simple_shown_text`] holds — a real, renderable simple
+/// font whose single-byte operands any reader recovers text from — and the `Identity-H` pair with
+/// its `ToUnicode` CMap only where the text genuinely needs two-byte codes.
+fn reconciled_font(objects: &mut Vec<PdfIndirectObject>, next_number: &mut u32, font: &mut Option<ObjRef>, text: &str) -> PdfObject {
+    if let Some(id) = font {
+        return PdfObject::Ref(*id);
+    }
+    let id = if simple_shown_text(text) {
+        allocate_object(
+            objects,
+            next_number,
+            PdfObject::Dict(vec![
+                PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Font".into()) },
+                PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("Type1".into()) },
+                PdfDictEntry { key: "BaseFont".into(), value: PdfObject::Name("Helvetica".into()) },
+                PdfDictEntry { key: "Encoding".into(), value: PdfObject::Name("WinAnsiEncoding".into()) },
+            ]),
+        )
+    } else {
+        let cmap = allocate_object(objects, next_number, PdfObject::Stream { dict: Vec::new(), data: TOUNICODE_IDENTITY_CMAP.as_bytes().to_vec(), filters: Vec::new() });
+        allocate_object(
+            objects,
+            next_number,
+            PdfObject::Dict(vec![
+                PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Font".into()) },
+                PdfDictEntry { key: "Subtype".into(), value: PdfObject::Name("Type0".into()) },
+                PdfDictEntry { key: "BaseFont".into(), value: PdfObject::Name("SemioSans-Identity".into()) },
+                PdfDictEntry { key: "Encoding".into(), value: PdfObject::Name("Identity-H".into()) },
+                PdfDictEntry { key: "DescendantFonts".into(), value: PdfObject::Array(Vec::new()) },
+                PdfDictEntry { key: "ToUnicode".into(), value: PdfObject::Ref(cmap) },
+            ]),
+        )
+    };
+    *font = Some(id);
+    PdfObject::Ref(id)
+}
+
+fn decimal_array(values: [f64; 4]) -> PdfObject {
+    PdfObject::Array(values.iter().map(|value| if value.fract() == 0.0 && value.abs() < 1e15 { PdfObject::Int(*value as i64) } else { PdfObject::Real(PdfDecimal::from(*value)) }).collect())
+}
+
+/// 🔤️ A `/Info` text value: plain bytes while the string is ASCII (what a naive reader recovers
+/// verbatim), UTF-16BE with the byte-order mark the moment it is not — the exact pair
+/// [`pdf_string_to_text`] reads back.
+fn info_string(text: &str) -> PdfObject {
+    if text.is_ascii() {
+        return PdfObject::Str(text.as_bytes().to_vec());
+    }
+    let mut bytes = vec![0xFE, 0xFF];
+    for unit in text.encode_utf16() {
+        bytes.extend_from_slice(&unit.to_be_bytes());
+    }
+    PdfObject::Str(bytes)
+}
+
+/// ✍️ Writes the authored `pages`/`info` lanes back onto the retained COS graph, returning the
+/// graph to serialize or `None` when the two already agree.
+///
+/// THE RULE THIS ENCODES. `PdfSnapshot` carries the same document twice: `pages`/`info` are the
+/// resolved authoring lanes every `PdfMutation` in the page and metadata half of the vocabulary
+/// edits, and `objects`/`trailer` are the retained native carrier. Until this function existed the
+/// writer serialized the carrier alone, so `SetPageRotation`, `SetPageMediaBox`, `SetPageCropBox`,
+/// `SetPageContent`, `AppendPageContent`, `InsertPage`, `RemovePage`, `MovePage`, `SetInfo` and
+/// `SetSnapshot` all applied cleanly to the snapshot and then vanished on export — a mutation that
+/// reports as applied and cannot be read back out of the bytes. **The authored lanes are
+/// authoritative on export; the carrier supplies everything the authored lanes do not describe.**
+/// @see ../🧬️schema/📸️snapshot/🦀️component.rs — `PdfPage::text` states the same contract
+/// ("the writer regenerates a fresh content stream from it on encode"). Ticket
+/// 26/08/23/END-TO-END-TESTING-REFACTOR.
+///
+/// Nothing is rewritten that did not move: a page still carrying its own geometry, its own text
+/// and its own position keeps its original content stream, filters and byte layout, which is why
+/// applying a mutation and then its inverse lands back on the untouched document rather than on a
+/// re-rendered lookalike.
+fn reconcile_authored_lanes(snap: &PdfSnapshot) -> Option<PdfSnapshot> {
+    let lanes = retained_lanes(snap)?;
+    if lanes.pages == snap.pages && lanes.info == snap.info {
+        return None;
+    }
+    let mut objects = snap.objects.clone();
+    let mut trailer = snap.trailer.clone();
+    let mut next_number = objects.iter().map(|object| object.id.num).max().unwrap_or(0) + 1;
+    let mut font: Option<ObjRef> = None;
+    let alignment = align_pages(&snap.pages, &lanes.pages);
+    let structural = alignment.len() != lanes.leaves.len() || alignment.iter().enumerate().any(|(index, source)| *source != Some(index));
+    let mut kids: Vec<ObjRef> = Vec::new();
+    for (index, page) in snap.pages.iter().enumerate() {
+        let Some(source) = alignment[index] else {
+            let content = build_content_ops(&page.text, RECONCILED_FONT_NAME);
+            let content_id = allocate_object(&mut objects, &mut next_number, PdfObject::Stream { dict: Vec::new(), data: content.into_bytes(), filters: Vec::new() });
+            let resource = reconciled_font(&mut objects, &mut next_number, &mut font, &page.text);
+            let mut entries = vec![
+                PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Page".into()) },
+                PdfDictEntry { key: "Parent".into(), value: PdfObject::Ref(lanes.pages_root) },
+                PdfDictEntry { key: "MediaBox".into(), value: decimal_array(page.media_box) },
+                PdfDictEntry { key: "Resources".into(), value: PdfObject::Dict(vec![PdfDictEntry { key: "Font".into(), value: PdfObject::Dict(vec![PdfDictEntry { key: RECONCILED_FONT_NAME.into(), value: resource }]) }]) },
+                PdfDictEntry { key: "Contents".into(), value: PdfObject::Ref(content_id) },
+            ];
+            if let Some(crop_box) = page.crop_box {
+                entries.push(PdfDictEntry { key: "CropBox".into(), value: decimal_array(crop_box) });
+            }
+            entries.push(PdfDictEntry { key: "Rotate".into(), value: PdfObject::Int(page.rotate as i64) });
+            kids.push(allocate_object(&mut objects, &mut next_number, PdfObject::Dict(entries)));
+            continue;
+        };
+        let id = lanes.leaves[source];
+        let carried = lanes.pages[source].clone();
+        kids.push(id);
+        if carried.text != page.text {
+            let appended = !carried.text.is_empty() && page.text.starts_with(&carried.text);
+            let shown = if appended { page.text[carried.text.len()..].trim_start_matches('\n').to_string() } else { page.text.clone() };
+            let content = build_content_ops(&shown, RECONCILED_FONT_NAME);
+            let content_id = allocate_object(&mut objects, &mut next_number, PdfObject::Stream { dict: Vec::new(), data: content.into_bytes(), filters: Vec::new() });
+            let resource = reconciled_font(&mut objects, &mut next_number, &mut font, &shown);
+            let prior = object_slot(&mut objects, id).and_then(|value| value.dict_get("Contents").cloned());
+            let Some(entries) = object_slot(&mut objects, id).and_then(dict_slots) else { continue };
+            match prior.filter(|_| appended) {
+                Some(PdfObject::Array(mut items)) => {
+                    items.push(PdfObject::Ref(content_id));
+                    dict_put(entries, "Contents", PdfObject::Array(items));
+                }
+                Some(one) => dict_put(entries, "Contents", PdfObject::Array(vec![one, PdfObject::Ref(content_id)])),
+                None => dict_put(entries, "Contents", PdfObject::Ref(content_id)),
+            }
+            let resources = entries.iter().find(|entry| entry.key == "Resources").map(|entry| entry.value.clone());
+            match (appended, resources) {
+                // 🔗️ An appended stream draws beside operators that still reference the page's own
+                // resources, so the font is MERGED in under a name of this writer's own; a replaced
+                // stream is the only thing left on the page, so it carries its own dictionary.
+                (true, Some(PdfObject::Ref(shared))) => {
+                    if let Some(slots) = object_slot(&mut objects, shared).and_then(dict_slots) {
+                        merge_font_resource(slots, resource);
+                    }
+                }
+                (true, Some(_)) => {
+                    if let Some(slots) = object_slot(&mut objects, id).and_then(dict_slots).and_then(|entries| entries.iter_mut().find(|entry| entry.key == "Resources")).and_then(|entry| dict_slots(&mut entry.value)) {
+                        merge_font_resource(slots, resource);
+                    }
+                }
+                _ => {
+                    if let Some(slots) = object_slot(&mut objects, id).and_then(dict_slots) {
+                        dict_put(slots, "Resources", PdfObject::Dict(vec![PdfDictEntry { key: "Font".into(), value: PdfObject::Dict(vec![PdfDictEntry { key: RECONCILED_FONT_NAME.into(), value: resource }]) }]));
+                    }
+                }
+            }
+        }
+        let Some(entries) = object_slot(&mut objects, id).and_then(dict_slots) else { continue };
+        if structural || carried.media_box != page.media_box {
+            dict_put(entries, "MediaBox", decimal_array(page.media_box));
+        }
+        if structural || carried.crop_box != page.crop_box {
+            match page.crop_box {
+                Some(crop_box) => dict_put(entries, "CropBox", decimal_array(crop_box)),
+                None => dict_drop(entries, "CropBox"),
+            }
+        }
+        if structural || carried.rotate != page.rotate {
+            match page.rotate {
+                0 => dict_drop(entries, "Rotate"),
+                rotate => dict_put(entries, "Rotate", PdfObject::Int(rotate as i64)),
+            }
+        }
+        if structural {
+            dict_put(entries, "Parent", PdfObject::Ref(lanes.pages_root));
+        }
+    }
+
+    if structural {
+        if let Some(entries) = object_slot(&mut objects, lanes.pages_root).and_then(dict_slots) {
+            dict_put(entries, "Kids", PdfObject::Array(kids.iter().map(|kid| PdfObject::Ref(*kid)).collect()));
+            dict_put(entries, "Count", PdfObject::Int(kids.len() as i64));
+        }
+    }
+
+    if lanes.info != snap.info {
+        // 📇️ `PdfInfo` is a whole-record slot (@see its own doc comment), so the retained `/Info`
+        // dictionary is re-stated rather than patched key by key — otherwise clearing a field
+        // through `SetInfo` would leave the old value standing in the file.
+        let mut entries = Vec::new();
+        for (key, value) in [("Title", &snap.info.title), ("Author", &snap.info.author), ("Subject", &snap.info.subject), ("Keywords", &snap.info.keywords), ("Creator", &snap.info.creator), ("Producer", &snap.info.producer)] {
+            if let Some(value) = value {
+                entries.push(PdfDictEntry { key: key.to_string(), value: info_string(value) });
+            }
+        }
+        match lanes.info_object {
+            Some(id) => {
+                if let Some(slot) = object_slot(&mut objects, id) {
+                    *slot = PdfObject::Dict(entries);
+                }
+            }
+            None => {
+                let id = allocate_object(&mut objects, &mut next_number, PdfObject::Dict(entries));
+                dict_put(&mut trailer, "Info", PdfObject::Ref(id));
+            }
+        }
+    }
+
+    Some(PdfSnapshot { objects, trailer, ..snap.clone() })
+}
+
+/// 🔗️ Adds this writer's font to a resource dictionary without disturbing whatever fonts the page
+/// already declares.
+fn merge_font_resource(resources: &mut Vec<PdfDictEntry>, font: PdfObject) {
+    match resources.iter_mut().find(|entry| entry.key == "Font").and_then(|entry| dict_slots(&mut entry.value)) {
+        Some(fonts) => dict_put(fonts, RECONCILED_FONT_NAME, font),
+        None => dict_put(resources, "Font", PdfObject::Dict(vec![PdfDictEntry { key: RECONCILED_FONT_NAME.into(), value: font }])),
+    }
+}
+//#endregion 🔖️AuthoredLanes
+
+/// 📤️ Serializes the retained COS graph exactly as it stands. Reconciliation happens once, in
+/// [`encode_logical_pdf`], and never from here — a writer that re-entered its own reconciler would
+/// have to trust that re-reading a stream it just wrote reproduces the text it was written from,
+/// and that is precisely the round trip `PdfPage`'s single `text` field cannot promise.
+fn serialize_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     let version = if snap.declared_version.is_empty() { "1.7" } else { snap.declared_version.as_str() };
     if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
         return malformed("declared PDF version is not numeric");
@@ -2408,6 +2766,16 @@ fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     Ok(body)
 }
 
+/// 📤️ Writes a document that carries a retained COS graph: the authored `pages`/`info` lanes are
+/// written back onto that graph first (@see [`reconcile_authored_lanes`]), then the graph is
+/// serialized.
+fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
+    match reconcile_authored_lanes(snap) {
+        Some(reconciled) => serialize_logical_pdf(&reconciled),
+        None => serialize_logical_pdf(snap),
+    }
+}
+
 /// 📤️ Deterministically writes the logical COS object graph or an authored page model.
 pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     if !snap.objects.is_empty() {
@@ -2422,7 +2790,12 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     let catalog_num = alloc();
     let pages_num = alloc();
     let needs_font = snap.pages.iter().any(|p| !p.text.is_empty());
-    let (font_num, cmap_num) = if needs_font { (Some(alloc()), Some(alloc())) } else { (None, None) };
+    // 🖋️ Same rule the reconciler follows (@see `reconciled_font`): the two-byte `Identity-H` pair
+    // is only spent where the text genuinely needs it, so an all-ASCII document is written with a
+    // real simple font whose operands any reader can recover the text from.
+    let simple = snap.pages.iter().all(|p| simple_shown_text(&p.text));
+    let font_num = if needs_font { Some(alloc()) } else { None };
+    let cmap_num = if needs_font && !simple { Some(alloc()) } else { None };
     let mut page_nums = Vec::new();
     let mut content_nums = Vec::new();
     for _ in &snap.pages {
@@ -2434,23 +2807,27 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
 
     let mut objects: Vec<(u32, Vec<u8>)> = Vec::new();
 
-    if let (Some(fnum), Some(cnum)) = (font_num, cmap_num) {
+    if let Some(cnum) = cmap_num {
         let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
         let mut cbytes = Vec::new();
         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
         cbytes.extend_from_slice(&compressed);
         cbytes.extend_from_slice(b"\nendstream\nendobj\n");
         objects.push((cnum, cbytes));
-
-        let fbytes = format!("{fnum} 0 obj\n<< /Type /Font /Subtype /Type0 /BaseFont /SemioSans-Identity /Encoding /Identity-H /DescendantFonts [] /ToUnicode {cnum} 0 R >>\nendobj\n").into_bytes();
-        objects.push((fnum, fbytes));
+    }
+    if let Some(fnum) = font_num {
+        let fbytes = match cmap_num {
+            Some(cnum) => format!("{fnum} 0 obj\n<< /Type /Font /Subtype /Type0 /BaseFont /SemioSans-Identity /Encoding /Identity-H /DescendantFonts [] /ToUnicode {cnum} 0 R >>\nendobj\n"),
+            None => format!("{fnum} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n"),
+        };
+        objects.push((fnum, fbytes.into_bytes()));
     }
 
     let mut kids = String::new();
     for (i, page) in snap.pages.iter().enumerate() {
         let pnum = page_nums[i];
         let cnum = content_nums[i];
-        let ops = build_content_ops(&page.text);
+        let ops = build_content_ops(&page.text, "F1");
         let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(ops.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("content compress: {e}")))?;
         let mut cbytes = Vec::new();
         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());

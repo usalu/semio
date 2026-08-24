@@ -379,6 +379,15 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
 /// own declared palette. That is reported as an `Err` — never silently narrowed to the nearest
 /// palette entry, and never silently downgraded to 24-bit behind the caller's back — because
 /// either of those would hide the very loss of fidelity the mutation just introduced.
+///
+/// ⚠️ `SetPixelData` reaches the same state for a DIFFERENT reason — the picture changed, not the
+/// table — and there the refusal is contested: the registered `image` reference implements the same
+/// declared kind by switching the document to 24-bit `BI_RGB`, so `mutate-bmp-v3`'s
+/// `mutate-set-pixel-data` row diverges (oracle `storage: direct`, subject an encode error). The
+/// declared kind (`../🧬️schema/🧬️mutations/🦀️component.rs`: "Replaces the whole decoded
+/// canonical-RGBA `pixels` buffer") says nothing about storage, so BOTH sides are extrapolating and
+/// neither is a codec bug. Specifying what `set-pixel-data` means for an indexed BMP — and making
+/// both sides implement that one meaning — is the fix; nothing here should be relaxed to hide it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
     let (w, h) = (snap.width, snap.height);

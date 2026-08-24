@@ -269,6 +269,15 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// ↩️ This subset's own inverse algebra as a free function, so a caller driving the vocabulary from
+/// outside the crate reaches it without naming `protocol::Mutation` — `protocol` is an
+/// `extern crate` ALIAS private to this plugin's glue (`📦️glue.rs`), so that trait's name simply
+/// does not exist for a dependent. Same shape and same reason as `inverse_png_mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_gif_mutation(mutation: &GifMutation, base: &GifSnapshot) -> Vec<GifMutation> {
+    Mutation::inverse(mutation, base)
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

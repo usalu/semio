@@ -49,12 +49,16 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
 
   ⚠️ TWO things about this case a reader must not take on trust. FIRST: the runner does not execute
   a `@no-oracle-` case's scenarios in the oracle phase at all — `[test] not-exercised … recorded
-  no-oracle decision txt-utf-8-line-structure` — and the subject phase has never run either, so
-  every scenario below has ZERO executed evidence today. What does carry evidence is the reference
-  module's own `#[cfg(test)]` suite (`cargo test --features oracles --lib`), which now exercises the
-  observability law, the inverse law and the carrier law against THIS fixture with THESE exact
-  Examples parameters. That is stated here because "the evidence is discharged by the subject phase"
-  is, today, a claim about a phase that does not run.
+  no-oracle decision txt-utf-8-line-structure`. The SUBJECT phase does run (`bun ./📜️script.ts
+  subject exhaustive --owner 🗄️stdio --case mutate-txt-utf-8` → `executed=24 passed=24`), and it is
+  the only phase that ever will for this case, so it is the only thing standing between these 24
+  scenarios and no evidence at all. That is exactly why every subject handler below asserts its law
+  IN ROLE: until 2026-08-24 the `mutate-<kind>`, `inverse-<kind>` and `identity-round-trip` handlers
+  computed a result and asserted NOTHING about it — 15 of the 24 scenarios were reporting green
+  while proving only that the codec did not panic. `parity=0/0` is the correct and permanent reading
+  for this case; it is not a number waiting to improve. The reference module's own `#[cfg(test)]`
+  suite (`cargo test --features oracles --lib`) exercises the observability, inverse and carrier
+  laws against THIS fixture with THESE exact Examples parameters, independently of the subject.
 
   🔒️ SECOND, and found by asserting the inverse law rather than describing it: `set-trailing-newline`
   did not invert on this document, and the defect was in this subset's own data model. The pair

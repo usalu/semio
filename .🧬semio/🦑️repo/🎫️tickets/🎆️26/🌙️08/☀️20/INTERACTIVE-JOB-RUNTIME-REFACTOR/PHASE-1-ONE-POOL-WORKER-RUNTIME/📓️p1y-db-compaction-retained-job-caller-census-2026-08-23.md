@@ -58,3 +58,15 @@ Permanent fixtures and the verifier must prove:
 - public completion uses check-register-recheck and generation-tagged slots reject ABA-stale callbacks.
 
 Each backend operation may remain one explicit Phase 9 indivisible-latency residual poll. Native, Wasm, browser, stress, and timing validation remains deferred to the serialized build matrix after overlapping Rust source packets are quiescent.
+
+## 2026-08-24 Independent RED Remediation Clarification
+
+The retained production graph owns one shared cancellation atomic and passes that exact identity into every retained index-compaction child together with an eight-millisecond deadline and bounded fuel. A private child token, thirty-second deadline, or 65,536-fuel control is outside the P1y contract.
+
+Snapshot consolidation must publish through one generation-qualified authority. The admitted latest generation is the expected generation; a fixed per-document publication claim serializes observation and write, refuses a mismatched generation before descriptor/page construction or storage write, and returns the exact snapshot-body owner for incremental close. A post-write generation comparison is not revalidation and cannot satisfy P1y.
+
+Lease ownership becomes recoverable immediately after acquire. A panic publishes both the unwound execution owner and the typed lease-release future before releasing the driver claim. Public fault completion is forbidden until the release witness, execution/release quarantine retirement, admission release, and generation-registry drain have all completed exactly once on the shared I/O lane.
+
+Only `Ok(())` from the backend release may consume the retained fence or set the released witness. Every release `Err` keeps fence, resource, holder, storage, admission and registry discoverable, retains the first exact fault, and backs off through a real `WorkerPool::callback_at` before resubmitting the typed release future to `Lane::Io`. A persistent release error blocks public terminal completion; later success incrementally retires the fault before completion.
+
+Backing credit is cumulative across every simultaneously live descriptor, document clone, page owner, snapshot body, list, and publication owner. Credit uses observed `Vec`, `String`, `Arc`, page, and backing capacity after allocation, is returned only after incremental owner retirement, and every refusal/cancel/deadline/stale/fault branch mounts the same retained cleanup. The expected-generation publication path cannot construct a hidden page-hash `Vec`.

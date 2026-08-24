@@ -111,6 +111,7 @@ semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️ru
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 # 🚪️ NO `semio-framework-os` / `semio-framework-3d` here, deliberately (ticket
 # 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2). The demonstrator used to
 # reach into the OS host crate to register `"3d.cad"`'s ten solid/mesh/dwg codecs and `"2d.map"`'s

@@ -58,6 +58,22 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   order. `InsertVertex`/`InsertTexCoord`/`InsertNormal`/`InsertFace` likewise invert at the CLAMPED
   landing index rather than the requested one.
 
+  🔴 The Rust SUBJECT phase ran for this case for the first time and reproduced a SECOND real
+  defect the oracle phase could not see, because it lives in our own writer rather than in the
+  reference: `mutate-set-object` left the compared projection bit-for-bit identical to the
+  untouched input. `o` is a sticky statement and `encode_obj` had no way to END an object run — it
+  emitted `o <name>` on a transition into an object and nothing at all on a transition out — so
+  `SetObject {name: "pattern-sphere", faces: [0,1,2]}` moved the snapshot and then re-rendered a
+  document in which `o pattern-sphere` still ran to end-of-file. Re-reading it handed back the
+  original membership over all 16,128 faces: the mutation was unobservable and the row measured
+  nothing. `decode_obj` already read an argument-less `o` as "no object from here on", and this
+  case's reference writes exactly that (`../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧪️oracle/
+  🦀️component.rs` renders `o\n` when the object run ends), so only our encoder was short of the
+  grammar. It now emits the bare `o` terminator, mirroring the bare `g` it already wrote when a
+  group run ends, pinned by `🚪️io/🦀️component.rs`'s own
+  `an_object_run_that_ends_is_closed_with_a_bare_o`. Nothing in this case was relaxed to reach it:
+  the `mutate-<kind>` observability assertion, the profile and the fixture are untouched.
+
   🧭️ Still open and deliberately NOT patched here, because no law in this case measures it and
   changing it is a vocabulary decision rather than a repair: neither producer renumbers the `v`/
   `vt`/`vn` index space when a row is removed, so a `remove-vertex` leaves every later `f` reference

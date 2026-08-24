@@ -34,6 +34,21 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   passed without a mutation ever happening. The observability law added in this wave is what
   surfaced it.
 
+  ⚠️ The two halves of the identity scenario assert OPPOSITE byte laws, and both are asserted rather
+  than skipped. The oracle half re-muxes with `mp4` 0.14's `Mp4Writer`, a second writer with its own
+  box order and `mdat` layout, so it asserts the no-byte-pass-through tripwire. The subject half
+  asserts the tripwire's documented mirror, `carrier_is_exact`: `Mp4Snapshot` carries no raw-byte
+  escape hatch — every `mvhd`/`tkhd`/`mdhd` field, every edit list entry, the visual sample entry,
+  `colr`/`pasp`/`btrt`, the `avcC` extension and the `stsc`/`stco` chunk grouping are typed fields —
+  and this repository's `encode_mp4` rebuilds the entire `moov` from them into one deterministic
+  normal form (`ftyp`, `moov`, canonical empty `free`, `mdat`) which is already this ffmpeg
+  `-c copy -movflags +faststart` fixture's own layout. Demanding that our writer move the bytes
+  would demand that a lossless container codec lose something. The artifact holds itself to the
+  exact-bytes claim outside this case too, on the FULL recording rather than this excerpt
+  (`🚪️io/🦀️component.rs::exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte`), and the ten
+  `mutate-*` rows below are what prove a real parse happened: they drive the same decode/encode
+  pipeline and every one of them moves both the bytes and the compared projection.
+
   Every scenario copies the immutable fixture into the case work directory before touching it; the
   committed fixture is never written to. Both the oracle's and the subject's results are read back by
   the SAME independent `mp4`-backed projection (`ftyp`, per-track geometry/codec digest, and every
@@ -94,7 +109,7 @@ Feature: Apply every typed ISO-BMFF mutation to a real-world video
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode and re-encode the real video without passing bytes through
+  Scenario: Decode and re-encode the real video from the typed model alone
     Given the real input video shared://🎥️bauen-mit-bestand-ausschnitt.mp4
     When the video is decoded to the typed snapshot and re-encoded from it alone
     Then the reference implementation and this repository agree on the result

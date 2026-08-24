@@ -212,7 +212,16 @@ mod oracles {
             Parameter::Omitted => Json::Object(vec![("t".to_string(), Json::String("derived".to_string()))]),
             Parameter::Integer(i) => tv("integer", Json::Number(*i as f64)),
             Parameter::Real(r) => tv("real", Json::Number(*r)),
-            Parameter::String(s) => tv("string", Json::String(s.clone())),
+            // 🔤️ A Part-21 string ARGUMENT is the value the literal DENOTES, not the literal.
+            // `ruststep`'s `string` combinator is `many0(none_of("'"))` — it decodes no control
+            // directive at all — so passing its text straight through compared ENCODINGS and made
+            // two conformant writers that spell one character differently diverge for no semantic
+            // reason. Decoded here through the shared oracle's OWN from-scratch reader, never
+            // through the production codec this projection is evidence about.
+            Parameter::String(s) => tv("string", match crate::artifacts::step::standards::v_ap214::reference::part21::decode_string_literal(s) {
+                Ok(value) => Json::String(value),
+                Err(error) => Json::Object(vec![("undecodableStringLiteral".to_string(), Json::String(error))]),
+            }),
             Parameter::Enumeration(s) => tv("enum", Json::String(s.clone())),
             Parameter::List(items) => tv("aggregate", Json::Array(items.iter().map(value_to_json).collect())),
             Parameter::Ref(name) => tv("reference", Json::Number(name_id(name) as f64)),

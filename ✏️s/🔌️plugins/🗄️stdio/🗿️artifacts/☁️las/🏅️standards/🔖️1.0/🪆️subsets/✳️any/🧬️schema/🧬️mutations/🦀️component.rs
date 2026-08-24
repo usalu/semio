@@ -41,8 +41,12 @@ pub enum LasMutation {
         day_of_year: u16,
         year: u16,
     },
-    /// 📏️ Sets X/Y/Z scale factors and offsets (the two fields that jointly reconstruct
-    /// real-world coordinates from the on-disk integer `x/y/z`).
+    /// 📏️ Sets X/Y/Z scale factors and offsets — the two header fields that jointly reconstruct
+    /// real-world coordinates from the on-disk integer point records — and nothing else. The
+    /// records keep the exact integers they carry, so every coordinate is re-read under the new
+    /// parameters (`coordinate = record * scale + offset`) rather than held fixed while the
+    /// records are silently re-quantized. Lossless and exactly invertible in either direction; see
+    /// `../🔺️diff/🦀️component.rs::diff_set_scale_and_offset` for the reproduction that settled it.
     SetScaleAndOffset {
         scale: (f64, f64, f64),
         offset: (f64, f64, f64),
@@ -141,7 +145,7 @@ impl Mutation<LasSnapshot> for LasMutation {
             LasMutation::SetSystemIdentifier { system_identifier } => diff::diff_set_system_identifier(system_identifier),
             LasMutation::SetSoftwareInfo { generating_software } => diff::diff_set_software_info(generating_software),
             LasMutation::SetCreationDate { day_of_year, year } => diff::diff_set_creation_date(*day_of_year, *year),
-            LasMutation::SetScaleAndOffset { scale, offset } => diff::diff_set_scale_and_offset(*scale, *offset),
+            LasMutation::SetScaleAndOffset { scale, offset } => diff::diff_set_scale_and_offset(base, *scale, *offset),
             LasMutation::SetBounds { max, min } => diff::diff_set_bounds(*max, *min),
             LasMutation::SetPointsByReturn { counts } => diff::diff_set_points_by_return(*counts),
             LasMutation::InsertVlr { index, vlr } => diff::diff_insert_vlr(base, *index, vlr.clone()),
@@ -1099,6 +1103,64 @@ mod tests {
         assert_eq!(declared, KINDS, "the oracle manifest's kinds must match LasMutation exactly");
     }
     //#endregion 🔖️KindsConformanceLaw
+
+    //#region 🔖️ScaleAndOffsetRecordLaw
+    /// 📏️ `SetScaleAndOffset` writes the six header fields and leaves the on-disk point RECORDS
+    /// exactly where they are, so every coordinate is re-read under the new parameters. The
+    /// integer each coordinate decoded from is what this asserts on — `record = (coordinate -
+    /// offset) / scale` before and after — because that integer is what the file carries and what
+    /// the reference (`las::raw`) preserves. Holding the coordinates fixed instead would rewrite
+    /// every record, which is a re-quantization rather than the header edit this kind is named
+    /// for (ticket `26/08/23/END-TO-END-TESTING-REFACTOR`,
+    /// `mutate-las-1-0::mutate-set-scale-and-offset`).
+    #[test]
+    fn set_scale_and_offset_keeps_every_point_record_where_it_is() {
+        // 🧫️ Power-of-two scales and coordinates that are exact multiples of them, so every
+        // assertion below is about the mutation rather than about binary floating point.
+        let mut base = base_snapshot();
+        base.header.x_scale = 0.5;
+        base.header.y_scale = 0.5;
+        base.header.z_scale = 0.5;
+        for (index, point) in base.points.iter_mut().enumerate() {
+            point.x = 100.0 + index as f64 * 0.5;
+            point.y = -50.0 + index as f64;
+            point.z = 10.0 + index as f64 * 1.5;
+        }
+        let records = |snapshot: &LasSnapshot| -> Vec<(i64, i64, i64)> {
+            snapshot
+                .points
+                .iter()
+                .map(|point| {
+                    (
+                        ((point.x - snapshot.header.x_offset) / snapshot.header.x_scale).round() as i64,
+                        ((point.y - snapshot.header.y_offset) / snapshot.header.y_scale).round() as i64,
+                        ((point.z - snapshot.header.z_offset) / snapshot.header.z_scale).round() as i64,
+                    )
+                })
+                .collect()
+        };
+        let before = records(&base);
+
+        for (scale, offset) in [((0.25, 0.25, 0.25), (1000.0, 2000.0, 5.0)), ((2.0, 2.0, 2.0), (0.0, 0.0, 0.0))] {
+            let kind = LasMutation::SetScaleAndOffset { scale, offset };
+            let mut moved = base.clone();
+            apply_las_mutation(&mut moved, &kind);
+            assert_eq!(moved.header.x_scale, scale.0, "the header field is written");
+            assert_eq!(moved.header.y_offset, offset.1, "the header field is written");
+            assert_eq!(records(&moved), before, "the point records must be untouched — only how they are read changed");
+            assert_ne!(moved.points[1].x, base.points[1].x, "so the real-world coordinate must move");
+            assert_eq!(moved.points[1].x, before[1].0 as f64 * scale.0 + offset.0, "and it must be exactly `record * scale + offset`");
+
+            // ↩️ Exact in BOTH directions, the coarsening one included — that is the direction a
+            // re-quantizing reading would round away for good.
+            let mut restored = moved;
+            for step in &<LasMutation as Mutation<LasSnapshot>>::inverse(&kind, &base) {
+                apply_las_mutation(&mut restored, step);
+            }
+            assert_eq!(restored, base, "putting the old scale and offset back must restore the document exactly");
+        }
+    }
+    //#endregion 🔖️ScaleAndOffsetRecordLaw
 }
 //#endregion Tests
 

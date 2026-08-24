@@ -13,8 +13,10 @@
 //! Every scenario copies the immutable real fixture into the case work directory first; the
 //! committed file is never written to. The subject half is gated behind the generated host's `sut`
 //! feature so the oracle-only run never compiles the local implementation — see §5.3 of the fleet
-//! brief. The Rust SUBJECT phase cannot compile this wave (a concurrent os-kernel refactor), so it
-//! is written and gated but not run.
+//! brief. The Rust SUBJECT phase RUNS (`semio-s-plugin-stdio` builds; the os-kernel blocker earlier
+//! waves reported is cleared), and for a `@no-oracle-` case like this one it is the only phase that
+//! ever executes — which is why every subject handler below asserts its law in role rather than
+//! deferring to a comparison that will never happen.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{independent_render, independent_split, oracle_apply_mutation, oracle_inverse_spec, project_txt};
@@ -124,6 +126,7 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
     use semio_s_plugin_stdio::artifacts::txt::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{oracle_inverse_spec, project_txt};
+    use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
     fn json_usize(params: &Json, key: &str) -> Result<usize, String> {
         match params.get(key) {
@@ -176,15 +179,41 @@ mod subject {
         Ok(TxtSnapshot::from_body(&text))
     }
 
+    /// 👁️ The forward mutation, with the OBSERVABILITY law asserted IN ROLE. This case records a
+    /// no-oracle decision, so the subject handler is the ONLY place any of its `mutate-<kind>` rows
+    /// can be checked at all — an un-asserting handler here means 7 scenarios reporting green while
+    /// proving nothing. Two outcomes are admissible and they are told apart, never merged: the
+    /// subset ACCEPTS the mutation, in which case a kind other than `no-mutation` must move the
+    /// projection; or it REFUSES it with `stdio.txt.mutation-not-representable`, in which case the
+    /// bytes must be exactly the input's (see the feature's 🔒️ note — `set-trailing-newline false`
+    /// on a fixture whose last line is empty is the one documented refusal, and it is required to
+    /// be that kind and no other, so a codec that started refusing everything would fail here).
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let mut snapshot = decode(&mutable_input(ctx)?)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        apply_txt_mutation(&mut snapshot, &mutation);
+        let input = mutable_input(ctx)?;
+        let mut snapshot = decode(&input)?;
+        let spec = ctx.doc_json()?;
+        let kind = spec.str("kind");
+        let mutation = mutation_from_spec(&spec)?;
+        let outcome = apply_txt_mutation(&mut snapshot, &mutation);
         let output = snapshot.to_body().into_bytes();
         let projection = project_txt(&output)?;
+        if outcome.messages().is_empty() {
+            if kind != "no-mutation" && projection == project_txt(&input)? {
+                return Err(format!("{kind:?} was accepted and still left the semantic projection exactly as it found it -- the parameters address nothing in the real document"));
+            }
+        } else {
+            if kind != "set-trailing-newline" {
+                return Err(format!("{kind:?} was refused on the real document, and only `set-trailing-newline` is documented as unrepresentable here: {:?}", outcome.messages()));
+            }
+            if output != input {
+                return Err(format!("{kind:?} was refused and still changed the document -- a refusal must leave the bytes untouched: {:?}", outcome.messages()));
+            }
+        }
         Ok(Outcome::with_raw(output, projection))
     }
 
+    /// ↩️ The inverse law, asserted IN ROLE through the same shared `⚖️law` helper the oracle
+    /// handler uses — apply-then-undo must land back on the REAL original document's projection.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
@@ -193,6 +222,7 @@ mod subject {
         apply_txt_mutation(&mut snapshot, &mutation_from_spec(&oracle_inverse_spec(&input, &spec)?)?);
         let output = snapshot.to_body().into_bytes();
         let projection = project_txt(&output)?;
+        inverse_restores(&spec.str("kind"), &projection, &project_txt(&input)?)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
@@ -204,7 +234,9 @@ mod subject {
         let input = mutable_input(ctx)?;
         let snapshot = decode(&input)?;
         let output = snapshot.to_body().into_bytes();
+        carrier_is_exact(&output, &input)?;
         let projection = project_txt(&output)?;
+        round_trip_preserves(&projection, &project_txt(&input)?)?;
         Ok(Outcome::with_raw(output, projection))
     }
 

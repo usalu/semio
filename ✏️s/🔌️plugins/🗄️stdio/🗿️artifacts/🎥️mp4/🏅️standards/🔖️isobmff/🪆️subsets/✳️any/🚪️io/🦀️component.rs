@@ -678,13 +678,20 @@ fn build_ctts(track: &Mp4Track) -> Vec<u8> {
     write_box(b"ctts", &payload)
 }
 
-/// ✍️ One chunk per track (all samples together) — adapted from remodel's `mp4_stsc`, which
-/// makes the same single-chunk simplification for its own fixture muxer.
+/// ✍️ The chunk grouping a track is written with. `chunk_sample_counts` is a RETAINED layout
+/// hint — `stsc`/`stco` read back on decode so an unmutated round trip reproduces the source's own
+/// chunking — and never an independent fact: the sample list is the truth. A grouping that does not
+/// partition the current sample list is therefore DISCARDED for the one-chunk-per-track normal form
+/// (adapted from remodel's `mp4_stsc`, which makes the same single-chunk simplification for its own
+/// fixture muxer) rather than trusted. This is reachable by construction and not a defensive
+/// nicety: `SetSnapshot` carries a whole caller-supplied document, and a caller that adds or drops
+/// a sample cannot be expected to also restate a writer's chunking. Encoding a legal snapshot must
+/// not depend on two fields being kept in step, so the encoder reconciles instead of aborting.
 fn normalized_chunk_sample_counts(track: &Mp4Track) -> Vec<u32> {
-    if track.chunk_sample_counts.is_empty() {
+    let covered = track.chunk_sample_counts.iter().map(|count| *count as usize).sum::<usize>();
+    if track.chunk_sample_counts.is_empty() || covered != track.samples.len() {
         return vec![track.samples.len() as u32];
     }
-    assert_eq!(track.chunk_sample_counts.iter().map(|count| *count as usize).sum::<usize>(), track.samples.len(), "MP4 chunk sample counts must cover every sample");
     track.chunk_sample_counts.clone()
 }
 
@@ -1080,6 +1087,44 @@ mod codec_tests {
         assert_eq!(encode_mp4(&changed), bytes);
     }
     //#endregion codec_retention_law
+
+    //#region chunk_grouping_reconciliation
+    /// 🧮️ `chunk_sample_counts` is a RETAINED `stsc`/`stco` layout hint, and the sample list is the
+    /// truth. When the two disagree the encoder normalizes to one chunk per track instead of
+    /// aborting — reachable by construction, not a defensive nicety: `SetSnapshot` carries a whole
+    /// caller-supplied document and a caller that drops a sample cannot be expected to restate a
+    /// writer's chunking. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR: `mutate-mp4-isobmff`'s
+    /// `set-snapshot` row drops the first track's last sample, and this encoder used to panic on it
+    /// (`MP4 chunk sample counts must cover every sample`, left 47 right 46), taking the whole
+    /// subject host down before a single scenario could report.
+    #[test]
+    fn a_stale_chunk_grouping_is_reconciled_against_the_sample_list() {
+        let sample = |n: u8| Mp4Sample { data: vec![0, 0, 0, 1, n], duration: 1000, cts_offset: 0, sync: true };
+        let track = |counts: Vec<u32>, samples: Vec<Mp4Sample>| Mp4Track {
+            track_id: 1,
+            timescale: 1000,
+            codec: Mp4Codec { sps: vec![vec![0x67, 0x42, 0x00, 0x1E, 0x8C, 0x8D, 0x40]], pps: vec![vec![0x68, 0xCE, 0x3C, 0x80]], nal_length_size: 4, extension: None },
+            width: 16,
+            height: 16,
+            metadata: Mp4TrackMetadata::default(),
+            chunk_sample_counts: counts,
+            samples,
+        };
+        assert_eq!(normalized_chunk_sample_counts(&track(vec![2, 1], vec![sample(1), sample(2), sample(3)])), vec![2, 1], "a grouping that partitions the sample list is retained verbatim");
+        assert_eq!(normalized_chunk_sample_counts(&track(vec![2, 1], vec![sample(1), sample(2)])), vec![2], "a grouping left over from a longer sample list normalizes to one chunk");
+        assert_eq!(normalized_chunk_sample_counts(&track(vec![1], vec![sample(1), sample(2)])), vec![2], "a grouping left over from a shorter sample list normalizes to one chunk");
+        assert_eq!(normalized_chunk_sample_counts(&track(vec![], vec![sample(1)])), vec![1], "no retained grouping at all is the same one-chunk normal form");
+
+        let stale = Mp4Snapshot {
+            schema: STDIO_MP4_DOCUMENT_SCHEMA.into(),
+            ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into()] },
+            movie: Mp4Movie::default(),
+            tracks: vec![track(vec![3], vec![sample(1), sample(2)])],
+        };
+        let bytes = encode_mp4(&stale);
+        assert!(sniff_real_bytes(&bytes), "a snapshot whose retained grouping is stale still encodes to a real MP4");
+    }
+    //#endregion chunk_grouping_reconciliation
 }
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {

@@ -7,7 +7,8 @@
   "private": true,
   "scripts": {
     "dev": "bun nx run @semio-tech/mit-bestand-demonstrator:dev",
-    "build": "bun nx run @semio-tech/mit-bestand-demonstrator:build"
+    "build": "bun nx run @semio-tech/mit-bestand-demonstrator:build",
+    "test": "bun nx run @semio-tech/mit-bestand-demonstrator:test"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

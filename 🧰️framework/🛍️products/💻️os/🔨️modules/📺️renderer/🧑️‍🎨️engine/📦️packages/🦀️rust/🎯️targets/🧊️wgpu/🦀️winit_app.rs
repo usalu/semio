@@ -20,12 +20,12 @@
 //! the just-created `Window` (or an explicit two-phase `NativeHost::new_pending()` API) would let a
 //! future revision drop this file's hand-rolled `ApplicationHandler` entirely.
 
+use crate::kernel_seam::KernelSeam;
+use crate::os_host::{OsHost, OsHostRetirement};
 use crate::AppInteractionState;
 use crate::RuntimeMailbox;
-use crate::kernel_seam::KernelSeam;
-use crate::os_host::OsHost;
 use std::sync::Arc;
-use ui_host::{RedrawOutcome, WindowDelegate, WindowMetrics, should_request_redraw};
+use ui_host::{should_request_redraw, RedrawOutcome, WindowDelegate, WindowMetrics};
 use ui_render::{CursorRequest, DispatchEvent, EventModifiers, InvalidationReason, PhysicalSize, PointerButton, PointerInfo};
 #[cfg(target_arch = "wasm32")]
 use ui_render::{PointerId, PointerKind};
@@ -97,19 +97,14 @@ impl WindowDelegate for OsHost {
         }
     }
 
-    /// 📐️ P3a: also funnels through the enqueue-only [`ui_host::EventQueue`] (`enqueue_metrics`, so a
-    /// resize storm coalesces to the latest sample the same way pointer move does — see that struct's
-    /// own test coverage). The `app.resize(..)` call stays immediate rather than deferred: this
-    /// crate's GPU surface must be reconfigured before the next `render_frame` submission or the
-    /// backend rejects the mismatched surface/window size, which is the platform constraint the design
-    /// doc's §6 table calls "GPU resource creation... depends, may need locking in native" — resizing
-    /// the surface synchronously here IS that lock, kept minimal (no layout, no tessellation, no
-    /// allocation beyond what `wgpu`'s own surface reconfiguration already does).
+    /// 📐️ P5e funnels metrics through both the input queue and the fixed generation-qualified
+    /// surface lane. This callback only publishes the newest scalar owner; worker preparation and the
+    /// one UI-capability surface step advance from redraw opportunities.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn handle_metrics(&mut self, metrics: WindowMetrics) {
         enqueue_host_metrics(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, metrics.physical.width, metrics.physical.height, metrics.scale_factor);
         let (width, height) = metrics.logical_size();
-        self.presenter.resize(width, height, metrics.scale_factor);
+        let _ = self.surface_resize.enqueue(metrics.physical.width, metrics.physical.height, metrics.scale_factor);
         let dpr = metrics.scale_factor;
         let _ = self.runtime.enqueue_apply(Some("window-metrics"), true, crate::RuntimeApply::Resize { width, height, dpr });
     }
@@ -138,12 +133,24 @@ impl OsHost {
     }
 
     fn redraw_core(&mut self) -> RedrawOutcome {
+        let _ = crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step();
         if self.frame_ready {
             self.frame_ready = false;
         } else {
             if !advance_frame_generation(&mut self.frame_generation) {
                 self.present_fault = Some("frame generation exhausted".to_string());
             }
+        }
+        self.surface_resize.drive_one();
+        if self.presenter.surface_resize_available() {
+            if let Some(candidate) = self.surface_resize.take_ready() {
+                if let Err(candidate) = self.presenter.begin_surface_resize(candidate) {
+                    let _ = self.surface_resize.restore_ready(candidate);
+                }
+            }
+        }
+        if !self.presenter.surface_resize_step() || self.surface_resize.has_work() {
+            self.scheduler.invalidate(InvalidationReason::VIEWPORT);
         }
         let now = self.clock.now_seconds();
         self.build_and_publish_snapshot();
@@ -417,6 +424,7 @@ pub struct WinitApp {
     plugin_modules_root: std::path::PathBuf,
     window: Option<Arc<Window>>,
     host: Option<OsHost>,
+    retirement: Option<OsHostRetirement>,
     #[cfg(not(target_arch = "wasm32"))]
     pointers: ui_host::PointerRegistry,
     modifiers: EventModifiers,
@@ -445,6 +453,7 @@ impl WinitApp {
             plugin_modules_root,
             window: None,
             host: None,
+            retirement: None,
             #[cfg(not(target_arch = "wasm32"))]
             pointers: ui_host::PointerRegistry::new(),
             modifiers: EventModifiers::default(),
@@ -735,34 +744,46 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
     // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         let Some(window) = self.window.clone() else { return };
-        if self.host.is_none() {
+        if self.host.is_none() && self.retirement.is_none() {
             return;
         }
         match &event {
             WindowEvent::CloseRequested => {
-                if self.host.as_mut().expect("checked above").close_requested() {
-                    event_loop.exit();
+                let requested = self.host.as_mut().is_some_and(|host| host.close_requested());
+                if requested {
+                    if let Some(host) = self.host.take() {
+                        self.retirement = Some(host.into_retirement());
+                    }
+                    event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                 }
                 return;
             }
             WindowEvent::Resized(size) => {
                 let scale_factor = window.scale_factor() as f32;
-                self.host.as_mut().expect("checked above").handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor });
+                if let Some(host) = self.host.as_mut() {
+                    host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor });
+                }
             }
             WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
                 let size = window.inner_size();
-                self.host.as_mut().expect("checked above").handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor: *scale_factor as f32 });
+                if let Some(host) = self.host.as_mut() {
+                    host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor: *scale_factor as f32 });
+                }
             }
             WindowEvent::RedrawRequested => {
                 if let Some(reason) = self.pending_reason.take() {
-                    let _outcome = self.host.as_mut().expect("checked above").redraw(reason);
+                    if let Some(host) = self.host.as_mut() {
+                        let _outcome = host.redraw(reason);
+                    }
                 }
                 self.recompute_control_flow(event_loop);
                 return;
             }
             _ => {
                 if let Some(dispatch_event) = normalize(self, &event) {
-                    self.host.as_mut().expect("checked above").handle_event(dispatch_event);
+                    if let Some(host) = self.host.as_mut() {
+                        host.handle_event(dispatch_event);
+                    }
                 }
             }
         }
@@ -773,6 +794,16 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
     /// Native futures run exclusively on the process worker pool; this callback never polls them.
     // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        if let Some(retirement) = self.retirement.as_mut() {
+            if retirement.close_step() && retirement.terminal_is_empty() {
+                self.retirement = None;
+                self.window = None;
+                event_loop.exit();
+            } else {
+                event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
+            }
+            return;
+        }
         let Some(host) = self.host.as_mut() else { return };
         let now = host.now_seconds();
         if let Some(reason) = should_request_redraw(&mut host.scheduler, now) {

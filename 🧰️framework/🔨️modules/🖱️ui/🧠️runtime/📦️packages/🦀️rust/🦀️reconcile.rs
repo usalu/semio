@@ -3216,7 +3216,11 @@ mod tests {
     }
 
     fn container(key: &str, children: Vec<crate::TreeNode>) -> crate::TreeNode {
-        let node = crate::TreeNode::try_new(key, ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None })).expect("bounded fixture node");
+        let node = crate::TreeNode::try_new(
+            key,
+            ui_contract::Component::Container(ui_contract::ContainerProps { role: ui_contract::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }),
+        )
+        .expect("bounded fixture node");
         node.try_with_children(children).unwrap_or_else(|_| panic!("bounded fixture children"))
     }
 
@@ -3249,7 +3253,9 @@ mod tests {
     }
 
     fn with_binding(mut node: crate::TreeNode, scope: &str, name: &str) -> crate::TreeNode {
-        node.bindings.try_push(ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: ui_contract::ActionId::try_v1(scope, name).expect("bounded fixture action"), args: None, capability: None }).expect("bounded fixture bindings");
+        node.bindings
+            .try_push(ui_contract::ActionBinding { trigger: ui_contract::Trigger::Activate, action: ui_contract::ActionId::try_v1(scope, name).expect("bounded fixture action"), args: None, capability: None })
+            .expect("bounded fixture bindings");
         node
     }
 

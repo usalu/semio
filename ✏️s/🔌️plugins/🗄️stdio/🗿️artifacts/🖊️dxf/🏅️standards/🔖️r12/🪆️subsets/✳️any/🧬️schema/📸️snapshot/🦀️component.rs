@@ -585,6 +585,20 @@ fn print_table_block(out: &mut String, name: &str, count: usize, mut body: impl 
 fn print_tables_section(tables: &DxfTables, others: &[DxfOtherTable], out: &mut String) {
     push_tag(out, 0, "SECTION");
     push_tag(out, 2, "TABLES");
+    // 📐️ LTYPE MUST precede LAYER. A LAYER record names its linetype by string (group code 6), so
+    // a reader that meets the LAYER table first has to invent the linetype it cannot yet resolve —
+    // which is exactly what the registered `dxf` 0.6 reference reader does: fed this writer's
+    // former LAYER-then-LTYPE order it reported EIGHT linetypes for the real `🚏️bus-shelter`
+    // drawing, an extra `CONTINUOUS` ahead of the real seven, and all 39 `mutate-dxf-r12` parity
+    // comparisons diverged on `$.linetypes` alone. Confirmed by experiment rather than inferred:
+    // reordering nothing but these two blocks in the very bytes this writer had produced took the
+    // same reader from eight linetypes back to the real seven. The order below is the AutoCAD DXF
+    // reference's own table order for R12, of which that constraint is the load-bearing part.
+    print_table_block(out, "LTYPE", tables.linetypes.len(), |out| {
+        for l in &tables.linetypes {
+            print_linetype(out, l);
+        }
+    });
     print_table_block(out, "LAYER", tables.layers.len(), |out| {
         for l in &tables.layers {
             print_layer(out, l);
@@ -593,11 +607,6 @@ fn print_tables_section(tables: &DxfTables, others: &[DxfOtherTable], out: &mut 
     print_table_block(out, "STYLE", tables.styles.len(), |out| {
         for s in &tables.styles {
             print_style(out, s);
-        }
-    });
-    print_table_block(out, "LTYPE", tables.linetypes.len(), |out| {
-        for l in &tables.linetypes {
-            print_linetype(out, l);
         }
     });
     for t in others {

@@ -3,11 +3,10 @@
 use crate::wgpu::draw::{DrawLayer, DrawList, ScissorRect};
 use crate::wgpu::kernel_3d_scene::Mesh3dLease;
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, StepContext, StepOutcome};
-use std::collections::VecDeque;
 use std::mem::size_of;
 use std::rc::Rc;
-use std::sync::atomic::{AtomicPtr, AtomicU8, AtomicU64, Ordering};
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::atomic::{AtomicPtr, AtomicU64, AtomicU8, AtomicUsize, Ordering};
+use std::sync::{LazyLock, Mutex};
 
 //#region 📊️Credits
 /// 🎛️ Hard item and byte credits for one prepared frame transaction.
@@ -35,18 +34,301 @@ pub struct PreparedRenderUsage {
 }
 
 impl PreparedRenderUsage {
-    fn include_draw(&mut self, items: usize, bytes: usize) {
-        self.draw_items = self.draw_items.saturating_add(items);
-        self.draw_bytes = self.draw_bytes.saturating_add(bytes);
+    fn include_draw(&mut self, items: usize, bytes: usize) -> bool {
+        let Some(draw_items) = self.draw_items.checked_add(items) else { return false };
+        let Some(draw_bytes) = self.draw_bytes.checked_add(bytes) else { return false };
+        self.draw_items = draw_items;
+        self.draw_bytes = draw_bytes;
+        true
     }
 
-    fn include_upload(&mut self, bytes: usize) {
-        self.upload_items = self.upload_items.saturating_add(1);
-        self.upload_bytes = self.upload_bytes.saturating_add(bytes);
+    fn include_upload(&mut self, bytes: usize) -> bool {
+        let Some(upload_items) = self.upload_items.checked_add(1) else { return false };
+        let Some(upload_bytes) = self.upload_bytes.checked_add(bytes) else { return false };
+        self.upload_items = upload_items;
+        self.upload_bytes = upload_bytes;
+        true
     }
 
     pub fn fits(self, limits: PreparedRenderLimits) -> bool {
         self.draw_items <= limits.max_draw_items && self.draw_bytes <= limits.max_draw_bytes && self.upload_items <= limits.max_upload_items && self.upload_bytes <= limits.max_upload_bytes
+    }
+}
+
+pub const PREPARED_RENDER_METADATA_ITEMS: usize = 256;
+pub const PREPARED_RENDER_METADATA_PAGE_ITEMS: usize = 32;
+const PREPARED_RENDER_METADATA_PAGES: usize = PREPARED_RENDER_METADATA_ITEMS / PREPARED_RENDER_METADATA_PAGE_ITEMS;
+pub const PREPARED_RENDER_COMMAND_PAGE_ITEMS: usize = 64;
+pub const PREPARED_RENDER_COMMAND_PAGES: usize = 4_096;
+const PREPARED_RENDER_PROCESS_SLOTS: usize = 64;
+const PREPARED_RENDER_PROCESS_PAGES: usize = 16_383;
+const PREPARED_RENDER_PROCESS_BACKING_BYTES: usize = 128 * 1024 * 1024;
+
+#[derive(Debug)]
+struct PreparedFixedPage<T> {
+    slots: [Option<T>; PREPARED_RENDER_METADATA_PAGE_ITEMS],
+    len: usize,
+}
+
+impl<T> Default for PreparedFixedPage<T> {
+    fn default() -> Self {
+        Self { slots: std::array::from_fn(|_| None), len: 0 }
+    }
+}
+
+/// 🧰 Fixed retained page list whose backing and each populated owner are closed independently.
+#[derive(Debug)]
+pub struct PreparedFixedList<T> {
+    pages: [Option<Box<PreparedFixedPage<T>>>; PREPARED_RENDER_METADATA_PAGES],
+    head: usize,
+    len: usize,
+}
+
+impl<T> Default for PreparedFixedList<T> {
+    fn default() -> Self {
+        Self { pages: std::array::from_fn(|_| None), head: 0, len: 0 }
+    }
+}
+
+impl<T> PreparedFixedList<T> {
+    pub fn try_push(&mut self, value: T) -> Result<(), T> {
+        if self.len == PREPARED_RENDER_METADATA_ITEMS {
+            return Err(value);
+        }
+        let Some(index) = self.head.checked_add(self.len).map(|value| value % PREPARED_RENDER_METADATA_ITEMS) else { return Err(value) };
+        let Some(next) = self.len.checked_add(1) else { return Err(value) };
+        let page_index = index / PREPARED_RENDER_METADATA_PAGE_ITEMS;
+        let scalar = index % PREPARED_RENDER_METADATA_PAGE_ITEMS;
+        if self.pages[page_index].is_none() {
+            self.pages[page_index] = Some(Box::new(PreparedFixedPage::default()));
+        }
+        let Some(page) = self.pages[page_index].as_mut() else { return Err(value) };
+        let Some(page_len) = page.len.checked_add(1).filter(|len| *len <= PREPARED_RENDER_METADATA_PAGE_ITEMS) else { return Err(value) };
+        page.slots[scalar] = Some(value);
+        page.len = page_len;
+        self.len = next;
+        Ok(())
+    }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        if index >= self.len {
+            return None;
+        }
+        let physical = self.head.checked_add(index)? % PREPARED_RENDER_METADATA_ITEMS;
+        self.pages.get(physical / PREPARED_RENDER_METADATA_PAGE_ITEMS)?.as_ref()?.slots.get(physical % PREPARED_RENDER_METADATA_PAGE_ITEMS)?.as_ref()
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        if index >= self.len {
+            return None;
+        }
+        let physical = self.head.checked_add(index)? % PREPARED_RENDER_METADATA_ITEMS;
+        self.pages.get_mut(physical / PREPARED_RENDER_METADATA_PAGE_ITEMS)?.as_mut()?.slots.get_mut(physical % PREPARED_RENDER_METADATA_PAGE_ITEMS)?.as_mut()
+    }
+
+    pub fn front_mut(&mut self) -> Option<&mut T> {
+        self.get_mut(0)
+    }
+
+    pub fn last_mut(&mut self) -> Option<&mut T> {
+        self.len.checked_sub(1).and_then(|index| self.get_mut(index))
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        let logical = self.len.checked_sub(1)?;
+        let index = self.head.checked_add(logical)? % PREPARED_RENDER_METADATA_ITEMS;
+        let page = self.pages.get_mut(index / PREPARED_RENDER_METADATA_PAGE_ITEMS)?.as_mut()?;
+        let value = page.slots.get_mut(index % PREPARED_RENDER_METADATA_PAGE_ITEMS)?.take();
+        page.len = page.len.checked_sub(usize::from(value.is_some()))?;
+        self.len = logical;
+        value
+    }
+
+    pub fn pop_front(&mut self) -> Option<T> {
+        if self.len == 0 {
+            return None;
+        }
+        let page = self.pages.get_mut(self.head / PREPARED_RENDER_METADATA_PAGE_ITEMS)?.as_mut()?;
+        let value = page.slots.get_mut(self.head % PREPARED_RENDER_METADATA_PAGE_ITEMS)?.take();
+        page.len = page.len.checked_sub(usize::from(value.is_some()))?;
+        self.head = self.head.checked_add(1)? % PREPARED_RENDER_METADATA_ITEMS;
+        self.len = self.len.checked_sub(1)?;
+        value
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    fn release_backing_step(&mut self) -> bool {
+        if self.len != 0 {
+            return false;
+        }
+        if let Some(index) = self.pages.iter().position(|page| page.as_ref().is_some_and(|page| page.len == 0)) {
+            self.pages[index] = None;
+            return false;
+        }
+        if self.head != 0 {
+            self.head = 0;
+            return false;
+        }
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.head == 0 && self.pages.iter().all(Option::is_none)
+    }
+}
+
+const PREPARED_RENDER_ITEM_SHIFT: u32 = 0;
+const PREPARED_RENDER_PAGE_SHIFT: u32 = 7;
+const PREPARED_RENDER_BACKING_SHIFT: u32 = 21;
+const PREPARED_RENDER_ITEM_MASK: u64 = 0x7f;
+const PREPARED_RENDER_PAGE_MASK: u64 = 0x3fff;
+const PREPARED_RENDER_BACKING_MASK: u64 = 0x3fff;
+static PREPARED_RENDER_PROCESS_PERMITS: AtomicU64 = AtomicU64::new(0);
+static PREPARED_RENDER_SLOT_STATE: [AtomicU8; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
+static PREPARED_RENDER_SLOT_GENERATION: [AtomicU64; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU64::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
+static PREPARED_RENDER_PACKET_ABANDONMENT_STATE: [AtomicU8; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
+static PREPARED_RENDER_PACKET_ABANDONMENT_OWNER: [AtomicPtr<PreparedRenderPacket>; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_RENDER_PROCESS_SLOTS];
+static PREPARED_RENDER_JOB_ABANDONMENT_STATE: [AtomicU8; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
+static PREPARED_RENDER_JOB_ABANDONMENT_OWNER: [AtomicPtr<PreparedRenderJob>; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_RENDER_PROCESS_SLOTS];
+static PREPARED_RENDER_INPUT_ABANDONMENT_STATE: [AtomicU8; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
+static PREPARED_RENDER_INPUT_ABANDONMENT_OWNER: [AtomicPtr<PreparedRenderInput>; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_RENDER_PROCESS_SLOTS];
+
+fn prepared_render_units(bytes: usize) -> Option<usize> {
+    bytes.checked_add(PREPARED_RASTER_PAGE_BYTES.checked_sub(1)?)?.checked_div(PREPARED_RASTER_PAGE_BYTES)
+}
+
+fn prepared_render_permit_delta(items: usize, pages: usize, backing_units: usize) -> Option<u64> {
+    let items = u64::try_from(items).ok()?;
+    let pages = u64::try_from(pages).ok()?;
+    let backing = u64::try_from(backing_units).ok()?;
+    if items > PREPARED_RENDER_ITEM_MASK || pages > PREPARED_RENDER_PAGE_MASK || backing > PREPARED_RENDER_BACKING_MASK {
+        return None;
+    }
+    Some((items << PREPARED_RENDER_ITEM_SHIFT) | (pages << PREPARED_RENDER_PAGE_SHIFT) | (backing << PREPARED_RENDER_BACKING_SHIFT))
+}
+
+#[derive(Debug)]
+struct PreparedRenderProcessPermit {
+    slot: u8,
+    generation: u64,
+    pages: usize,
+    backing_units: usize,
+    release_phase: u8,
+}
+
+impl PreparedRenderProcessPermit {
+    fn try_reserve(pages: usize, backing_bytes: usize) -> Option<Self> {
+        let backing_units = prepared_render_units(backing_bytes)?;
+        let current = PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire);
+        let items = ((current >> PREPARED_RENDER_ITEM_SHIFT) & PREPARED_RENDER_ITEM_MASK).checked_add(1)?;
+        let reserved_pages = ((current >> PREPARED_RENDER_PAGE_SHIFT) & PREPARED_RENDER_PAGE_MASK).checked_add(u64::try_from(pages).ok()?)?;
+        let reserved_backing = ((current >> PREPARED_RENDER_BACKING_SHIFT) & PREPARED_RENDER_BACKING_MASK).checked_add(u64::try_from(backing_units).ok()?)?;
+        if items > PREPARED_RENDER_PROCESS_SLOTS as u64 || reserved_pages > PREPARED_RENDER_PROCESS_PAGES as u64 || reserved_backing > u64::try_from(prepared_render_units(PREPARED_RENDER_PROCESS_BACKING_BYTES)?).ok()? {
+            return None;
+        }
+        let delta = prepared_render_permit_delta(1, pages, backing_units)?;
+        let next = current.checked_add(delta)?;
+        PREPARED_RENDER_PROCESS_PERMITS.compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire).ok()?;
+        let Some(slot) = PREPARED_RENDER_SLOT_STATE.iter().position(|state| state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_ok()) else {
+            PREPARED_RENDER_PROCESS_PERMITS.fetch_sub(delta, Ordering::AcqRel);
+            return None;
+        };
+        let current_generation = PREPARED_RENDER_SLOT_GENERATION[slot].load(Ordering::Acquire);
+        let Some(generation) = current_generation.checked_add(1) else {
+            PREPARED_RENDER_SLOT_STATE[slot].store(0, Ordering::Release);
+            PREPARED_RENDER_PROCESS_PERMITS.fetch_sub(delta, Ordering::AcqRel);
+            return None;
+        };
+        if PREPARED_RENDER_SLOT_GENERATION[slot].compare_exchange(current_generation, generation, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            PREPARED_RENDER_SLOT_STATE[slot].store(0, Ordering::Release);
+            PREPARED_RENDER_PROCESS_PERMITS.fetch_sub(delta, Ordering::AcqRel);
+            return None;
+        }
+        Some(Self { slot: slot as u8, generation, pages, backing_units, release_phase: 0 })
+    }
+
+    fn matches(&self) -> bool {
+        let slot = usize::from(self.slot);
+        PREPARED_RENDER_SLOT_STATE.get(slot).is_some_and(|state| state.load(Ordering::Acquire) == 1) && PREPARED_RENDER_SLOT_GENERATION.get(slot).is_some_and(|generation| generation.load(Ordering::Acquire) == self.generation)
+    }
+
+    fn try_grow(&mut self, pages: usize, backing_bytes: usize) -> bool {
+        if !self.matches() {
+            return false;
+        }
+        let Some(backing_units) = prepared_render_units(backing_bytes) else { return false };
+        let current = PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire);
+        let Some(reserved_pages) = u64::try_from(pages).ok().and_then(|pages| ((current >> PREPARED_RENDER_PAGE_SHIFT) & PREPARED_RENDER_PAGE_MASK).checked_add(pages)) else { return false };
+        let Some(reserved_backing) = u64::try_from(backing_units).ok().and_then(|backing| ((current >> PREPARED_RENDER_BACKING_SHIFT) & PREPARED_RENDER_BACKING_MASK).checked_add(backing)) else { return false };
+        let Some(backing_limit) = prepared_render_units(PREPARED_RENDER_PROCESS_BACKING_BYTES).and_then(|limit| u64::try_from(limit).ok()) else { return false };
+        if reserved_pages > PREPARED_RENDER_PROCESS_PAGES as u64 || reserved_backing > backing_limit {
+            return false;
+        }
+        let Some(delta) = prepared_render_permit_delta(0, pages, backing_units) else { return false };
+        let Some(next) = current.checked_add(delta) else { return false };
+        if PREPARED_RENDER_PROCESS_PERMITS.compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return false;
+        }
+        let Some(owned_pages) = self.pages.checked_add(pages) else {
+            PREPARED_RENDER_PROCESS_PERMITS.fetch_sub(delta, Ordering::AcqRel);
+            return false;
+        };
+        let Some(owned_backing) = self.backing_units.checked_add(backing_units) else {
+            PREPARED_RENDER_PROCESS_PERMITS.fetch_sub(delta, Ordering::AcqRel);
+            return false;
+        };
+        self.pages = owned_pages;
+        self.backing_units = owned_backing;
+        true
+    }
+
+    fn release_step(&mut self) -> bool {
+        let delta = match self.release_phase {
+            0 => prepared_render_permit_delta(0, 0, self.backing_units),
+            1 => prepared_render_permit_delta(0, self.pages, 0),
+            2 => prepared_render_permit_delta(1, 0, 0),
+            3 => {
+                let slot = usize::from(self.slot);
+                if !self.matches() || PREPARED_RENDER_SLOT_STATE[slot].compare_exchange(1, 0, Ordering::AcqRel, Ordering::Acquire).is_err() {
+                    return false;
+                }
+                self.release_phase = 4;
+                return true;
+            }
+            _ => return true,
+        };
+        let Some(delta) = delta else { return false };
+        let current = PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire);
+        let Some(next) = current.checked_sub(delta) else { return false };
+        if PREPARED_RENDER_PROCESS_PERMITS.compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return false;
+        }
+        self.release_phase += 1;
+        false
+    }
+}
+
+impl Drop for PreparedRenderProcessPermit {
+    fn drop(&mut self) {
+        if self.release_phase >= 4 || !self.matches() {
+            return;
+        }
+        let backing = if self.release_phase == 0 { self.backing_units } else { 0 };
+        let pages = if self.release_phase <= 1 { self.pages } else { 0 };
+        let items = usize::from(self.release_phase <= 2);
+        if let Some(delta) = prepared_render_permit_delta(items, pages, backing) {
+            PREPARED_RENDER_PROCESS_PERMITS.fetch_sub(delta, Ordering::AcqRel);
+        }
+        let slot = usize::from(self.slot);
+        let _ = PREPARED_RENDER_SLOT_STATE[slot].compare_exchange(1, 0, Ordering::AcqRel, Ordering::Acquire);
+        self.release_phase = 4;
     }
 }
 //#endregion 📊️Credits
@@ -713,7 +995,7 @@ impl PreparedRasterReservation {
         if claim.width != width || claim.height != height || source.len() != claim.byte_len || source.capacity() > claim.byte_len || retained_source.capacity() > self.source_bytes {
             return Err(reject(self, "raster materialization did not match its exact claim", source, retained_source));
         }
-        let credit = self.credit.take().expect("reserved raster credit");
+        let Some(credit) = self.credit.take() else { return Err(reject(self, "raster reservation lost its exact credit", source, retained_source)) };
         let source_generation = PreparedRasterGeneration { slot: credit.slot, epoch: credit.epoch };
         let pages = PreparedRasterPages {
             slots: Vec::with_capacity(claim.page_capacity),
@@ -783,7 +1065,8 @@ impl PreparedRasterProducer {
             Some(current) => current == generation,
             None => {
                 self.frame_generation = Some(generation);
-                self.pages.as_mut().expect("admitted raster pages").frame_generation = generation;
+                let Some(pages) = self.pages.as_mut() else { return false };
+                pages.frame_generation = generation;
                 true
             }
         }
@@ -811,23 +1094,27 @@ impl PreparedRasterProducer {
                 self.retained_source_released = true;
                 return PreparedRasterProducerStep::Pending;
             }
-            let pages = self.pages.take().expect("completed raster pages");
+            let Some(pages) = self.pages.take() else { return PreparedRasterProducerStep::Fault("raster producer lost its admitted page owner") };
             let key = std::mem::take(&mut self.key);
             return PreparedRasterProducerStep::Complete(PreparedRenderUpload::RasterPages { key, pixels: pages });
         }
-        let pages = self.pages.as_mut().expect("admitted raster pages");
+        let Some(pages) = self.pages.as_mut() else { return PreparedRasterProducerStep::Fault("raster producer lost its admitted page owner") };
         if pages.slots.len() == pages.page_capacity {
             pages.backing = std::mem::take(&mut self.source);
             self.source_released = true;
             return PreparedRasterProducerStep::Pending;
         }
-        let row_bytes = usize::try_from(pages.width).unwrap_or(usize::MAX) * 4;
-        let page_bytes = usize::try_from(pages.rows_per_page).unwrap_or(usize::MAX) * row_bytes;
-        let logical = pages.page_capacity.saturating_sub(pages.slots.len().saturating_add(1));
-        let start = logical.saturating_mul(page_bytes);
-        let end = start.saturating_add(page_bytes).min(self.source.len());
-        let start_row = u32::try_from(start / row_bytes).unwrap_or(u32::MAX);
-        let rows = u32::try_from((end - start) / row_bytes).unwrap_or(u32::MAX);
+        let Some(row_bytes) = usize::try_from(pages.width).ok().and_then(|width| width.checked_mul(4)) else { return PreparedRasterProducerStep::Fault("raster row byte count exhausted") };
+        let Some(page_bytes) = usize::try_from(pages.rows_per_page).ok().and_then(|rows| rows.checked_mul(row_bytes)) else {
+            return PreparedRasterProducerStep::Fault("raster page byte count exhausted");
+        };
+        let Some(logical) = pages.slots.len().checked_add(1).and_then(|next| pages.page_capacity.checked_sub(next)) else {
+            return PreparedRasterProducerStep::Fault("raster page cursor exceeded its fixed capacity");
+        };
+        let Some(start) = logical.checked_mul(page_bytes) else { return PreparedRasterProducerStep::Fault("raster page offset exhausted") };
+        let Some(end) = start.checked_add(page_bytes).map(|end| end.min(self.source.len())) else { return PreparedRasterProducerStep::Fault("raster page end exhausted") };
+        let Ok(start_row) = u32::try_from(start / row_bytes) else { return PreparedRasterProducerStep::Fault("raster start row exhausted") };
+        let Ok(rows) = u32::try_from((end - start) / row_bytes) else { return PreparedRasterProducerStep::Fault("raster page rows exhausted") };
         pages.slots.push(PreparedRasterPage { start_row, rows });
         PreparedRasterProducerStep::Pending
     }
@@ -899,13 +1186,40 @@ pub enum RenderDirective {
 /// 📤️ Typed upload data owned by the prepared transaction.
 #[derive(Debug, PartialEq)]
 pub enum PreparedRenderUpload {
-    GlyphAtlas { pixels: Vec<u8>, width: u32, height: u32 },
-    IconAtlas { pixels: Vec<u8>, width: u32, height: u32 },
-    GlyphAtlasPages { pixels: PreparedAtlasPages },
-    IconAtlasPages { pixels: PreparedAtlasPages },
-    Raster { key: String, pixels: Vec<u8>, width: u32, height: u32 },
-    RasterPages { key: String, pixels: PreparedRasterPages },
-    Mesh { key: String, version: u64, lease: Mesh3dLease },
+    #[cfg(test)]
+    GlyphAtlas {
+        pixels: Vec<u8>,
+        width: u32,
+        height: u32,
+    },
+    #[cfg(test)]
+    IconAtlas {
+        pixels: Vec<u8>,
+        width: u32,
+        height: u32,
+    },
+    GlyphAtlasPages {
+        pixels: PreparedAtlasPages,
+    },
+    IconAtlasPages {
+        pixels: PreparedAtlasPages,
+    },
+    #[cfg(test)]
+    Raster {
+        key: String,
+        pixels: Vec<u8>,
+        width: u32,
+        height: u32,
+    },
+    RasterPages {
+        key: String,
+        pixels: PreparedRasterPages,
+    },
+    Mesh {
+        key: String,
+        version: u64,
+        lease: Mesh3dLease,
+    },
 }
 
 /// 🧹️ UI-thread GPU cache invalidation selected during worker preparation.
@@ -915,33 +1229,244 @@ pub enum PreparedRenderEviction {
 }
 
 impl PreparedRenderEviction {
-    pub fn byte_len(&self) -> usize {
+    pub fn byte_len(&self) -> Option<usize> {
         match self {
-            Self::Mesh { key } => key.len(),
+            Self::Mesh { key } => Some(key.len()),
         }
     }
 }
 
 impl PreparedRenderUpload {
-    pub fn byte_len(&self) -> usize {
+    pub fn byte_len(&self) -> Option<usize> {
         match self {
-            Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } => pixels.len(),
-            Self::GlyphAtlasPages { pixels } | Self::IconAtlasPages { pixels } => pixels.byte_len(),
-            Self::Raster { key, pixels, .. } => key.len().saturating_add(pixels.len()),
-            Self::RasterPages { key, pixels } => key.len().saturating_add(pixels.byte_len()),
-            Self::Mesh { key, lease, .. } => key.len().saturating_add(lease.schema().map_or(0, |schema| {
-                usize::try_from(schema.vertices)
-                    .unwrap_or(usize::MAX)
-                    .saturating_mul(24)
-                    .saturating_add(usize::try_from(schema.indices).unwrap_or(usize::MAX).saturating_mul(4))
-                    .saturating_add(usize::try_from(schema.face_ids).unwrap_or(usize::MAX).saturating_mul(4))
-                    .saturating_add(usize::try_from(schema.vertex_ids).unwrap_or(usize::MAX).saturating_mul(4))
-                    .saturating_add(usize::try_from(schema.edges).unwrap_or(usize::MAX).saturating_mul(24))
-                    .saturating_add(usize::try_from(schema.edge_ids).unwrap_or(usize::MAX).saturating_mul(4))
-                    .saturating_add(usize::try_from(schema.uvs).unwrap_or(usize::MAX).saturating_mul(8))
-                    .saturating_add(usize::try_from(schema.colors).unwrap_or(usize::MAX).saturating_mul(16))
-            })),
+            #[cfg(test)]
+            Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } => Some(pixels.len()),
+            Self::GlyphAtlasPages { pixels } | Self::IconAtlasPages { pixels } => Some(pixels.byte_len()),
+            #[cfg(test)]
+            Self::Raster { key, pixels, .. } => key.len().checked_add(pixels.len()),
+            Self::RasterPages { key, pixels } => key.len().checked_add(pixels.byte_len()),
+            Self::Mesh { key, lease, .. } => {
+                let Ok(schema) = lease.schema() else { return Some(key.len()) };
+                let bytes = usize::try_from(schema.vertices)
+                    .ok()?
+                    .checked_mul(24)?
+                    .checked_add(usize::try_from(schema.indices).ok()?.checked_mul(4)?)?
+                    .checked_add(usize::try_from(schema.face_ids).ok()?.checked_mul(4)?)?
+                    .checked_add(usize::try_from(schema.vertex_ids).ok()?.checked_mul(4)?)?
+                    .checked_add(usize::try_from(schema.edges).ok()?.checked_mul(24)?)?
+                    .checked_add(usize::try_from(schema.edge_ids).ok()?.checked_mul(4)?)?
+                    .checked_add(usize::try_from(schema.uvs).ok()?.checked_mul(8)?)?
+                    .checked_add(usize::try_from(schema.colors).ok()?.checked_mul(16)?)?;
+                key.len().checked_add(bytes)
+            }
         }
+    }
+
+    /// 🧹 Releases one page, byte, or key scalar from a rejected upload owner.
+    pub fn close_step(&mut self) -> bool {
+        match self {
+            #[cfg(test)]
+            Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } => {
+                if pixels.pop().is_some() {
+                    false
+                } else {
+                    true
+                }
+            }
+            Self::GlyphAtlasPages { pixels } | Self::IconAtlasPages { pixels } => pixels.close_step(),
+            #[cfg(test)]
+            Self::Raster { key, pixels, .. } => {
+                if pixels.pop().is_some() {
+                    false
+                } else {
+                    key.pop().is_none()
+                }
+            }
+            Self::RasterPages { key, pixels } => pixels.retire_with_key_step(key),
+            Self::Mesh { key, .. } => key.pop().is_none(),
+        }
+    }
+}
+
+pub type PreparedRenderUploads = PreparedFixedList<PreparedRenderUpload>;
+pub type PreparedRenderEvictions = PreparedFixedList<PreparedRenderEviction>;
+pub type PreparedRenderScissors = PreparedFixedList<ScissorRect>;
+pub type PreparedRenderDirectives = PreparedFixedList<RenderDirective>;
+pub type PreparedRasterProducers = PreparedFixedList<PreparedRasterProducer>;
+
+/// 🧩 One immutable scalar command emitted by a retained preparation child.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PreparedRenderCommandKind {
+    Validate,
+    Snap,
+    Order,
+    Tessellate,
+    Batch,
+    Hash,
+    Upload,
+    Packet,
+}
+
+impl PreparedRenderCommandKind {
+    pub fn code(self) -> u32 {
+        match self {
+            Self::Validate => 0,
+            Self::Snap => 1,
+            Self::Order => 2,
+            Self::Tessellate => 3,
+            Self::Batch => 4,
+            Self::Hash => 5,
+            Self::Upload => 6,
+            Self::Packet => 7,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PreparedRenderCommand {
+    kind: PreparedRenderCommandKind,
+    source: usize,
+    digest: u64,
+    draw_cursor: Option<DrawMeasureCursor>,
+    packet_overlay: bool,
+}
+
+impl PreparedRenderCommand {
+    pub fn kind(&self) -> PreparedRenderCommandKind {
+        self.kind
+    }
+
+    pub fn source(&self) -> usize {
+        self.source
+    }
+
+    pub fn digest(&self) -> u64 {
+        self.digest
+    }
+
+    pub(crate) fn draw_cursor(&self) -> Option<DrawMeasureCursor> {
+        self.draw_cursor
+    }
+
+    pub(crate) fn packet_overlay(&self) -> bool {
+        self.packet_overlay
+    }
+}
+
+#[derive(Debug)]
+struct PreparedRenderCommandPage {
+    slots: [Option<PreparedRenderCommand>; PREPARED_RENDER_COMMAND_PAGE_ITEMS],
+    len: usize,
+}
+
+const PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS: usize = 256;
+const PREPARED_RENDER_COMMAND_DIRECTORIES: usize = PREPARED_RENDER_COMMAND_PAGES / PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS;
+
+#[derive(Debug)]
+struct PreparedRenderCommandDirectory {
+    pages: [Option<Box<PreparedRenderCommandPage>>; PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS],
+    len: usize,
+}
+
+impl Default for PreparedRenderCommandDirectory {
+    fn default() -> Self {
+        Self { pages: std::array::from_fn(|_| None), len: 0 }
+    }
+}
+
+impl Default for PreparedRenderCommandPage {
+    fn default() -> Self {
+        Self { slots: [None; PREPARED_RENDER_COMMAND_PAGE_ITEMS], len: 0 }
+    }
+}
+
+#[derive(Debug)]
+pub struct PreparedRenderCommandPages {
+    directories: [Option<Box<PreparedRenderCommandDirectory>>; PREPARED_RENDER_COMMAND_DIRECTORIES],
+    page_count: usize,
+    len: usize,
+}
+
+impl Default for PreparedRenderCommandPages {
+    fn default() -> Self {
+        Self { directories: std::array::from_fn(|_| None), page_count: 0, len: 0 }
+    }
+}
+
+impl PreparedRenderCommandPages {
+    fn try_push(&mut self, command: PreparedRenderCommand) -> Result<(), PreparedRenderCommand> {
+        let page = self.len / PREPARED_RENDER_COMMAND_PAGE_ITEMS;
+        let scalar = self.len % PREPARED_RENDER_COMMAND_PAGE_ITEMS;
+        if page >= PREPARED_RENDER_COMMAND_PAGES {
+            return Err(command);
+        }
+        let directory_index = page / PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS;
+        let page_index = page % PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS;
+        if self.directories[directory_index].is_none() {
+            self.directories[directory_index] = Some(Box::new(PreparedRenderCommandDirectory::default()));
+        }
+        let Some(directory) = self.directories[directory_index].as_mut() else { return Err(command) };
+        if directory.pages[page_index].is_none() {
+            directory.pages[page_index] = Some(Box::new(PreparedRenderCommandPage::default()));
+            let Some(directory_len) = directory.len.checked_add(1) else { return Err(command) };
+            let Some(page_count) = self.page_count.checked_add(1) else { return Err(command) };
+            directory.len = directory_len;
+            self.page_count = page_count;
+        }
+        let Some(owner) = directory.pages[page_index].as_mut() else { return Err(command) };
+        owner.slots[scalar] = Some(command);
+        let Some(owner_len) = owner.len.checked_add(1) else { return Err(command) };
+        let Some(len) = self.len.checked_add(1) else { return Err(command) };
+        owner.len = owner_len;
+        self.len = len;
+        Ok(())
+    }
+
+    pub fn get(&self, index: usize) -> Option<&PreparedRenderCommand> {
+        let page = index / PREPARED_RENDER_COMMAND_PAGE_ITEMS;
+        let scalar = index % PREPARED_RENDER_COMMAND_PAGE_ITEMS;
+        let directory = self.directories.get(page / PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS)?.as_ref()?;
+        directory.pages.get(page % PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS)?.as_ref()?.slots.get(scalar)?.as_ref()
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    fn close_step(&mut self) -> bool {
+        if let Some(index) = self.len.checked_sub(1) {
+            let page = index / PREPARED_RENDER_COMMAND_PAGE_ITEMS;
+            let scalar = index % PREPARED_RENDER_COMMAND_PAGE_ITEMS;
+            let Some(directory) = self.directories.get_mut(page / PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS).and_then(Option::as_mut) else { return false };
+            let Some(owner) = directory.pages.get_mut(page % PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS).and_then(Option::as_mut) else { return false };
+            owner.slots[scalar] = None;
+            let Some(owner_len) = owner.len.checked_sub(1) else { return false };
+            owner.len = owner_len;
+            self.len = index;
+            return false;
+        }
+        if let Some(page) = self.page_count.checked_sub(1) {
+            let directory_index = page / PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS;
+            let page_index = page % PREPARED_RENDER_COMMAND_DIRECTORY_ITEMS;
+            let Some(directory) = self.directories[directory_index].as_mut() else { return false };
+            if !directory.pages[page_index].as_ref().is_some_and(|page| page.len == 0) {
+                return false;
+            }
+            directory.pages[page_index] = None;
+            let Some(directory_len) = directory.len.checked_sub(1) else { return false };
+            directory.len = directory_len;
+            self.page_count = page;
+            return false;
+        }
+        if let Some(index) = self.directories.iter().position(|directory| directory.as_ref().is_some_and(|directory| directory.len == 0)) {
+            self.directories[index] = None;
+            return false;
+        }
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.page_count == 0 && self.directories.iter().all(Option::is_none)
     }
 }
 
@@ -949,17 +1474,20 @@ impl PreparedRenderUpload {
 pub struct PreparedRenderPacket {
     pub(crate) scene_revision: u64,
     pub(crate) preview_generation: u64,
-    pub(crate) damage: Vec<ScissorRect>,
-    pub(crate) clips: Vec<ScissorRect>,
-    pub(crate) directives: Vec<RenderDirective>,
-    pub(crate) uploads: Vec<PreparedRenderUpload>,
-    pub(crate) evictions: Vec<PreparedRenderEviction>,
+    pub(crate) damage: PreparedRenderScissors,
+    pub(crate) clips: PreparedRenderScissors,
+    pub(crate) directives: PreparedRenderDirectives,
+    pub(crate) uploads: PreparedRenderUploads,
+    pub(crate) evictions: PreparedRenderEvictions,
     pub(crate) draw: DrawList,
     pub(crate) overlay: Option<DrawList>,
+    pub(crate) commands: PreparedRenderCommandPages,
     pub(crate) time_seconds: f32,
     pub(crate) usage: PreparedRenderUsage,
     pub(crate) limits: PreparedRenderLimits,
+    permit: Option<PreparedRenderProcessPermit>,
     retirement_phase: u8,
+    abandonment_slot: u8,
 }
 
 impl PreparedRenderPacket {
@@ -973,23 +1501,23 @@ impl PreparedRenderPacket {
         self.preview_generation
     }
 
-    pub fn damage(&self) -> &[ScissorRect] {
+    pub fn damage(&self) -> &PreparedRenderScissors {
         &self.damage
     }
 
-    pub fn clips(&self) -> &[ScissorRect] {
+    pub fn clips(&self) -> &PreparedRenderScissors {
         &self.clips
     }
 
-    pub fn directives(&self) -> &[RenderDirective] {
+    pub fn directives(&self) -> &PreparedRenderDirectives {
         &self.directives
     }
 
-    pub fn uploads(&self) -> &[PreparedRenderUpload] {
+    pub fn uploads(&self) -> &PreparedRenderUploads {
         &self.uploads
     }
 
-    pub fn evictions(&self) -> &[PreparedRenderEviction] {
+    pub fn evictions(&self) -> &PreparedRenderEvictions {
         &self.evictions
     }
 
@@ -1002,13 +1530,46 @@ impl PreparedRenderPacket {
     }
 
     pub fn is_within_credits(&self) -> bool {
-        self.usage.fits(self.limits)
+        self.usage.fits(self.limits) && self.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches)
+    }
+
+    pub fn command_pages(&self) -> &PreparedRenderCommandPages {
+        &self.commands
+    }
+
+    fn try_arm_abandonment(mut self) -> Result<Self, Self> {
+        let Some(slot) = self.permit.as_ref().map(|permit| usize::from(permit.slot)) else { return Err(self) };
+        let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(slot) else { return Err(self) };
+        if state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return Err(self);
+        }
+        self.abandonment_slot = slot as u8;
+        Ok(self)
+    }
+
+    /// 🧹 Advances one owner from an interrupted packet Drop handback.
+    pub fn close_abandoned_step() -> bool {
+        let Some(slot) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return true };
+        let pointer = PREPARED_RENDER_PACKET_ABANDONMENT_OWNER[slot].swap(std::ptr::null_mut(), Ordering::AcqRel);
+        if pointer.is_null() {
+            PREPARED_RENDER_PACKET_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
+            return false;
+        }
+        let mut packet = unsafe { Box::from_raw(pointer) };
+        if packet.retire_step() || packet.abandonment_slot == u8::MAX {
+            drop(packet);
+        } else {
+            PREPARED_RENDER_PACKET_ABANDONMENT_OWNER[slot].store(Box::into_raw(packet), Ordering::Release);
+            PREPARED_RENDER_PACKET_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
+        }
+        false
     }
 
     /// 🧹️ Releases at most one admitted page, draw owner, string scalar, or metadata item.
     pub fn retire_step(&mut self) -> bool {
         if let Some(upload) = self.uploads.last_mut() {
             let retained = match upload {
+                #[cfg(test)]
                 PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. } => {
                     let next = pixels.len().saturating_sub(Self::RETIRE_PAGE_BYTES);
                     if next != pixels.len() {
@@ -1019,6 +1580,7 @@ impl PreparedRenderPacket {
                     }
                 }
                 PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels } => !pixels.close_step(),
+                #[cfg(test)]
                 PreparedRenderUpload::Raster { key, pixels, .. } => {
                     let next = pixels.len().saturating_sub(Self::RETIRE_PAGE_BYTES);
                     if next != pixels.len() {
@@ -1054,7 +1616,20 @@ impl PreparedRenderPacket {
             self.overlay = None;
             return false;
         }
+        if !self.commands.close_step() {
+            return false;
+        }
         if self.damage.pop().is_some() || self.clips.pop().is_some() || self.directives.pop().is_some() {
+            return false;
+        }
+        if !self.uploads.release_backing_step() || !self.evictions.release_backing_step() || !self.damage.release_backing_step() || !self.clips.release_backing_step() || !self.directives.release_backing_step() {
+            return false;
+        }
+        if let Some(permit) = self.permit.as_mut() {
+            if !permit.release_step() {
+                return false;
+            }
+            self.permit = None;
             return false;
         }
         match self.retirement_phase {
@@ -1063,6 +1638,19 @@ impl PreparedRenderPacket {
             2 => self.time_seconds = 0.0,
             3 => self.usage = PreparedRenderUsage::default(),
             4 => self.limits = PreparedRenderLimits::default(),
+            5 => {
+                if self.abandonment_slot == u8::MAX {
+                    self.retirement_phase = 6;
+                    return false;
+                }
+                let slot = usize::from(self.abandonment_slot);
+                let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(slot) else { return false };
+                let current = state.load(Ordering::Acquire);
+                if !matches!(current, 1 | 3) || state.compare_exchange(current, 0, Ordering::AcqRel, Ordering::Acquire).is_err() {
+                    return false;
+                }
+                self.abandonment_slot = u8::MAX;
+            }
             _ => return true,
         }
         self.retirement_phase += 1;
@@ -1070,14 +1658,54 @@ impl PreparedRenderPacket {
     }
 
     pub fn retirement_is_empty(&self) -> bool {
-        self.retirement_phase >= 5
+        self.retirement_phase >= 6
             && self.uploads.is_empty()
             && self.evictions.is_empty()
             && self.draw.retirement_is_empty()
             && self.overlay.as_ref().is_none_or(DrawList::retirement_is_empty)
-            && self.damage.is_empty()
-            && self.clips.is_empty()
-            && self.directives.is_empty()
+            && self.commands.terminal_is_empty()
+            && self.uploads.terminal_is_empty()
+            && self.evictions.terminal_is_empty()
+            && self.damage.terminal_is_empty()
+            && self.clips.terminal_is_empty()
+            && self.directives.terminal_is_empty()
+            && self.permit.is_none()
+            && self.abandonment_slot == u8::MAX
+    }
+}
+
+impl Drop for PreparedRenderPacket {
+    fn drop(&mut self) {
+        if self.retirement_is_empty() || self.abandonment_slot == u8::MAX {
+            return;
+        }
+        let slot = usize::from(self.abandonment_slot);
+        let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(slot) else { return };
+        if state.load(Ordering::Acquire) != 1 {
+            return;
+        }
+        let packet = Box::new(Self {
+            scene_revision: std::mem::take(&mut self.scene_revision),
+            preview_generation: std::mem::take(&mut self.preview_generation),
+            damage: std::mem::take(&mut self.damage),
+            clips: std::mem::take(&mut self.clips),
+            directives: std::mem::take(&mut self.directives),
+            uploads: std::mem::take(&mut self.uploads),
+            evictions: std::mem::take(&mut self.evictions),
+            draw: std::mem::replace(&mut self.draw, DrawList::empty()),
+            overlay: self.overlay.take(),
+            commands: std::mem::take(&mut self.commands),
+            time_seconds: std::mem::take(&mut self.time_seconds),
+            usage: std::mem::take(&mut self.usage),
+            limits: std::mem::take(&mut self.limits),
+            permit: self.permit.take(),
+            retirement_phase: self.retirement_phase,
+            abandonment_slot: self.abandonment_slot,
+        });
+        self.retirement_phase = 6;
+        self.abandonment_slot = u8::MAX;
+        PREPARED_RENDER_PACKET_ABANDONMENT_OWNER[slot].store(Box::into_raw(packet), Ordering::Release);
+        state.store(2, Ordering::Release);
     }
 }
 
@@ -1085,67 +1713,476 @@ impl PreparedRenderPacket {
 pub struct PreparedRenderInput {
     pub scene_revision: u64,
     pub preview_generation: u64,
-    pub damage: Vec<ScissorRect>,
-    pub clips: Vec<ScissorRect>,
-    pub directives: Vec<RenderDirective>,
-    pub uploads: Vec<PreparedRenderUpload>,
-    pub raster_producers: VecDeque<PreparedRasterProducer>,
-    pub evictions: Vec<PreparedRenderEviction>,
+    pub damage: PreparedRenderScissors,
+    pub clips: PreparedRenderScissors,
+    pub directives: PreparedRenderDirectives,
+    pub uploads: PreparedRenderUploads,
+    pub raster_producers: PreparedRasterProducers,
+    pub evictions: PreparedRenderEvictions,
     pub draw: DrawList,
     pub overlay: Option<DrawList>,
     pub time_seconds: f32,
     pub limits: PreparedRenderLimits,
+    permit: Option<PreparedRenderProcessPermit>,
+    abandonment_slot: u8,
+}
+
+/// 🛡️ Exact input owner returned when the process/page reservation refuses admission.
+pub struct PreparedRenderInputRejected {
+    fault: &'static str,
+    draw: Option<DrawList>,
+    overlay: Option<DrawList>,
+    permit: Option<PreparedRenderProcessPermit>,
+}
+
+impl PreparedRenderInputRejected {
+    pub fn fault(&self) -> &'static str {
+        self.fault
+    }
+
+    pub fn take_draw(&mut self) -> Option<DrawList> {
+        self.draw.take()
+    }
+
+    pub fn take_overlay(&mut self) -> Option<DrawList> {
+        self.overlay.take()
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if let Some(draw) = self.draw.as_mut() {
+            if !draw.retire_step() {
+                return false;
+            }
+            self.draw = None;
+            return false;
+        }
+        if let Some(overlay) = self.overlay.as_mut() {
+            if !overlay.retire_step() {
+                return false;
+            }
+            self.overlay = None;
+            return false;
+        }
+        if let Some(permit) = self.permit.as_mut() {
+            if !permit.release_step() {
+                return false;
+            }
+            self.permit = None;
+            return false;
+        }
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.draw.is_none() && self.overlay.is_none() && self.permit.is_none()
+    }
 }
 
 impl PreparedRenderInput {
-    pub fn new(scene_revision: u64, preview_generation: u64, draw: DrawList, overlay: Option<DrawList>, time_seconds: f32) -> Self {
+    pub fn try_new(scene_revision: u64, preview_generation: u64, draw: DrawList, overlay: Option<DrawList>, time_seconds: f32) -> Result<Self, PreparedRenderInputRejected> {
         let limits = PreparedRenderLimits::default();
-        Self {
+        let (draw_items, draw_bytes) = draw.prepared_output_usage();
+        let (overlay_items, overlay_bytes) = overlay.as_ref().map_or((0, 0), DrawList::prepared_output_usage);
+        let Some(items) = draw_items.checked_add(overlay_items) else {
+            return Err(PreparedRenderInputRejected { fault: "prepared render item claim overflowed", draw: Some(draw), overlay, permit: None });
+        };
+        let Some(bytes) = draw_bytes.checked_add(overlay_bytes).and_then(|value| value.checked_add(limits.max_upload_bytes)) else {
+            return Err(PreparedRenderInputRejected { fault: "prepared render byte claim overflowed", draw: Some(draw), overlay, permit: None });
+        };
+        let Some(maximum_bytes) = limits.max_draw_bytes.checked_add(limits.max_upload_bytes) else {
+            return Err(PreparedRenderInputRejected { fault: "prepared render byte limit overflowed", draw: Some(draw), overlay, permit: None });
+        };
+        if scene_revision == 0 || scene_revision == u64::MAX || preview_generation == 0 || preview_generation == u64::MAX || items > limits.max_draw_items || bytes > maximum_bytes {
+            return Err(PreparedRenderInputRejected { fault: "prepared render source exceeded fixed revision, item, or byte credits", draw: Some(draw), overlay, permit: None });
+        }
+        let Some(pages) = prepared_render_units(bytes).and_then(|pages| pages.checked_add(PREPARED_RENDER_COMMAND_PAGES)) else {
+            return Err(PreparedRenderInputRejected { fault: "prepared render page claim overflowed", draw: Some(draw), overlay, permit: None });
+        };
+        let metadata = size_of::<Option<PreparedRenderUpload>>()
+            .checked_mul(PREPARED_RENDER_METADATA_ITEMS)
+            .and_then(|value| value.checked_add(size_of::<Option<PreparedRenderEviction>>().checked_mul(PREPARED_RENDER_METADATA_ITEMS)?))
+            .and_then(|value| value.checked_add(size_of::<Option<ScissorRect>>().checked_mul(PREPARED_RENDER_METADATA_ITEMS.checked_mul(2)?)?))
+            .and_then(|value| value.checked_add(size_of::<Option<RenderDirective>>().checked_mul(PREPARED_RENDER_METADATA_ITEMS)?))
+            .and_then(|value| value.checked_add(size_of::<Option<PreparedRasterProducer>>().checked_mul(PREPARED_RENDER_METADATA_ITEMS)?))
+            .and_then(|value| value.checked_add(size_of::<PreparedRenderCommandDirectory>().checked_mul(PREPARED_RENDER_COMMAND_DIRECTORIES)?))
+            .and_then(|value| value.checked_add(size_of::<PreparedRenderCommandPage>().checked_mul(PREPARED_RENDER_COMMAND_PAGES)?));
+        let Some(backing_bytes) = metadata.and_then(|metadata| bytes.checked_add(metadata)) else {
+            return Err(PreparedRenderInputRejected { fault: "prepared render backing claim overflowed", draw: Some(draw), overlay, permit: None });
+        };
+        let Some(permit) = PreparedRenderProcessPermit::try_reserve(pages, backing_bytes) else {
+            return Err(PreparedRenderInputRejected { fault: "prepared render process permits exhausted", draw: Some(draw), overlay, permit: None });
+        };
+        let slot = usize::from(permit.slot);
+        if PREPARED_RENDER_INPUT_ABANDONMENT_STATE[slot].compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return Err(PreparedRenderInputRejected { fault: "prepared render input abandonment slot was occupied", draw: Some(draw), overlay, permit: Some(permit) });
+        }
+        let mut directives = PreparedRenderDirectives::default();
+        if directives.try_push(RenderDirective::PreservePreviousOnFailure).is_err() {
+            PREPARED_RENDER_INPUT_ABANDONMENT_STATE[slot].store(0, Ordering::Release);
+            return Err(PreparedRenderInputRejected { fault: "prepared render directive admission failed", draw: Some(draw), overlay, permit: Some(permit) });
+        }
+        Ok(Self {
             scene_revision,
             preview_generation,
-            damage: Vec::new(),
-            clips: Vec::new(),
-            directives: vec![RenderDirective::PreservePreviousOnFailure],
-            uploads: Vec::with_capacity(limits.max_upload_items),
-            raster_producers: VecDeque::with_capacity(limits.max_upload_items),
-            evictions: Vec::new(),
+            damage: PreparedRenderScissors::default(),
+            clips: PreparedRenderScissors::default(),
+            directives,
+            uploads: PreparedRenderUploads::default(),
+            raster_producers: PreparedRasterProducers::default(),
+            evictions: PreparedRenderEvictions::default(),
             draw,
             overlay,
             time_seconds,
             limits,
+            permit: Some(permit),
+            abandonment_slot: slot as u8,
+        })
+    }
+
+    #[cfg(test)]
+    pub fn new(scene_revision: u64, preview_generation: u64, draw: DrawList, overlay: Option<DrawList>, time_seconds: f32) -> Self {
+        match Self::try_new(scene_revision, preview_generation, draw, overlay, time_seconds) {
+            Ok(input) => input,
+            Err(_) => panic!("test prepared input must fit fixed process permits"),
         }
+    }
+
+    pub fn try_push_upload(&mut self, upload: PreparedRenderUpload) -> Result<(), PreparedRenderUpload> {
+        if self.raster_producers.len().checked_add(self.uploads.len()).is_none_or(|items| items >= self.limits.max_upload_items) {
+            return Err(upload);
+        }
+        self.uploads.try_push(upload)
+    }
+
+    pub fn try_push_raster_producer(&mut self, producer: PreparedRasterProducer) -> Result<(), PreparedRasterProducer> {
+        if self.raster_producers.len().checked_add(self.uploads.len()).is_none_or(|items| items >= self.limits.max_upload_items) {
+            return Err(producer);
+        }
+        self.raster_producers.try_push(producer)
+    }
+
+    pub fn try_push_eviction(&mut self, eviction: PreparedRenderEviction) -> Result<(), PreparedRenderEviction> {
+        self.evictions.try_push(eviction)
+    }
+
+    /// 🧱 Admits and transfers the final retained draw owners before worker submission.
+    pub fn try_bind_draw(&mut self, draw: DrawList, overlay: Option<DrawList>) -> Result<(), PreparedRenderInputRejected> {
+        if !self.draw.retirement_is_empty() || self.overlay.is_some() {
+            return Err(PreparedRenderInputRejected { fault: "prepared render draw owner was already bound", draw: Some(draw), overlay, permit: None });
+        }
+        let (draw_items, draw_bytes) = draw.prepared_output_usage();
+        let (overlay_items, overlay_bytes) = overlay.as_ref().map_or((0, 0), DrawList::prepared_output_usage);
+        let Some(items) = draw_items.checked_add(overlay_items) else {
+            return Err(PreparedRenderInputRejected { fault: "prepared render draw item claim overflowed", draw: Some(draw), overlay, permit: None });
+        };
+        let Some(bytes) = draw_bytes.checked_add(overlay_bytes) else {
+            return Err(PreparedRenderInputRejected { fault: "prepared render draw byte claim overflowed", draw: Some(draw), overlay, permit: None });
+        };
+        if items > self.limits.max_draw_items || bytes > self.limits.max_draw_bytes {
+            return Err(PreparedRenderInputRejected { fault: "prepared render draw owner exceeded fixed credits", draw: Some(draw), overlay, permit: None });
+        }
+        let Some(pages) = prepared_render_units(bytes) else {
+            return Err(PreparedRenderInputRejected { fault: "prepared render draw page claim overflowed", draw: Some(draw), overlay, permit: None });
+        };
+        if !self.permit.as_mut().is_some_and(|permit| permit.try_grow(pages, bytes)) {
+            return Err(PreparedRenderInputRejected { fault: "prepared render draw process credits were refused", draw: Some(draw), overlay, permit: None });
+        }
+        self.draw = draw;
+        self.overlay = overlay;
+        Ok(())
+    }
+
+    fn close_step(&mut self) -> bool {
+        if let Some(upload) = self.uploads.last_mut() {
+            let retained = match upload {
+                #[cfg(test)]
+                PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. } => pixels.pop().is_some(),
+                PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels } => !pixels.close_step(),
+                #[cfg(test)]
+                PreparedRenderUpload::Raster { key, pixels, .. } => pixels.pop().is_some() || key.pop().is_some(),
+                PreparedRenderUpload::RasterPages { key, pixels } => !pixels.retire_with_key_step(key),
+                PreparedRenderUpload::Mesh { key, .. } => key.pop().is_some(),
+            };
+            if retained {
+                return false;
+            }
+            self.uploads.pop();
+            return false;
+        }
+        if let Some(producer) = self.raster_producers.last_mut() {
+            producer.begin_close();
+            if !producer.close_step() {
+                return false;
+            }
+            self.raster_producers.pop();
+            return false;
+        }
+        if let Some(PreparedRenderEviction::Mesh { key }) = self.evictions.last_mut() {
+            if key.pop().is_some() {
+                return false;
+            }
+            self.evictions.pop();
+            return false;
+        }
+        if !self.draw.retire_step() {
+            return false;
+        }
+        if let Some(overlay) = self.overlay.as_mut() {
+            if !overlay.retire_step() {
+                return false;
+            }
+            self.overlay = None;
+            return false;
+        }
+        if self.damage.pop().is_some() || self.clips.pop().is_some() || self.directives.pop().is_some() {
+            return false;
+        }
+        if !self.uploads.release_backing_step()
+            || !self.raster_producers.release_backing_step()
+            || !self.evictions.release_backing_step()
+            || !self.damage.release_backing_step()
+            || !self.clips.release_backing_step()
+            || !self.directives.release_backing_step()
+        {
+            return false;
+        }
+        if let Some(permit) = self.permit.as_mut() {
+            if !permit.release_step() {
+                return false;
+            }
+            self.permit = None;
+            return false;
+        }
+        if self.abandonment_slot != u8::MAX {
+            let slot = usize::from(self.abandonment_slot);
+            let Some(state) = PREPARED_RENDER_INPUT_ABANDONMENT_STATE.get(slot) else { return false };
+            let current = state.load(Ordering::Acquire);
+            if !matches!(current, 1 | 3) || state.compare_exchange(current, 0, Ordering::AcqRel, Ordering::Acquire).is_err() {
+                return false;
+            }
+            self.abandonment_slot = u8::MAX;
+            return false;
+        }
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.uploads.terminal_is_empty()
+            && self.raster_producers.terminal_is_empty()
+            && self.evictions.terminal_is_empty()
+            && self.damage.terminal_is_empty()
+            && self.clips.terminal_is_empty()
+            && self.directives.terminal_is_empty()
+            && self.draw.retirement_is_empty()
+            && self.overlay.is_none()
+            && self.permit.is_none()
+            && self.abandonment_slot == u8::MAX
+    }
+
+    /// 🧹 Advances one exact pre-submission input owner recovered after interruption.
+    pub fn close_abandoned_step() -> bool {
+        let Some(slot) = PREPARED_RENDER_INPUT_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return true };
+        let pointer = PREPARED_RENDER_INPUT_ABANDONMENT_OWNER[slot].swap(std::ptr::null_mut(), Ordering::AcqRel);
+        if pointer.is_null() {
+            PREPARED_RENDER_INPUT_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
+            return false;
+        }
+        let mut input = unsafe { Box::from_raw(pointer) };
+        if input.close_step() || input.abandonment_slot == u8::MAX {
+            drop(input);
+        } else {
+            PREPARED_RENDER_INPUT_ABANDONMENT_OWNER[slot].store(Box::into_raw(input), Ordering::Release);
+            PREPARED_RENDER_INPUT_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
+        }
+        false
+    }
+}
+
+impl Drop for PreparedRenderInput {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() || self.abandonment_slot == u8::MAX {
+            return;
+        }
+        let slot = usize::from(self.abandonment_slot);
+        let Some(state) = PREPARED_RENDER_INPUT_ABANDONMENT_STATE.get(slot) else { return };
+        if state.load(Ordering::Acquire) != 1 {
+            return;
+        }
+        let input = Box::new(Self {
+            scene_revision: std::mem::take(&mut self.scene_revision),
+            preview_generation: std::mem::take(&mut self.preview_generation),
+            damage: std::mem::take(&mut self.damage),
+            clips: std::mem::take(&mut self.clips),
+            directives: std::mem::take(&mut self.directives),
+            uploads: std::mem::take(&mut self.uploads),
+            raster_producers: std::mem::take(&mut self.raster_producers),
+            evictions: std::mem::take(&mut self.evictions),
+            draw: std::mem::replace(&mut self.draw, DrawList::empty()),
+            overlay: self.overlay.take(),
+            time_seconds: std::mem::take(&mut self.time_seconds),
+            limits: std::mem::take(&mut self.limits),
+            permit: self.permit.take(),
+            abandonment_slot: self.abandonment_slot,
+        });
+        self.abandonment_slot = u8::MAX;
+        PREPARED_RENDER_INPUT_ABANDONMENT_OWNER[slot].store(Box::into_raw(input), Ordering::Release);
+        state.store(2, Ordering::Release);
     }
 }
 //#endregion 📦️Packet
 
 //#region ⚙️PreparationJob
-/// 📬️ Bounded single-packet handoff retained after a worker consumes the job.
-#[derive(Clone, Default)]
+const PREPARED_RENDER_MAILBOX_SLOTS: usize = 64;
+
+struct PreparedRenderMailboxSlot {
+    state: AtomicU8,
+    generation: AtomicU64,
+    references: AtomicUsize,
+    packet: AtomicPtr<PreparedRenderPacket>,
+}
+
+impl PreparedRenderMailboxSlot {
+    const fn new() -> Self {
+        Self { state: AtomicU8::new(0), generation: AtomicU64::new(0), references: AtomicUsize::new(0), packet: AtomicPtr::new(std::ptr::null_mut()) }
+    }
+}
+
+static PREPARED_RENDER_MAILBOX: [PreparedRenderMailboxSlot; PREPARED_RENDER_MAILBOX_SLOTS] = [const { PreparedRenderMailboxSlot::new() }; PREPARED_RENDER_MAILBOX_SLOTS];
+
+/// 📬️ Generation-qualified nonblocking capacity-one packet handoff.
 pub struct PreparedRenderReceiver {
-    latest: Arc<Mutex<Option<PreparedRenderPacket>>>,
+    slot: u8,
+    generation: u64,
+    owned: bool,
 }
 
 impl PreparedRenderReceiver {
-    pub fn take_latest(&self) -> Option<PreparedRenderPacket> {
-        self.latest.lock().expect("prepared render receiver").take()
+    fn unowned() -> Self {
+        Self { slot: u8::MAX, generation: 0, owned: false }
     }
 
-    fn publish(&self, packet: PreparedRenderPacket) {
-        *self.latest.lock().expect("prepared render receiver") = Some(packet);
+    fn try_reserve() -> Option<Self> {
+        let slot = PREPARED_RENDER_MAILBOX.iter().position(|slot| slot.state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_ok())?;
+        let current = PREPARED_RENDER_MAILBOX[slot].generation.load(Ordering::Acquire);
+        let Some(generation) = current.checked_add(1) else {
+            PREPARED_RENDER_MAILBOX[slot].state.store(0, Ordering::Release);
+            return None;
+        };
+        if PREPARED_RENDER_MAILBOX[slot].generation.compare_exchange(current, generation, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            PREPARED_RENDER_MAILBOX[slot].state.store(0, Ordering::Release);
+            return None;
+        }
+        PREPARED_RENDER_MAILBOX[slot].references.store(1, Ordering::Release);
+        Some(Self { slot: slot as u8, generation, owned: true })
+    }
+
+    pub fn try_clone(&self) -> Option<Self> {
+        let slot = PREPARED_RENDER_MAILBOX.get(usize::from(self.slot))?;
+        if !self.owned || slot.generation.load(Ordering::Acquire) != self.generation || slot.state.load(Ordering::Acquire) == 0 {
+            return None;
+        }
+        let references = slot.references.load(Ordering::Acquire);
+        let next = references.checked_add(1)?;
+        slot.references.compare_exchange(references, next, Ordering::AcqRel, Ordering::Acquire).ok()?;
+        Some(Self { slot: self.slot, generation: self.generation, owned: true })
+    }
+
+    pub fn take_latest(&self) -> Option<PreparedRenderPacket> {
+        let slot = PREPARED_RENDER_MAILBOX.get(usize::from(self.slot))?;
+        if slot.generation.load(Ordering::Acquire) != self.generation || slot.state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return None;
+        }
+        let pointer = slot.packet.swap(std::ptr::null_mut(), Ordering::AcqRel);
+        slot.state.store(1, Ordering::Release);
+        if pointer.is_null() {
+            return None;
+        }
+        Some(*unsafe { Box::from_raw(pointer) })
+    }
+
+    fn publish(&self, packet: PreparedRenderPacket) -> Result<(), PreparedRenderPacket> {
+        let Some(slot) = PREPARED_RENDER_MAILBOX.get(usize::from(self.slot)) else { return Err(packet) };
+        if slot.generation.load(Ordering::Acquire) != self.generation || slot.state.load(Ordering::Acquire) != 1 {
+            return Err(packet);
+        }
+        let pointer = Box::into_raw(Box::new(packet));
+        if slot.packet.compare_exchange(std::ptr::null_mut(), pointer, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return Err(*unsafe { Box::from_raw(pointer) });
+        }
+        slot.state.store(2, Ordering::Release);
+        Ok(())
     }
 
     fn close_step(&self) -> bool {
-        let mut latest = self.latest.lock().expect("prepared render receiver");
-        let Some(packet) = latest.as_mut() else { return true };
-        if !packet.retire_step() {
+        let Some(slot) = PREPARED_RENDER_MAILBOX.get(usize::from(self.slot)) else { return true };
+        if slot.generation.load(Ordering::Acquire) != self.generation {
+            return true;
+        }
+        if slot.state.load(Ordering::Acquire) == 1 {
+            return true;
+        }
+        if slot.state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return false;
         }
-        *latest = None;
+        let pointer = slot.packet.swap(std::ptr::null_mut(), Ordering::AcqRel);
+        if pointer.is_null() {
+            slot.state.store(1, Ordering::Release);
+            return false;
+        }
+        let mut packet = unsafe { Box::from_raw(pointer) };
+        if packet.retire_step() {
+            drop(packet);
+            slot.state.store(1, Ordering::Release);
+        } else {
+            slot.packet.store(Box::into_raw(packet), Ordering::Release);
+            slot.state.store(2, Ordering::Release);
+        }
         false
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.latest.lock().expect("prepared render receiver").is_none()
+        PREPARED_RENDER_MAILBOX.get(usize::from(self.slot)).is_none_or(|slot| slot.generation.load(Ordering::Acquire) != self.generation || slot.packet.load(Ordering::Acquire).is_null())
+    }
+
+    /// 🧹 Advances one owner from one mailbox abandoned by its final handle.
+    pub fn close_abandoned_step() -> bool {
+        let Some(slot) = PREPARED_RENDER_MAILBOX.iter().find(|slot| slot.state.compare_exchange(4, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return true };
+        let pointer = slot.packet.swap(std::ptr::null_mut(), Ordering::AcqRel);
+        if pointer.is_null() {
+            slot.state.store(0, Ordering::Release);
+            return false;
+        }
+        let mut packet = unsafe { Box::from_raw(pointer) };
+        if packet.retire_step() {
+            drop(packet);
+            slot.state.store(0, Ordering::Release);
+        } else {
+            slot.packet.store(Box::into_raw(packet), Ordering::Release);
+            slot.state.store(4, Ordering::Release);
+        }
+        false
+    }
+}
+
+impl Drop for PreparedRenderReceiver {
+    fn drop(&mut self) {
+        if !self.owned {
+            return;
+        }
+        let Some(slot) = PREPARED_RENDER_MAILBOX.get(usize::from(self.slot)) else { return };
+        if slot.generation.load(Ordering::Acquire) != self.generation {
+            self.owned = false;
+            return;
+        }
+        let references = slot.references.fetch_sub(1, Ordering::AcqRel);
+        if references == 1 {
+            if slot.packet.load(Ordering::Acquire).is_null() {
+                slot.state.store(0, Ordering::Release);
+            } else {
+                slot.state.store(4, Ordering::Release);
+            }
+        }
+        self.owned = false;
     }
 }
 
@@ -1156,12 +2193,21 @@ pub struct PreparedRenderJob {
     section: PreparationSection,
     draw_cursor: DrawMeasureCursor,
     overlay_cursor: DrawMeasureCursor,
+    pipeline_cursor: DrawMeasureCursor,
+    pipeline_overlay_cursor: DrawMeasureCursor,
+    pipeline_overlay: bool,
     metadata_cursor: usize,
-    items_per_step: usize,
+    commands: Option<PreparedRenderCommandPages>,
+    digest: u64,
+    fault: Option<&'static str>,
     receiver: PreparedRenderReceiver,
-    terminal_identity: Option<[u8; 16]>,
-    terminal_state: Option<semio_framework_job::RetainedJobPayload>,
+    rejected_upload: Option<PreparedRenderUpload>,
+    rejected_packet: Option<PreparedRenderPacket>,
+    raster_backing_closed: bool,
+    packet_command_staged: bool,
+    published: bool,
     closing: bool,
+    abandonment_slot: u8,
 }
 
 #[derive(Clone, Copy)]
@@ -1173,19 +2219,32 @@ enum PreparationSection {
     Damage,
     Clips,
     Directives,
+    Validate,
+    Snap,
+    Order,
+    Tessellate,
+    Batch,
+    Hash,
     Complete,
 }
 
-#[derive(Clone, Copy)]
-enum DrawMeasureCursor {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum DrawMeasureCursor {
     LayerHeader(usize),
+    LayerUi { layer: usize, item: usize, overlay: bool },
+    LayerVector { layer: usize, item: usize, overlay: bool },
     LayerRaster { layer: usize, raster: usize },
+    LayerRasterKey { layer: usize, raster: usize, byte: usize },
     PassHeader(usize),
     PassDraw { pass: usize, draw: usize, translucent: bool },
+    PassDrawKey { pass: usize, draw: usize, byte: usize, translucent: bool },
     PassInstance { pass: usize, draw: usize, instance: usize, translucent: bool },
+    PassInstanceKey { pass: usize, draw: usize, instance: usize, byte: usize, translucent: bool },
     PassLine { pass: usize, draw: usize },
+    PassLineVertex { pass: usize, draw: usize, vertex: usize },
     PassTextured { pass: usize, draw: usize },
     PassTexturedInstance { pass: usize, draw: usize, instance: usize },
+    PassTexturedKey { pass: usize, draw: usize, instance: usize, byte: usize },
     Glass(usize),
     Complete,
 }
@@ -1196,25 +2255,93 @@ impl Default for DrawMeasureCursor {
     }
 }
 
+/// 🛡️ Exact input returned when the fixed packet mailbox refuses a job.
+pub struct PreparedRenderJobRejected {
+    fault: &'static str,
+    input: Option<PreparedRenderInput>,
+}
+
+impl PreparedRenderJobRejected {
+    pub fn fault(&self) -> &'static str {
+        self.fault
+    }
+
+    pub fn take_rejected(&mut self) -> Option<PreparedRenderInput> {
+        self.input.take()
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        let Some(input) = self.input.as_mut() else { return true };
+        if !input.close_step() {
+            return false;
+        }
+        self.input = None;
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.input.is_none()
+    }
+}
+
 impl PreparedRenderJob {
-    pub fn new(input: PreparedRenderInput, items_per_step: usize) -> Self {
+    pub fn try_new(mut input: PreparedRenderInput) -> Result<Self, PreparedRenderJobRejected> {
+        let Some(receiver) = PreparedRenderReceiver::try_reserve() else {
+            return Err(PreparedRenderJobRejected { fault: "prepared render packet mailbox exhausted", input: Some(input) });
+        };
+        let Some(slot) = input.permit.as_ref().map(|permit| usize::from(permit.slot)) else {
+            return Err(PreparedRenderJobRejected { fault: "prepared render process owner was missing", input: Some(input) });
+        };
+        let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(slot) else {
+            return Err(PreparedRenderJobRejected { fault: "prepared render abandonment slot was missing", input: Some(input) });
+        };
+        if state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return Err(PreparedRenderJobRejected { fault: "prepared render abandonment slot was occupied", input: Some(input) });
+        }
+        let input_slot = usize::from(input.abandonment_slot);
+        if input_slot != slot || PREPARED_RENDER_INPUT_ABANDONMENT_STATE[input_slot].compare_exchange(1, 0, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            state.store(0, Ordering::Release);
+            return Err(PreparedRenderJobRejected { fault: "prepared render input handoff generation was stale", input: Some(input) });
+        }
+        input.abandonment_slot = u8::MAX;
+        Ok(Self::from_admitted(input, receiver, slot as u8))
+    }
+
+    fn from_admitted(input: PreparedRenderInput, receiver: PreparedRenderReceiver, abandonment_slot: u8) -> Self {
         Self {
             input: Some(input),
             usage: PreparedRenderUsage::default(),
             section: PreparationSection::Draw,
             draw_cursor: DrawMeasureCursor::default(),
             overlay_cursor: DrawMeasureCursor::default(),
+            pipeline_cursor: DrawMeasureCursor::default(),
+            pipeline_overlay_cursor: DrawMeasureCursor::default(),
+            pipeline_overlay: false,
             metadata_cursor: 0,
-            items_per_step: items_per_step.max(1),
-            receiver: PreparedRenderReceiver::default(),
-            terminal_identity: None,
-            terminal_state: None,
+            commands: Some(PreparedRenderCommandPages::default()),
+            digest: 0xcbf29ce484222325,
+            fault: None,
+            receiver,
+            rejected_upload: None,
+            rejected_packet: None,
+            raster_backing_closed: false,
+            packet_command_staged: false,
+            published: false,
             closing: false,
+            abandonment_slot,
         }
     }
 
-    pub fn receiver(&self) -> PreparedRenderReceiver {
-        self.receiver.clone()
+    #[cfg(test)]
+    pub fn new(input: PreparedRenderInput, _items_per_step: usize) -> Self {
+        match Self::try_new(input) {
+            Ok(job) => job,
+            Err(_) => panic!("test prepared render mailbox must admit one job"),
+        }
+    }
+
+    pub fn receiver(&self) -> Option<PreparedRenderReceiver> {
+        self.receiver.try_clone()
     }
 
     pub fn take_packet(&self) -> Option<PreparedRenderPacket> {
@@ -1222,11 +2349,12 @@ impl PreparedRenderJob {
     }
 
     pub fn close_step(&mut self) -> bool {
-        let Some(input) = self.input.as_mut() else { return self.receiver.close_step() };
-        if let Some(upload) = input.uploads.last_mut() {
+        if let Some(upload) = self.rejected_upload.as_mut() {
             let retained = match upload {
+                #[cfg(test)]
                 PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. } => pixels.pop().is_some(),
                 PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels } => !pixels.close_step(),
+                #[cfg(test)]
                 PreparedRenderUpload::Raster { key, pixels, .. } => pixels.pop().is_some() || key.pop().is_some(),
                 PreparedRenderUpload::RasterPages { key, pixels } => !pixels.retire_with_key_step(key),
                 PreparedRenderUpload::Mesh { key, .. } => key.pop().is_some(),
@@ -1234,56 +2362,70 @@ impl PreparedRenderJob {
             if retained {
                 return false;
             }
-            input.uploads.pop();
+            self.rejected_upload = None;
             return false;
         }
-        if let Some(producer) = input.raster_producers.back_mut() {
-            producer.begin_close();
-            if !producer.close_step() {
+        if let Some(packet) = self.rejected_packet.as_mut() {
+            if !packet.retire_step() {
                 return false;
             }
-            assert!(producer.terminal_is_empty(), "closed raster producer must be terminal-empty");
-            input.raster_producers.pop_back();
+            self.rejected_packet = None;
             return false;
         }
-        if let Some(PreparedRenderEviction::Mesh { key }) = input.evictions.last_mut() {
-            if key.pop().is_some() {
+        if let Some(commands) = self.commands.as_mut() {
+            if !commands.close_step() {
                 return false;
             }
-            input.evictions.pop();
+            self.commands = None;
             return false;
         }
-        if !input.draw.retire_step() {
-            return false;
-        }
-        if let Some(overlay) = input.overlay.as_mut() {
-            if !overlay.retire_step() {
+        if let Some(input) = self.input.as_mut() {
+            if !input.close_step() {
                 return false;
             }
-            input.overlay = None;
+            self.input = None;
             return false;
         }
-        if input.damage.pop().is_some() || input.clips.pop().is_some() || input.directives.pop().is_some() {
+        if !self.receiver.close_step() {
             return false;
         }
-        self.input = None;
-        false
+        if self.abandonment_slot != u8::MAX {
+            let slot = usize::from(self.abandonment_slot);
+            let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(slot) else { return false };
+            let current = state.load(Ordering::Acquire);
+            if !matches!(current, 1 | 3) || state.compare_exchange(current, 0, Ordering::AcqRel, Ordering::Acquire).is_err() {
+                return false;
+            }
+            self.abandonment_slot = u8::MAX;
+            return false;
+        }
+        true
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.input.is_none() && self.receiver.terminal_is_empty()
+        self.input.is_none() && self.commands.is_none() && self.rejected_upload.is_none() && self.rejected_packet.is_none() && self.receiver.terminal_is_empty() && self.abandonment_slot == u8::MAX
     }
 
-    fn input(&self) -> &PreparedRenderInput {
-        self.input.as_ref().expect("prepared render input")
+    /// 🧹 Advances one exact job owner recovered after an interrupted worker execution.
+    pub fn close_abandoned_step() -> bool {
+        let Some(slot) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return true };
+        let pointer = PREPARED_RENDER_JOB_ABANDONMENT_OWNER[slot].swap(std::ptr::null_mut(), Ordering::AcqRel);
+        if pointer.is_null() {
+            PREPARED_RENDER_JOB_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
+            return false;
+        }
+        let mut job = unsafe { Box::from_raw(pointer) };
+        if job.close_step() || job.abandonment_slot == u8::MAX {
+            drop(job);
+        } else {
+            PREPARED_RENDER_JOB_ABANDONMENT_OWNER[slot].store(Box::into_raw(job), Ordering::Release);
+            PREPARED_RENDER_JOB_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
+        }
+        false
     }
 
-    fn measure_layer_header(layer: &DrawLayer) -> PreparedRenderUsage {
-        let ui = layer.ui_instances.len().saturating_add(layer.overlay_ui_instances.len());
-        let vector = layer.vector_vertices.len().saturating_add(layer.overlay_vector_vertices.len());
-        let items = ui.saturating_add(vector);
-        let bytes = ui.saturating_mul(size_of::<crate::wgpu::draw::UiInstance>()).saturating_add(vector.saturating_mul(size_of::<crate::wgpu::draw::VectorVertex>()));
-        PreparedRenderUsage { draw_items: items, draw_bytes: bytes, ..PreparedRenderUsage::default() }
+    fn input(&self) -> Option<&PreparedRenderInput> {
+        self.input.as_ref()
     }
 
     fn next_draw_usage(draw: &DrawList, cursor: &mut DrawMeasureCursor) -> Option<PreparedRenderUsage> {
@@ -1291,67 +2433,145 @@ impl PreparedRenderJob {
             DrawMeasureCursor::LayerHeader(layer) => {
                 let Some(value) = draw.layers.get(layer) else {
                     *cursor = DrawMeasureCursor::PassHeader(0);
-                    return Self::next_draw_usage(draw, cursor);
+                    return Some(PreparedRenderUsage::default());
                 };
-                let next = if value.raster_instances.is_empty() { DrawMeasureCursor::LayerHeader(layer + 1) } else { DrawMeasureCursor::LayerRaster { layer, raster: 0 } };
-                (Self::measure_layer_header(value), next)
+                let next = if !value.ui_instances.is_empty() {
+                    DrawMeasureCursor::LayerUi { layer, item: 0, overlay: false }
+                } else if !value.overlay_ui_instances.is_empty() {
+                    DrawMeasureCursor::LayerUi { layer, item: 0, overlay: true }
+                } else if !value.vector_vertices.is_empty() {
+                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: false }
+                } else if !value.overlay_vector_vertices.is_empty() {
+                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: true }
+                } else if !value.raster_instances.is_empty() {
+                    DrawMeasureCursor::LayerRaster { layer, raster: 0 }
+                } else {
+                    DrawMeasureCursor::LayerHeader(layer + 1)
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<DrawLayer>(), ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::LayerUi { layer, item, overlay } => {
+                let value = &draw.layers[layer];
+                let items = if overlay { &value.overlay_ui_instances } else { &value.ui_instances };
+                let next = if item + 1 < items.len() {
+                    DrawMeasureCursor::LayerUi { layer, item: item + 1, overlay }
+                } else if !overlay && !value.overlay_ui_instances.is_empty() {
+                    DrawMeasureCursor::LayerUi { layer, item: 0, overlay: true }
+                } else if !value.vector_vertices.is_empty() {
+                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: false }
+                } else if !value.overlay_vector_vertices.is_empty() {
+                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: true }
+                } else if !value.raster_instances.is_empty() {
+                    DrawMeasureCursor::LayerRaster { layer, raster: 0 }
+                } else {
+                    DrawMeasureCursor::LayerHeader(layer + 1)
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw::UiInstance>(), ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::LayerVector { layer, item, overlay } => {
+                let value = &draw.layers[layer];
+                let items = if overlay { &value.overlay_vector_vertices } else { &value.vector_vertices };
+                let next = if item + 1 < items.len() {
+                    DrawMeasureCursor::LayerVector { layer, item: item + 1, overlay }
+                } else if !overlay && !value.overlay_vector_vertices.is_empty() {
+                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: true }
+                } else if !value.raster_instances.is_empty() {
+                    DrawMeasureCursor::LayerRaster { layer, raster: 0 }
+                } else {
+                    DrawMeasureCursor::LayerHeader(layer + 1)
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw::VectorVertex>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::LayerRaster { layer, raster } => {
                 let value = &draw.layers[layer].raster_instances[raster];
-                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw::UiInstance>().saturating_add(value.0.len()), ..PreparedRenderUsage::default() };
-                let next = if raster + 1 < draw.layers[layer].raster_instances.len() { DrawMeasureCursor::LayerRaster { layer, raster: raster + 1 } } else { DrawMeasureCursor::LayerHeader(layer + 1) };
+                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw::UiInstance>(), ..PreparedRenderUsage::default() };
+                let next = if value.0.is_empty() { Self::next_layer_raster(draw, layer, raster) } else { DrawMeasureCursor::LayerRasterKey { layer, raster, byte: 0 } };
                 (usage, next)
+            }
+            DrawMeasureCursor::LayerRasterKey { layer, raster, byte } => {
+                let key = &draw.layers[layer].raster_instances[raster].0;
+                let next = if byte + 1 < key.len() { DrawMeasureCursor::LayerRasterKey { layer, raster, byte: byte + 1 } } else { Self::next_layer_raster(draw, layer, raster) };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassHeader(pass) => {
                 let Some(value) = draw.scene_passes.get(pass) else {
                     *cursor = DrawMeasureCursor::Glass(0);
-                    return Self::next_draw_usage(draw, cursor);
+                    return Some(PreparedRenderUsage::default());
                 };
                 let next = if value.draws.is_empty() { Self::next_after_opaque(draw, pass) } else { DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: false } };
-                (PreparedRenderUsage::default(), next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::ScenePass3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassDraw { pass, draw: draw_index, translucent } => {
                 let pass_value = &draw.scene_passes[pass];
                 let draws = if translucent { &pass_value.translucent_draws } else { &pass_value.draws };
                 let value = &draws[draw_index];
-                let usage = PreparedRenderUsage { draw_bytes: value.mesh_key.len(), ..PreparedRenderUsage::default() };
-                let next = if value.instances.is_empty() { Self::next_pass_draw(draw, pass, draw_index, translucent) } else { DrawMeasureCursor::PassInstance { pass, draw: draw_index, instance: 0, translucent } };
+                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>(), ..PreparedRenderUsage::default() };
+                let next = if !value.mesh_key.is_empty() {
+                    DrawMeasureCursor::PassDrawKey { pass, draw: draw_index, byte: 0, translucent }
+                } else if value.instances.is_empty() {
+                    Self::next_pass_draw(draw, pass, draw_index, translucent)
+                } else {
+                    DrawMeasureCursor::PassInstance { pass, draw: draw_index, instance: 0, translucent }
+                };
                 (usage, next)
+            }
+            DrawMeasureCursor::PassDrawKey { pass, draw: draw_index, byte, translucent } => {
+                let pass_value = &draw.scene_passes[pass];
+                let draws = if translucent { &pass_value.translucent_draws } else { &pass_value.draws };
+                let value = &draws[draw_index];
+                let next = if byte + 1 < value.mesh_key.len() {
+                    DrawMeasureCursor::PassDrawKey { pass, draw: draw_index, byte: byte + 1, translucent }
+                } else if value.instances.is_empty() {
+                    Self::next_pass_draw(draw, pass, draw_index, translucent)
+                } else {
+                    DrawMeasureCursor::PassInstance { pass, draw: draw_index, instance: 0, translucent }
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassInstance { pass, draw: draw_index, instance, translucent } => {
                 let pass_value = &draw.scene_passes[pass];
                 let draws = if translucent { &pass_value.translucent_draws } else { &pass_value.draws };
                 let value = &draws[draw_index].instances[instance];
-                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::Instance3d>().saturating_add(value.id.len()), ..PreparedRenderUsage::default() };
-                let next = if instance + 1 < draws[draw_index].instances.len() { DrawMeasureCursor::PassInstance { pass, draw: draw_index, instance: instance + 1, translucent } } else { Self::next_pass_draw(draw, pass, draw_index, translucent) };
+                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::Instance3d>(), ..PreparedRenderUsage::default() };
+                let next = if value.id.is_empty() { Self::next_pass_instance(draw, pass, draw_index, instance, translucent) } else { DrawMeasureCursor::PassInstanceKey { pass, draw: draw_index, instance, byte: 0, translucent } };
                 (usage, next)
+            }
+            DrawMeasureCursor::PassInstanceKey { pass, draw: draw_index, instance, byte, translucent } => {
+                let pass_value = &draw.scene_passes[pass];
+                let draws = if translucent { &pass_value.translucent_draws } else { &pass_value.draws };
+                let key = &draws[draw_index].instances[instance].id;
+                let next = if byte + 1 < key.len() { DrawMeasureCursor::PassInstanceKey { pass, draw: draw_index, instance, byte: byte + 1, translucent } } else { Self::next_pass_instance(draw, pass, draw_index, instance, translucent) };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassLine { pass, draw: draw_index } => {
                 let pass_value = &draw.scene_passes[pass];
-                let vertices = pass_value.line_draws[draw_index].vertices.len();
-                let usage = PreparedRenderUsage { draw_items: vertices, draw_bytes: vertices.saturating_mul(size_of::<crate::wgpu::kernel_3d_scene::LineVertex3d>()), ..PreparedRenderUsage::default() };
-                let next = if draw_index + 1 < pass_value.line_draws.len() { DrawMeasureCursor::PassLine { pass, draw: draw_index + 1 } } else { Self::next_after_lines(draw, pass) };
-                (usage, next)
+                let next = if pass_value.line_draws[draw_index].vertices.is_empty() { Self::next_pass_line(draw, pass, draw_index) } else { DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex: 0 } };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::LineDraw3d>(), ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex } => {
+                let next = if vertex + 1 < draw.scene_passes[pass].line_draws[draw_index].vertices.len() { DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex: vertex + 1 } } else { Self::next_pass_line(draw, pass, draw_index) };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::LineVertex3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassTextured { pass, draw: draw_index } => {
                 let value = &draw.scene_passes[pass].textured_draws[draw_index];
                 let next = if value.instances.is_empty() { Self::next_textured_draw(draw, pass, draw_index) } else { DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance: 0 } };
-                (PreparedRenderUsage::default(), next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::TexturedDraw3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance } => {
                 let value = &draw.scene_passes[pass].textured_draws[draw_index].instances[instance];
-                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::TexturedInstance3d>().saturating_add(value.texture_key.len()), ..PreparedRenderUsage::default() };
-                let next = if instance + 1 < draw.scene_passes[pass].textured_draws[draw_index].instances.len() {
-                    DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance: instance + 1 }
-                } else {
-                    Self::next_textured_draw(draw, pass, draw_index)
-                };
+                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::TexturedInstance3d>(), ..PreparedRenderUsage::default() };
+                let next = if value.texture_key.is_empty() { Self::next_textured_instance(draw, pass, draw_index, instance) } else { DrawMeasureCursor::PassTexturedKey { pass, draw: draw_index, instance, byte: 0 } };
                 (usage, next)
+            }
+            DrawMeasureCursor::PassTexturedKey { pass, draw: draw_index, instance, byte } => {
+                let key = &draw.scene_passes[pass].textured_draws[draw_index].instances[instance].texture_key;
+                let next = if byte + 1 < key.len() { DrawMeasureCursor::PassTexturedKey { pass, draw: draw_index, instance, byte: byte + 1 } } else { Self::next_textured_instance(draw, pass, draw_index, instance) };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::Glass(index) => {
                 if index >= draw.glass_regions.len() {
                     *cursor = DrawMeasureCursor::Complete;
-                    return None;
+                    return Some(PreparedRenderUsage::default());
                 }
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw::GlassRegion>(), ..PreparedRenderUsage::default() }, DrawMeasureCursor::Glass(index + 1))
             }
@@ -1359,6 +2579,40 @@ impl PreparedRenderJob {
         };
         *cursor = next;
         Some(usage)
+    }
+
+    fn next_layer_raster(draw: &DrawList, layer: usize, raster: usize) -> DrawMeasureCursor {
+        if raster + 1 < draw.layers[layer].raster_instances.len() {
+            DrawMeasureCursor::LayerRaster { layer, raster: raster + 1 }
+        } else {
+            DrawMeasureCursor::LayerHeader(layer + 1)
+        }
+    }
+
+    fn next_pass_instance(draw: &DrawList, pass: usize, draw_index: usize, instance: usize, translucent: bool) -> DrawMeasureCursor {
+        let pass_value = &draw.scene_passes[pass];
+        let draws = if translucent { &pass_value.translucent_draws } else { &pass_value.draws };
+        if instance + 1 < draws[draw_index].instances.len() {
+            DrawMeasureCursor::PassInstance { pass, draw: draw_index, instance: instance + 1, translucent }
+        } else {
+            Self::next_pass_draw(draw, pass, draw_index, translucent)
+        }
+    }
+
+    fn next_pass_line(draw: &DrawList, pass: usize, draw_index: usize) -> DrawMeasureCursor {
+        if draw_index + 1 < draw.scene_passes[pass].line_draws.len() {
+            DrawMeasureCursor::PassLine { pass, draw: draw_index + 1 }
+        } else {
+            Self::next_after_lines(draw, pass)
+        }
+    }
+
+    fn next_textured_instance(draw: &DrawList, pass: usize, draw_index: usize, instance: usize) -> DrawMeasureCursor {
+        if instance + 1 < draw.scene_passes[pass].textured_draws[draw_index].instances.len() {
+            DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance: instance + 1 }
+        } else {
+            Self::next_textured_draw(draw, pass, draw_index)
+        }
     }
 
     fn next_pass_draw(draw: &DrawList, pass: usize, draw_index: usize, translucent: bool) -> DrawMeasureCursor {
@@ -1375,34 +2629,50 @@ impl PreparedRenderJob {
 
     fn next_after_opaque(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
         let value = &draw.scene_passes[pass];
-        if !value.line_draws.is_empty() { DrawMeasureCursor::PassLine { pass, draw: 0 } } else { Self::next_after_lines(draw, pass) }
+        if !value.line_draws.is_empty() {
+            DrawMeasureCursor::PassLine { pass, draw: 0 }
+        } else {
+            Self::next_after_lines(draw, pass)
+        }
     }
 
     fn next_after_lines(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
         let value = &draw.scene_passes[pass];
-        if !value.translucent_draws.is_empty() { DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: true } } else { Self::next_after_translucent(draw, pass) }
+        if !value.translucent_draws.is_empty() {
+            DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: true }
+        } else {
+            Self::next_after_translucent(draw, pass)
+        }
     }
 
     fn next_after_translucent(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
-        if !draw.scene_passes[pass].textured_draws.is_empty() { DrawMeasureCursor::PassTextured { pass, draw: 0 } } else { DrawMeasureCursor::PassHeader(pass + 1) }
+        if !draw.scene_passes[pass].textured_draws.is_empty() {
+            DrawMeasureCursor::PassTextured { pass, draw: 0 }
+        } else {
+            DrawMeasureCursor::PassHeader(pass + 1)
+        }
     }
 
     fn next_textured_draw(draw: &DrawList, pass: usize, draw_index: usize) -> DrawMeasureCursor {
-        if draw_index + 1 < draw.scene_passes[pass].textured_draws.len() { DrawMeasureCursor::PassTextured { pass, draw: draw_index + 1 } } else { DrawMeasureCursor::PassHeader(pass + 1) }
+        if draw_index + 1 < draw.scene_passes[pass].textured_draws.len() {
+            DrawMeasureCursor::PassTextured { pass, draw: draw_index + 1 }
+        } else {
+            DrawMeasureCursor::PassHeader(pass + 1)
+        }
     }
 
     fn measure_next(&mut self) -> Option<PreparedRenderUsage> {
         match self.section {
             PreparationSection::Draw => {
-                let input = self.input.as_ref().expect("prepared render input");
+                let input = self.input.as_ref()?;
                 if let Some(usage) = Self::next_draw_usage(&input.draw, &mut self.draw_cursor) {
                     return Some(usage);
                 }
                 self.section = PreparationSection::Overlay;
-                self.measure_next()
+                Some(PreparedRenderUsage::default())
             }
             PreparationSection::Overlay => {
-                let input = self.input.as_ref().expect("prepared render input");
+                let input = self.input.as_ref()?;
                 if let Some(overlay) = &input.overlay {
                     if let Some(usage) = Self::next_draw_usage(overlay, &mut self.overlay_cursor) {
                         return Some(usage);
@@ -1410,137 +2680,322 @@ impl PreparedRenderJob {
                 }
                 self.section = PreparationSection::Uploads;
                 self.metadata_cursor = 0;
-                self.measure_next()
+                Some(PreparedRenderUsage::default())
             }
             PreparationSection::Uploads => {
-                let input = self.input.as_ref().expect("prepared render input");
+                let input = self.input.as_ref()?;
                 if let Some(upload) = input.uploads.get(self.metadata_cursor) {
-                    self.metadata_cursor += 1;
-                    return Some(PreparedRenderUsage { upload_items: 1, upload_bytes: upload.byte_len(), ..PreparedRenderUsage::default() });
+                    let source = self.metadata_cursor;
+                    let Some(next) = self.metadata_cursor.checked_add(1) else {
+                        self.fault = Some("prepared upload cursor exhausted");
+                        return Some(PreparedRenderUsage::default());
+                    };
+                    let Some(bytes) = upload.byte_len() else {
+                        self.fault = Some("prepared upload byte claim overflowed");
+                        return Some(PreparedRenderUsage::default());
+                    };
+                    self.metadata_cursor = next;
+                    let Some(digest) = u64::try_from(bytes).ok() else {
+                        self.fault = Some("prepared upload digest exhausted");
+                        return Some(PreparedRenderUsage::default());
+                    };
+                    let command = PreparedRenderCommand { kind: PreparedRenderCommandKind::Upload, source, digest, draw_cursor: None, packet_overlay: false };
+                    let Some(commands) = self.commands.as_mut() else {
+                        self.fault = Some("prepared render command owner was missing");
+                        return Some(PreparedRenderUsage::default());
+                    };
+                    if commands.try_push(command).is_err() {
+                        self.fault = Some("prepared render command page credits exhausted");
+                        return Some(PreparedRenderUsage::default());
+                    }
+                    return Some(PreparedRenderUsage { upload_items: 1, upload_bytes: bytes, ..PreparedRenderUsage::default() });
                 }
                 self.section = PreparationSection::Evictions;
                 self.metadata_cursor = 0;
-                self.measure_next()
+                Some(PreparedRenderUsage::default())
             }
             PreparationSection::Evictions => {
-                let input = self.input.as_ref().expect("prepared render input");
+                let input = self.input.as_ref()?;
                 if let Some(eviction) = input.evictions.get(self.metadata_cursor) {
-                    self.metadata_cursor += 1;
-                    return Some(PreparedRenderUsage { upload_items: 1, upload_bytes: eviction.byte_len(), ..PreparedRenderUsage::default() });
+                    let Some(next) = self.metadata_cursor.checked_add(1) else {
+                        self.fault = Some("prepared eviction cursor exhausted");
+                        return Some(PreparedRenderUsage::default());
+                    };
+                    let Some(bytes) = eviction.byte_len() else {
+                        self.fault = Some("prepared eviction byte claim overflowed");
+                        return Some(PreparedRenderUsage::default());
+                    };
+                    self.metadata_cursor = next;
+                    return Some(PreparedRenderUsage { upload_items: 1, upload_bytes: bytes, ..PreparedRenderUsage::default() });
                 }
                 self.section = PreparationSection::Damage;
                 self.metadata_cursor = 0;
-                self.measure_next()
+                Some(PreparedRenderUsage::default())
             }
             PreparationSection::Damage => self.measure_metadata(PreparationSection::Clips, |input| input.damage.len(), size_of::<ScissorRect>()),
             PreparationSection::Clips => self.measure_metadata(PreparationSection::Directives, |input| input.clips.len(), size_of::<ScissorRect>()),
-            PreparationSection::Directives => self.measure_metadata(PreparationSection::Complete, |input| input.directives.len(), size_of::<RenderDirective>()),
+            PreparationSection::Directives => self.measure_metadata(PreparationSection::Validate, |input| input.directives.len(), size_of::<RenderDirective>()),
+            PreparationSection::Validate | PreparationSection::Snap | PreparationSection::Order | PreparationSection::Tessellate | PreparationSection::Batch | PreparationSection::Hash => self.advance_pipeline(),
             PreparationSection::Complete => None,
         }
     }
 
     fn measure_metadata(&mut self, next: PreparationSection, len: impl FnOnce(&PreparedRenderInput) -> usize, bytes: usize) -> Option<PreparedRenderUsage> {
-        if self.metadata_cursor < len(self.input()) {
-            self.metadata_cursor += 1;
+        if self.metadata_cursor < len(self.input()?) {
+            let Some(next) = self.metadata_cursor.checked_add(1) else {
+                self.fault = Some("prepared metadata cursor exhausted");
+                return Some(PreparedRenderUsage::default());
+            };
+            self.metadata_cursor = next;
             Some(PreparedRenderUsage { draw_items: 1, draw_bytes: bytes, ..PreparedRenderUsage::default() })
         } else {
             self.section = next;
             self.metadata_cursor = 0;
-            self.measure_next()
+            Some(PreparedRenderUsage::default())
         }
     }
 
-    fn include_usage(&mut self, usage: PreparedRenderUsage) {
-        self.usage.include_draw(usage.draw_items, usage.draw_bytes);
-        if usage.upload_items > 0 {
-            self.usage.include_upload(usage.upload_bytes);
+    fn advance_pipeline(&mut self) -> Option<PreparedRenderUsage> {
+        let prepared_cursor = if self.pipeline_overlay { self.pipeline_overlay_cursor } else { self.pipeline_cursor };
+        let usage = if self.pipeline_overlay {
+            let input = self.input.as_ref()?;
+            match input.overlay.as_ref() {
+                Some(overlay) => Self::next_draw_usage(overlay, &mut self.pipeline_overlay_cursor),
+                None => None,
+            }
+        } else {
+            let input = self.input.as_ref()?;
+            Self::next_draw_usage(&input.draw, &mut self.pipeline_cursor)
+        };
+        if let Some(usage) = usage {
+            let source = self.metadata_cursor;
+            let Some(next) = self.metadata_cursor.checked_add(1) else {
+                self.fault = Some("prepared pipeline cursor exhausted");
+                return Some(PreparedRenderUsage::default());
+            };
+            let Some(items) = u64::try_from(usage.draw_items).ok() else {
+                self.fault = Some("prepared pipeline item digest exhausted");
+                return Some(PreparedRenderUsage::default());
+            };
+            let Some(bytes) = u64::try_from(usage.draw_bytes).ok() else {
+                self.fault = Some("prepared pipeline byte digest exhausted");
+                return Some(PreparedRenderUsage::default());
+            };
+            self.metadata_cursor = next;
+            self.digest = self.digest.rotate_left(7) ^ items ^ bytes.rotate_left(17);
+            if matches!(self.section, PreparationSection::Tessellate) {
+                let command = PreparedRenderCommand { kind: PreparedRenderCommandKind::Tessellate, source, digest: self.digest, draw_cursor: Some(prepared_cursor), packet_overlay: self.pipeline_overlay };
+                let Some(commands) = self.commands.as_mut() else {
+                    self.fault = Some("prepared render command owner was missing");
+                    return Some(PreparedRenderUsage::default());
+                };
+                if commands.try_push(command).is_err() {
+                    self.fault = Some("prepared render command page credits exhausted");
+                    return Some(PreparedRenderUsage::default());
+                }
+            }
+            return Some(PreparedRenderUsage::default());
         }
+        if !self.pipeline_overlay {
+            self.pipeline_overlay = true;
+            self.metadata_cursor = 0;
+            return Some(PreparedRenderUsage::default());
+        }
+        self.pipeline_overlay = false;
+        self.pipeline_cursor = DrawMeasureCursor::default();
+        self.pipeline_overlay_cursor = DrawMeasureCursor::default();
+        self.metadata_cursor = 0;
+        self.section = match self.section {
+            PreparationSection::Validate => PreparationSection::Snap,
+            PreparationSection::Snap => PreparationSection::Order,
+            PreparationSection::Order => PreparationSection::Tessellate,
+            PreparationSection::Tessellate => PreparationSection::Batch,
+            PreparationSection::Batch => PreparationSection::Hash,
+            PreparationSection::Hash => PreparationSection::Complete,
+            _ => return None,
+        };
+        Some(PreparedRenderUsage::default())
     }
 
-    fn complete(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if self.terminal_identity.is_none() {
-            let input = self.input.take().expect("prepared render input");
+    fn include_usage(&mut self, usage: PreparedRenderUsage) -> bool {
+        self.usage.include_draw(usage.draw_items, usage.draw_bytes) && (usage.upload_items == 0 || self.usage.include_upload(usage.upload_bytes))
+    }
+
+    fn fault_outcome(&mut self, fault: &'static str) -> StepOutcome {
+        self.fault = Some(fault);
+        self.closing = true;
+        StepOutcome::Fault(JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) })
+    }
+
+    fn complete(&mut self) -> StepOutcome {
+        if !self.packet_command_staged {
+            let command = PreparedRenderCommand { kind: PreparedRenderCommandKind::Packet, source: 0, digest: self.digest, draw_cursor: None, packet_overlay: false };
+            let Some(commands) = self.commands.as_mut() else { return self.fault_outcome("prepared render command owner was missing") };
+            if commands.try_push(command).is_err() {
+                return self.fault_outcome("prepared render packet command credits exhausted");
+            }
+            self.packet_command_staged = true;
+            return StepOutcome::Yield;
+        }
+        if !self.published {
+            let Some(input) = self.input.take() else { return self.fault_outcome("prepared render input was missing before publication") };
+            if !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
+                self.input = Some(input);
+                return self.fault_outcome("prepared render process generation was stale before publication");
+            }
             let revision = input.scene_revision;
             let generation = input.preview_generation;
+            let Some(commands) = self.commands.take() else {
+                self.input = Some(input);
+                return self.fault_outcome("prepared render command pages were missing before publication");
+            };
+            let input = std::mem::ManuallyDrop::new(input);
             let packet = PreparedRenderPacket {
                 scene_revision: revision,
                 preview_generation: generation,
-                damage: input.damage,
-                clips: input.clips,
-                directives: input.directives,
-                uploads: input.uploads,
-                evictions: input.evictions,
-                draw: input.draw,
-                overlay: input.overlay,
+                damage: unsafe { std::ptr::read(&input.damage) },
+                clips: unsafe { std::ptr::read(&input.clips) },
+                directives: unsafe { std::ptr::read(&input.directives) },
+                uploads: unsafe { std::ptr::read(&input.uploads) },
+                evictions: unsafe { std::ptr::read(&input.evictions) },
+                draw: unsafe { std::ptr::read(&input.draw) },
+                overlay: unsafe { std::ptr::read(&input.overlay) },
+                commands,
                 time_seconds: input.time_seconds,
                 usage: self.usage,
                 limits: input.limits,
+                permit: unsafe { std::ptr::read(&input.permit) },
                 retirement_phase: 0,
+                abandonment_slot: u8::MAX,
             };
-            self.receiver.publish(packet);
-            let mut identity = [0; 16];
-            identity[..8].copy_from_slice(&revision.to_le_bytes());
-            identity[8..].copy_from_slice(&generation.to_le_bytes());
-            self.terminal_identity = Some(identity);
-        }
-        let identity = self.terminal_identity.as_ref().expect("prepared render terminal identity");
-        if self.terminal_state.is_none() {
-            self.terminal_state = Some(cx.payload_from_bytes(semio_framework_job::JobPayloadStream::CommitState, identity).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState)));
+            let packet = match packet.try_arm_abandonment() {
+                Ok(packet) => packet,
+                Err(packet) => {
+                    self.rejected_packet = Some(packet);
+                    return self.fault_outcome("prepared render packet abandonment admission was refused");
+                }
+            };
+            if let Err(packet) = self.receiver.publish(packet) {
+                self.rejected_packet = Some(packet);
+                return self.fault_outcome("prepared render packet mailbox publication refused");
+            }
+            self.published = true;
             return StepOutcome::Yield;
         }
-        let output = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::CommitOutput, identity).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput));
-        StepOutcome::Complete(CommitCandidate { state: self.terminal_state.take().expect("prepared render retained state"), output })
+        StepOutcome::Complete(CommitCandidate {
+            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+        })
+    }
+}
+
+impl Drop for PreparedRenderJob {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() || self.abandonment_slot == u8::MAX {
+            return;
+        }
+        let slot = usize::from(self.abandonment_slot);
+        let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(slot) else { return };
+        if state.load(Ordering::Acquire) != 1 {
+            return;
+        }
+        let job = Box::new(Self {
+            input: self.input.take(),
+            usage: std::mem::take(&mut self.usage),
+            section: self.section,
+            draw_cursor: self.draw_cursor,
+            overlay_cursor: self.overlay_cursor,
+            pipeline_cursor: self.pipeline_cursor,
+            pipeline_overlay_cursor: self.pipeline_overlay_cursor,
+            pipeline_overlay: self.pipeline_overlay,
+            metadata_cursor: self.metadata_cursor,
+            commands: self.commands.take(),
+            digest: self.digest,
+            fault: self.fault.take(),
+            receiver: std::mem::replace(&mut self.receiver, PreparedRenderReceiver::unowned()),
+            rejected_upload: self.rejected_upload.take(),
+            rejected_packet: self.rejected_packet.take(),
+            raster_backing_closed: self.raster_backing_closed,
+            packet_command_staged: self.packet_command_staged,
+            published: self.published,
+            closing: true,
+            abandonment_slot: self.abandonment_slot,
+        });
+        self.abandonment_slot = u8::MAX;
+        self.closing = true;
+        PREPARED_RENDER_JOB_ABANDONMENT_OWNER[slot].store(Box::into_raw(job), Ordering::Release);
+        state.store(2, Ordering::Release);
     }
 }
 
 impl InteractiveJob for PreparedRenderJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         if cx.is_cancelled() {
+            self.closing = true;
             return StepOutcome::Cancelled;
         }
-        if self.terminal_identity.is_some() {
-            return self.complete(cx);
+        if self.closing {
+            return self.fault_outcome("prepared render job was stepped while closing");
         }
-        if self.input().preview_generation != cx.generation().0 {
-            let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"prepared render generation is stale").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-            return StepOutcome::Fault(JobFault { detail });
+        let Some(input) = self.input() else {
+            return self.complete();
+        };
+        if input.preview_generation != cx.generation().0 || !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
+            return self.fault_outcome("prepared render generation is stale");
         }
-        if let Some(producer) = self.input.as_mut().expect("prepared render input").raster_producers.front_mut() {
-            if cx.should_yield() {
-                return StepOutcome::Yield;
-            }
+        if cx.should_yield() {
+            return StepOutcome::Yield;
+        }
+        if let Some(producer) = self.input.as_mut().and_then(|input| input.raster_producers.front_mut()) {
             cx.consume_fuel(1);
             let step = producer.step(cx.generation().0);
             let outcome = match step {
                 PreparedRasterProducerStep::Pending => StepOutcome::Yield,
                 PreparedRasterProducerStep::Complete(upload) => {
-                    let input = self.input.as_mut().expect("prepared render input");
+                    let Some(input) = self.input.as_mut() else { return self.fault_outcome("prepared render input disappeared during raster publication") };
                     input.raster_producers.pop_front();
-                    input.uploads.push(upload);
+                    if let Err(upload) = input.try_push_upload(upload) {
+                        self.rejected_upload = Some(upload);
+                        return self.fault_outcome("prepared render upload admission refused the exact raster owner");
+                    }
                     StepOutcome::Yield
                 }
-                PreparedRasterProducerStep::Fault(fault) => {
-                    let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, fault.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-                    StepOutcome::Fault(JobFault { detail })
-                }
+                PreparedRasterProducerStep::Fault(fault) => self.fault_outcome(fault),
             };
             if cx.is_cancelled() {
+                self.closing = true;
                 return StepOutcome::Cancelled;
+            }
+            if self.input().is_some_and(|input| input.preview_generation != cx.generation().0) {
+                return self.fault_outcome("prepared render generation became stale after raster work");
             }
             return outcome;
         }
-        let mut processed = 0usize;
-        while processed < self.items_per_step && !cx.should_yield() {
-            let Some(usage) = self.measure_next() else {
-                return self.complete(cx);
-            };
-            self.include_usage(usage);
-            if !self.usage.fits(self.input().limits) {
-                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"prepared render credits exceeded").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
-                return StepOutcome::Fault(JobFault { detail });
-            }
-            processed += 1;
+        if !self.raster_backing_closed {
             cx.consume_fuel(1);
+            let Some(input) = self.input.as_mut() else { return self.fault_outcome("prepared render input disappeared before producer backing close") };
+            if input.raster_producers.release_backing_step() {
+                self.raster_backing_closed = true;
+            }
+            return StepOutcome::Yield;
+        }
+        let Some(usage) = self.measure_next() else {
+            return self.complete();
+        };
+        cx.consume_fuel(1);
+        if self.fault.is_some() || !self.include_usage(usage) {
+            return self.fault_outcome("prepared render cumulative credits overflowed");
+        }
+        let Some(input) = self.input() else { return self.fault_outcome("prepared render input disappeared after one worker unit") };
+        if !self.usage.fits(input.limits) {
+            return self.fault_outcome("prepared render credits exceeded");
+        }
+        if cx.is_cancelled() {
+            self.closing = true;
+            return StepOutcome::Cancelled;
+        }
+        if input.preview_generation != cx.generation().0 || !input.permit.as_ref().is_some_and(PreparedRenderProcessPermit::matches) {
+            return self.fault_outcome("prepared render generation became stale after one worker unit");
         }
         StepOutcome::Yield
     }
@@ -1550,31 +3005,18 @@ impl InteractiveJob for PreparedRenderJob {
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if let Some(state) = self.terminal_state.as_mut() {
-            if !state.terminal_is_empty() {
-                return match state.close_step(maximum_items, maximum_bytes) {
-                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                };
-            }
-            if maximum_items == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.terminal_state = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.terminal_identity.is_some() {
-            if maximum_items == 0 {
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.terminal_identity = None;
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        if PreparedRenderJob::close_step(self) {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
         }
-        if PreparedRenderJob::close_step(self) { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 } }
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.terminal_state.is_none() && self.terminal_identity.is_none() && PreparedRenderJob::terminal_is_empty(self)
+        self.closing && PreparedRenderJob::terminal_is_empty(self)
     }
 }
 //#endregion ⚙️PreparationJob
@@ -1685,7 +3127,7 @@ impl PreparedRenderGate {
         if pending.sequence != witness.sequence || pending.packet.scene_revision != witness.scene_revision || pending.packet.preview_generation != witness.preview_generation {
             return Err(witness);
         }
-        let pending = self.pending.take().expect("validated pending presentation");
+        let Some(pending) = self.pending.take() else { return Err(witness) };
         let previous = self.last_valid.replace(pending.packet);
         Ok(PreparedRenderReplacement { previous })
     }
@@ -1772,7 +3214,7 @@ impl OffscreenPresentToken {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_job::{Generation, InteractiveStage, OperationId, StepBudget, drive_step, root_cancel_token};
+    use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveStage, OperationId, StepBudget};
 
     static ATLAS_TEST_LOCK: Mutex<()> = Mutex::new(());
 
@@ -1787,25 +3229,46 @@ mod tests {
         while !PreparedAtlasPages::close_abandoned_step() {}
     }
 
+    fn drain_abandoned_preparations() {
+        loop {
+            let inputs = PreparedRenderInput::close_abandoned_step();
+            let jobs = PreparedRenderJob::close_abandoned_step();
+            let mailboxes = PreparedRenderReceiver::close_abandoned_step();
+            let packets = PreparedRenderPacket::close_abandoned_step();
+            if inputs && jobs && mailboxes && packets {
+                break;
+            }
+        }
+    }
+
     fn now_ms() -> u64 {
         1
     }
 
     fn packet(revision: u64, generation: u64) -> PreparedRenderPacket {
-        PreparedRenderPacket {
+        let mut directives = PreparedRenderDirectives::default();
+        assert!(directives.try_push(RenderDirective::PreservePreviousOnFailure).is_ok());
+        let packet = PreparedRenderPacket {
             scene_revision: revision,
             preview_generation: generation,
-            damage: Vec::new(),
-            clips: Vec::new(),
-            directives: vec![RenderDirective::PreservePreviousOnFailure],
-            uploads: Vec::new(),
-            evictions: Vec::new(),
+            damage: PreparedRenderScissors::default(),
+            clips: PreparedRenderScissors::default(),
+            directives,
+            uploads: PreparedRenderUploads::default(),
+            evictions: PreparedRenderEvictions::default(),
             draw: DrawList::default(),
             overlay: None,
+            commands: PreparedRenderCommandPages::default(),
             time_seconds: 0.0,
             usage: PreparedRenderUsage::default(),
             limits: PreparedRenderLimits::default(),
+            permit: PreparedRenderProcessPermit::try_reserve(0, 0),
             retirement_phase: 0,
+            abandonment_slot: u8::MAX,
+        };
+        match packet.try_arm_abandonment() {
+            Ok(packet) => packet,
+            Err(_) => panic!("test packet abandonment slot"),
         }
     }
 
@@ -2042,16 +3505,16 @@ mod tests {
         assert_eq!(producer.retained_source.as_ptr(), retained_pointer);
 
         let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
-        input.raster_producers.push_back(producer);
+        assert!(input.try_push_raster_producer(producer).is_ok());
         let mut job = PreparedRenderJob::new(input, 1);
         let mut preview = 0;
         let now_ms = || 0.0;
         for expected in [PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES, 0] {
             let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(11), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10), root_cancel_token(), now_ms, &mut preview);
             assert!(matches!(outcome, StepOutcome::Yield));
-            assert_eq!(job.input.as_ref().unwrap().raster_producers.front().unwrap().retained_source.len(), expected);
+            assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.len(), expected);
         }
-        assert_eq!(job.input.as_ref().unwrap().raster_producers.front().unwrap().retained_source.as_ptr(), retained_pointer);
+        assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.as_ptr(), retained_pointer);
         while !job.close_step() {}
         assert!(job.terminal_is_empty());
     }
@@ -2103,19 +3566,19 @@ mod tests {
         assert!(producer.bind_frame_generation(3));
         let source_pointer = producer.source.as_ptr();
         let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
-        input.raster_producers.push_back(producer);
+        assert!(input.try_push_raster_producer(producer).is_ok());
         let mut job = PreparedRenderJob::new(input, 1);
         let mut preview = 0;
 
         let zero = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(0, 10), root_cancel_token(), now_ms, &mut preview);
         assert!(matches!(zero, StepOutcome::Yield));
-        let retained = job.input.as_ref().unwrap().raster_producers.front().unwrap();
+        let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
         assert_eq!(retained.source.as_ptr(), source_pointer);
         assert!(retained.pages.as_ref().unwrap().slots.is_empty());
 
         let expired = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 1), root_cancel_token(), now_ms, &mut preview);
         assert!(matches!(expired, StepOutcome::Yield));
-        let retained = job.input.as_ref().unwrap().raster_producers.front().unwrap();
+        let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
         assert_eq!(retained.source.as_ptr(), source_pointer);
         assert!(retained.pages.as_ref().unwrap().slots.is_empty());
 
@@ -2126,7 +3589,7 @@ mod tests {
     #[test]
     fn cancellation_retires_large_upload_incrementally_before_terminal_empty() {
         let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
-        input.uploads.push(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4_096], width: 64, height: 64 });
+        assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4_096], width: 64, height: 64 }).is_ok());
         let mut job = PreparedRenderJob::new(input, 1);
         assert!(!job.close_step());
         assert!(!job.terminal_is_empty());
@@ -2155,7 +3618,7 @@ mod tests {
     #[test]
     fn receiver_survives_worker_ownership_of_the_job() {
         let job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0), 1);
-        let receiver = job.receiver();
+        let receiver = job.receiver().expect("prepared receiver clone");
         std::thread::spawn(move || {
             let mut job = job;
             let mut preview = 0;
@@ -2284,8 +3747,8 @@ mod tests {
         let mut gate = PreparedRenderGate::default();
         let _pending = gate.stage_presented(packet(7, 3)).ok().expect("pending presenter witness");
         let mut superseding = packet(8, 4);
-        superseding.uploads.push(PreparedRenderUpload::GlyphAtlas { pixels: vec![7; 16_385], width: 1, height: 1 });
-        let pixels = match &superseding.uploads[0] {
+        assert!(superseding.uploads.try_push(PreparedRenderUpload::GlyphAtlas { pixels: vec![7; 16_385], width: 1, height: 1 }).is_ok());
+        let pixels = match superseding.uploads.get(0) {
             PreparedRenderUpload::GlyphAtlas { pixels, .. } => pixels.as_ptr(),
             _ => unreachable!(),
         };
@@ -2294,9 +3757,9 @@ mod tests {
             Err(packet) => packet,
         };
         assert_eq!((returned.scene_revision, returned.preview_generation), (8, 4));
-        assert!(matches!(&returned.uploads[0], PreparedRenderUpload::GlyphAtlas { pixels: returned_pixels, .. } if returned_pixels.as_ptr() == pixels));
+        assert!(matches!(returned.uploads.get(0), Some(PreparedRenderUpload::GlyphAtlas { pixels: returned_pixels, .. }) if returned_pixels.as_ptr() == pixels));
         assert!(!returned.retire_step(), "one close grant retires only one admitted pixel page");
-        assert!(matches!(&returned.uploads[0], PreparedRenderUpload::GlyphAtlas { pixels, .. } if pixels.len() == 1));
+        assert!(matches!(returned.uploads.get(0), Some(PreparedRenderUpload::GlyphAtlas { pixels, .. }) if pixels.len() == 1));
     }
 
     #[test]
@@ -2317,7 +3780,7 @@ mod tests {
     fn upload_byte_cap_faults_before_packet_publication() {
         let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
         input.limits.max_upload_bytes = 3;
-        input.uploads.push(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4], width: 2, height: 2 });
+        assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4], width: 2, height: 2 }).is_ok());
         let mut job = PreparedRenderJob::new(input, 64);
         let mut preview = 0;
         let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
@@ -2329,7 +3792,7 @@ mod tests {
     fn eviction_byte_cap_faults_before_packet_publication() {
         let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
         input.limits.max_upload_bytes = 3;
-        input.evictions.push(PreparedRenderEviction::Mesh { key: "mesh".into() });
+        assert!(input.try_push_eviction(PreparedRenderEviction::Mesh { key: "mesh".into() }).is_ok());
         let mut job = PreparedRenderJob::new(input, 64);
         let mut preview = 0;
         let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
@@ -2348,5 +3811,108 @@ mod tests {
         let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
         assert!(matches!(outcome, StepOutcome::Fault(_)));
         assert!(job.take_packet().is_none());
+    }
+
+    #[test]
+    fn input_drop_hands_back_exact_process_permits_for_incremental_close() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_preparations();
+        let input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
+        assert_ne!(PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire), 0);
+        drop(input);
+        assert_ne!(PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire), 0);
+        let mut turns = 0;
+        while !PreparedRenderInput::close_abandoned_step() {
+            turns += 1;
+            assert!(turns < 128);
+        }
+        assert!(turns > 4);
+        assert_eq!(PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire), 0);
+    }
+
+    #[test]
+    fn worker_panic_hands_back_the_exact_job_and_mailbox_owners() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_preparations();
+        let job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0), 1);
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
+            let _owner = job;
+            panic!("hostile worker interruption");
+        }));
+        assert!(result.is_err());
+        let mut turns = 0;
+        while !PreparedRenderJob::close_abandoned_step() {
+            turns += 1;
+            assert!(turns < 256);
+        }
+        assert!(turns > 4);
+        assert_eq!(PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire), 0);
+        assert!(PREPARED_RENDER_MAILBOX.iter().all(|slot| slot.packet.load(Ordering::Acquire).is_null()));
+    }
+
+    #[test]
+    fn packet_drop_retires_nested_backings_and_permit_scalars_separately() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_preparations();
+        let mut owner = packet(7, 3);
+        owner.draw.push_solid([0.0, 0.0, 8.0, 8.0], crate::wgpu::theme::Rgba::new(1.0, 0.0, 0.0, 1.0));
+        drop(owner);
+        let mut turns = 0;
+        while !PreparedRenderPacket::close_abandoned_step() {
+            turns += 1;
+            assert!(turns < 256);
+        }
+        assert!(turns > 8);
+        assert_eq!(PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire), 0);
+    }
+
+    #[test]
+    fn fixed_command_pages_reject_max_plus_one_without_consuming_the_owner() {
+        let mut commands = PreparedRenderCommandPages::default();
+        for source in 0..PREPARED_RENDER_COMMAND_PAGES * PREPARED_RENDER_COMMAND_PAGE_ITEMS {
+            let command = PreparedRenderCommand { kind: PreparedRenderCommandKind::Tessellate, source, digest: source as u64, draw_cursor: Some(DrawMeasureCursor::Complete), packet_overlay: false };
+            assert!(commands.try_push(command).is_ok());
+        }
+        let rejected = PreparedRenderCommand { kind: PreparedRenderCommandKind::Tessellate, source: usize::MAX, digest: u64::MAX, draw_cursor: Some(DrawMeasureCursor::Complete), packet_overlay: true };
+        let returned = match commands.try_push(rejected) {
+            Ok(()) => panic!("command cap plus one must refuse"),
+            Err(returned) => returned,
+        };
+        assert_eq!((returned.source, returned.digest, returned.packet_overlay), (usize::MAX, u64::MAX, true));
+        let mut turns = 0;
+        while !commands.close_step() {
+            turns += 1;
+        }
+        assert!(turns >= PREPARED_RENDER_COMMAND_PAGES * PREPARED_RENDER_COMMAND_PAGE_ITEMS);
+        assert!(commands.terminal_is_empty());
+    }
+
+    #[test]
+    fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
+        let _guard = atlas_test_guard();
+        drain_abandoned_preparations();
+        let mut draw = DrawList::default();
+        draw.push_solid([0.0, 0.0, 4.0, 4.0], crate::wgpu::theme::Rgba::new(0.0, 1.0, 0.0, 1.0));
+        let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
+        let mut preview = 0;
+        let mut steps = 0;
+        loop {
+            let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(41), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10), root_cancel_token(), now_ms, &mut preview);
+            steps += 1;
+            if outcome.is_terminal() {
+                assert!(matches!(outcome, StepOutcome::Complete(_)));
+                break;
+            }
+            assert!(steps < 128);
+        }
+        let mut packet = match job.take_packet() {
+            Some(packet) => packet,
+            None => panic!("prepared packet handoff"),
+        };
+        assert!((0..packet.commands.len())
+            .filter_map(|index| packet.commands.get(index))
+            .any(|command| { command.kind == PreparedRenderCommandKind::Tessellate && command.draw_cursor == Some(DrawMeasureCursor::LayerUi { layer: 0, item: 0, overlay: false }) && !command.packet_overlay }));
+        while !packet.retire_step() {}
+        while !job.close_step() {}
     }
 }

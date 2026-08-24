@@ -11,8 +11,9 @@
 //! vocabulary. Both results are read back by the SAME independent `project_docx_ecma_376` (the
 //! `zip`+`quick-xml` composition) before the `semantic-docx-ecma-376-mutate-v1` profile compares
 //! them. The subject half is gated behind the generated host's `sut` feature so the oracle-only run
-//! never links `semio-s-plugin-stdio`, whose subject phase is peer-blocked right now (concurrent
-//! os-kernel refactor).
+//! never links `semio-s-plugin-stdio` -- §5.3's own role separation, NOT a workaround for anything:
+//! the Rust subject phase runs (`subject exhaustive --owner 🗄️stdio --case mutate-docx-ecma-376`
+//! executes all 27 scenarios), and wave 14 ran the full differential comparison against the oracle.
 //!
 //! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
 //! module, so a scenario cannot pass merely because `zip`+`quick-xml` declined to error:

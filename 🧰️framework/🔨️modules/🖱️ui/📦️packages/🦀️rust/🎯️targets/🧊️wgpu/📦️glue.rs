@@ -245,7 +245,7 @@ pub use host::{WindowInputState, clipboard_read_text, clipboard_write_text, disp
 #[cfg(feature = "wgpu-engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "wgpu-engine")]
-pub use paint::{RetainedGlyphCursor, RetainedGlyphStep, paint_retained_glyph_step};
+pub use paint::{RETAINED_NODE_TEXT_MAX_BYTES, RetainedGlyphCursor, RetainedGlyphStep, paint_retained_glyph_step};
 #[cfg(all(feature = "wgpu-engine", target_arch = "wasm32"))]
 pub use prepared::OffscreenPresentToken;
 #[cfg(feature = "wgpu-engine")]

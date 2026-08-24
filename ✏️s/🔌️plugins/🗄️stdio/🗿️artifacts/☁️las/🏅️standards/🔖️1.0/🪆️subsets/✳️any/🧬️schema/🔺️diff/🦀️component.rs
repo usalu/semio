@@ -924,9 +924,63 @@ pub fn diff_set_software_info(generating_software: &str) -> LasDiff {
 pub fn diff_set_creation_date(day_of_year: u16, year: u16) -> LasDiff {
     LasDiff { creation_day_of_year: Some(day_of_year), creation_year: Some(year), ..Default::default() }
 }
+/// 📏️ One axis of [`diff_set_scale_and_offset`]: the point RECORD this coordinate was decoded
+/// from, re-read under the new scale/offset. `record = round((value - offset) / scale)` is the
+/// exact inverse of the LAS public-header rule `coordinate = record * scale + offset`, so the
+/// integer this returns to is the one on disk. A zero `from_scale` is not a legal LAS header and
+/// carries no record to preserve, so the coordinate is left alone rather than turned into NaN.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_scale_and_offset(scale: (f64, f64, f64), offset: (f64, f64, f64)) -> LasDiff {
-    LasDiff { x_scale: Some(scale.0), y_scale: Some(scale.1), z_scale: Some(scale.2), x_offset: Some(offset.0), y_offset: Some(offset.1), z_offset: Some(offset.2), ..Default::default() }
+fn coordinate_under(value: f64, from_scale: f64, from_offset: f64, to_scale: f64, to_offset: f64) -> f64 {
+    if from_scale == 0.0 {
+        return value;
+    }
+    ((value - from_offset) / from_scale).round() * to_scale + to_offset
+}
+
+/// 📏️ Sets the six public-header-block fields that state HOW the on-disk integer point records
+/// are turned into real-world coordinates — and changes nothing else about the file's contents.
+///
+/// ⚠️ This snapshot stores each point in REAL-WORLD coordinates and re-derives its integer record
+/// on encode, which is the opposite primacy from the file itself: LAS §"Public Header Block"
+/// defines `coordinate = record * scale + offset`, so the record is what the document carries and
+/// the coordinate is what is computed from it. Writing only the six header fields therefore used
+/// to hold the COORDINATES fixed and silently rewrite all 8,448 point records — a re-quantization,
+/// not the header edit this kind is named for. That reading is also lossy in one direction: moving
+/// to a COARSER scale rounds every coordinate away and `LasMutation::inverse`'s "put the old scale
+/// and offset back" cannot bring it back, so the inverse law held only for rows that happen to
+/// refine. The mutation now does what its name says — the records stay exactly where they are and
+/// every coordinate is re-read from its own record under the new parameters, which is lossless and
+/// exactly invertible for any scale in either direction. Reproduced by
+/// `mutate-las-1-0::mutate-set-scale-and-offset` in the parity phase, where the reference
+/// (`las::raw`, whose model IS the record) reported `$.points[1].x` 583000.246 against our
+/// 583000.491 across 24,320 differences (ticket `26/08/23/END-TO-END-TESTING-REFACTOR`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_scale_and_offset(base: &LasSnapshot, scale: (f64, f64, f64), offset: (f64, f64, f64)) -> LasDiff {
+    let modified: Vec<LasPointModified> = base
+        .points
+        .iter()
+        .enumerate()
+        .filter_map(|(index, point)| {
+            let held = LasPoint {
+                x: coordinate_under(point.x, base.header.x_scale, base.header.x_offset, scale.0, offset.0),
+                y: coordinate_under(point.y, base.header.y_scale, base.header.y_offset, scale.1, offset.1),
+                z: coordinate_under(point.z, base.header.z_scale, base.header.z_offset, scale.2, offset.2),
+                ..point.clone()
+            };
+            let d = point_between(point, &held);
+            (d != LasPointDiff::default()).then_some(LasPointModified { index, diff: d })
+        })
+        .collect();
+    LasDiff {
+        x_scale: Some(scale.0),
+        y_scale: Some(scale.1),
+        z_scale: Some(scale.2),
+        x_offset: Some(offset.0),
+        y_offset: Some(offset.1),
+        z_offset: Some(offset.2),
+        points: (!modified.is_empty()).then_some(LasPointsDiff { removed: vec![], modified, added: vec![] }),
+        ..Default::default()
+    }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_bounds(max: (f64, f64, f64), min: (f64, f64, f64)) -> LasDiff {

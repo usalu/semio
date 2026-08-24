@@ -30,6 +30,26 @@ Feature: Apply every typed GIF87a mutation to a real derived document
     – The projection is this subset's own, not the shared raster one, which reports screen geometry,
       per-frame rectangles and an opaque-sample count only — leaving the Global Color Table, both
       screen scalars, the interlace flag and the raw index buffers outside the compared surface.
+    – `gif::Encoder::new` documents that an empty global palette means no Global Color Table, then
+      `write_global_palette` sets the table-present flag unconditionally and writes two padded
+      all-zero entries (gif 0.14.2 `src/encoder.rs:183-195`, `303-311`). `oracle_encode` clears the
+      flag and drops those six bytes; before that, `set-snapshot {"gct": null}` came back with a
+      phantom two-colour table and diverged from a subject that correctly wrote none.
+
+  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-set-global-color-table` (parity 24/25, 2026-08-24). The row
+  installs a four-colour Global Color Table; image 0 carries no Local Color Table and its indices
+  run to 255, so after the edit those pixels index past the active table. The reference writer emits
+  the file anyway and derives the LZW minimum code size from the maximum index actually present
+  (`gif` 0.14.2 `src/encoder.rs:448-450`, matching GIF89a Appendix F "the minimum number of bits
+  required to represent the set of actual pixel values"). This repository's `encode_gif` refuses,
+  and `encode_gif_rejects_index_past_color_table`
+  (`../../🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/🦀️component.rs`) pins that refusal as deliberate.
+  Neither side is a coding error: the declared kind says "replace the global colour table" and says
+  nothing about the images that resolve through it, so both sides are extrapolating. Resolving it is
+  an owner decision on what a table-shrinking edit means — either the codec writes out-of-range
+  indices and sizes LZW from the data (which means retiring that pinned test), or the vocabulary
+  refuses a shrink that orphans indices and the oracle mirrors that refusal. NOTHING here is to be
+  relaxed to make the row pass: not the profile, not the row's parameters, not the fixture.
 
   @id-mutate
   @level-exhaustive

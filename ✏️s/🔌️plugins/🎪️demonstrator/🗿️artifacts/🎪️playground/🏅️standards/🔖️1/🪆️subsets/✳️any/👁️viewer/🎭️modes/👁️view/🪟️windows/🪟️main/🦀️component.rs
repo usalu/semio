@@ -5,7 +5,7 @@
 
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -14,7 +14,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::playground::create_playground_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Schema", "Schema"), ..TextWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `PlaygroundSnapshot -> UiNode` read, always `read_only: true` — a viewer never emits a
 /// `replace-text` command.
-pub async fn render(document: &PlaygroundSnapshot) -> UiNode {
+pub fn render(document: &PlaygroundSnapshot) -> UiAssemblyResult<BuiltNode> {
     TextWindowKit::render(&TextView { text: document.schema.clone(), language: Some("playground".into()), read_only: true })
 }
 //#endregion 🔖️Render
@@ -32,21 +32,20 @@ pub async fn render(document: &PlaygroundSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_a_read_only_text_window() {
+    #[test]
+    fn definition_declares_a_read_only_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
         assert!(def.actions.is_empty(), "a viewer window kind declares no mutation-shaped actions");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_carries_the_schema_field_as_read_only_text() {
+    #[test]
+    fn render_carries_the_schema_field_as_read_only_text() {
         let document = PlaygroundSnapshot { schema: "playground.custom".into() };
-        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.text_editor.expect("text_editor scene");
-        assert_eq!(scene.buffer, "playground.custom");
-        assert!(scene.settings_json.unwrap_or_default().contains("readOnly"));
+        let json = serde_json::to_string(&render(&document).expect("render")).expect("serialize render");
+        assert!(json.contains("playground.custom"));
+        assert!(json.contains("readOnly"));
     }
 }
 //#endregion 🧪️Tests

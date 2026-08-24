@@ -23,17 +23,17 @@ impl Default for PlaygroundArtifact {
 
 impl PlaygroundArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
         crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot { schema: self.schema.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) -> Self {
         Self { schema: snapshot.schema }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) {
         self.schema = snapshot.schema;
     }
 }
@@ -43,14 +43,14 @@ impl PlaygroundArtifact {
 /// 🏗️ Empty default playground snapshot (relocated from the deleted `⚙️engine`, ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES: pure document helper, no `&mut self`,
 /// no app type — belongs beside the snapshot it builds).
-pub async fn empty_playground_snapshot() -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
+pub fn empty_playground_snapshot() -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
     crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.demonstrator.playground` — twenty handcrafted schema leaves.
-pub async fn playground_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn playground_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.demonstrator.playground",
         artifact: schema::FacetLeaves {
@@ -108,10 +108,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PlaygroundSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<PlaygroundSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::diff(&mutation, &self.snapshot);
@@ -190,8 +190,8 @@ pub mod derived_analysis {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn empty_snapshot_matches_schema() {
+    #[test]
+    fn empty_snapshot_matches_schema() {
         let snapshot = empty_playground_snapshot();
         assert_eq!(snapshot.schema, crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA);
     }

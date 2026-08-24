@@ -1248,6 +1248,11 @@ pub enum WalReplayStep {
 }
 
 impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
+    /// 🔋️ Replenishes one bounded caller-owned replay opportunity without replacing the cursor.
+    pub fn replenish(&mut self, deadline: std::time::Instant, fuel: usize) -> Result<(), DbError> {
+        self.control.replenish(deadline, fuel)
+    }
+
     pub async fn open(storage: &'storage S, document: &ArtifactId, control: WalCursorControl) -> Result<Self, DbError> {
         let segments = storage.list_segments(document).await?;
         Ok(Self { storage, document: document.clone(), segments, segment: 0, pages: None, offset: protocol::format::HEADER_SIZE, trusted_len: 0, control, closed: false })

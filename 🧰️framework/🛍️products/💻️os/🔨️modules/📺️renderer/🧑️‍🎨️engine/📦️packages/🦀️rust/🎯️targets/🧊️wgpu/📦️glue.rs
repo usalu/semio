@@ -71,6 +71,9 @@ mod runtime_mailbox_core;
 #[path = "🦀️frame_job.rs"]
 mod frame_job;
 
+#[path = "🦀️surface_lane.rs"]
+mod surface_lane;
+
 #[cfg(target_arch = "wasm32")]
 #[path = "🦀️browser_worker.rs"]
 mod browser_worker;
@@ -88,10 +91,10 @@ mod winit_app;
 pub mod parallel_runtime;
 
 use infinite_world::world::{
-    WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind,
-    WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset,
-    publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction,
-    step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation,
+    begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response,
+    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested,
+    world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
+    WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
@@ -103,16 +106,16 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use ui_wgpu::wgpu::ActionDescriptor;
 #[cfg(target_arch = "wasm32")]
 use ui_wgpu::wgpu::apply_canvas_cursor;
+use ui_wgpu::wgpu::ActionDescriptor;
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
 use ui_wgpu::wgpu::{
-    CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, SemioCursor, Theme, apply_window_cursor, fetch_font_bytes,
-    mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3,
-    resolve_semio_cursor,
+    apply_window_cursor, fetch_font_bytes, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32,
+    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers,
+    SemioCursor, Theme,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -473,7 +476,11 @@ impl GlbStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) { Ok(()) } else { Err("GLB structure ended before JSON and BIN reached terminal") }
+        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) {
+            Ok(())
+        } else {
+            Err("GLB structure ended before JSON and BIN reached terminal")
+        }
     }
 }
 
@@ -566,7 +573,11 @@ impl PngStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) { Ok(()) } else { Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal") }
+        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) {
+            Ok(())
+        } else {
+            Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal")
+        }
     }
 }
 
@@ -673,7 +684,11 @@ impl JpegStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) { Ok(()) } else { Err("JPEG structure ended before a bounded frame and EOI reached terminal") }
+        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) {
+            Ok(())
+        } else {
+            Err("JPEG structure ended before a bounded frame and EOI reached terminal")
+        }
     }
 }
 
@@ -724,7 +739,11 @@ impl TextAssetStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) { Ok(()) } else { Err("text asset structure did not reach its bounded terminal witness") }
+        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) {
+            Ok(())
+        } else {
+            Err("text asset structure did not reach its bounded terminal witness")
+        }
     }
 }
 
@@ -807,7 +826,11 @@ impl ProtobufStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) { Ok(()) } else { Err("protobuf structure did not reach a field boundary") }
+        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) {
+            Ok(())
+        } else {
+            Err("protobuf structure did not reach a field boundary")
+        }
     }
 }
 
@@ -2013,7 +2036,11 @@ fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
 
 fn glb_normalize(value: [f32; 3]) -> [f32; 3] {
     let length = value.iter().map(|value| value * value).sum::<f32>().sqrt();
-    if length <= f32::EPSILON { value } else { value.map(|value| value / length) }
+    if length <= f32::EPSILON {
+        value
+    } else {
+        value.map(|value| value / length)
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -2421,23 +2448,43 @@ fn glb_read_component(owner: &RendererAssetFetchOwner, pages: &RendererAssetPage
     let value = match component {
         5120 => {
             let value = i8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized { (f32::from(value) / 127.0).max(-1.0) } else { f32::from(value) }
+            if normalized {
+                (f32::from(value) / 127.0).max(-1.0)
+            } else {
+                f32::from(value)
+            }
         }
         5121 => {
             let value = u8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized { f32::from(value) / 255.0 } else { f32::from(value) }
+            if normalized {
+                f32::from(value) / 255.0
+            } else {
+                f32::from(value)
+            }
         }
         5122 => {
             let value = i16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized { (f32::from(value) / 32767.0).max(-1.0) } else { f32::from(value) }
+            if normalized {
+                (f32::from(value) / 32767.0).max(-1.0)
+            } else {
+                f32::from(value)
+            }
         }
         5123 => {
             let value = u16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized { f32::from(value) / 65535.0 } else { f32::from(value) }
+            if normalized {
+                f32::from(value) / 65535.0
+            } else {
+                f32::from(value)
+            }
         }
         5125 => {
             let value = u32::from_le_bytes(pages.read::<4>(owner, absolute)?);
-            if normalized { value as f32 / u32::MAX as f32 } else { value as f32 }
+            if normalized {
+                value as f32 / u32::MAX as f32
+            } else {
+                value as f32
+            }
         }
         5126 if !normalized => f32::from_le_bytes(pages.read::<4>(owner, absolute)?),
         5126 => return Err("GLB FLOAT accessor could not be normalized"),
@@ -3001,7 +3048,7 @@ fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<RendererIoHandle, String> {
-    use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveStage, allocate_operation_id, root_cancel_token};
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
     let Some((slot_index, generation)) = RENDERER_IO_SLOTS.iter().enumerate().find_map(|(index, slot)| {
         if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return None;
@@ -3105,8 +3152,8 @@ mod renderer_io_retained_tests {
 pub(crate) mod kernel_runtime {
     use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
     use semio_framework_actor::{
-        ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, JobProgressIdentity, JobProgressKind, JobProgressLiveAuthority, JobProgressOverlayStore, JobProgressReceipt, JobProgressRejected, JobPublication, JobTurn, Lane,
-        Origin, PackageHash, PackageId, Payload, intersect_capabilities,
+        intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, JobProgressIdentity, JobProgressKind, JobProgressLiveAuthority, JobProgressOverlayStore, JobProgressReceipt, JobProgressRejected,
+        JobPublication, JobTurn, Lane, Origin, PackageHash, PackageId, Payload,
     };
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
@@ -3117,7 +3164,7 @@ pub(crate) mod kernel_runtime {
     use std::sync::{Arc, Mutex, OnceLock};
     use std::task::{Context, Poll, Waker};
     use std::time::Duration;
-    use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_SLOTS, UiDocumentBuilder, UiDocumentLease, UiDocumentLimits, UiFixedList, UiPatchApplyOutcome, UiPatchApplyProducer, UiPatchApplyRejected, UiPatchApplyStep, UiRevision, UiSnapshotState};
+    use ui_contract::{SurfaceId, UiDocumentBuilder, UiDocumentLease, UiDocumentLimits, UiFixedList, UiPatchApplyOutcome, UiPatchApplyProducer, UiPatchApplyRejected, UiPatchApplyStep, UiRevision, UiSnapshotState, UI_DOCUMENT_LEASE_SLOTS};
 
     #[derive(Default)]
     struct RendererSequenceAuthority {
@@ -7393,7 +7440,7 @@ mod async_boundary_tests {
         }
 
         let begin = gpu.find("self.raster_store.begin_presenting").unwrap_or(usize::MAX);
-        let render = gpu.find("self.render_prepared(packet)").unwrap_or(0);
+        let present_step = gpu.find("pub fn prepared_present_step").unwrap_or(0);
         let presenter_close = glue.find("self.gpu.close_raster_table_step()").unwrap_or(usize::MAX);
         let world_terminal = glue.find("self.gpu.raster_table_terminal_is_empty()").unwrap_or(0);
         let engine_reservation = "let admission = gpu.reserve_engine_texture(&key, width, height, candidate, expected)?;";
@@ -7478,7 +7525,7 @@ mod async_boundary_tests {
             && gpu.contains("view: wgpu::TextureView")
             && gpu.contains(".stage_gpu_bind_group")
             && gpu.contains("Result<(), RasterTextureStageFault>")
-            && begin < render
+            && begin < present_step
             && engine.matches(engine_reservation).count() == 1
             && engine_reservation_index < first_engine_allocation
             && guarded_allocations(engine, "gpu.validate_engine_target_texture_allocation(&admission, expected)", "create_target_texture", 1)
@@ -7878,7 +7925,7 @@ mod async_boundary_tests {
         let mut actions = FrameActionOwners::default();
         assert!(actions.try_push(ActionDescriptor { controller_id: "a".to_string(), action: "one".to_string(), args: None }).is_ok());
         assert!(actions.try_push(ActionDescriptor { controller_id: "b".to_string(), action: "two".to_string(), args: None }).is_ok());
-        let mut cursor = FrameDeferredCursor::new(actions, true, true, true);
+        let mut cursor = FrameDeferredCursor::new(actions, true, true, true, 1, semio_framework_job::root_cancel_token());
         assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::ShellMaintenance)));
         assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::PumpSync)));
         assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "one"));
@@ -7894,12 +7941,160 @@ mod async_boundary_tests {
         for index in 0..WORLD3D_DEADLINE_CAPACITY {
             assert!(actions.try_push(ActionDescriptor { controller_id: index.to_string(), action: "cancel".to_string(), args: None }).is_ok());
         }
-        let mut cursor = FrameDeferredCursor::new(actions, false, true, false);
+        let mut cursor = FrameDeferredCursor::new(actions, false, true, false, 1, semio_framework_job::root_cancel_token());
         for _ in 0..WORLD3D_DEADLINE_CAPACITY {
             assert!(!cursor.close_step());
         }
+        assert!(!cursor.close_step());
         assert!(cursor.close_step());
         assert!(cursor.terminal_is_empty());
+    }
+
+    #[test]
+    fn frame_deferred_cancel_token_closes_one_exact_owner_per_grant() {
+        let cancel = semio_framework_job::root_cancel_token();
+        let mut actions = FrameActionOwners::default();
+        assert!(actions.try_push(ActionDescriptor { controller_id: "cancel-owner".to_string(), action: "one".to_string(), args: None }).is_ok());
+        let mut cursor = FrameDeferredCursor::new(actions, true, true, true, 17, cancel.clone());
+        cancel.cancel_now();
+        assert!(cursor.cancel.is_cancelled_now());
+        cursor.begin_close();
+        assert!(!cursor.close_step());
+        assert!(!cursor.close_step());
+        assert!(!cursor.close_step());
+        assert!(!cursor.close_step());
+        assert!(cursor.close_step());
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn frame_maintenance_authority_refuses_aba_and_releases_the_exact_generation() {
+        let authority = FrameMaintenanceAuthority::new();
+        assert!(authority.try_reserve(41));
+        assert!(authority.is_live(41));
+        assert!(!authority.try_reserve(42));
+        assert!(!authority.release(42));
+        assert!(authority.is_live(41));
+        assert!(authority.release(41));
+        assert!(!authority.is_live(41));
+        assert!(authority.try_reserve(42));
+        assert!(authority.release(42));
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn frame_maintenance_refusal_cell_recovers_exact_identity_without_blocking() {
+        let owner = Box::new(73u64);
+        let identity = owner.as_ref() as *const u64;
+        let cell = FrameMaintenanceOwnerCell::new(owner);
+        let Some(owner) = cell.try_take() else { panic!("exact owner admission") };
+        assert_eq!(owner.as_ref() as *const u64, identity);
+        assert!(cell.try_take().is_none());
+        assert!(cell.try_restore(owner).is_ok());
+        let Some(owner) = cell.try_take() else { panic!("exact owner handback") };
+        assert_eq!(owner.as_ref() as *const u64, identity);
+        assert!(cell.try_take().is_none());
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant() {
+        let cancel = semio_framework_job::root_cancel_token();
+        let mut cancelled_actions = FrameActionOwners::default();
+        assert!(cancelled_actions.try_push(ActionDescriptor { controller_id: "cancelled".to_string(), action: "one".to_string(), args: None }).is_ok());
+        let mut cancelled = FrameDeferredCursor::new(cancelled_actions, false, false, false, 81, cancel.clone());
+        cancel.cancel_now();
+        assert_eq!(frame_maintenance_terminal_fault(cancelled.cancel.is_cancelled_now(), false, false), Some("frame maintenance cancelled"));
+        cancelled.begin_close();
+        let before = cancelled.actions.len;
+        assert!(!cancelled.close_step());
+        assert_eq!(before - cancelled.actions.len, 1);
+        assert!(cancelled.close_step());
+        assert!(cancelled.terminal_is_empty());
+
+        let authority = FrameMaintenanceAuthority::new();
+        assert!(authority.try_reserve(82));
+        assert!(authority.release(82));
+        let mut stale_actions = FrameActionOwners::default();
+        assert!(stale_actions.try_push(ActionDescriptor { controller_id: "stale".to_string(), action: "one".to_string(), args: None }).is_ok());
+        let mut stale = FrameDeferredCursor::new(stale_actions, false, false, false, 82, semio_framework_job::root_cancel_token());
+        assert_eq!(frame_maintenance_terminal_fault(false, !authority.is_live(stale.generation), false), Some("frame maintenance generation became stale"));
+        stale.begin_close();
+        let before = stale.actions.len;
+        assert!(!stale.close_step());
+        assert_eq!(before - stale.actions.len, 1);
+        assert!(stale.close_step());
+        assert!(stale.terminal_is_empty());
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMaintenanceOwner {
+        let mut action_owners = FrameActionOwners::default();
+        for index in 0..actions {
+            assert!(action_owners.try_push(ActionDescriptor { controller_id: format!("owner-{index}"), action: "close".to_string(), args: None }).is_ok());
+        }
+        let interaction = AppInteractionState {
+            shell: ShellState::new(Vec::new(), "maintenance-owner".to_string()),
+            input: InputState::default(),
+            theme: Theme::default(),
+            theme_dark: false,
+            last_pointer_x: 0.0,
+            last_pointer_y: 0.0,
+            pointer_down: false,
+            pointer_button: 0,
+            modifiers: PointerModifiers::default(),
+            wheel_delta: 0.0,
+            space_pressed: false,
+            wheel_zoom_deadline_ms: 0.0,
+            caret_blink_at_ms: 0.0,
+            caret_blink_visible: true,
+            text_streams: std::array::from_fn(|_| None),
+            text_fault: None,
+            frame_fault: None,
+            text_cancel_pending: false,
+            last_sync_pump_ms: 0.0,
+        };
+        FrameMaintenanceOwner { interaction: Some(interaction), cursor: Some(FrameDeferredCursor::new(action_owners, true, true, true, generation, semio_framework_job::root_cancel_token())), deadline_ms: Some(u64::MAX) }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn accepted_frame_maintenance_queue_drop_publishes_exact_generation_owner() {
+        let registry = FrameMaintenanceExecutionRegistry::new();
+        let owner = frame_maintenance_test_owner(91, 1);
+        let identity = owner.interaction.as_ref().map(|interaction| interaction.shell.plugin_filter.as_ptr());
+        let cell = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+        assert!(registry.try_publish(91, cell.clone()).is_ok());
+        assert!(!registry.abandon(92));
+        assert!(registry.abandon(91));
+        let Some((generation, recovered_cell)) = registry.try_take_abandoned() else { panic!("abandoned execution owner") };
+        assert_eq!(generation, 91);
+        assert!(Arc::ptr_eq(&cell, &recovered_cell));
+        let Some(recovered) = recovered_cell.try_take() else { panic!("exact abandoned owner") };
+        assert_eq!(recovered.interaction.as_ref().map(|interaction| interaction.shell.plugin_filter.as_ptr()), identity);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn interrupted_frame_maintenance_execution_restores_before_incremental_recovery() {
+        let registry = FrameMaintenanceExecutionRegistry::new();
+        let owner = frame_maintenance_test_owner(93, 2);
+        let cell = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+        assert!(registry.try_publish(93, cell.clone()).is_ok());
+        let Some(running_cell) = registry.try_begin(93) else { panic!("running execution cell") };
+        let Some(mut running_owner) = running_cell.try_take() else { panic!("running exact owner") };
+        let Some(cursor) = running_owner.cursor.as_mut() else { panic!("running cursor") };
+        cursor.begin_close();
+        running_cell.restore_taken(running_owner);
+        assert!(registry.abandon(93));
+        let Some((generation, recovered_cell)) = registry.try_take_abandoned() else { panic!("interrupted execution owner") };
+        assert_eq!(generation, 93);
+        let Some(mut recovered) = recovered_cell.try_take() else { panic!("interrupted exact owner") };
+        let Some(cursor) = recovered.cursor.as_mut() else { panic!("interrupted cursor") };
+        let before = cursor.actions.len;
+        assert!(!cursor.close_step());
+        assert_eq!(before - cursor.actions.len, 1);
     }
 
     #[test]
@@ -8245,6 +8440,9 @@ struct FrameDeferredCursor {
     flush_tutorial: bool,
     shell_maintenance: bool,
     phase: u8,
+    generation: u64,
+    cancel: semio_framework_async::CancelToken,
+    closing: bool,
 }
 
 enum FrameDeferredWork {
@@ -8255,8 +8453,8 @@ enum FrameDeferredWork {
 }
 
 impl FrameDeferredCursor {
-    fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool, shell_maintenance: bool) -> Self {
-        Self { actions, pump_sync, flush_tutorial, shell_maintenance, phase: 0 }
+    fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool, shell_maintenance: bool, generation: u64, cancel: semio_framework_async::CancelToken) -> Self {
+        Self { actions, pump_sync, flush_tutorial, shell_maintenance, phase: 0, generation, cancel, closing: false }
     }
 
     fn take_next(&mut self) -> Option<FrameDeferredWork> {
@@ -8285,18 +8483,268 @@ impl FrameDeferredCursor {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.actions.is_empty() && (self.phase > 0 || !self.shell_maintenance) && (self.phase > 1 || !self.pump_sync) && (self.phase > 2 || !self.flush_tutorial)
+        !self.closing && self.actions.is_empty() && (self.phase > 0 || !self.shell_maintenance) && (self.phase > 1 || !self.pump_sync) && (self.phase > 2 || !self.flush_tutorial)
     }
 
     fn close_step(&mut self) -> bool {
         if self.actions.pop_front().is_some() {
             return false;
         }
-        self.shell_maintenance = false;
-        self.pump_sync = false;
-        self.flush_tutorial = false;
+        if self.shell_maintenance {
+            self.shell_maintenance = false;
+            return false;
+        }
+        if self.pump_sync {
+            self.pump_sync = false;
+            return false;
+        }
+        if self.flush_tutorial {
+            self.flush_tutorial = false;
+            return false;
+        }
         self.phase = 3;
+        self.closing = false;
         true
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn return_shell_maintenance(&mut self) {
+        self.phase = 0;
+        self.shell_maintenance = true;
+        self.closing = false;
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameMaintenanceOwner {
+    interaction: Option<AppInteractionState>,
+    cursor: Option<FrameDeferredCursor>,
+    deadline_ms: Option<u64>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameMaintenanceOwner {
+    fn new(interaction: AppInteractionState, cursor: FrameDeferredCursor) -> Self {
+        Self { interaction: Some(interaction), cursor: Some(cursor), deadline_ms: renderer_worker_pool().now_ms().checked_add(8) }
+    }
+
+    fn generation(&self) -> Option<u64> {
+        self.cursor.as_ref().map(|cursor| cursor.generation)
+    }
+
+    fn cancel(&self) -> Option<&semio_framework_async::CancelToken> {
+        self.cursor.as_ref().map(|cursor| &cursor.cancel)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.interaction.is_none() && self.cursor.is_none()
+    }
+
+    fn take_pair(&mut self) -> Option<(AppInteractionState, FrameDeferredCursor)> {
+        if self.interaction.is_none() || self.cursor.is_none() {
+            return None;
+        }
+        Some((self.interaction.take()?, self.cursor.take()?))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameMaintenanceOwnerCell<T> {
+    state: std::sync::atomic::AtomicU8,
+    owner: std::cell::UnsafeCell<Option<T>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+unsafe impl<T: Send> Send for FrameMaintenanceOwnerCell<T> {}
+
+#[cfg(not(target_arch = "wasm32"))]
+unsafe impl<T: Send> Sync for FrameMaintenanceOwnerCell<T> {}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T> FrameMaintenanceOwnerCell<T> {
+    fn new(owner: T) -> Self {
+        Self { state: std::sync::atomic::AtomicU8::new(0), owner: std::cell::UnsafeCell::new(Some(owner)) }
+    }
+
+    fn try_take(&self) -> Option<T> {
+        self.state.compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok()?;
+        unsafe { (&mut *self.owner.get()).take() }
+    }
+
+    fn try_restore(&self, owner: T) -> Result<(), T> {
+        if self.state.load(std::sync::atomic::Ordering::Acquire) != 1 {
+            return Err(owner);
+        }
+        let slot = unsafe { &mut *self.owner.get() };
+        if slot.is_some() {
+            return Err(owner);
+        }
+        *slot = Some(owner);
+        self.state.store(0, std::sync::atomic::Ordering::Release);
+        Ok(())
+    }
+
+    fn restore_taken(&self, owner: T) {
+        unsafe {
+            *self.owner.get() = Some(owner);
+        }
+        self.state.store(0, std::sync::atomic::Ordering::Release);
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameMaintenanceRefusal {
+    owner: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>,
+    reservation_live: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameMaintenanceRefusal {
+    fn try_take(&self) -> Option<FrameMaintenanceOwner> {
+        self.owner.try_take()
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameMaintenanceExecutionRegistry {
+    state: std::sync::atomic::AtomicU8,
+    generation: std::sync::atomic::AtomicU64,
+    owner: std::cell::UnsafeCell<Option<Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+unsafe impl Send for FrameMaintenanceExecutionRegistry {}
+
+#[cfg(not(target_arch = "wasm32"))]
+unsafe impl Sync for FrameMaintenanceExecutionRegistry {}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameMaintenanceExecutionRegistry {
+    const WRITING: u8 = 1;
+    const QUEUED: u8 = 2;
+    const RUNNING: u8 = 3;
+    const ABANDONED: u8 = 4;
+    const RECOVERING: u8 = 5;
+
+    fn new() -> Self {
+        Self { state: std::sync::atomic::AtomicU8::new(0), generation: std::sync::atomic::AtomicU64::new(0), owner: std::cell::UnsafeCell::new(None) }
+    }
+
+    fn try_publish(&self, generation: u64, owner: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>) -> Result<(), Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>> {
+        if self.state.compare_exchange(0, Self::WRITING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return Err(owner);
+        }
+        unsafe {
+            *self.owner.get() = Some(owner);
+        }
+        self.generation.store(generation, std::sync::atomic::Ordering::Release);
+        self.state.store(Self::QUEUED, std::sync::atomic::Ordering::Release);
+        Ok(())
+    }
+
+    fn try_begin(&self, generation: u64) -> Option<Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>> {
+        if self.generation.load(std::sync::atomic::Ordering::Acquire) != generation {
+            return None;
+        }
+        self.state.compare_exchange(Self::QUEUED, Self::RUNNING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok()?;
+        unsafe { (&*self.owner.get()).as_ref().cloned() }
+    }
+
+    fn abandon(&self, generation: u64) -> bool {
+        if self.generation.load(std::sync::atomic::Ordering::Acquire) != generation {
+            return false;
+        }
+        let state = self.state.load(std::sync::atomic::Ordering::Acquire);
+        if !matches!(state, Self::QUEUED | Self::RUNNING) {
+            return false;
+        }
+        self.state.compare_exchange(state, Self::ABANDONED, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
+    }
+
+    fn complete(&self, generation: u64) -> bool {
+        if self.generation.load(std::sync::atomic::Ordering::Acquire) != generation || self.state.compare_exchange(Self::RUNNING, Self::WRITING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return false;
+        }
+        let owner = unsafe { (&mut *self.owner.get()).take() };
+        drop(owner);
+        self.generation.store(0, std::sync::atomic::Ordering::Release);
+        self.state.store(0, std::sync::atomic::Ordering::Release);
+        true
+    }
+
+    fn reclaim_rejected(&self, generation: u64, fallback: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>) -> Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>> {
+        if self.generation.load(std::sync::atomic::Ordering::Acquire) != generation {
+            return fallback;
+        }
+        if self.state.compare_exchange(Self::QUEUED, Self::RECOVERING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return fallback;
+        }
+        let owner = unsafe { (&mut *self.owner.get()).take() };
+        self.generation.store(0, std::sync::atomic::Ordering::Release);
+        self.state.store(0, std::sync::atomic::Ordering::Release);
+        match owner {
+            Some(owner) => owner,
+            None => fallback,
+        }
+    }
+
+    fn try_take_abandoned(&self) -> Option<(u64, Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>)> {
+        self.state.compare_exchange(Self::ABANDONED, Self::RECOVERING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok()?;
+        let generation = self.generation.load(std::sync::atomic::Ordering::Acquire);
+        let owner = unsafe { (&mut *self.owner.get()).take() }?;
+        self.generation.store(0, std::sync::atomic::Ordering::Release);
+        self.state.store(0, std::sync::atomic::Ordering::Release);
+        Some((generation, owner))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameMaintenanceAuthority {
+    state: std::sync::atomic::AtomicU8,
+    generation: std::sync::atomic::AtomicU64,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameMaintenanceAuthority {
+    fn new() -> Self {
+        Self { state: std::sync::atomic::AtomicU8::new(0), generation: std::sync::atomic::AtomicU64::new(0) }
+    }
+
+    fn try_reserve(&self, generation: u64) -> bool {
+        if self.state.compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return false;
+        }
+        self.generation.store(generation, std::sync::atomic::Ordering::Release);
+        true
+    }
+
+    fn is_live(&self, generation: u64) -> bool {
+        self.state.load(std::sync::atomic::Ordering::Acquire) == 1 && self.generation.load(std::sync::atomic::Ordering::Acquire) == generation
+    }
+
+    fn release(&self, generation: u64) -> bool {
+        if !self.is_live(generation) {
+            return false;
+        }
+        self.generation.store(0, std::sync::atomic::Ordering::Release);
+        self.state.compare_exchange(1, 0, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
+    }
+}
+
+/// 🛑️ Classifies one maintenance terminal guard before any field work moves.
+#[cfg(not(target_arch = "wasm32"))]
+fn frame_maintenance_terminal_fault(cancelled: bool, stale: bool, deadline_exceeded: bool) -> Option<&'static str> {
+    if cancelled {
+        Some("frame maintenance cancelled")
+    } else if stale {
+        Some("frame maintenance generation became stale")
+    } else if deadline_exceeded {
+        Some("frame maintenance deadline expired")
+    } else {
+        None
     }
 }
 
@@ -8348,6 +8796,48 @@ impl RuntimeApply {
     }
 
     fn start_frame_deferred(cursor: &mut Option<FrameDeferredCursor>, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
+        #[cfg(not(target_arch = "wasm32"))]
+        if runtime.pending_frame_maintenance_refusal.is_none() {
+            if let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) {
+                runtime.pending_frame_maintenance_refusal = mailbox.try_take_abandoned_frame_maintenance();
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(mut refusal) = runtime.pending_frame_maintenance_refusal.take() {
+            let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
+                runtime.pending_frame_maintenance_refusal = Some(refusal);
+                return false;
+            };
+            if refusal.reservation_live {
+                if !mailbox.cancel_interaction_future_reservation() {
+                    runtime.pending_frame_maintenance_refusal = Some(refusal);
+                    return false;
+                }
+                refusal.reservation_live = false;
+            }
+            let Some(mut owner) = refusal.try_take() else {
+                runtime.pending_frame_maintenance_refusal = Some(refusal);
+                return false;
+            };
+            let Some((interaction, mut returned_cursor)) = owner.take_pair() else {
+                if let Err(owner) = refusal.owner.try_restore(owner) {
+                    refusal.owner = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+                }
+                runtime.pending_frame_maintenance_refusal = Some(refusal);
+                return false;
+            };
+            returned_cursor.return_shell_maintenance();
+            runtime.interaction = Some(interaction);
+            *cursor = Some(returned_cursor);
+            return false;
+        }
+        if cursor.as_ref().is_some_and(|cursor| cursor.closing) {
+            let complete = cursor.as_mut().is_some_and(FrameDeferredCursor::close_step);
+            if complete {
+                cursor.take();
+            }
+            return complete;
+        }
         let Some(cursor_value) = cursor.as_mut() else { return true };
         if cursor_value.terminal_is_empty() {
             cursor.take();
@@ -8369,14 +8859,27 @@ impl RuntimeApply {
             return true;
         };
         if matches!(work, FrameDeferredWork::ShellMaintenance) {
-            mailbox.spawn_frame_maintenance_reserved(async move {
-                cursor_value.shell_maintenance = interaction.shell.advance_chrome_maintenance_step();
-                if cursor_value.shell_maintenance {
-                    cursor_value.phase = 0;
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                match mailbox.try_spawn_frame_maintenance_reserved(FrameMaintenanceOwner::new(interaction, cursor_value)) {
+                    Ok(()) => return true,
+                    Err(refusal) => {
+                        runtime.pending_frame_maintenance_refusal = Some(refusal);
+                        return false;
+                    }
                 }
-                (interaction, cursor_value)
-            });
-            return true;
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                mailbox.spawn_frame_maintenance_reserved(async move {
+                    cursor_value.shell_maintenance = interaction.shell.advance_chrome_maintenance_step();
+                    if cursor_value.shell_maintenance {
+                        cursor_value.phase = 0;
+                    }
+                    (interaction, cursor_value)
+                });
+                return true;
+            }
         }
         mailbox.spawn_frame_deferred_reserved(async move {
             match work {
@@ -8560,6 +9063,10 @@ struct RuntimeMailboxInner {
     applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
     frame_inputs: Mutex<crate::frame_job::FrameBuildInputs>,
     frame_fault: Mutex<Option<String>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    frame_maintenance: FrameMaintenanceAuthority,
+    #[cfg(not(target_arch = "wasm32"))]
+    frame_maintenance_executions: Arc<FrameMaintenanceExecutionRegistry>,
     world3d_close_cursor: Mutex<usize>,
     world3d_close_sequence: Mutex<u64>,
     world3d_asset_cursor: Mutex<usize>,
@@ -8616,6 +9123,84 @@ impl RuntimeMailboxInner {
 #[derive(Clone)]
 pub(crate) struct RuntimeMailbox(Arc<RuntimeMailboxInner>);
 
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameMaintenanceExecutionEnvelope {
+    mailbox: RuntimeMailbox,
+    registry: Arc<FrameMaintenanceExecutionRegistry>,
+    generation: u64,
+    revision: u64,
+    armed: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameMaintenanceExecutionEnvelope {
+    fn new(mailbox: RuntimeMailbox, registry: Arc<FrameMaintenanceExecutionRegistry>, generation: u64, revision: u64) -> Self {
+        Self { mailbox, registry, generation, revision, armed: true }
+    }
+
+    fn begin(mut self) -> Option<FrameMaintenanceExecutionGuard> {
+        let owner_cell = self.registry.try_begin(self.generation)?;
+        let owner = owner_cell.try_take()?;
+        self.armed = false;
+        Some(FrameMaintenanceExecutionGuard { mailbox: self.mailbox.clone(), registry: self.registry.clone(), owner_cell, owner: Some(owner), generation: self.generation, revision: self.revision, completed: false })
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for FrameMaintenanceExecutionEnvelope {
+    fn drop(&mut self) {
+        if self.armed && self.registry.abandon(self.generation) {
+            self.mailbox.0.finish(RuntimeCompletion { key: None, revision: self.revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None } });
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FrameMaintenanceExecutionGuard {
+    mailbox: RuntimeMailbox,
+    registry: Arc<FrameMaintenanceExecutionRegistry>,
+    owner_cell: Arc<FrameMaintenanceOwnerCell<FrameMaintenanceOwner>>,
+    owner: Option<FrameMaintenanceOwner>,
+    generation: u64,
+    revision: u64,
+    completed: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FrameMaintenanceExecutionGuard {
+    fn owner_mut(&mut self) -> Option<&mut FrameMaintenanceOwner> {
+        self.owner.as_mut()
+    }
+
+    fn finish(mut self) -> bool {
+        let Some(owner) = self.owner.as_mut() else { return false };
+        let Some((interaction, cursor)) = owner.take_pair() else { return false };
+        if !self.registry.complete(self.generation) {
+            owner.interaction = Some(interaction);
+            owner.cursor = Some(cursor);
+            return false;
+        }
+        self.completed = true;
+        self.mailbox.0.finish(RuntimeCompletion { key: None, revision: self.revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
+        true
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for FrameMaintenanceExecutionGuard {
+    fn drop(&mut self) {
+        if self.completed {
+            return;
+        }
+        if let Some(owner) = self.owner.take() {
+            self.owner_cell.restore_taken(owner);
+        }
+        if self.registry.abandon(self.generation) {
+            self.mailbox.0.finish(RuntimeCompletion { key: None, revision: self.revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None } });
+        }
+    }
+}
+
 impl RuntimeMailbox {
     fn new(runtime: AppRuntime) -> Self {
         let presentation_authority = RuntimePresentationAuthority::new();
@@ -8644,6 +9229,10 @@ impl RuntimeMailbox {
             applied_revisions: Mutex::new(std::collections::HashMap::new()),
             frame_inputs: Mutex::new(crate::frame_job::FrameBuildInputs::default()),
             frame_fault: Mutex::new(None),
+            #[cfg(not(target_arch = "wasm32"))]
+            frame_maintenance: FrameMaintenanceAuthority::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            frame_maintenance_executions: Arc::new(FrameMaintenanceExecutionRegistry::new()),
             world3d_close_cursor: Mutex::new(0),
             world3d_close_sequence: Mutex::new(0),
             world3d_asset_cursor: Mutex::new(0),
@@ -9062,6 +9651,21 @@ impl RuntimeMailbox {
         self.0.completions.lock().expect("runtime completion mailbox lock").reserve_interaction()
     }
 
+    fn cancel_interaction_future_reservation(&self) -> bool {
+        match self.0.completions.try_lock() {
+            Ok(mut completions) => completions.cancel_interaction_reservation(),
+            Err(std::sync::TryLockError::Poisoned(error)) => error.into_inner().cancel_interaction_reservation(),
+            Err(std::sync::TryLockError::WouldBlock) => false,
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn try_take_abandoned_frame_maintenance(&self) -> Option<FrameMaintenanceRefusal> {
+        let (generation, owner) = self.0.frame_maintenance_executions.try_take_abandoned()?;
+        let _ = self.0.frame_maintenance.release(generation);
+        Some(FrameMaintenanceRefusal { owner, reservation_live: false })
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     fn spawn_interaction_reserved<F>(&self, _key: Option<&'static str>, future: F)
     where
@@ -9115,16 +9719,73 @@ impl RuntimeMailbox {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn spawn_frame_maintenance_reserved<F>(&self, future: F)
-    where
-        F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + Send + 'static,
-    {
+    fn try_spawn_frame_maintenance_reserved(&self, owner: FrameMaintenanceOwner) -> Result<(), FrameMaintenanceRefusal> {
+        let Some(generation) = owner.generation() else {
+            return Err(FrameMaintenanceRefusal { owner: Arc::new(FrameMaintenanceOwnerCell::new(owner)), reservation_live: true });
+        };
+        let cell = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+        if !self.0.frame_maintenance.try_reserve(generation) {
+            return Err(FrameMaintenanceRefusal { owner: cell, reservation_live: true });
+        }
+        let registry = self.0.frame_maintenance_executions.clone();
+        if registry.try_publish(generation, cell.clone()).is_err() {
+            let _ = self.0.frame_maintenance.release(generation);
+            return Err(FrameMaintenanceRefusal { owner: cell, reservation_live: true });
+        }
         let mailbox = self.clone();
         let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let _ = kernel_runtime::KernelPoolFuture::spawn(renderer_worker_pool(), semio_framework_async::Lane::Io, async move {
-            let (interaction, cursor) = future.await;
-            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
+        let worker_pool = renderer_worker_pool();
+        let execution = FrameMaintenanceExecutionEnvelope::new(mailbox.clone(), registry.clone(), generation, revision);
+        let job: semio_framework_async::Job = Box::new(move || {
+            let Some(mut execution) = execution.begin() else {
+                mailbox.record_frame_fault("frame maintenance exact owner pair was incomplete");
+                return;
+            };
+            let stale;
+            {
+                let Some(owner) = execution.owner_mut() else {
+                    mailbox.record_frame_fault("frame maintenance execution lost its exact owner");
+                    return;
+                };
+                let FrameMaintenanceOwner { interaction, cursor, deadline_ms } = owner;
+                let (Some(interaction), Some(cursor)) = (interaction.as_mut(), cursor.as_mut()) else {
+                    mailbox.record_frame_fault("frame maintenance exact owner pair was incomplete");
+                    return;
+                };
+                let cancelled = cursor.cancel.is_cancelled_now();
+                stale = !mailbox.0.frame_maintenance.is_live(generation) || mailbox.0.presentation_authority.witness_for(generation).is_none();
+                let deadline_exceeded = deadline_ms.is_none_or(|deadline| worker_pool.now_ms() > deadline);
+                if let Some(fault) = frame_maintenance_terminal_fault(cancelled, stale, deadline_exceeded) {
+                    cursor.begin_close();
+                    interaction.frame_fault = Some(fault.to_string());
+                } else {
+                    cursor.shell_maintenance = interaction.shell.advance_chrome_maintenance_step();
+                    if cursor.shell_maintenance {
+                        cursor.phase = 0;
+                    }
+                    if deadline_ms.is_some_and(|deadline| worker_pool.now_ms() > deadline) {
+                        interaction.frame_fault = Some("frame maintenance bounded field exceeded its deadline".to_string());
+                        cursor.begin_close();
+                    }
+                }
+                if !mailbox.0.frame_maintenance.release(generation) && !stale {
+                    interaction.frame_fault = Some("frame maintenance authority release faulted".to_string());
+                    cursor.begin_close();
+                }
+            }
+            if !execution.finish() {
+                mailbox.record_frame_fault("frame maintenance execution handback faulted");
+            }
         });
+        match renderer_worker_pool().try_submit(semio_framework_async::Lane::Io, job) {
+            Ok(()) => Ok(()),
+            Err(error) => {
+                let reclaimed = registry.reclaim_rejected(generation, cell);
+                drop(error.into_job());
+                let _ = self.0.frame_maintenance.release(generation);
+                Err(FrameMaintenanceRefusal { owner: reclaimed, reservation_live: true })
+            }
+        }
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -9210,6 +9871,8 @@ struct AppRuntime {
     draw: DrawList,
     overlay: DrawList,
     pending_frame_deferred: Option<FrameDeferredCursor>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pending_frame_maintenance_refusal: Option<FrameMaintenanceRefusal>,
     #[cfg(not(target_arch = "wasm32"))]
     plugin_modules_root: std::path::PathBuf,
     #[cfg(not(target_arch = "wasm32"))]
@@ -9363,6 +10026,8 @@ pub(crate) struct AppFrameBuild {
 
 struct AppFrameAfterChrome {
     resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
+    upload_rejected: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
+    draw_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
     engine_packets: Option<FrameEnginePackets>,
     deferred_actions: FrameActionOwners,
     fullscreen: Option<bool>,
@@ -9385,6 +10050,7 @@ struct FrameBuildCursor {
     engine_resources: Option<engine_canvas::EngineCanvasBuildContext>,
     world_resources: Option<infinite_world::world::World3dBuildContext>,
     resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
+    input_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
     engine_packets: FrameEnginePackets,
     engine_rejected: Option<engine_canvas::EngineCanvasPacket>,
     world_rejected: Option<infinite_world::world::World3dBuildRejected>,
@@ -9398,6 +10064,11 @@ struct FrameBuildCursor {
 #[derive(Clone, Copy)]
 enum FrameBuildPhase {
     Deferred,
+    PreparedGpuAbandonment,
+    PreparedInputAbandonment,
+    PreparedJobAbandonment,
+    PreparedAbandonment,
+    PacketAbandonment,
     Text,
     Fullscreen,
     NativePoll,
@@ -9443,6 +10114,7 @@ impl FrameBuildCursor {
             engine_resources: None,
             world_resources: None,
             resource_input: None,
+            input_rejected: None,
             engine_packets: FrameEnginePackets::default(),
             engine_rejected: None,
             world_rejected: None,
@@ -9455,6 +10127,13 @@ impl FrameBuildCursor {
     }
 
     fn close_step(&mut self) -> bool {
+        if let Some(rejected) = self.input_rejected.as_mut() {
+            if !rejected.close_step() {
+                return false;
+            }
+            self.input_rejected = None;
+            return false;
+        }
         if let Some(packet) = self.engine_rejected.as_mut() {
             if !packet.close_step() {
                 return false;
@@ -9516,7 +10195,10 @@ impl FrameBuildCursor {
             return false;
         }
         if self.resource_input.is_none() && (self.world_resources.is_some() || self.icon_upload.is_some()) {
-            self.resource_input = Some(ui_wgpu::wgpu::PreparedRenderInput::new(self.presentation_witness.scene_revision, self.presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::default(), None, 0.0));
+            match ui_wgpu::wgpu::PreparedRenderInput::try_new(self.presentation_witness.scene_revision, self.presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::empty(), None, 0.0) {
+                Ok(input) => self.resource_input = Some(input),
+                Err(rejected) => self.input_rejected = Some(rejected),
+            }
             return false;
         }
         if let Some(resources) = self.world_resources.as_mut() {
@@ -9539,7 +10221,9 @@ impl FrameBuildCursor {
                 self.icon_upload = Some(upload);
                 return false;
             };
-            input.uploads.push(upload);
+            if let Err(upload) = input.try_push_upload(upload) {
+                self.world_rejected = Some(infinite_world::world::World3dBuildRejected::Upload(upload));
+            }
             return false;
         }
         if let Some(input) = self.resource_input.take() {
@@ -9572,6 +10256,7 @@ impl FrameBuildCursor {
             && self.engine_resources.is_none()
             && self.world_resources.is_none()
             && self.resource_input.is_none()
+            && self.input_rejected.is_none()
             && self.icon_upload.is_none()
             && self.icon_pages.is_none()
             && self.retirement.is_none()
@@ -9647,6 +10332,20 @@ struct FrameWheelCursor {
 
 impl AppFrameAfterChrome {
     fn close_step(&mut self) -> bool {
+        if let Some(rejected) = self.draw_rejected.as_mut() {
+            if !rejected.close_step() {
+                return false;
+            }
+            self.draw_rejected = None;
+            return false;
+        }
+        if let Some(upload) = self.upload_rejected.as_mut() {
+            if !upload.close_step() {
+                return false;
+            }
+            self.upload_rejected = None;
+            return false;
+        }
         if self.deferred_actions.pop_front().is_some() {
             return false;
         }
@@ -10289,7 +10988,15 @@ impl FrameTransaction {
                             self.phase = AppFrameTransactionPhase::Terminal;
                             return AppFrameTransactionStep::Fault;
                         }
-                        input.raster_producers.push_back(producer);
+                        if let Err(producer) = input.try_push_raster_producer(producer) {
+                            if let Err(mut returned) = cursor.retain_rejected(producer) {
+                                returned.begin_close();
+                                self.raster_rejected = Some(returned);
+                            }
+                            runtime.record_frame_fault("frame raster producer fixed admission was refused");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            return AppFrameTransactionStep::Fault;
+                        }
                         AppFrameTransactionStep::Pending
                     }
                     scenes::PendingRasterUploadStep::Complete => {
@@ -10312,7 +11019,7 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Fault;
                 };
                 let cursor = self.finish_cursor.get_or_insert_with(Default::default);
-                match app.frame_after_input_step(runtime, partial, cursor) {
+                match app.frame_after_input_step(runtime, partial, cursor, context.cancel_token()) {
                     FrameFinishBoundaryStep::Pending => AppFrameTransactionStep::Pending,
                     FrameFinishBoundaryStep::Complete(frame) => {
                         self.after_chrome = None;
@@ -10428,18 +11135,34 @@ pub(crate) struct AppFramePresentation {
 
 impl AppFrameBuild {
     pub(crate) fn into_preparation(self) -> AppFramePreparation {
+        let AppFrameBuild {
+            input,
+            engine_packets,
+            generation,
+            cursor,
+            theme_dark,
+            fullscreen,
+            cursor_wake,
+            #[cfg(not(target_arch = "wasm32"))]
+            job_progress,
+        } = self;
+        let (job, job_rejected) = match ui_wgpu::wgpu::PreparedRenderJob::try_new(input) {
+            Ok(job) => (Some(job), None),
+            Err(rejected) => (None, Some(rejected)),
+        };
         AppFramePreparation {
-            job: Some(ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 64)),
+            job,
+            job_rejected,
             session: None,
             rejected: None,
-            engine_packets: Some(self.engine_packets),
-            generation: self.generation,
-            cursor: self.cursor,
-            theme_dark: self.theme_dark,
-            fullscreen: self.fullscreen,
-            cursor_wake: self.cursor_wake,
+            engine_packets: Some(engine_packets),
+            generation,
+            cursor,
+            theme_dark,
+            fullscreen,
+            cursor_wake,
             #[cfg(not(target_arch = "wasm32"))]
-            job_progress: self.job_progress,
+            job_progress,
             terminal: false,
         }
     }
@@ -10447,6 +11170,7 @@ impl AppFrameBuild {
 
 pub(crate) struct AppFramePreparation {
     job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
+    job_rejected: Option<ui_wgpu::wgpu::PreparedRenderJobRejected>,
     session: Option<semio_framework_job::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>,
     rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>>,
     engine_packets: Option<FrameEnginePackets>,
@@ -10467,7 +11191,7 @@ impl AppFramePreparation {
                 operation,
                 generation,
                 cancel,
-                config: semio_framework_job::BatchDriveConfig { site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 64, step_budget_ms: 1 },
+                config: semio_framework_job::BatchDriveConfig { site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: 1 },
                 now_ms: semio_framework_job::default_now_ms,
             };
             match semio_framework_job::BatchJobSession::try_new(job, params) {
@@ -10476,6 +11200,14 @@ impl AppFramePreparation {
                     rejected.begin_close();
                     self.rejected = Some(rejected);
                 }
+            }
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        if let Some(rejected) = self.job_rejected.as_mut() {
+            if rejected.close_step() {
+                self.job_rejected = None;
+                self.terminal = true;
+                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
             }
             return semio_framework_job::StepOutcome::Yield;
         }
@@ -10539,6 +11271,13 @@ impl AppFramePreparation {
     }
 
     pub(crate) fn close_step(&mut self) -> bool {
+        if let Some(rejected) = self.job_rejected.as_mut() {
+            if !rejected.close_step() {
+                return false;
+            }
+            self.job_rejected = None;
+            return false;
+        }
         if let Some(job) = self.job.as_mut() {
             semio_framework_job::InteractiveJob::begin_close(job);
             match semio_framework_job::InteractiveJob::close_step(job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
@@ -10585,7 +11324,7 @@ impl AppFramePreparation {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.job.is_none() && self.session.is_none() && self.rejected.is_none() && self.engine_packets.is_none() && self.cursor_wake.is_none() && {
+        self.job.is_none() && self.job_rejected.is_none() && self.session.is_none() && self.rejected.is_none() && self.engine_packets.is_none() && self.cursor_wake.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 self.job_progress.is_none()
@@ -10610,6 +11349,19 @@ pub(crate) struct AppPresenter {
     last_cursor: Option<(SemioCursor, bool)>,
     pending: Option<AppPresentCursor>,
     retirement: Option<AppPresentedRetirement>,
+    surface_resize: Option<AppSurfaceResizeCursor>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AppSurfaceResizePhase {
+    Apply,
+    Retire,
+    Complete,
+}
+
+struct AppSurfaceResizeCursor {
+    candidate: Option<crate::surface_lane::PreparedSurfaceResize>,
+    phase: AppSurfaceResizePhase,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -10620,6 +11372,7 @@ enum AppPresentPhase {
     Uploads,
     Stage,
     Render,
+    CloseGpu,
     Acknowledge,
     ProgressAcknowledge,
     Aborted,
@@ -10633,6 +11386,7 @@ struct AppPresentCursor {
     upload: usize,
     witness: Option<ui_wgpu::wgpu::PreparedPresenterWitness>,
     raster_witness: Option<ui_wgpu::wgpu::RasterTextureWitness>,
+    gpu_cursor: Option<ui_wgpu::wgpu::PreparedGpuPresentCursor>,
 }
 
 struct AppPresentedRetirement {
@@ -10756,7 +11510,8 @@ impl AppPresentedRetirement {
         }
         if let Some(packet) = gate.last_valid() {
             if self.acknowledged_eviction < packet.evictions().len() {
-                let key = match &packet.evictions()[self.acknowledged_eviction] {
+                let Some(eviction) = packet.evictions().get(self.acknowledged_eviction) else { return Err("prepared eviction cursor exceeded its fixed list".to_string()) };
+                let key = match eviction {
                     ui_wgpu::wgpu::PreparedRenderEviction::Mesh { key } => key,
                 };
                 if let Some(upload) = packet.uploads().get(self.acknowledged_upload_scan) {
@@ -10807,8 +11562,53 @@ impl AppPresenter {
         self.gpu.dpr()
     }
 
-    pub(crate) fn resize(&mut self, css_width: f32, css_height: f32, dpr: f32) {
-        self.gpu.resize(css_width, css_height, dpr);
+    pub(crate) fn surface_resize_available(&self) -> bool {
+        self.surface_resize.is_none()
+    }
+
+    pub(crate) fn begin_surface_resize(&mut self, candidate: crate::surface_lane::PreparedSurfaceResize) -> Result<(), crate::surface_lane::PreparedSurfaceResize> {
+        if self.surface_resize.is_some() {
+            return Err(candidate);
+        }
+        self.surface_resize = Some(AppSurfaceResizeCursor { candidate: Some(candidate), phase: AppSurfaceResizePhase::Apply });
+        Ok(())
+    }
+
+    pub(crate) fn surface_resize_step(&mut self) -> bool {
+        let Some(cursor) = self.surface_resize.as_mut() else { return true };
+        match cursor.phase {
+            AppSurfaceResizePhase::Apply => {
+                let Some(candidate) = cursor.candidate else {
+                    cursor.phase = AppSurfaceResizePhase::Complete;
+                    return false;
+                };
+                if !candidate.suspended() {
+                    self.gpu.resize(candidate.logical_width(), candidate.logical_height(), candidate.scale_factor());
+                }
+                cursor.phase = AppSurfaceResizePhase::Retire;
+                false
+            }
+            AppSurfaceResizePhase::Retire => {
+                cursor.candidate.take();
+                cursor.phase = AppSurfaceResizePhase::Complete;
+                false
+            }
+            AppSurfaceResizePhase::Complete => {
+                self.surface_resize = None;
+                true
+            }
+        }
+    }
+
+    pub(crate) fn close_surface_resize_step(&mut self) -> bool {
+        let Some(cursor) = self.surface_resize.as_mut() else { return true };
+        if cursor.candidate.take().is_some() {
+            cursor.phase = AppSurfaceResizePhase::Retire;
+            return false;
+        }
+        cursor.phase = AppSurfaceResizePhase::Complete;
+        self.surface_resize = None;
+        false
     }
 
     pub(crate) fn has_pending_presentation(&self) -> bool {
@@ -10825,6 +11625,16 @@ impl AppPresenter {
 
     pub(crate) fn close_world_owners_step(&mut self) -> Result<bool, String> {
         if let Some(mut cursor) = self.pending.take() {
+            if let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() {
+                gpu_cursor.begin_close();
+                if !gpu_cursor.close_step() {
+                    self.pending = Some(cursor);
+                    return Ok(false);
+                }
+                cursor.gpu_cursor = None;
+                self.pending = Some(cursor);
+                return Ok(false);
+            }
             if cursor.frame.packet.is_none() {
                 cursor.frame.packet = self.gate.abort_pending();
             }
@@ -10895,7 +11705,7 @@ impl AppPresenter {
         }
         let frame = produce()?;
         let cursor = frame.cursor;
-        self.pending = Some(AppPresentCursor { frame, phase: AppPresentPhase::BeginGpu, engine: 0, upload: 0, witness: None, raster_witness: None });
+        self.pending = Some(AppPresentCursor { frame, phase: AppPresentPhase::BeginGpu, engine: 0, upload: 0, witness: None, raster_witness: None, gpu_cursor: None });
         Some(cursor)
     }
 
@@ -10916,7 +11726,15 @@ impl AppPresenter {
         let Some(cursor) = self.pending.as_mut() else { return Ok(AppPresentStep::Idle) };
         match cursor.phase {
             AppPresentPhase::Aborted => {
-                let mut aborted = self.pending.take().expect("aborted presentation cursor");
+                if let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() {
+                    gpu_cursor.begin_close();
+                    if !gpu_cursor.close_step() {
+                        return Ok(AppPresentStep::Pending);
+                    }
+                    cursor.gpu_cursor = None;
+                    return Ok(AppPresentStep::Pending);
+                }
+                let Some(mut aborted) = self.pending.take() else { return Err("aborted presentation cursor was missing".to_string()) };
                 let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
                 if retirement.completed_frame.is_some() {
                     self.pending = Some(aborted);
@@ -11025,7 +11843,7 @@ impl AppPresenter {
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::Stage => {
-                let packet = cursor.frame.packet.take().expect("validated prepared frame packet");
+                let Some(packet) = cursor.frame.packet.take() else { return Err("validated prepared frame packet was missing".to_string()) };
                 cursor.witness = match self.gate.stage_presented(packet) {
                     Ok(witness) => Some(witness),
                     Err(packet) => {
@@ -11056,13 +11874,42 @@ impl AppPresenter {
                     cursor.phase = AppPresentPhase::Aborted;
                     return Err("raster operation authority was stale before submit".to_string());
                 }
-                if let Err(error) = self.gpu.finish_prepared(packet, raster_witness) {
-                    cursor.frame.packet = self.gate.abort_pending();
-                    cursor.witness = None;
-                    cursor.phase = AppPresentPhase::Aborted;
-                    return Err(format!("prepared frame submit: {error}"));
+                if cursor.gpu_cursor.is_none() {
+                    match self.gpu.begin_prepared_present(packet, raster_witness) {
+                        Ok(gpu_cursor) => cursor.gpu_cursor = Some(gpu_cursor),
+                        Err(error) => {
+                            cursor.frame.packet = self.gate.abort_pending();
+                            cursor.witness = None;
+                            cursor.phase = AppPresentPhase::Aborted;
+                            return Err(format!("prepared frame submit admission: {error}"));
+                        }
+                    }
+                    return Ok(AppPresentStep::Pending);
                 }
-                cursor.phase = AppPresentPhase::Acknowledge;
+                let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() else { return Ok(AppPresentStep::Pending) };
+                match self.gpu.prepared_present_step(packet, gpu_cursor) {
+                    Ok(true) => cursor.phase = AppPresentPhase::CloseGpu,
+                    Ok(false) => {}
+                    Err(error) => {
+                        gpu_cursor.begin_close();
+                        cursor.frame.packet = self.gate.abort_pending();
+                        cursor.witness = None;
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err(format!("prepared frame submit step: {error}"));
+                    }
+                }
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::CloseGpu => {
+                let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() else {
+                    cursor.phase = AppPresentPhase::Acknowledge;
+                    return Ok(AppPresentStep::Pending);
+                };
+                gpu_cursor.begin_close();
+                if gpu_cursor.close_step() {
+                    cursor.gpu_cursor = None;
+                    cursor.phase = AppPresentPhase::Acknowledge;
+                }
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::Acknowledge => {
@@ -11211,7 +12058,11 @@ async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut Rend
 fn push_renderer_asset_page(_fetch: &mut RendererAssetFetchOwner, mut bytes: semio_framework_job::RetainedJobPayload) -> Result<(), String> {
     let populated = !bytes.is_empty();
     let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    if populated { Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into()) } else { Ok(()) }
+    if populated {
+        Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into())
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -11318,6 +12169,36 @@ impl AppRuntime {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
                 if !ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step() {
+                    return FrameBuildBoundaryStep::Pending;
+                }
+                cursor.phase = FrameBuildPhase::PreparedGpuAbandonment;
+            }
+            FrameBuildPhase::PreparedGpuAbandonment => {
+                if !ui_wgpu::wgpu::PreparedGpuPresentCursor::close_abandoned_step() {
+                    return FrameBuildBoundaryStep::Pending;
+                }
+                cursor.phase = FrameBuildPhase::PreparedInputAbandonment;
+            }
+            FrameBuildPhase::PreparedInputAbandonment => {
+                if !ui_wgpu::wgpu::PreparedRenderInput::close_abandoned_step() {
+                    return FrameBuildBoundaryStep::Pending;
+                }
+                cursor.phase = FrameBuildPhase::PreparedJobAbandonment;
+            }
+            FrameBuildPhase::PreparedJobAbandonment => {
+                if !ui_wgpu::wgpu::PreparedRenderJob::close_abandoned_step() {
+                    return FrameBuildBoundaryStep::Pending;
+                }
+                cursor.phase = FrameBuildPhase::PreparedAbandonment;
+            }
+            FrameBuildPhase::PreparedAbandonment => {
+                if !ui_wgpu::wgpu::PreparedRenderReceiver::close_abandoned_step() {
+                    return FrameBuildBoundaryStep::Pending;
+                }
+                cursor.phase = FrameBuildPhase::PacketAbandonment;
+            }
+            FrameBuildPhase::PacketAbandonment => {
+                if !ui_wgpu::wgpu::PreparedRenderPacket::close_abandoned_step() {
                     return FrameBuildBoundaryStep::Pending;
                 }
                 cursor.phase = FrameBuildPhase::Text;
@@ -11488,7 +12369,13 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::ResourceInput;
             }
             FrameBuildPhase::ResourceInput => {
-                cursor.resource_input = Some(ui_wgpu::wgpu::PreparedRenderInput::new(cursor.presentation_witness.scene_revision, cursor.presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::default(), None, 0.0));
+                match ui_wgpu::wgpu::PreparedRenderInput::try_new(cursor.presentation_witness.scene_revision, cursor.presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::empty(), None, 0.0) {
+                    Ok(input) => cursor.resource_input = Some(input),
+                    Err(rejected) => {
+                        cursor.input_rejected = Some(rejected);
+                        return FrameBuildBoundaryStep::Fault("frame prepared input process admission was refused");
+                    }
+                }
                 cursor.phase = FrameBuildPhase::WorldTransfer;
             }
             FrameBuildPhase::WorldTransfer => {
@@ -11506,15 +12393,10 @@ impl AppRuntime {
             FrameBuildPhase::IconTransfer => {
                 if let Some(upload) = cursor.icon_upload.take() {
                     let Some(input) = cursor.resource_input.as_mut() else { return FrameBuildBoundaryStep::Fault("frame icon transfer lost resource input") };
-                    let Some(next) = input.raster_producers.len().checked_add(input.uploads.len()).and_then(|count| count.checked_add(1)) else {
+                    if let Err(upload) = input.try_push_upload(upload) {
                         cursor.world_rejected = Some(infinite_world::world::World3dBuildRejected::Upload(upload));
-                        return FrameBuildBoundaryStep::Fault("frame icon upload credits exhausted");
-                    };
-                    if next > input.limits.max_upload_items {
-                        cursor.world_rejected = Some(infinite_world::world::World3dBuildRejected::Upload(upload));
-                        return FrameBuildBoundaryStep::Fault("frame icon upload credits exceeded");
+                        return FrameBuildBoundaryStep::Fault("frame icon upload fixed admission was refused");
                     }
-                    input.uploads.push(upload);
                 }
                 cursor.phase = FrameBuildPhase::EngineTransfer;
             }
@@ -11551,6 +12433,8 @@ impl AppRuntime {
                 let engine_packets = std::mem::take(&mut cursor.engine_packets);
                 return FrameBuildBoundaryStep::Complete(AppFrameAfterChrome {
                     resource_input: Some(resource_input),
+                    upload_rejected: None,
+                    draw_rejected: None,
                     engine_packets: Some(engine_packets),
                     deferred_actions,
                     fullscreen: cursor.fullscreen.take(),
@@ -11565,7 +12449,7 @@ impl AppRuntime {
     }
 
     /// 🎞️ Advances one retained post-input owner transfer without driving deferred work inline.
-    fn frame_after_input_step(&mut self, runtime: &RuntimeMailbox, partial: &mut AppFrameAfterChrome, cursor: &mut FrameFinishCursor) -> FrameFinishBoundaryStep {
+    fn frame_after_input_step(&mut self, runtime: &RuntimeMailbox, partial: &mut AppFrameAfterChrome, cursor: &mut FrameFinishCursor, cancel: semio_framework_job::CancelToken) -> FrameFinishBoundaryStep {
         match cursor.phase {
             FrameFinishPhase::Inputs => {
                 runtime.update_frame_inputs(self);
@@ -11612,7 +12496,10 @@ impl AppRuntime {
                 }
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame glyph transfer lost resource input") };
                 let Some(pages) = cursor.glyph_pages.take() else { return FrameFinishBoundaryStep::Fault("frame glyph atlas pages lost ownership") };
-                input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlasPages { pixels: pages });
+                if let Err(upload) = input.try_push_upload(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlasPages { pixels: pages }) {
+                    partial.upload_rejected = Some(upload);
+                    return FrameFinishBoundaryStep::Fault("frame glyph upload fixed admission was refused");
+                }
                 cursor.phase = FrameFinishPhase::Cursor;
             }
             FrameFinishPhase::Cursor => {
@@ -11635,13 +12522,17 @@ impl AppRuntime {
             }
             FrameFinishPhase::Draw => {
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame draw transfer lost resource input") };
-                input.draw = std::mem::take(&mut self.draw);
                 input.time_seconds = (app_now_ms() / 1000.0) as f32;
                 cursor.phase = FrameFinishPhase::Overlay;
             }
             FrameFinishPhase::Overlay => {
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame overlay transfer lost resource input") };
-                input.overlay = Some(std::mem::take(&mut self.overlay));
+                let draw = std::mem::replace(&mut self.draw, DrawList::empty());
+                let overlay = Some(std::mem::replace(&mut self.overlay, DrawList::empty()));
+                if let Err(rejected) = input.try_bind_draw(draw, overlay) {
+                    partial.draw_rejected = Some(rejected);
+                    return FrameFinishBoundaryStep::Fault("frame draw process admission was refused");
+                }
                 cursor.phase = FrameFinishPhase::Complete;
             }
             FrameFinishPhase::Complete => {
@@ -11661,7 +12552,7 @@ impl AppRuntime {
                     return FrameFinishBoundaryStep::Fault("frame completion lost engine packets");
                 };
                 if has_deferred {
-                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance));
+                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, input.preview_generation, cancel));
                 }
                 return FrameFinishBoundaryStep::Complete(AppFrameBuild {
                     generation: semio_framework_trace::Generation(input.preview_generation),
@@ -12051,6 +12942,8 @@ async fn boot_runtime(
         overlay: DrawList::default(),
         pending_frame_deferred: None,
         #[cfg(not(target_arch = "wasm32"))]
+        pending_frame_maintenance_refusal: None,
+        #[cfg(not(target_arch = "wasm32"))]
         plugin_modules_root: plugin_modules_root.clone(),
         #[cfg(not(target_arch = "wasm32"))]
         native_plugin_mtimes: std::collections::HashMap::new(),
@@ -12075,6 +12968,7 @@ async fn boot_runtime(
         last_cursor: None,
         pending: None,
         retirement: None,
+        surface_resize: None,
     };
 
     // 🧹️ P3c: this used to build a `PointerCallbacks` here (5 `Rc<RefCell<AppRuntime>>` clones, one

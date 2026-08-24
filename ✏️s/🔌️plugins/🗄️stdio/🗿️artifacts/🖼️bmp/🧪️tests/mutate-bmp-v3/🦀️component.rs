@@ -108,6 +108,7 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, inverse_bmp_mutation, BmpMutation};
     use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
     use semio_s_plugin_stdio::artifacts::bmp::BmpSnapshot;
+    use semio_s_plugin_stdio::ArtifactDsl;
 
     //#region 🔖️Json
     fn num(params: &Json, key: &str) -> Option<f64> {
@@ -116,7 +117,7 @@ mod subject {
             _ => None,
         }
     }
-    fn as_str(params: &Json, key: &str) -> Option<&str> {
+    fn as_str<'a>(params: &'a Json, key: &str) -> Option<&'a str> {
         match params.get(key) {
             Some(Json::String(value)) => Some(value.as_str()),
             _ => None,
@@ -252,8 +253,8 @@ mod subject {
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_bmp(&input).map_err(|error| format!("decode_bmp failed: {error}"))?;
-        let text = <BmpSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
-        let reparsed = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error:?}"))?;
+        let text = <BmpSnapshot as ArtifactDsl>::print_dsl(&snapshot);
+        let reparsed = <BmpSnapshot as ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error:?}"))?;
         let output = encode_bmp(&reparsed).map_err(|error| format!("encode_bmp failed: {error}"))?;
         let projection = project_bmp_mutation(&output)?;
         law::carrier_is_exact(&output, &input)?;

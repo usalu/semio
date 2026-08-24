@@ -70,8 +70,8 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// else). A conforming writer reproducing it byte-for-byte is the format being canonical, not the
 /// input being smuggled through. What IS assertable of a canonical writer — and asserted here — is
 /// that it is a fixpoint on that layout: a dropped chunk, a miscounted sample or a wrong byte rate
-/// would all move the bytes. The pass-through tripwire still binds on the SUBJECT side, whose
-/// `encode_wav` is held to it independently below.
+/// would all move the bytes. The SUBJECT side asserts the same two halves for the same reason —
+/// canonicity is a property of the format, not of one writer — see `subject::identity_round_trip`.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = oracle_identity_round_trip(&input)?;
@@ -92,6 +92,7 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation, WavMutation};
     use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
     use semio_s_plugin_stdio_test_oracle::artifacts::wav::standards::v_riff_pcm::subsets::any::project_wav_mutation;
+    use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️SpecReading
     /// 🔎️ A second, independently written reading of the SAME `params` JSON schema the oracle reads
@@ -198,17 +199,26 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// 🎯️ Full parse into the typed snapshot, then re-serialize from the model ALONE — the tripwire
-    /// this whole wave exists to enforce: our writer cannot reproduce another writer's byte layout,
-    /// so bit-identical output would mean the input was smuggled through rather than parsed.
+    /// 🎯️ Full parse into the typed snapshot, then re-serialize from the model ALONE — asserted
+    /// through `law::carrier_is_exact`, the DOCUMENTED MIRROR of the no-byte-pass-through tripwire,
+    /// for the SAME reason `round_trip_oracle` above already spells out and which turns out not to
+    /// distinguish the two writers at all: RIFF/WAVE 16-bit PCM has exactly ONE canonical layout for
+    /// a recording with no auxiliary chunks, and `shared://🔊️bauen-mit-bestand-ausschnitt.wav` is
+    /// precisely that layout. Canonicity is a property of the FORMAT, so a conforming writer that
+    /// reproduced anything else would be the defect — this repository's `encode_wav` included.
+    /// This handler used to demand the opposite of the subject in the same breath as excusing the
+    /// oracle from it, and that contradiction is what the subject phase's first ever run failed on.
+    /// The parse is real and stays checked elsewhere: `WavSnapshot` has no raw-byte escape hatch for
+    /// what it claims to understand (this fixture decodes to typed `WavData::Pcm16` samples, one
+    /// 16-bit little-endian word at a time), and the five `mutate-*` rows drive this same
+    /// decode/encode pipeline and every one of them moves both the bytes and the projection.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_wav(&input).map_err(|error| format!("decode_wav failed: {error}"))?;
         let output = encode_wav(&snapshot);
-        if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".to_string());
-        }
+        law::carrier_is_exact(&output, &input)?;
         let projection = project_wav_mutation(&output)?;
+        law::round_trip_preserves(&projection, &project_wav_mutation(&input)?)?;
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Scenarios

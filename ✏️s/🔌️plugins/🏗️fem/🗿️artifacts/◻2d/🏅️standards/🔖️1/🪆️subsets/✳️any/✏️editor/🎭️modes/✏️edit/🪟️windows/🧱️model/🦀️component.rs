@@ -8,9 +8,8 @@ use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera, FemDof, FemE
 use crate::model::Dof;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 use semio_framework_ui_scene::{
-    canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal,
-    canvas2d_snapshot_terminal_is_empty, canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, Canvas2dSnapshotDescriptor, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken,
-    CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY,
+    canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal, canvas2d_snapshot_terminal_is_empty,
+    canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, Canvas2dSnapshotDescriptor, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY,
 };
 use serde_json::json;
 use std::collections::HashMap;
@@ -650,15 +649,8 @@ impl Fem2dVisualJob {
                             let (x0, y0) = screen_2d(point[0], point[1]);
                             let (x1, y1) = screen_2d(next[0], next[1]);
                             self.layer_prefix()?;
-                            write!(
-                                self.output,
-                                "{{\"kind\":\"line\",\"id\":\"region-quality-{}-{}-{}\",\"x0\":{x0},\"y0\":{y0},\"x1\":{x1},\"y1\":{y1},\"color\":\"{}\"}}",
-                                self.quality.id(),
-                                region.id,
-                                self.point_cursor,
-                                self.quality.color()
-                            )
-                            .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+                            write!(self.output, "{{\"kind\":\"line\",\"id\":\"region-quality-{}-{}-{}\",\"x0\":{x0},\"y0\":{y0},\"x1\":{x1},\"y1\":{y1},\"color\":\"{}\"}}", self.quality.id(), region.id, self.point_cursor, self.quality.color())
+                                .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                             self.point_cursor += 1;
                             return Ok(false);
                         }
@@ -733,8 +725,7 @@ impl Fem2dVisualJob {
                     return Ok(false);
                 };
                 self.layer_prefix()?;
-                write!(self.output, "{{\"kind\":\"text\",\"id\":\"assembling-{id}\",\"x\":10,\"y\":36,\"text\":{{\"content\":\"assembling {id}\",\"size\":11}}}}")
-                    .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+                write!(self.output, "{{\"kind\":\"text\",\"id\":\"assembling-{id}\",\"x\":10,\"y\":36,\"text\":{{\"content\":\"assembling {id}\",\"size\":11}}}}").map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                 self.cursor += 1;
             }
             Fem2dVisualJobStage::BuildLoadGlyph => {
@@ -753,8 +744,7 @@ impl Fem2dVisualJob {
                     FemLoad::Area { id, pressure, .. } => (id, [0.0, -pressure.signum() * 18.0]),
                 };
                 self.layer_prefix()?;
-                write!(self.output, "{{\"kind\":\"line\",\"id\":\"load-{id}\",\"x0\":20,\"y0\":52,\"x1\":{},\"y1\":{}}}", 20.0 + vector[0], 52.0 - vector[1])
-                    .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+                write!(self.output, "{{\"kind\":\"line\",\"id\":\"load-{id}\",\"x0\":20,\"y0\":52,\"x1\":{},\"y1\":{}}}", 20.0 + vector[0], 52.0 - vector[1]).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                 self.load_cursor += 1;
             }
             Fem2dVisualJobStage::BuildSupportGlyph => {
@@ -781,13 +771,9 @@ impl Fem2dVisualJob {
                 let field = &visual.fields[index];
                 self.layer_prefix()?;
                 match self.stage {
-                    Fem2dVisualJobStage::BuildDisplacementEntry => write!(
-                        self.output,
-                        "{{\"kind\":\"line\",\"id\":\"displacement-field-{}\",\"x0\":30,\"y0\":80,\"x1\":{},\"y1\":{}}}",
-                        field.node_id,
-                        30.0 + field.displacement[0] * SCALE_2D,
-                        80.0 - field.displacement[1] * SCALE_2D
-                    ),
+                    Fem2dVisualJobStage::BuildDisplacementEntry => {
+                        write!(self.output, "{{\"kind\":\"line\",\"id\":\"displacement-field-{}\",\"x0\":30,\"y0\":80,\"x1\":{},\"y1\":{}}}", field.node_id, 30.0 + field.displacement[0] * SCALE_2D, 80.0 - field.displacement[1] * SCALE_2D)
+                    }
                     Fem2dVisualJobStage::BuildResidualEntry => {
                         write!(self.output, "{{\"kind\":\"line\",\"id\":\"residual-field-{}\",\"x0\":30,\"y0\":96,\"x1\":{},\"y1\":{}}}", field.node_id, 30.0 + field.residual[0], 96.0 - field.residual[1])
                     }
@@ -917,12 +903,7 @@ impl Fem2dVisualJob {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.complete.is_none()
-            && self.token.is_none_or(canvas2d_snapshot_write_terminal_is_empty)
-            && self.output.terminal_is_empty()
-            && self.region_order.is_empty()
-            && self.element_order.is_empty()
-            && self.field_order.is_empty()
+        self.complete.is_none() && self.token.is_none_or(canvas2d_snapshot_write_terminal_is_empty) && self.output.terminal_is_empty() && self.region_order.is_empty() && self.element_order.is_empty() && self.field_order.is_empty()
     }
 }
 //#endregion 🧵️MountedVisualJob
@@ -1165,10 +1146,7 @@ pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin
 
 /// 👁️ Renders the model plus an optional replaceable worker-job progress snapshot.
 pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &FemCamera, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::canvas_2d_surface(
-        BODY_KEY,
-        Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot) },
-    )
+    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot) })
 }
 //#endregion 🔖️Render
 
@@ -1192,9 +1170,7 @@ mod tests {
     }
 
     fn packet_contains(lease: &Fem2dMountedVisualLease, needle: &[u8]) -> bool {
-        (0..lease.snapshot.page_count).any(|page| {
-            canvas2d_snapshot_with_page(lease.snapshot, page, |owner| owner.bytes().windows(needle.len()).any(|window| window == needle)).unwrap_or(false)
-        })
+        (0..lease.snapshot.page_count).any(|page| canvas2d_snapshot_with_page(lease.snapshot, page, |owner| owner.bytes().windows(needle.len()).any(|window| window == needle)).unwrap_or(false))
     }
 
     fn packet_equal(left: &Fem2dMountedVisualLease, right: &Fem2dMountedVisualLease) -> bool {

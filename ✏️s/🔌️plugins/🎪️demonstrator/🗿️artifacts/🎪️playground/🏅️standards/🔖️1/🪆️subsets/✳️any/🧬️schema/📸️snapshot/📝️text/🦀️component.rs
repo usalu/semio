@@ -12,12 +12,12 @@ use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot:
 pub const PLAYGROUND_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses playground DSL text into a `PlaygroundSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<PlaygroundSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<PlaygroundSnapshot, store::TextError> {
     <PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PlaygroundSnapshot` back to DSL text.
-pub async fn print_dsl(snapshot: &PlaygroundSnapshot) -> String {
+pub fn print_dsl(snapshot: &PlaygroundSnapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 
@@ -26,13 +26,13 @@ pub async fn print_dsl(snapshot: &PlaygroundSnapshot) -> String {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn playground_snapshot_dsl_round_trips() {
+    #[test]
+    fn playground_snapshot_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn default_example_dsl_round_trips() {
+    #[test]
+    fn default_example_dsl_round_trips() {
         let document = parse_dsl(PLAYGROUND_DEMO_DEFAULT_EXAMPLE_TEXT).expect("parse default playground example");
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }

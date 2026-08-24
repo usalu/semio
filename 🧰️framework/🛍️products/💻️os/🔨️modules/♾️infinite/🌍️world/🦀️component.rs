@@ -6,9 +6,9 @@ use ui_wgpu::wgpu::{
     aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
     marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, mesh_content_version,
     paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances, transform_aabb,
-    vec3_from_f64, widgets::gizmo, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController,
-    PointerModifiers, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode, Vec3, WidgetContext, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease,
-    World3dSnapshotPageKind,
+    vec3_from_f64, widgets::gizmo, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
+    Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode,
+    Vec3, WidgetContext, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
 };
 
 //#region 📦️PreparedWorldResources
@@ -16,26 +16,35 @@ const WORLD3D_FRAME_RESOURCE_CAPACITY: usize = 256;
 
 pub enum World3dBuildRejected {
     Upload(PreparedRenderUpload),
+    RasterProducer(PreparedRasterProducer),
+    RasterAdmission(PreparedRasterRejected),
     Eviction(PreparedRenderEviction),
 }
 
 impl World3dBuildRejected {
     pub fn close_step(&mut self) -> bool {
         match self {
-            Self::Upload(PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. }) => pixels.pop().is_none(),
-            Self::Upload(PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels }) => pixels.close_step(),
-            Self::Upload(PreparedRenderUpload::Raster { key, pixels, .. }) => pixels.pop().is_none() && key.pop().is_none(),
-            Self::Upload(PreparedRenderUpload::RasterPages { key, .. } | PreparedRenderUpload::Mesh { key, .. }) => key.pop().is_none(),
+            Self::Upload(upload) => upload.close_step(),
+            Self::RasterProducer(producer) => {
+                producer.begin_close();
+                producer.close_step()
+            }
+            Self::RasterAdmission(rejected) => rejected.close_step(),
             Self::Eviction(PreparedRenderEviction::Mesh { key }) => key.pop().is_none(),
         }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
         match self {
+            #[cfg(test)]
             Self::Upload(PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. }) => pixels.is_empty(),
             Self::Upload(PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels }) => pixels.terminal_is_empty(),
+            #[cfg(test)]
             Self::Upload(PreparedRenderUpload::Raster { key, pixels, .. }) => key.is_empty() && pixels.is_empty(),
-            Self::Upload(PreparedRenderUpload::RasterPages { key, .. } | PreparedRenderUpload::Mesh { key, .. }) => key.is_empty(),
+            Self::Upload(PreparedRenderUpload::RasterPages { key, .. }) => key.is_empty(),
+            Self::Upload(PreparedRenderUpload::Mesh { key, .. }) => key.is_empty(),
+            Self::RasterProducer(producer) => producer.terminal_is_empty(),
+            Self::RasterAdmission(rejected) => rejected.terminal_is_empty(),
             Self::Eviction(PreparedRenderEviction::Mesh { key }) => key.is_empty(),
         }
     }
@@ -46,6 +55,8 @@ impl World3dBuildRejected {
 pub struct World3dBuildContext {
     uploads: Box<[Option<PreparedRenderUpload>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
     upload_len: usize,
+    raster_producers: Box<[Option<PreparedRasterProducer>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
+    raster_producer_len: usize,
     evictions: Box<[Option<PreparedRenderEviction>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
     eviction_len: usize,
     mesh_requests: Box<[Option<(String, u64)>; WORLD3D_FRAME_RESOURCE_CAPACITY]>,
@@ -162,6 +173,8 @@ impl World3dBuildContext {
         Self {
             uploads: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
             upload_len: 0,
+            raster_producers: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
+            raster_producer_len: 0,
             evictions: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
             eviction_len: 0,
             mesh_requests: Box::new([const { None }; WORLD3D_FRAME_RESOURCE_CAPACITY]),
@@ -196,17 +209,25 @@ impl World3dBuildContext {
         if self.raster_requests[..self.raster_request_len].iter().flatten().any(|candidate| candidate == key) {
             return;
         }
-        let upload = PreparedRenderUpload::Raster { key: key.to_string(), pixels: pixels.to_vec(), width, height };
-        if self.raster_request_len == WORLD3D_FRAME_RESOURCE_CAPACITY || self.upload_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
+        let producer = match PreparedRasterProducer::try_admit(key.to_string(), pixels.to_vec(), width, height) {
+            Ok((producer, _)) => producer,
+            Err(rejected) => {
+                if self.rejected.is_none() {
+                    self.rejected = Some(World3dBuildRejected::RasterAdmission(rejected));
+                }
+                return;
+            }
+        };
+        if self.raster_request_len == WORLD3D_FRAME_RESOURCE_CAPACITY || self.raster_producer_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
             if self.rejected.is_none() {
-                self.rejected = Some(World3dBuildRejected::Upload(upload));
+                self.rejected = Some(World3dBuildRejected::RasterProducer(producer));
             }
             return;
         }
         self.raster_requests[self.raster_request_len] = Some(key.to_string());
         self.raster_request_len += 1;
-        self.uploads[self.upload_len] = Some(upload);
-        self.upload_len += 1;
+        self.raster_producers[self.raster_producer_len] = Some(producer);
+        self.raster_producer_len += 1;
     }
 
     pub fn evict_mesh(&mut self, key: &str) {
@@ -242,6 +263,20 @@ impl World3dBuildContext {
         if let Some(rejected) = self.rejected.take() {
             return Err(rejected);
         }
+        if let Some(index) = self.raster_producer_len.checked_sub(1) {
+            self.raster_producer_len = index;
+            let Some(producer) = self.raster_producers[index].take() else { return Ok(false) };
+            let Some(next) = input.raster_producers.len().checked_add(input.uploads.len()).and_then(|count| count.checked_add(1)) else {
+                return Err(World3dBuildRejected::RasterProducer(producer));
+            };
+            if next > input.limits.max_upload_items {
+                return Err(World3dBuildRejected::RasterProducer(producer));
+            }
+            if let Err(producer) = input.try_push_raster_producer(producer) {
+                return Err(World3dBuildRejected::RasterProducer(producer));
+            }
+            return Ok(false);
+        }
         if let Some(index) = self.upload_len.checked_sub(1) {
             self.upload_len = index;
             let Some(upload) = self.uploads[index].take() else { return Ok(false) };
@@ -251,13 +286,17 @@ impl World3dBuildContext {
             if next > input.limits.max_upload_items {
                 return Err(World3dBuildRejected::Upload(upload));
             }
-            input.uploads.push(upload);
+            if let Err(upload) = input.try_push_upload(upload) {
+                return Err(World3dBuildRejected::Upload(upload));
+            }
             return Ok(false);
         }
         if let Some(index) = self.eviction_len.checked_sub(1) {
             self.eviction_len = index;
             let Some(eviction) = self.evictions[index].take() else { return Ok(false) };
-            input.evictions.push(eviction);
+            if let Err(eviction) = input.try_push_eviction(eviction) {
+                return Err(World3dBuildRejected::Eviction(eviction));
+            }
             return Ok(false);
         }
         if let Some(index) = self.mesh_request_len.checked_sub(1) {
@@ -275,11 +314,13 @@ impl World3dBuildContext {
 
     pub fn terminal_is_empty(&self) -> bool {
         self.upload_len == 0
+            && self.raster_producer_len == 0
             && self.eviction_len == 0
             && self.mesh_request_len == 0
             && self.raster_request_len == 0
             && self.rejected.is_none()
             && self.uploads.iter().all(Option::is_none)
+            && self.raster_producers.iter().all(Option::is_none)
             && self.evictions.iter().all(Option::is_none)
             && self.mesh_requests.iter().all(Option::is_none)
             && self.raster_requests.iter().all(Option::is_none)
@@ -8772,13 +8813,14 @@ struct World3dSnapshotApplyCursor {
     item: u8,
     staged_orbit: Option<OrbitController>,
     draw_started: bool,
+    draw_permit: Option<World3dSnapshotDrawPermit>,
     faulted: bool,
     status: [Option<World3dPreparedStatus>; 2],
 }
 
 impl World3dSnapshotApplyCursor {
     fn new(lease: World3dSnapshotLease) -> Self {
-        Self { lease, page: 0, item: 0, staged_orbit: None, draw_started: false, faulted: false, status: [None; 2] }
+        Self { lease, page: 0, item: 0, staged_orbit: None, draw_started: false, draw_permit: None, faulted: false, status: [None; 2] }
     }
 
     fn close_step(&mut self) -> bool {
@@ -8876,6 +8918,16 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
                 state.snapshot_apply = Some(cursor);
                 return World3dSnapshotApplyStep::Fault;
             };
+            let draw_bytes = item.indexes[1];
+            let permit = match world3d_snapshot_claim_draw_permit(cursor.lease, 1, instance_count, draw_bytes) {
+                Ok(permit) => permit,
+                Err(fault) => {
+                    state.snapshot_fault = Some(fault);
+                    cursor.faulted = true;
+                    state.snapshot_apply = Some(cursor);
+                    return World3dSnapshotApplyStep::Fault;
+                }
+            };
             begin_world_placeholder_mesh(state, mesh_key, WorldPlaceholderKind::Box);
             let descriptor = WorldDrawRebuildDescriptor { generation: state.draw_generation.wrapping_add(1), revision: state.interaction_revision, draw_count: 1, instance_count, byte_count };
             let admitted = begin_world3d_draw_rebuild(state, descriptor).and_then(|()| world3d_draw_rebuild_admit_draw(state, mesh_key, 0, u16::try_from(instance_count).map_err(|_| WorldDynamicFault::InstanceCapacity)?));
@@ -8885,6 +8937,7 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
                 state.snapshot_apply = Some(cursor);
                 return World3dSnapshotApplyStep::Fault;
             }
+            cursor.draw_permit = Some(permit);
             cursor.draw_started = true;
         }
         World3dSnapshotPageKind::Instance if item.number_len >= 14 && cursor.draw_started => {
@@ -13112,7 +13165,7 @@ mod tests {
         let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(ui_wgpu::wgpu::World3dSnapshotPageKind::Camera);
         page.push_item(ui_wgpu::wgpu::World3dSnapshotItem { numbers: [4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 45.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], number_len: 10, ..Default::default() }).unwrap();
         page.seal().unwrap();
-        let descriptor = ui_wgpu::wgpu::World3dSnapshotDescriptor { revision: 5, generation: 7, page_count: 1, item_count: 1, byte_count: 0 };
+        let descriptor = ui_wgpu::wgpu::World3dSnapshotDescriptor { revision: 5, generation: 7, page_count: 1, item_count: 1, byte_count: 0, draw_count: 0, draw_instance_count: 0, draw_byte_count: 0 };
         let token = ui_wgpu::wgpu::world3d_snapshot_begin(descriptor).unwrap();
         ui_wgpu::wgpu::world3d_snapshot_admit_page(token, page).unwrap();
         let lease = ui_wgpu::wgpu::world3d_snapshot_seal(token).unwrap();

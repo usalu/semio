@@ -54,6 +54,20 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
   Every scenario copies the fixture into the case work directory before touching it; the committed
   file is never written to.
 
+  THE FIRST DIFFERENTIAL RUN OF THIS CASE FOUND THE ADAPTER'S OWN SUBJECT WIRING WRONG. All six pool
+  scenarios diverged structurally (`parity=15/21`): the oracle emitted `{"sharedStringCount":…,
+  "sharedStrings":[…]}` and the subject emitted `{"format":…,"sheets":[…]}` — projections of two
+  different SHAPES, which cannot be compared at all. The oracle half already branches on
+  `is_pool_kind` and reads `xl/sharedStrings.xml` back with `zip` + `quick-xml` for exactly those
+  three kinds, as the paragraph above describes; the subject half projected all ten kinds through
+  the `calamine` grid instead. That also made `mutate-remove-shared-string` fail outright with
+  `Cell string index not found in shared strings table`: removing pool entry 228 while leaving the
+  sheets alone is what BOTH implementations do — it is this vocabulary's declared "address the pool
+  by an index independent of any cell reference" semantics, and the oracle's own bytes carry the
+  same dangling reference — but only the subject was asked to read the result back through a reader
+  that resolves `t="s"` indices. The subject now makes the SAME projector choice the oracle makes,
+  per scenario id. Nothing was ignored, no tolerance moved, no Examples row changed.
+
   THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because the reference
   pairing did not error. `inverse-<kind>` applies the mutation, applies its own independently
   computed inverse, and fails with the first diverging cell unless the result projects onto exactly

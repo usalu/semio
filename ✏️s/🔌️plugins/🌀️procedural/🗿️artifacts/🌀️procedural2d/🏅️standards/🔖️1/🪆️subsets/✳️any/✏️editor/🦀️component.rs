@@ -22,7 +22,8 @@ use crate::editor::procedural2d::terminology::{procedural2d_labels, Procedural2d
 use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{
     app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
+    SelectionSpec, TopologyNode,
 };
 use serde_json::Value;
 use store::EngineHandles;
@@ -34,6 +35,12 @@ pub const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
 
 fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, category: &str) -> ActionDefinition {
     semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog(id, label, kind).with_category(category))
+}
+
+/// 🧵️ Classifies the internal flow continuation as backed by its bounded first-step factory.
+fn migrated_command(mut definition: CommandDefinition) -> CommandDefinition {
+    definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+    definition
 }
 //#endregion 🔖️Constants
 
@@ -365,7 +372,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
 pub fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PROCEDURAL2D_DIALECT)
         .document(["semio", "procedural", "2d"])
-        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
+        .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
         .artifact_kind(artifact_kind())
         .icon_id("procedural2d")
         .mode_def(edit::definition())
@@ -406,6 +413,25 @@ pub fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition {
         .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Canvas-Zeiger losgelassen"))
         .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Canvas-Mausrad"))
         .action_with(categorized_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View, "methods"))
+        .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
+        .action_interactive_job("moveMediaNode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addWidget", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeWidget", InteractiveJobClassification::Migrated)
+        .action_interactive_job("connectMediaPorts", InteractiveJobClassification::Migrated)
+        .action_interactive_job("reorganize", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addGeneration", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeGeneration", InteractiveJobClassification::Migrated)
+        .action_interactive_job("renameGeneration", InteractiveJobClassification::Migrated)
+        .action_interactive_job("updateGenerationValues", InteractiveJobClassification::Migrated)
+        .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("generate", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setEvalOutputs", InteractiveJobClassification::Migrated)
+        .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
+        .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
+        .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
+        .action_interactive_job("canvasWheel", InteractiveJobClassification::Migrated)
+        .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
         .action_args("addWidget", vec![
             ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![

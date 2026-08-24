@@ -43,6 +43,28 @@ Feature: Apply every typed IFC4 mutation to a real-world exchange structure
   either -- confirmed by reading that file, not assumed.
 
 
+  THE FIRST SUBJECT RUN OF THIS CASE COULD NOT READ THE FIXTURE AT ALL, AND THE READER WAS WRONG.
+  All 22 executable scenarios failed with `parse_part21 failed: part21: unsupported string escape at
+  138718: unsupported escape start Some('\\')`, `parity=1/23`. Byte 138718 is
+  `#966=IFCBUILDINGELEMENTPROXYTYPE('1Cr_EEDPz6fuVrxIH6lX$j',$,'\\',$,$,…)` — a real one-character
+  backslash name IfcOpenShell wrote as the doubled reverse solidus that ISO 10303-21's own STRING
+  production defines, exactly as it defines the doubled apostrophe. This repository's shared Part-21
+  lexer implemented `\X\HH\` and `\X2\…\X0\` and nothing else; `ruststep`, the registered
+  independent reader, read the same file without complaint. The lexer now implements the complete
+  §6.4.2 directive set — `\\`, `\X\HH` (two hex digits and NO terminator, per the grammar's own
+  `arbitrary = "\X\" hex_one`, which the old code got wrong too), `\X2\`/`\X4\` runs, `\S\`
+  and `\P?\` — refusing an ISO 8859 page it cannot map rather than guessing a character. No
+  fixture was touched and no assertion relaxed.
+
+  AND THE PROJECTION WAS COMPARING ENCODINGS. `ruststep`'s `string` combinator is
+  `many0(none_of("'"))`: it returns the raw text between the apostrophes and decodes no control
+  directive, so the oracle's `'\\'` lexeme and the subject's conformant `\X2\005C\X0\`
+  re-encoding of the SAME one-character value read as different argument values. The projection now
+  decodes each literal through a from-scratch §6.4.2 reader in the shared AP214 oracle — written
+  independently of the production codec it is evidence about, refusing a malformed directive rather
+  than waving it through. `semantic-ifc-v1` compares exactly the same axes; nothing was ignored,
+  loosened or swapped.
+
   📌️ Every Examples row below other than `no-mutation` is required to MOVE the semantic projection,
   and the adapter fails the scenario in role when it does not: a row whose parameters make the
   mutation a no-op passes whenever the reference library merely declined to error, which is not a

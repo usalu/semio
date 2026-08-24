@@ -372,7 +372,7 @@ const { reactor, jobs, checkpoint, describe } = await import("./${componentBase}
 export async function createActorApi(actorId) {
   hostShim.__bindHostBridge(actorId);
   return {
-    poll: async (events, commandPage, budget) => reactor.poll(events, commandPage, budget),
+    poll: async (events, commandPage, budget) => reactor.poll(events.map(({ kind, payload }) => ({ tag: kind, val: payload })), commandPage, { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 }),
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
     stepJob: async (job, budget) => jobs.stepJob(job, budget),
     cancelJob: async (job) => jobs.cancelJob(job),

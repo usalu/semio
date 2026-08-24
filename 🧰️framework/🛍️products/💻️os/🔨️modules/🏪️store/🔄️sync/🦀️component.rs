@@ -4037,7 +4037,7 @@ mod tests {
             Lane::Command,
         )
         .await;
-        write_server(&fixtures_dir, "📦️server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command).await;
+        write_server(&fixtures_dir, "📦️server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: crate::os_spr::SnapshotChunkBytes::try_from_slice(&[1, 2, 3, 4]).unwrap() }, Lane::Command).await;
         write_server(&fixtures_dir, "📦️server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
         write_server(&fixtures_dir, "📦️server-commands.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command).await;
         write_server(

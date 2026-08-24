@@ -6590,6 +6590,7 @@ enum ArtifactEnvelopeDecodeState {
     ReleaseSuccess,
     ReleaseCancelled,
     ReleaseFault(OwnedSchemaDecodeDiagnostic),
+    Transferred,
     Complete,
     Cancelled,
     Fault(OwnedSchemaDecodeDiagnostic),
@@ -6597,8 +6598,8 @@ enum ArtifactEnvelopeDecodeState {
 
 /// @emoji 🧬️ Persistent fixed-page envelope decode job; terminal outcomes are withheld until every nested owner is empty.
 pub struct ArtifactEnvelopeDecodeAuthority<P, Mutation> {
-    record: Option<OwnedSchemaRecordCursor>,
-    fields: Option<ArtifactEnvelopeFieldDecoderLease<P, Mutation>>,
+    record: std::mem::ManuallyDrop<Option<OwnedSchemaRecordCursor>>,
+    fields: std::mem::ManuallyDrop<Option<ArtifactEnvelopeFieldDecoderLease<P, Mutation>>>,
     field_registry: Arc<ArtifactEnvelopeFieldDecoderRegistry<P, Mutation>>,
     field_ticket: ArtifactEnvelopeFieldDecoderTicket,
     field_returned: bool,
@@ -6622,7 +6623,15 @@ where
             Err((fault, fields)) => return Err((record, fault, fields)),
         };
         let field_ticket = fields.ticket();
-        Ok(Self { record: Some(record), fields: Some(fields), field_registry: Arc::clone(field_registry), field_ticket, field_returned: false, pending_field: None, state: ArtifactEnvelopeDecodeState::Fields })
+        Ok(Self {
+            record: std::mem::ManuallyDrop::new(Some(record)),
+            fields: std::mem::ManuallyDrop::new(Some(fields)),
+            field_registry: Arc::clone(field_registry),
+            field_ticket,
+            field_returned: false,
+            pending_field: None,
+            state: ArtifactEnvelopeDecodeState::Fields,
+        })
     }
 
     fn begin_release(&mut self, state: ArtifactEnvelopeDecodeState) {
@@ -6634,9 +6643,7 @@ where
     }
 
     fn terminal_fault(diagnostic: OwnedSchemaDecodeDiagnostic, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
-        let detail = cx
-            .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, diagnostic.code.as_bytes())
-            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+        let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, diagnostic.code.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
         semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
     }
 
@@ -6733,12 +6740,18 @@ where
     }
 
     /// @emoji 🧹️ Transfers an unstarted exact decode owner into a retained close authority.
-    pub fn reject(mut self, diagnostic: OwnedSchemaDecodeDiagnostic) -> ArtifactEnvelopeDecodeRejected<P, Mutation> {
-        let record = self.record.take().expect("rejected envelope record cursor remains present");
-        let fields = self.fields.take().expect("rejected envelope field lease remains present");
-        self.state = ArtifactEnvelopeDecodeState::Fault(diagnostic);
-        self.field_returned = true;
-        ArtifactEnvelopeDecodeRejected { record: Some(record), fields: Some(fields), field_registry: Arc::clone(&self.field_registry), field_ticket: self.field_ticket, field_returned: false, diagnostic }
+    pub fn reject(self, diagnostic: OwnedSchemaDecodeDiagnostic) -> Result<ArtifactEnvelopeDecodeRejected<P, Mutation>, Self> {
+        if !matches!(self.state, ArtifactEnvelopeDecodeState::Fields) || self.record.is_none() || self.fields.is_none() || self.field_returned || self.pending_field.is_some() {
+            return Err(self);
+        }
+        let mut source = std::mem::ManuallyDrop::new(self);
+        let Some(record) = source.record.take() else { unreachable!("validated rejected record owner") };
+        let Some(fields) = source.fields.take() else { unreachable!("validated rejected field owner") };
+        let field_registry = Arc::clone(&source.field_registry);
+        let field_ticket = source.field_ticket;
+        source.state = ArtifactEnvelopeDecodeState::Transferred;
+        unsafe { std::mem::ManuallyDrop::drop(&mut source) };
+        Ok(ArtifactEnvelopeDecodeRejected { record: std::mem::ManuallyDrop::new(Some(record)), fields: std::mem::ManuallyDrop::new(Some(fields)), field_registry, field_ticket, field_returned: false, diagnostic })
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -6861,13 +6874,7 @@ where
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         self.begin_close();
         if let Some(fields) = self.fields.as_mut() {
-            let close = fields.with_owner(|owner| {
-                if owner.terminal_is_empty() {
-                    Ok(SnapshotRetirementStep::Complete)
-                } else {
-                    owner.close_step(maximum_items, maximum_bytes)
-                }
-            });
+            let close = fields.with_owner(|owner| if owner.terminal_is_empty() { Ok(SnapshotRetirementStep::Complete) } else { owner.close_step(maximum_items, maximum_bytes) });
             match close {
                 Ok(Ok(SnapshotRetirementStep::Pending { released_items, released_bytes })) => {
                     return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
@@ -6927,8 +6934,9 @@ where
 
 impl<P, Mutation> Drop for ArtifactEnvelopeDecodeAuthority<P, Mutation> {
     fn drop(&mut self) {
-        if let Some(fields) = self.fields.as_mut() {
-            let _ = fields.return_now();
+        if matches!(self.state, ArtifactEnvelopeDecodeState::Transferred) {
+            assert!(self.record.is_none() && self.fields.is_none() && self.pending_field.is_none() && !self.field_returned, "transferred artifact envelope decode source retained an owner after exact rejection handoff");
+            return;
         }
         let terminal = self.record.is_none()
             && self.fields.is_none()
@@ -6940,8 +6948,8 @@ impl<P, Mutation> Drop for ArtifactEnvelopeDecodeAuthority<P, Mutation> {
 }
 
 pub struct ArtifactEnvelopeDecodeRejected<P, Mutation> {
-    record: Option<OwnedSchemaRecordCursor>,
-    fields: Option<ArtifactEnvelopeFieldDecoderLease<P, Mutation>>,
+    record: std::mem::ManuallyDrop<Option<OwnedSchemaRecordCursor>>,
+    fields: std::mem::ManuallyDrop<Option<ArtifactEnvelopeFieldDecoderLease<P, Mutation>>>,
     field_registry: Arc<ArtifactEnvelopeFieldDecoderRegistry<P, Mutation>>,
     field_ticket: ArtifactEnvelopeFieldDecoderTicket,
     field_returned: bool,
@@ -7002,9 +7010,6 @@ where
 
 impl<P, Mutation> Drop for ArtifactEnvelopeDecodeRejected<P, Mutation> {
     fn drop(&mut self) {
-        if let Some(fields) = self.fields.as_mut() {
-            let _ = fields.return_now();
-        }
         let _ = self.diagnostic;
         assert!(self.record.is_none() && self.fields.is_none() && self.field_returned && self.field_registry.ticket_reclaimed(self.field_ticket), "artifact envelope decode rejection reached Drop before every exact page owner was cursor-retired");
     }
@@ -18469,7 +18474,8 @@ mod tests {
             Box::new(TestEnvelopeFieldDecoder { terminal: false, accepted: 0 }),
         )
         .unwrap_or_else(|_| panic!("fixed rejected decoder admission"))
-        .reject(diagnostic);
+        .reject(diagnostic)
+        .unwrap_or_else(|_| panic!("public exact rejection transfer"));
         let mut close_turns = 0;
         let mut detached = None;
         while !rejected.terminal_is_empty() {
@@ -18480,6 +18486,57 @@ mod tests {
             assert!(close_turns < 16);
         }
         assert!(close_turns >= 3, "rejected field, page, and terminal record are independently witnessed");
+        assert!(registry.terminal_is_empty());
+    }
+
+    #[test]
+    fn artifact_envelope_public_rejection_preserves_record_lease_ticket_double_return_and_generation_reuse() {
+        let registry = ArtifactEnvelopeFieldDecoderRegistry::new();
+        let record = artifact_envelope_decode_test_cursor(&[br#"{"schema":"s","id":"i","vcs":{},"editMessages":[],"conflicts":[]}"#]);
+        let record_identity = record.tokens.pages.slots.as_ptr();
+        let source = ArtifactEnvelopeDecodeAuthority::<(), ()>::try_new(record, &registry, Box::new(TestEnvelopeFieldDecoder { terminal: false, accepted: 0 })).unwrap_or_else(|_| panic!("fixed public rejection decoder admission"));
+        let field_ticket = source.field_ticket;
+        let registry_identity = Arc::as_ptr(&source.field_registry);
+        let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.public-rejected", offset: 7, line: 2, column: 3, path: OwnedSchemaPath::ROOT };
+        let mut rejected = source.reject(diagnostic).unwrap_or_else(|_| panic!("public rejection returns the exact owner authority"));
+        assert_eq!(rejected.record.as_ref().map(|record| record.tokens.pages.slots.as_ptr()), Some(record_identity));
+        assert_eq!(rejected.fields.as_ref().map(ArtifactEnvelopeFieldDecoderLease::ticket), Some(field_ticket));
+        assert_eq!(Arc::as_ptr(&rejected.field_registry), registry_identity);
+        assert_eq!(rejected.diagnostic, diagnostic);
+        assert!(!registry.ticket_reclaimed(field_ticket));
+        assert_eq!(rejected.close_step(0, 0), Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert_eq!(rejected.record.as_ref().map(|record| record.tokens.pages.slots.as_ptr()), Some(record_identity));
+        assert_eq!(rejected.fields.as_ref().map(ArtifactEnvelopeFieldDecoderLease::ticket), Some(field_ticket));
+
+        let mut detached = None;
+        for _ in 0..16 {
+            drive_test_envelope_field_return(&registry, &mut detached);
+            let step = rejected.close_step(1, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("public rejection closes one exact owner");
+            assert!(
+                matches!(step, SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)
+                    || step == SnapshotRetirementStep::Blocked
+                    || step == SnapshotRetirementStep::Complete
+            );
+            if rejected.terminal_is_empty() {
+                break;
+            }
+        }
+        drive_test_envelope_field_return(&registry, &mut detached);
+        assert!(rejected.terminal_is_empty());
+        assert!(registry.ticket_reclaimed(field_ticket));
+        assert!(registry.terminal_is_empty());
+        assert!(detached.is_none());
+
+        let mut reused = registry.try_admit(Box::new(TestEnvelopeFieldDecoder { terminal: true, accepted: 0 })).unwrap_or_else(|_| panic!("reused field generation"));
+        let reused_ticket = reused.ticket();
+        assert_eq!(reused_ticket.index(), field_ticket.index());
+        assert_ne!(reused_ticket.generation(), field_ticket.generation());
+        assert!(reused.return_now());
+        assert!(!reused.return_now());
+        drop(reused);
+        drive_test_envelope_field_return(&registry, &mut detached);
+        drive_test_envelope_field_return(&registry, &mut detached);
+        assert!(registry.ticket_reclaimed(reused_ticket));
         assert!(registry.terminal_is_empty());
     }
 

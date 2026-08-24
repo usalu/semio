@@ -303,12 +303,18 @@ mod subject {
         apply_md_mutation(&mut restored, &inverse_mutation);
         let restored_bytes = restored.to_text().into_bytes();
         let projection = project_md(&restored_bytes)?;
-        if projection != original_projection {
-            return Err(format!("inverse of {kind} did not restore the subject's original semantic projection"));
+        if let Some(divergence) = super::projection_divergence(&projection, &original_projection) {
+            return Err(format!("inverse law violated: {kind:?} followed by its own inverse did not restore the original document's projection -- {divergence}"));
         }
         Ok(Outcome::with_raw(restored_bytes, projection))
     }
 
+    /// 🔒️ The SUBJECT side of the round-trip law, asserted in role exactly as
+    /// `super::round_trip_oracle` asserts it on its own side: the re-encoded bytes must move, AND
+    /// the re-encoded document's own block projection must still equal the input's. Only the byte
+    /// half was checked here before, so a decode/re-encode that silently reshaped the document
+    /// passed -- and every `inverse-<kind>` row inherited the same blind spot, since each of them
+    /// restores through the same `to_text`.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx, INPUT, "input.md")?;
         let text = String::from_utf8(input.clone()).map_err(|error| format!("input is not valid UTF-8: {error}"))?;
@@ -318,6 +324,9 @@ mod subject {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_md(&bytes)?;
+        if let Some(divergence) = super::projection_divergence(&projection, &project_md(&input)?) {
+            return Err(format!("round-trip law violated: decode then re-encode did not preserve the semantic block projection -- {divergence}"));
+        }
         Ok(Outcome::with_raw(bytes, projection))
     }
     //#endregion 🔖️Handlers

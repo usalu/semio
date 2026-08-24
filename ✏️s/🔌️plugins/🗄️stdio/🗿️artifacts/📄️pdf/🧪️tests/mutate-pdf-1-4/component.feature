@@ -39,6 +39,16 @@ Feature: Apply every typed PDF 1.4 mutation to a real-world document
   `every_declared_kind_is_observable_and_its_inverse_restores_the_document` in
   ../../🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs.
 
+  WHAT THE DIFFERENTIAL RUN ACTUALLY REPORTS. The oracle-against-subject comparison ran for the
+  first time in ticket 26/08/23/END-TO-END-TESTING-REFACTOR and scored parity 5 of 5: both mutate
+  rows, both inverse rows and the identity round trip agree on the whole projection, with nothing
+  ignored beyond `semantic-pdf-v1`'s own declared writer freedom. The sibling `mutate-pdf-1-7` case
+  scored 24 of 37 on its first run over the very same document, and the ten-failure cluster there
+  was a defect in the 1.7 writer's handling of a retained COS graph — a graph this subset's own
+  `PdfSnapshot` does not carry, which is why the same run came back clean here. Its subject-side
+  handlers do NOT yet assert the three laws in role the way the oracle-side ones do; parity carries
+  those two rows today, and closing that gap is open work rather than a claim already made.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

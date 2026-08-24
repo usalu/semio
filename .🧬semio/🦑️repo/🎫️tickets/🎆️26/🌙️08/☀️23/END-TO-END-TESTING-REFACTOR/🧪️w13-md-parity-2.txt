@@ -1,0 +1,2 @@
+[test] level=exhaustive cases=1 executed=26 passed=26 failed=0 errored=0 parity=12/13
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md::mutate-md-commonmark::mutate-set-snapshot::rust::subject (10 differences)

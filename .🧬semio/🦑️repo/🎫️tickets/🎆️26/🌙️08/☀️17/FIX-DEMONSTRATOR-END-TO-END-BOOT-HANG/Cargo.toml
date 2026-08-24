@@ -1,0 +1,14 @@
+[package]
+name = "procedural-manifest-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+semio-s-plugin-procedural = { path = "../../../../../../../✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", default-features = false }
+
+[[bin]]
+name = "procedural-manifest-probe"
+path = "🦀️main.rs"

@@ -18,7 +18,7 @@ pub struct ChangeSchema {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handle
-pub async fn handle(payload: &ChangeSchema, _doc: &ArtifactView<'_, PlaygroundSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<PlaygroundMutation, NoConfigMutation>, Fault> {
+pub fn handle(payload: &ChangeSchema, _doc: &ArtifactView<'_, PlaygroundSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<PlaygroundMutation, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![PlaygroundMutation::ChangeSchema(ChangeSchemaMutation { new_schema: payload.new_schema.clone() })]))
 }
 //#endregion 🔖️Handle

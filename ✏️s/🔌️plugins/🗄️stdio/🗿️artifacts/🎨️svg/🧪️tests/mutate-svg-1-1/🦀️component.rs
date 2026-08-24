@@ -68,7 +68,7 @@ fn projection_divergence(restored: &Json, original: &Json) -> Option<String> {
 /// `quick-xml` applies the kind and then its own computed inverse, and the restored drawing's
 /// independent projection must equal the REAL original's own. Without this the scenario would only
 /// prove that the reference library did not error, which is not what `@mode-property` claims -- and
-/// with the subject phase blocked, this is the only place the law can be checked today.
+/// the subject handler asserts the same law on its own side, so neither side can be vacuous.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -257,31 +257,56 @@ mod subject {
     //#endregion 🔖️Inverse
 
     //#region 🔖️Handlers
+    /// 👁️ The forward mutation, with the OBSERVABILITY law asserted IN ROLE — the same law
+    /// `super::mutate_oracle` asserts on its side. `apply_svg_mutation` REJECTS a mutation whose
+    /// path addresses nothing and leaves the snapshot untouched, so without this a refused mutation
+    /// is reported as a green scenario carrying the unmutated drawing.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let base = SvgSnapshot::import_utf8(&mutable_input(ctx)?).map_err(|error| format!("import_utf8 failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &base)?;
+        let spec = ctx.doc_json()?;
+        let kind = spec.str("kind");
+        let mutation = mutation_from_spec(&spec, &base)?;
+        let before = project_svg_1_1(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?;
         let mut snapshot = base;
-        apply_svg_mutation(&mut snapshot, &mutation);
+        let outcome = apply_svg_mutation(&mut snapshot, &mutation);
         let bytes = snapshot.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
         let projection = project_svg_1_1(&bytes)?;
+        if kind != "no-mutation" && super::projection_divergence(&projection, &before).is_none() {
+            return Err(format!("{kind:?} left the semantic projection exactly as it found it -- the subset either refused the mutation or addressed nothing; its own outcome messages were {:?}", outcome.messages()));
+        }
         Ok(Outcome::with_raw(bytes, projection))
     }
 
+    /// ↩️ The inverse law, asserted on the SUBJECT side too rather than deferred to the parity
+    /// phase: apply-then-undo must restore this side's OWN reading of the original drawing's
+    /// projection. Mirrors `super::inverse_oracle` through the same independent `project_svg_1_1`.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = SvgSnapshot::import_utf8(&mutable_input(ctx)?).map_err(|error| format!("import_utf8 failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &base)?;
+        let spec = ctx.doc_json()?;
+        let mutation = mutation_from_spec(&spec, &base)?;
         let undo = inverse_of(&mutation, &base);
+        let original = project_svg_1_1(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?;
         let mut snapshot = base;
-        apply_svg_mutation(&mut snapshot, &mutation);
-        apply_svg_mutation(&mut snapshot, &undo);
+        let forward = apply_svg_mutation(&mut snapshot, &mutation);
+        let backward = apply_svg_mutation(&mut snapshot, &undo);
         let bytes = snapshot.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
         let projection = project_svg_1_1(&bytes)?;
+        if let Some(divergence) = super::projection_divergence(&projection, &original) {
+            return Err(format!(
+                "inverse law violated: {:?} followed by its own inverse did not restore the original drawing's projection -- {divergence}; forward outcome messages {:?}, undo outcome messages {:?}",
+                spec.str("kind"),
+                forward.messages(),
+                backward.messages()
+            ));
+        }
         Ok(Outcome::with_raw(bytes, projection))
     }
 
     /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
     /// typed snapshot and re-serialize from the model alone -- `import_utf8`/`export_utf8` are this
     /// subset's ONLY channel from input to output (no separate text-DSL layer over the snapshot).
+    /// The round-trip half is asserted here too, the way `super::identity_round_trip_oracle` asserts
+    /// it: re-encoding must preserve this side's own semantic projection.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = SvgSnapshot::import_utf8(&input).map_err(|error| format!("import_utf8 failed: {error}"))?;
@@ -290,6 +315,9 @@ mod subject {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_svg_1_1(&output)?;
+        if let Some(divergence) = super::projection_divergence(&projection, &project_svg_1_1(&input)?) {
+            return Err(format!("round-trip law violated: decode then re-encode did not preserve the semantic projection -- {divergence}"));
+        }
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Handlers

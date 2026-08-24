@@ -9,8 +9,8 @@
 //! `DxfMutation` vocabulary. Both results are read back by the SAME independent `project_dxf_r12`
 //! (`dxf` 0.6) before the `semantic-dxf-r12-v1` profile compares them. The subject half is gated
 //! behind the generated host's `sut` feature so the oracle-only run never compiles the local
-//! implementation -- which cannot compile this wave regardless (a concurrent os-kernel refactor),
-//! per the fleet brief's own note.
+//! implementation -- §5.3's own role separation, NOT a workaround for anything: the Rust subject
+//! phase runs, and wave 14 ran the full differential comparison against the oracle.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::dxf::standards::v_r12::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_dxf_r12};
@@ -356,13 +356,31 @@ mod subject {
     //#endregion 🔖️Inverse
 
     //#region 🔖️Handlers
+    /// 🚫️ A REFUSED mutation is a failure, never a silent no-op. `apply_dxf_mutation` returns a
+    /// `MutationOutcome` whose messages carry the refusal and whose snapshot is left untouched, so
+    /// discarding that value turned every rejection into a scenario that re-encoded the input
+    /// unchanged and reported green: ten of this case's kinds did exactly that, against a real
+    /// drawing, until this wave, and only the differential comparison against `dxf` 0.6 showed it.
+    fn applied(snapshot: &mut DxfSnapshot, mutation: &DxfMutation, kind: &str) -> Result<(), String> {
+        // 📨️ Every `DxfMutation::diff` arm builds its outcome with `MutationOutcome::new`, which
+        // carries NO message, and `apply_dxf_mutation` attaches one only when the apply itself was
+        // rejected — so a non-empty message list here IS a refusal, and needs no severity type the
+        // adapter would have to reach into the kernel crate for.
+        let outcome = apply_dxf_mutation(snapshot, mutation);
+        match outcome.messages().first() {
+            Some(refusal) => Err(format!("{kind}: the mutation was REFUSED and the document left untouched — {refusal:?}")),
+            None => Ok(()),
+        }
+    }
+
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let text = std::str::from_utf8(&input).map_err(|error| error.to_string())?;
         let base = parse_dxf_document(text)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &base)?;
+        let spec = ctx.doc_json()?;
+        let mutation = mutation_from_spec(&spec, &base)?;
         let mut snapshot = base;
-        apply_dxf_mutation(&mut snapshot, &mutation);
+        applied(&mut snapshot, &mutation, &spec.str("kind"))?;
         let output = print_dxf_document(&snapshot).into_bytes();
         let projection = project_dxf_r12(&output)?;
         Ok(Outcome::with_raw(output, projection))
@@ -372,11 +390,13 @@ mod subject {
         let input = mutable_input(ctx)?;
         let text = std::str::from_utf8(&input).map_err(|error| error.to_string())?;
         let base = parse_dxf_document(text)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?, &base)?;
+        let spec = ctx.doc_json()?;
+        let mutation = mutation_from_spec(&spec, &base)?;
         let undo = inverse_of(&mutation, &base);
         let mut snapshot = base;
-        apply_dxf_mutation(&mut snapshot, &mutation);
-        apply_dxf_mutation(&mut snapshot, &undo);
+        let kind = spec.str("kind");
+        applied(&mut snapshot, &mutation, &kind)?;
+        applied(&mut snapshot, &undo, &format!("the inverse of {kind}"))?;
         let output = print_dxf_document(&snapshot).into_bytes();
         let projection = project_dxf_r12(&output)?;
         Ok(Outcome::with_raw(output, projection))

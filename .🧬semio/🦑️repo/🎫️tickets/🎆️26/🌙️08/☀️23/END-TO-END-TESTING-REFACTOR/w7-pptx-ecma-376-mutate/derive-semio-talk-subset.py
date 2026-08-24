@@ -108,7 +108,12 @@ with zipfile.ZipFile(SRC) as zin:
         return part_name.lstrip("/") in keep_exact
     overrides = re.findall(r'<Override PartName="([^"]+)" ContentType="[^"]+"/>', ct_xml)
     kept_override_entries = [entry for entry in re.findall(r"<Override\b[^>]*/>", ct_xml) if keep_override(re.search(r'PartName="([^"]+)"', entry))]
-    defaults_entries = re.findall(r"<Default [^/]+/>", ct_xml)
+    # `[^/]+` could never span the `/` in `application/vnd.openxmlformats-...`, so this matched
+    # NOTHING and the wave-7 fixture shipped without a single <Default> -- every .rels/.png/.jpeg
+    # part left with no resolvable content type, which ECMA-376 Part 2 §10.1.2.2.1 forbids and
+    # `decode_pptx` rightly refused. Repaired in wave 14 (see w14-ooxml-cad-parity/).
+    defaults_entries = re.findall(r"<Default\b[^>]*/>", ct_xml)
+    assert defaults_entries, "no <Default> content types found -- the package would be non-conformant"
     new_ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' + "".join(defaults_entries) + "".join(kept_override_entries) + "</Types>"
 
     with zipfile.ZipFile(DST, "w", zipfile.ZIP_DEFLATED) as zout:

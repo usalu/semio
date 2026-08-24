@@ -23,7 +23,7 @@
 //! cluster-shaped concern (sharding, ownership leases, quorum durability, split-brain repair) is
 //! deferred wholesale, documented here rather than faked. `db_compact`/`db_sync`/`db_security`/
 //! `db_observe` ARE genuinely wired, but narrowly: `Database::compact_document` drives a real
-//! `db_compact::Compactor` pass, `Database::hello` drives `db_sync::handle_hello` for the wire-v2
+//! retained compaction pass, and `Database::hello` mounts `db_sync::DatabaseSyncHelloFuture` for the wire-v2
 //! handshake (no transport of its own — that is CW5/CW6's job), `SecurityAuthzHook` wraps a real
 //! `db_security::SecurityGate` as an optional `AuthzHook`, and `Database::open`/`open_at` wire a
 //! real `db_observe::StructuredSink`/`HealthRegistry` pair by default. `ArtifactHandle::preview`/
@@ -7386,13 +7386,33 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         compaction.await?.close_and_take_report()
     }
 
-    /// @emoji 👋️ A real `db_sync::handle_hello` call for `document` — the server-side half of the
-    /// wire-v2 handshake (frontier exchange / bootstrap-plan decision). No transport of its own:
-    /// wiring this to an actual `protocol_wire` socket is CW5/CW6's job (framework/sync, semio_hub
-    /// rebuilds), out of this crate's scope this wave.
-    pub async fn hello(&self, document: &protocol::ArtifactId, hello_frontier: Option<&protocol::RuntimeFrontierSummary>, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<db_sync::WelcomeResponse, DbError> {
-        let core_document = to_core_document_id(document);
-        db_actor::block_on(db_sync::handle_hello(self.storage.as_ref(), core_document.await, hello_frontier, session_id, origin, snapshot_chunk_bytes))
+    /// 👋️ Pre-admits the exact sync-hello owners before mounting shared-pool I/O work.
+    pub fn hello_retained(
+        &self,
+        document: ArtifactId,
+        hello_frontier: Option<protocol::RuntimeFrontierSummary>,
+        session_id: String,
+        origin: protocol::ActorId,
+        snapshot_chunk_bytes: usize,
+    ) -> Result<db_sync::DatabaseSyncHelloFuture, db_sync::DatabaseSyncHelloRejected> {
+        db_sync::DatabaseSyncHelloFuture::try_submit(self.pool.clone(), self.storage.clone(), document, hello_frontier, session_id, origin, snapshot_chunk_bytes)
+    }
+
+    /// 📡️ Mounts one retained hello authority and returns its backpressured frame session.
+    pub async fn hello(
+        &self,
+        document: protocol::ArtifactId,
+        hello_frontier: Option<protocol::RuntimeFrontierSummary>,
+        session_id: String,
+        origin: protocol::ActorId,
+        snapshot_chunk_bytes: usize,
+    ) -> Result<db_sync::DatabaseSyncHelloSession, DbError> {
+        let document = to_core_document_id(&document).await;
+        let hello = match self.hello_retained(document, hello_frontier, session_id, origin, snapshot_chunk_bytes) {
+            Ok(hello) => hello,
+            Err(rejected) => return Err(rejected.close_and_take_error()),
+        };
+        hello.await?.close_and_take_session()
     }
 
     /// @emoji 🌿️ A real, `vcs`-backed checkpoint over every change `record_change` has recorded for
@@ -11454,8 +11474,8 @@ mod tests {
         let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
         db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
 
-        let response = database.hello(&document, None, "session-1".to_string(), &protocol::ActorId("semio_hub".to_string()), 4096).await.unwrap();
-        assert!(matches!(response.welcome, protocol::ServerFrame::Welcome { .. }));
+        let mut session = database.hello(document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string()), 4096).await.unwrap();
+        assert!(matches!(session.take_welcome().unwrap(), protocol::ServerFrame::Welcome { .. }));
     }
 
     // 🔬️ `storage()` is a real escape hatch to the same backend `Database::open_at` wired — a

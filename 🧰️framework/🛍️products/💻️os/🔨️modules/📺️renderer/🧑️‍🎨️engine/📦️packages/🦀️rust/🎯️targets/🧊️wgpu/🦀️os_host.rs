@@ -18,7 +18,7 @@
 //! waiting on the Element migration to land first.
 
 use crate::deadlines::{CaretBlink, HotSwapPoll};
-use crate::kernel_seam::{AppKernelSeam, default_intent_exchange};
+use crate::kernel_seam::{default_intent_exchange, AppKernelSeam};
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
 use crate::{AppPresenter, RuntimeMailbox};
 use ui_render::{CursorRequest, FrameScheduler};
@@ -132,6 +132,7 @@ pub struct OsHost {
     /// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the non-blocking poll/resubmit
     /// handle for the deadline-scan job plus worker-owned `AppRuntime::frame` transaction.
     pub(crate) frame_build: crate::frame_job::FrameBuildHandle,
+    pub(crate) surface_resize: crate::surface_lane::SurfaceResizeAuthority,
 }
 
 pub(crate) struct OsHostRetirement {
@@ -146,6 +147,7 @@ pub(crate) struct OsHostRetirement {
     ui_token: Option<ui_host::UiThreadToken>,
     snapshot_sink: Option<RenderSnapshotSink>,
     frame_build: Option<crate::frame_job::FrameBuildHandle>,
+    surface_resize: Option<crate::surface_lane::SurfaceResizeAuthority>,
     raster_uploads: Option<crate::scenes::PendingRasterAuthorityClose>,
     cursor_wake_requested: Option<crate::infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
@@ -172,6 +174,7 @@ impl OsHost {
             ui_token: ui_host::UiThreadToken::mint_for_host(),
             snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, semio_framework_trace::Generation(0), 0, CursorRequest::Default, None)),
             frame_build: crate::frame_job::FrameBuildHandle::new(),
+            surface_resize: crate::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
         }
     }
 
@@ -182,7 +185,8 @@ impl OsHost {
     }
 
     pub(crate) fn into_retirement(self) -> OsHostRetirement {
-        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, frame_generation: _, frame_ready: _, cursor_wake_requested, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build } = self;
+        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, frame_generation: _, frame_ready: _, cursor_wake_requested, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build, surface_resize } =
+            self;
         OsHostRetirement {
             runtime: Some(runtime),
             presenter: Some(presenter),
@@ -195,6 +199,7 @@ impl OsHost {
             ui_token: Some(ui_token),
             snapshot_sink: Some(snapshot_sink),
             frame_build: Some(frame_build),
+            surface_resize: Some(surface_resize),
             raster_uploads: Some(crate::scenes::begin_pending_raster_authority_close()),
             cursor_wake_requested,
             #[cfg(not(target_arch = "wasm32"))]
@@ -215,6 +220,22 @@ impl OsHost {
 
 impl OsHostRetirement {
     pub(crate) fn close_step(&mut self) -> bool {
+        if !crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step() {
+            return false;
+        }
+        if let Some(surface_resize) = self.surface_resize.as_mut() {
+            surface_resize.begin_close();
+            if !surface_resize.close_step() || !surface_resize.terminal_is_empty() {
+                return false;
+            }
+            self.surface_resize = None;
+            return false;
+        }
+        if let Some(presenter) = self.presenter.as_mut() {
+            if !presenter.close_surface_resize_step() {
+                return false;
+            }
+        }
         if let Some(frame_build) = self.frame_build.as_mut() {
             if !frame_build.close_step() {
                 return false;
@@ -292,6 +313,7 @@ impl OsHostRetirement {
             && self.ui_token.is_none()
             && self.snapshot_sink.is_none()
             && self.frame_build.is_none()
+            && self.surface_resize.is_none()
             && self.raster_uploads.is_none()
             && self.cursor_wake_requested.is_none()
             && {
@@ -309,6 +331,7 @@ impl OsHostRetirement {
 
 impl Drop for OsHostRetirement {
     fn drop(&mut self) {
+        drop(self.surface_resize.take());
         for owner in [
             &mut self.snapshot_sink as &mut dyn RetirementOwner,
             &mut self.ui_token,

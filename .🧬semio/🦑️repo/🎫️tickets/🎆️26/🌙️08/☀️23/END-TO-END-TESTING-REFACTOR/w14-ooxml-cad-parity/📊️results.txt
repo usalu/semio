@@ -1,0 +1,21 @@
+w14 — OOXML + CAD/BIM parity slice. Every line below is real output, read from the tool's own
+[test] line (never through a pipe's exit code).
+
+case                    subject before        subject after      parity before   parity after
+mutate-docx-ecma-376    27/27 passed          27/27 passed       26/27           27/27
+mutate-pptx-ecma-376    0/19 passed           19/19 passed        0/19           19/19
+mutate-xlsx-ecma-376    20/21 passed          21/21 passed       15/21           21/21
+mutate-bcf-2-1          29/29 passed          29/29 passed       29/29           29/29
+mutate-ifc-2x3          did not compile       11/11 passed        0/0 (no subj)  11/11
+mutate-ifc-4            1/23 passed           23/23 passed        1/23           23/23
+mutate-step-ap214       23/23 passed          23/23 passed        1/23           23/23
+mutate-dxf-r12          did not compile       39/39 passed        0/39           39/39
+
+Supporting runs
+- oracle crate, ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust:
+  cargo test --features oracles --lib -> ok. 369 passed; 0 failed; 2 ignored  (367 before; +2 new)
+- cargo check -p semio-s-plugin-stdio --lib -> exit 0, no errors
+- bun ./📜️script.ts contract --owner 🗄️stdio -> 0 high-priority breach(es) across 0 rule(s)
+- cargo test -p semio-s-plugin-stdio --lib --no-run -> 909 PRE-EXISTING errors, none in any file
+  touched here (a peer's repo-wide async-convention removal); the two new plain #[test]s in
+  📐️part21 and 📜️docx/🔺️diff type-check but cannot be executed until that lands.

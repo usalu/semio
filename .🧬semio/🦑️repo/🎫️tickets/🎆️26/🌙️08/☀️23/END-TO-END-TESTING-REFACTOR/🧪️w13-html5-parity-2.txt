@@ -1,0 +1,9 @@
+[test] level=exhaustive cases=1 executed=42 passed=42 failed=0 errored=0 parity=13/21
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html::mutate-html-5::mutate-set-snapshot::rust::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html::mutate-html-5::mutate-insert-node::rust::subject (157 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html::mutate-html-5::mutate-remove-node::rust::subject (76 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html::mutate-html-5::mutate-set-element-name::rust::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html::mutate-html-5::mutate-set-attribute::rust::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html::mutate-html-5::mutate-set-text::rust::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html::mutate-html-5::mutate-set-comment::rust::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html::mutate-html-5::mutate-set-raw-text::rust::subject (1 differences)

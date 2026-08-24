@@ -1,14 +1,14 @@
 // #region widgets
 //! 🧩️ Generic widget tree — layout, measurement, and drawing.
 
-use crate::wgpu::IconName;
-use crate::wgpu::UiTreeActionPlacement;
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{HitKind, HitTarget, InputState};
 use crate::wgpu::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Rgba, Theme};
+use crate::wgpu::IconName;
+use crate::wgpu::UiTreeActionPlacement;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -219,7 +219,11 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
                     }
                 }
             }
-            if vertical { (max_cross + padding, total_main + padding) } else { (total_main + padding, max_cross + padding) }
+            if vertical {
+                (max_cross + padding, total_main + padding)
+            } else {
+                (total_main + padding, max_cross + padding)
+            }
         }
         WidgetNode::Text { value, emphasize } => {
             let size = if *emphasize { theme.font_size_emphasized } else { theme.font_size_body };
@@ -282,7 +286,11 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
                 .iter()
                 .map(|child| {
                     let (w, h) = measure_widget(ctx.atlas, ctx.theme, child);
-                    if vertical { h } else { w }
+                    if vertical {
+                        h
+                    } else {
+                        w
+                    }
                 })
                 .collect();
             let rects = if vertical { layout_vertical(bounds, gap, padding, &sizes) } else { layout_horizontal(bounds, gap, padding, &sizes) };
@@ -697,7 +705,11 @@ pub mod gizmo {
             .enumerate()
             .filter_map(|(index, tip)| {
                 let distance = ((x - tip.screen_x).powi(2) + (y - tip.screen_y).powi(2)).sqrt();
-                if distance <= tip.pick_radius + 3.0 { Some((index, distance)) } else { None }
+                if distance <= tip.pick_radius + 3.0 {
+                    Some((index, distance))
+                } else {
+                    None
+                }
             })
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(index, _)| index)
@@ -721,7 +733,11 @@ pub mod gizmo {
             let stroke = Rgba::new(tip.color.r, tip.color.g, tip.color.b, if hovered { tip.color.a.min(1.0) } else { alpha });
             ctx.draw.push_line_overlay(origin_x, origin_y, tip.screen_x, tip.screen_y, stroke, if tip.is_corner { 1.5 } else { 2.0 });
             let r = if tip.prominent {
-                if hovered { 3.6 } else { 3.0 }
+                if hovered {
+                    3.6
+                } else {
+                    3.0
+                }
             } else if hovered {
                 2.4
             } else {

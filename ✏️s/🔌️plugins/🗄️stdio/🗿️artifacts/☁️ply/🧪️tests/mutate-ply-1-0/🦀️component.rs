@@ -154,9 +154,9 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::io::{decode_ply, encode_ply};
+    use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::io::{decode_ply, encode_ply_with_format};
     use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::mutations::{apply_ply_mutation, PlyMutation};
-    use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
+    use semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlySnapshot, PlyValue};
     use semio_s_plugin_stdio_test_oracle::artifacts::ply::standards::v1_0::subsets::any::project_ply;
 
     //#region 🔖️SpecReading
@@ -268,7 +268,7 @@ mod subject {
     /// resolve their target property's declared type against `snapshot` (the document the mutation is
     /// about to be applied to) — the same way the oracle module resolves it against `ply.header`
     /// before decoding a cell — rather than guessing a type from the JSON value alone.
-    fn mutation_from_spec(spec: &Json, snapshot: &semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot) -> Result<PlyMutation, String> {
+    fn mutation_from_spec(spec: &Json, snapshot: &PlySnapshot) -> Result<PlyMutation, String> {
         let kind = json_str(spec, "kind").unwrap_or_default();
         let empty = Json::Object(Vec::new());
         let params = spec.get("params").unwrap_or(&empty);
@@ -317,7 +317,7 @@ mod subject {
         }
     }
 
-    fn element_properties(snapshot: &semio_s_plugin_stdio::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot, element_name: &str) -> Result<Vec<PlyProperty>, String> {
+    fn element_properties(snapshot: &PlySnapshot, element_name: &str) -> Result<Vec<PlyProperty>, String> {
         snapshot.elements.iter().find(|element| element.name == element_name).map(|element| element.properties.clone()).ok_or_else(|| format!("no element named {element_name:?}"))
     }
 
@@ -336,13 +336,41 @@ mod subject {
     //#endregion 🔖️MutationFromSpec
 
     //#region 🔖️Codec
-    /// 📐️ Full parse → typed mutation → re-serialize from the model alone — the no-byte-pass-
-    /// through rule this wave exists to enforce.
-    fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+    /// 📐️ Full parse → typed mutation → re-serialize from the model alone, IN THE SNAPSHOT'S OWN
+    /// DECLARED FORMAT. `encode_ply` is the ascii-forcing convenience (`encode_ply_with_format(…,
+    /// PlyFormat::Ascii)`) and calling it here discarded `snapshot.format` outright, so
+    /// `set-format` → `binaryLittleEndian` moved the typed model and then wrote plain ascii with
+    /// an `format ascii 1.0` header: the mutation was unobservable in the document and the
+    /// reference's real binary output had nothing on our side to be compared against. The
+    /// production pack path already reads it this way — `🧬️schema/📸️snapshot/🦀️component.rs`
+    /// calls `encode_ply_with_format(self, self.format)` and names the ascii-forcing call as the
+    /// hazard — and this adapter now mirrors it (ticket `26/08/23/END-TO-END-TESTING-REFACTOR`,
+    /// subject scenario `inverse-set-format`).
+    fn encode_in_declared_format(snapshot: &PlySnapshot) -> Result<Vec<u8>, String> {
+        encode_ply_with_format(snapshot, snapshot.format).map_err(|error| format!("encode_ply_with_format failed: {error}"))
+    }
+
+    /// 📐️ One step of the pipeline: parse, apply, re-serialize. Carries NO byte tripwire — see
+    /// [`apply_and_encode`] for where that rule belongs.
+    fn mutate_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let mut snapshot = decode_ply(input).map_err(|error| format!("decode_ply failed: {error}"))?;
         let mutation = mutation_from_spec(spec, &snapshot)?;
         apply_ply_mutation(&mut snapshot, &mutation);
-        let bytes = encode_ply(&snapshot).map_err(|error| format!("encode_ply failed: {error}"))?;
+        encode_in_declared_format(&snapshot)
+    }
+
+    /// 📐️ [`mutate_and_encode`] plus the no-byte-pass-through rule this wave exists to enforce,
+    /// applied to the step that reads the REAL COMMITTED FIXTURE — a foreign writer's bytes, which
+    /// this codec's normal form cannot reproduce, so bit-identical output there means the input was
+    /// smuggled rather than parsed. It is deliberately NOT applied to the undo step: that step
+    /// re-encodes THIS codec's own first-generation output, and `🚪️io/🦀️component.rs` documents
+    /// decode/encode as a true fixed point from the second generation onward, so an undo that
+    /// restores the same model is REQUIRED to reproduce those bytes. Asserting the tripwire there
+    /// failed `inverse-no-mutation` for the codec behaving exactly as its own retention law says it
+    /// must. The pristine-input half of the law still runs, unweakened, in [`round_trip`] and in
+    /// every forward step below.
+    fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+        let bytes = mutate_and_encode(input, spec)?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
@@ -368,7 +396,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let kind = json_str(&spec, "kind").unwrap_or_default();
         let mutated = apply_and_encode(&input, &spec)?;
-        let restored = apply_and_encode(&mutated, &inverse_spec(&kind, &input)?)?;
+        let restored = mutate_and_encode(&mutated, &inverse_spec(&kind, &input)?)?;
         let projection = project_ply(&restored)?;
         Ok(Outcome::with_raw(restored, projection))
     }
@@ -376,7 +404,7 @@ mod subject {
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_ply(&input).map_err(|error| format!("decode_ply failed: {error}"))?;
-        let bytes = encode_ply(&snapshot).map_err(|error| format!("encode_ply failed: {error}"))?;
+        let bytes = encode_in_declared_format(&snapshot)?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }

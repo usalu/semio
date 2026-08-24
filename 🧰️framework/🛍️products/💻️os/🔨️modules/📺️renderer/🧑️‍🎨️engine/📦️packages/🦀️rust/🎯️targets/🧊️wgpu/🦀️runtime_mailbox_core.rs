@@ -62,6 +62,12 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
         true
     }
 
+    pub(crate) fn cancel_interaction_reservation(&mut self) -> bool {
+        let Some(next) = self.in_flight.checked_sub(1) else { return false };
+        self.in_flight = next;
+        true
+    }
+
     pub(crate) fn finish(&mut self, completion: Completion<T>) {
         assert!(self.in_flight > 0, "runtime completion without reservation");
         self.in_flight -= 1;
@@ -95,5 +101,17 @@ mod tests {
         assert!(queue.enqueue(completion(Some("preview"), 4)));
         assert_eq!(queue.len(), 3);
         assert_eq!(queue.ready.back().expect("latest preview").revision, 4);
+    }
+
+    #[test]
+    fn rejected_interaction_submission_releases_only_its_reserved_slot() {
+        let mut queue = BoundedCompletionQueue::<(), 4>::new();
+        assert!(queue.enqueue(completion(None, 1)));
+        assert!(queue.reserve_interaction());
+        assert_eq!(queue.len(), 2);
+        assert!(queue.cancel_interaction_reservation());
+        assert_eq!(queue.len(), 1);
+        assert_eq!(queue.ready.front().map(|completion| completion.revision), Some(1));
+        assert!(!queue.cancel_interaction_reservation());
     }
 }

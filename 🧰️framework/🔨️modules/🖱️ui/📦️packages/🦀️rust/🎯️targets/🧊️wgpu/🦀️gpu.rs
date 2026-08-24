@@ -1,11 +1,14 @@
 // #region gpu
 //! 🖥️ WebGPU device, surface, and frame loop.
 
-use crate::wgpu::draw::{FrameBuffers, MeshGpuTable, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, SceneColorTarget, UiPipelines};
+use crate::wgpu::draw::{FrameBuffers, MeshGpuTable, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, SceneColorTarget, UiPipelines, SCENE_MIP_LEVELS};
 #[cfg(target_arch = "wasm32")]
 use crate::wgpu::prepared::OffscreenPresentToken;
-use crate::wgpu::prepared::{PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, UiPresentToken};
+use crate::wgpu::prepared::{DrawMeasureCursor, PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, UiPresentToken, PREPARED_RENDER_COMMAND_PAGES, PREPARED_RENDER_COMMAND_PAGE_ITEMS};
 use crate::wgpu::text::FontAtlas;
+use std::sync::atomic::{AtomicPtr, AtomicU8, Ordering};
+#[cfg(not(target_os = "wasi"))]
+use std::sync::Arc;
 use wgpu::Surface;
 
 #[derive(Clone, Copy)]
@@ -13,6 +16,145 @@ struct PreparedAtlasUploadCursor {
     generation: u64,
     upload: usize,
     page: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PreparedGpuPresentPhase {
+    EnsureTarget,
+    ClearScene,
+    Commands,
+    AcquireSurface,
+    CreateView,
+    BlurScene,
+    EncodeComposite,
+    GlassCommands,
+    Present,
+    Complete,
+    Closing,
+}
+
+const PREPARED_GPU_ABANDONMENT_SLOTS: usize = 64;
+static PREPARED_GPU_ABANDONMENT_STATE: [AtomicU8; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_GPU_ABANDONMENT_SLOTS];
+static PREPARED_GPU_ABANDONMENT_OWNER: [AtomicPtr<PreparedGpuPresentCursor>; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_GPU_ABANDONMENT_SLOTS];
+
+/// 🎟️ Generation-qualified retained surface and command submission cursor.
+pub struct PreparedGpuPresentCursor {
+    scene_revision: u64,
+    preview_generation: u64,
+    command: usize,
+    glass_command: usize,
+    blur_mip: u32,
+    frame: Option<wgpu::SurfaceTexture>,
+    view: Option<wgpu::TextureView>,
+    phase: PreparedGpuPresentPhase,
+    abandonment_slot: u8,
+}
+
+impl PreparedGpuPresentCursor {
+    pub fn begin(scene_revision: u64, preview_generation: u64) -> Option<Self> {
+        if scene_revision == 0 || scene_revision == u64::MAX || preview_generation == 0 || preview_generation == u64::MAX {
+            return None;
+        }
+        let slot = PREPARED_GPU_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_ok())?;
+        Some(Self { scene_revision, preview_generation, command: 0, glass_command: 0, blur_mip: 1, frame: None, view: None, phase: PreparedGpuPresentPhase::EnsureTarget, abandonment_slot: slot as u8 })
+    }
+
+    fn matches(&self, packet: &PreparedRenderPacket) -> bool {
+        self.scene_revision == packet.scene_revision() && self.preview_generation == packet.preview_generation() && packet.is_within_credits()
+    }
+
+    pub fn begin_close(&mut self) {
+        self.phase = PreparedGpuPresentPhase::Closing;
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.view.take().is_some() {
+            return false;
+        }
+        if self.frame.take().is_some() {
+            return false;
+        }
+        self.command = 0;
+        self.glass_command = 0;
+        self.blur_mip = 0;
+        self.scene_revision = 0;
+        self.preview_generation = 0;
+        self.phase = PreparedGpuPresentPhase::Complete;
+        if self.abandonment_slot != u8::MAX {
+            let slot = usize::from(self.abandonment_slot);
+            let Some(state) = PREPARED_GPU_ABANDONMENT_STATE.get(slot) else { return false };
+            let current = state.load(Ordering::Acquire);
+            if !matches!(current, 1 | 3) || state.compare_exchange(current, 0, Ordering::AcqRel, Ordering::Acquire).is_err() {
+                return false;
+            }
+            self.abandonment_slot = u8::MAX;
+            return false;
+        }
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.frame.is_none()
+            && self.view.is_none()
+            && self.command == 0
+            && self.glass_command == 0
+            && self.blur_mip == 0
+            && self.scene_revision == 0
+            && self.preview_generation == 0
+            && self.phase == PreparedGpuPresentPhase::Complete
+            && self.abandonment_slot == u8::MAX
+    }
+
+    /// 🧹 Advances one exact GPU cursor owner recovered from an interrupted presentation.
+    pub fn close_abandoned_step() -> bool {
+        let Some(slot) = PREPARED_GPU_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(2, 3, Ordering::AcqRel, Ordering::Acquire).is_ok()) else { return true };
+        let pointer = PREPARED_GPU_ABANDONMENT_OWNER[slot].swap(std::ptr::null_mut(), Ordering::AcqRel);
+        if pointer.is_null() {
+            PREPARED_GPU_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
+            return false;
+        }
+        let mut cursor = unsafe { Box::from_raw(pointer) };
+        if cursor.close_step() || cursor.abandonment_slot == u8::MAX {
+            drop(cursor);
+        } else {
+            PREPARED_GPU_ABANDONMENT_OWNER[slot].store(Box::into_raw(cursor), Ordering::Release);
+            PREPARED_GPU_ABANDONMENT_STATE[slot].store(2, Ordering::Release);
+        }
+        false
+    }
+}
+
+impl Drop for PreparedGpuPresentCursor {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() || self.abandonment_slot == u8::MAX {
+            return;
+        }
+        let slot = usize::from(self.abandonment_slot);
+        let Some(state) = PREPARED_GPU_ABANDONMENT_STATE.get(slot) else { return };
+        if state.load(Ordering::Acquire) != 1 {
+            return;
+        }
+        let cursor = Box::new(Self {
+            scene_revision: self.scene_revision,
+            preview_generation: self.preview_generation,
+            command: self.command,
+            glass_command: self.glass_command,
+            blur_mip: self.blur_mip,
+            frame: self.frame.take(),
+            view: self.view.take(),
+            phase: PreparedGpuPresentPhase::Closing,
+            abandonment_slot: self.abandonment_slot,
+        });
+        self.scene_revision = 0;
+        self.preview_generation = 0;
+        self.command = 0;
+        self.glass_command = 0;
+        self.blur_mip = 0;
+        self.phase = PreparedGpuPresentPhase::Complete;
+        self.abandonment_slot = u8::MAX;
+        PREPARED_GPU_ABANDONMENT_OWNER[slot].store(Box::into_raw(cursor), Ordering::Release);
+        state.store(2, Ordering::Release);
+    }
 }
 
 pub struct GpuContext {
@@ -29,6 +171,7 @@ pub struct GpuContext {
     raster_store: RasterTextureTable,
     scene_color: Option<SceneColorTarget>,
     atlas_upload: Option<PreparedAtlasUploadCursor>,
+    prepared_command_buffer: wgpu::Buffer,
     width: u32,
     height: u32,
     dpr: f32,
@@ -86,6 +229,12 @@ impl GpuContext {
         surface.configure(&device, &config);
         let pipelines = UiPipelines::new(&device, &queue, color_target_format);
         let raster_store = RasterTextureTable::new(&device, pipelines.bind_group_layout());
+        let prepared_command_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("prepared_render_command_pages"),
+            size: (PREPARED_RENDER_COMMAND_PAGES as u64) * (PREPARED_RENDER_COMMAND_PAGE_ITEMS as u64) * 16,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
         let mut gpu = Self {
             device,
             queue,
@@ -100,6 +249,7 @@ impl GpuContext {
             raster_store,
             scene_color: None,
             atlas_upload: None,
+            prepared_command_buffer,
             width,
             height,
             dpr,
@@ -191,11 +341,13 @@ impl GpuContext {
     pub fn apply_prepared_upload_step(&mut self, packet: &PreparedRenderPacket, index: usize, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<bool, String> {
         let Some(upload) = packet.uploads().get(index) else { return Ok(true) };
         let complete = match upload {
+            #[cfg(test)]
             PreparedRenderUpload::GlyphAtlas { pixels, width, height } => {
                 self.atlas_upload = None;
                 self.pipelines.upload_glyph_atlas(&self.queue, pixels, *width, *height);
                 true
             }
+            #[cfg(test)]
             PreparedRenderUpload::IconAtlas { pixels, width, height } => {
                 self.atlas_upload = None;
                 self.pipelines.upload_icon_atlas(&self.queue, pixels, *width, *height);
@@ -239,6 +391,7 @@ impl GpuContext {
                     false
                 }
             }
+            #[cfg(test)]
             PreparedRenderUpload::Raster { key, pixels, width, height } => self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels), *width, *height, candidate, expected).map_err(str::to_owned)?,
             PreparedRenderUpload::RasterPages { key, pixels } => {
                 if pixels.frame_generation() != packet.preview_generation() {
@@ -251,38 +404,175 @@ impl GpuContext {
         Ok(complete)
     }
 
-    pub fn finish_prepared(&mut self, packet: &PreparedRenderPacket, witness: RasterTextureWitness) -> Result<(), String> {
+    pub fn begin_prepared_present(&mut self, packet: &PreparedRenderPacket, witness: RasterTextureWitness) -> Result<PreparedGpuPresentCursor, String> {
+        let cursor = PreparedGpuPresentCursor::begin(packet.scene_revision(), packet.preview_generation()).ok_or_else(|| "prepared GPU cursor generation or abandonment admission was exhausted".to_string())?;
         self.raster_store.begin_presenting(witness).map_err(str::to_owned)?;
-        self.render_prepared(packet)
+        Ok(cursor)
     }
 
-    fn render_prepared(&mut self, packet: &PreparedRenderPacket) -> Result<(), String> {
-        self.ensure_scene_color();
-        let scene = self.scene_color.as_ref().expect("scene_color");
-        let frame = self.surface.get_current_texture().map_err(|err| format!("frame: {err:?}"))?;
-        let view = frame.texture.create_view(&wgpu::TextureViewDescriptor { format: Some(self.color_target_format), ..Default::default() });
-        let depth_view = self.depth_view.as_ref();
-        let mut scene_encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("ui_wgpu_scene") });
-        self.pipelines.render_scene_content(&self.device, &self.queue, &mut scene_encoder, scene, depth_view, &packet.draw, &self.mesh_store, &self.raster_store, &mut self.frame_buffers, self.width as f32, self.height as f32, packet.time_seconds);
-        self.queue.submit(Some(scene_encoder.finish()));
-        let mut composite_encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("ui_wgpu_composite") });
-        self.pipelines.composite_to_swapchain(
-            &self.device,
-            &self.queue,
-            &mut composite_encoder,
-            &view,
-            scene,
-            depth_view,
-            &packet.draw,
-            packet.overlay.as_ref(),
-            &self.mesh_store,
-            &self.raster_store,
-            &mut self.frame_buffers,
-            self.width as f32,
-            self.height as f32,
-        );
-        self.queue.submit(Some(composite_encoder.finish()));
-        frame.present();
+    /// 🚦 Advances one fixed command scalar or one bounded platform submission opportunity.
+    pub fn prepared_present_step(&mut self, packet: &PreparedRenderPacket, cursor: &mut PreparedGpuPresentCursor) -> Result<bool, String> {
+        if !cursor.matches(packet) || cursor.phase == PreparedGpuPresentPhase::Closing {
+            return Err("prepared GPU cursor was stale, uncredited, or closing".to_string());
+        }
+        let started = semio_framework_job::default_now_ms();
+        match cursor.phase {
+            PreparedGpuPresentPhase::EnsureTarget => {
+                self.ensure_scene_color();
+                cursor.phase = PreparedGpuPresentPhase::ClearScene;
+            }
+            PreparedGpuPresentPhase::ClearScene => {
+                let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_scene_packet") });
+                self.pipelines.clear_prepared_scene(&mut encoder, scene, self.depth_view.as_ref());
+                self.queue.submit(Some(encoder.finish()));
+                cursor.phase = PreparedGpuPresentPhase::Commands;
+            }
+            PreparedGpuPresentPhase::Commands => {
+                let Some(command) = packet.command_pages().get(cursor.command) else {
+                    cursor.phase = PreparedGpuPresentPhase::AcquireSurface;
+                    return Ok(false);
+                };
+                let source = u32::try_from(command.source()).map_err(|_| "prepared command source exceeded fixed GPU record".to_string())?;
+                let digest = command.digest();
+                let record = [command.kind().code(), source, digest as u32, (digest >> 32) as u32];
+                let offset = u64::try_from(cursor.command).ok().and_then(|value| value.checked_mul(16)).ok_or_else(|| "prepared command buffer offset exhausted".to_string())?;
+                self.queue.write_buffer(&self.prepared_command_buffer, offset, bytemuck::cast_slice(&record));
+                if let Some(draw_cursor) = command.draw_cursor() {
+                    self.encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay())?;
+                }
+                cursor.command = cursor.command.checked_add(1).ok_or_else(|| "prepared command cursor exhausted".to_string())?;
+            }
+            PreparedGpuPresentPhase::AcquireSurface => {
+                cursor.frame = Some(self.surface.get_current_texture().map_err(|error| format!("prepared surface acquisition: {error:?}"))?);
+                cursor.phase = PreparedGpuPresentPhase::CreateView;
+            }
+            PreparedGpuPresentPhase::CreateView => {
+                let Some(frame) = cursor.frame.as_ref() else { return Err("prepared surface owner was missing".to_string()) };
+                cursor.view = Some(frame.texture.create_view(&wgpu::TextureViewDescriptor { format: Some(self.color_target_format), ..Default::default() }));
+                cursor.phase = PreparedGpuPresentPhase::BlurScene;
+            }
+            PreparedGpuPresentPhase::BlurScene => {
+                if cursor.blur_mip >= SCENE_MIP_LEVELS {
+                    cursor.phase = PreparedGpuPresentPhase::EncodeComposite;
+                    return Ok(false);
+                }
+                let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
+                self.pipelines.encode_prepared_blur_mip(&self.device, &self.queue, scene, cursor.blur_mip).map_err(str::to_owned)?;
+                cursor.blur_mip = cursor.blur_mip.checked_add(1).ok_or_else(|| "prepared blur cursor exhausted".to_string())?;
+            }
+            PreparedGpuPresentPhase::EncodeComposite => {
+                let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
+                let Some(view) = cursor.view.as_ref() else { return Err("prepared surface view was missing".to_string()) };
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_composite_packet") });
+                self.pipelines.blit_prepared_scene(&self.device, &mut encoder, view, scene);
+                self.queue.submit(Some(encoder.finish()));
+                cursor.phase = PreparedGpuPresentPhase::GlassCommands;
+            }
+            PreparedGpuPresentPhase::GlassCommands => {
+                let Some(command) = packet.command_pages().get(cursor.glass_command) else {
+                    cursor.phase = PreparedGpuPresentPhase::Present;
+                    return Ok(false);
+                };
+                if let Some(DrawMeasureCursor::Glass(region)) = command.draw_cursor() {
+                    let draw = if command.packet_overlay() { packet.overlay.as_ref().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { &packet.draw };
+                    let region = draw.glass_regions.get(region).ok_or_else(|| "prepared glass region cursor was stale".to_string())?;
+                    let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
+                    let Some(view) = cursor.view.as_ref() else { return Err("prepared surface view was missing".to_string()) };
+                    let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_glass_scalar") });
+                    self.pipelines.encode_prepared_glass_scalar(&self.device, &self.queue, &mut encoder, view, scene, &mut self.frame_buffers, region).map_err(str::to_owned)?;
+                    self.queue.submit(Some(encoder.finish()));
+                }
+                cursor.glass_command = cursor.glass_command.checked_add(1).ok_or_else(|| "prepared glass command cursor exhausted".to_string())?;
+            }
+            PreparedGpuPresentPhase::Present => {
+                cursor.view = None;
+                let Some(frame) = cursor.frame.take() else { return Err("prepared surface owner was missing before present".to_string()) };
+                frame.present();
+                cursor.phase = PreparedGpuPresentPhase::Complete;
+            }
+            PreparedGpuPresentPhase::Complete => return Ok(true),
+            PreparedGpuPresentPhase::Closing => return Err("prepared GPU cursor was closing".to_string()),
+        }
+        if !cursor.matches(packet) {
+            return Err("prepared GPU cursor became stale after a platform call".to_string());
+        }
+        if semio_framework_job::default_now_ms() - started > 2 {
+            return Err("prepared GPU opportunity exceeded the two millisecond ceiling".to_string());
+        }
+        Ok(cursor.phase == PreparedGpuPresentPhase::Complete)
+    }
+
+    fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool) -> Result<(), String> {
+        let draw = if packet_overlay { packet.overlay.as_ref().ok_or_else(|| "prepared overlay owner was missing".to_string())? } else { &packet.draw };
+        let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
+        let Some(depth) = self.depth_view.as_ref() else { return Err("prepared depth owner was missing".to_string()) };
+        let width = self.width as f32;
+        let height = self.height as f32;
+        match cursor {
+            DrawMeasureCursor::LayerUi { layer, item, overlay } => {
+                let layer = draw.layers.get(layer).ok_or_else(|| "prepared UI layer cursor was stale".to_string())?;
+                let instances = if overlay { &layer.overlay_ui_instances } else { &layer.ui_instances };
+                let instance = instances.get(item).ok_or_else(|| "prepared UI scalar cursor was stale".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_ui_scalar") });
+                self.pipelines.encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, scene, depth, &mut self.frame_buffers, &self.raster_store, instance, None, layer.scissor, width, height, packet.time_seconds).map_err(str::to_owned)?;
+                self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::LayerVector { layer, item, overlay } if item % 3 == 2 => {
+                let layer = draw.layers.get(layer).ok_or_else(|| "prepared vector layer cursor was stale".to_string())?;
+                let vertices = if overlay { &layer.overlay_vector_vertices } else { &layer.vector_vertices };
+                let start = item.checked_sub(2).ok_or_else(|| "prepared vector triangle cursor underflowed".to_string())?;
+                let triangle = vertices.get(start..=item).ok_or_else(|| "prepared vector triangle cursor was stale".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_vector_triangle") });
+                self.pipelines.encode_prepared_vector_triangle(&self.device, &self.queue, &mut encoder, scene, depth, &mut self.frame_buffers, triangle, layer.scissor, width, height, packet.time_seconds).map_err(str::to_owned)?;
+                self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::LayerRaster { layer, raster } => {
+                let layer = draw.layers.get(layer).ok_or_else(|| "prepared raster layer cursor was stale".to_string())?;
+                let (key, instance) = layer.raster_instances.get(raster).ok_or_else(|| "prepared raster scalar cursor was stale".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_raster_scalar") });
+                self.pipelines
+                    .encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, scene, depth, &mut self.frame_buffers, &self.raster_store, instance, Some(key), layer.scissor, width, height, packet.time_seconds)
+                    .map_err(str::to_owned)?;
+                self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::PassInstance { pass, draw: draw_index, instance, translucent } => {
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared world pass cursor was stale".to_string())?;
+                let draws = if translucent { &pass_owner.translucent_draws } else { &pass_owner.draws };
+                let draw_owner = draws.get(draw_index).ok_or_else(|| "prepared world draw cursor was stale".to_string())?;
+                let instance_owner = draw_owner.instances.get(instance).ok_or_else(|| "prepared world instance cursor was stale".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_instance") });
+                self.pipelines
+                    .encode_prepared_world_instance(
+                        &self.device,
+                        &self.queue,
+                        &mut encoder,
+                        scene,
+                        depth,
+                        &mut self.frame_buffers,
+                        &self.mesh_store,
+                        pass_owner,
+                        &draw_owner.mesh_key,
+                        draw_owner.mesh_version,
+                        instance_owner,
+                        translucent,
+                        width,
+                        height,
+                    )
+                    .map_err(str::to_owned)?;
+                self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex } if vertex % 2 == 1 => {
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared line pass cursor was stale".to_string())?;
+                let line_owner = pass_owner.line_draws.get(draw_index).ok_or_else(|| "prepared line draw cursor was stale".to_string())?;
+                let start = vertex.checked_sub(1).ok_or_else(|| "prepared line segment cursor underflowed".to_string())?;
+                let segment = line_owner.vertices.get(start..=vertex).ok_or_else(|| "prepared line segment cursor was stale".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_line") });
+                self.pipelines.encode_prepared_world_line(&self.device, &self.queue, &mut encoder, scene, depth, &mut self.frame_buffers, pass_owner, segment).map_err(str::to_owned)?;
+                self.queue.submit(Some(encoder.finish()));
+            }
+            _ => {}
+        }
         Ok(())
     }
 
@@ -389,10 +679,61 @@ impl GpuContext {
     }
 }
 
+#[cfg(test)]
+mod prepared_present_tests {
+    use super::*;
+
+    static TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    fn guard() -> std::sync::MutexGuard<'static, ()> {
+        match TEST_LOCK.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => poisoned.into_inner(),
+        }
+    }
+
+    fn drain() {
+        while !PreparedGpuPresentCursor::close_abandoned_step() {}
+    }
+
+    #[test]
+    fn interrupted_present_cursor_hands_back_generation_and_fixed_owners() {
+        let _guard = guard();
+        drain();
+        let cursor = match PreparedGpuPresentCursor::begin(7, 3) {
+            Some(cursor) => cursor,
+            None => panic!("fixed present cursor admission"),
+        };
+        drop(cursor);
+        assert!(!PreparedGpuPresentCursor::close_abandoned_step());
+        assert!(PreparedGpuPresentCursor::close_abandoned_step());
+        assert!(PREPARED_GPU_ABANDONMENT_STATE.iter().all(|state| state.load(Ordering::Acquire) == 0));
+    }
+
+    #[test]
+    fn present_cursor_generation_and_capacity_boundaries_refuse_before_ownership() {
+        let _guard = guard();
+        drain();
+        assert!(PreparedGpuPresentCursor::begin(0, 3).is_none());
+        assert!(PreparedGpuPresentCursor::begin(7, u64::MAX).is_none());
+        let mut owners: [Option<PreparedGpuPresentCursor>; PREPARED_GPU_ABANDONMENT_SLOTS] = std::array::from_fn(|_| None);
+        for owner in &mut owners {
+            *owner = PreparedGpuPresentCursor::begin(7, 3);
+            assert!(owner.is_some());
+        }
+        assert!(PreparedGpuPresentCursor::begin(7, 3).is_none());
+        for owner in owners.iter_mut().filter_map(Option::as_mut) {
+            owner.begin_close();
+            while !owner.close_step() {}
+            assert!(owner.terminal_is_empty());
+        }
+    }
+}
+
 #[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
 pub fn schedule_frame(window: &winit::window::Window, callback: impl FnMut() + 'static) {
-    use wasm_bindgen::JsCast;
     use wasm_bindgen::closure::Closure;
+    use wasm_bindgen::JsCast;
 
     let mut callback = callback;
     let closure = Closure::wrap(Box::new(move || {

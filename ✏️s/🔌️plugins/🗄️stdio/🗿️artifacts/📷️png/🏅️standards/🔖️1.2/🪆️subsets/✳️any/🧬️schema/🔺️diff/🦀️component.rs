@@ -714,12 +714,31 @@ fn absorb_chunk_order_opt(base: &mut Option<PngChunkOrderDiff>, other: Option<Pn
 // rule extends to ORDER: a scalar going None→Some without a chunk_order entry would silently
 // desync the two).
 
-/// 📍 Where a freshly created marker lands — always just before `Iend` (or at the very end if
-/// there is none). Documented normalization: only a DECODED file's `chunk_order` carries the
-/// real original position; anything created via mutation gets this deterministic default.
+/// 📍 Where a freshly created marker lands. Only a DECODED file's `chunk_order` carries the real
+/// original position; anything created via mutation gets the deterministic default below, and the
+/// default is the marker's own ORDERING CONSTRAINT rather than one position for everything.
+///
+/// ISO/IEC 15948 §5.6 (Table 5.3) does not let an ancillary chunk sit anywhere: `cHRM`, `gAMA` and
+/// `sRGB` shall precede both `PLTE` and the first `IDAT`; `PLTE`, `tRNS`, `bKGD` and `pHYs` shall
+/// precede the first `IDAT`. A conforming reader that stops at the image data — which is what every
+/// streaming decoder does, including the reference `png` crate this artifact is measured against —
+/// therefore never sees one of those chunks written after `IDAT`, and a writer that puts one there
+/// has produced a non-conforming file. `tIME` and the text chunks are legal anywhere, but a reader
+/// that has only decoded the frame has not parsed them yet either, so they are placed before the
+/// image data too: legal, and actually observable.
+///
+/// A chunk this codec does not model (`Unknown`) carries no constraint anyone can derive, so it
+/// keeps the file-tail position; `IHDR`/`IDAT`/`IEND` are never created by a mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn chunk_order_insert_pos(order: &[PngChunkMarker]) -> usize {
-    order.iter().position(|m| matches!(m, PngChunkMarker::Iend)).unwrap_or(order.len())
+pub fn chunk_order_insert_pos(order: &[PngChunkMarker], marker: &PngChunkMarker) -> usize {
+    let position_of = |wanted: fn(&PngChunkMarker) -> bool| order.iter().position(wanted);
+    let before_idat = position_of(|m| matches!(m, PngChunkMarker::Idat));
+    let tail = position_of(|m| matches!(m, PngChunkMarker::Iend)).unwrap_or(order.len());
+    match marker {
+        PngChunkMarker::Chrm | PngChunkMarker::Gama | PngChunkMarker::Srgb => position_of(|m| matches!(m, PngChunkMarker::Plte)).or(before_idat).unwrap_or(tail),
+        PngChunkMarker::Plte | PngChunkMarker::Trns | PngChunkMarker::Bkgd | PngChunkMarker::Phys | PngChunkMarker::Time | PngChunkMarker::Text { .. } => before_idat.unwrap_or(tail),
+        PngChunkMarker::Unknown { .. } | PngChunkMarker::Ihdr | PngChunkMarker::Idat | PngChunkMarker::Iend => tail,
+    }
 }
 
 /// 🔀 Diff for a scalar ancillary field's marker toggling presence (`None` if presence didn't
@@ -730,7 +749,7 @@ pub fn chunk_order_presence_diff(order: &[PngChunkMarker], is_marker: fn(&PngChu
         return None;
     }
     if want_present {
-        let pos = chunk_order_insert_pos(order);
+        let pos = chunk_order_insert_pos(order, &marker);
         Some(PngChunkOrderDiff { removed: vec![], modified: vec![], added: vec![PngChunkOrderAdded { index: pos, marker }] })
     } else {
         order.iter().position(|m| is_marker(m)).map(|idx| PngChunkOrderDiff { removed: vec![idx], modified: vec![], added: vec![] })
@@ -750,7 +769,7 @@ pub fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -> PngC
             _ => None,
         })
         .collect();
-    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order), marker: PngChunkMarker::Text { index: at } }];
+    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order, &PngChunkMarker::Text { index: at }), marker: PngChunkMarker::Text { index: at } }];
     PngChunkOrderDiff { removed: vec![], modified, added }
 }
 
@@ -781,7 +800,7 @@ pub fn chunk_order_insert_unknown_diff(order: &[PngChunkMarker], at: usize) -> P
             _ => None,
         })
         .collect();
-    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order), marker: PngChunkMarker::Unknown { index: at } }];
+    let added = vec![PngChunkOrderAdded { index: chunk_order_insert_pos(order, &PngChunkMarker::Unknown { index: at }), marker: PngChunkMarker::Unknown { index: at } }];
     PngChunkOrderDiff { removed: vec![], modified, added }
 }
 

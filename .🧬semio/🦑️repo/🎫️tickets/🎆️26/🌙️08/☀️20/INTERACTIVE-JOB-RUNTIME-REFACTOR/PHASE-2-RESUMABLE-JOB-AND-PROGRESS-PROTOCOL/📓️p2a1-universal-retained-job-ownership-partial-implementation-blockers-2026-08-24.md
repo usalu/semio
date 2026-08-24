@@ -72,6 +72,37 @@ Current changed P2a1 source includes:
 No P1q kernel/channel/storage region was edited. No P5b-owned UI-contract `UiValue`/map/reconcile,
 renderer `UiValue` constructor, or plugin DSL/JSON conversion region was edited.
 
+## 2026-08-24 Store Exact Rejection-transfer Closure
+
+This section supersedes the Store residual in
+`📓️coordinator-p2a1-store-residual-refresh-2026-08-24.md`. It does not broaden P2a1 or claim the
+deferred build/runtime gates.
+
+| Counterexample | Exact bounded repair | Hostile evidence |
+| --- | --- | --- |
+| `reject` transferred the field lease but source `Drop` still required its ticket to be reclaimed | The public seam validates the transferable state, wraps the consumed source in `ManuallyDrop`, moves the exact record and field lease, copies the same registry authority/ticket, marks only the emptied source shell `Transferred`, and explicitly shallow-drops that shell | The mutation that restores `Fault(diagnostic)` on the source makes the source reclaimed-ticket assertion reachable and is rejected |
+| Invalid/public rejection could panic and recursively destroy retained owners | An ineligible call returns `Err(self)` unchanged; both populated source and rejection shells store record and lease as `ManuallyDrop<Option<_>>` | Mutations restoring ordinary source record/lease fields or replacing unchanged return with panic are rejected |
+| Premature ordinary `Drop` returned the lease and then unwound through the record graph | Source/rejection `Drop` no longer calls `return_now`; normal close alone returns the exact lease and retires the record | Deep-drop, transferred-branch-removal, and raw-record-drop mutations are rejected |
+| Rejection could advance pages before the app reclaimed the exact ticket | Rejected close first terminates and returns one field owner, waits for the generation-qualified reclaimed-ticket witness, then closes one record page per grant | Premature-reclamation and ignored-double-return mutations are rejected |
+| Existing laws did not exercise the public seam | `artifact_envelope_public_rejection_preserves_record_lease_ticket_double_return_and_generation_reuse` compares the exact fixed page backing, field ticket, registry pointer, and diagnostic before/after transfer and zero grant, then closes incrementally and reuses the slot only with a greater generation | Pointer-identity, success, cancellation, double-return, and generation-reuse law mutations are independently rejected |
+
+### Source/static ledger
+
+```text
+bun ./📜️script.ts verify interactivity tool-jobs --p2a1-only --self-test
+[verify interactivity tool-jobs p2a1] live-source clean; hostile-mutations=13.
+```
+
+```text
+bun ./📜️script.ts verify interactivity tool-jobs --self-test
+[verify interactivity tool-jobs] self-tests=365 clean.
+```
+
+The Store source passes `rustfmt --check --edition 2021`, and the Store/verifier/report scoped diff
+whitespace gate is clean. The accepted P2d source was not edited; its static hostile cases remain in
+the 365-case tool-job suite. Cargo, Nx, Wasm, browser, native runtime, and broad build gates were not
+run and are not claimed.
+
 ## Implemented Foundation
 
 - Non-`Clone` 16 KiB page sources, retained payload writers, exact rejected-source handback,

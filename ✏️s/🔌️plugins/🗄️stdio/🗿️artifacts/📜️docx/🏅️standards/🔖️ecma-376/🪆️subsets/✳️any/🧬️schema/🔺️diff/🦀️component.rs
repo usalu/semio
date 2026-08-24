@@ -75,11 +75,13 @@ pub struct NamedTripleDiff<K, D, T> {
     pub modified: Vec<NamedModified<K, D>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<T>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub order: Vec<K>,
 }
 
 impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
     fn default() -> Self {
-        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new(), order: Vec::new() }
     }
 }
 
@@ -546,6 +548,36 @@ where
 //#endregion 🔖️GenericIndexedEngine
 
 //#region 🔖️GenericNamedEngine
+/// 🧮️ The key sequence `removed`/`added` alone imply — survivors in base order, then the additions
+/// in carried order. `NamedTripleDiff::order` is populated exactly when the real target sequence is
+/// NOT this one, so an order-insignificant collection never pays for the field.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_named_order<K: PartialEq + Clone>(base_keys: &[K], removed: &[K], added_keys: &[K]) -> Vec<K> {
+    base_keys.iter().filter(|k| !removed.contains(k)).chain(added_keys.iter()).cloned().collect()
+}
+
+/// 🔀️ Rebuilds `items` into `order` when one is carried, and fails loudly when it is not a
+/// permutation of what the collection actually holds — a silently dropped or duplicated item is
+/// precisely the failure this field exists to prevent.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn reorder_named<K: PartialEq, T>(items: &mut Vec<T>, order: &[K], key_of: impl Fn(&T) -> K) -> MutationApplyResult<()> {
+    if order.is_empty() {
+        return Ok(());
+    }
+    if order.len() != items.len() {
+        return Err(MutationApplyError::new("mutation.apply.invalid-order", "named ordering does not cover the resulting collection").at(["order"]));
+    }
+    let mut pool: Vec<Option<T>> = std::mem::take(items).into_iter().map(Some).collect();
+    for key in order {
+        let slot = pool
+            .iter()
+            .position(|held| matches!(held, Some(item) if key_of(item) == *key))
+            .ok_or_else(|| MutationApplyError::new("mutation.apply.invalid-order", "named ordering names an item the collection does not carry").at(["order"]))?;
+        items.push(pool[slot].take().expect("the slot was located as occupied one line above"));
+    }
+    Ok(())
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
 where
@@ -573,10 +605,14 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+    let base_keys: Vec<K> = base.iter().map(&key_of).collect();
+    let other_keys: Vec<K> = other.iter().map(&key_of).collect();
+    let added_keys: Vec<K> = added.iter().map(&key_of).collect();
+    let order = if default_named_order(&base_keys, &removed, &added_keys) == other_keys { Vec::new() } else { other_keys };
+    if removed.is_empty() && modified.is_empty() && added.is_empty() && order.is_empty() {
         None
     } else {
-        Some(NamedTripleDiff { removed, modified, added })
+        Some(NamedTripleDiff { removed, modified, added, order })
     }
 }
 
@@ -626,6 +662,7 @@ where
     for item in &diff.added {
         items.push(item.clone());
     }
+    reorder_named(items, &diff.order, &key_of)?;
     Ok(())
 }
 
@@ -648,7 +685,11 @@ where
             added.push(original.clone());
         }
     }
-    NamedTripleDiff { removed, modified, added }
+    let base_keys: Vec<K> = base_items.iter().map(&key_of).collect();
+    let other_keys = if diff.order.is_empty() { default_named_order(&base_keys, &diff.removed, &removed) } else { diff.order.clone() };
+    let added_keys: Vec<K> = added.iter().map(&key_of).collect();
+    let order = if default_named_order(&other_keys, &removed, &added_keys) == base_keys { Vec::new() } else { base_keys };
+    NamedTripleDiff { removed, modified, added, order }
 }
 
 /// 🧮️ Name-keyed absorb — identity is the KEY (not position), so no index transport is needed:
@@ -662,6 +703,7 @@ where
     D: Clone,
 {
     let d1_added_keys: Vec<K> = d1.added.iter().map(&key_of).collect();
+    let d1_order = d1.order.clone();
     let mut removed = d1.removed.clone();
     let mut annihilated: Vec<K> = Vec::new();
     for k in &d2.removed {
@@ -693,7 +735,21 @@ where
             None => working_added.push(a2.clone()),
         }
     }
-    NamedTripleDiff { removed, modified, added: working_added }
+    let order = if !d2.order.is_empty() {
+        d2.order.clone()
+    } else if d1_order.is_empty() {
+        Vec::new()
+    } else {
+        let mut composed: Vec<K> = d1_order.into_iter().filter(|k| !d2.removed.contains(k)).collect();
+        for a2 in &d2.added {
+            let k2 = key_of(a2);
+            if !composed.contains(&k2) {
+                composed.push(k2);
+            }
+        }
+        composed
+    };
+    NamedTripleDiff { removed, modified, added: working_added, order }
 }
 //#endregion 🔖️GenericNamedEngine
 
@@ -1296,7 +1352,10 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
     if removed.is_empty() && modified.is_empty() && added.is_empty() {
         None
     } else {
-        Some(DocxOpcRelationshipsDiff { removed, modified, added })
+        // 🗺️ Relationships live in a `HashMap<owner, …>`, which HAS no order to transport, so this
+        // triple's `order` is empty by construction rather than by omission — `apply_relationships`
+        // inserts by key and never reads one.
+        Some(DocxOpcRelationshipsDiff { removed, modified, added, order: Vec::new() })
     }
 }
 
@@ -1352,7 +1411,7 @@ fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &Do
             added.push((owner.clone(), list.clone()));
         }
     }
-    DocxOpcRelationshipsDiff { removed, modified, added }
+    DocxOpcRelationshipsDiff { removed, modified, added, order: Vec::new() }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1961,7 +2020,7 @@ fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String
     Ok(IndexedTripleDiff { removed, modified, added })
 }
 
-/// 🏷️ `[removed];[modified];[added]` -- generic over `NamedTripleDiff<K,D,T>`'s own `K`/`D`/`T`,
+/// 🏷️ `[removed];[modified];[added];[order]` -- generic over `NamedTripleDiff<K,D,T>`'s own `K`/`D`/`T`,
 /// reused for `styles` and every OPC-layer name-keyed collection (content-type entries, parts,
 /// relationship lists, relationships-by-owner).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1969,12 +2028,13 @@ fn enc_named_triple<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K)
     let removed = diff.removed.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
     let modified = diff.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
     let added = diff.added.iter().map(|t| enc_t(t)).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
+    let order = diff.order.iter().map(|k| enc_k(k)).collect::<Vec<_>>().join(",");
+    format!("[{removed}];[{modified}];[{added}];[{order}]")
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
+    let four = split_top_level(body, ';');
+    let [removed_s, modified_s, added_s, order_s] = four.as_slice() else { return Err(format!("named triple: expected 4 sections, got {}", four.len())) };
     let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_k(s)).collect::<Result<Vec<_>, String>>()?;
     let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
@@ -1985,7 +2045,8 @@ fn dec_named_triple<K, D, T>(body: &str, dec_k: impl Fn(&str) -> Result<K, Strin
         })
         .collect::<Result<Vec<_>, String>>()?;
     let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_t(s)).collect::<Result<Vec<_>, String>>()?;
-    Ok(NamedTripleDiff { removed, modified, added })
+    let order = split_top_level(strip_brackets(order_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| dec_k(s)).collect::<Result<Vec<_>, String>>()?;
+    Ok(NamedTripleDiff { removed, modified, added, order })
 }
 //#endregion 🔖️GenericTripleCodecs
 
@@ -2611,8 +2672,9 @@ fn dec_indexed_triple_bin<D, T>(reader: &mut store::ByteReader<'_>, dec_d: impl 
     Ok(IndexedTripleDiff { removed, modified, added })
 }
 
-/// 🏷️ Binary twin of `enc_named_triple`/`dec_named_triple` -- three varint-counted sections
-/// (removed keys / modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
+/// 🏷️ Binary twin of `enc_named_triple`/`dec_named_triple` -- four varint-counted sections
+/// (removed keys / modified key+diff pairs / added whole items / the final key order), generic
+/// over `K`/`D`/`T`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
@@ -2627,6 +2689,10 @@ fn enc_named_triple_bin<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl Fn
     store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
     for t in &diff.added {
         enc_t(t, out);
+    }
+    store::pack_rt::write_varint_u64(out, diff.order.len() as u64);
+    for k in &diff.order {
+        enc_k(k, out);
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2653,7 +2719,12 @@ fn dec_named_triple_bin<K, D, T>(
     for _ in 0..added_count {
         added.push(dec_t(reader)?);
     }
-    Ok(NamedTripleDiff { removed, modified, added })
+    let order_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut order = Vec::with_capacity(order_count as usize);
+    for _ in 0..order_count {
+        order.push(dec_k(reader)?);
+    }
+    Ok(NamedTripleDiff { removed, modified, added, order })
 }
 //#endregion 🔖️GenericTripleBinaryCodecs
 
@@ -3181,6 +3252,33 @@ mod handcrafted_diff_codec_tests {
 #[cfg(test)]
 mod result_apply_tests {
     use super::*;
+
+    /// 🧪️ `SetSnapshot` is a TOTAL replacement, so `DocxDiff::between(base, next)` applied to
+    /// `base` has to land on `next` EXACTLY — the ORDER of the name-keyed style list included,
+    /// because `w:styles`' declaration order is what `semantic-docx-ecma-376-mutate-v1` projects
+    /// by index. Until wave 14 the named triple was order-blind (survivors kept their base order,
+    /// additions were appended), so undoing `set-snapshot` on the real `📜️example-readme.docx`
+    /// returned all seven real styles with six of them in the wrong place — 12 differences
+    /// against the `zip`+`quick-xml` oracle in `mutate-docx-ecma-376::inverse-set-snapshot`. The
+    /// fixture's own seven styles and the case's own three-style `set-snapshot` target are used
+    /// here verbatim, so this test fails for the same reason the case did.
+    #[test]
+    fn set_snapshot_and_its_inverse_reproduce_the_exact_style_order() {
+        let of = |ids: &[&str]| DocxSnapshot::from_parts(OpcPackage::empty(), DocxDocument { body: Vec::new(), styles: ids.iter().map(|id| DocxStyle { id: (*id).into(), name: (*id).into(), based_on: None }).collect() });
+        let base = of(&["Normal", "Title", "Heading1", "Heading2", "Heading3", "Code", "TableCell"]);
+        let next = of(&["Normal", "Heading1", "TableCell"]);
+
+        let forward = DocxDiff::between(&base, &next);
+        assert_eq!(forward.apply(&base).expect("the forward diff applies"), next, "set-snapshot must land on exactly the snapshot it carries");
+        assert_eq!(forward.inverse(&base).apply(&next).expect("the inverse applies"), base, "undoing set-snapshot must restore the style order it found");
+
+        // A pure REORDER carries no removal, no modification and no addition whatsoever, so the
+        // order field is the only thing in the triple that can express it at all.
+        let shuffled = of(&["TableCell", "Normal", "Heading1"]);
+        let reorder = DocxDiff::between(&next, &shuffled);
+        assert!(!reorder.is_empty(), "a pure reorder must not diff to nothing");
+        assert_eq!(reorder.apply(&next).expect("the reorder applies"), shuffled);
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn rejects_missing_style_target_without_mutating_base() {

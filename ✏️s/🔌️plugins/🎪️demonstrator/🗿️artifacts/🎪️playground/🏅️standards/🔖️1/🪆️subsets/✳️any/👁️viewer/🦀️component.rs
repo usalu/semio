@@ -12,7 +12,7 @@ use crate::artifacts::playground::{PLAYGROUND_DIALECT, PLAYGROUND_DOCUMENT_SCHEM
 use crate::viewer::playground::modes::view;
 use crate::viewer::playground::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -27,10 +27,10 @@ pub enum PlaygroundViewCommand {
 }
 
 impl protocol::OpBinary for PlaygroundViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(PlaygroundViewCommand::Noop)
     }
 }
@@ -66,17 +66,17 @@ impl ArtifactViewer for PlaygroundViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_playground_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_playground_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(PLAYGROUND_DIALECT)
         .document(["semio", "playground"])
         .icon_id("playground")
@@ -93,15 +93,15 @@ pub async fn create_playground_viewer() -> semio_framework_plugin::AppDefinition
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn create_playground_viewer_builds_a_definition_for_the_viewer_role() {
+    #[test]
+    fn create_playground_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_playground_viewer();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Viewer);
         assert_eq!(def.dialect, PLAYGROUND_DIALECT.into());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
+    #[test]
+    fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<PlaygroundViewer as ArtifactViewer>::DIALECT, PLAYGROUND_DIALECT);
     }
 }

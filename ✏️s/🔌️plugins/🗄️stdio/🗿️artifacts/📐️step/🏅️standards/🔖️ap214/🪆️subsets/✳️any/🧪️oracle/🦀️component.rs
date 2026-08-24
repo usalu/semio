@@ -100,7 +100,16 @@ mod oracles {
             Parameter::Omitted => Json::Object(vec![("t".to_string(), Json::String("derived".to_string()))]),
             Parameter::Integer(i) => tv("integer", Json::Number(*i as f64)),
             Parameter::Real(r) => tv("real", Json::Number(*r)),
-            Parameter::String(s) => tv("string", Json::String(s.clone())),
+            // 🔤️ A Part-21 string ARGUMENT is the value the literal DENOTES, not the literal.
+            // `ruststep`'s `string` combinator is `many0(none_of("'"))` — it decodes no control
+            // directive at all — so passing its text straight through compared ENCODINGS and made
+            // two conformant writers that spell one character differently diverge for no semantic
+            // reason. Decoded here through the shared oracle's OWN from-scratch reader, never
+            // through the production codec this projection is evidence about.
+            Parameter::String(s) => tv("string", match decode_string_literal(s) {
+                Ok(value) => Json::String(value),
+                Err(error) => Json::Object(vec![("undecodableStringLiteral".to_string(), Json::String(error))]),
+            }),
             Parameter::Enumeration(s) => tv("enum", Json::String(s.clone())),
             Parameter::List(items) => tv("aggregate", Json::Array(items.iter().map(value_to_json).collect())),
             Parameter::Ref(name) => tv("reference", Json::Number(name_id(name) as f64)),
@@ -123,7 +132,7 @@ mod oracles {
     /// the six `✳️ccN` conformance-class subsets do, and a second copy in this file would be the
     /// duplication the family-module rule exists to prevent. What stays here is what is genuinely
     /// this subset's own: the eleven-verb Part-21 GRAMMAR vocabulary and its projection.
-    use crate::artifacts::step::standards::v_ap214::reference::part21::{args, args_mut, entity_id, header_record, header_record_mut, primary_record, primary_record_mut, string_list as string_list_param, write as write_exchange_bytes};
+    use crate::artifacts::step::standards::v_ap214::reference::part21::{args, args_mut, decode_string_literal, entity_id, header_record, header_record_mut, primary_record, primary_record_mut, string_list as string_list_param, write as write_exchange_bytes};
 
     fn write_exchange(exchange: &Exchange) -> String {
         String::from_utf8_lossy(&write_exchange_bytes(exchange)).to_string()

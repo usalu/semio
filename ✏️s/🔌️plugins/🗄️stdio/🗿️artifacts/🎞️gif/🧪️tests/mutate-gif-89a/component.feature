@@ -28,6 +28,25 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       trusting the decoder meant the round trip erased both the flag and the row permutation and
       landed back exactly where it started.
 
+  ⚠️ TWO KNOWN OPEN DIVERGENCES (parity 41/43, 2026-08-24), both the same disagreement: a mutation
+  edits one field and leaves a dependent one behind, and the two implementations resolve the
+  resulting inconsistency differently. Neither is a coding error and neither is to be papered over.
+
+    – `mutate-set-screen-size` shrinks the Logical Screen to 801x799 while frame 0 stays 800x800 at
+      (0,0), so the frame no longer fits inside the screen. `encode_gif` refuses ("frame 0 region
+      exceeds the logical screen"); the reference writer emits the file, leaving a frame that
+      overhangs the canvas.
+    – `mutate-set-frame-geometry` re-declares frame 0 as 100x100 at (5,5) while its index buffer
+      stays 640 000 bytes. `encode_gif` refuses ("frame 0 indices length mismatch"); the reference
+      writer accepts any buffer at least as large as the rectangle and LZW-encodes the whole thing,
+      so the image data block carries 64x more pixels than the descriptor declares.
+
+  In both cases GIF89a permits the file the reference produced (§18/§20 constrain nothing a writer
+  must enforce), and this repository's codec is the stricter of the two. Resolving them means
+  specifying what `set-screen-size` and `set-frame-geometry` do to the raster they invalidate —
+  clip, resize, or refuse at mutation time — and making both sides implement that one answer. Do not
+  widen the profile, change these rows' parameters, or swap the fixture to close them.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

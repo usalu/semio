@@ -20,7 +20,21 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   guides), which referenced numeric slide ids this derivation drops, was removed rather than left
   dangling. Every other real byte — every kept slide's real German/English text, every real
   `a:xfrm`, the real embedded photo — is untouched. The derivation script and full provenance are
-  recorded in this ticket's own folder. `temp/` is gitignored; `git check-ignore -v` on the derived
+  recorded in this ticket's own folder.
+
+  THE FIXTURE WAS NOT A CONFORMANT OPC PACKAGE UNTIL WAVE 14, AND THE FIRST SUBJECT RUN IS WHAT
+  FOUND IT. The derivation says "keep every Default" and read them with `re.findall(r"<Default
+  [^/]+/>", ct_xml)` — a character class that cannot span the `/` in `application/vnd.openxml...`,
+  so it matched NOTHING and the committed `[Content_Types].xml` shipped with 28 Overrides and zero
+  Defaults. Every `.rels`, `.png` and `.jpeg` part in the package was therefore left with no
+  resolvable content type, which ECMA-376 Part 2 §10.1.2.2.1 forbids outright, and this subset's
+  own `decode_pptx` rightly refused the file with `part docProps/thumbnail.jpeg has no resolvable
+  content type` — all 19 subject scenarios red, `parity=0/19`, while the oracle composition read
+  the same broken package without complaint. The eight real `<Default>` elements were spliced back
+  in from the real source deck and NOTHING else changed: the repair rewrites only the
+  `[Content_Types].xml` entry, and every other part keeps its exact bytes, order and zip timestamp
+  (verified part-by-part). The regex is fixed in the derivation script too, so re-deriving now
+  produces the repaired package rather than the broken one. `temp/` is gitignored; `git check-ignore -v` on the derived
   copy under this artifact's `🧫️fixtures/` confirms it is tracked (the `!**/🧫️fixtures/**` rule
   re-includes it).
 

@@ -20,6 +20,17 @@
 //! SAME name is a synthetic case this text codec doesn't attempt to round-trip (diff/mutation
 //! semantics are unaffected either way, since those operate on the snapshot directly, never
 //! through the text codec).
+//!
+//! ⚠️ An object run that ENDS is closed with a bare `o` line — the exact mirror of the bare `g`
+//! this encoder already emitted when a group run ends, and of `decode_obj`'s own
+//! `Some("o") => cur_active_object = parts.next()`, which reads an argument-less `o` as "no
+//! object from here on". Without it `encode_obj` could not say "these faces belong to no
+//! object": every `o` run silently ran to end-of-file, so narrowing an object's membership
+//! (`ObjMutation::SetObject { name, faces }` over a strict subset of the faces it held)
+//! re-rendered to the ORIGINAL membership — the encoded document was semantically unchanged and
+//! the mutation unobservable (ticket `26/08/23/END-TO-END-TESTING-REFACTOR`, subject scenario
+//! `mutate-set-object` of `mutate-obj-3-0`; pinned by
+//! `an_object_run_that_ends_is_closed_with_a_bare_o`).
 //#region 🔖️Codec
 //#region 🔖️IndexResolution
 use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
@@ -237,8 +248,13 @@ pub fn encode_obj(snap: &ObjSnapshot) -> String {
     for (i, face) in snap.faces.iter().enumerate() {
         let object = object_at(i);
         if !started || object != prev_object {
-            if let Some(name) = object {
-                out.push_str(&format!("o {name}\n"));
+            match object {
+                Some(name) => out.push_str(&format!("o {name}\n")),
+                None => {
+                    if prev_object.is_some() {
+                        out.push_str("o\n");
+                    }
+                }
             }
             prev_object = object;
         }
@@ -479,6 +495,26 @@ mod tests {
         let text3 = encode_obj(&snap2);
         let snap3 = decode_obj(&text3).expect("re-decode 2");
         assert_eq!(snap2, snap3, "decode/encode must be a fixed point from the second generation onward");
+    }
+
+    /// 🏷️ An `o` run that ends is closed with a bare `o`, so an object over a STRICT SUBSET of the
+    /// faces survives the text. Before the terminator existed the encoder had no way to express
+    /// "no object from here on" and the sticky `o Shell` ran to end-of-file, so re-decoding handed
+    /// back the object over ALL faces — narrowing an object's membership was a silent no-op in the
+    /// document even though the snapshot carried it (ticket
+    /// `26/08/23/END-TO-END-TESTING-REFACTOR`, `mutate-obj-3-0::mutate-set-object`).
+    #[test]
+    fn an_object_run_that_ends_is_closed_with_a_bare_o() {
+        let fixture = "v 0 0 0\nv 1 0 0\nv 0 1 0\no Shell\nf 1 2 3\nf 2 3 1\nf 3 1 2\n";
+        let mut snap = decode_obj(fixture).expect("decode");
+        assert_eq!(snap.objects[0].faces, vec![0, 1, 2], "the fixture's own o run covers every face");
+
+        snap.objects[0].faces = vec![0];
+        let text = encode_obj(&snap);
+        assert!(text.contains("\no\n"), "the end of the o run must be written as a bare `o`: {text}");
+        let reread = decode_obj(&text).expect("re-decode");
+        assert_eq!(reread.objects.len(), 1, "no second object may be invented: {:?}", reread.objects);
+        assert_eq!(reread.objects[0].faces, vec![0], "the narrowed membership must survive the text");
     }
     //#endregion 🔖️CodecRetentionLaw
 

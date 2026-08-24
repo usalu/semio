@@ -84,6 +84,39 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   It now writes BT ET, which is the faithful reconstruction of "no text", and the text axis passes
   under the full law.
 
+  THE DEFECT THE DIFFERENTIAL RUN FOUND, AND IT WAS FIXED IN THE CODEC RATHER THAN EXEMPTED. The
+  first time this case actually ran oracle AGAINST subject it scored parity 24 of 37, and ten of the
+  thirteen failures were one bug: PdfSnapshot carries the document twice — pages/info are the
+  resolved authoring lanes every page and metadata mutation edits, objects/trailer are the retained
+  native carrier — and encode_pdf serialized the carrier ALONE whenever it was non-empty. On this
+  thesis it always is, so set-page-rotation, set-page-media-box, set-page-crop-box, set-page-content,
+  append-page-content, insert-page, remove-page, move-page, set-info and set-snapshot all applied
+  cleanly to the snapshot and then vanished on export: the subject's own reader projected 65 pages
+  where the oracle had 64, rotate 0 where the oracle had 90, title "" where the oracle had the
+  stamped one. That is a mutation reporting as applied that no reader can find in the bytes, and it
+  contradicted PdfPage's own docstring ("the writer regenerates a fresh content stream from it on
+  encode"). ../../🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs now writes the authored lanes
+  back onto the retained graph before serializing — patching the leaf page objects in place,
+  rebuilding /Kids and /Count when the page SET changes, appending rather than re-rendering when a
+  page's text only grew, and re-stating /Info as the whole record PdfInfo declares itself to be —
+  and rewrites nothing that did not move. Parity went 24/37 to 34/37 with no comparison profile
+  touched, no ignoreKeys added and no fixture swapped.
+
+  THE THREE THAT REMAIN, AND WHY THEY ARE LEFT RED. inverse-remove-page, inverse-append-page-content
+  and inverse-set-page-content still diverge, on ONE axis and one only: pages.N.contentOperators.
+  Every other axis agrees exactly — page count, media box, crop box, rotation, the shown text and
+  the whole objectGraph. The subject restores the page's ORIGINAL content stream (294, 148 and 289
+  operators respectively) because returning the authored lane to its base value leaves the retained
+  carrier untouched, so the writer has nothing to rewrite; the reference lands on a two-operator
+  BT ET, because its own capture of a page's prior text reads only the Tj operator and this thesis
+  sets its type with TJ, so it undoes the mutation from an empty string. Both sides project text: []
+  and agree there — the loss is in the reference's round trip, not in the projection and not in this
+  implementation. The subject half proves it rather than asserting it in prose: its inverse-<kind>
+  handler holds all eighteen kinds to the inverse law with NO carve-out at all, contentOperators
+  included, and all eighteen pass. Dropping the axis from the comparison would make these three go
+  green while hiding exactly that fact, so they stay red and attributed. The oracle half keeps its
+  own documented one-axis exemption for the same three kinds, because on ITS side the loss is real.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

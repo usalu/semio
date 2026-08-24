@@ -282,14 +282,34 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, mutable_input};
+    use super::{inverse_spec, is_pool_kind, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::{build_minimal_xlsx, encode_xlsx};
     use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx;
     use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::apply_xlsx_mutation;
     use semio_s_plugin_stdio::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
     use semio_s_plugin_stdio::artifacts::xlsx::{XlsxMutation, XlsxSnapshot};
-    use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::any::project_xlsx_workbook;
+    use semio_s_plugin_stdio_test_oracle::artifacts::xlsx::standards::v_ecma_376::subsets::any::{project_shared_string_pool, project_xlsx_workbook};
+
+    /// 📑️ The SAME projector choice the oracle half makes for the same scenario id, and it has to
+    /// be the same or the two roles are not comparable at all. `insert-shared-string`/
+    /// `remove-shared-string`/`set-shared-string` address `xl/sharedStrings.xml` by INDEX, so both
+    /// roles read that part back out of the package with `zip` + `quick-xml`; every other kind
+    /// addresses the sheet grid, so both roles read it back with `calamine`. Wiring the subject to
+    /// the grid projection for all ten kinds made the two roles emit projections of DIFFERENT
+    /// SHAPES — `{sharedStrings}` against `{format, sheets, …}` — so all six pool comparisons
+    /// diverged structurally, and `mutate-remove-shared-string` failed outright because removing a
+    /// pool entry a cell still references leaves an index `calamine` cannot resolve. Both
+    /// implementations produce that dangling reference, by the vocabulary's own declared "edit the
+    /// pool by index, leave the sheets alone" semantics; only the subject was being asked to read
+    /// it back through a reader that cannot.
+    fn project(kind: &str, bytes: &[u8], shared_string_count: usize) -> Result<Json, String> {
+        if is_pool_kind(kind) {
+            project_shared_string_pool(bytes)
+        } else {
+            project_xlsx_workbook(bytes, shared_string_count)
+        }
+    }
 
     /// 🔀️ The same JSON mutation spec the oracle reads, turned into this repository's own typed
     /// `XlsxMutation` — the only channel between the feature's parameters and the subject's codec.
@@ -359,10 +379,11 @@ mod subject {
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let spec = ctx.doc_json()?;
+        let mutation = mutation_from_spec(&spec)?;
         apply_xlsx_mutation(&mut snapshot, &mutation);
         let output = encode_xlsx(&snapshot).map_err(|error| error.to_string())?;
-        let projection = project_xlsx_workbook(&output, snapshot.workbook.shared_strings.len())?;
+        let projection = project(&spec.str("kind"), &output, snapshot.workbook.shared_strings.len())?;
         Ok(Outcome::with_raw(output, projection))
     }
 
@@ -373,7 +394,7 @@ mod subject {
         apply_xlsx_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
         apply_xlsx_mutation(&mut snapshot, &mutation_from_spec(&inverse_spec(&input, &spec)?)?);
         let output = encode_xlsx(&snapshot).map_err(|error| error.to_string())?;
-        let projection = project_xlsx_workbook(&output, snapshot.workbook.shared_strings.len())?;
+        let projection = project(&spec.str("kind"), &output, snapshot.workbook.shared_strings.len())?;
         Ok(Outcome::with_raw(output, projection))
     }
 

@@ -27,6 +27,15 @@
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
     }
   }
 }

@@ -1632,6 +1632,7 @@ pub mod viewer {
 #[path = "../../🦀️component.rs"]
 mod plugin;
 pub(crate) use plugin::{generation_form, generation_tree, scene_surface, ui_label, ui_node_list, ui_text, ui_value_list, ui_value_map, ui_value_text};
+
 #[cfg(feature = "plugin-entry")]
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ProceduralApps);
 

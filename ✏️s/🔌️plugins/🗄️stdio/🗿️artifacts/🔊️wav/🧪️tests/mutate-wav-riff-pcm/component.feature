@@ -19,14 +19,22 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
   captured brightness reused as a real captured amplitude, not a computed tone.
 
   On the @id-identity-round-trip scenario the "re-encoded bytes must differ from the input" half of
-  the law binds the SUBJECT only, and deliberately does not bind the oracle. RIFF/WAVE 16-bit PCM
-  has exactly one canonical layout for a recording carrying no auxiliary chunks — a 44-byte
-  RIFF/fmt /data header followed by the samples — and this fixture is precisely that (mono, 8000 Hz,
-  16-bit, data at offset 44, no LIST or fact chunk). The reference writer reproducing it
-  byte-for-byte is the format being canonical, not the input being copied. The oracle side therefore
-  asserts the two halves that ARE checkable of it: the semantic projection survives the
-  decode/re-encode, and the reference codec reproduces that canonical layout exactly — a dropped
-  chunk, a miscounted sample or a wrong byte rate would all move the bytes.
+  the law binds NEITHER side, and the exact-bytes law binds BOTH. RIFF/WAVE 16-bit PCM has exactly
+  one canonical layout for a recording carrying no auxiliary chunks — a 44-byte RIFF/fmt /data
+  header followed by the samples — and this fixture is precisely that (mono, 8000 Hz, 16-bit, data
+  at offset 44, no LIST or fact chunk). A writer reproducing it byte-for-byte is the format being
+  canonical, not the input being copied, and that argument does not distinguish between the two
+  writers: it is a property of the format, so demanding that THIS repository's `encode_wav` move the
+  bytes would be demanding that it stop being canonical. (This case used to demand exactly that of
+  the subject, in the same breath as excusing the oracle from it, and the subject phase failed on it
+  the first time it ever ran — ticket 26/08/23/END-TO-END-TESTING-REFACTOR.) Both sides therefore
+  assert the two halves that ARE checkable of a canonical writer: the semantic projection survives
+  the decode/re-encode, and the writer reproduces that canonical layout exactly — a dropped chunk, a
+  miscounted sample or a wrong byte rate would all move the bytes. `WavSnapshot` carries no raw-byte
+  escape hatch for what it claims to understand: this fixture's `data` chunk is decoded into typed
+  `Pcm16` samples one 16-bit little-endian word at a time and re-emitted from them, and the five
+  @id-mutate rows drive the same decode/encode pipeline and every one of them moves both the bytes
+  and the compared projection, which is what proves a real parse happened.
 
   Every scenario copies the immutable fixture into the case work directory before touching it; the
   committed fixture is never written to. The reference implementation (`hound`) is used only by the
@@ -74,7 +82,7 @@ Feature: Apply every typed WAV RIFF-PCM mutation to a real-world recording
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode and re-encode the real recording without passing bytes through
+  Scenario: Decode and re-encode the real recording from the typed model alone
     Given the real input recording shared://🔊️bauen-mit-bestand-ausschnitt.wav
     When the recording is decoded to the typed snapshot and re-encoded from it alone
     Then the reference implementation and this repository agree on the result

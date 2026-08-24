@@ -17,7 +17,7 @@ pub const PLAYGROUND_DIALECT: Dialect = Dialect { artifact_kind: "s.demonstrator
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "playground.document".into(),
         name: "Playground Document".into(),
@@ -45,7 +45,7 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// every one of playground's §6 registrars fits this declaration with nothing left over. Lives at the
 /// artifact root, not `⚙️engine`, per that ticket's taxonomy pass — `declaration()` describes the
 /// artifact (kind/schema/io/ownership), it is not engine behaviour.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -80,7 +80,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     Ok(definition)
 }
 
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::playground::standards::v1::subsets::any::schema::playground_artifact_schema_descriptor())
         .inferences([crate::artifacts::playground::standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor()])
@@ -93,16 +93,16 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
 /// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 revision — kept unexported, not widened).
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES.get_or_init(build_pilot_languages).as_slice()
 }
 
-async fn build_pilot_languages() -> Vec<dsl::LanguageSpec> {
+fn build_pilot_languages() -> Vec<dsl::LanguageSpec> {
     vec![playground_document_language(), playground_op_language(), playground_diff_language(), playground_pack_language(), playground_spr_language()]
 }
 
-async fn playground_document_language() -> dsl::LanguageSpec {
+fn playground_document_language() -> dsl::LanguageSpec {
     dsl::LanguageSpec {
         id: "playground.document",
         extension: Some("playground"),
@@ -115,7 +115,7 @@ async fn playground_document_language() -> dsl::LanguageSpec {
     }
 }
 
-async fn playground_op_language() -> dsl::LanguageSpec {
+fn playground_op_language() -> dsl::LanguageSpec {
     dsl::LanguageSpec {
         id: "playground.op",
         extension: None,
@@ -128,7 +128,7 @@ async fn playground_op_language() -> dsl::LanguageSpec {
     }
 }
 
-async fn playground_diff_language() -> dsl::LanguageSpec {
+fn playground_diff_language() -> dsl::LanguageSpec {
     dsl::LanguageSpec {
         id: "playground.diff",
         extension: None,
@@ -141,7 +141,7 @@ async fn playground_diff_language() -> dsl::LanguageSpec {
     }
 }
 
-async fn playground_pack_language() -> dsl::LanguageSpec {
+fn playground_pack_language() -> dsl::LanguageSpec {
     dsl::LanguageSpec {
         id: "playground.pack",
         extension: None,
@@ -154,7 +154,7 @@ async fn playground_pack_language() -> dsl::LanguageSpec {
     }
 }
 
-async fn playground_spr_language() -> dsl::LanguageSpec {
+fn playground_spr_language() -> dsl::LanguageSpec {
     dsl::LanguageSpec {
         id: "playground.spr",
         extension: None,

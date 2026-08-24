@@ -26,6 +26,30 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
   `EncodeScopeNote`: "no LAS 1.3/1.4 extensions") — exercising 1.3/1.4 would be testing a real
   subject capability gap under a version-label mutation, not the mutation itself.
 
+  🔴 The PARITY phase ran for this case for the first time and reproduced the one place the two
+  sides disagreed about what a kind MEANS, rather than about how to write it: `set-scale-and-offset`
+  diverged on all 8,448 points, 24,320 differences, `$.points[1].x` oracle 583000.246 against our
+  583000.491. The committed fixture stores that point as the integer record 491 under scale 0.001
+  and offset 583000. Setting the scale to 0.0005, the reference left the record at 491 and read it
+  as 583000.246; we held the coordinate at 583000.491 and re-quantized the record to 982. Both were
+  self-consistent, so this was a vocabulary decision, not a writer bug — and the reference is not an
+  independent authority on it either, since `las` 0.11 is a reader/writer and the mutation semantics
+  in the oracle module are this repository's own choice too. It was settled on the LAS specification
+  and on invertibility, not on convenience. §"Public Header Block" defines `coordinate = record *
+  scale + offset`, so the RECORD is what the file carries; `set-scale-and-offset` sits in a group of
+  kinds (`set-version`/`set-system-identifier`/`set-software-info`/`set-creation-date`/`set-bounds`/
+  `set-points-by-return`) every one of which writes header bytes and nothing else; and, decisively,
+  the coordinate-preserving reading is LOSSY in one direction — moving to a coarser scale rounds
+  every coordinate away and `LasMutation::inverse`'s "put the old scale and offset back" cannot
+  restore it, so the inverse law was holding only because this row's 0.0005 happens to REFINE
+  0.001. The record-preserving reading is lossless and exactly invertible for any scale either way.
+  Our side was changed to match: `🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs`'s
+  `diff_set_scale_and_offset` now carries, alongside the six header fields, the coordinate every
+  point is re-read to under the new parameters, so the records stay put — pinned by
+  `set_scale_and_offset_keeps_every_point_record_where_it_is`, which asserts the records are
+  unchanged and the undo is exact in the coarsening direction too. Nothing was relaxed to reach it:
+  `semantic-las-v1` and its 0.001 tolerance, the fixture and every assertion are untouched.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

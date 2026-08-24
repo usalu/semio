@@ -309,6 +309,11 @@ mod surface_tests {
     use crate::viewer::procedural2d::Procedural2dViewer;
     use crate::viewer::procedural3d::Procedural3dViewer;
 
+    #[test]
+    fn plugin_manifest_builds_synchronously() {
+        super::plugin().expect("procedural plugin manifest should build synchronously");
+    }
+
     /// 👁️ A viewer instance never mutates the document store, even when dispatched.
     #[test]
     fn procedural2d_viewer_never_mutates() {

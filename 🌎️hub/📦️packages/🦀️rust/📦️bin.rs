@@ -764,26 +764,63 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     };
 
     let session_id = directory::os_identity::time_ordered_id();
-    // 🔖️ 64KiB inline-snapshot threshold: this crate's own choice (`db_sync::build_welcome`'s
-    // `snapshot_chunk_bytes` fixes the threshold, not a value) — generous enough that a fresh
-    // replica's typical backlog never needs a follow-up `SnapshotChunk` round trip, small enough
-    // to never balloon a single WS frame unreasonably.
-    let welcome_response = match state.db.hello(&db_id, frontier.as_ref(), session_id, &actor, 64 * 1024).await {
-        Ok(response) => response,
+    let mut hello_session = match state.db.hello(db_id.clone(), frontier, session_id, actor.clone(), 64 * 1024).await {
+        Ok(session) => session,
         Err(error) => {
             let _ = sender.send(error_frame("storage", error.to_string()).await).await;
             state.release_color(&space_id, &actor.0);
             return;
         }
     };
-    if sender.send(encode(&welcome_response.welcome).await).await.is_err() {
+    let welcome = match hello_session.take_welcome() {
+        Ok(welcome) => welcome,
+        Err(error) => {
+            let _ = sender.send(error_frame("storage", error.to_string()).await).await;
+            state.release_color(&space_id, &actor.0);
+            return;
+        }
+    };
+    let welcome_bytes = match welcome.frame() {
+        Ok(frame) => encode(frame).await,
+        Err(error) => {
+            let _ = sender.send(error_frame("storage", error.to_string()).await).await;
+            state.release_color(&space_id, &actor.0);
+            return;
+        }
+    };
+    let welcome_sent = sender.send(welcome_bytes).await;
+    let welcome_acknowledged = welcome.acknowledge();
+    if welcome_sent.is_err() || welcome_acknowledged.is_err() {
+        hello_session.cancel();
         state.release_color(&space_id, &actor.0);
         return;
     }
-    for frame in &welcome_response.follow_up {
-        if sender.send(encode(frame).await).await.is_err() {
-            state.release_color(&space_id, &actor.0);
-            return;
+    loop {
+        match hello_session.next_frame().await {
+            Ok(Some(frame)) => {
+                let frame_bytes = match frame.frame() {
+                    Ok(owner) => encode(owner).await,
+                    Err(error) => {
+                        let _ = sender.send(error_frame("storage", error.to_string()).await).await;
+                        hello_session.cancel();
+                        state.release_color(&space_id, &actor.0);
+                        return;
+                    }
+                };
+                let sent = sender.send(frame_bytes).await;
+                let acknowledged = frame.acknowledge();
+                if sent.is_err() || acknowledged.is_err() {
+                    hello_session.cancel();
+                    state.release_color(&space_id, &actor.0);
+                    return;
+                }
+            }
+            Ok(None) => break,
+            Err(error) => {
+                let _ = sender.send(error_frame("storage", error.to_string()).await).await;
+                state.release_color(&space_id, &actor.0);
+                return;
+            }
         }
     }
     // 🎨️ Contract §C7.3: sent exactly once per connection, after `Welcome` (and its follow-up

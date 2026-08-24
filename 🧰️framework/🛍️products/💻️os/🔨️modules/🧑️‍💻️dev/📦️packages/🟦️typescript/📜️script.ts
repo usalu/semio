@@ -69,6 +69,7 @@ const extensionOutRoot = defaultExtensionInstallRoot(repoRoot);
 const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🤖️generated/🟦️session.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
+const PLUGIN_WASM_STACK_BYTES = 8 * 1024 * 1024;
 
 /** @emoji 🎯 Ensures the wasip2 rustc target is installed for plugin component builds. */
 function ensureWasmTarget(): void {
@@ -81,6 +82,12 @@ function ensureWasmTarget(): void {
 /** @emoji 🪶️ Cargo profile for wasip2 plugin components — `dev` in agent loops, `wasm-release` when `SEMIO_BUILD_MODE=ship`. */
 function pluginWasmProfile(): string {
   return process.env.SEMIO_PLUGIN_PROFILE ?? (semioBuildMode() === "ship" ? "wasm-release" : "dev");
+}
+
+function pluginCargoArgs(packageName: string, profile: string): string[] {
+  const args = ["rustc", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile, "--", "-C", `link-arg=-zstack-size=${PLUGIN_WASM_STACK_BYTES}`];
+  if (process.env.SEMIO_PLUGIN_SYMBOLS === "1") args.push("-C", "strip=none");
+  return args;
 }
 
 //#region 🔖️PlaygroundVariantResolution
@@ -783,6 +790,33 @@ function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: 
   }
 }
 
+/** @emoji 🛂️ Publishes the checked-in build-time descriptor beside the generated browser module.
+ * `fetchDescriptorManifest()` deliberately reads this sibling before any actor is instantiated, so
+ * leaving descriptors only at their owner roots makes every otherwise-valid module appear app-less
+ * at runtime. Unmigrated crates remain honest: no source descriptor means no staged descriptor. */
+function stagePluginDescriptor(target: PluginRegistryEntry, outDir: string, root: string = repoRoot): boolean {
+  const ownerRoot = join(root, target.cratePath, "..", "..");
+  const descriptorJson = join(ownerRoot, "🔣️descriptor.json");
+  if (!existsSync(descriptorJson)) {
+    rmSync(join(outDir, "🔣️descriptor.json"), { force: true });
+    rmSync(join(outDir, "🛂️descriptor.semio"), { force: true });
+    return false;
+  }
+  copyFileSync(descriptorJson, join(outDir, "🔣️descriptor.json"));
+  const descriptorPack = join(ownerRoot, "🛂️descriptor.semio");
+  if (existsSync(descriptorPack)) copyFileSync(descriptorPack, join(outDir, "🛂️descriptor.semio"));
+  else rmSync(join(outDir, "🛂️descriptor.semio"), { force: true });
+  return true;
+}
+
+/** @emoji 🔁️ Refreshes descriptor siblings for already-materialized modules on zero-build starts. */
+function syncBuiltPluginDescriptors(entries: readonly PluginRegistryEntry[]): void {
+  for (const target of entries) {
+    const outDir = join(pluginOutRoot, target.pluginId);
+    if (existsSync(outDir)) stagePluginDescriptor(target, outDir);
+  }
+}
+
 /** @emoji 🧹️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): sweeps generated extension-module output
  * (`defaultExtensionInstallRoot()`, entirely gitignored — `.gitignore:90`) left over from BEFORE the
  * `world actor` ABI flip. The SOURCE is already correct — `webMaterialize` (`🏪️store/📜️store.ts`) and
@@ -892,7 +926,7 @@ function describeBuiltPlugin(target: PluginRegistryEntry, artifact: string): voi
 async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly target: PluginRegistryEntry; readonly artifact: string }> {
   const packageName = await readPackageName(target.cratePath);
   const profile = pluginWasmProfile();
-  if (runCmdStatus("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+  if (runCmdStatus("cargo", pluginCargoArgs(packageName, profile), { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`plugin build failed: ${target.pluginId}`);
   }
   const cargoTargetRoot = process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
@@ -915,6 +949,7 @@ async function materializePlugin(target: PluginRegistryEntry, artifact: string):
   const componentBase = `${jsBase}_component`;
   cleanStalePluginOutputs(outDir, jsBase, componentBase);
   writeFileSync(join(outDir, "🟨️host-shim.js"), hostShimSource());
+  stagePluginDescriptor(target, outDir);
   // 🪶️ Transpile straight from cargo's own build output — plugin-modules never receives a copy of the
   // full component `.wasm` (see `emitRustArtifacts`'s doc comment). The browser only ever fetches
   // jco's extracted `${componentBase}.core.wasm`, so shipping the untranspiled component alongside it
@@ -1045,6 +1080,8 @@ export async function ensurePluginRegistry(filterPlugin?: string): Promise<void>
   const registryScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts");
   if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
   const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
+  const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
+  syncBuiltPluginDescriptors(generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {}));
   writePlaygroundSession(variant, playgroundSessionPath, repoRoot);
 }
 
@@ -5384,6 +5421,81 @@ if (import.meta.vitest) {
   });
 
   //#region 🔖️T-P8-tests
+  describe("stagePluginDescriptor", () => {
+    it("stages descriptor siblings for migrated plugins and leaves unmigrated plugins absent", () => {
+      const root = mkdtempSync(join(tmpdir(), "semio-plugin-descriptor-stage-"));
+      try {
+        const target = {
+          pluginId: "demo",
+          cratePath: "owner/demo/📦️packages/🦀️rust",
+          packageName: "demo",
+          wasmOut: "demo.wasm",
+          role: "plugin",
+          capabilities: [],
+          contributes: [],
+          consumes: [],
+          dependsOn: [],
+          activationEvents: [],
+          extensionPoints: [],
+        } satisfies PluginRegistryEntry;
+        const ownerRoot = join(root, "owner/demo");
+        const outDir = join(root, "out");
+        mkdirSync(ownerRoot, { recursive: true });
+        mkdirSync(outDir, { recursive: true });
+        writeFileSync(join(ownerRoot, "🔣️descriptor.json"), '{"manifest":{"pluginId":"demo"}}\n');
+        writeFileSync(join(ownerRoot, "🛂️descriptor.semio"), "descriptor-pack");
+        expect(stagePluginDescriptor(target, outDir, root)).toBe(true);
+        expect(readFileSync(join(outDir, "🔣️descriptor.json"), "utf8")).toContain('"pluginId":"demo"');
+        expect(readFileSync(join(outDir, "🛂️descriptor.semio"), "utf8")).toBe("descriptor-pack");
+        rmSync(join(ownerRoot, "🔣️descriptor.json"));
+        expect(stagePluginDescriptor(target, outDir, root)).toBe(false);
+        expect(existsSync(join(outDir, "🔣️descriptor.json"))).toBe(false);
+        expect(existsSync(join(outDir, "🛂️descriptor.semio"))).toBe(false);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+  });
+
+  describe("pluginComponentBridgeSource", () => {
+    it("adapts the shard envelope into the canonical jco variant representation", () => {
+      const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
+      expect(source).toContain("events.map(({ kind, payload }) => ({ tag: kind, val: payload }))");
+    });
+
+    it("adapts the actor grant into the reactor budget vocabulary", () => {
+      const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
+      expect(source).toContain("fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs");
+      expect(source).toContain("maxFrames: 8");
+    });
+  });
+
+  describe("pluginCargoArgs", () => {
+    it("links every actor component with bounded headroom for descriptor and app assembly", () => {
+      expect(pluginCargoArgs("semio-s-plugin-procedural", "wasm-release")).toEqual([
+        "rustc",
+        "-p",
+        "semio-s-plugin-procedural",
+        "--target",
+        "wasm32-wasip2",
+        "--profile",
+        "wasm-release",
+        "--",
+        "-C",
+        "link-arg=-zstack-size=8388608",
+      ]);
+    });
+
+    it("can retain actor symbols for a reproducible browser trap diagnosis", () => {
+      process.env.SEMIO_PLUGIN_SYMBOLS = "1";
+      try {
+        expect(pluginCargoArgs("semio-s-plugin-procedural", "wasm-release").slice(-2)).toEqual(["-C", "strip=none"]);
+      } finally {
+        delete process.env.SEMIO_PLUGIN_SYMBOLS;
+      }
+    });
+  });
+
   describe("createConcurrencyLimiter (T-P8 bounded-parallel materialize primitive)", () => {
     it("never runs more than `limit` callbacks concurrently, and still runs every one to completion", async () => {
       const limiter = createConcurrencyLimiter(2);

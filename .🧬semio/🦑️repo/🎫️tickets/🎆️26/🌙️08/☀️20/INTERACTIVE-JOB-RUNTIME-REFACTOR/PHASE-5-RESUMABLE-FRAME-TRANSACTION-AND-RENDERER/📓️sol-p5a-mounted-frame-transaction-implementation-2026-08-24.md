@@ -292,3 +292,182 @@ Shell child, document, packet, world, atlas-upload, and publication mutations re
 The broad renderer/UI compile, hostile Rust test execution, worker-count matrix, browser-worker
 replay, and measured under-8 ms opportunity gates remain for the coordinator after overlapping
 source work is quiescent.
+
+## Independent RED B1/B2/B3 Remediation
+
+The independent RED was valid. This pass closes its three concrete blockers in the mounted caller
+graph and strengthens the source verifier at the actual callees. This is a source-audit-ready
+handoff for a fresh independent review, not self-acceptance.
+
+### Exact Changed-file Inventory
+
+| File | Independent-RED remediation |
+|---|---|
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs` | Kept `paint_node_step` exhaustive over every `UiNode` variant and completed the retained collection state: Select lookup now inspects one item per grant, Select MAX + 1 refuses before output, KeyValue advances one label/value scalar at a time, and Tree retains section/item/action/control/depth/ascent state. `RetainedGlyphCursor` is the single 4 MiB-capped string authority. |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs` | Re-exported the retained glyph authority and its public maximum without a compatibility adapter. |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs` | Routed live dialog and tour title/body/button strings through `chrome_text_complete_step`, parking the Shell scalar until the retained glyph cursor completes. Replaced production native whole-config JSON/Mutex storage with one fixed 4 KiB field page and bounded per-field paths; panel layout uses a capped six-field encoding. The former full-config store remains test-only. |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs` | Replaced the discarded generic native maintenance task with a generation-qualified `FrameMaintenanceAuthority`, atomic single-claim `FrameMaintenanceOwnerCell`, exact refusal owner, typed `Lane::Io` admission, mounted cancellation token, deadline/freshness guards, and incremental close before completion handback. Cancel/stale/deadline share one production terminal classifier. |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️runtime_mailbox_core.rs` | Added exact cancellation of a refused interaction completion reservation and a law proving only the reserved slot is released. |
+| `📜️script.ts` | Traces the live per-variant paint, dialog/tour glyph, maintenance owner/spawn/terminal, and native preference field bodies. Added faithful B1/B2/B3 mutations, repaired the live P5b fixed-boxed arena predicates and mutations, and made P5c mutate the accepted-layout read inside `paint_node_step` rather than an obsolete complete painter. No accepted P5b/P5c implementation source was changed. |
+
+### Exact Owner and Close Laws
+
+| Authority | Refusal/cancel/stale behavior | One-grant close behavior |
+|---|---|---|
+| Retained node painter | A different node/origin faults without moving the cursor. Select/KeyValue/Tree collection caps reject before output. A string over 4 MiB faults before glyph admission. | One scalar, fixed emitted item, collection item, Tree action/control, depth transition, or terminal presence unit advances. |
+| Dialog/tour text | The Shell child scalar remains parked while `RetainedGlyphCursor` is pending; MAX + 1 sets the retained fault path with zero output. | One call admits at most one scalar/glyph; the Shell scalar advances only after the text cursor reports complete. |
+| Native maintenance task | Generation reservation precedes submission. `try_submit` refusal recovers the exact owner cell and releases the exact generation; the completion reservation stays explicit until refusal recovery. Cancellation, stale presentation, and deadline are checked before field work. | Every terminal reason calls `begin_close`; `FrameDeferredCursor::close_step` removes one action or one Shell/pump/tutorial owner, and only terminal empty is handed back. |
+| Native preference field | Key/value length is capped before path or write work; a read uses `[u8; 4096]`; full-config JSON and its blocking Mutex are not production-reachable. | One maintenance grant reads or writes one bounded field and retains the remaining Shell maintenance phases. |
+
+The new source laws are
+`retained_multi_megabyte_input_advances_one_scalar_per_grant`,
+`retained_select_max_plus_one_refuses_before_output_without_moving_tree_owner`,
+`dialog_and_tour_text_advance_one_scalar_and_one_glyph_per_grant`,
+`dialog_and_tour_text_max_plus_one_fails_without_output`,
+`frame_deferred_cancel_token_closes_one_exact_owner_per_grant`,
+`frame_maintenance_authority_refuses_aba_and_releases_the_exact_generation`,
+`frame_maintenance_refusal_cell_recovers_exact_identity_without_blocking`,
+`frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant`, and
+`rejected_interaction_submission_releases_only_its_reserved_slot`.
+
+### Independent-remediation Residual Census
+
+| Live boundary | Residual |
+|---|---:|
+| Direct `paint_node_step` boundary calls to `paint_node_self` | **0** |
+| Direct retained paint `wrap_text` or whole-value scalar loops | **0** |
+| Accepted-layout reads in the mounted `paint_node_step` boundary | **1**, exact live snapshot read |
+| Dialog/tour calls to whole `chrome_text` or direct `draw_text` | **0** |
+| Native maintenance `KernelPoolFuture::spawn`, blocking `.lock()`, or discarded `try_submit` | **0** |
+| Production native preference `Mutex`, `serde_json`, or dynamic 4 KiB page | **0** |
+| Faithful P5a mutations | **81 / 81 rejected** |
+
+### Independent-remediation Static Validation
+
+| Gate | Result |
+|---|---|
+| `rustfmt --edition 2024 --config skip_children=true` on the five touched Rust files | **PASS** |
+| Root `📜️script.ts` Bun import/parser | **PASS** |
+| `interactivityMountedFrameTransactionSelfTests(process.cwd())` after formatting | **PASS** — P5a **81 / 81** mutations rejected |
+| `interactivityLiveReconcileSelfTests(process.cwd())` | **PASS** — accepted P5b source baseline and hostile mutations preserved |
+| `interactivityMountedLayoutTextSelfTests(process.cwd())` | **PASS** — faithful `paint_node_step` accepted-layout mutation rejected |
+| Scoped `git diff --check` on the six implementation/verifier files and this report | **PASS** |
+| Cargo/Nx/Wasm/browser/native runtime gates | **DEFERRED by coordinator instruction**; not run and not claimed |
+
+The broad compile/test matrix, executable Rust hostile laws, worker-count replay, browser-worker
+coverage, and measured under-8 ms opportunity checks remain deferred until overlapping source work
+is quiescent.
+
+## Fresh Terra Post-RED Remediation
+
+The fresh independent RED was valid. The mounted interactive synchronization, remaining Shell
+chrome labels, and accepted native-maintenance execution now retain their exact work and recovery
+authority across worker grants. This is a source/static handoff for another independent Terra audit;
+it is not self-acceptance and makes no compile, runtime, browser, or measured-latency claim.
+
+### Exact Changed-file Inventory
+
+| File | Fresh post-RED remediation |
+|---|---|
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs` | Replaced mounted whole Select synchronization and recursive Tree synchronization with `RetainedInteractiveSyncCursor`. Fixed source, output-record, depth, and key credits are checked before mutation. Select advances one source-item inspection or one layout write; Tree retains fixed direct-sibling frames and advances one section, item, ascent, child inspection, layout write, or record close. Fault and abandonment close one retained record/depth owner per grant. |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs` | Mounted synchronization parks the exact node and cursor. Stale revisions and faults enter the same incremental close phase and cannot publish or advance the frame until the synchronization cursor is terminal-empty. |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs` | Routed mounted Navbar, TutorialBar, footer utility, sync-status, and check-in labels through a retained chrome-group subcursor. Width admission is fixed-cost and capped before work; each grant advances one background, icon, UTF-8 scalar/glyph, border, hit, or terminal transition. Dynamic status/check-in strings remain in `UiText` across grants. The two legacy whole-string helper call seams are now `cfg(test)` only. |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs` | Added the generation-qualified nonblocking `FrameMaintenanceExecutionRegistry`, accepted-job envelope, and execution guard. Queue loss or interrupted execution restores the exact owner to its pre-reserved cell before publishing one mounted recovery wake; refusal reclaims the queued generation without ordinary-drop loss. Cancel, stale witness, and deadline still enter retained `begin_close`. |
+| `🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs` | Applied the requested scoped P5b rustfmt preservation only; reconciliation semantics and verifier predicates remain unchanged. |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/{🦀️component.rs,🦀️widgets.rs,🦀️mounted_layout.rs,🦀️tree.rs,🦀️events.rs}` | Applied the requested scoped P5c rustfmt preservation only; accepted-layout, text, event, and tree semantics remain unchanged. |
+| `📜️script.ts` | Traces the retained synchronization, chrome-group, and native execution registry bodies directly. The suite retains exactly 81 mutations and replaces the duplicate broad Shell glyph mutation with a faithful mounted-navbar whole-label restoration. Navbar, tutorial, footer, overlay, and error production slices all reject direct whole-string painting. |
+
+### Exact Owner and Close Laws
+
+| Authority | Admission and progress | Refusal, stale, fault, and close |
+|---|---|---|
+| Interactive Select synchronization | The fixed 256-source/512-output census completes before writes. One grant inspects one source item, scans one retained sibling, or writes one child layout. | MAX + 1 faults without moving the tree owner. Engine freshness is checked before each step; stale/fault parks the node while one cursor record/depth owner closes per grant. |
+| Interactive Tree synchronization | Each fixed frame retains its stable worker-owned direct-items pointer, item count, next item, output record, and depth. One section/item/ascent/child/layout action advances per grant without path replay or recursion. | Depth, item, output, and key caps fail closed. `close_step` releases one output record or one depth frame and only terminal empty releases the mounted node. |
+| Retained Shell chrome group | Label bytes are capped before background/icon work. A group cursor retains the phase and glyph byte; dynamic sync/check-in `UiText` ownership remains parked until completion. | MAX + 1 preserves input identity and stages no group owner. Glyph fault resets the exact group/glyph cursor; mounted callers record a fault and advance only after that retained child is closed. |
+| Accepted maintenance execution | Registry publication precedes `try_submit`. A generation can transition once through queued, running, abandoned/recovering, and complete states without a lock, loop, or dynamic recovery set. | Submission refusal reclaims the exact queued owner. Queue Drop and execution-guard Drop restore the exact interaction/cursor into the owner cell before the abandonment wake. Mounted recovery takes only the matching generation and resumes incremental cancel/stale/deadline close. |
+
+### Added Hostile Laws and Faithful Mutations
+
+The fresh pass adds direct Rust laws for retained Select one-row progress and MAX + 1 refusal,
+Tree one-record/depth abandonment close, dynamic chrome-group one-output/glyph progress and MAX + 1
+identity preservation, accepted maintenance queue Drop handback, and interrupted execution guard
+handback. Existing cancel/stale maintenance laws continue to prove that populated action, Shell,
+pump, and tutorial owners enter `begin_close` and close one owner per grant.
+
+The P5a verifier rejects **81 / 81** mutations. Five auditor counterexample families are mutated at
+their live callees: Select materialization, Tree child materialization, mounted Navbar whole-label
+painting, populated deferred bulk close, and maintenance authority release/Drop handback. The
+remaining mutations preserve the mounted stage, paint-variant, scene/image, atlas, find, packet,
+world-resource, publication, and hostile-law coverage.
+
+### Fresh-remediation Residual Census
+
+| Live boundary | Residual |
+|---|---:|
+| Mounted engine calls to complete `sync_interactive_state_node` | **0** |
+| Retained synchronization `Vec`, `collect`, source clone, `tree.children` replay, recursion, `for`, `while`, or `loop` | **0** |
+| Mounted Navbar/Tutorial/Footer/Overlay/Error calls to direct `chrome_text` or `draw_text` | **0** |
+| Production helper seams capable of reaching whole `chrome_text` | **0**; the two former production-defined seam locations are now excluded by the `cfg(test)` panel-tab item and the `cfg(test)` label block in the legacy chrome-group oracle; other direct calls live only inside independently `cfg(test)` legacy render oracles |
+| Maintenance execution registry `Mutex`, blocking lock, dynamic owner set, whole take, or recovery loop | **0** |
+| Accepted execution path without generation-qualified external handback | **0** |
+| Faithful P5a mutations | **81 / 81 rejected** |
+
+### Fresh-remediation Static Validation
+
+| Gate | Result |
+|---|---|
+| `rustfmt --edition 2024 --check --config skip_children=true` on the four fresh P5a implementation files | **PASS** |
+| `rustfmt --edition 2021 --check --config skip_children=true` on exact P5b `reconcile.rs` and five P5c files | **PASS** after scoped formatting |
+| Root `📜️script.ts` Bun parser plus `interactivityMountedFrameTransactionSelfTests(process.cwd())` | **PASS** — P5a **81 / 81** mutations rejected |
+| `interactivityLiveReconcileSelfTests(process.cwd())` | **PASS** — accepted P5b reconciliation baseline and hostile mutations preserved |
+| `interactivityMountedLayoutTextSelfTests(process.cwd())` | **PASS** — accepted P5c layout/text baseline and live accepted-layout mutation preserved |
+| Scoped `git diff --check` across implementation, preservation, verifier, and report files | **PASS** |
+| Cargo/Nx/Wasm/browser/native hostile-law and timing gates | **DEFERRED by coordinator instruction**; not run and not claimed |
+
+The renderer/UI compile matrix, executable Rust hostile laws, browser-worker replay, native
+worker-count matrix, and measured under-8 ms opportunity gates remain for the coordinator after
+overlapping source work is quiescent.
+
+## Narrow Legacy Chrome and Formatter Remediation
+
+The final narrow Terra RED was valid. `measure_chrome_group_item` and `render_chrome_group` had no
+mounted caller, but their definitions still compiled in production and retained a whole-string
+`FontAtlas::measure_text` reachability. Both definitions, `chrome_group_border`, and every remaining
+legacy caller that can reach them are now explicitly `#[cfg(test)]`. The mounted Navbar, Tutorial,
+Footer, Overlay, and Error paths remain on `RetainedChromeGroupCursor` and `RetainedGlyphCursor`.
+
+### Exact Source and Verifier Changes
+
+| File | Change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs` | Made `chrome_group_border`, `measure_chrome_group_item`, `render_chrome_group`, `render_presence_bar`, `render_footer_utility_nodes`, `render_studio_canvas_bars`, the three legacy window rails, `render_staged_form`, and `render_staged_arg` test-only. Normalized the already-test-only native preference conditional into edition-2021 syntax without changing behavior. |
+| `📜️script.ts` | Binds both legacy definitions to exact `#[cfg(test)]` attributes, excludes them from the production-source view, forbids their restoration in every mounted child slice, and adds three faithful legacy-chrome mutations: remove either test boundary or restore the legacy renderer inside mounted Navbar work. Updated the P5b token-publication predicate for rustfmt's multiline `.take_ready()` form and made the two-caller raw-completion mutation alter both live callers. |
+| P5b/P5c declared Rust inventories | Applied formatting only to the complete edition-2021 source inventories requested by the independent audit. No compatibility or runtime adapter was added. |
+
+### Final Residual Census
+
+| Boundary | Residual |
+|---|---:|
+| Production-compiled `fn measure_chrome_group_item` | **0** |
+| Production-compiled `fn render_chrome_group` | **0** |
+| Mounted child calls to either legacy helper | **0** |
+| Production-mounted whole-string `FontAtlas::measure_text` through the legacy helper chain | **0** |
+| Exact legacy helper attributes | **2 / 2 `#[cfg(test)]`** |
+| P5a hostile mutations | **81 / 81 core plus 3 / 3 legacy-chrome rejected** |
+
+### Final Source/Static Gates
+
+| Gate | Result |
+|---|---|
+| `interactivityMountedFrameTransactionSelfTests(process.cwd())` | **PASS** — 81 core plus 3 legacy-chrome mutations |
+| `interactivityLiveReconcileSelfTests(process.cwd())` | **PASS** after faithful live-token formatting predicate repair |
+| `interactivityMountedLayoutTextSelfTests(process.cwd())` | **PASS** |
+| Edition-2021 `rustfmt --check --config skip_children=true` on the P5b nine-file union | **PASS** — accepted eight-file set plus the auditor-declared plugin shard |
+| Edition-2021 `rustfmt --check --config skip_children=true` on the declared P5c eight-file set | **PASS** |
+| Scoped `git diff --check` over root verifier and all P5b/P5c source inventories | **PASS** |
+| Cargo/Nx/Wasm/browser/build/runtime gates | **DEFERRED by coordinator instruction**; not run and not claimed |
+
+The shared Shell, renderer glue, UI-WGPU engine, and paint sources are intentionally left in the
+auditor-required edition-2021 format. Reapplying edition-2024 formatting to that shared subset would
+invalidate the explicit P5b/P5c preservation gate. This handoff is source-audit-ready for the
+requested narrow fresh Terra audit; it is not self-acceptance.

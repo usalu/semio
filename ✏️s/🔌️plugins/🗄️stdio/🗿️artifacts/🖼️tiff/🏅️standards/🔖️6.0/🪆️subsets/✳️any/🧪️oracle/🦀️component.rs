@@ -691,7 +691,11 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
                 return Err(format!("tiff oracle: set-pixels payload is {} byte(s), expected {} ({width}x{height} RGBA8)", rgba.len(), expected));
             }
             let rgb: Vec<u8> = rgba.chunks_exact(4).flat_map(|px| [px[0], px[1], px[2]]).collect();
-            ifd0.set(TAG_BITS_PER_SAMPLE, OracleValue::Short(vec![8]));
+            // 🎨 TIFF6 §Baseline Fields (p.29): BitsPerSample's COUNT is SamplesPerPixel — one entry
+            // per channel. This arm writes chunky 8-bit RGB (`SamplesPerPixel` 3, two lines below),
+            // so a single `[8]` contradicts it. Every other arm carries the fixture's own genuine
+            // `[8, 8, 8]` through untouched; only this one rebuilt the tag, and rebuilt it wrong.
+            ifd0.set(TAG_BITS_PER_SAMPLE, OracleValue::Short(vec![8, 8, 8]));
             ifd0.set(TAG_COMPRESSION, OracleValue::Short(vec![1]));
             ifd0.set(TAG_PHOTOMETRIC, OracleValue::Short(vec![2]));
             ifd0.set(TAG_SAMPLES_PER_PIXEL, OracleValue::Short(vec![3]));

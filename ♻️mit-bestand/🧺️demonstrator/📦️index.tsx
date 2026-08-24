@@ -27,7 +27,7 @@ import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/fra
 import { PLUGIN_CATALOG } from "@semio-tech/plugin-registry/catalog";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
-import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneRuntimeVariant, type DemonstratorPaneSpec } from "./🟦️brand.ts";
+import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneBootVariants, scheduleDemonstratorIdle, type DemonstratorPaneSpec } from "./🟦️brand.ts";
 import "./🎨️globals.css";
 
 // 🎪️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
@@ -162,17 +162,8 @@ const DEMONSTRATOR_MOBILE_OVERVIEW_VEIL_OPACITY = 1;
 //#endregion 📱️DemonstratorMobileList
 
 //#region 🎪️DemonstratorPaneBoot
-/** @emoji 🐢️ `requestIdleCallback` isn't universal (Safari); falls back to a short timeout so the warm-boot
- * queue still staggers instead of booting every pane synchronously back-to-back. */
-function scheduleIdle(callback: () => void, timeoutMs: number): () => void {
-  const withIdle = window as typeof window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (handle: number) => void };
-  if (withIdle.requestIdleCallback) {
-    const handle = withIdle.requestIdleCallback(callback, { timeout: timeoutMs });
-    return () => withIdle.cancelIdleCallback?.(handle);
-  }
-  const handle = window.setTimeout(callback, timeoutMs);
-  return () => window.clearTimeout(handle);
-}
+/** @emoji ⏱️ Keeps each background shell's 30-second plugin-load budget isolated from the next boot. */
+const DEMONSTRATOR_PANE_BOOT_INTERVAL_MS = 35_000;
 
 /** @emoji 🐢️ Boots panes one at a time (hash-target pane first, if any) instead of all six simultaneously —
  * six live WASM plugin boots at once would make the very first paint of the page janky. `promote` lets a
@@ -197,9 +188,9 @@ function useSequentialPaneBoot(
       const nextId = queueRef.current[0];
       if (!nextId) return;
       boot(nextId);
-      cancelRef.current = scheduleIdle(bootNext, 1500);
+      cancelRef.current = scheduleDemonstratorIdle(bootNext, DEMONSTRATOR_PANE_BOOT_INTERVAL_MS, window);
     };
-    cancelRef.current = scheduleIdle(bootNext, 1500);
+    cancelRef.current = scheduleDemonstratorIdle(bootNext, 1_500, window);
     return () => cancelRef.current?.();
   }, [boot, skipIdleQueue]);
 
@@ -396,8 +387,9 @@ function DemonstratorPane({
   readonly onDirty: () => void;
   readonly onContainerElement: (id: string, el: HTMLDivElement | null) => void;
 }) {
-  const bootVariant = demonstratorPaneRuntimeVariant(pane.variant);
-  const boot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, bootVariant), [bootVariant]);
+  const bootVariants = demonstratorPaneBootVariants(pane.variant);
+  const runtimeBoot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, bootVariants.runtime), [bootVariants.runtime]);
+  const manifestBoot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, bootVariants.manifest), [bootVariants.manifest]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
   const live = booted && !suspended;
@@ -417,9 +409,9 @@ function DemonstratorPane({
       {live ? (
         <PaneErrorBoundary paneLabel={pane.label}>
           <FrameworkOsShell
-            pluginFilter={bootVariant}
-            plugins={boot.plugins}
-            appId={boot.defaultAppId}
+            pluginFilter={bootVariants.runtime}
+            plugins={runtimeBoot.plugins}
+            appId={manifestBoot.defaultAppId}
             locks={locks}
             defaults={defaults}
             brand={pane.brand}
@@ -509,11 +501,10 @@ function DemonstratorLanding() {
   useElementsSurfaceChrome(surfaceChrome);
 
   const initialFocusId = useMemo(() => paneIdFromLocationHash(), []);
-  const { bootedIds, promote } = useSequentialPaneBoot(initialFocusId, { skipIdleQueue: touchListMode });
-
   const [introductionStep, setIntroductionStep] = useState(0);
   const [showIntroduction, setShowIntroduction] = useState(!initialFocusId);
   const [focusedId, setFocusedId] = useState<string | null>(initialFocusId);
+  const { bootedIds, promote } = useSequentialPaneBoot(initialFocusId, { skipIdleQueue: touchListMode || focusedId != null });
   const { suspendedIds, postersById, markDirty, registerContainer, resumePane } = usePaneSuspension(bootedIds, focusedId, initialFocusId);
   const promoteAndResume = useCallback(
     (id: string) => {

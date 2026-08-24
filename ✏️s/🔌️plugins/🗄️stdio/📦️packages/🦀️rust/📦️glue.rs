@@ -129,6 +129,16 @@ pub mod registry;
 pub mod manifest;
 //#endregion Manifest
 
+//#region Store
+/// 🗄️ Names the document-codec traits every snapshot in this crate implements, so a consumer can
+/// actually call the impls: `ArtifactDsl::print_dsl`/`parse_dsl` and `ArtifactPack::encode_pack`/
+/// `decode_pack`. The impls were public while the traits were reachable only through the private
+/// `store` extern-crate alias above, which made them uncallable from outside — see
+/// `🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which recorded
+/// exactly that gap.
+pub use semio_framework_os_kernel::{ArtifactDsl, ArtifactPack};
+//#endregion Store
+
 //#region Artifacts
 // 🎫️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, S2 mutation-triad
 // mounting policy (load-bearing for F1-F6): `POLICY_MUTATION_TRIAD_DIRS`

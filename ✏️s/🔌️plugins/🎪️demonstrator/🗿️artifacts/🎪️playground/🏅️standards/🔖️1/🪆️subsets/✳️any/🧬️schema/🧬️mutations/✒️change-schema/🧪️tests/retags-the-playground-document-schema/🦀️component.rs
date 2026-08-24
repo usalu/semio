@@ -39,8 +39,8 @@ fn built_outcome() -> protocol::MutationOutcome<PlaygroundDiff> {
 
 /// ▶️ Retagging the document moves its one and only field from `playground.playground` to
 /// `playground.experiment`.
-#[semio_framework_async_macros::async_test]
-async fn retags_the_only_persistent_field() {
+#[test]
+fn retags_the_only_persistent_field() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-schema applies to its committed before-document");
     assert_eq!(applied, expected_after(), "change-schema/retags-the-playground-document-schema: the retagged document differs from the committed after-snapshot");
     assert_eq!(applied.schema, "playground.experiment", "change-schema/retags-the-playground-document-schema: the schema tag must land on the payload's value");
@@ -48,8 +48,8 @@ async fn retags_the_only_persistent_field() {
 
 /// ↩️ `change-schema`'s inverse re-tags with `base.schema` read out of BASE — never the diff — so
 /// undoing restores `playground.playground`.
-#[semio_framework_async_macros::async_test]
-async fn retagging_back_restores_before() {
+#[test]
+fn retagging_back_restores_before() {
     let base = before();
     let mut snapshot = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("forward change-schema applies");
     let inverse = <PlaygroundMutation as protocol::Mutation<PlaygroundSnapshot>>::inverse(&mutation(), &base);
@@ -63,8 +63,8 @@ async fn retagging_back_restores_before() {
 
 /// 🔣️ Both committed documents and the externally tagged `ChangeSchema` payload are canonical —
 /// this is where the `{"ChangeSchema": {"new_schema": ..}}` wire shape is pinned.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: PlaygroundSnapshot = serde_json::from_str(text).expect("playground document decodes");
         let reencoded = serde_json::to_value(&decoded).expect("playground document encodes");
@@ -78,8 +78,8 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ `playground.experiment` differs from the base tag, so the equality guard — this oracle's only
 /// guard — does not fire and the declared `applied` outcome must be message-free.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-schema/retags-the-playground-document-schema: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -89,8 +89,8 @@ async fn declared_outcome_holds() {
 
 /// 🔺️ `PlaygroundDiff` has two slots — the whole-artifact `artifact` replacement and the sparse
 /// `schema` field. This mutation may set the second one only.
-#[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+#[test]
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("produced change-schema diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-schema/retags-the-playground-document-schema: produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -98,8 +98,8 @@ async fn produces_committed_diff() {
 
 /// 🔣️ The committed diff decodes to `PlaygroundDiff` and re-encodes unchanged — `artifact` stays
 /// an explicit `null` because `PlaygroundDiff` carries no `skip_serializing_if`.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+#[test]
+fn committed_diff_is_canonical() {
     let decoded: PlaygroundDiff = serde_json::from_str(DIFF).expect("committed change-schema diff decodes");
     assert_eq!(decoded.schema.as_deref(), Some("playground.experiment"), "change-schema/retags-the-playground-document-schema: the committed diff must set the new tag");
     assert!(decoded.artifact.is_none(), "change-schema/retags-the-playground-document-schema: a one-field retag must never escalate into a whole-artifact replacement");
@@ -109,8 +109,8 @@ async fn committed_diff_is_canonical() {
 }
 
 /// 🩹 The committed diff alone carries the before-document to the after-document.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+#[test]
+fn committed_diff_applies_to_after() {
     let decoded: PlaygroundDiff = serde_json::from_str(DIFF).expect("committed change-schema diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "change-schema/retags-the-playground-document-schema: committed diff did not carry before to after");

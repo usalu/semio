@@ -154,6 +154,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::{inverse_spec, mutable_input, number};
+    use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, round_trip_preserves};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::apply_json_mutation;
     use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::{JsonMutation, JsonPath, JsonPathSegment};
@@ -229,15 +230,24 @@ mod subject {
         write_json_text(&snapshot.value).into_bytes()
     }
 
+    /// 👁️ The forward mutation, with the OBSERVABILITY law asserted IN ROLE through the SAME shared
+    /// `⚖️law` helper `super::mutate_oracle` calls. `apply_json_mutation` returns a rejecting
+    /// `MutationOutcome` and leaves the snapshot untouched when a path addresses nothing, so without
+    /// this a refused mutation reports a green scenario carrying the unmutated document.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let mut snapshot = decode(&mutable_input(ctx)?)?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
+        let input = mutable_input(ctx)?;
+        let mut snapshot = decode(&input)?;
+        let spec = ctx.doc_json()?;
+        let mutation = mutation_from_spec(&spec)?;
         apply_json_mutation(&mut snapshot, &mutation);
         let output = encode(&snapshot);
         let projection = project_json_value(&output)?;
+        mutation_is_observable(&spec.str("kind"), &projection, &project_json_value(&input)?, &[])?;
         Ok(Outcome::with_raw(output, projection))
     }
 
+    /// ↩️ The inverse law, asserted on the SUBJECT side too rather than deferred to the parity
+    /// phase, through the same shared `⚖️law` helper `super::inverse_oracle` calls.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
@@ -246,6 +256,7 @@ mod subject {
         apply_json_mutation(&mut snapshot, &mutation_from_spec(&inverse_spec(&input, &spec)?)?);
         let output = encode(&snapshot);
         let projection = project_json_value(&output)?;
+        inverse_restores(&spec.str("kind"), &projection, &project_json_value(&input)?)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
@@ -262,6 +273,7 @@ mod subject {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
         let projection = project_json_value(&output)?;
+        round_trip_preserves(&projection, &project_json_value(&input)?)?;
         Ok(Outcome::with_raw(output, projection))
     }
 }

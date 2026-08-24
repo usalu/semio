@@ -46,6 +46,26 @@ Feature: Apply every typed STEP AP214 mutation to a real-world exchange structur
   claim.
 
 
+  THE FIRST DIFFERENTIAL RUN OF THIS CASE DIVERGED ON EVERY SINGLE SCENARIO, AND THE PROJECTION WAS
+  WHAT WAS WRONG. Both roles passed their own laws (`executed=46 passed=46`) and yet `parity=1/23`:
+  `$.entities[824].args[3].v` read `…at asserted c<LF>onnectivities` from the oracle and `…at
+  asserted c\X2\000A\X0\onnectivities` from the subject. That is ONE value spelled two ways.
+  ST-Developer wrapped its output line INSIDE that string literal, so the real committed fixture
+  carries a raw line break there; this repository's own writer decodes it and re-emits it as the
+  conformant `\X2\000A\X0\` control directive, which ISO 10303-21 §6.4.2 defines and a raw
+  0x0A inside a string literal is not. Neither writer is wrong about the VALUE. What was wrong is
+  that `ruststep`'s own `string` combinator is `many0(none_of("'"))` — it hands back the raw text
+  between the apostrophes and decodes no control directive at all (its own doc comment quotes the
+  production it does not implement) — so the projection was comparing ENCODINGS while calling them
+  argument values. The oracle now decodes every string literal to the value it denotes, through a
+  from-scratch §6.4.2 reader in the shared `../../🏅️standards/🔖️ap214/🧪️oracle/🦀️component.rs`
+  written independently of the production codec under test, pinned by
+  `every_control_directive_decodes_to_the_value_it_denotes` and
+  `a_malformed_or_unmappable_directive_is_refused`. A malformed directive is an ERROR, not a lexeme
+  waved through, so a subject that emitted a broken escape still fails. No `ignoreKeys` was added,
+  no tolerance loosened, no fixture touched: `semantic-step-v1` is compared over exactly the same
+  axes, on decoded values instead of lexemes.
+
   📌️ Every Examples row below other than `no-mutation` is required to MOVE the semantic projection,
   and the adapter fails the scenario in role when it does not: a row whose parameters make the
   mutation a no-op passes whenever the reference library merely declined to error, which is not a

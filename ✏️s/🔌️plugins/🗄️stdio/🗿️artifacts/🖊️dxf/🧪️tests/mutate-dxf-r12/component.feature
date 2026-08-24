@@ -32,6 +32,37 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
   gitignored with `git check-ignore -v` (the taxonomy's `!**/🔖️*/**` negation rule at `.gitignore:187`
   un-ignores every `🔖️<standard>/**` subtree, this one included).
 
+  THE FIRST DIFFERENTIAL RUN OF THIS CASE WAS `parity=0/39`, AND IT FOUND THREE REAL DEFECTS THAT
+  THE SUBJECT PHASE ALONE HAD REPORTED AS 39 GREENS.
+
+  1. THE WRITER PUT `LAYER` BEFORE `LTYPE`. A `LAYER` record names its linetype by string (group
+     code 6), so the AutoCAD DXF reference requires the `LTYPE` table to precede the `LAYER` table;
+     this subset's writer emitted LAYER, STYLE, LTYPE. Fed that order, the registered `dxf` 0.6
+     reader invented the linetype it could not yet resolve and reported EIGHT linetypes where the
+     drawing has seven — every one of the 39 comparisons diverged on `$.linetypes` alone.
+     Confirmed by experiment, not inferred: reordering nothing but those two blocks in the very
+     bytes the writer had already produced took the same reader from eight back to seven.
+  2. THE SUBJECT HALF DISCARDED `MutationOutcome`. `apply_dxf_mutation` returns the refusal and
+     leaves the snapshot untouched, so a rejected mutation re-encoded the input unchanged and the
+     scenario reported green. Ten kinds did exactly that. The adapter now fails the scenario with
+     the refusal's own code and target.
+  3. THE FIXTURE'S SYMBOL TABLES CARRIED DUPLICATE NAMES, and a symbol table's names are its keys.
+     Wave 7 derived this file by WRITING it with `dxf` 0.6, whose `normalize()` inserts its own
+     `LAYER "0"`, `STYLE "STANDARD"`/`"ANNOTATIVE"` and `LTYPE "BYBLOCK"`/`"BYLAYER"`/`"CONTINUOUS"`
+     on top of the source drawing's own — so the committed file carried `LAYER ["0","0","DIMS"]`,
+     two `STANDARD` styles and two `CONTINUOUS` linetypes, which the paragraph above never claimed
+     and which no name-keyed edit can address unambiguously. Each collision was resolved by
+     dropping the `normalize()`-added record and keeping the derivation's own, which is the one
+     carrying the real content (`CONTINUOUS` description "Solid line", `STANDARD` text height 2.5);
+     nothing else in the file changed. Related, and fixed at the same cause: this subset's own
+     name-keyed precondition demanded that the WHOLE table be duplicate-free, so it refused even
+     `remove-layer {"name":"DIMS"}`, whose target is unique. It now constrains the names an edit
+     actually TARGETS — still refusing an ambiguous one, no longer refusing an unambiguous one
+     because of an unrelated collision elsewhere.
+
+  No comparison profile was touched, no `ignoreKeys` added, no tolerance moved and no Examples row
+  changed.
+
   `dxf` 0.6 reads AND writes DXF, so it is a genuine differential second producer for every
   `@mode-differential` scenario below, not merely an independent reader. Both the oracle's and the
   subject's results are read back by the SAME independent `dxf`-backed projection

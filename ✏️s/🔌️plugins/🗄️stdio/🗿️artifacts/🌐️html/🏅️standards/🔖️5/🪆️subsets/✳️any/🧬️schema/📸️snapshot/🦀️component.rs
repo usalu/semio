@@ -14,6 +14,11 @@
 //! `&#xHH;`) are decoded — the full WHATWG named-character-reference table (~2200 entries, e.g.
 //! `&nbsp;`) is not reproduced here; any other `&name;`-shaped sequence is passed through literally
 //! as raw text (never an error, never silently corrupted).
+//!
+//! Out of scope is not the same as free: for the WELL-FORMED documents this subset does accept, the
+//! tree it builds must be the tree every other HTML5 implementation builds, because the mutation
+//! vocabulary addresses nodes by child index. The two normative placements a purely literal reader
+//! gets wrong are applied by [`normalize_html_root_whitespace`] — see its own doc comment.
 
 use dsl::TextSpan;
 use schema::ArtifactSchema;
@@ -559,9 +564,70 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// 🧽 Whitespace-only character data, per the WHATWG definition (TAB, LF, FF, CR, SPACE).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_whitespace_text(node: &HtmlNode) -> bool {
+    matches!(node, HtmlNode::Text { text } if text.chars().all(|c| matches!(c, '\t' | '\n' | '\u{000C}' | '\r' | ' ')))
+}
+
+/// 🧹 The three places where a well-formed HTML5 document's SOURCE whitespace is not where the
+/// document's TREE carries it. All three are normative WHATWG tree construction, not error recovery
+/// (which stays out of scope per the module header): §13.2.6.4.3 "before head" *ignores*
+/// whitespace-only character tokens, so `<html>\n  <head>` has no text node before `<head>` in any
+/// conformant DOM; §13.2.6.4.20 "after body" and §13.2.6.4.22 "after after body" both process them
+/// with the "in body" rules, whose insertion point is still the `body` element (`</body>` and
+/// `</html>` switch the insertion mode but never pop the stack), so the newlines in
+/// `</body>\n</html>\n` both belong to `body`, merged onto its last text node by the tree
+/// construction's own "append to existing text node" rule — not to `html`, and not discarded.
+/// `after_root` carries the document-level tail the caller consumed after `</html>`.
+///
+/// Reading them literally is what this parser used to do, and it put every path index inside `<html>`
+/// one place off from every other HTML5 implementation's: `[2]` addressed a whitespace text node here
+/// where `html5ever`, every browser, and this subset's own mutation oracle all address `<body>`.
+/// Found by `../../../../../🧪️tests/mutate-html-5`'s parity phase the first time it ran
+/// (ticket 26/08/23/END-TO-END-TESTING-REFACTOR), where all seven path-addressed kinds were refused
+/// with `mutation.apply.conflicting-target` — "element diff targets a non-element node".
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn normalize_html_root_whitespace(root: &mut HtmlNode, after_root: &str) {
+    let HtmlNode::Element { name, children, .. } = root else { return };
+    if !name.eq_ignore_ascii_case("html") {
+        return;
+    }
+    let Some(first_element) = children.iter().position(|child| matches!(child, HtmlNode::Element { .. })) else { return };
+    let mut seen = 0;
+    children.retain(|child| {
+        let keep = seen >= first_element || !is_whitespace_text(child);
+        seen += 1;
+        keep
+    });
+    let Some(body) = children.iter().position(|child| matches!(child, HtmlNode::Element { name, .. } if name.eq_ignore_ascii_case("body"))) else { return };
+    let mut trailing = String::new();
+    let mut seen = 0;
+    children.retain(|child| {
+        let keep = seen <= body || !is_whitespace_text(child);
+        if !keep {
+            if let HtmlNode::Text { text } = child {
+                trailing.push_str(text);
+            }
+        }
+        seen += 1;
+        keep
+    });
+    trailing.push_str(after_root);
+    if trailing.is_empty() {
+        return;
+    }
+    let HtmlNode::Element { children: body_children, .. } = &mut children[body] else { return };
+    match body_children.last_mut() {
+        Some(HtmlNode::Text { text }) => text.push_str(&trailing),
+        _ => body_children.push(HtmlNode::Text { text: trailing }),
+    }
+}
+
 /// 🔓️ Parses a complete well-formed HTML5 document (optional leading `<!DOCTYPE ...>` + exactly
 /// one root element + only whitespace before/after). See the module doc comment for the "honest
-/// boundary" this subset draws.
+/// boundary" this subset draws, and [`normalize_html_root_whitespace`] for the two normative
+/// tree-construction whitespace placements applied to an `<html>` root.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_html_document(text: &str) -> Result<HtmlSnapshot, TextError> {
     let mut p = Parser::new(text);
@@ -586,11 +652,14 @@ pub fn parse_html_document(text: &str) -> Result<HtmlSnapshot, TextError> {
     };
 
     p.skip_ws();
-    let root = p.parse_element()?;
+    let mut root = p.parse_element()?;
+    let tail_start = p.pos;
     p.skip_ws();
     if p.pos != p.bytes.len() {
         return Err(p.err("trailing content after the root element"));
     }
+    let after_root = p.slice(tail_start, p.pos).to_string();
+    normalize_html_root_whitespace(&mut root, &after_root);
     Ok(HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype, root })
 }
 //#endregion 🔖️Parser
@@ -598,13 +667,20 @@ pub fn parse_html_document(text: &str) -> Result<HtmlSnapshot, TextError> {
 //#region 🔖️Writer
 /// 🖊️ Serializes a snapshot back to HTML5 text. Canonical/normalized form (documented per the
 /// ticket brief's "documented-honest normalization" allowance — the fixed `{doctype, root}`
-/// snapshot shape has no slot for the raw bytes between the doctype and the root element, or after
-/// the root element, so those are normalized to a single `\n` each): `<!doctype>\n` (if present) +
-/// the root element, verbatim inside its own subtree (all inter-tag whitespace INSIDE the root IS
-/// a real `Text` node and round-trips exactly) + a single trailing `\n`. Attribute values are
-/// always re-emitted double-quoted regardless of the source's original quote style (a second
-/// documented normalization — the `HtmlAttr{name,value}` shape has no slot to remember which quote
-/// character was used).
+/// snapshot shape has no slot for the raw bytes between the doctype and the root element, so those
+/// are normalized to a single `\n`): `<!doctype>\n` (if present) + the root element, verbatim inside
+/// its own subtree (all inter-tag whitespace INSIDE the root IS a real `Text` node and round-trips
+/// exactly). Attribute values are always re-emitted double-quoted regardless of the source's
+/// original quote style (a second documented normalization — the `HtmlAttr{name,value}` shape has no
+/// slot to remember which quote character was used).
+///
+/// ⚠️ Nothing follows the root element — not even a courtesy `\n`. Whitespace after `</html>` is NOT
+/// inert in HTML: WHATWG §13.2.6.4.22 "after after body" processes it with the "in body" rules, so a
+/// trailing newline re-enters `<body>`'s last text node on the very next read by any conformant
+/// parser. Emitting one made `write` → `html5ever::parse` grow a newline inside `body` on every
+/// cycle (found by `mutate-html-5`'s `set-snapshot` parity row, ticket
+/// 26/08/23/END-TO-END-TESTING-REFACTOR); [`parse_html_document`] carries that whitespace into the
+/// model instead, where it round-trips as the real text node it is.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn write_html_document(snapshot: &HtmlSnapshot) -> String {
     let mut out = String::new();
@@ -614,7 +690,6 @@ pub fn write_html_document(snapshot: &HtmlSnapshot) -> String {
         out.push_str(">\n");
     }
     write_node(&snapshot.root, &mut out);
-    out.push('\n');
     out
 }
 
@@ -742,6 +817,54 @@ mod tests {
         HtmlNode::Text { text: s.into() }
     }
 
+    /// 🧪 Pins WHATWG §13.2.6.4.3 "before head": a whitespace-only character token before `<head>`
+    /// is IGNORED, so `<html>`'s first child is the `<head>` element itself. Without this the whole
+    /// path space inside `<html>` is shifted one place away from every conformant HTML5 DOM.
+    #[test]
+    fn whitespace_before_head_is_not_a_node() {
+        let snap = parse_html_document("<html lang=\"de\">\n  <head></head>\n  <body></body>\n</html>").unwrap();
+        let HtmlNode::Element { children, .. } = &snap.root else { panic!("root not element") };
+        assert!(matches!(&children[0], HtmlNode::Element { name, .. } if name == "head"), "got {:?}", children[0]);
+        assert!(matches!(&children[1], HtmlNode::Text { text } if text == "\n  "));
+        assert!(matches!(&children[2], HtmlNode::Element { name, .. } if name == "body"), "got {:?}", children[2]);
+        assert_eq!(children.len(), 3, "nothing may follow <body>: {children:?}");
+    }
+
+    /// 🧪 Pins WHATWG §13.2.6.4.20 "after body" and §13.2.6.4.22 "after after body": whitespace
+    /// between `</body>` and `</html>` AND after `</html>` is processed with the "in body" rules,
+    /// whose insertion point is still `body`, and merges onto `body`'s last text node rather than
+    /// becoming a child of `html` or being discarded.
+    #[test]
+    fn whitespace_after_body_belongs_to_body() {
+        let snap = parse_html_document("<html><head></head><body><p>x</p>\n  </body>\n</html>\n").unwrap();
+        let HtmlNode::Element { children, .. } = &snap.root else { panic!("root not element") };
+        assert_eq!(children.len(), 2);
+        let HtmlNode::Element { children: body, .. } = &children[1] else { panic!("body not element") };
+        assert_eq!(body.len(), 2);
+        assert!(matches!(&body[1], HtmlNode::Text { text } if text == "\n  \n\n"), "got {:?}", body[1]);
+    }
+
+    /// 🧪 Nothing may follow `</html>` on the way out: whatever came after it on the way in is
+    /// already inside `body`, so a courtesy trailing newline would be a NEW character the next
+    /// conformant read puts inside `body` again. `write` after `parse` is a true fixpoint.
+    #[test]
+    fn writing_never_emits_anything_after_the_root_element() {
+        let source = "<!DOCTYPE html>\n<html><head></head><body><p>x</p>\n</body></html>";
+        let printed = write_html_document(&parse_html_document(source).unwrap());
+        assert_eq!(printed, source);
+        assert_eq!(write_html_document(&parse_html_document(&printed).unwrap()), printed);
+    }
+
+    /// 🧪 The normalization is scoped to an `<html>` root: a fragment-shaped document keeps every
+    /// text node exactly where the source put it.
+    #[test]
+    fn non_html_root_keeps_its_whitespace_verbatim() {
+        let snap = parse_html_document("<section>\n  <p>x</p>\n</section>").unwrap();
+        let HtmlNode::Element { children, .. } = &snap.root else { panic!("root not element") };
+        assert_eq!(children.len(), 3);
+        assert!(matches!(&children[0], HtmlNode::Text { text } if text == "\n  "));
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn parses_void_elements_without_children_or_close_tag() {
         let snap = parse_html_document("<html><br><img src=\"x.png\"></html>").unwrap();
@@ -849,10 +972,12 @@ mod tests {
 
     //#region 🔖️CodecRetentionLaw
     /// 🎯️ codec_retention_law: byte-preserving round trip of the real W0 fixture. Exact, not just
-    /// "documented-honest normalization" — the fixture's actual bytes already follow this codec's
-    /// canonical top-level-whitespace convention (single `\n` after the doctype, single trailing
-    /// `\n` at EOF), and every attribute value is already double-quoted, so `decode -> re-encode`
-    /// matches the source byte-for-byte.
+    /// "documented-honest normalization" — the fixture's actual bytes follow this codec's canonical
+    /// top-level-whitespace convention (a single `\n` after the doctype, `<head>` opening
+    /// immediately after `<html …>` and `</html>` closing immediately after `</body>`, because
+    /// WHATWG tree construction gives whitespace in those two places to nothing and to `body`
+    /// respectively — see [`normalize_html_root_whitespace`]), and every attribute value is already
+    /// double-quoted, so `decode -> re-encode` matches the source byte-for-byte.
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let snap = parse_html_document(FIXTURE).expect("fixture parses");

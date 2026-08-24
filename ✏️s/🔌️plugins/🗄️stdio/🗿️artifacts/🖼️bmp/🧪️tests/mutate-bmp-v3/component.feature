@@ -58,6 +58,20 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   subject side the ONLY channel from input to output is decode_bmp → the DSL text codec → parse_dsl
   → encode_bmp, so a byte that survives did so by being modelled.
 
+  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-set-pixel-data` (parity 14/15, 2026-08-24). The row fills the
+  whole raster with rgb(200,40,40), a colour the committed 240-entry table has no entry for. The
+  oracle answers by switching the document to 24-bit direct colour (`storage: direct`,
+  `paletteEntries: 0`); `encode_bmp` answers with an Err, and
+  `unrepresentable_palette_edit_is_reported_not_narrowed`
+  (`../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs`) pins that refusal as deliberate,
+  because the same snapshot shape is also what a palette edit that orphans a real pixel produces —
+  and there a silent 24-bit fallback WOULD hide the edit. The declared kind ("Replaces the whole
+  decoded canonical-RGBA `pixels` buffer") says nothing about storage, so both sides are
+  extrapolating from an under-specified verb. Resolving it means saying what `set-pixel-data` means
+  for an indexed BMP — most likely that it moves the document to direct colour, which then also
+  makes its inverse a full `set-snapshot` rather than a second `set-pixel-data` — and making both
+  sides implement that. Do not weaken the profile, the row's parameters or the fixture to close it.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

@@ -202,8 +202,8 @@ pub mod app {
     /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
     use store::os_io::{ArtifactKindId, ArtifactRef};
     use store::{
-        build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles, GroupMeta, HistoryColumn, HistoryLane,
-        MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember,
+        build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles, GroupMeta, HistoryColumn,
+        HistoryLane, MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember,
     };
     /// 🔗️ `manifest::Keybinding.action` (FORBIDDEN file, `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`)
     /// is still declared as `ui_wgpu::wgpu::ActionDescriptor` and was not part of this migration's scope
@@ -242,11 +242,7 @@ pub mod app {
     /// 🎬️ Encodes a typed product scene behind the semantic surface contract.
     pub fn scene_surface<T: semio_framework_ui_scene::SceneDoc>(id: &str, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
         let props = semio_framework_ui_scene::encode(kind, scene).map_err(|_| ui_assembly_error("scene-surface.encode"))?;
-        ui::surface(props)
-            .try_id(id)
-            .map_err(|_| ui_assembly_error("scene-surface.id"))?
-            .try_build()
-            .map_err(|_| ui_assembly_error("scene-surface.build"))
+        ui::surface(props).try_id(id).map_err(|_| ui_assembly_error("scene-surface.id"))?.try_build().map_err(|_| ui_assembly_error("scene-surface.build"))
     }
 
     /// 🏷️ Builds one semantic text node from the SDK's retained non-node label type.
@@ -456,24 +452,24 @@ pub mod app {
 
     impl PanelTabSpec {
         /// 🍃️ An app-declared leaf tab; `group` is only meaningful on the root entry passed to `.panel_tab_tree`.
-        pub async fn leaf(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: impl Into<String>) -> Self {
+        pub fn leaf(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: impl Into<String>) -> Self {
             Self { kind: PanelTabKind::App(id.into()), label: label.into(), group, body_key: Some(body_key.into()), children: Vec::new() }
         }
 
         /// 🌳️ An app-declared branch tab; its `children` render as the tab row below it when active.
-        pub async fn group(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, children: Vec<PanelTabSpec>) -> Self {
+        pub fn group(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, children: Vec<PanelTabSpec>) -> Self {
             Self { kind: PanelTabKind::App(id.into()), label: label.into(), group, body_key: None, children }
         }
 
         /// 🏛️ A framework-predefined tab — only the framework shell itself should ever pass a
         /// non-`App` `PanelTabKind` here; plugins must go through `leaf`/`group`.
-        pub async fn framework(kind: PanelTabKind, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: Option<String>, children: Vec<PanelTabSpec>) -> Self {
+        pub fn framework(kind: PanelTabKind, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: Option<String>, children: Vec<PanelTabSpec>) -> Self {
             Self { kind, label: label.into(), group, body_key, children }
         }
     }
 
     /// 🌳️ Asserts every tab in the tree has a non-empty, unique id and sets exactly one of `body_key`/`children`.
-    async fn validate_panel_tab_spec(app_id: &str, tab: &PanelTabSpec, seen_ids: &mut HashSet<String>) {
+    fn validate_panel_tab_spec(app_id: &str, tab: &PanelTabSpec, seen_ids: &mut HashSet<String>) {
         let id = tab.kind.id_str();
         assert!(!id.trim().is_empty(), "app {} panel tab id must be non-empty", app_id);
         assert!(seen_ids.insert(id.to_string()), "app {} duplicate panel tab id {}", app_id, id);
@@ -482,7 +478,7 @@ pub mod app {
             assert!(!body_key.trim().is_empty(), "app {} panel tab {} body_key must be non-empty", app_id, id);
         }
         for child in &tab.children {
-            Box::pin(validate_panel_tab_spec(app_id, child, seen_ids)).await;
+            validate_panel_tab_spec(app_id, child, seen_ids);
         }
     }
 
@@ -537,7 +533,7 @@ pub mod app {
     /// 📝️ Asserts every `ActionArgDef` in `args` (belonging to `owner`, e.g. an action or dialog id) has
     /// a non-empty, unique id and that any `Select` control declares at least one option — shared by
     /// per-action arg validation and dialog arg validation so both stay in lockstep.
-    async fn validate_arg_defs(app_id: &str, owner: &str, args: &[ActionArgDef]) {
+    fn validate_arg_defs(app_id: &str, owner: &str, args: &[ActionArgDef]) {
         let mut arg_ids = HashSet::new();
         for arg in args {
             assert!(arg_ids.insert(arg.id.clone()), "app {} {} declares duplicate arg id {}", app_id, owner, arg.id);
@@ -553,7 +549,7 @@ pub mod app {
     /// kind ids are camelCased at the stamp site, never compared raw). Anything else grammar-valid is an
     /// escape hatch — an app may legitimately reference a plugin- or framework-owned element it doesn't
     /// declare.
-    async fn validate_referenced_element_id(app_id: &str, owner: &str, role: &str, id: &str, declared_utility_ids: &HashSet<String>, panel_tab_ids: &HashSet<String>, window_kind_ids: &HashSet<String>) {
+    fn validate_referenced_element_id(app_id: &str, owner: &str, role: &str, id: &str, declared_utility_ids: &HashSet<String>, panel_tab_ids: &HashSet<String>, window_kind_ids: &HashSet<String>) {
         assert!(is_element_id(id), "app {} {} {} element id {} does not match the UI element id grammar", app_id, owner, role, id);
         if declared_utility_ids.contains(id) || id == UI_NAVBAR_ELEMENT_ID || id == UI_FOOTER_ELEMENT_ID {
             return;
@@ -579,7 +575,7 @@ pub mod app {
     /// 👻️ Every `IntroductionPoint` a gesture references (one for click/scroll kinds, two for drag/orbit) —
     /// shared by tutorial gesture-cue validation; only `Element` points are grammar-checked (the other
     /// addressing schemes name windows/entities/curves, not the `ui.*` element-id vocabulary).
-    async fn introduction_gesture_points(gesture: &semio_framework::IntroductionGesture) -> Vec<&semio_framework::IntroductionPoint> {
+    fn introduction_gesture_points(gesture: &semio_framework::IntroductionGesture) -> Vec<&semio_framework::IntroductionPoint> {
         use semio_framework::IntroductionGesture;
         match gesture {
             IntroductionGesture::LeftClick { at } | IntroductionGesture::RightClick { at } | IntroductionGesture::DoubleClick { at } | IntroductionGesture::Scroll { at, .. } => {
@@ -5001,7 +4997,7 @@ pub mod app {
         }
 
         pub async fn panel_tab(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: impl Into<String>) -> Self {
-            self.panel_tabs.push(PanelTabSpec::leaf(id, label, group, body_key).await);
+            self.panel_tabs.push(PanelTabSpec::leaf(id, label, group, body_key));
             self
         }
 
@@ -5118,7 +5114,7 @@ pub mod app {
         /// @emoji 🧷️ Keybinding-vs-action-registry consistency is only enforced for apps that declare
         /// actions via `.mutation()`/`.view_action()`/`.shell_action()` — apps with an empty action
         /// registry keybind directly against controller actions instead, so there is nothing to check.
-        pub async fn try_build_definition(mut self) -> Result<AppDefinition, PluginAssemblyError> {
+        pub fn try_build_definition(mut self) -> Result<AppDefinition, PluginAssemblyError> {
             if !(!self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty())) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} document must contain non-empty segments", self.id)));
             }
@@ -5150,22 +5146,19 @@ pub mod app {
             }
             let mut panel_tab_ids = HashSet::new();
             for tab in &self.panel_tabs {
-                validate_panel_tab_spec(&self.id, tab, &mut panel_tab_ids).await;
+                validate_panel_tab_spec(&self.id, tab, &mut panel_tab_ids);
             }
             // 🕰️ Unlike Document/Catalogue/Inspection/Parameters (per-app content, opt-in via
             // `.panel_tab(...)`), the history panel's content is framework-generic (`HistoryView`), so
             // every app gets it unconditionally — unless it already declared the reserved id itself.
             if panel_tab_ids.insert(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()) {
-                self.panel_tabs.push(
-                    PanelTabSpec::framework(
-                        PanelTabKind::App(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
-                        LocalizedLabel::native(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_LABEL, "Verlauf"),
-                        PanelGroup::Settings,
-                        Some(FRAMEWORK_HISTORY_BODY_KEY.to_string()),
-                        Vec::new(),
-                    )
-                    .await,
-                );
+                self.panel_tabs.push(PanelTabSpec::framework(
+                    PanelTabKind::App(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
+                    LocalizedLabel::native(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_LABEL, "Verlauf"),
+                    PanelGroup::Settings,
+                    Some(FRAMEWORK_HISTORY_BODY_KEY.to_string()),
+                    Vec::new(),
+                ));
             }
             let mut layout_window_ids = Vec::new();
             if let Some(layout) = &self.default_layout {
@@ -5188,7 +5181,7 @@ pub mod app {
                 if !(declared_action_ids.insert(action.id.clone())) {
                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate action id {}", self.id, action.id)));
                 }
-                validate_arg_defs(&self.id, &format!("action {}", action.id), &action.args).await;
+                validate_arg_defs(&self.id, &format!("action {}", action.id), &action.args);
             }
             let mut declared_utility_ids = HashSet::new();
             for utility in &self.utilities {
@@ -5246,7 +5239,7 @@ pub mod app {
                 if !(declared_command_ids.insert(command.id.clone())) {
                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate app command id {}", self.id, command.id)));
                 }
-                validate_arg_defs(&self.id, &format!("command {}", command.id), &command.args).await;
+                validate_arg_defs(&self.id, &format!("command {}", command.id), &command.args);
             }
             let app_declared_actions = !self.actions.is_empty();
             let mut actions = self.actions;
@@ -5270,10 +5263,10 @@ pub mod app {
                 actions.push(start_introduction_action_definition());
             }
             if !self.tutorials.is_empty() && declared_action_ids.insert(START_TUTORIAL_ACTION_ID.to_string()) {
-                actions.push(start_tutorial_action_definition(&self.tutorials).await);
+                actions.push(start_tutorial_action_definition(&self.tutorials));
             }
             if declared_action_ids.insert(RECORD_TUTORIAL_ACTION_ID.to_string()) {
-                actions.push(record_tutorial_action_definition().await);
+                actions.push(record_tutorial_action_definition());
             }
             if declared_action_ids.insert(SET_HISTORY_COMMAND_FILTER_ACTION_ID.to_string()) {
                 actions.push(set_history_command_filter_action_definition());
@@ -5299,7 +5292,7 @@ pub mod app {
                         return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind {} duplicate action id {}", self.id, window.id, action.id)));
                     }
                     declared_action_ids.insert(action.id.clone());
-                    validate_arg_defs(&self.id, &format!("window kind {} action {}", window.id, action.id), &action.args).await;
+                    validate_arg_defs(&self.id, &format!("window kind {} action {}", window.id, action.id), &action.args);
                 }
                 for action in &actions {
                     if !explicitly_owned_action_ids.contains(&action.id) {
@@ -5372,7 +5365,7 @@ pub mod app {
                         return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} mode {} duplicate command id {}", self.id, mode.id, command.id)));
                     }
                     declared_command_ids.insert(command.id.clone());
-                    validate_arg_defs(&self.id, &format!("mode {} command {}", mode.id, command.id), &command.args).await;
+                    validate_arg_defs(&self.id, &format!("mode {} command {}", mode.id, command.id), &command.args);
                 }
                 for tool_ref in &mode.tools {
                     if !(declared_tool_ids.contains(tool_ref.as_str())) {
@@ -5400,10 +5393,10 @@ pub mod app {
                     }
                     let step_context = format!("introduction step {}", step.id);
                     if let Some(id) = &step.introduce {
-                        validate_referenced_element_id(&self.id, &step_context, "introduce", id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids).await;
+                        validate_referenced_element_id(&self.id, &step_context, "introduce", id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids);
                     }
                     for id in &step.show {
-                        validate_referenced_element_id(&self.id, &step_context, "show", id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids).await;
+                        validate_referenced_element_id(&self.id, &step_context, "show", id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids);
                     }
                     for interaction in &step.interactions {
                         if !(!interaction.label.trim().is_empty()) {
@@ -5428,8 +5421,8 @@ pub mod app {
                                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step {} interaction references undeclared tool {}", self.id, step.id, tool_ref_str)));
                                 }
                             }
-                            IntroductionInteractionKind::Panel(panel_tab_id) => validate_referenced_element_id(&self.id, &step_context, "interaction.panel", panel_tab_id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids).await,
-                            IntroductionInteractionKind::Expand(tree_id) => validate_referenced_element_id(&self.id, &step_context, "interaction.expand", tree_id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids).await,
+                            IntroductionInteractionKind::Panel(panel_tab_id) => validate_referenced_element_id(&self.id, &step_context, "interaction.panel", panel_tab_id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids),
+                            IntroductionInteractionKind::Expand(tree_id) => validate_referenced_element_id(&self.id, &step_context, "interaction.expand", tree_id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids),
                             IntroductionInteractionKind::Pan(window_kind_id) | IntroductionInteractionKind::Zoom(window_kind_id) | IntroductionInteractionKind::Orbit(window_kind_id) => {
                                 if !(window_kind_ids.contains(window_kind_id)) {
                                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step {} interaction references undeclared window kind {}", self.id, step.id, window_kind_id)));
@@ -5447,7 +5440,7 @@ pub mod app {
                 if !(tutorial_ids.insert(tutorial.id.clone())) {
                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate tutorial id {}", self.id, tutorial.id)));
                 }
-                if let Err(reason) = semio_framework::validate_tutorial(tutorial).await {
+                if let Err(reason) = semio_framework::validate_tutorial(tutorial) {
                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} tutorial {} failed validation: {}", self.id, tutorial.id, reason)));
                 }
                 let owner = format!("tutorial {}", tutorial.id);
@@ -5498,9 +5491,9 @@ pub mod app {
                     }
                 }
                 for gesture_cue in &tutorial.tracks.gestures {
-                    for point in introduction_gesture_points(&gesture_cue.gesture).await {
+                    for point in introduction_gesture_points(&gesture_cue.gesture) {
                         if let semio_framework::IntroductionPoint::Element { id, .. } = point {
-                            validate_referenced_element_id(&self.id, &owner, "gesture", &id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids).await;
+                            validate_referenced_element_id(&self.id, &owner, "gesture", &id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids);
                         }
                     }
                 }
@@ -5521,7 +5514,7 @@ pub mod app {
                         return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} dialog {} cancel_action references undeclared action {}", self.id, dialog.id, cancel_action.as_str())));
                     }
                 }
-                validate_arg_defs(&self.id, &format!("dialog {}", dialog.id), &dialog.args).await;
+                validate_arg_defs(&self.id, &format!("dialog {}", dialog.id), &dialog.args);
             }
             let mut media_port_ids = HashSet::new();
             for port in self.media_inputs.iter().chain(self.media_outputs.iter()) {
@@ -5553,7 +5546,7 @@ pub mod app {
                 let message = errors.into_iter().map(|error| error.to_string()).collect::<Vec<_>>().join("; ");
                 return Err(PluginAssemblyError::new("app-definition.interactive-job-classification", message));
             }
-            let (dialect, role) = semio_framework::parse_surface_app_id(&self.id).await.map_err(|error| PluginAssemblyError::new("app-definition.invalid", format!("app id {} must be a canonical surface id: {error}", self.id)))?;
+            let (dialect, role) = semio_framework::parse_surface_app_id(&self.id).map_err(|error| PluginAssemblyError::new("app-definition.invalid", format!("app id {} must be a canonical surface id: {error}", self.id)))?;
             let mut definition = AppDefinition {
                 id: self.id,
                 role,
@@ -5631,8 +5624,8 @@ pub mod app {
         /// Plugin `plugin()` entry points that assemble an `AppDefinition` from anything that could
         /// legitimately fail at runtime should call `try_build_definition` directly and propagate the
         /// `PluginAssemblyError` via `?` instead — see `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs`.
-        pub async fn build_definition(self) -> AppDefinition {
-            self.try_build_definition().await.unwrap_or_else(|error| panic!("{error}"))
+        pub fn build_definition(self) -> AppDefinition {
+            self.try_build_definition().unwrap_or_else(|error| panic!("{error}"))
         }
     }
 
@@ -7804,12 +7797,12 @@ pub mod app {
                 .await
                 .default_layout(create_default_layout(&["missing".into()], "row", None, None))
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
         #[semio_framework_async_macros::async_test]
-        async fn build_definition_accepts_valid_manifest() {
+        async fn build_definition_is_sync_and_accepts_valid_manifest() {
             let definition = App::builder(canonical_test_app_id("good-app").await, LocalizedLabel::data("Good"))
                 .await
                 .document(["semio", "good"])
@@ -7823,8 +7816,7 @@ pub mod app {
                 .await
                 .default_layout(create_default_layout(&["main".into()], "row", None, None))
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             assert_eq!(definition.window_kinds.len(), 1);
             assert_eq!(definition.window_kinds.iter().next().map(|kind| kind.icon_id.as_str()), Some("app-window"));
             assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
@@ -7852,8 +7844,7 @@ pub mod app {
                 .await
                 .default_layout(create_default_layout(&["main".into()], "row", None, None))
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
         }
 
@@ -7872,7 +7863,7 @@ pub mod app {
                 .await
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -7893,8 +7884,7 @@ pub mod app {
                 .await
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             assert_eq!(definition.terminology_breadcrumbs.get("reuse").map(Vec::as_slice), Some(["Entwerfen mit Bestand".to_string(), "Aggregator".to_string()].as_slice()));
         }
 
@@ -7914,13 +7904,13 @@ pub mod app {
 
             let mut unclassified = ActionDefinition::bounded_catalog("blockedAction", LocalizedLabel::data("Blocked"), ActionKind::Mutation);
             unclassified.semantics.execution.interactive_job = Unclassified;
-            let error = minimal_app("unclassified-action").await.action_with(unclassified).await.try_build_definition().await.expect_err("unclassified declarations must block release");
+            let error = minimal_app("unclassified-action").await.action_with(unclassified).await.try_build_definition().expect_err("unclassified declarations must block release");
             assert_eq!(error.code, "app-definition.interactive-job-classification");
 
             for (index, classification) in [BatchOnlyPendingRewrite, ForbiddenFromUi, Deleted].into_iter().enumerate() {
                 let mut action = ActionDefinition::bounded_catalog("blockedAction", LocalizedLabel::data("Blocked"), ActionKind::Mutation);
                 action.semantics.execution.interactive_job = classification;
-                let definition = minimal_app(&format!("classified-action-{index}")).await.action_with(action).await.try_build_definition().await.expect("an explicit non-UI disposition is valid inventory data");
+                let definition = minimal_app(&format!("classified-action-{index}")).await.action_with(action).await.try_build_definition().expect("an explicit non-UI disposition is valid inventory data");
                 let retained = definition.window_kinds.iter().flat_map(|window| &window.actions).find(|entry| entry.id == "blockedAction").expect("classified action retained");
                 assert_eq!(retained.semantics.execution.interactive_job, classification);
             }
@@ -7928,7 +7918,7 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_auto_injects_history_actions_and_keybindings() {
-            let definition = minimal_app("history-app").await.build_definition().await;
+            let definition = minimal_app("history-app").await.build_definition();
             let history_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
             assert!(history_ids.contains("undo"));
             assert!(history_ids.contains("redo"));
@@ -7943,13 +7933,13 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_does_not_duplicate_manually_declared_history_keybinding() {
-            let definition = minimal_app("manual-undo-app").await.keybinding("mod+z", "undo").await.build_definition().await;
+            let definition = minimal_app("manual-undo-app").await.keybinding("mod+z", "undo").await.build_definition();
             assert_eq!(definition.keybindings.iter().filter(|b| b.keys == "mod+z").count(), 1);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_auto_injects_clipboard_actions_and_keybindings() {
-            let definition = minimal_app("clipboard-app").await.build_definition().await;
+            let definition = minimal_app("clipboard-app").await.build_definition();
             let clipboard_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
             assert!(clipboard_ids.contains("copy"));
             assert!(clipboard_ids.contains("cut"));
@@ -7967,7 +7957,7 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_auto_injects_the_history_panel_tab_and_filter_action() {
-            let definition = minimal_app("history-panel-app").await.build_definition().await;
+            let definition = minimal_app("history-panel-app").await.build_definition();
             let mut history_panel_tab_ids: Vec<&str> = Vec::new();
             for tab in definition.panel_tabs.iter() {
                 history_panel_tab_ids.push(tab.id());
@@ -7986,7 +7976,7 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_does_not_duplicate_a_manually_declared_history_panel_tab() {
-            let definition = minimal_app("manual-history-app").await.panel_tab(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").await.build_definition().await;
+            let definition = minimal_app("manual-history-app").await.panel_tab(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").await.build_definition();
             let mut manual_history_tab_ids: Vec<&str> = Vec::new();
             for t in definition.panel_tabs.iter() {
                 manual_history_tab_ids.push(t.id());
@@ -8007,8 +7997,7 @@ pub mod app {
                 .await
                 .shell_action("exportPng", LocalizedLabel::data("Export PNG"))
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             let by_id = |id: &str| definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|c| c.id == id).expect("declared");
             assert_eq!(by_id("addLayer").kind, ActionKind::Mutation);
             assert_eq!(by_id("setCamera").kind, ActionKind::View);
@@ -8019,7 +8008,7 @@ pub mod app {
         async fn build_definition_rejects_duplicate_action_ids() {
             let __base = minimal_app("dupe-action-app").await;
             let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.mutation("addLayer", LocalizedLabel::data("Add Layer Again")).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8027,7 +8016,7 @@ pub mod app {
         async fn build_definition_rejects_keybinding_for_undeclared_action_once_opted_in() {
             let __base = minimal_app("undeclared-keybinding-app").await;
             let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.keybinding("mod+l", "removeLayer").await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8040,8 +8029,7 @@ pub mod app {
                 .await
                 .utility_simple("eraser", LocalizedLabel::data("Eraser"), IconName::Eraser)
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             let set_active_utility = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility injected");
             assert_eq!(set_active_utility.kind, ActionKind::View);
             assert!(!set_active_utility.in_palette);
@@ -8053,14 +8041,14 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn no_utilities_means_no_set_active_utility_action() {
             use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
-            let definition = minimal_app("no-utility-app").await.build_definition().await;
+            let definition = minimal_app("no-utility-app").await.build_definition();
             assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn build_definition_accepts_and_resolves_mode_tools() {
             use semio_framework::ToolRef;
-            let definition = minimal_app("tool-app").await.tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition().await;
+            let definition = minimal_app("tool-app").await.tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition();
             assert_eq!(definition.tools.len(), 1);
             assert_eq!(definition.modes[0].tools, vec![ToolRef::new("fill").await]);
         }
@@ -8070,7 +8058,7 @@ pub mod app {
             use semio_framework::ToolRef;
             let __base = minimal_app("undeclared-mode-tool-app").await;
             let __chain = __base.mode_tools("edit", vec![ToolRef::new("missing").await]).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8078,7 +8066,7 @@ pub mod app {
         async fn build_definition_rejects_tool_referenced_by_no_mode() {
             let __base = minimal_app("orphan-tool-app").await;
             let __chain = __base.tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err(), "a declared tool must be referenced by mode_tools on at least one mode");
         }
 
@@ -8091,8 +8079,7 @@ pub mod app {
                 .await
                 .mode_tools("edit", vec![ToolRef::new("fill").await])
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             let set_active_tool = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool injected");
             assert_eq!(set_active_tool.kind, ActionKind::View);
             assert!(!set_active_tool.in_palette);
@@ -8104,14 +8091,14 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn no_tools_means_no_set_active_tool_action() {
             use semio_framework::SET_ACTIVE_TOOL_ACTION_ID;
-            let definition = minimal_app("no-tool-app").await.build_definition().await;
+            let definition = minimal_app("no-tool-app").await.build_definition();
             assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn action_args_attaches_declared_arguments() {
             let definition =
-                minimal_app("args-app").await.mutation("resize", LocalizedLabel::data("Resize")).await.action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).await.build_definition().await;
+                minimal_app("args-app").await.mutation("resize", LocalizedLabel::data("Resize")).await.action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).await.build_definition();
             let resize = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resize").expect("declared");
             assert_eq!(resize.args.len(), 1);
             assert_eq!(resize.args[0].id, "scale");
@@ -8122,7 +8109,7 @@ pub mod app {
         async fn build_definition_rejects_window_kind_utility_referencing_undeclared_utility() {
             let __base = minimal_app("bad-utility-ref-app").await;
             let __chain = __base.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await.window_kind_utilities("main", vec!["missing".into()]).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8130,7 +8117,7 @@ pub mod app {
         async fn build_definition_rejects_window_kind_action_referencing_undeclared_action() {
             let __base = minimal_app("bad-action-ref-app").await;
             let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.window_kind_action_refs("main", vec!["removeLayer".into()]).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8150,8 +8137,7 @@ pub mod app {
                 .await
                 .window_kind_interactions("main", vec![InteractionRef::new("world")])
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             assert_eq!(definition.interactions.len(), 1);
             assert_eq!(definition.window_kinds.first().interactions, vec![InteractionRef::new("world")]);
             assert_eq!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == INTERACTION_HOVER_ACTION_ID).map(|action| action.kind), Some(ActionKind::Interaction));
@@ -8166,8 +8152,7 @@ pub mod app {
                 .await
                 .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi there"))] })
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             let start_introduction = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_INTRODUCTION_ACTION_ID).expect("startIntroduction injected");
             assert_eq!(start_introduction.kind, ActionKind::View);
             assert!(!start_introduction.in_palette, "the shell-owned Introduce App command owns palette discovery");
@@ -8176,7 +8161,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn no_introduction_means_no_start_introduction_action() {
             use semio_framework::START_INTRODUCTION_ACTION_ID;
-            let definition = minimal_app("no-intro-app").await.build_definition().await;
+            let definition = minimal_app("no-intro-app").await.build_definition();
             assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_INTRODUCTION_ACTION_ID));
         }
 
@@ -8185,7 +8170,7 @@ pub mod app {
             use semio_framework::IntroductionDefinition;
             let __base = minimal_app("empty-intro-app").await;
             let __chain = __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![] }).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8200,7 +8185,7 @@ pub mod app {
                     steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")), IntroductionStepDefinition::new("step", LocalizedLabel::data("B"), LocalizedLabel::data("b"))],
                 })
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8212,7 +8197,7 @@ pub mod app {
             let __chain = __base
                 .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(window_element_id("missing"))] })
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8224,7 +8209,7 @@ pub mod app {
             let __chain = __base
                 .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_element_id("missing"))] })
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
             let __base = minimal_app("bad-panel-tab-first-draggable-app").await;
             let __chain = __base
@@ -8233,7 +8218,7 @@ pub mod app {
                     steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce(panel_tab_first_draggable_element_id("missing"))],
                 })
                 .await;
-            let result_first_draggable = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result_first_draggable = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result_first_draggable.is_err());
         }
 
@@ -8244,13 +8229,13 @@ pub mod app {
             let __base = minimal_app("bad-element-app").await;
             let __chain =
                 __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("not-camel-case")] }).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
             let __base = minimal_app("bad-element-show-app").await;
             let __chain = __base
                 .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).show(vec!["not-camel-case".into()])] })
                 .await;
-            let result_show = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result_show = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result_show.is_err());
         }
 
@@ -8262,8 +8247,7 @@ pub mod app {
                 .await
                 .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).introduce("ui.custom.thing")] })
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             let introduction = definition.introduction.expect("introduction present");
             assert_eq!(introduction.steps.len(), 1);
         }
@@ -8279,7 +8263,7 @@ pub mod app {
                     steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::utility("missing", "Activate").await])],
                 })
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8294,7 +8278,7 @@ pub mod app {
                     steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::orbit("missing", "Orbit").await])],
                 })
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8324,8 +8308,7 @@ pub mod app {
                     ],
                 })
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             let introduction = definition.introduction.expect("introduction present");
             assert_eq!(introduction.steps.len(), 5);
         }
@@ -8347,7 +8330,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn declaring_tutorial_injects_start_tutorial_action() {
             use semio_framework::{ActionKind, START_TUTORIAL_ACTION_ID};
-            let definition = minimal_app("tutorial-app").await.tutorial(minimal_tutorial("welcome-tour").await).await.build_definition().await;
+            let definition = minimal_app("tutorial-app").await.tutorial(minimal_tutorial("welcome-tour").await).await.build_definition();
             let start_tutorial = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
             assert_eq!(start_tutorial.kind, ActionKind::View);
             assert!(!start_tutorial.in_palette, "the shell-owned Play Tutorial command owns palette discovery");
@@ -8356,7 +8339,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected() {
             use semio_framework::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
-            let definition = minimal_app("no-tutorial-app").await.build_definition().await;
+            let definition = minimal_app("no-tutorial-app").await.build_definition();
             assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_TUTORIAL_ACTION_ID));
             assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == RECORD_TUTORIAL_ACTION_ID), "recordTutorial is injected unconditionally — recording needs no app declaration");
         }
@@ -8368,7 +8351,7 @@ pub mod app {
             tutorial.chapters.push(semio_framework::TutorialChapter { id: "late".into(), at: 999_999, title: LocalizedLabel::data("Late"), body: None });
             let base = minimal_app("bad-structural-tutorial-app").await;
             let __chain = base.tutorial(tutorial).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8378,7 +8361,7 @@ pub mod app {
             let tour_b = minimal_tutorial("tour").await;
             let __base = minimal_app("dupe-tutorial-app").await;
             let __chain = __base.tutorial(tour_a).await.tutorial(tour_b).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8389,7 +8372,7 @@ pub mod app {
             tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "missingAction".into(), args: None } }];
             let base = minimal_app("bad-tutorial-event-app").await;
             let __chain = base.tutorial(tutorial).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8400,7 +8383,7 @@ pub mod app {
             tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 10, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("missing".into()) }] } }];
             let base = minimal_app("bad-tutorial-ui-app").await;
             let __chain = base.tutorial(tutorial).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8411,7 +8394,7 @@ pub mod app {
             tutorial.tracks.gestures = vec![TutorialGestureCue { at: 10, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: "not-camel-case".into(), offset: None } }, cursor: None }];
             let base = minimal_app("bad-tutorial-gesture-app").await;
             let __chain = base.tutorial(tutorial).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8423,7 +8406,7 @@ pub mod app {
             tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 20, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("brush".into()) }] } }];
             tutorial.tracks.gestures = vec![TutorialGestureCue { at: 30, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: window_element_id("main"), offset: None } }, cursor: None }];
             let definition =
-                minimal_app("good-tutorial-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await.tutorial(tutorial).await.build_definition().await;
+                minimal_app("good-tutorial-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await.tutorial(tutorial).await.build_definition();
             assert_eq!(definition.tutorials.len(), 1);
             assert_eq!(definition.tutorials[0].id, "good-tour");
         }
@@ -8432,7 +8415,7 @@ pub mod app {
         async fn declaring_dialog_appends_to_definition() {
             use semio_framework::{ActionRef, DialogDefinition};
             let definition =
-                minimal_app("dialog-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).await.build_definition().await;
+                minimal_app("dialog-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).await.build_definition();
             assert_eq!(definition.dialogs.len(), 1);
             assert_eq!(definition.dialogs[0].id, "addLayer");
             assert_eq!(definition.dialogs[0].submit_label, LocalizedLabel::data("OK"));
@@ -8449,7 +8432,7 @@ pub mod app {
                 .await
                 .dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer Again"), ActionRef::new("addLayer")))
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8458,7 +8441,7 @@ pub mod app {
             use semio_framework::{ActionRef, DialogDefinition};
             let __base = minimal_app("bad-dialog-submit-app").await;
             let __chain = __base.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("missing"))).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8467,14 +8450,14 @@ pub mod app {
             use semio_framework::{ActionRef, DialogDefinition};
             let __base = minimal_app("bad-dialog-cancel-app").await;
             let __chain = __base.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing"))).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
         #[semio_framework_async_macros::async_test]
         async fn dialog_submit_action_may_reference_an_injected_history_action() {
             use semio_framework::{ActionRef, DialogDefinition};
-            let definition = minimal_app("dialog-injected-action-app").await.dialog(DialogDefinition::new("confirmUndo", LocalizedLabel::data("Undo?"), ActionRef::new("undo"))).await.build_definition().await;
+            let definition = minimal_app("dialog-injected-action-app").await.dialog(DialogDefinition::new("confirmUndo", LocalizedLabel::data("Undo?"), ActionRef::new("undo"))).await.build_definition();
             assert_eq!(definition.dialogs[0].submit_action, ActionRef::new("undo"));
         }
 
@@ -8489,7 +8472,7 @@ pub mod app {
                     DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer")).args(vec![ActionArgDef::text("name", LocalizedLabel::data("Name")), ActionArgDef::text("name", LocalizedLabel::data("Name Again"))]),
                 )
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8502,8 +8485,7 @@ pub mod app {
                 .await
                 .mode_command("edit", CommandDefinition::bounded_catalog("mode.focus", LocalizedLabel::data("Focus"), "view", ActionKind::View))
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             assert_eq!(definition.commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["app.export"]);
             assert_eq!(definition.modes[0].commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["mode.focus"]);
         }
@@ -8512,7 +8494,7 @@ pub mod app {
         async fn build_definition_rejects_duplicate_command_ids() {
             let __base = minimal_app("dupe-command-app").await;
             let __chain = __base.app_command("app.export", LocalizedLabel::data("Export"), "document", ActionKind::Shell).await.app_command("app.export", LocalizedLabel::data("Export Again"), "document", ActionKind::Shell).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8525,7 +8507,7 @@ pub mod app {
                 .await
                 .mode_command("edit", CommandDefinition::bounded_catalog("mode.focus", LocalizedLabel::data("Focus Again"), "view", ActionKind::View))
                 .await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
 
@@ -8538,8 +8520,7 @@ pub mod app {
                 .await
                 .mode_command("edit", CommandDefinition::bounded_catalog("focus", LocalizedLabel::data("Mode Focus"), "mode", ActionKind::View))
                 .await
-                .build_definition()
-                .await;
+                .build_definition();
             assert_eq!(definition.commands[0].category, "app");
             assert_eq!(definition.modes[0].commands[0].category, "mode");
         }
@@ -8549,7 +8530,7 @@ pub mod app {
             use semio_framework::CommandDefinition;
             let __base = minimal_app("empty-mode-command-app").await;
             let __chain = __base.mode_command("edit", CommandDefinition::bounded_catalog("", LocalizedLabel::data("Focus"), "view", ActionKind::View)).await;
-            let result = std::panic::catch_unwind(move || resolve_ready(__chain.build_definition()));
+            let result = std::panic::catch_unwind(move || __chain.build_definition());
             assert!(result.is_err());
         }
     }
@@ -8697,12 +8678,12 @@ pub mod app {
         /// (round-trips through the plugin manifest; `semio_framework_os`'s artifact catalog registry
         /// consumes it from there at plugin registration time).
         pub async fn from_builder(builder: AppBuilder) -> Self {
-            Self { definition: builder.build_definition().await, examples: Vec::new() }
+            Self { definition: builder.build_definition(), examples: Vec::new() }
         }
 
         /// 🧷️ Fallible twin of `from_builder` — see `AppBuilder::try_build_definition`.
         pub async fn try_from_builder(builder: AppBuilder) -> Result<Self, PluginAssemblyError> {
-            Ok(Self { definition: builder.try_build_definition().await?, examples: Vec::new() })
+            Ok(Self { definition: builder.try_build_definition()?, examples: Vec::new() })
         }
 
         /// 📚️ Registers an example from a definition-leaf [`ExampleSource`] (canonical path).
@@ -13321,9 +13302,7 @@ pub mod app {
                     state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
                 }),
-                None => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"artifact-store.initializer-owner-missing"),
-                }),
+                None => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"artifact-store.initializer-owner-missing") }),
             }
         }
 
@@ -13837,9 +13816,9 @@ pub mod app {
             match self.state.try_lock() {
                 Ok(mut state) => state.inner.as_mut().map_or(semio_framework_job::StepOutcome::Cancelled, |inner| inner.step(cx)),
                 Err(std::sync::TryLockError::WouldBlock) => semio_framework_job::StepOutcome::Yield,
-                Err(std::sync::TryLockError::Poisoned(_)) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"reserved job authority is poisoned"),
-                }),
+                Err(std::sync::TryLockError::Poisoned(_)) => {
+                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"reserved job authority is poisoned") })
+                }
             }
         }
 
@@ -13905,10 +13884,7 @@ pub mod app {
 
                 fn checkpoint(&self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::Checkpoint {
                     let state = self.cursor_state();
-                    semio_framework_job::Checkpoint {
-                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &state),
-                        applied_progress: self.envelope_cursor.saturating_add(self.item_cursor) as u64,
-                    }
+                    semio_framework_job::Checkpoint { state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &state), applied_progress: self.envelope_cursor.saturating_add(self.item_cursor) as u64 }
                 }
             }
 
@@ -14065,10 +14041,7 @@ pub mod app {
                     let units = self.raw.len().saturating_sub(self.cursor).min(4_096).min(cx.fuel_remaining() as usize);
                     self.cursor += units;
                     cx.consume_fuel(units as u64);
-                    let checkpoint = semio_framework_job::Checkpoint {
-                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &self.cursor.to_le_bytes()),
-                        applied_progress: self.cursor as u64,
-                    };
+                    let checkpoint = semio_framework_job::Checkpoint { state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &self.cursor.to_le_bytes()), applied_progress: self.cursor as u64 };
                     if self.cursor < self.raw.len() {
                         semio_framework_job::StepOutcome::CheckpointReady(checkpoint)
                     } else {
@@ -15187,9 +15160,7 @@ pub mod app {
             }
             if self.decoded_items > self.contract.max_decoded_items || self.work_units > self.contract.max_work_units_per_step {
                 let detail = format!("decoded/work contract exceeded: {}/{} decoded items, {}/{} work units", self.decoded_items, self.contract.max_decoded_items, self.work_units, self.contract.max_work_units_per_step);
-                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, detail.as_bytes()),
-                });
+                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, detail.as_bytes()) });
             }
             cx.set_stage("app-tool-command");
             cx.consume_fuel(self.work_units);
@@ -15252,9 +15223,7 @@ pub mod app {
                 *output.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactToolCompletionValue::Emit(emit, ephemeral));
             }
             match fault_detail {
-                Some(detail) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, &detail),
-                }),
+                Some(detail) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, &detail) }),
                 None => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
                     state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
@@ -15537,9 +15506,7 @@ pub mod app {
                         }
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    semio_framework_job::JobPayloadCloseStep::Complete => {
-                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-false-terminal"), "envelope worker outcome reported Complete without terminal-empty payload"))
-                    }
+                    semio_framework_job::JobPayloadCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-false-terminal"), "envelope worker outcome reported Complete without terminal-empty payload")),
                 };
             }
             if let Some(target) = self.terminal_state {
@@ -22735,7 +22702,7 @@ pub mod app {
             self
         }
         pub fn build_definition(self) -> AppDefinition {
-            let mut definition = resolve_ready(self.inner.build_definition());
+            let mut definition = self.inner.build_definition();
             definition.role = AppRole::Viewer;
             definition.dialect = self.dialect;
             definition
@@ -22761,7 +22728,7 @@ pub mod app {
             self
         }
         pub fn build_definition(self) -> AppDefinition {
-            let mut definition = resolve_ready(self.inner.build_definition());
+            let mut definition = self.inner.build_definition();
             definition.role = AppRole::Editor;
             definition.dialect = self.dialect;
             definition
@@ -23706,9 +23673,8 @@ pub mod plugin_runtime {
     //! 📤️ WASM component export glue for plugin bundles.
 
     use crate::app::{
-        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll,
-        EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp,
-        PluginAssemblyError, PluginProgram, PresenceRosterAdmission, TransactionProposalDraft,
+        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError, PluginProgram,
+        PresenceRosterAdmission, TransactionProposalDraft,
     };
     use crate::ArtifactApp;
     use dsl::{from_dsl_value, to_dsl_value};
@@ -24155,10 +24121,10 @@ pub mod plugin_runtime {
     // Body is entirely `call_once`'s sync closure (an `E4` fn-pointer install), zero suspension.
     pub fn ensure_plugin_initialized() {
         PLUGIN_INIT_ONCE.call_once(|| {
-            // 🩹️ The owned hook uses only `std`, so a classic browser build does not import a second
-            // panic path through `web-sys`. Component-model p2 guests retain their abort trap.
-            #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-            std::panic::set_hook(Box::new(|panic| eprintln!("[semio-plugin panic] {panic}")));
+            // 🩹️ The owned hook uses only `std`, so every browser actor reports the exact Rust panic
+            // through its WASI stderr stream before the target's normal abort trap terminates it.
+            #[cfg(target_arch = "wasm32")]
+            std::panic::set_hook(Box::new(|panic| eprintln!("[DEBUG] [semio-plugin panic] {panic}")));
             // 🧬️ A2 (design-abi.md §4): `host_port`/`HostBackboneChannel`/`set_host_backbone_channel`
             // are deleted per `important.md`'s "Replace, never wrap" list — a process-global backbone
             // channel cannot survive a pooled multi-instance actor. The per-instance `EffectBackbone`
@@ -24596,9 +24562,7 @@ pub mod plugin_runtime {
                     return semio_framework_job::StepOutcome::Yield;
                 }
                 Err(std::sync::TryLockError::Poisoned(_)) => {
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                        detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin live cleanup authority is poisoned"),
-                    });
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin live cleanup authority is poisoned") });
                 }
             };
             cx.consume_fuel(1);
@@ -24610,9 +24574,9 @@ pub mod plugin_runtime {
                         applied_progress: released_items as u64,
                     })
                 }
-                Ok(crate::app::PluginCloseStep::Pending { .. }) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin live cleanup step exceeded its exact item or byte contract"),
-                }),
+                Ok(crate::app::PluginCloseStep::Pending { .. }) => {
+                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin live cleanup step exceeded its exact item or byte contract") })
+                }
                 Ok(progress @ crate::app::PluginCloseStep::Blocked { .. }) => {
                     self.progress = Some(progress);
                     semio_framework_job::StepOutcome::Yield
@@ -24624,9 +24588,7 @@ pub mod plugin_runtime {
                         output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
                     })
                 }
-                Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, error.message.as_bytes()),
-                }),
+                Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, error.message.as_bytes()) }),
             }
         }
 
@@ -24779,9 +24741,7 @@ pub mod plugin_runtime {
                         return semio_framework_job::StepOutcome::Yield;
                     }
                     Err(std::sync::TryLockError::Poisoned(_)) => {
-                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                            detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin close cell authority is poisoned"),
-                        });
+                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin close cell authority is poisoned") });
                     }
                 };
                 let Some(cell) = cell.as_ref() else {
@@ -24801,9 +24761,7 @@ pub mod plugin_runtime {
                         return semio_framework_job::StepOutcome::Yield;
                     }
                     Err(std::sync::TryLockError::Poisoned(_)) => {
-                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                            detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin maintenance session authority is poisoned"),
-                        });
+                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin maintenance session authority is poisoned") });
                     }
                 };
                 let _ = maintenance.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
@@ -24819,9 +24777,7 @@ pub mod plugin_runtime {
                     return semio_framework_job::StepOutcome::Yield;
                 }
                 Err(std::sync::TryLockError::Poisoned(_)) => {
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                        detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin app close authority is poisoned"),
-                    });
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin app close authority is poisoned") });
                 }
             };
             cx.consume_fuel(1);
@@ -24833,14 +24789,12 @@ pub mod plugin_runtime {
                         applied_progress: released_items as u64,
                     })
                 }
-                Ok(crate::app::PluginCloseStep::Pending { .. }) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin close step exceeded its item or byte contract"),
-                }),
+                Ok(crate::app::PluginCloseStep::Pending { .. }) => {
+                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin close step exceeded its item or byte contract") })
+                }
                 Ok(progress @ crate::app::PluginCloseStep::Blocked { reason }) => {
                     self.progress = Some(progress);
-                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                        detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, reason.as_bytes()),
-                    })
+                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, reason.as_bytes()) })
                 }
                 Ok(crate::app::PluginCloseStep::Complete) => {
                     if !instance.app.close_terminal_is_empty() {
@@ -24854,9 +24808,7 @@ pub mod plugin_runtime {
                         output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
                     })
                 }
-                Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, error.message.as_bytes()),
-                }),
+                Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, error.message.as_bytes()) }),
             }
         }
 
@@ -26021,14 +25973,14 @@ pub mod plugin_runtime {
 
     async fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
         let role = opening_role(role_wire).await?;
-        let (dialect, artifact_role) = semio_framework::parse_surface_app_id(&artifact_ref).await.map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-artifact-ref"), error))?;
+        let (dialect, artifact_role) = semio_framework::parse_surface_app_id(&artifact_ref).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-artifact-ref"), error))?;
         if role != artifact_role {
             return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.role-mismatch"), format!("artifact ref {artifact_ref} declares {} but command declares {}", artifact_role.as_str(), role.as_str())));
         }
         match (plugin_id.trim().is_empty(), app_id.trim().is_empty()) {
             (true, true) => {}
             (false, false) => {
-                let (app_dialect, app_role) = semio_framework::parse_surface_app_id(&app_id).await.map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), error))?;
+                let (app_dialect, app_role) = semio_framework::parse_surface_app_id(&app_id).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), error))?;
                 if app_dialect != dialect || app_role != role {
                     return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.app-mismatch"), format!("explicit app {app_id} does not serve {}#{}", dialect.to_coordinate(), role.as_str())));
                 }
@@ -26044,7 +25996,7 @@ pub mod plugin_runtime {
         if plugin_id.trim().is_empty() {
             return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), "plugin_id must be non-empty when setting a default app"));
         }
-        let (app_dialect, app_role) = semio_framework::parse_surface_app_id(&app_id).await.map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), error))?;
+        let (app_dialect, app_role) = semio_framework::parse_surface_app_id(&app_id).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-app-ref"), error))?;
         if app_dialect != dialect || app_role != role {
             return Err(Fault::new(FaultOrigin::Os, FaultCode::new("opening.app-mismatch"), format!("default app {app_id} does not serve {}#{}", dialect.to_coordinate(), role.as_str())));
         }
@@ -26883,11 +26835,7 @@ pub mod plugin_runtime {
                 // 🔀️ Member state machine (contract §5.3-§5.10) — see `📓️w1-b-report.md` for the
                 // full frame/rejection-code table.
                 protocol::AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
-                    let decoded_origin = if origin.is_empty() {
-                        Ok(None)
-                    } else {
-                        decode_wire_serialized::<protocol::MutationOrigin>(&origin).await.map(Some)
-                    };
+                    let decoded_origin = if origin.is_empty() { Ok(None) } else { decode_wire_serialized::<protocol::MutationOrigin>(&origin).await.map(Some) };
                     match decoded_origin {
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                         Ok(decoded_origin) => {
@@ -31797,6 +31745,7 @@ pub use app::{
     ArtifactDefinitionError,
     ArtifactDefinitionRegistry,
     ArtifactDeserializer,
+    ArtifactDocumentStoreDisposer,
     ArtifactDownloadOutput,
     ArtifactEditor,
     ArtifactEnvelopeDecodeOperationHandle,
@@ -31829,7 +31778,6 @@ pub use app::{
     ArtifactOwnedDisposer,
     ArtifactOwnedToolJobFactory,
     ArtifactOwnedToolJobRequest,
-    ArtifactDocumentStoreDisposer,
     ArtifactReservedJob,
     ArtifactReservedToolInput,
     ArtifactReservedToolJob,

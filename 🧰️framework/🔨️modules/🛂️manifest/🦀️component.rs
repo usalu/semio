@@ -994,7 +994,7 @@ pub fn set_history_command_filter_action_definition() -> ActionDefinition {
         ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")),
         ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")),
     ];
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View) }.with_args([ActionArgDef::select(
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View) }.with_args([ActionArgDef::select(
         "value",
         LocalizedLabel::native("Filter", "Filter"),
         options,
@@ -1012,7 +1012,7 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 /// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
 /// optional free-text elaboration shown in the history panel.
 pub fn note_shell_command_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell) }.with_args([
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell) }.with_args([
         ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).required(),
         ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).required(),
         ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")),
@@ -1089,22 +1089,22 @@ pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefiniti
         vec![ActionArgOption::new("pick", LocalizedLabel::native("Pick", "Auswahl")), ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso"))];
     let mode_options = vec![ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")), ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach"))];
     vec![
-        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction) }.with_args([
+        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction) }.with_args([
             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
             ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
             ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
             ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
         ]),
-        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction) }.with_args([
+        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction) }.with_args([
             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
             ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
             ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
         ]),
-        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::bounded_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction) },
-        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::bounded_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction) },
-        ActionDefinition::bounded_catalog(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction)
+        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::resumable_framework_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction) },
+        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::resumable_framework_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction) },
+        ActionDefinition::resumable_framework_catalog(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction)
             .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).required()]),
-        ActionDefinition::bounded_catalog(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction)
+        ActionDefinition::resumable_framework_catalog(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction)
             .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).required()]),
     ]
 }
@@ -1118,7 +1118,7 @@ pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 /// host-owned active utility of a window kind. `utilityId` is required; `windowKindId` is contextual (the
 /// shell fills it from the focused window when absent).
 pub fn set_active_utility_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"), ActionKind::View) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"), ActionKind::View) }
         .with_args([ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).required(), ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster"))])
 }
 
@@ -1130,7 +1130,7 @@ pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 /// host-owned active tool of the active mode. Unlike `setActiveUtility` this takes no `windowKindId` —
 /// tools are windowless, scoped to the whole mode.
 pub fn set_active_tool_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(SET_ACTIVE_TOOL_ACTION_ID, LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"), ActionKind::View) }.with_args([ActionArgDef::text(
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(SET_ACTIVE_TOOL_ACTION_ID, LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"), ActionKind::View) }.with_args([ActionArgDef::text(
         "toolId",
         LocalizedLabel::native("Tool", "Werkzeug"),
     )
@@ -1147,7 +1147,7 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 /// Unlike ordinary app actions this stays out of the action palette because the shell exposes the
 /// dedicated `Introduce App` command.
 pub fn start_introduction_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View) }
 }
 
 /// 📇️ A relative action id used by declarations nested beneath an owning window kind.
@@ -2396,12 +2396,12 @@ pub const START_TUTORIAL_ACTION_ID: &str = "startTutorial";
 
 /// @emoji 🎬️ The framework-injected `startTutorial` View action: fully shell-intercepted, it sandboxes
 /// the live document, loads the selected tutorial's `base`, and starts playback from t=0.
-pub async fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
+pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
     let mut options = Vec::with_capacity(tutorials.len());
     for t in tutorials {
         options.push(ActionArgOption::new(t.id.clone(), t.title.clone()));
     }
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View) }.with_args([ActionArgDef::select(
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View) }.with_args([ActionArgDef::select(
         "tutorialId",
         LocalizedLabel::native("Tutorial", "Tutorial"),
         options,
@@ -2415,8 +2415,8 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 
 /// @emoji ⏺️ The framework-injected `recordTutorial` View action: fully shell-intercepted, arms the
 /// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
-pub async fn record_tutorial_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View) }
+pub fn record_tutorial_action_definition() -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View) }
 }
 
 /// ⏱️ Real-time (not timeline-time, not rate-scaled) duration of the camera glide the player performs
@@ -2428,8 +2428,8 @@ pub const TUTORIAL_CONVERGE_MS: u64 = 600;
 /// track sorted ascending by `at`, every entry within `[0, durationMs]`, chapter/narration-cue ids
 /// unique, `base.cameras` all at `at == 0`. Does NOT check that referenced action/command/element ids
 /// exist — the plugin builder's validation (which has the full `AppDefinition` in scope) does that.
-pub async fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
-    async fn sorted_by_at<T>(label: &str, items: &[T], at: impl Fn(&T) -> u64, duration_ms: u64) -> Result<(), String> {
+pub fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
+    fn sorted_by_at<T>(label: &str, items: &[T], at: impl Fn(&T) -> u64, duration_ms: u64) -> Result<(), String> {
         let mut last: Option<u64> = None;
         for item in items {
             let at = at(item);
@@ -2446,14 +2446,14 @@ pub async fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
         Ok(())
     }
 
-    sorted_by_at("chapters", &def.chapters, |c| c.at, def.duration_ms).await?;
-    sorted_by_at("narration", &def.tracks.narration, |c| c.at, def.duration_ms).await?;
-    sorted_by_at("video", &def.tracks.video, |c| c.at, def.duration_ms).await?;
-    sorted_by_at("events", &def.tracks.events, |e| e.at, def.duration_ms).await?;
-    sorted_by_at("ui", &def.tracks.ui, |k| k.at, def.duration_ms).await?;
-    sorted_by_at("document", &def.tracks.document, |e| e.at, def.duration_ms).await?;
-    sorted_by_at("camera", &def.tracks.camera, |k| k.at, def.duration_ms).await?;
-    sorted_by_at("gestures", &def.tracks.gestures, |c| c.at, def.duration_ms).await?;
+    sorted_by_at("chapters", &def.chapters, |c| c.at, def.duration_ms)?;
+    sorted_by_at("narration", &def.tracks.narration, |c| c.at, def.duration_ms)?;
+    sorted_by_at("video", &def.tracks.video, |c| c.at, def.duration_ms)?;
+    sorted_by_at("events", &def.tracks.events, |e| e.at, def.duration_ms)?;
+    sorted_by_at("ui", &def.tracks.ui, |k| k.at, def.duration_ms)?;
+    sorted_by_at("document", &def.tracks.document, |e| e.at, def.duration_ms)?;
+    sorted_by_at("camera", &def.tracks.camera, |k| k.at, def.duration_ms)?;
+    sorted_by_at("gestures", &def.tracks.gestures, |c| c.at, def.duration_ms)?;
 
     let mut chapter_ids = std::collections::HashSet::new();
     for chapter in &def.chapters {
@@ -3021,7 +3021,7 @@ pub fn surface_app_id(dialect: &ArtifactDialect, role: AppRole) -> String {
 }
 
 /// 🪪️ Inverse of `surface_app_id`; rejects anything not matching the grammar.
-pub async fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), String> {
+pub fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole), String> {
     let (coordinate, role_str) = id.rsplit_once('#').ok_or_else(|| format!("surface id {id:?} missing '#'"))?;
     let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
     let role: AppRole = role_str.parse().map_err(|err| format!("surface id {id:?}: {err}"))?;
@@ -5908,21 +5908,21 @@ mod app_label_tests {
             TutorialNarrationCue { id: "b".into(), at: 500, duration_ms: 100, text: LocalizedLabel::data("b"), audio: None, voice: None, rate: 1.0, captions: vec![] },
             TutorialNarrationCue { id: "a".into(), at: 100, duration_ms: 100, text: LocalizedLabel::data("a"), audio: None, voice: None, rate: 1.0, captions: vec![] },
         ];
-        assert!(validate_tutorial(&def).await.is_err(), "unsorted narration must be rejected");
+        assert!(validate_tutorial(&def).is_err(), "unsorted narration must be rejected");
 
         let mut def = minimal_tutorial().await;
         def.tracks.narration = vec![TutorialNarrationCue { id: "a".into(), at: 999_999, duration_ms: 100, text: LocalizedLabel::data("a"), audio: None, voice: None, rate: 1.0, captions: vec![] }];
-        assert!(validate_tutorial(&def).await.is_err(), "entry beyond durationMs must be rejected");
+        assert!(validate_tutorial(&def).is_err(), "entry beyond durationMs must be rejected");
 
         let mut def = minimal_tutorial().await;
         def.chapters.push(TutorialChapter { id: "start".into(), at: 0, title: LocalizedLabel::data("Dup"), body: None });
-        assert!(validate_tutorial(&def).await.is_err(), "duplicate chapter id must be rejected");
+        assert!(validate_tutorial(&def).is_err(), "duplicate chapter id must be rejected");
 
         let mut def = minimal_tutorial().await;
         def.base.cameras.push(TutorialCameraKeyframe { at: 5, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::default() });
-        assert!(validate_tutorial(&def).await.is_err(), "base camera keyframe must be at == 0");
+        assert!(validate_tutorial(&def).is_err(), "base camera keyframe must be at == 0");
 
-        assert!(validate_tutorial(&minimal_tutorial().await).await.is_ok());
+        assert!(validate_tutorial(&minimal_tutorial().await).is_ok());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6058,7 +6058,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn start_tutorial_action_definition_offers_declared_tutorials_as_select_options() {
-        let action = start_tutorial_action_definition(std::slice::from_ref(&minimal_tutorial().await)).await;
+        let action = start_tutorial_action_definition(std::slice::from_ref(&minimal_tutorial().await));
         assert_eq!(action.id, START_TUTORIAL_ACTION_ID);
         assert!(!action.in_palette, "shell owns palette discovery via the dedicated Play Tutorial command");
         assert_eq!(action.args.len(), 1);
@@ -6074,7 +6074,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn record_tutorial_action_definition_is_shell_intercepted_and_out_of_palette() {
-        let action = record_tutorial_action_definition().await;
+        let action = record_tutorial_action_definition();
         assert_eq!(action.id, RECORD_TUTORIAL_ACTION_ID);
         assert!(!action.in_palette);
         assert_eq!(action.kind, ActionKind::View);
@@ -6254,7 +6254,7 @@ mod app_label_tests {
         ];
         for (dialect, role) in fixtures {
             let id = surface_app_id(&dialect, role);
-            let (parsed_dialect, parsed_role) = parse_surface_app_id(&id).await.unwrap_or_else(|err| panic!("{id}: {err}"));
+            let (parsed_dialect, parsed_role) = parse_surface_app_id(&id).unwrap_or_else(|err| panic!("{id}: {err}"));
             assert_eq!(parsed_dialect, dialect, "{id}");
             assert_eq!(parsed_role, role, "{id}");
         }
@@ -6262,8 +6262,8 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn parse_surface_app_id_rejects_missing_hash_and_unknown_role() {
-        assert!(parse_surface_app_id("s.cad.cad@1/*").await.is_err(), "missing '#role' suffix");
-        assert!(parse_surface_app_id("s.cad.cad@1/*#owner").await.is_err(), "role outside viewer/editor");
+        assert!(parse_surface_app_id("s.cad.cad@1/*").is_err(), "missing '#role' suffix");
+        assert!(parse_surface_app_id("s.cad.cad@1/*#owner").is_err(), "role outside viewer/editor");
     }
 
     #[semio_framework_async_macros::async_test]

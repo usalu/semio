@@ -52,16 +52,25 @@ Feature: Apply every typed CommonMark mutation to a real-world document
   subset's own honest CommonMark-only scope, so a real pipe table or `~~strike~~` in the README
   parses as plain paragraph text on both sides rather than gaining GFM structure on one side only.
 
-  Honest limits: the Rust SUBJECT phase does not compile this wave (a concurrent session's
-  `semio_framework::` cycle in `📡️spr/🧵️channel`); every scenario below is written and `sut`-gated
-  so it compiles into the subject role the moment that lands, and only the oracle side is verified
-  here. The `@id-inverse` scenarios are therefore weaker than they look while the subject is
-  blocked: `apply(inverse(m), apply(m, base))` is asserted equal to `base`'s OWN independent
-  `comrak` projection, computed purely oracle-side (`inverse_mutation_spec` reads the ORIGINAL
-  document's projection to build the inverse spec), never a comparison against the subject's actual
-  inverse implementation. The `@id-mutate` scenarios do not share this weakness: there `comrak`
-  genuinely performs the mutation on the real document via its own AST, independent of anything the
-  subject does.
+  The Rust SUBJECT phase runs. It first ran on 2026-08-24 and immediately produced two real findings,
+  both fixed at the cause in this repository's own code: this subset's renderer closed no list at all
+  (a tight list's last item ends in a single newline, so the next block was read back as a lazy
+  continuation and two consecutive lists merged into ONE LOOSE list — the real README's tight
+  `**Title symbols:**` list came back `"tight": false`, failing all six `inverse-<kind>` rows and the
+  round trip), and this case's own subject `identity-round-trip` handler asserted only the byte half
+  of the law, never the projection half its oracle counterpart asserts, which is why that renderer
+  bug had been invisible.
+
+  One scenario is left RED rather than tuned away, and it is the reference library's: `comrak`'s
+  CommonMark writer emits a literal `<!-- end list -->` HTML block between a list and a following
+  code block (a conservative guard against an INDENTED code block being absorbed — unnecessary for
+  the fenced code block it itself always writes). Its own reader then reports that separator as a
+  sixth document block, so `parse(render(x)) != x` for `comrak` on `set-snapshot`'s replacement
+  document, while this repository's renderer reproduces exactly the five blocks it was given. The
+  `ordered-json-v1` profile was NOT widened to hide it and no `ignoreKeys` was added: an injected
+  block is document content, and a comparison that forgave it would forgive a real one too. Verified
+  as specific to a list followed by a code block — the real README has 23 lists and `comrak` emits no
+  separator for any of them, because none is followed by a code block.
 
   @id-mutate
   @level-exhaustive

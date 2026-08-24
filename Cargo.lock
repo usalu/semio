@@ -6865,6 +6865,7 @@ dependencies = [
 name = "semio-s-plugin-demonstrator"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-os-kernel",

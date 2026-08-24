@@ -8,13 +8,13 @@ pub const PLAYGROUND_VIEW_MODE_VIEW: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::playground::create_playground_viewer`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: PLAYGROUND_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One window, one layout slot — mirrors the editor's own default layout shape minus the
 /// mutation-shaped window kind.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     create_stack_layout(&[main::WINDOW_KIND_ID.into()], Some(&["Schema".into()]))
 }
 //#endregion 🔖️Definition
@@ -24,8 +24,8 @@ pub async fn layout() -> WindowLayout {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn the_view_layout_lists_the_one_read_only_window() {
+    #[test]
+    fn the_view_layout_lists_the_one_read_only_window() {
         let json = serde_json::to_string(&layout()).expect("layout json");
         assert!(json.contains(main::WINDOW_KIND_ID), "layout must reference the main window kind: {json}");
     }

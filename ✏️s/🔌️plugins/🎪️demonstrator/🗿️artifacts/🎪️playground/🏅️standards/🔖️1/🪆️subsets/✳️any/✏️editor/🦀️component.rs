@@ -16,7 +16,7 @@ use crate::editor::playground::modes::edit;
 use crate::editor::playground::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode,
+    ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
 };
 use serde_json::Value;
 use store::EngineHandles;
@@ -82,10 +82,10 @@ impl ArtifactEditor for PlaygroundEditor {
         command.dispatch(doc, cfg)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, PlaygroundSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, PlaygroundSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -95,7 +95,7 @@ impl ArtifactEditor for PlaygroundEditor {
 /// 🚧️ SDK GAP (pilot `📓️w2-cad-report.md`, confirmed still open by `📓️w2-p8-report.md`):
 /// `.example(...)`/`.workflow(...)` do not exist on `EditorBuilder` — playground never registered
 /// either, so nothing is dropped here (unlike migrated packets which had real examples to lose).
-pub async fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PLAYGROUND_DIALECT)
         .document(["semio", "playground"])
         .icon_id("playground")
@@ -117,7 +117,7 @@ pub mod testkit {
     use super::create_playground_editor;
     use semio_framework_plugin::App;
 
-    pub async fn playground_editor_manifest_for_testkit() -> App {
+    pub fn playground_editor_manifest_for_testkit() -> App {
         App { definition: create_playground_editor(), examples: Vec::new() }
     }
 }
@@ -129,20 +129,20 @@ mod tests {
     use super::*;
     use semio_framework_plugin::{EditorApp, HistoryView};
 
-    #[semio_framework_async_macros::async_test]
-    async fn create_playground_editor_builds_a_definition_for_the_editor_role() {
+    #[test]
+    fn create_playground_editor_builds_a_definition_for_the_editor_role() {
         let def = create_playground_editor();
         assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
         assert_eq!(def.dialect, PLAYGROUND_DIALECT.into());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn editor_dialect_matches_the_artifact_coordinate() {
+    #[test]
+    fn editor_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<PlaygroundEditor as ArtifactEditor>::DIALECT, PLAYGROUND_DIALECT);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn change_schema_command_mutates_the_schema_field() {
+    #[test]
+    fn change_schema_command_mutates_the_schema_field() {
         let document = empty_playground_snapshot();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -153,10 +153,10 @@ mod tests {
         assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() })]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {
+    #[test]
+    fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {
         semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(testkit::playground_editor_manifest_for_testkit);
-        assert!(PlaygroundEditor::command_from_action("noSuchAction", None).is_err());
+        assert!(semio_framework_plugin::resolve_ready(PlaygroundEditor::command_from_action("noSuchAction", None)).is_err());
     }
 }
 //#endregion 🧪️Tests

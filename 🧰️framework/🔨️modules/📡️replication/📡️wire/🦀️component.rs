@@ -95,6 +95,89 @@ pub enum AckStage {
     Applied { outcome: Box<ApplyOutcome> },
 }
 
+pub const SNAPSHOT_CHUNK_BACKING_BYTES: usize = 4 * 1024;
+
+/// @emoji 🧱️ One fixed-capacity snapshot frame backing whose owned allocation can never exceed one wire page.
+#[derive(Clone)]
+pub struct SnapshotChunkBytes {
+    backing: Option<Box<[u8; SNAPSHOT_CHUNK_BACKING_BYTES]>>,
+    len: u16,
+}
+
+impl SnapshotChunkBytes {
+    /// @emoji 🆕️ Allocates exactly one fixed snapshot backing.
+    pub fn allocate_fixed() -> Self {
+        Self { backing: Some(Box::new([0; SNAPSHOT_CHUNK_BACKING_BYTES])), len: 0 }
+    }
+
+    /// @emoji 📥️ Copies one bounded source into a fixed snapshot backing.
+    pub fn try_from_slice(source: &[u8]) -> Option<Self> {
+        if source.len() > SNAPSHOT_CHUNK_BACKING_BYTES {
+            return None;
+        }
+        let mut owner = Self::allocate_fixed();
+        owner.try_extend_from_slice(source).then_some(owner)
+    }
+
+    /// @emoji ➕️ Appends bytes only while the fixed backing can retain the complete source.
+    pub fn try_extend_from_slice(&mut self, source: &[u8]) -> bool {
+        let start = usize::from(self.len);
+        let Some(end) = start.checked_add(source.len()).filter(|end| *end <= SNAPSHOT_CHUNK_BACKING_BYTES) else { return false };
+        let Some(backing) = self.backing.as_mut() else { return false };
+        backing[start..end].copy_from_slice(source);
+        self.len = end as u16;
+        true
+    }
+
+    /// @emoji 📏️ Returns the initialized snapshot byte count.
+    pub fn len(&self) -> usize {
+        usize::from(self.len)
+    }
+
+    /// @emoji 🩹️ Reports whether the initialized snapshot range is empty.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    /// @emoji 🧩️ Borrows the initialized snapshot byte range.
+    pub fn as_slice(&self) -> &[u8] {
+        self.backing.as_ref().map_or(&[], |backing| &backing[..usize::from(self.len)])
+    }
+
+    /// @emoji 🧮️ Returns the exact retained fixed backing debit.
+    pub fn backing_bytes(&self) -> usize {
+        self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+    }
+
+    /// @emoji 🧹️ Retires the single fixed backing in one explicit close opportunity.
+    pub fn close_one(&mut self) -> bool {
+        if self.backing.take().is_none() {
+            return false;
+        }
+        self.len = 0;
+        true
+    }
+
+    /// @emoji 🏁️ Reports whether the fixed backing owner has been retired.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.backing.is_none()
+    }
+}
+
+impl std::fmt::Debug for SnapshotChunkBytes {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_tuple("SnapshotChunkBytes").field(&self.as_slice()).finish()
+    }
+}
+
+impl PartialEq for SnapshotChunkBytes {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+
+impl Eq for SnapshotChunkBytes {}
+
 /// @emoji 📬️ One frame the semio_hub sends to a client.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ServerFrame {
@@ -106,7 +189,7 @@ pub enum ServerFrame {
     },
     SnapshotChunk {
         seq: u32,
-        bytes: Vec<u8>,
+        bytes: SnapshotChunkBytes,
     },
     SnapshotDone {
         seq_count: u32,
@@ -436,7 +519,7 @@ pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
         ServerFrame::SnapshotChunk { seq, bytes } => {
             out.push(1);
             crate::wire::write_varint_u64(&mut out, *seq as u64);
-            crate::write_bytes(&mut out, bytes);
+            crate::write_bytes(&mut out, bytes.as_slice());
         }
         ServerFrame::SnapshotDone { seq_count } => {
             out.push(2);
@@ -483,6 +566,19 @@ pub async fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
     out
 }
 
+fn read_snapshot_chunk_bytes(bytes: &[u8], pos: &mut usize) -> Result<SnapshotChunkBytes, crate::ProtocolError> {
+    let len = crate::wire::read_varint_u64(bytes, pos)?;
+    if len > SNAPSHOT_CHUNK_BACKING_BYTES as u64 {
+        return Err(crate::ProtocolError::LimitExceeded("snapshot chunk fixed backing"));
+    }
+    let len = len as usize;
+    let end = pos.checked_add(len).ok_or(crate::ProtocolError::Malformed { what: "wire snapshot chunk", offset: *pos as u64, detail: "length overflow".to_string() })?;
+    let source = bytes.get(*pos..end).ok_or(crate::ProtocolError::Malformed { what: "wire snapshot chunk", offset: *pos as u64, detail: "truncated".to_string() })?;
+    let owner = SnapshotChunkBytes::try_from_slice(source).ok_or(crate::ProtocolError::LimitExceeded("snapshot chunk fixed backing"))?;
+    *pos = end;
+    Ok(owner)
+}
+
 /// @emoji 📥️ Decodes one `ServerFrame`, returning the `Lane` it was tagged with.
 pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), crate::ProtocolError> {
     let lane_byte = match bytes.first() {
@@ -506,7 +602,7 @@ pub async fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), cr
             server_frontier: crate::causal::decode_frontier(bytes, &mut pos)?,
             bootstrap: decode_bootstrap(bytes, &mut pos).await?,
         },
-        1 => ServerFrame::SnapshotChunk { seq: crate::wire::read_varint_u64(bytes, &mut pos)? as u32, bytes: crate::read_bytes(bytes, &mut pos)? },
+        1 => ServerFrame::SnapshotChunk { seq: crate::wire::read_varint_u64(bytes, &mut pos)? as u32, bytes: read_snapshot_chunk_bytes(bytes, &mut pos)? },
         2 => ServerFrame::SnapshotDone { seq_count: crate::wire::read_varint_u64(bytes, &mut pos)? as u32 },
         3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::ids::ActorId(crate::read_str(bytes, &mut pos)?), frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
         4 => ServerFrame::Ack { batch_id: crate::wire::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos).await?, frontier: crate::causal::decode_frontier(bytes, &mut pos)? },
@@ -640,7 +736,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn server_frame_snapshot_chunk_round_trips() {
-        assert_server_round_trips(&ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command).await;
+        assert_server_round_trips(&ServerFrame::SnapshotChunk { seq: 0, bytes: SnapshotChunkBytes::try_from_slice(&[1, 2, 3, 4]).unwrap() }, Lane::Command).await;
     }
 
     #[semio_framework_async_macros::async_test]

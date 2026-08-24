@@ -54,6 +54,238 @@ pub struct AnalysisModel {
     pub supports: Vec<Support>,
 }
 
+pub const MOUNTED_ANALYSIS_NODE_SLOTS: usize = 128;
+pub const MOUNTED_ANALYSIS_ELEMENT_SLOTS: usize = 128;
+pub const MOUNTED_ANALYSIS_SUPPORT_SLOTS: usize = 64;
+
+pub struct MountedAnalysisSupport {
+    node_id: String,
+    fixed: [Option<Dof>; 6],
+    fixed_len: usize,
+}
+
+impl MountedAnalysisSupport {
+    pub fn new(node_id: String) -> Self {
+        Self { node_id, fixed: [None; 6], fixed_len: 0 }
+    }
+
+    pub fn push_fixed(&mut self, dof: Dof) -> Result<(), Dof> {
+        if self.fixed_len == self.fixed.len() {
+            return Err(dof);
+        }
+        self.fixed[self.fixed_len] = Some(dof);
+        self.fixed_len += 1;
+        Ok(())
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if self.node_id.capacity() != 0 {
+            let bytes = self.node_id.capacity();
+            if bytes > maximum_bytes {
+                return (false, 0, 0);
+            }
+            self.node_id = String::new();
+            return (false, 1, bytes);
+        }
+        if self.fixed_len != 0 {
+            self.fixed_len -= 1;
+            self.fixed[self.fixed_len] = None;
+            return (false, 1, 0);
+        }
+        (true, 0, 0)
+    }
+}
+
+/// 🧱 Fixed mounted analysis owner with one admitted slot, copied value, or close action per turn.
+pub struct MountedAnalysisModel {
+    nodes: [Option<Node>; MOUNTED_ANALYSIS_NODE_SLOTS],
+    elements: [Option<Elements>; MOUNTED_ANALYSIS_ELEMENT_SLOTS],
+    supports: [Option<MountedAnalysisSupport>; MOUNTED_ANALYSIS_SUPPORT_SLOTS],
+    admitted_nodes: usize,
+    admitted_elements: usize,
+    admitted_supports: usize,
+    node_len: usize,
+    element_len: usize,
+    support_len: usize,
+    close_lane: u8,
+}
+
+impl MountedAnalysisModel {
+    pub fn new() -> Self {
+        Self {
+            nodes: std::array::from_fn(|_| None),
+            elements: std::array::from_fn(|_| None),
+            supports: std::array::from_fn(|_| None),
+            admitted_nodes: 0,
+            admitted_elements: 0,
+            admitted_supports: 0,
+            node_len: 0,
+            element_len: 0,
+            support_len: 0,
+            close_lane: 0,
+        }
+    }
+
+    fn admit_one(admitted: &mut usize, target: usize, maximum: usize) -> Result<bool, ()> {
+        if target > maximum {
+            return Err(());
+        }
+        if *admitted < target {
+            *admitted += 1;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    pub fn admit_node_one(&mut self, target: usize) -> Result<bool, ()> {
+        Self::admit_one(&mut self.admitted_nodes, target, MOUNTED_ANALYSIS_NODE_SLOTS)
+    }
+
+    pub fn admit_element_one(&mut self, target: usize) -> Result<bool, ()> {
+        Self::admit_one(&mut self.admitted_elements, target, MOUNTED_ANALYSIS_ELEMENT_SLOTS)
+    }
+
+    pub fn admit_support_one(&mut self, target: usize) -> Result<bool, ()> {
+        Self::admit_one(&mut self.admitted_supports, target, MOUNTED_ANALYSIS_SUPPORT_SLOTS)
+    }
+
+    pub fn push_node(&mut self, node: Node) -> Result<(), Node> {
+        if self.node_len == self.admitted_nodes {
+            return Err(node);
+        }
+        self.nodes[self.node_len] = Some(node);
+        self.node_len += 1;
+        Ok(())
+    }
+
+    pub fn push_element(&mut self, element: Elements) -> Result<(), Elements> {
+        if self.element_len == self.admitted_elements {
+            return Err(element);
+        }
+        self.elements[self.element_len] = Some(element);
+        self.element_len += 1;
+        Ok(())
+    }
+
+    pub fn push_support(&mut self, support: MountedAnalysisSupport) -> Result<(), MountedAnalysisSupport> {
+        if self.support_len == self.admitted_supports {
+            return Err(support);
+        }
+        self.supports[self.support_len] = Some(support);
+        self.support_len += 1;
+        Ok(())
+    }
+
+    pub fn nodes_len(&self) -> usize {
+        self.node_len
+    }
+
+    pub fn elements_len(&self) -> usize {
+        self.element_len
+    }
+
+    pub fn node(&self, index: usize) -> Option<&Node> {
+        (index < self.node_len).then(|| self.nodes[index].as_ref()).flatten()
+    }
+
+    pub fn element(&self, index: usize) -> Option<&Elements> {
+        (index < self.element_len).then(|| self.elements[index].as_ref()).flatten()
+    }
+
+    fn support(&self, index: usize) -> Option<&MountedAnalysisSupport> {
+        (index < self.support_len).then(|| self.supports[index].as_ref()).flatten()
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        loop {
+            match self.close_lane {
+                0 => {
+                    let Some(node) = self.node_len.checked_sub(1).and_then(|index| self.nodes[index].as_mut()) else {
+                        self.close_lane += 1;
+                        continue;
+                    };
+                    if node.id.capacity() != 0 {
+                        let bytes = node.id.capacity();
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        node.id = String::new();
+                        return (false, 1, bytes);
+                    }
+                    self.node_len -= 1;
+                    self.nodes[self.node_len] = None;
+                    return (false, 1, 0);
+                }
+                1 => {
+                    if self.admitted_nodes != 0 {
+                        self.admitted_nodes -= 1;
+                        return (false, 1, 0);
+                    }
+                    self.close_lane += 1;
+                }
+                2 => {
+                    let Some(element) = self.element_len.checked_sub(1).and_then(|index| self.elements[index].as_mut()) else {
+                        self.close_lane += 1;
+                        continue;
+                    };
+                    if let Some(bytes) = element.mounted_next_string_bytes() {
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        return (false, 1, element.close_mounted_string_step().map_or(0, |bytes| bytes));
+                    }
+                    self.element_len -= 1;
+                    self.elements[self.element_len] = None;
+                    return (false, 1, 0);
+                }
+                3 => {
+                    if self.admitted_elements != 0 {
+                        self.admitted_elements -= 1;
+                        return (false, 1, 0);
+                    }
+                    self.close_lane += 1;
+                }
+                4 => {
+                    let Some(support) = self.support_len.checked_sub(1).and_then(|index| self.supports[index].as_mut()) else {
+                        self.close_lane += 1;
+                        continue;
+                    };
+                    if support.node_id.capacity() != 0 {
+                        let bytes = support.node_id.capacity();
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        support.node_id = String::new();
+                        return (false, 1, bytes);
+                    }
+                    if support.fixed_len != 0 {
+                        support.fixed_len -= 1;
+                        support.fixed[support.fixed_len] = None;
+                        return (false, 1, 0);
+                    }
+                    self.support_len -= 1;
+                    self.supports[self.support_len] = None;
+                    return (false, 1, 0);
+                }
+                5 => {
+                    if self.admitted_supports != 0 {
+                        self.admitted_supports -= 1;
+                        return (false, 1, 0);
+                    }
+                    self.close_lane += 1;
+                }
+                _ => return (true, 0, 0),
+            }
+        }
+    }
+}
+
+impl Default for MountedAnalysisModel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Default)]
 struct AnalysisModelCloseCursor {
     lane: u8,
@@ -747,8 +979,71 @@ enum AssemblyConstructionStage {
 
 /// 🧵️ Retained mounted-session assembly-plan construction. Each call performs one reference
 /// comparison, DOF insertion, scalar initialization or fixed-capacity allocation opportunity.
+enum AssemblyConstructionModel {
+    Dynamic(Arc<AnalysisModel>),
+    Mounted(Arc<MountedAnalysisModel>),
+}
+
+impl AssemblyConstructionModel {
+    fn nodes_len(&self) -> usize {
+        match self {
+            Self::Dynamic(model) => model.nodes.len(),
+            Self::Mounted(model) => model.nodes_len(),
+        }
+    }
+
+    fn elements_len(&self) -> usize {
+        match self {
+            Self::Dynamic(model) => model.elements.len(),
+            Self::Mounted(model) => model.elements_len(),
+        }
+    }
+
+    fn supports_len(&self) -> usize {
+        match self {
+            Self::Dynamic(model) => model.supports.len(),
+            Self::Mounted(model) => model.support_len,
+        }
+    }
+
+    fn node(&self, index: usize) -> Option<&Node> {
+        match self {
+            Self::Dynamic(model) => model.nodes.get(index),
+            Self::Mounted(model) => model.node(index),
+        }
+    }
+
+    fn element(&self, index: usize) -> Option<&Elements> {
+        match self {
+            Self::Dynamic(model) => model.elements.get(index),
+            Self::Mounted(model) => model.element(index),
+        }
+    }
+
+    fn support_node_id(&self, index: usize) -> Option<&str> {
+        match self {
+            Self::Dynamic(model) => model.supports.get(index).map(|support| support.node_id.as_str()),
+            Self::Mounted(model) => model.support(index).map(|support| support.node_id.as_str()),
+        }
+    }
+
+    fn support_fixed_len(&self, index: usize) -> Option<usize> {
+        match self {
+            Self::Dynamic(model) => model.supports.get(index).map(|support| support.fixed.len()),
+            Self::Mounted(model) => model.support(index).map(|support| support.fixed_len),
+        }
+    }
+
+    fn support_fixed(&self, support: usize, index: usize) -> Option<Dof> {
+        match self {
+            Self::Dynamic(model) => model.supports.get(support)?.fixed.get(index).copied(),
+            Self::Mounted(model) => model.support(support)?.fixed.get(index).copied().flatten(),
+        }
+    }
+}
+
 pub struct AssemblyJobConstruction {
-    model: Option<Arc<AnalysisModel>>,
+    model: Option<AssemblyConstructionModel>,
     model_close: AnalysisModelCloseCursor,
     operation: Operation,
     partition_count: usize,
@@ -783,6 +1078,10 @@ pub struct AssemblyJobConstruction {
 
 impl AssemblyJobConstruction {
     pub fn new_owned(model: Arc<AnalysisModel>, operation: Operation, partition_count: usize) -> Self {
+        Self::from_model(AssemblyConstructionModel::Dynamic(model), operation, partition_count)
+    }
+
+    fn from_model(model: AssemblyConstructionModel, operation: Operation, partition_count: usize) -> Self {
         Self {
             model: Some(model),
             model_close: AnalysisModelCloseCursor::default(),
@@ -818,45 +1117,53 @@ impl AssemblyJobConstruction {
         }
     }
 
+    /// 🧱 Retains an already-admitted fixed mounted model without contiguous materialization.
+    pub fn new_mounted(model: Arc<MountedAnalysisModel>, operation: Operation, partition_count: usize) -> Self {
+        Self::from_model(AssemblyConstructionModel::Mounted(model), operation, partition_count)
+    }
+
     pub fn step_one(&mut self) -> Result<bool, FemError> {
         match self.stage {
             AssemblyConstructionStage::ReserveDofs => {
-                if self.partition_count == 0 || self.model.as_ref().is_none_or(|model| model.nodes.is_empty()) {
+                if self.partition_count == 0 || self.model.as_ref().is_none_or(|model| model.nodes_len() == 0) {
                     return Err(FemError::EmptyModel);
                 }
-                let maximum_dofs = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes.len().checked_mul(6).ok_or(FemError::Singular)?;
+                let maximum_dofs = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes_len().checked_mul(6).ok_or(FemError::Singular)?;
                 if !reserve_exact_owner_page(&mut self.plan.dof_map.order, maximum_dofs) {
                     return Err(FemError::Singular);
                 }
                 self.stage = AssemblyConstructionStage::ValidateNodePairs;
             }
             AssemblyConstructionStage::ValidateNodePairs => {
-                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
-                if self.node_outer >= model.nodes.len() {
+                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+                if self.node_outer >= model.nodes_len() {
                     self.stage = AssemblyConstructionStage::ValidateElementReferences;
-                } else if self.node_inner >= model.nodes.len() {
+                } else if self.node_inner >= model.nodes_len() {
                     self.node_outer += 1;
                     self.node_inner = self.node_outer + 1;
                 } else {
-                    if model.nodes[self.node_outer].id == model.nodes[self.node_inner].id {
-                        return Err(FemError::DuplicateNodeId(model.nodes[self.node_outer].id.clone()));
+                    let outer = model.node(self.node_outer).ok_or(FemError::EmptyModel)?;
+                    let inner = model.node(self.node_inner).ok_or(FemError::EmptyModel)?;
+                    if outer.id == inner.id {
+                        return Err(FemError::DuplicateNodeId(outer.id.clone()));
                     }
                     self.node_inner += 1;
                 }
             }
             AssemblyConstructionStage::ValidateElementReferences => {
-                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
-                if self.element_cursor >= model.elements.len() {
+                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+                if self.element_cursor >= model.elements_len() {
                     self.stage = AssemblyConstructionStage::ValidateSupportReferences;
-                } else if self.reference_cursor >= model.elements[self.element_cursor].mounted_node_id_count().ok_or(FemError::Singular)? {
-                    let side = model.elements[self.element_cursor].mounted_node_id_count().and_then(|nodes| nodes.checked_mul(model.elements[self.element_cursor].dofs_per_node().len())).ok_or(FemError::Singular)?;
+                } else if self.reference_cursor >= model.element(self.element_cursor).and_then(Elements::mounted_node_id_count).ok_or(FemError::Singular)? {
+                    let element = model.element(self.element_cursor).ok_or(FemError::Singular)?;
+                    let side = element.mounted_node_id_count().and_then(|nodes| nodes.checked_mul(element.dofs_per_node().len())).ok_or(FemError::Singular)?;
                     self.maximum_triplets = self.maximum_triplets.checked_add(side.checked_mul(side).ok_or(FemError::Singular)?).ok_or(FemError::Singular)?;
                     self.element_cursor += 1;
                     self.reference_cursor = 0;
                     self.reference_node_cursor = 0;
-                } else if self.reference_node_cursor >= model.nodes.len() {
-                    return Err(FemError::DanglingNodeRef(model.elements[self.element_cursor].mounted_node_id(self.reference_cursor).ok_or(FemError::Singular)?.to_owned()));
-                } else if model.nodes[self.reference_node_cursor].id == model.elements[self.element_cursor].mounted_node_id(self.reference_cursor).ok_or(FemError::Singular)? {
+                } else if self.reference_node_cursor >= model.nodes_len() {
+                    return Err(FemError::DanglingNodeRef(model.element(self.element_cursor).and_then(|element| element.mounted_node_id(self.reference_cursor)).ok_or(FemError::Singular)?.to_owned()));
+                } else if model.node(self.reference_node_cursor).ok_or(FemError::EmptyModel)?.id == model.element(self.element_cursor).and_then(|element| element.mounted_node_id(self.reference_cursor)).ok_or(FemError::Singular)? {
                     self.reference_cursor += 1;
                     self.reference_node_cursor = 0;
                 } else {
@@ -867,13 +1174,13 @@ impl AssemblyJobConstruction {
                 self.stage = AssemblyConstructionStage::ValidateElementReferences;
             }
             AssemblyConstructionStage::ValidateSupportReferences => {
-                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
-                if self.support_cursor >= model.supports.len() {
+                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+                if self.support_cursor >= model.supports_len() {
                     self.element_cursor = 0;
                     self.stage = AssemblyConstructionStage::DiscoverDofs;
-                } else if self.support_node_cursor >= model.nodes.len() {
-                    return Err(FemError::DanglingNodeRef(model.supports[self.support_cursor].node_id.clone()));
-                } else if model.nodes[self.support_node_cursor].id == model.supports[self.support_cursor].node_id {
+                } else if self.support_node_cursor >= model.nodes_len() {
+                    return Err(FemError::DanglingNodeRef(model.support_node_id(self.support_cursor).ok_or(FemError::Singular)?.to_owned()));
+                } else if model.node(self.support_node_cursor).ok_or(FemError::EmptyModel)?.id == model.support_node_id(self.support_cursor).ok_or(FemError::Singular)? {
                     self.support_cursor += 1;
                     self.support_node_cursor = 0;
                 } else {
@@ -881,18 +1188,19 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::DiscoverDofs => {
-                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
-                if self.dof_node_cursor >= model.nodes.len() {
+                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+                if self.dof_node_cursor >= model.nodes_len() {
                     self.stage = AssemblyConstructionStage::ReservePermutation;
-                } else if self.dof_element_cursor >= model.elements.len() {
+                } else if self.dof_element_cursor >= model.elements_len() {
                     self.dof_emit_cursor = 0;
                     self.stage = AssemblyConstructionStage::EmitDofs;
-                } else if self.dof_reference_cursor >= model.elements[self.dof_element_cursor].mounted_node_id_count().ok_or(FemError::Singular)? {
+                } else if self.dof_reference_cursor >= model.element(self.dof_element_cursor).and_then(Elements::mounted_node_id_count).ok_or(FemError::Singular)? {
                     self.dof_element_cursor += 1;
                     self.dof_reference_cursor = 0;
                 } else {
-                    if model.elements[self.dof_element_cursor].mounted_node_id(self.dof_reference_cursor).ok_or(FemError::Singular)? == model.nodes[self.dof_node_cursor].id {
-                        for dof in model.elements[self.dof_element_cursor].dofs_per_node() {
+                    let element = model.element(self.dof_element_cursor).ok_or(FemError::Singular)?;
+                    if element.mounted_node_id(self.dof_reference_cursor).ok_or(FemError::Singular)? == model.node(self.dof_node_cursor).ok_or(FemError::EmptyModel)?.id {
+                        for dof in element.dofs_per_node() {
                             self.active_dofs[dof.index()] = true;
                         }
                     }
@@ -911,7 +1219,7 @@ impl AssemblyJobConstruction {
                 } else {
                     if self.active_dofs[self.dof_emit_cursor] {
                         let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_emit_cursor];
-                        let node_id = self.model()?.nodes[self.dof_node_cursor].id.clone();
+                        let node_id = self.model.as_ref().and_then(|model| model.node(self.dof_node_cursor)).ok_or(FemError::EmptyModel)?.id.clone();
                         self.pending_dof_owner = Some((node_id, dof));
                         self.stage = AssemblyConstructionStage::CommitDofOwner;
                         return Ok(false);
@@ -957,10 +1265,10 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::MarkConstraints => {
-                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
-                if self.constraint_support_cursor >= model.supports.len() {
+                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+                if self.constraint_support_cursor >= model.supports_len() {
                     self.stage = AssemblyConstructionStage::ReserveFree;
-                } else if self.constraint_dof_cursor >= model.supports[self.constraint_support_cursor].fixed.len() {
+                } else if self.constraint_dof_cursor >= model.support_fixed_len(self.constraint_support_cursor).ok_or(FemError::Singular)? {
                     self.constraint_support_cursor += 1;
                     self.constraint_dof_cursor = 0;
                     self.constraint_order_cursor = 0;
@@ -968,9 +1276,8 @@ impl AssemblyJobConstruction {
                     self.constraint_dof_cursor += 1;
                     self.constraint_order_cursor = 0;
                 } else {
-                    let support = &model.supports[self.constraint_support_cursor];
                     let (node_id, dof) = &self.plan.dof_map.order[self.constraint_order_cursor];
-                    if node_id == &support.node_id && *dof == support.fixed[self.constraint_dof_cursor] {
+                    if node_id == model.support_node_id(self.constraint_support_cursor).ok_or(FemError::Singular)? && *dof == model.support_fixed(self.constraint_support_cursor, self.constraint_dof_cursor).ok_or(FemError::Singular)? {
                         self.constrained_old[self.constraint_order_cursor] = true;
                         self.constraint_dof_cursor += 1;
                         self.constraint_order_cursor = 0;
@@ -1064,12 +1371,13 @@ impl AssemblyJobConstruction {
                     self.free_merge_cursors.push(0);
                 } else {
                     let model = self.model.take().ok_or(FemError::EmptyModel)?;
+                    let total_elements = model.elements_len();
                     let model_signature = self.operation.operation.0 ^ self.operation.base_revision.0.rotate_left(17) ^ self.operation.generation.0.rotate_left(33);
                     let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap { order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() });
                     self.job = Some(AssemblyJob {
                         state: AssemblyCheckpoint {
                             stage: AssemblyJobStage::ElementTriplets,
-                            total_elements: model.elements.len(),
+                            total_elements,
                             element_cursor: 0,
                             pending_build: None,
                             pending: None,
@@ -1084,7 +1392,10 @@ impl AssemblyJobConstruction {
                             merge_scan_partition: 0,
                             merge_candidate: None,
                         },
-                        model: AnalysisModelOwner::Owned(model),
+                        model: match model {
+                            AssemblyConstructionModel::Dynamic(model) => AnalysisModelOwner::Owned(model),
+                            AssemblyConstructionModel::Mounted(model) => AnalysisModelOwner::Mounted(model),
+                        },
                         operation: self.operation,
                         model_signature,
                         plan,
@@ -1185,7 +1496,10 @@ impl AssemblyJobConstruction {
             Ok(None) => {}
         }
         if let Some(model) = self.model.as_mut() {
-            let (terminal, items, bytes) = close_analysis_model_step(model, &mut self.model_close, maximum_bytes);
+            let (terminal, items, bytes) = match model {
+                AssemblyConstructionModel::Dynamic(model) => close_analysis_model_step(model, &mut self.model_close, maximum_bytes),
+                AssemblyConstructionModel::Mounted(model) => Arc::get_mut(model).map_or((false, 0, 0), |model| model.close_step(maximum_bytes)),
+            };
             if !terminal {
                 return (false, items, bytes);
             }
@@ -1219,15 +1533,47 @@ struct UnfactoredSystem {
 enum AnalysisModelOwner<'model> {
     Borrowed(&'model AnalysisModel),
     Owned(Arc<AnalysisModel>),
+    Mounted(Arc<MountedAnalysisModel>),
 }
 
-impl std::ops::Deref for AnalysisModelOwner<'_> {
-    type Target = AnalysisModel;
-
-    fn deref(&self) -> &Self::Target {
+impl AnalysisModelOwner<'_> {
+    fn dynamic(&self) -> Option<&AnalysisModel> {
         match self {
-            Self::Borrowed(model) => model,
-            Self::Owned(model) => model.as_ref(),
+            Self::Borrowed(model) => Some(model),
+            Self::Owned(model) => Some(model.as_ref()),
+            Self::Mounted(_) => None,
+        }
+    }
+
+    fn nodes_len(&self) -> usize {
+        match self {
+            Self::Borrowed(model) => model.nodes.len(),
+            Self::Owned(model) => model.nodes.len(),
+            Self::Mounted(model) => model.nodes_len(),
+        }
+    }
+
+    fn elements_len(&self) -> usize {
+        match self {
+            Self::Borrowed(model) => model.elements.len(),
+            Self::Owned(model) => model.elements.len(),
+            Self::Mounted(model) => model.elements_len(),
+        }
+    }
+
+    fn node(&self, index: usize) -> Option<&Node> {
+        match self {
+            Self::Borrowed(model) => model.nodes.get(index),
+            Self::Owned(model) => model.nodes.get(index),
+            Self::Mounted(model) => model.node(index),
+        }
+    }
+
+    fn element(&self, index: usize) -> Option<&Elements> {
+        match self {
+            Self::Borrowed(model) => model.elements.get(index),
+            Self::Owned(model) => model.elements.get(index),
+            Self::Mounted(model) => model.element(index),
         }
     }
 }
@@ -1249,8 +1595,10 @@ impl<'model> AssemblyJob<'model> {
 
     fn from_owner(model: AnalysisModelOwner<'model>, operation: Operation, partition_count: usize) -> Result<Self, FemError> {
         assert!(partition_count > 0, "assembly requires at least one worker-local partition");
-        let plan = AssemblyPlan::prepare(&model)?;
-        let model_signature = assembly_model_signature(&model);
+        let dynamic = model.dynamic().ok_or(FemError::EmptyModel)?;
+        let plan = AssemblyPlan::prepare(dynamic)?;
+        let model_signature = assembly_model_signature(dynamic);
+        let total_elements = model.elements_len();
         Ok(Self {
             model,
             operation,
@@ -1258,7 +1606,7 @@ impl<'model> AssemblyJob<'model> {
             plan,
             state: AssemblyCheckpoint {
                 stage: AssemblyJobStage::ElementTriplets,
-                total_elements: model.elements.len(),
+                total_elements,
                 element_cursor: 0,
                 pending_build: None,
                 pending: None,
@@ -1306,7 +1654,7 @@ impl<'model> AssemblyJob<'model> {
             total_elements: self.state.total_elements,
             full_triplets: self.state.partitions.iter().map(|partition| partition.full.len()).sum(),
             free_triplets: self.state.partitions.iter().map(|partition| partition.free.len()).sum(),
-            assembled_element_ids: self.model.elements.iter().take(self.state.element_cursor).map(|element| element.id().to_string()).collect(),
+            assembled_element_ids: (0..self.state.element_cursor).filter_map(|index| self.model.element(index)).map(|element| element.id().to_string()).collect(),
         }
     }
 
@@ -1481,6 +1829,14 @@ impl<'model> AssemblyJob<'model> {
                         }
                         return (false, items, bytes);
                     }
+                    AnalysisModelOwner::Mounted(model) => {
+                        let (terminal, items, bytes) = Arc::get_mut(model).map_or((false, 0, 0), |model| model.close_step(maximum_bytes));
+                        if terminal {
+                            self.close_lane += 1;
+                            continue;
+                        }
+                        return (false, items, bytes);
+                    }
                 },
                 _ => return (true, 0, 0),
             };
@@ -1491,7 +1847,7 @@ impl<'model> AssemblyJob<'model> {
     fn advance_element_build(&mut self) -> Result<bool, FemError> {
         if self.state.pending_build.is_none() {
             let element_index = self.state.element_cursor;
-            let element = &self.model.elements[element_index];
+            let element = self.model.element(element_index).ok_or(FemError::Singular)?;
             let node_count = element.mounted_node_id_count().ok_or(FemError::Singular)?;
             let dof_count = element.dofs_per_node().len();
             let side = node_count.checked_mul(dof_count).ok_or(FemError::Singular)?;
@@ -1514,7 +1870,7 @@ impl<'model> AssemblyJob<'model> {
             return Ok(false);
         }
         let build = self.state.pending_build.as_mut().ok_or(FemError::Singular)?;
-        let element = &self.model.elements[build.element_index];
+        let element = self.model.element(build.element_index).ok_or(FemError::Singular)?;
         match build.stage {
             PendingElementBuildStage::ReserveIndices => {
                 let side = build.node_count.checked_mul(build.dof_count).ok_or(FemError::Singular)?;
@@ -1558,7 +1914,7 @@ impl<'model> AssemblyJob<'model> {
             PendingElementBuildStage::Positions => {
                 if build.scalar_cursor < build.node_count {
                     let node_id = element.mounted_node_id(build.scalar_cursor).ok_or(FemError::Singular)?;
-                    let Some(node) = self.model.nodes.get(build.lookup_cursor) else { return Err(FemError::Singular) };
+                    let Some(node) = self.model.node(build.lookup_cursor) else { return Err(FemError::Singular) };
                     if node.id == node_id {
                         build.lookup_match = Some(build.lookup_cursor);
                         build.stage = PendingElementBuildStage::PublishPosition;
@@ -1570,7 +1926,7 @@ impl<'model> AssemblyJob<'model> {
                 }
             }
             PendingElementBuildStage::PublishPosition => {
-                let node = build.lookup_match.take().and_then(|index| self.model.nodes.get(index)).ok_or(FemError::Singular)?;
+                let node = build.lookup_match.take().and_then(|index| self.model.node(index)).ok_or(FemError::Singular)?;
                 build.positions.push(node.pos);
                 build.scalar_cursor += 1;
                 build.lookup_cursor = 0;
@@ -1664,12 +2020,13 @@ impl<'model> AssemblyJob<'model> {
 
     fn begin_borrowed_element(&mut self) -> Result<(), FemError> {
         let element_index = self.state.element_cursor;
-        let element = &self.model.elements[element_index];
+        let dynamic = self.model.dynamic().ok_or(FemError::Singular)?;
+        let element = dynamic.elements.get(element_index).ok_or(FemError::Singular)?;
         let node_ids = element.node_ids();
         let dofs = element.dofs_per_node();
         let indices_old = element_global_indices(&self.plan.dof_map, &node_ids, dofs).ok_or(FemError::Singular)?;
         let indices_new = indices_old.iter().map(|&old| self.plan.inv_perm[old]).collect::<Vec<_>>();
-        let context = ElementContext { positions: positions_of(&self.model.nodes, &node_ids) };
+        let context = ElementContext { positions: positions_of(&dynamic.nodes, &node_ids) };
         let stiffness = element.stiffness_global(&context);
         let side = indices_new.len();
         self.state.pending = Some(PendingElementAssembly { element_index, side, cell_cursor: 0, reclaim_lane: 0, complete: false, indices_new, positions: context.positions, stiffness: stiffness.data });
@@ -2017,14 +2374,14 @@ impl InteractiveJob for AssemblyJob<'_> {
         context.set_stage(self.state.pending_build.as_ref().map_or_else(|| self.state.stage.label(), |build| build.stage.label()));
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
-            if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
+            if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return StepOutcome::Yield;
             }
             return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.element_cursor as u64 });
         }
         if self.state.preview_due {
             self.state.preview_due = false;
-            if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
+            if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return StepOutcome::Yield;
             }
             return StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("assembly preview is serializable"));
@@ -2033,7 +2390,7 @@ impl InteractiveJob for AssemblyJob<'_> {
             return StepOutcome::Yield;
         }
         if self.state.stage == AssemblyJobStage::Complete {
-            if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
+            if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return StepOutcome::Complete(CommitCandidate {
                     state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
@@ -2049,7 +2406,7 @@ impl InteractiveJob for AssemblyJob<'_> {
                         if self.state.element_cursor == self.state.total_elements {
                             self.state.stage = AssemblyJobStage::MergeFull;
                         } else {
-                            let result = if matches!(&self.model, AnalysisModelOwner::Owned(_)) { self.advance_element_build().map(|_| ()) } else { self.begin_borrowed_element() };
+                            let result = if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) { self.advance_element_build().map(|_| ()) } else { self.begin_borrowed_element() };
                             if let Err(error) = result {
                                 return StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() });
                             }
@@ -2649,6 +3006,7 @@ mod tests {
         match &job.model {
             AnalysisModelOwner::Owned(owner) => assert_eq!(Arc::as_ptr(owner), pointer),
             AnalysisModelOwner::Borrowed(_) => panic!("mounted construction must preserve the owned model authority"),
+            AnalysisModelOwner::Mounted(_) => panic!("dynamic construction cannot substitute mounted fixed authority"),
         }
         assert!(construction.take_complete().is_none(), "completion transfers exactly once");
     }

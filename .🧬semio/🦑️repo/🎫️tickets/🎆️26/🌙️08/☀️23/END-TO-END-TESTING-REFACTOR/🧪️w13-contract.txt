@@ -1,0 +1,19 @@
+14 high-priority breach(es) across 1 rule(s):
+     14  testing/contract
+
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 94: "⚠️ The two halves of the identity scenario assert OPPOSITE byte laws, and both are asserted rather"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 95: "than skipped. The oracle half re-muxes with `mp4` 0.14's `Mp4Writer`, a second writer with its own"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 96: "box order and `mdat` layout, so it asserts the no-byte-pass-through tripwire. The subject half"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 97: "asserts the tripwire's documented mirror, `carrier_is_exact`: `Mp4Snapshot` carries no raw-byte"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 98: "escape hatch — every `mvhd`/`tkhd`/`mdhd` field, every edit list entry, the visual sample entry,"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 99: "`colr`/`pasp`/`btrt`, the `avcC` extension and the `stsc`/`stco` chunk grouping are typed fields —"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 100: "and this repository's `encode_mp4` rebuilds the entire `moov` from them into one deterministic"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 101: "normal form (`ftyp`, `moov`, canonical empty `free`, `mdat`) which is already this ffmpeg"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 102: "`-c copy -movflags +faststart` fixture's own layout. Demanding that our writer move the bytes"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 103: "would demand that a lossless container codec lose something. The artifact holds itself to the"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 104: "exact-bytes claim outside this case too, on the FULL recording rather than this excerpt"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 105: "(`🚪️io/🦀️component.rs::exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte`), and the ten"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 106: "`mutate-*` rows above are what prove a real parse happened: they drive the same decode/encode"
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature  Unrecognized line 107: "pipeline and every one of them moves both the bytes and the compared projection."
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json

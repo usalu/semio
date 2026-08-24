@@ -142,15 +142,7 @@ pub fn canvas2d_snapshot_begin(descriptor: Canvas2dSnapshotDescriptor) -> Result
     let slot = store.slots.iter().position(Option::is_none).ok_or(Canvas2dSnapshotFault::Unavailable)?;
     let epoch = store.epochs[slot].wrapping_add(1).max(1);
     store.epochs[slot] = epoch;
-    store.slots[slot] = Some(Canvas2dSnapshotSlot {
-        epoch,
-        descriptor,
-        pages: std::array::from_fn(|_| None),
-        admitted_pages: 0,
-        admitted_bytes: 0,
-        sealed: false,
-        closing: false,
-    });
+    store.slots[slot] = Some(Canvas2dSnapshotSlot { epoch, descriptor, pages: std::array::from_fn(|_| None), admitted_pages: 0, admitted_bytes: 0, sealed: false, closing: false });
     Ok(Canvas2dSnapshotWriteToken { slot: slot as u8, epoch, revision: descriptor.revision, generation: descriptor.generation })
 }
 
@@ -192,14 +184,7 @@ pub fn canvas2d_snapshot_seal(token: Canvas2dSnapshotWriteToken) -> Result<Canva
         return Err(Canvas2dSnapshotFault::NotSealed);
     }
     slot.sealed = true;
-    Ok(Canvas2dSnapshotLease {
-        slot: token.slot,
-        epoch: token.epoch,
-        revision: token.revision,
-        generation: token.generation,
-        page_count: slot.admitted_pages,
-        byte_count: slot.admitted_bytes,
-    })
+    Ok(Canvas2dSnapshotLease { slot: token.slot, epoch: token.epoch, revision: token.revision, generation: token.generation, page_count: slot.admitted_pages, byte_count: slot.admitted_bytes })
 }
 
 pub fn canvas2d_snapshot_abort_write(token: Canvas2dSnapshotWriteToken) -> Result<(), Canvas2dSnapshotFault> {

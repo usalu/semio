@@ -887,26 +887,6 @@ BYLAYER
   0
 LTYPE
   5
-8
-100
-AcDbSymbolTableRecord
-100
-AcDbLinetypeTableRecord
-  2
-CONTINUOUS
- 70
-     0
-  3
-
- 72
-    65
- 73
-     0
- 40
-0.0
-  0
-LTYPE
-  5
 14
 100
 AcDbSymbolTableRecord
@@ -997,22 +977,6 @@ AcDbSymbolTable
   0
 LAYER
   5
-7
-100
-AcDbSymbolTableRecord
-100
-AcDbLayerTableRecord
-  2
-0
- 70
-     0
- 62
-     7
-  6
-CONTINUOUS
-  0
-LAYER
-  5
 10
 100
 AcDbSymbolTableRecord
@@ -1062,32 +1026,6 @@ AcDbSymbolTableRecord
 AcDbTextStyleTableRecord
   2
 ANNOTATIVE
- 70
-     0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-     0
- 42
-0.2
-  3
-txt
-  4
-
-  0
-STYLE
-  5
-D
-100
-AcDbSymbolTableRecord
-100
-AcDbTextStyleTableRecord
-  2
-STANDARD
  70
      0
  40

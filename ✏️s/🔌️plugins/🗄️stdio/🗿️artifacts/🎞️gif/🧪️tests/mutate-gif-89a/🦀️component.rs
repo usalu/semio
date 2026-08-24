@@ -4,7 +4,8 @@
 //! drives the registered `gif` reference implementation; the subject fully parses the artifact into
 //! its typed snapshot and re-serializes from it alone — never splicing source bytes. The subject half
 //! is gated behind the generated host's `sut` feature so the oracle-only run never compiles the local
-//! implementation, which cannot build right now (an unrelated, in-progress os-kernel refactor).
+//! implementation — §5.3 of the frozen plan, not a workaround for a broken crate. `semio-s-plugin-stdio`
+//! builds; the subject and parity phases both run.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, project};
@@ -12,8 +13,8 @@ use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `GifMutation::KINDS` (`.../🧬️schema/🧬️mutations/🦀️component.rs`) as an adapter-local
-/// list rather than importing the subject crate at the top level — that crate cannot compile right
-/// now, and this list must stay usable for the oracle-only run regardless.
+/// list rather than importing the subject crate at the top level: the oracle-only host does not link
+/// the subject crate at all (`sut` is off), so registration must not name it.
 const KINDS: [&str; 21] = [
     "no-mutation",
     "set-snapshot",
@@ -111,10 +112,11 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::{arranged_input, mutable_input, KINDS};
-    use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_repo_test_host::{Adapter, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::project;
+    use semio_s_plugin_stdio::ArtifactDsl;
     use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
-    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
+    use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::mutations::{apply_gif_mutation, inverse_gif_mutation, GifMutation};
     use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifRgb, GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
 
     //#region 🔖️SpecToMutation
@@ -256,8 +258,8 @@ mod subject {
     /// and back in, then re-serialize from the model alone — never the source bytes.
     fn decode_through_text(input: &[u8]) -> Result<GifSnapshot, String> {
         let snapshot = decode_gif(input)?;
-        let text = store::ArtifactDsl::print_dsl(&snapshot);
-        <GifSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error}"))
+        let text = ArtifactDsl::print_dsl(&snapshot);
+        <GifSnapshot as ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error}"))
     }
     //#endregion 🔖️Codec
 
@@ -278,7 +280,7 @@ mod subject {
         let mutation = mutation_from_spec(&original, &spec)?;
         let mut mutated = original.clone();
         apply_gif_mutation(&mut mutated, &mutation);
-        for inverse in mutation.inverse(&original) {
+        for inverse in inverse_gif_mutation(&mutation, &original) {
             apply_gif_mutation(&mut mutated, &inverse);
         }
         let bytes = encode_gif(&mutated).map_err(|error| format!("encode_gif failed: {error}"))?;

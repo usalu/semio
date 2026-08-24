@@ -142,6 +142,96 @@ pub mod part21 {
         }
         Ok(exchange)
     }
+
+    /// 🔤️ ONE Part-21 string LEXEME turned into the VALUE it denotes, per ISO 10303-21 §6.4.2.
+    ///
+    /// `ruststep`'s own `string` combinator is `many0(none_of("'"))` — it hands back the raw text
+    /// between the apostrophes and decodes NO control directive at all (its doc comment quotes the
+    /// production it does not implement). A projection that passed that text straight through was
+    /// therefore comparing ENCODINGS, not values, and two conformant writers that pick different
+    /// spellings for the same character diverged for no semantic reason: the real committed
+    /// `📐️hexagonal-cut-concrete-forest-left-ap214.stp` carries an ST-Developer line break INSIDE a
+    /// string literal (`'…at asserted c<LF>onnectivities'`, entity #829), which this repository's
+    /// own writer re-emits as the conformant `\X2\000A\X0\` — the same value, and 23 of 23
+    /// `mutate-step-ap214` parity comparisons apart until this wave. The real IfcOpenShell
+    /// `🏗️nakagin-capsule-tower.ifc` carries the same problem the other way round, as `'\\'`.
+    ///
+    /// Written from scratch here, NOT by calling `crate::artifacts::step::…::engine::part21`: a
+    /// projection that decoded with the codec under test would be comparing that codec against
+    /// itself, which is the exact failure this whole oracle exists to prevent.
+    ///
+    /// A malformed directive is an ERROR rather than a passed-through lexeme — a subject that
+    /// emitted a broken escape must fail the comparison, not sneak through it.
+    pub fn decode_string_literal(lexeme: &str) -> Result<String, String> {
+        let chars: Vec<char> = lexeme.chars().collect();
+        let mut out = String::with_capacity(lexeme.len());
+        let mut index = 0;
+        let mut alphabet = 'A';
+        let hex_group = |chars: &[char], from: usize, width: usize| -> Result<char, String> {
+            let slice: String = chars.get(from..from + width).ok_or_else(|| format!("truncated hex group in {lexeme:?}"))?.iter().collect();
+            if !slice.chars().all(|c| c.is_ascii_hexdigit()) {
+                return Err(format!("bad hex group {slice:?} in {lexeme:?}"));
+            }
+            let code = u32::from_str_radix(&slice, 16).map_err(|error| format!("bad hex group {slice:?}: {error}"))?;
+            char::from_u32(code).ok_or_else(|| format!("hex group {slice:?} is not a codepoint"))
+        };
+        while index < chars.len() {
+            if chars[index] != '\\' {
+                out.push(chars[index]);
+                index += 1;
+                continue;
+            }
+            match chars.get(index + 1) {
+                Some('\\') => {
+                    out.push('\\');
+                    index += 2;
+                }
+                Some('P') => {
+                    let page = *chars.get(index + 2).ok_or_else(|| format!("truncated \\P directive in {lexeme:?}"))?;
+                    if !('A'..='I').contains(&page) || chars.get(index + 3) != Some(&'\\') {
+                        return Err(format!("malformed \\P directive in {lexeme:?}"));
+                    }
+                    alphabet = page;
+                    index += 4;
+                }
+                Some('S') => {
+                    if chars.get(index + 2) != Some(&'\\') {
+                        return Err(format!("malformed \\S directive in {lexeme:?}"));
+                    }
+                    if alphabet != 'A' {
+                        return Err(format!("\\S\\ on ISO 8859 page {alphabet} needs a mapping table this projection does not carry"));
+                    }
+                    let shifted = *chars.get(index + 3).ok_or_else(|| format!("truncated \\S directive in {lexeme:?}"))?;
+                    out.push(char::from_u32(shifted as u32 + 128).ok_or_else(|| format!("bad \\S\\ character in {lexeme:?}"))?);
+                    index += 4;
+                }
+                Some('X') => match chars.get(index + 2) {
+                    Some(width @ ('2' | '4')) => {
+                        let group = if *width == '2' { 4 } else { 8 };
+                        if chars.get(index + 3) != Some(&'\\') {
+                            return Err(format!("malformed \\X{width} directive in {lexeme:?}"));
+                        }
+                        index += 4;
+                        loop {
+                            out.push(hex_group(&chars, index, group)?);
+                            index += group;
+                            if chars.get(index) == Some(&'\\') && chars.get(index + 1) == Some(&'X') && chars.get(index + 2) == Some(&'0') && chars.get(index + 3) == Some(&'\\') {
+                                index += 4;
+                                break;
+                            }
+                        }
+                    }
+                    Some('\\') => {
+                        out.push(hex_group(&chars, index + 3, 2)?);
+                        index += 5;
+                    }
+                    other => return Err(format!("malformed \\X directive {other:?} in {lexeme:?}")),
+                },
+                other => return Err(format!("unsupported control directive {other:?} in {lexeme:?}")),
+            }
+        }
+        Ok(out)
+    }
     //#endregion 🔖️Reader
 
     //#region 🔖️Writer
@@ -633,6 +723,39 @@ mod tests {
     /// entire DATA section is untouched real data.
     fn fixture() -> Vec<u8> {
         include_bytes!("../../../🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp").to_vec()
+    }
+
+    /// 🧪️ Every ISO 10303-21 §6.4.2 control directive this projection has to survive, read off a
+    /// literal spelled the way the standard spells it. The two rows that matter most are real: the
+    /// committed AP214 export carries an ST-Developer line break INSIDE a string literal, and the
+    /// committed IfcOpenShell IFC4 export carries `\\` for a one-character backslash name. Before
+    /// this decoder existed the projection compared `ruststep`'s raw lexeme, so this repository's
+    /// own conformant `\X2\000A\X0\` and the oracle's raw newline read as different VALUES.
+    #[test]
+    fn every_control_directive_decodes_to_the_value_it_denotes() {
+        let decode = |lexeme: &str| part21::decode_string_literal(lexeme).unwrap_or_else(|error| panic!("decode {lexeme:?}: {error}"));
+        assert_eq!(decode("plain text"), "plain text");
+        assert_eq!(decode("\n"), "\n", "a raw line break passes through — it is what ST-Developer actually wrote");
+        assert_eq!(decode(r"\X2\000A\X0\"), "\n", "and the conformant spelling of the same character decodes to the same value");
+        assert_eq!(decode(r"\\"), "\\", "the doubled reverse solidus is ONE backslash");
+        assert_eq!(decode(r"c\X2\000D000A\X0\every"), "c\r\nevery", "the real Nakagin description's own run");
+        assert_eq!(decode(r"\X\41"), "A", "\\X\\ carries exactly two hex digits and no terminator");
+        assert_eq!(decode(r"\X\41\S\A"), "A\u{00C1}");
+        assert_eq!(decode(r"\S\A"), "\u{00C1}");
+        assert_eq!(decode(r"\PA\\S\A"), "\u{00C1}");
+        assert_eq!(decode(r"\X4\0001F600\X0\"), "\u{1F600}");
+        assert_eq!(decode(r"\X2\4E2D6587\X0\"), "中文");
+    }
+
+    /// 🧪️ A directive this decoder cannot honour is an ERROR, never a lexeme waved through: a
+    /// subject that emitted a broken escape has to FAIL the comparison, not slip past it.
+    #[test]
+    fn a_malformed_or_unmappable_directive_is_refused() {
+        assert!(part21::decode_string_literal(r"\Q").is_err(), "an unknown directive is not passed through");
+        assert!(part21::decode_string_literal(r"\X\ZZ").is_err(), "non-hex digits are not passed through");
+        assert!(part21::decode_string_literal(r"\X2\4E2D").is_err(), "an unterminated \\X2\\ run is not passed through");
+        let page = part21::decode_string_literal(r"\PB\\S\A").expect_err("ISO 8859-2 must not be guessed");
+        assert!(page.contains("ISO 8859 page B"), "the error must name the page it refused: {page}");
     }
 
     #[test]

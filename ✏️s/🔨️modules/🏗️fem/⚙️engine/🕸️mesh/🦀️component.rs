@@ -30,6 +30,174 @@ pub struct PlanarDomain {
     pub holes: Vec<Vec<[f64; 2]>>,
 }
 
+pub const MOUNTED_DOMAIN_POINT_SLOTS: usize = 128;
+pub const MOUNTED_DOMAIN_HOLE_SLOTS: usize = 32;
+
+/// 🧩 Fixed mounted polygon whose admission and copy advance one slot at a time.
+pub struct MountedPlanarPolygon {
+    points: [[f64; 2]; MOUNTED_DOMAIN_POINT_SLOTS],
+    admitted: usize,
+    len: usize,
+}
+
+impl MountedPlanarPolygon {
+    fn new() -> Self {
+        Self { points: [[0.0; 2]; MOUNTED_DOMAIN_POINT_SLOTS], admitted: 0, len: 0 }
+    }
+
+    pub fn admit_one(&mut self, target: usize) -> Result<bool, ()> {
+        if target > MOUNTED_DOMAIN_POINT_SLOTS {
+            return Err(());
+        }
+        if self.admitted < target {
+            self.admitted += 1;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    pub fn push(&mut self, point: [f64; 2]) -> Result<(), [f64; 2]> {
+        if self.len == self.admitted {
+            return Err(point);
+        }
+        self.points[self.len] = point;
+        self.len += 1;
+        Ok(())
+    }
+
+    fn as_slice(&self) -> &[[f64; 2]] {
+        &self.points[..self.len]
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.len != 0 {
+            self.len -= 1;
+            return false;
+        }
+        if self.admitted != 0 {
+            self.admitted -= 1;
+            return false;
+        }
+        true
+    }
+}
+
+/// 🗺️ Fixed mounted planar-domain owner with one admitted polygon or point per opportunity.
+pub struct MountedPlanarDomain {
+    outer: MountedPlanarPolygon,
+    holes: [MountedPlanarPolygon; MOUNTED_DOMAIN_HOLE_SLOTS],
+    admitted_holes: usize,
+    hole_count: usize,
+    close_hole: usize,
+}
+
+impl MountedPlanarDomain {
+    pub fn new() -> Self {
+        Self { outer: MountedPlanarPolygon::new(), holes: std::array::from_fn(|_| MountedPlanarPolygon::new()), admitted_holes: 0, hole_count: 0, close_hole: 0 }
+    }
+
+    pub fn admit_outer_one(&mut self, target: usize) -> Result<bool, ()> {
+        self.outer.admit_one(target)
+    }
+
+    pub fn push_outer(&mut self, point: [f64; 2]) -> Result<(), [f64; 2]> {
+        self.outer.push(point)
+    }
+
+    pub fn admit_hole_one(&mut self, target: usize) -> Result<bool, ()> {
+        if target > MOUNTED_DOMAIN_HOLE_SLOTS {
+            return Err(());
+        }
+        if self.admitted_holes < target {
+            self.admitted_holes += 1;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    pub fn begin_hole(&mut self) -> Result<usize, ()> {
+        if self.hole_count == self.admitted_holes {
+            return Err(());
+        }
+        let index = self.hole_count;
+        self.hole_count += 1;
+        Ok(index)
+    }
+
+    pub fn admit_hole_point_one(&mut self, hole: usize, target: usize) -> Result<bool, ()> {
+        self.holes.get_mut(hole).ok_or(())?.admit_one(target)
+    }
+
+    pub fn push_hole_point(&mut self, hole: usize, point: [f64; 2]) -> Result<(), [f64; 2]> {
+        self.holes.get_mut(hole).ok_or(point)?.push(point)
+    }
+
+    fn outer(&self) -> &[[f64; 2]] {
+        self.outer.as_slice()
+    }
+
+    fn holes_len(&self) -> usize {
+        self.hole_count
+    }
+
+    fn hole(&self, index: usize) -> Option<&[[f64; 2]]> {
+        (index < self.hole_count).then(|| self.holes[index].as_slice())
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        while self.close_hole < self.hole_count {
+            if !self.holes[self.close_hole].close_step() {
+                return false;
+            }
+            self.close_hole += 1;
+            return false;
+        }
+        if self.hole_count != 0 {
+            self.hole_count -= 1;
+            return false;
+        }
+        if self.admitted_holes != 0 {
+            self.admitted_holes -= 1;
+            return false;
+        }
+        self.outer.close_step()
+    }
+}
+
+impl Default for MountedPlanarDomain {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+enum MeshDomainOwner {
+    Dynamic(PlanarDomain),
+    Mounted(MountedPlanarDomain),
+}
+
+impl MeshDomainOwner {
+    fn outer(&self) -> &[[f64; 2]] {
+        match self {
+            Self::Dynamic(domain) => &domain.outer,
+            Self::Mounted(domain) => domain.outer(),
+        }
+    }
+
+    fn holes_len(&self) -> usize {
+        match self {
+            Self::Dynamic(domain) => domain.holes.len(),
+            Self::Mounted(domain) => domain.holes_len(),
+        }
+    }
+
+    fn hole(&self, index: usize) -> Option<&[[f64; 2]]> {
+        match self {
+            Self::Dynamic(domain) => domain.holes.get(index).map(Vec::as_slice),
+            Self::Mounted(domain) => domain.hole(index),
+        }
+    }
+}
+
 /// 🕸️ A triangulated mesh: shared node positions plus triangles as index triples into `points`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TriMesh2 {
@@ -750,7 +918,7 @@ impl MeshInputPreparation {
         }
     }
 
-    fn advance_grid_classification(&mut self, domain: &PlanarDomain) {
+    fn advance_grid_classification(&mut self, domain: &MeshDomainOwner) {
         if self.grid_candidate.is_none() {
             self.grid_candidate = Some([self.bounds[0] + self.grid_column as f64 * self.grid_step[0], self.bounds[2] + self.grid_row as f64 * self.grid_step[1]]);
             self.grid_polygon = 0;
@@ -759,7 +927,15 @@ impl MeshInputPreparation {
             return;
         }
         let point = self.grid_candidate.expect("grid candidate retained");
-        let polygon = if self.grid_polygon == 0 { &domain.outer } else { &domain.holes[self.grid_polygon - 1] };
+        let polygon = if self.grid_polygon == 0 {
+            domain.outer()
+        } else {
+            let Some(polygon) = domain.hole(self.grid_polygon - 1) else {
+                self.grid_candidate = None;
+                return;
+            };
+            polygon
+        };
         if self.grid_edge < polygon.len() {
             let previous = if self.grid_edge == 0 { polygon.len() - 1 } else { self.grid_edge - 1 };
             let a = polygon[self.grid_edge];
@@ -777,7 +953,7 @@ impl MeshInputPreparation {
         } else if self.grid_polygon > 0 && self.grid_inside {
             self.grid_candidate = None;
             self.advance_grid_cell();
-        } else if self.grid_polygon < domain.holes.len() {
+        } else if self.grid_polygon < domain.holes_len() {
             self.grid_polygon += 1;
             self.grid_edge = 0;
             self.grid_inside = false;
@@ -788,7 +964,7 @@ impl MeshInputPreparation {
         }
     }
 
-    fn advance(&mut self, domain: &PlanarDomain, opts: &MeshOpts) -> Result<bool, MeshError> {
+    fn advance(&mut self, domain: &MeshDomainOwner, opts: &MeshOpts) -> Result<bool, MeshError> {
         if self.pending_index.is_some() {
             self.accept_pending_index();
             return Ok(false);
@@ -797,7 +973,7 @@ impl MeshInputPreparation {
             self.advance_pending_point();
             return Ok(false);
         }
-        let polygon_count = 1 + domain.holes.len();
+        let polygon_count = 1 + domain.holes_len();
         if !self.boundary_complete {
             if self.polygon >= polygon_count {
                 self.boundary_complete = true;
@@ -814,7 +990,7 @@ impl MeshInputPreparation {
                 }
                 return Ok(false);
             }
-            let polygon = if self.polygon == 0 { &domain.outer } else { &domain.holes[self.polygon - 1] };
+            let polygon = if self.polygon == 0 { domain.outer() } else { domain.hole(self.polygon - 1).ok_or(MeshError::DegenerateDomain)? };
             if self.edge == polygon.len() {
                 if let (Some(previous), Some(first)) = (self.previous, self.first) {
                     if previous != first {
@@ -1017,7 +1193,7 @@ struct MeshPayloadCursor {
 /// Only the completed deterministic payload is authoritative.
 pub struct MeshJob {
     operation: Operation,
-    domain: PlanarDomain,
+    domain: MeshDomainOwner,
     options: MeshOpts,
     preparation: Option<MeshInputPreparation>,
     prepared_input: Option<(Vec<[f64; 2]>, Vec<Edge>)>,
@@ -1066,6 +1242,10 @@ pub struct MeshJob {
 impl MeshJob {
     /// 🌱️ Creates a deterministic mesh operation from an immutable domain snapshot.
     pub fn new(domain: PlanarDomain, options: MeshOpts, operation: Operation) -> Self {
+        Self::from_domain(MeshDomainOwner::Dynamic(domain), options, operation)
+    }
+
+    fn from_domain(domain: MeshDomainOwner, options: MeshOpts, operation: Operation) -> Self {
         Self {
             operation,
             domain,
@@ -1124,6 +1304,28 @@ impl MeshJob {
         job
     }
 
+    /// 🧱 Creates a bounded mesh operation by transferring an already-admitted fixed domain owner.
+    pub fn new_mounted_bounded(domain: MountedPlanarDomain, options: MeshOpts, operation: Operation, maximum_points: usize, maximum_triangles: usize) -> Self {
+        let mut job = Self::from_domain(MeshDomainOwner::Mounted(domain), options, operation);
+        job.maximum_points = maximum_points;
+        job.maximum_triangles = maximum_triangles;
+        job
+    }
+
+    /// 🔭 Borrows one completed point without transferring the mesh backing.
+    pub fn completed_point(&self, index: usize) -> Option<[f64; 2]> {
+        (self.stage == MeshJobStage::Published).then(|| self.mesh.points.get(index).copied()).flatten()
+    }
+
+    /// 🔭 Borrows one completed triangle without transferring the mesh backing.
+    pub fn completed_triangle(&self, index: usize) -> Option<[u32; 3]> {
+        (self.stage == MeshJobStage::Published).then(|| self.mesh.tris.get(index).copied()).flatten()
+    }
+
+    pub fn completed_counts(&self) -> Option<(usize, usize)> {
+        (self.stage == MeshJobStage::Published).then_some((self.mesh.points.len(), self.mesh.tris.len()))
+    }
+
     /// 🧹️ Retires one exact mesh/domain owner per governed close opportunity.
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         if let Some(writer) = self.publication_writer.as_mut() {
@@ -1138,25 +1340,38 @@ impl MeshJob {
         }
         loop {
             let released = match self.close_lane {
-                0 => match close_vec_owner_step(&mut self.domain.outer, maximum_bytes) {
-                    Ok(Some(step)) => step,
-                    Err(()) => return (false, 0, 0),
-                    Ok(None) => {
-                        self.close_lane += 1;
-                        continue;
+                0 => match &mut self.domain {
+                    MeshDomainOwner::Dynamic(domain) => match close_vec_owner_step(&mut domain.outer, maximum_bytes) {
+                        Ok(Some(step)) => step,
+                        Err(()) => return (false, 0, 0),
+                        Ok(None) => {
+                            self.close_lane += 1;
+                            continue;
+                        }
+                    },
+                    MeshDomainOwner::Mounted(domain) => {
+                        if domain.close_step() {
+                            self.close_lane += 2;
+                            continue;
+                        }
+                        (1, 0)
                     }
                 },
                 1 => {
-                    if let Some(hole) = self.domain.holes.last_mut() {
+                    let MeshDomainOwner::Dynamic(domain) = &mut self.domain else {
+                        self.close_lane += 1;
+                        continue;
+                    };
+                    if let Some(hole) = domain.holes.last_mut() {
                         match close_vec_owner_step(hole, maximum_bytes) {
                             Ok(Some(step)) => return (false, step.0, step.1),
                             Err(()) => return (false, 0, 0),
                             Ok(None) => {}
                         }
-                        self.domain.holes.pop();
+                        domain.holes.pop();
                         (1, 0)
                     } else {
-                        match close_vec_owner_step(&mut self.domain.holes, maximum_bytes) {
+                        match close_vec_owner_step(&mut domain.holes, maximum_bytes) {
                             Ok(Some(step)) => step,
                             Err(()) => return (false, 0, 0),
                             Ok(None) => {
@@ -1358,7 +1573,7 @@ impl MeshJob {
         match cursor.stage {
             FaceClassificationStage::Begin => cursor.stage = FaceClassificationStage::OuterEdge,
             FaceClassificationStage::OuterEdge => {
-                if Self::advance_polygon_edge(cursor.centroid, &self.domain.outer, cursor.edge, &mut cursor.inside) {
+                if Self::advance_polygon_edge(cursor.centroid, self.domain.outer(), cursor.edge, &mut cursor.inside) {
                     if !cursor.inside {
                         self.face_classification = None;
                         self.face_cursor += 1;
@@ -1372,7 +1587,7 @@ impl MeshJob {
                 }
             }
             FaceClassificationStage::HoleEdge => {
-                if let Some(hole) = self.domain.holes.get(cursor.hole) {
+                if let Some(hole) = self.domain.hole(cursor.hole) {
                     if Self::advance_polygon_edge(cursor.centroid, hole, cursor.edge, &mut cursor.inside) {
                         if cursor.inside {
                             self.face_classification = None;
@@ -1802,10 +2017,10 @@ impl InteractiveJob for MeshJob {
         context.consume_fuel(1);
         match self.stage {
             MeshJobStage::Validate => {
-                if self.domain.outer.len() < 3 {
+                if self.domain.outer().len() < 3 {
                     return Self::fail(MeshError::DegenerateDomain.to_string().into_bytes());
                 }
-                if let Some(hole) = self.domain.holes.get(self.validation_hole_cursor) {
+                if let Some(hole) = self.domain.hole(self.validation_hole_cursor) {
                     if hole.len() < 3 {
                         return Self::fail(MeshError::DegenerateDomain.to_string().into_bytes());
                     }
@@ -1845,14 +2060,14 @@ impl InteractiveJob for MeshJob {
                 if complete {
                     let preparation = self.preparation.take().expect("input preparation complete");
                     self.prepared_input = Some((preparation.points, preparation.constraints));
-                    self.input_count = self.domain.outer.len();
+                    self.input_count = self.domain.outer().len();
                     self.input_count_hole = 0;
                     self.stage = MeshJobStage::CountInput;
                 }
                 StepOutcome::Yield
             }
             MeshJobStage::CountInput => {
-                if let Some(hole) = self.domain.holes.get(self.input_count_hole) {
+                if let Some(hole) = self.domain.hole(self.input_count_hole) {
                     self.input_count = match self.input_count.checked_add(hole.len()) {
                         Some(count) => count,
                         None => return Self::fail(b"mesh-input-count-overflow".to_vec()),
@@ -2858,11 +3073,11 @@ mod tests {
             }
         }
         assert!(faulted);
-        assert_eq!(job.domain.outer.len(), 65, "fault retains every rejected point owner");
+        assert_eq!(job.domain.outer().len(), 65, "fault retains every rejected point owner");
         let (terminal, items, _) = job.close_step(4_096);
         assert!(!terminal);
         assert_eq!(items, 1);
-        assert_eq!(job.domain.outer.len(), 64, "one close grant releases one point owner");
+        assert_eq!(job.domain.outer().len(), 64, "one close grant releases one point owner");
     }
 
     #[test]

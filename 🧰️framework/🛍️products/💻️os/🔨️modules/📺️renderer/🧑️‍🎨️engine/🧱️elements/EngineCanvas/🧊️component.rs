@@ -90,14 +90,60 @@ const ENGINE_SURFACE_CAPACITY: usize = 256;
 const ENGINE_SURFACE_ID_BYTE_CAPACITY: usize = 256;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct EngineSurfaceId {
+    bytes: [u8; ENGINE_SURFACE_ID_BYTE_CAPACITY],
+    len: u16,
+}
+
+impl EngineSurfaceId {
+    fn try_from_str(id: &str) -> Result<Self, ()> {
+        if id.is_empty() || id.len() > ENGINE_SURFACE_ID_BYTE_CAPACITY {
+            return Err(());
+        }
+        let mut bytes = [0; ENGINE_SURFACE_ID_BYTE_CAPACITY];
+        bytes[..id.len()].copy_from_slice(id.as_bytes());
+        Ok(Self { bytes, len: id.len() as u16 })
+    }
+
+    fn as_str(&self) -> &str {
+        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).unwrap_or("")
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    fn close_step(&mut self) -> bool {
+        self.len = 0;
+        true
+    }
+
+    fn with_raster_key<R>(&self, apply: impl FnOnce(&str) -> R) -> R {
+        const PREFIX: &[u8] = b"engine:";
+        let mut bytes = [0; ENGINE_SURFACE_ID_BYTE_CAPACITY + 7];
+        bytes[..PREFIX.len()].copy_from_slice(PREFIX);
+        let end = PREFIX.len() + usize::from(self.len);
+        bytes[PREFIX.len()..end].copy_from_slice(&self.bytes[..usize::from(self.len)]);
+        apply(std::str::from_utf8(&bytes[..end]).unwrap_or("engine:"))
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct EngineSurfaceToken {
     slot: u16,
     generation: u64,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct EngineSurfaceIdentity {
+    token: EngineSurfaceToken,
+    id: EngineSurfaceId,
+}
+
 struct EngineSurfaceSlot {
-    id: Option<String>,
+    id: Option<EngineSurfaceId>,
     generation: u64,
+    exhausted: bool,
     value: Option<EngineSurface>,
     retirement: Option<EngineSurfaceRetirement>,
 }
@@ -109,13 +155,13 @@ struct EngineSurfaceRegistry {
 
 impl Default for EngineSurfaceRegistry {
     fn default() -> Self {
-        Self { slots: Box::new(std::array::from_fn(|_| EngineSurfaceSlot { id: None, generation: 0, value: None, retirement: None })), faulted: false }
+        Self { slots: Box::new(std::array::from_fn(|_| EngineSurfaceSlot { id: None, generation: 0, exhausted: false, value: None, retirement: None })), faulted: false }
     }
 }
 
 impl EngineSurfaceRegistry {
     fn slot_index(&self, id: &str) -> Option<usize> {
-        self.slots.iter().position(|slot| slot.id.as_deref() == Some(id))
+        self.slots.iter().position(|slot| slot.id.as_ref().is_some_and(|stored| stored.as_str() == id))
     }
 
     fn contains_key(&self, id: &str) -> bool {
@@ -136,6 +182,11 @@ impl EngineSurfaceRegistry {
         Some(EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation })
     }
 
+    fn identity(&self, id: &str) -> Option<EngineSurfaceIdentity> {
+        let index = self.slot_index(id)?;
+        Some(EngineSurfaceIdentity { token: EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation }, id: self.slots[index].id? })
+    }
+
     fn get_token_mut(&mut self, token: EngineSurfaceToken) -> Option<&mut EngineSurface> {
         let slot = self.slots.get_mut(usize::from(token.slot))?;
         (slot.generation == token.generation).then_some(())?;
@@ -143,32 +194,48 @@ impl EngineSurfaceRegistry {
     }
 
     fn reserve(&mut self, id: &str) -> Option<EngineSurfaceToken> {
-        if id.len() > ENGINE_SURFACE_ID_BYTE_CAPACITY || self.contains_key(id) {
+        let Ok(id) = EngineSurfaceId::try_from_str(id) else {
+            self.faulted = true;
+            return None;
+        };
+        if self.contains_key(id.as_str()) {
             self.faulted = true;
             return None;
         }
-        let Some(index) = self.slots.iter().position(|slot| slot.value.is_none() && slot.retirement.is_none() && slot.id.is_none()) else {
+        let Some(index) = self.slots.iter().position(|slot| !slot.exhausted && slot.value.is_none() && slot.retirement.is_none() && slot.id.is_none()) else {
             self.faulted = true;
             return None;
         };
         let slot = &mut self.slots[index];
-        slot.generation = slot.generation.wrapping_add(1).max(1);
-        slot.id = Some(id.to_owned());
+        let Some(generation) = slot.generation.checked_add(1).filter(|generation| *generation != 0) else {
+            slot.exhausted = true;
+            self.faulted = true;
+            return None;
+        };
+        slot.generation = generation;
+        slot.id = Some(id);
         Some(EngineSurfaceToken { slot: index as u16, generation: slot.generation })
     }
 
-    fn publish_reserved(&mut self, token: EngineSurfaceToken, value: EngineSurface) {
-        let slot = self.slots.get_mut(usize::from(token.slot)).expect("reserved surface token slot remains in the fixed registry");
-        assert_eq!(slot.generation, token.generation, "reserved surface token generation remains current");
-        assert!(slot.id.is_some() && slot.value.is_none(), "reserved surface slot remains unpublished");
+    fn publish_reserved(&mut self, token: EngineSurfaceToken, value: EngineSurface) -> Result<(), EngineSurface> {
+        let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
+            return Err(value);
+        };
+        if slot.generation != token.generation || slot.id.is_none() || slot.value.is_some() || slot.retirement.is_some() {
+            return Err(value);
+        }
         slot.value = Some(value);
+        Ok(())
     }
 
     #[cfg(test)]
     fn remove(&mut self, id: &str) -> Option<EngineSurface> {
         let index = self.slot_index(id)?;
         let slot = &mut self.slots[index];
-        slot.generation = slot.generation.wrapping_add(1).max(1);
+        slot.generation = slot.generation.checked_add(1).unwrap_or_else(|| {
+            slot.exhausted = true;
+            u64::MAX
+        });
         slot.id = None;
         slot.value.take()
     }
@@ -207,7 +274,11 @@ impl EngineSurfaceRegistry {
         assert!(retirement.terminal_nonopaque_is_empty());
         slot.retirement = None;
         slot.id = None;
-        slot.generation = slot.generation.wrapping_add(1).max(1);
+        let Some(generation) = slot.generation.checked_add(1) else {
+            slot.exhausted = true;
+            return true;
+        };
+        slot.generation = generation;
         true
     }
 

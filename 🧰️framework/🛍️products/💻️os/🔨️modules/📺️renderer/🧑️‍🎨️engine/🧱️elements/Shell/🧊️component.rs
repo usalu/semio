@@ -6,23 +6,23 @@
 //! `crate::shell::...` call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
-use crate::dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockStackTab, DockState, WindowSilhouette, compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border};
+use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockStackTab, DockState, WindowSilhouette};
 use crate::engine_canvas::theme_is_dark;
 #[cfg(test)]
 use crate::interpreter::render_ui_document;
-use crate::interpreter::{UiDocumentFrameCursor, begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, resolve_ui_image};
-use crate::program_bridge::{PluginHostConfig, ProgramBridgeEntry, is_space_mode, resolve_playground_app_id, resolve_plugin_host_config};
-use crate::scenes::{AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface, clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click};
-use infinite_world::world::{World3dState, WorldInteractionIntent, WorldInteractionPhase, enqueue_world3d_events};
-use semio_framework::{AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel, app_breadcrumb, app_window_label, resolve_app_breadcrumb};
+use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, resolve_ui_image, UiDocumentFrameCursor};
+use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
+use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
+use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel};
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 #[cfg(not(target_arch = "wasm32"))]
-use store_sync::PresencePeer;
-#[cfg(not(target_arch = "wasm32"))]
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
-use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS, UiDocumentLease, UiFixedList, UiText};
+#[cfg(not(target_arch = "wasm32"))]
+use store_sync::PresencePeer;
+use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
 // re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
@@ -32,9 +32,9 @@ use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS,
 // `ShellState` (`document_host`, `sync_channel`, `sync_status`).
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_kernel::os_directory::{
+    client::{native::NativeDirectoryTransport, DirectoryClient, DirectoryStream, DirectoryStreamTurn, DirectoryTransport},
+    identity::{actor_id, mint_or_restore, Identity, IdentityOutcome, IdentityStatus},
     DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
-    client::{DirectoryClient, DirectoryStream, DirectoryStreamTurn, DirectoryTransport, native::NativeDirectoryTransport},
-    identity::{Identity, IdentityOutcome, IdentityStatus, actor_id, mint_or_restore},
 };
 // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
 // methods now carry an `OperationContext` (cancellation/deadline/trace), and the native transport
@@ -49,12 +49,12 @@ use semio_framework_async::{CancelToken, Lane, OperationContext, ScopeOwner, Tra
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 use ui_wgpu::wgpu::{
-    ActionDescriptor, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem,
-    UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowMeasure,
+    chrome_item_bg, chrome_item_text, draw_text, paint_retained_glyph_step, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep,
+    Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowStackCorner,
 };
 use ui_wgpu::wgpu::{
-    DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep, Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowStackCorner, chrome_item_bg,
-    chrome_item_text, draw_text, paint_retained_glyph_step, push_chrome_group_border,
+    ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
@@ -1811,13 +1811,60 @@ const DEFAULT_PANEL_WIDTH_PX: f32 = 300.0;
 /// isn't enabled" `Cargo.toml` constraint. Flagged by both `report-w3-panel-dock-6anchor.md` and
 /// `report-w3-prefs-i18n-themes.md` as a wiring/dedup request; resolved here by routing panel layout
 /// through `prefs_get`/`prefs_set` like every other uiPref instead of keeping a second storage mechanism.
+fn decode_panel_layout_field(raw: &str) -> Option<PanelLayoutPersisted> {
+    if raw.len() > SHELL_CHROME_IO_FIELD_BYTES {
+        return None;
+    }
+    let mut fields = raw.splitn(7, '\t');
+    let left_panel_open = fields.next()?.parse::<u8>().ok()? == 1;
+    let right_panel_open = fields.next()?.parse::<u8>().ok()? == 1;
+    let active_left_kind = match fields.next()? {
+        "" => None,
+        value => Some(value.to_string()),
+    };
+    let active_right_kind = match fields.next()? {
+        "" => None,
+        value => Some(value.to_string()),
+    };
+    let left_panel_width = match fields.next()? {
+        "" => None,
+        value => Some(value.parse::<f32>().ok()?),
+    };
+    let right_panel_width = match fields.next()? {
+        "" => None,
+        value => Some(value.parse::<f32>().ok()?),
+    };
+    if fields.next().is_some() {
+        return None;
+    }
+    Some(PanelLayoutPersisted { left_panel_open, right_panel_open, active_left_kind, active_right_kind, left_panel_width, right_panel_width })
+}
+
+fn encode_panel_layout_field(layout: &PanelLayoutPersisted) -> Option<String> {
+    let left_kind = layout.active_left_kind.as_deref().unwrap_or("");
+    let right_kind = layout.active_right_kind.as_deref().unwrap_or("");
+    if left_kind.contains('\t') || right_kind.contains('\t') {
+        return None;
+    }
+    let encoded = format!(
+        "{}\t{}\t{}\t{}\t{}\t{}",
+        u8::from(layout.left_panel_open),
+        u8::from(layout.right_panel_open),
+        left_kind,
+        right_kind,
+        layout.left_panel_width.map(|value| value.to_string()).unwrap_or_default(),
+        layout.right_panel_width.map(|value| value.to_string()).unwrap_or_default()
+    );
+    (encoded.len() <= SHELL_CHROME_IO_FIELD_BYTES).then_some(encoded)
+}
+
 fn load_panel_layout_from_store() -> Option<PanelLayoutPersisted> {
-    prefs_get(PANEL_LAYOUT_STORAGE_KEY).and_then(|json| serde_json::from_str(&json).ok())
+    prefs_get(PANEL_LAYOUT_STORAGE_KEY).and_then(|raw| decode_panel_layout_field(&raw))
 }
 
 fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
-    if let Ok(json) = serde_json::to_string(layout) {
-        prefs_set(PANEL_LAYOUT_STORAGE_KEY, &json);
+    if let Some(encoded) = encode_panel_layout_field(layout) {
+        prefs_set(PANEL_LAYOUT_STORAGE_KEY, &encoded);
     }
 }
 
@@ -6231,6 +6278,7 @@ mod shell_input_tests {
 }
 //#endregion ShellInput
 
+#[cfg(test)]
 fn chrome_text(target: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -6244,6 +6292,92 @@ fn chrome_text_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, x:
     paint_retained_glyph_step(text, Rect::new(x, y - size, width.max(1.0), size), size, color, atlas, target, cursor)
 }
 
+fn chrome_text_complete_step(target: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, width: f32, size: f32, color: Rgba, cursor: &mut RetainedGlyphCursor) -> Result<bool, ()> {
+    match chrome_text_step(target, atlas, text, x, y, width, size, color, cursor) {
+        RetainedGlyphStep::Pending => Ok(false),
+        RetainedGlyphStep::Complete => {
+            cursor.reset();
+            Ok(true)
+        }
+        RetainedGlyphStep::Fault => Err(()),
+    }
+}
+
+#[cfg(test)]
+mod retained_chrome_text_laws {
+    use super::*;
+
+    /// 🪟️ A multi-megabyte dialog or tour string consumes exactly one scalar per grant.
+    #[test]
+    fn dialog_and_tour_text_advance_one_scalar_and_one_glyph_per_grant() {
+        let value = "x".repeat(2 * 1_024 * 1_024);
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let mut cursor = RetainedGlyphCursor::default();
+        assert_eq!(chrome_text_step(&mut draw, &mut atlas, &value, 0.0, 16.0, 320.0, 14.0, Rgba::new(1.0, 1.0, 1.0, 1.0), &mut cursor), RetainedGlyphStep::Pending);
+        assert_eq!(cursor.byte(), 1);
+        assert_eq!(draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>(), 1);
+        assert_eq!(chrome_text_step(&mut draw, &mut atlas, &value, 0.0, 16.0, 320.0, 14.0, Rgba::new(1.0, 1.0, 1.0, 1.0), &mut cursor), RetainedGlyphStep::Pending);
+        assert_eq!(cursor.byte(), 2);
+        assert_eq!(draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>(), 2);
+    }
+
+    /// 🚫️ The retained Shell text boundary fails closed before shaping MAX + 1 bytes.
+    #[test]
+    fn dialog_and_tour_text_max_plus_one_fails_without_output() {
+        let value = "x".repeat(ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES + 1);
+        let identity = value.as_ptr();
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let mut cursor = RetainedGlyphCursor::default();
+        assert_eq!(chrome_text_step(&mut draw, &mut atlas, &value, 0.0, 16.0, 320.0, 14.0, Rgba::new(1.0, 1.0, 1.0, 1.0), &mut cursor), RetainedGlyphStep::Fault);
+        assert_eq!(value.as_ptr(), identity);
+        assert_eq!(draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>(), 0);
+        assert!(cursor.terminal_is_empty());
+    }
+
+    /// 🧱️ A dynamic chrome group advances through exactly one admitted output or hit per grant.
+    #[test]
+    fn dynamic_chrome_group_retains_every_glyph_and_border_opportunity() {
+        let value = "x".repeat(32);
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let theme = Theme::light();
+        let item = ChromeGroupItem { control_id: "retained.group", icon_id: Some("play"), label: Some(value.as_str()), active: false, disabled: false, kind: HitKind::Button };
+        let Some(width) = retained_chrome_group_item_width(&theme, &item) else {
+            assert!(false);
+            return;
+        };
+        let mut group_phase = 0;
+        let mut glyph = RetainedGlyphCursor::default();
+        let mut complete = false;
+        for _ in 0..64 {
+            let before = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>();
+            let step = render_retained_chrome_group_item_step(&mut group_phase, &mut glyph, &mut draw, &mut atlas, &icons, &mut input, &theme, Rect::new(0.0, 0.0, width, theme.control_height), &item, true);
+            let after = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>();
+            assert!(after.saturating_sub(before) <= 1);
+            if step == RetainedChromeGroupStep::Complete {
+                complete = true;
+                break;
+            }
+        }
+        assert!(complete);
+    }
+
+    /// 🚫️ A MAX + 1 chrome label is rejected before a retained owner or output is staged.
+    #[test]
+    fn dynamic_chrome_group_max_plus_one_is_identity_preserving() {
+        let value = "x".repeat(ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES + 1);
+        let identity = value.as_ptr();
+        let theme = Theme::light();
+        let item = ChromeGroupItem { control_id: "retained.group", icon_id: None, label: Some(value.as_str()), active: false, disabled: false, kind: HitKind::Button };
+        assert!(retained_chrome_group_item_width(&theme, &item).is_none());
+        assert_eq!(value.as_ptr(), identity);
+    }
+}
+
 fn chrome_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y: f32, size: f32, color: Rgba) {
     if let Some(uv) = icons.icon_uv(icon_id) {
         draw.push_textured([x, y, size, size], uv, color);
@@ -6251,6 +6385,7 @@ fn chrome_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y:
 }
 
 /** @emoji 📑️ Shared side-panel tab strip for floating panels. */
+#[cfg(test)]
 fn render_panel_tab_bar(
     chrome: &mut ShellChromeBuildState,
     panel_draw: &mut DrawList,
@@ -6301,6 +6436,7 @@ fn render_panel_tab_bar(
     tab_bar_h
 }
 
+#[cfg(test)]
 fn chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme) {
     push_chrome_group_border(draw, rect, theme);
 }
@@ -6314,6 +6450,106 @@ struct ChromeGroupItem<'a> {
     kind: HitKind,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum RetainedChromeGroupStep {
+    Pending,
+    Complete,
+    Fault,
+}
+
+/// 📐️ Computes the conservative fixed-cost width admitted for one retained chrome item.
+fn retained_chrome_group_item_width(theme: &Theme, item: &ChromeGroupItem<'_>) -> Option<f32> {
+    let label_bytes = item.label.map(str::len).unwrap_or(0);
+    if label_bytes > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES {
+        return None;
+    }
+    let icon_w = item.icon_id.map(|_| CHROME_ICON_TINY + theme.gap_standard).unwrap_or(0.0);
+    Some(theme.padding_standard * 2.0 + icon_w + label_bytes as f32 * theme.font_size_small * 0.6)
+}
+
+/// 🧱️ Emits at most one retained chrome item scalar, glyph, hit, or border per grant.
+fn render_retained_chrome_group_item_step(
+    group_phase: &mut u8,
+    glyph: &mut RetainedGlyphCursor,
+    draw: &mut DrawList,
+    atlas: &mut FontAtlas,
+    icons: &IconAtlas,
+    input: &mut InputState<ActionDescriptor>,
+    theme: &Theme,
+    rect: Rect,
+    item: &ChromeGroupItem<'_>,
+    register_hit: bool,
+) -> RetainedChromeGroupStep {
+    let hovered = !item.disabled && rect.contains(input.pointer_x, input.pointer_y);
+    let color = if item.disabled { theme.text_muted } else { chrome_item_text(theme, item.active, hovered) };
+    match *group_phase {
+        0 => {
+            let background = if item.disabled { theme.overlay_shadow } else { chrome_item_bg(theme, item.active, hovered) };
+            if background.a > 0.0 {
+                draw.push_solid([rect.x, rect.y, rect.w, rect.h], background);
+            }
+            *group_phase = 1;
+        }
+        1 => {
+            if let Some(icon_id) = item.icon_id {
+                chrome_icon(draw, icons, icon_id, rect.x + theme.padding_standard, rect.y + (rect.h - CHROME_ICON_TINY) * 0.5, CHROME_ICON_TINY, color);
+            }
+            *group_phase = 2;
+        }
+        2 => {
+            if let Some(label) = item.label {
+                if label.len() > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES {
+                    *group_phase = 0;
+                    glyph.reset();
+                    return RetainedChromeGroupStep::Fault;
+                }
+                let icon_w = item.icon_id.map(|_| CHROME_ICON_TINY + theme.gap_standard).unwrap_or(0.0);
+                let x = rect.x + theme.padding_standard + icon_w;
+                let width = (rect.x + rect.w - theme.padding_standard - x).max(1.0);
+                match chrome_text_complete_step(draw, atlas, label, x, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, width, theme.font_size_small, color, glyph) {
+                    Ok(false) => return RetainedChromeGroupStep::Pending,
+                    Ok(true) => {}
+                    Err(()) => {
+                        *group_phase = 0;
+                        glyph.reset();
+                        return RetainedChromeGroupStep::Fault;
+                    }
+                }
+            }
+            *group_phase = 3;
+        }
+        3 => {
+            draw.push_solid([rect.x, rect.y, rect.w, theme.stroke_hairline], theme.border_normal);
+            *group_phase = 4;
+        }
+        4 => {
+            draw.push_solid([rect.x, rect.y + rect.h - theme.stroke_hairline, rect.w, theme.stroke_hairline], theme.border_normal);
+            *group_phase = 5;
+        }
+        5 => {
+            draw.push_solid([rect.x, rect.y, theme.stroke_hairline, rect.h], theme.border_normal);
+            *group_phase = 6;
+        }
+        6 => {
+            draw.push_solid([rect.x + rect.w - theme.stroke_hairline, rect.y, theme.stroke_hairline, rect.h], theme.border_normal);
+            *group_phase = 7;
+        }
+        7 => {
+            if register_hit && !item.disabled {
+                input.register_hit(HitTarget { rect, event: None, control_id: Some(item.control_id.into()), kind: item.kind.clone(), drag_axis: None, drag_data: None });
+            }
+            *group_phase = 8;
+        }
+        _ => {
+            *group_phase = 0;
+            glyph.reset();
+            return RetainedChromeGroupStep::Complete;
+        }
+    }
+    RetainedChromeGroupStep::Pending
+}
+
+#[cfg(test)]
 fn measure_chrome_group_item(atlas: &mut FontAtlas, theme: &Theme, item: &ChromeGroupItem<'_>) -> f32 {
     let icon_w = item.icon_id.map(|_| CHROME_ICON_TINY + theme.gap_standard).unwrap_or(0.0);
     let text_w = item.label.map(|label| atlas.measure_text(label, theme.font_size_small).0).unwrap_or(0.0);
@@ -6443,6 +6679,7 @@ fn measure_engagement_body_height(theme: &Theme, engagement: &WindowEngagement) 
     h
 }
 
+#[cfg(test)]
 fn render_chrome_group(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, rect: Rect, items: &[ChromeGroupItem<'_>], register_hits: bool) {
     if items.is_empty() {
         return;
@@ -6465,8 +6702,11 @@ fn render_chrome_group(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconA
             chrome_icon(draw, icons, icon_id, content_x, item_rect.y + (item_rect.h - CHROME_ICON_TINY) * 0.5, CHROME_ICON_TINY, text_color);
             content_x += CHROME_ICON_TINY + theme.gap_standard;
         }
-        if let Some(label) = item.label {
-            chrome_text(draw, atlas, input, theme, label, content_x, item_rect.y + (item_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, text_color);
+        #[cfg(test)]
+        {
+            if let Some(label) = item.label {
+                chrome_text(draw, atlas, input, theme, label, content_x, item_rect.y + (item_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, text_color);
+            }
         }
         if register_hits && !item.disabled {
             input.register_hit(HitTarget { rect: item_rect, event: None, control_id: Some(item.control_id.into()), kind: item.kind.clone(), drag_axis: None, drag_data: None });
@@ -6560,7 +6800,7 @@ fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNod
 /// needs a `&mut GpuContext` this footer's own immediate-mode callers don't carry). Not clickable
 /// (`register_hits: false`) — a `peer:<actor>` hit is registered separately, with no `event`, purely
 /// so the id is discoverable for e2e/hit-testing.
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 fn render_presence_bar(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, rows: &[ui_wgpu::wgpu::PresencePeerRow], right_edge: f32, btn_y: f32, btn_h: f32) {
     if rows.is_empty() {
         return;
@@ -6595,6 +6835,7 @@ fn render_presence_bar(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconA
 /// straight away.
 #[cfg(not(target_arch = "wasm32"))]
 fn render_sync_status_and_checkin(
+    cursor: &mut ShellChromeChildCursor,
     draw: &mut DrawList,
     atlas: &mut FontAtlas,
     icons: &IconAtlas,
@@ -6603,30 +6844,57 @@ fn render_sync_status_and_checkin(
     status: Option<&ArtifactSyncStatus>,
     session: Option<&ActiveSession>,
     uncommitted_count: u32,
-    mut x: f32,
+    x: f32,
     btn_y: f32,
     btn_h: f32,
-) -> f32 {
-    let pill_label = ShellState::sync_pill_text(status);
-    let pill = ChromeGroupItem { control_id: "s-sync-status", icon_id: None, label: Some(pill_label.as_str()), active: false, disabled: false, kind: HitKind::Button };
-    let pill_w = measure_chrome_group_item(atlas, theme, &pill);
-    let pill_rect = Rect::new(x, btn_y, pill_w, btn_h);
-    render_chrome_group(draw, atlas, icons, input, theme, pill_rect, &[pill], false);
-    input.register_hit(HitTarget { rect: pill_rect, event: None, control_id: Some("s-sync-status".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
-    x += pill_w + theme.gap_standard * 0.5;
-    if let Some(session) = session {
-        if can_check_in(session.app.role) {
-            let label = if uncommitted_count > 0 { format!("Check In ({uncommitted_count})") } else { "Check In".to_string() };
-            let checkin = ChromeGroupItem { control_id: "s-checkin", icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
-            let checkin_w = measure_chrome_group_item(atlas, theme, &checkin);
-            let checkin_rect = Rect::new(x, btn_y, checkin_w, btn_h);
-            render_chrome_group(draw, atlas, icons, input, theme, checkin_rect, &[checkin], true);
-            let event = ActionDescriptor { controller_id: "framework.checkin".into(), action: "open".into(), args: None };
-            input.register_hit(HitTarget { rect: checkin_rect, event: Some(event), control_id: Some("s-checkin".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
-            x += checkin_w + theme.gap_standard * 0.5;
+) -> Result<Option<f32>, ()> {
+    if cursor.item == 0 {
+        if cursor.window.is_none() {
+            cursor.window = Some(UiText::try_from_string(ShellState::sync_pill_text(status)).map_err(|_| ())?);
         }
+        let Some(label) = cursor.window.as_ref() else { return Err(()) };
+        let item = ChromeGroupItem { control_id: "s-sync-status", icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
+        if cursor.rect.is_none() {
+            let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
+            cursor.rect = Some(Rect::new(x, btn_y, width, btn_h));
+        }
+        let Some(rect) = cursor.rect else { return Err(()) };
+        match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false) {
+            RetainedChromeGroupStep::Pending => return Ok(None),
+            RetainedChromeGroupStep::Fault => return Err(()),
+            RetainedChromeGroupStep::Complete => {}
+        }
+        input.register_hit(HitTarget { rect, event: None, control_id: Some("s-sync-status".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+        cursor.x = x + rect.w + theme.gap_standard * 0.5;
+        cursor.window = None;
+        cursor.rect = None;
+        cursor.item = 1;
+        return Ok(None);
     }
-    x
+    if !session.is_some_and(|session| can_check_in(session.app.role)) {
+        return Ok(Some(cursor.x));
+    }
+    if cursor.window.is_none() {
+        let label = if uncommitted_count > 0 { format!("Check In ({uncommitted_count})") } else { "Check In".to_string() };
+        cursor.window = Some(UiText::try_from_string(label).map_err(|_| ())?);
+    }
+    let Some(label) = cursor.window.as_ref() else { return Err(()) };
+    let item = ChromeGroupItem { control_id: "s-checkin", icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
+    if cursor.rect.is_none() {
+        let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
+        cursor.rect = Some(Rect::new(cursor.x, btn_y, width, btn_h));
+    }
+    let Some(rect) = cursor.rect else { return Err(()) };
+    match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false) {
+        RetainedChromeGroupStep::Pending => return Ok(None),
+        RetainedChromeGroupStep::Fault => return Err(()),
+        RetainedChromeGroupStep::Complete => {}
+    }
+    let event = ActionDescriptor { controller_id: "framework.checkin".into(), action: "open".into(), args: None };
+    input.register_hit(HitTarget { rect, event: Some(event), control_id: Some("s-checkin".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+    cursor.window = None;
+    cursor.rect = None;
+    Ok(Some(cursor.x + rect.w + theme.gap_standard * 0.5))
 }
 
 fn render_footer_section_divider(draw: &mut DrawList, theme: &Theme, x: f32, btn_y: f32, btn_h: f32) -> f32 {
@@ -6657,6 +6925,7 @@ fn footer_utility_sibling_count(roots: &[UtilityNode], path: &[u16; 64], depth: 
 }
 
 fn render_footer_utility_node(
+    cursor: &mut ShellChromeChildCursor,
     chrome: &mut ShellChromeBuildState,
     draw: &mut DrawList,
     atlas: &mut FontAtlas,
@@ -6668,40 +6937,65 @@ fn render_footer_utility_node(
     btn_h: f32,
     utility: &UtilityNode,
     collection_expanded: &HashMap<String, bool>,
-) -> (f32, bool) {
+) -> Result<Option<(f32, bool)>, ()> {
     match utility {
-        UtilityNode::Separator { .. } => (render_footer_section_divider(draw, theme, x, btn_y, btn_h), false),
+        UtilityNode::Separator { .. } => Ok(Some((render_footer_section_divider(draw, theme, x, btn_y, btn_h), false))),
         UtilityNode::Button { id, icon_id, label, text, title, disabled, on_press, .. } if !disabled.unwrap_or(false) => {
             let item = ChromeGroupItem { control_id: "framework.utility.button", icon_id: Some(icon_id.as_str()), label: Some(footer_utility_label(label, text, title, id)), active: false, disabled: false, kind: HitKind::Button };
-            let item_w = measure_chrome_group_item(atlas, theme, &item);
-            let rect = Rect::new(x, btn_y, item_w, btn_h);
-            render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+            if cursor.rect.is_none() {
+                let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
+                cursor.rect = Some(Rect::new(x, btn_y, width, btn_h));
+            }
+            let Some(rect) = cursor.rect else { return Err(()) };
+            match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false) {
+                RetainedChromeGroupStep::Pending => return Ok(None),
+                RetainedChromeGroupStep::Fault => return Err(()),
+                RetainedChromeGroupStep::Complete => {}
+            }
             chrome.register_element_rect(id.clone(), rect);
             input.register_hit(HitTarget { rect, event: Some(on_press.clone()), control_id: Some(format!("framework.utility.button.{id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
-            (x + item_w + theme.gap_standard * 0.5, false)
+            cursor.rect = None;
+            Ok(Some((x + rect.w + theme.gap_standard * 0.5, false)))
         }
         UtilityNode::Toggle { id, icon_id, label, text, title, pressed, disabled, on_change, .. } if !disabled.unwrap_or(false) => {
             let item = ChromeGroupItem { control_id: "framework.utility.toggle", icon_id: Some(icon_id.as_str()), label: Some(footer_utility_label(label, text, title, id)), active: pressed.unwrap_or(false), disabled: false, kind: HitKind::Toggle };
-            let item_w = measure_chrome_group_item(atlas, theme, &item);
-            let rect = Rect::new(x, btn_y, item_w, btn_h);
-            render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+            if cursor.rect.is_none() {
+                let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
+                cursor.rect = Some(Rect::new(x, btn_y, width, btn_h));
+            }
+            let Some(rect) = cursor.rect else { return Err(()) };
+            match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false) {
+                RetainedChromeGroupStep::Pending => return Ok(None),
+                RetainedChromeGroupStep::Fault => return Err(()),
+                RetainedChromeGroupStep::Complete => {}
+            }
             chrome.register_element_rect(id.clone(), rect);
             input.register_hit(HitTarget { rect, event: Some(on_change.clone()), control_id: Some(format!("framework.utility.toggle.{id}")), kind: HitKind::Toggle, drag_axis: None, drag_data: None });
-            (x + item_w + theme.gap_standard * 0.5, false)
+            cursor.rect = None;
+            Ok(Some((x + rect.w + theme.gap_standard * 0.5, false)))
         }
         UtilityNode::Collection { id, icon_id, label, text, title, disabled, children, .. } if !disabled.unwrap_or(false) => {
             let expanded = collection_expanded.get(id).copied().unwrap_or(false);
             let item = ChromeGroupItem { control_id: "framework.utility.collection", icon_id: Some(icon_id.as_str()), label: Some(footer_utility_label(label, text, title, id)), active: expanded, disabled: false, kind: HitKind::Button };
-            let item_w = measure_chrome_group_item(atlas, theme, &item);
-            let rect = Rect::new(x, btn_y, item_w, btn_h);
-            render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+            if cursor.rect.is_none() {
+                let width = retained_chrome_group_item_width(theme, &item).ok_or(())?;
+                cursor.rect = Some(Rect::new(x, btn_y, width, btn_h));
+            }
+            let Some(rect) = cursor.rect else { return Err(()) };
+            match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false) {
+                RetainedChromeGroupStep::Pending => return Ok(None),
+                RetainedChromeGroupStep::Fault => return Err(()),
+                RetainedChromeGroupStep::Complete => {}
+            }
             input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("framework.utility.collection.{id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
-            (x + item_w + theme.gap_standard * 0.5, expanded && !children.is_empty())
+            cursor.rect = None;
+            Ok(Some((x + rect.w + theme.gap_standard * 0.5, expanded && !children.is_empty())))
         }
-        UtilityNode::Button { .. } | UtilityNode::Toggle { .. } | UtilityNode::Collection { .. } => (x, false),
+        UtilityNode::Button { .. } | UtilityNode::Toggle { .. } | UtilityNode::Collection { .. } => Ok(Some((x, false))),
     }
 }
 
+#[cfg(test)]
 fn render_footer_utility_nodes(
     chrome: &mut ShellChromeBuildState,
     draw: &mut DrawList,
@@ -6822,7 +7116,11 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
 /// left/right. A middle anchor would fold right (the details/overflow side) but never occurs here — `PanelGroup`
 /// only ever maps to the four corner anchors.
 fn group_side(group: PanelGroup) -> &'static str {
-    if group.anchor().ends_with("left") { "left" } else { "right" }
+    if group.anchor().ends_with("left") {
+        "left"
+    } else {
+        "right"
+    }
 }
 
 fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static str {
@@ -6890,7 +7188,11 @@ pub(crate) fn window_action_definition<'a>(app: &'a AppDefinition, window_kind_i
 
 /// 🔢️ Formats a number for a staged input/vec3 field — integers without a trailing `.0`.
 fn fmt_num(value: f64) -> String {
-    if value.is_finite() && value == value.trunc() && value.abs() < 1e15 { format!("{}", value as i64) } else { format!("{value}") }
+    if value.is_finite() && value == value.trunc() && value.abs() < 1e15 {
+        format!("{}", value as i64)
+    } else {
+        format!("{value}")
+    }
 }
 
 /// 🖱️ Maps a `UtilityDefinition.cursor` CSS/winit cursor name onto the shell's {@link ui_wgpu::wgpu::SemioCursor}.
@@ -6952,7 +7254,11 @@ fn format_keybinding_shortcut(keys: &str) -> String {
         }
     };
     let parts: Vec<String> = chord.split('+').map(str::trim).filter(|part| !part.is_empty()).map(glyph).collect();
-    if apple { parts.join("") } else { parts.join("+") }
+    if apple {
+        parts.join("")
+    } else {
+        parts.join("+")
+    }
 }
 
 /// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav) that must win
@@ -7220,7 +7526,11 @@ impl ShellState {
     pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, Value>) -> Option<serde_json::Map<String, Value>> {
         let staged_dsl = semio_framework::to_dsl_value(&Value::Object(staged.clone())).ok()?;
         let effective = semio_framework::effective_action_args(defs, &staged_dsl, None);
-        if semio_framework::missing_required_args(defs, &effective).is_empty() { semio_framework::from_dsl_value::<Value>(effective).ok().and_then(|value| value.as_object().cloned()) } else { None }
+        if semio_framework::missing_required_args(defs, &effective).is_empty() {
+            semio_framework::from_dsl_value::<Value>(effective).ok().and_then(|value| value.as_object().cloned())
+        } else {
+            None
+        }
     }
 
     /// 🚀️ Executes a staged action once (P2): validates required args, dispatches exactly one
@@ -8380,7 +8690,11 @@ fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::wgpu::
 /// `render_engagement_input` so it's unit-testable without a `GpuContext` fixture (that function
 /// unconditionally needs a real wgpu device, per its own `_gpu` parameter).
 fn engagement_ghost_accept_on_click(ghost_rect: Rect, pointer_x: f32, pointer_y: f32, clicked_this_frame: bool, query: &str, suffix: &str) -> Option<String> {
-    if clicked_this_frame && ghost_rect.contains(pointer_x, pointer_y) { Some(format!("{query}{suffix}")) } else { None }
+    if clicked_this_frame && ghost_rect.contains(pointer_x, pointer_y) {
+        Some(format!("{query}{suffix}"))
+    } else {
+        None
+    }
 }
 //#endregion 🔖️ChromeOverlaysAndTour
 
@@ -8775,7 +9089,11 @@ fn tutorial_advance_playhead(playhead_ms: f64, dt_ms: f64, rate: f32) -> f64 {
 /// 🎚️ Pure scrub-bar progress (0–1) for a given playhead/duration — `0.0` for a zero-length timeline
 /// (the in-progress recording case) rather than dividing by zero.
 fn tutorial_scrub_progress(playhead_ms: f64, duration_ms: u64) -> f32 {
-    if duration_ms == 0 { 0.0 } else { (playhead_ms / duration_ms as f64).clamp(0.0, 1.0) as f32 }
+    if duration_ms == 0 {
+        0.0
+    } else {
+        (playhead_ms / duration_ms as f64).clamp(0.0, 1.0) as f32
+    }
 }
 
 /// 🎚️ Pure scrub-bar hit math: pointer x within `track` → target playhead ms.
@@ -9487,6 +9805,8 @@ struct ShellChromeChildCursor {
     y: f32,
     right: f32,
     flag: bool,
+    fault: bool,
+    group_phase: u8,
     document: UiDocumentFrameCursor,
     window: Option<UiText>,
     rect: Option<Rect>,
@@ -9750,11 +10070,11 @@ impl ShellState {
             }
             ShellChromeFramePhase::Error => {
                 if let Some(error) = &self.error {
-                    let scroll_offsets = &mut self.scroll_offsets;
-                    let collapsed_sections = &mut self.collapsed_sections;
-                    let open_selects = &mut self.open_selects;
-                    let mut ctx = framework_widget_context(draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-                    draw_text(&mut ctx, error, 12.0, h - theme.footer_height - 24.0, theme.font_size_small, theme.error);
+                    match chrome_text_complete_step(draw, atlas, error, 12.0, h - theme.footer_height - 24.0, (w - 24.0).max(1.0), theme.font_size_small, theme.error, &mut cursor.child.glyph) {
+                        Ok(false) => return false,
+                        Ok(true) => {}
+                        Err(()) => cursor.child.glyph.reset(),
+                    }
                 }
                 cursor.advance(ShellChromeFramePhase::IntroductionWrite);
             }
@@ -9880,11 +10200,9 @@ impl ShellState {
     fn advance_panel_layout_persist_step(&mut self) {
         let snapshot = self.panel_layout_snapshot();
         if self.chrome_present.last_persisted_panel_layout.as_ref() != Some(&snapshot) {
-            if let Ok(raw) = serde_json::to_string(&snapshot) {
-                if raw.len() <= SHELL_CHROME_IO_FIELD_BYTES {
-                    prefs_set_bounded(PANEL_LAYOUT_STORAGE_KEY, &raw);
-                    self.chrome_present.last_persisted_panel_layout = Some(snapshot);
-                }
+            if let Some(raw) = encode_panel_layout_field(&snapshot) {
+                prefs_set_bounded(PANEL_LAYOUT_STORAGE_KEY, &raw);
+                self.chrome_present.last_persisted_panel_layout = Some(snapshot);
             }
         }
         self.chrome_present.maintenance.layout_requested = false;
@@ -9965,7 +10283,11 @@ impl ShellState {
     /// active — `0.0` otherwise, so `body_rect`/the canvas layout are byte-identical to before this
     /// region existed whenever no tutorial is running.
     fn tutorial_bar_reserve(&self, theme: &Theme) -> f32 {
-        if self.tutorial.is_some() { tutorial_bar_height(theme) } else { 0.0 }
+        if self.tutorial.is_some() {
+            tutorial_bar_height(theme)
+        } else {
+            0.0
+        }
     }
 
     fn shell_uri(&self) -> String {
@@ -10095,7 +10417,11 @@ impl ShellState {
     fn floating_panel_rect(&self, left: bool, body: Rect, theme: &Theme) -> Rect {
         let inset = theme.panel_inset;
         let width = if left { floating_panel_width(self.left_panel_width, body, theme) } else { floating_panel_width(self.right_panel_width, body, theme) };
-        if left { Rect::new(body.x + inset, body.y + inset, width, body.h - inset * 2.0) } else { Rect::new(body.x + body.w - inset - width, body.y + inset, width, body.h - inset * 2.0) }
+        if left {
+            Rect::new(body.x + inset, body.y + inset, width, body.h - inset * 2.0)
+        } else {
+            Rect::new(body.x + body.w - inset - width, body.y + inset, width, body.h - inset * 2.0)
+        }
     }
 
     fn render_main_window_step(
@@ -10330,7 +10656,14 @@ impl ShellState {
             }
             3 => {
                 let title = self.session.as_ref().map_or("semio · os", |session| session.app.id.as_str());
-                chrome_text(draw, atlas, input, theme, title, cursor.x, btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+                match chrome_text_complete_step(draw, atlas, title, cursor.x, btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0, (width - cursor.x).max(1.0), theme.font_size_body, theme.text, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell navbar text exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
+                }
                 cursor.phase = 4;
             }
             4 => {
@@ -10343,9 +10676,22 @@ impl ShellState {
                     disabled: false,
                     kind: HitKind::Toggle,
                 };
-                let item_w = measure_chrome_group_item(atlas, theme, &item);
-                cursor.right -= item_w;
-                render_chrome_group(draw, atlas, icons, input, theme, Rect::new(cursor.right, btn_y, item_w, btn_h), &[item], true);
+                if cursor.rect.is_none() {
+                    let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                        self.error = Some("Shell fullscreen item exceeded the retained chrome boundary".to_string());
+                        cursor.phase = 5;
+                        return false;
+                    };
+                    cursor.right -= item_w;
+                    cursor.rect = Some(Rect::new(cursor.right, btn_y, item_w, btn_h));
+                }
+                let Some(rect) = cursor.rect else { return false };
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell fullscreen item exceeded the retained glyph boundary".to_string()),
+                }
+                cursor.rect = None;
                 cursor.phase = 5;
             }
             5 => {
@@ -10387,9 +10733,22 @@ impl ShellState {
                     _ => None,
                 };
                 if let Some(item) = item {
-                    let item_w = measure_chrome_group_item(atlas, theme, &item);
-                    cursor.right -= item_w;
-                    render_chrome_group(draw, atlas, icons, input, theme, Rect::new(cursor.right, btn_y, item_w, btn_h), &[item], true);
+                    if cursor.rect.is_none() {
+                        let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                            self.error = Some("Shell panel toggle exceeded the retained chrome boundary".to_string());
+                            cursor.phase = 6;
+                            return false;
+                        };
+                        cursor.right -= item_w;
+                        cursor.rect = Some(Rect::new(cursor.right, btn_y, item_w, btn_h));
+                    }
+                    let Some(rect) = cursor.rect else { return false };
+                    match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                        RetainedChromeGroupStep::Pending => return false,
+                        RetainedChromeGroupStep::Complete => {}
+                        RetainedChromeGroupStep::Fault => self.error = Some("Shell panel toggle exceeded the retained glyph boundary".to_string()),
+                    }
+                    cursor.rect = None;
                     cursor.item += 1;
                     return false;
                 }
@@ -10425,27 +10784,50 @@ impl ShellState {
             2 if mode != TutorialMode::Recording => {
                 let playing = mode == TutorialMode::Playing;
                 let item = ChromeGroupItem { control_id: "shell.tutorial.playPause", icon_id: Some(if playing { "pause" } else { "play" }), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
-                let item_w = measure_chrome_group_item(atlas, theme, &item).max(btn_h);
-                let rect = Rect::new(cursor.x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                if cursor.rect.is_none() {
+                    let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                        cursor.phase = 9;
+                        return false;
+                    };
+                    cursor.rect = Some(Rect::new(cursor.x, btn_y, item_w.max(btn_h), btn_h));
+                }
+                let Some(rect) = cursor.rect else { return false };
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell tutorial play item exceeded the retained glyph boundary".to_string()),
+                }
                 if self.chrome_build.clicked_this_frame && rect.contains(input.pointer_x, input.pointer_y) {
                     self.tutorial_toggle_play_pause();
                 }
-                cursor.x += item_w + theme.gap_standard;
+                cursor.x += rect.w + theme.gap_standard;
+                cursor.rect = None;
                 cursor.phase = 3;
             }
             2 => cursor.phase = 3,
             3 => {
                 let item = ChromeGroupItem { control_id: "shell.tutorial.stop", icon_id: Some("square"), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
-                let item_w = measure_chrome_group_item(atlas, theme, &item).max(btn_h);
-                let rect = Rect::new(cursor.x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                if cursor.rect.is_none() {
+                    let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                        cursor.phase = 9;
+                        return false;
+                    };
+                    cursor.rect = Some(Rect::new(cursor.x, btn_y, item_w.max(btn_h), btn_h));
+                }
+                let Some(rect) = cursor.rect else { return false };
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell tutorial stop item exceeded the retained glyph boundary".to_string()),
+                }
                 if self.chrome_build.clicked_this_frame && rect.contains(input.pointer_x, input.pointer_y) {
                     self.tutorial_stop();
+                    cursor.rect = None;
                     cursor.phase = 9;
                     return false;
                 }
-                cursor.x += item_w + theme.gap_standard;
+                cursor.x += rect.w + theme.gap_standard;
+                cursor.rect = None;
                 cursor.phase = 4;
             }
             4 => {
@@ -10456,8 +10838,15 @@ impl ShellState {
                     let total = duration_ms / 1000;
                     format!("{}:{:02} / {}:{:02}", current / 60, current % 60, total / 60, total % 60)
                 };
-                chrome_text(draw, atlas, input, theme, &label, cursor.x, btn_y + (btn_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
-                cursor.x += atlas.measure_text(&label, theme.font_size_small).0 + theme.gap_standard * 2.0;
+                match chrome_text_complete_step(draw, atlas, &label, cursor.x, btn_y + (btn_h + theme.font_size_small) * 0.5 - 1.0, (cursor.right - cursor.x).max(1.0), theme.font_size_small, theme.text, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell tutorial-bar text exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
+                }
+                cursor.x += theme.font_size_small * 13.0 + theme.gap_standard * 2.0;
                 cursor.phase = 5;
             }
             5 if mode != TutorialMode::Recording => {
@@ -10467,15 +10856,27 @@ impl ShellState {
                     return false;
                 };
                 let item = ChromeGroupItem { control_id, icon_id: None, label: Some(label), active: (rate - value).abs() < 0.01, disabled: false, kind: HitKind::Toggle };
-                let item_w = measure_chrome_group_item(atlas, theme, &item);
-                cursor.right -= item_w;
-                let rect = Rect::new(cursor.right, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                if cursor.rect.is_none() {
+                    let Some(item_w) = retained_chrome_group_item_width(theme, &item) else {
+                        self.error = Some("Shell tutorial rate exceeded the retained chrome boundary".to_string());
+                        cursor.phase = 6;
+                        return false;
+                    };
+                    cursor.right -= item_w;
+                    cursor.rect = Some(Rect::new(cursor.right, btn_y, item_w, btn_h));
+                }
+                let Some(rect) = cursor.rect else { return false };
+                match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                    RetainedChromeGroupStep::Pending => return false,
+                    RetainedChromeGroupStep::Complete => {}
+                    RetainedChromeGroupStep::Fault => self.error = Some("Shell tutorial rate exceeded the retained glyph boundary".to_string()),
+                }
                 if self.chrome_build.clicked_this_frame && rect.contains(input.pointer_x, input.pointer_y) {
                     if let Some(runtime) = self.tutorial.as_mut() {
                         runtime.rate = value;
                     }
                 }
+                cursor.rect = None;
                 cursor.item += 1;
             }
             5 => cursor.phase = 6,
@@ -10532,7 +10933,18 @@ impl ShellState {
                         cursor.phase = 3;
                         return false;
                     };
-                    let (next_x, descend) = render_footer_utility_node(&mut self.chrome_build, draw, atlas, icons, input, theme, cursor.x, btn_y, btn_h, utility, &self.utility_collection_expanded);
+                    let x = cursor.x;
+                    let result = render_footer_utility_node(cursor, &mut self.chrome_build, draw, atlas, icons, input, theme, x, btn_y, btn_h, utility, &self.utility_collection_expanded);
+                    let Some((next_x, descend)) = (match result {
+                        Ok(result) => result,
+                        Err(()) => {
+                            self.error = Some("Shell footer utility exceeded the retained chrome boundary".to_string());
+                            cursor.phase = 4;
+                            return false;
+                        }
+                    }) else {
+                        return false;
+                    };
                     cursor.x = next_x;
                     cursor.flag = descend;
                     cursor.scalar = 1;
@@ -10567,7 +10979,16 @@ impl ShellState {
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     let count = uncommitted_edit_count(&self.history_entries);
-                    cursor.x = render_sync_status_and_checkin(draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), count, cursor.x, btn_y, btn_h);
+                    let x = cursor.x;
+                    match render_sync_status_and_checkin(cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), count, x, btn_y, btn_h) {
+                        Ok(Some(next_x)) => cursor.x = next_x,
+                        Ok(None) => return false,
+                        Err(()) => {
+                            self.error = Some("Shell sync footer exceeded the retained chrome boundary".to_string());
+                            cursor.phase = 4;
+                            return false;
+                        }
+                    }
                 }
                 cursor.phase = 4;
             }
@@ -10595,11 +11016,29 @@ impl ShellState {
                     _ => None,
                 };
                 if let (Some(rect), Some((title, query))) = (cursor.rect, label) {
-                    chrome_text(overlay, atlas, input, theme, title, rect.x + theme.padding_standard, rect.y + theme.padding_standard + theme.font_size_body, theme.font_size_body, theme.text);
-                    if !query.is_empty() {
-                        chrome_text(overlay, atlas, input, theme, query, rect.x + theme.padding_standard, rect.y + theme.padding_standard * 2.0 + theme.font_size_body * 2.0, theme.font_size_small, theme.text_muted);
+                    let text = match cursor.item {
+                        0 => Some((title, rect.y + theme.padding_standard + theme.font_size_body, theme.font_size_body, theme.text)),
+                        1 if !query.is_empty() => Some((query, rect.y + theme.padding_standard * 2.0 + theme.font_size_body * 2.0, theme.font_size_small, theme.text_muted)),
+                        1 => {
+                            cursor.item = 2;
+                            return false;
+                        }
+                        _ => None,
+                    };
+                    if let Some((text, y, size, color)) = text {
+                        match chrome_text_complete_step(overlay, atlas, text, rect.x + theme.padding_standard, y, (rect.w - theme.padding_standard * 2.0).max(1.0), size, color, &mut cursor.glyph) {
+                            Ok(false) => return false,
+                            Ok(true) => {}
+                            Err(()) => {
+                                self.error = Some("Shell overlay text exceeded the retained glyph boundary".to_string());
+                                cursor.glyph.reset();
+                            }
+                        }
+                        cursor.item += 1;
+                        return false;
                     }
                 }
+                cursor.item = 0;
                 cursor.phase = 2;
             }
             2 => {
@@ -10638,7 +11077,7 @@ impl ShellState {
         false
     }
 
-    fn render_context_menu_step(&self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, viewport_w: f32, viewport_h: f32) -> bool {
+    fn render_context_menu_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, viewport_w: f32, viewport_h: f32) -> bool {
         let Some(menu) = self.context_menu.as_ref() else { return true };
         let row_h = theme.control_height;
         let menu_w = 240.0_f32.min(viewport_w.max(0.0));
@@ -10664,21 +11103,33 @@ impl ShellState {
                     if item.separator {
                         overlay.push_solid([row.x + 4.0, row.y + row.h * 0.5, row.w - 8.0, theme.stroke_hairline], theme.text_muted);
                     } else {
-                        let active = menu.active.first().copied() == Some(cursor.item);
-                        overlay.push_rounded([row.x, row.y, row.w, row.h], if active { theme.accent } else { theme.button }, theme.border_radius);
-                        let icon = item.icon.as_deref().unwrap_or("circle-dot");
-                        chrome_icon(overlay, icons, icon, row.x + 8.0, row.y + (row.h - theme.font_size_body) * 0.5, theme.font_size_body, if item.disabled { theme.text_muted } else { theme.text });
-                        chrome_text(
+                        if !cursor.flag {
+                            let active = menu.active.first().copied() == Some(cursor.item);
+                            overlay.push_rounded([row.x, row.y, row.w, row.h], if active { theme.accent } else { theme.button }, theme.border_radius);
+                            let icon = item.icon.as_deref().unwrap_or("circle-dot");
+                            chrome_icon(overlay, icons, icon, row.x + 8.0, row.y + (row.h - theme.font_size_body) * 0.5, theme.font_size_body, if item.disabled { theme.text_muted } else { theme.text });
+                            cursor.flag = true;
+                            return false;
+                        }
+                        match chrome_text_complete_step(
                             overlay,
                             atlas,
-                            input,
-                            theme,
                             &item.label,
                             row.x + theme.font_size_body + theme.gap_standard * 2.0,
                             row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
+                            (row.w - theme.font_size_body - theme.gap_standard * 3.0).max(1.0),
                             theme.font_size_small,
                             if item.disabled { theme.text_muted } else { theme.text },
-                        );
+                            &mut cursor.glyph,
+                        ) {
+                            Ok(false) => return false,
+                            Ok(true) => {}
+                            Err(()) => {
+                                cursor.fault = true;
+                                cursor.glyph.reset();
+                            }
+                        }
+                        cursor.flag = false;
                         if !item.disabled {
                             input.register_hit(HitTarget { rect: row, event: item.action.clone(), control_id: Some(item.id.clone()), kind: HitKind::ContextMenu, drag_axis: None, drag_data: None });
                         }
@@ -10690,7 +11141,13 @@ impl ShellState {
                 overlay.pop_scissor();
                 cursor.scalar = 4;
             }
-            4 => return true,
+            4 => {
+                if cursor.fault {
+                    self.error = Some("Shell context-menu text exceeded the retained glyph boundary".to_string());
+                    cursor.fault = false;
+                }
+                return true;
+            }
             _ => return false,
         }
         false
@@ -10722,7 +11179,8 @@ impl ShellState {
                 }
                 let Some(text) = UiText::try_from_str(title) else { return true };
                 let padding = theme.padding_standard * 0.5;
-                let (text_w, text_h) = atlas.measure_text(text.as_str(), theme.font_size_small);
+                let text_w = text.as_str().len() as f32 * theme.font_size_small * 0.6;
+                let text_h = theme.font_size_small * 1.25;
                 cursor.rect =
                     Some(Rect::new((hover.anchor_x + 12.0).clamp(0.0, (width - text_w - padding * 2.0).max(0.0)), (hover.anchor_y + 18.0).clamp(0.0, (height - text_h - padding * 2.0).max(0.0)), text_w + padding * 2.0, text_h + padding * 2.0));
                 cursor.window = Some(text);
@@ -10736,7 +11194,14 @@ impl ShellState {
             2 => {
                 if let (Some(rect), Some(text)) = (cursor.rect, cursor.window.as_ref()) {
                     let padding = theme.padding_standard * 0.5;
-                    chrome_text(overlay, atlas, input, theme, text.as_str(), rect.x + padding, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+                    match chrome_text_complete_step(overlay, atlas, text.as_str(), rect.x + padding, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, (rect.w - padding * 2.0).max(1.0), theme.font_size_small, theme.text, &mut cursor.glyph) {
+                        Ok(false) => return false,
+                        Ok(true) => {}
+                        Err(()) => {
+                            self.error = Some("Shell tooltip text exceeded the retained glyph boundary".to_string());
+                            cursor.glyph.reset();
+                        }
+                    }
                 }
                 cursor.scalar = 3;
             }
@@ -10747,22 +11212,43 @@ impl ShellState {
     }
 
     fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        if cursor.flag {
+            self.error = Some("Shell dialog text exceeded the retained glyph boundary".to_string());
+            cursor.flag = false;
+            return true;
+        }
         let Some(request) = self.chrome_build.dialog_stack.last() else { return true };
         let dialog = Rect::new((width - 360.0) * 0.5, (height - 168.0) * 0.5, 360.0, 168.0);
         let pad = theme.padding_standard;
         let confirm = Rect::new(dialog.x + dialog.w - pad - 110.0, dialog.y + dialog.h - pad - theme.control_height, 110.0, theme.control_height);
         let cancel = Rect::new(dialog.x + pad, dialog.y + dialog.h - pad - theme.control_height, 90.0, theme.control_height);
+        let text = match cursor.scalar {
+            2 => Some((request.title.as_str(), dialog.x + pad, dialog.y + pad + theme.font_size_body, dialog.w - pad * 2.0, theme.font_size_body, theme.text)),
+            3 => Some((request.body.as_str(), dialog.x + pad, dialog.y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small, dialog.w - pad * 2.0, theme.font_size_small, theme.text_muted)),
+            5 => Some((request.cancel_label.as_str(), cancel.x + 10.0, cancel.y + (cancel.h + theme.font_size_small) * 0.5 - 1.0, cancel.w - 20.0, theme.font_size_small, theme.text)),
+            7 => Some((request.confirm_label.as_str(), confirm.x + 10.0, confirm.y + (confirm.h + theme.font_size_small) * 0.5 - 1.0, confirm.w - 20.0, theme.font_size_small, theme.active_foreground)),
+            _ => None,
+        };
+        if let Some((value, x, y, text_width, size, color)) = text {
+            match chrome_text_complete_step(overlay, atlas, value, x, y, text_width, size, color, &mut cursor.glyph) {
+                Ok(false) => return false,
+                Ok(true) => {}
+                Err(()) => {
+                    cursor.glyph.reset();
+                    cursor.flag = true;
+                    return false;
+                }
+            }
+            cursor.scalar += 1;
+            return false;
+        }
         match cursor.scalar {
             0 => overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35)),
             1 => {
                 overlay.push_glass([dialog.x, dialog.y, dialog.w, dialog.h], theme.border_radius, theme.glass(Level::Dialog));
             }
-            2 => chrome_text(overlay, atlas, input, theme, &request.title, dialog.x + pad, dialog.y + pad + theme.font_size_body, theme.font_size_body, theme.text),
-            3 => chrome_text(overlay, atlas, input, theme, &request.body, dialog.x + pad, dialog.y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small, theme.font_size_small, theme.text_muted),
             4 => overlay.push_rounded([cancel.x, cancel.y, cancel.w, cancel.h], theme.button, theme.border_radius),
-            5 => chrome_text(overlay, atlas, input, theme, &request.cancel_label, cancel.x + 10.0, cancel.y + (cancel.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text),
             6 => overlay.push_rounded([confirm.x, confirm.y, confirm.w, confirm.h], theme.accent, theme.border_radius),
-            7 => chrome_text(overlay, atlas, input, theme, &request.confirm_label, confirm.x + 10.0, confirm.y + (confirm.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.active_foreground),
             8 => input.register_hit(HitTarget { rect: cancel, event: None, control_id: Some(format!("shell.dialog.{}.cancel", request.id)), kind: HitKind::Button, drag_axis: None, drag_data: None }),
             9 => input.register_hit(HitTarget { rect: confirm, event: Some(request.confirm_action.clone()), control_id: Some(format!("shell.dialog.{}.confirm", request.id)), kind: HitKind::Button, drag_axis: None, drag_data: None }),
             10 => {
@@ -10781,6 +11267,11 @@ impl ShellState {
     }
 
     fn render_chrome_tour_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        if cursor.flag {
+            self.error = Some("Shell tour text exceeded the retained glyph boundary".to_string());
+            cursor.flag = false;
+            return true;
+        }
         let Some(session) = self.session.as_ref() else {
             self.chrome_build.tour_state = None;
             return true;
@@ -10792,37 +11283,40 @@ impl ShellState {
         let pad = theme.padding_standard;
         let skip = Rect::new(rect.x + pad, rect.y + rect.h - pad - theme.control_height, 70.0, theme.control_height);
         let next = Rect::new(rect.x + rect.w - pad - 90.0, rect.y + rect.h - pad - theme.control_height, 90.0, theme.control_height);
+        let text = match cursor.scalar {
+            2 => Some((step.title.resolve(self.active_terminology(), self.active_locale()), rect.x + pad, rect.y + pad + theme.font_size_body, rect.w - pad * 2.0, theme.font_size_body, theme.text)),
+            3 => Some((step.body.resolve(self.active_terminology(), self.active_locale()), rect.x + pad, rect.y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small, rect.w - pad * 2.0, theme.font_size_small, theme.text_muted)),
+            5 => Some((shell_chrome_string("introduction.skip", self.locale_id == "de"), skip.x + 10.0, skip.y + (skip.h + theme.font_size_small) * 0.5 - 1.0, skip.w - 20.0, theme.font_size_small, theme.text)),
+            7 if step.interactions.is_empty() => Some((
+                shell_chrome_string(if step_index + 1 == introduction.steps.len() { "introduction.done" } else { "introduction.next" }, self.locale_id == "de"),
+                next.x + 10.0,
+                next.y + (next.h + theme.font_size_small) * 0.5 - 1.0,
+                next.w - 20.0,
+                theme.font_size_small,
+                theme.active_foreground,
+            )),
+            _ => None,
+        };
+        if let Some((value, x, y, text_width, size, color)) = text {
+            match chrome_text_complete_step(overlay, atlas, value, x, y, text_width, size, color, &mut cursor.glyph) {
+                Ok(false) => return false,
+                Ok(true) => {}
+                Err(()) => {
+                    cursor.glyph.reset();
+                    cursor.flag = true;
+                    return false;
+                }
+            }
+            cursor.scalar += 1;
+            return false;
+        }
         match cursor.scalar {
             0 => overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35)),
             1 => {
                 overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Dialog));
             }
-            2 => chrome_text(overlay, atlas, input, theme, step.title.resolve(self.active_terminology(), self.active_locale()), rect.x + pad, rect.y + pad + theme.font_size_body, theme.font_size_body, theme.text),
-            3 => chrome_text(
-                overlay,
-                atlas,
-                input,
-                theme,
-                step.body.resolve(self.active_terminology(), self.active_locale()),
-                rect.x + pad,
-                rect.y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small,
-                theme.font_size_small,
-                theme.text_muted,
-            ),
             4 => overlay.push_rounded([skip.x, skip.y, skip.w, skip.h], theme.button, theme.border_radius),
-            5 => chrome_text(overlay, atlas, input, theme, shell_chrome_string("introduction.skip", self.locale_id == "de"), skip.x + 10.0, skip.y + (skip.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text),
             6 if step.interactions.is_empty() => overlay.push_rounded([next.x, next.y, next.w, next.h], theme.accent, theme.border_radius),
-            7 if step.interactions.is_empty() => chrome_text(
-                overlay,
-                atlas,
-                input,
-                theme,
-                shell_chrome_string(if step_index + 1 == introduction.steps.len() { "introduction.done" } else { "introduction.next" }, self.locale_id == "de"),
-                next.x + 10.0,
-                next.y + (next.h + theme.font_size_small) * 0.5 - 1.0,
-                theme.font_size_small,
-                theme.active_foreground,
-            ),
             8 => input.register_hit(HitTarget { rect: skip, event: None, control_id: Some("shell.tour.skip".into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
             9 if step.interactions.is_empty() => input.register_hit(HitTarget { rect: next, event: None, control_id: Some("shell.tour.next".into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
             10 => {
@@ -11050,7 +11544,17 @@ impl ShellState {
                 utility_x = render_footer_section_divider(draw, theme, utility_x, btn_y, btn_h);
             }
             let uncommitted_count = uncommitted_edit_count(&self.history_entries);
-            utility_x = render_sync_status_and_checkin(draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), uncommitted_count, utility_x, btn_y, btn_h);
+            let mut cursor = ShellChromeChildCursor::default();
+            loop {
+                match render_sync_status_and_checkin(&mut cursor, draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), uncommitted_count, utility_x, btn_y, btn_h) {
+                    Ok(Some(next_x)) => {
+                        utility_x = next_x;
+                        break;
+                    }
+                    Ok(None) => {}
+                    Err(()) => break,
+                }
+            }
         }
         let _ = utility_x;
         // 👥️ ticket §5 — the live presence roster, right-aligned in the footer, scoped to the
@@ -11301,6 +11805,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn render_studio_canvas_bars(&self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, mut canvas: Rect, session: &ActiveSession) -> Rect {
         if !self.host_config().is_some_and(|cfg| session.app.id == cfg.host_app_id) {
             return canvas;
@@ -12102,6 +12607,7 @@ impl ShellState {
         self.window_engagements.get(&kind.id).cloned().or_else(|| kind.options.engagement.as_option().cloned()).or_else(|| if kind.surface_kind.is_viewport() { Some(ui_wgpu::wgpu::default_viewport_engagement()) } else { None })
     }
 
+    #[cfg(test)]
     fn render_window_measures_rail(
         &mut self,
         draw: &mut DrawList,
@@ -12313,6 +12819,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn render_window_engagement_rail(
         &mut self,
         draw: &mut DrawList,
@@ -12483,7 +12990,7 @@ impl ShellState {
         bounds: Rect,
         control: &WindowEngagementControl,
     ) {
-        use ui_wgpu::wgpu::widgets::{WidgetNode, render_widget};
+        use ui_wgpu::wgpu::widgets::{render_widget, WidgetNode};
         let node = match control {
             WindowEngagementControl::Slider { id, value, min, max, step, disabled, on_change, .. } => WidgetNode::Slider {
                 id: id.clone().unwrap_or_else(|| "engagement-slider".into()),
@@ -12525,6 +13032,7 @@ impl ShellState {
     /// corner (measures top-right, engagement top-left, utility bar bottom-left). Folded to a chip by
     /// default; unfolded it lists window-scoped actions in manifest order: zero-arg rows ARE the execute
     /// button, arg-carrying rows are accordion disclosures over a staged form. Returns the fold chip hit.
+    #[cfg(test)]
     fn render_window_actions_rail(
         &mut self,
         draw: &mut DrawList,
@@ -12635,6 +13143,7 @@ impl ShellState {
 
     /// 📝️ Renders the staged form for one expanded action and returns its consumed height. Every control
     /// writes to STAGING via shell-owned hit ids (never a live `on_change` dispatch) — P2.
+    #[cfg(test)]
     fn render_staged_form(
         &mut self,
         draw: &mut DrawList,
@@ -12674,6 +13183,7 @@ impl ShellState {
         self.staged_form_height(theme, action)
     }
 
+    #[cfg(test)]
     fn render_staged_arg(
         &mut self,
         draw: &mut DrawList,
@@ -12948,6 +13458,7 @@ const UI_TERMINOLOGY_NATIVE: &str = "native";
 //#endregion 🔑️StorageKeys
 
 //#region 🗄️PrefsStore
+#[cfg(test)]
 const OS_SHELL_CONFIG_STORAGE_KEY: &str = "semio.os.config";
 
 /// 🗄️ Cross-platform key-value persistence for uiPrefs. `web-sys`'s "Storage" feature isn't enabled
@@ -12996,7 +13507,7 @@ impl PrefsStore for WebLocalStorage {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), test))]
 struct FilePrefsStore {
     path: std::path::PathBuf,
     cache: std::cell::RefCell<HashMap<String, String>>,
@@ -13005,14 +13516,16 @@ struct FilePrefsStore {
     flush_state: std::sync::Arc<std::sync::Mutex<FilePrefsFlushState>>,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), test))]
 #[derive(Default)]
 struct FilePrefsFlushState {
     latest: Option<HashMap<String, String>>,
     running: bool,
 }
 
+#[cfg(test)]
 const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;
+#[cfg(test)]
 const OS_SHELL_PREFS_FILE_MAX_BYTES: usize = OS_SHELL_CONFIG_MAX_BYTES + 4 * 1024;
 
 /// 📁️ Resolves the native prefs file path: `$SEMIO_PREFS_DIR/ui-prefs.json` when set, else a
@@ -13027,7 +13540,7 @@ fn native_prefs_file_path() -> std::path::PathBuf {
     std::path::PathBuf::from(base).join("semio").join("ui-prefs.json")
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), test))]
 impl FilePrefsStore {
     fn new() -> Self {
         Self::with_path(native_prefs_file_path())
@@ -13085,32 +13598,30 @@ impl FilePrefsStore {
         let flush_state = std::sync::Arc::clone(&self.flush_state);
         crate::renderer_worker_pool().submit(
             Lane::Io,
-            Box::new(move || {
-                loop {
-                    let snapshot = {
-                        let mut state = flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                        match state.latest.take() {
-                            Some(snapshot) => snapshot,
-                            None => {
-                                state.running = false;
-                                break;
-                            }
+            Box::new(move || loop {
+                let snapshot = {
+                    let mut state = flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    match state.latest.take() {
+                        Some(snapshot) => snapshot,
+                        None => {
+                            state.running = false;
+                            break;
                         }
-                    };
-                    use std::fs as system_fs;
-                    if let Some(parent) = path.parent() {
-                        let _ = system_fs::create_dir_all(parent);
                     }
-                    if let Ok(json) = serde_json::to_string_pretty(&snapshot) {
-                        let _ = system_fs::write(&path, json);
-                    }
+                };
+                use std::fs as system_fs;
+                if let Some(parent) = path.parent() {
+                    let _ = system_fs::create_dir_all(parent);
+                }
+                if let Ok(json) = serde_json::to_string_pretty(&snapshot) {
+                    let _ = system_fs::write(&path, json);
                 }
             }),
         );
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), test))]
 impl PrefsStore for FilePrefsStore {
     fn get(&self, key: &str) -> Option<String> {
         self.poll_load();
@@ -13131,9 +13642,10 @@ thread_local! {
     static PREFS_STORE: std::cell::RefCell<WebLocalStorage> = std::cell::RefCell::new(WebLocalStorage::new());
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), test))]
 static PREFS_STORE: std::sync::OnceLock<std::sync::Mutex<std::cell::RefCell<FilePrefsStore>>> = std::sync::OnceLock::new();
 
+#[cfg(test)]
 fn empty_os_shell_config() -> Value {
     serde_json::json!({
         "version": 1,
@@ -13145,6 +13657,7 @@ fn empty_os_shell_config() -> Value {
     })
 }
 
+#[cfg(test)]
 fn prefs_get_from(store: &impl PrefsStore, key: &str) -> Option<String> {
     let raw = store.get(OS_SHELL_CONFIG_STORAGE_KEY)?;
     if raw.len() > OS_SHELL_CONFIG_MAX_BYTES {
@@ -13153,6 +13666,7 @@ fn prefs_get_from(store: &impl PrefsStore, key: &str) -> Option<String> {
     serde_json::from_str::<Value>(&raw).ok()?.get("preferences")?.get(key)?.as_str().map(ToOwned::to_owned)
 }
 
+#[cfg(test)]
 fn prefs_set_in(store: &mut impl PrefsStore, key: &str, value: &str) {
     let mut config = store
         .get(OS_SHELL_CONFIG_STORAGE_KEY)
@@ -13164,33 +13678,70 @@ fn prefs_set_in(store: &mut impl PrefsStore, key: &str, value: &str) {
         config["preferences"] = serde_json::json!({});
     }
     config["preferences"][key] = Value::String(value.to_string());
-    if let Ok(raw) = serde_json::to_string(&config)
-        && raw.len() <= OS_SHELL_CONFIG_MAX_BYTES
-    {
-        store.set(OS_SHELL_CONFIG_STORAGE_KEY, &raw);
+    if let Ok(raw) = serde_json::to_string(&config) {
+        if raw.len() <= OS_SHELL_CONFIG_MAX_BYTES {
+            store.set(OS_SHELL_CONFIG_STORAGE_KEY, &raw);
+        }
     }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn native_pref_field_path(key: &str) -> Option<std::path::PathBuf> {
+    if key.len() > SHELL_CHROME_IO_FIELD_BYTES {
+        return None;
+    }
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    key.hash(&mut hasher);
+    Some(native_prefs_file_path().with_file_name("ui-prefs.fields").join(format!("{:016x}.field", hasher.finish())))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn native_pref_read_page(key: &str) -> Option<String> {
+    use std::io::Read;
+    let path = native_pref_field_path(key)?;
+    let mut file = std::fs::File::open(path).ok()?;
+    let len = usize::try_from(file.metadata().ok()?.len()).ok()?;
+    if len > SHELL_CHROME_IO_FIELD_BYTES {
+        return None;
+    }
+    let mut page = [0u8; SHELL_CHROME_IO_FIELD_BYTES];
+    file.read_exact(&mut page[..len]).ok()?;
+    String::from_utf8(page[..len].to_vec()).ok()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn native_pref_write_page(key: &str, value: &str) -> bool {
+    use std::io::Write;
+    let Some(path) = native_pref_field_path(key) else { return false };
+    if value.len() > SHELL_CHROME_IO_FIELD_BYTES {
+        return false;
+    }
+    let Some(parent) = path.parent() else { return false };
+    if std::fs::create_dir_all(parent).is_err() {
+        return false;
+    }
+    let Ok(mut file) = std::fs::OpenOptions::new().create(true).truncate(true).write(true).open(path) else { return false };
+    file.write_all(value.as_bytes()).is_ok()
 }
 
 fn prefs_get(key: &str) -> Option<String> {
     #[cfg(target_arch = "wasm32")]
     {
-        PREFS_STORE.with(|store| prefs_get_from(&*store.borrow(), key))
+        PREFS_STORE.with(|store| store.borrow().get(key))
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        let store = PREFS_STORE.get_or_init(|| std::sync::Mutex::new(std::cell::RefCell::new(FilePrefsStore::new()))).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let value = prefs_get_from(&*store.borrow(), key);
-        value
+        native_pref_read_page(key)
     }
 }
 
 fn prefs_set(key: &str, value: &str) {
     #[cfg(target_arch = "wasm32")]
-    PREFS_STORE.with(|store| prefs_set_in(&mut *store.borrow_mut(), key, value));
+    PREFS_STORE.with(|store| store.borrow_mut().set(key, value));
     #[cfg(not(target_arch = "wasm32"))]
     {
-        let store = PREFS_STORE.get_or_init(|| std::sync::Mutex::new(std::cell::RefCell::new(FilePrefsStore::new()))).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        prefs_set_in(&mut *store.borrow_mut(), key, value);
+        let _ = native_pref_write_page(key, value);
     }
 }
 

@@ -143,7 +143,11 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
     // wiring (`is_plain_stack_container`) finds it actually carries `activate`/`drop_action`, or is
     // a registered drag source — any of those make it a real interaction target.
     let is_plain_container = is_plain_stack_container(node);
-    if inside && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container { Some(id) } else { None }
+    if inside && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container {
+        Some(id)
+    } else {
+        None
+    }
 }
 
 /// 🎯️🌳️ W2 wiring: a `Stack` (`node.spec.0`) stops being a plain pass-through container the moment
@@ -1351,10 +1355,10 @@ impl EventRouter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wgpu::IconName;
-    use crate::wgpu::Label;
     use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
     use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
+    use crate::wgpu::IconName;
+    use crate::wgpu::Label;
 
     fn action() -> ActionDescriptor {
         ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }

@@ -10,12 +10,12 @@ use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `PlaygroundMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &PlaygroundMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &PlaygroundMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `PlaygroundMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<PlaygroundMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<PlaygroundMutation, protocol::ProtocolError> {
     PlaygroundMutation::decode_op(bytes)
 }
 
@@ -24,8 +24,8 @@ pub async fn decode_op(bytes: &[u8]) -> Result<PlaygroundMutation, protocol::Pro
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn op_binary_round_trips_and_agrees_with_text() {
+    #[test]
+    fn op_binary_round_trips_and_agrees_with_text() {
         use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema;
         let operation = PlaygroundMutation::ChangeSchema(ChangeSchema { new_schema: "playground.custom".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);

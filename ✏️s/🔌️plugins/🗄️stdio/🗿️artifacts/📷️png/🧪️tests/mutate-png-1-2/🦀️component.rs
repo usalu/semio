@@ -129,6 +129,7 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::project_png_mutation;
+    use semio_s_plugin_stdio::ArtifactDsl;
     use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
     use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, inverse_png_mutation, PngMutation};
     use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSnapshot, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp};
@@ -287,8 +288,8 @@ mod subject {
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_png(&input).map_err(|error| format!("decode_png failed: {error}"))?;
-        let text = <PngSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
-        let reparsed = <PngSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error:?}"))?;
+        let text = <PngSnapshot as ArtifactDsl>::print_dsl(&snapshot);
+        let reparsed = <PngSnapshot as ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error:?}"))?;
         let output = encode_png(&reparsed).map_err(|error| format!("encode_png failed: {error}"))?;
         if output == input {
             return Err("byte pass-through: output is bit-identical to the input".into());

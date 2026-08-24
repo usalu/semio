@@ -25,8 +25,8 @@ use flow::{with_process_flow_eval_session, FlowEvalSession};
 // separate, still-uncurated gap (unrelated to this ticket) — kept qualified.
 use semio_framework_plugin::{
     app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod,
-    SelectionMode, SelectionSpec, TopologyNode, UtilityDefinition, WindowMeasure,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaType, MergeMode, NoDraft,
+    NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UtilityDefinition, WindowMeasure,
 };
 use serde_json::json;
 use serde_json::Value;
@@ -44,6 +44,12 @@ pub fn procedural3d_action(action: &str, args: Option<Value>) -> ActionDescripto
 
 fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, category: &str) -> ActionDefinition {
     semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog(id, label, kind).with_category(category))
+}
+
+/// 🧵️ Classifies the internal flow continuation as backed by its bounded first-step factory.
+fn migrated_command(mut definition: CommandDefinition) -> CommandDefinition {
+    definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+    definition
 }
 //#endregion 🔖️Constants
 
@@ -443,7 +449,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
 //#region 🔖️Manifest
 pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::procedural3d::PROCEDURAL3D_DIALECT).document(["semio", "procedural", "3d"])
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
+            .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
             .artifact_kind(artifact_kind())
             .icon_id("workflow")
             .mode_def(edit::definition())
@@ -491,6 +497,32 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .view_action("selectGeneration", LocalizedLabel::native("Set Generation", "Generation auswählen"))
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeWidget", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveMediaNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addWidget", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchFlowWidgets", InteractiveJobClassification::Migrated)
+            .action_interactive_job("reorganize", InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addGeneration", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeGeneration", InteractiveJobClassification::Migrated)
+            .action_interactive_job("renameGeneration", InteractiveJobClassification::Migrated)
+            .action_interactive_job("updateGenerationValues", InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("graphPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                     ActionArgOption::new("neuron", LocalizedLabel::native("Neuron", "Neuron")),

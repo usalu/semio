@@ -75,3 +75,28 @@ The focused UI test build also exposes stale tests that still construct the form
 - Updated the turn-patch transport test to unwrap without imposing an unrelated `Debug` requirement on the lease owner.
 - Updated the action-bus wire-dispatch regression to observe the bounded payload page release before terminal completion.
 - `@semio-tech/framework-rs:test-quick`: 191/191 Rust tests and 87/87 TypeScript tests passed.
+
+## Demonstrator Component Restoration
+
+- Restored the demonstrator schema, IO, editor, and viewer trait boundaries after the generated scaffold had applied asynchronous signatures to pure helpers and tests indiscriminately.
+- Kept artifact composition, analysis, snapshot rebuilding, and actual editor/viewer lifecycle methods asynchronous while returning bounded component trees through the current UI assembly contract.
+- Added the framework dependency required by the demonstrator's closed app enum and compiled the demonstrator with every foreign app crate in one `wasm32-wasip2` check.
+- Restored the shared plugin scene-surface bridge, WGPU retained-paint traversal, host fault projection, and plugin-root exports needed by the foreign apps.
+
+## Boot Scheduling and Build Selection
+
+- Added language-agnostic launcher tests for runtime plugin build selection and delayed boot scheduling.
+- Runtime build variants are deduplicated by plugin id, so the five demonstrator-backed routes share one component while the procedural generator retains its separate component.
+- Overview boot now begins after a real delay and spreads background app activation over time; focusing a route pauses background activation so a visible app cannot be starved by five simultaneous component boots.
+- `@semio-tech/mit-bestand-demonstrator:test`: 2/2 Vitest tests passed.
+- `cargo check -p semio-s-plugin-demonstrator --target wasm32-wasip2`: passed with all six foreign app crates.
+
+## Native Host Ownership Boundary
+
+- The full build exposed a native-only `Send` failure in the retained shard drive future: pure `granted_budget` and `actor_lane` helpers borrowed the non-`Sync` Wasmtime instance table immutably across `await`.
+- Made those helpers synchronous, kept outcome transport mutation on the shard's exclusive borrow, and removed the stale child-process `block_on` around synchronous registration.
+- `cargo check -p semio-framework-plugin-host`: passed for the library and `semio-shard` binary.
+
+## Pending Runtime Evidence
+
+- The fresh full release build and six focused browser routes will be recorded here after artifact staging completes.

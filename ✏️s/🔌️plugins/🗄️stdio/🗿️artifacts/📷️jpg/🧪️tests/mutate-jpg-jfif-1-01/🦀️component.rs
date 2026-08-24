@@ -203,7 +203,7 @@ mod subject {
                 Ok(JpgMutation::RemoveHuffmanTable { key: JpgHuffmanTableKey { class, id: number(params, "id", 0.0) as u8 } })
             }
             "set-restart-interval" => Ok(JpgMutation::SetRestartInterval { restart_interval: Some(number(params, "restartInterval", 16.0) as u16) }),
-            "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment { index: number(params, "index", 0.0) as usize, segment: JpgSegment { marker: number(params, "marker", 0xE2_f64) as u8, data: hex_decode(&params.str("data"))? } }),
+            "insert-other-segment" => Ok(JpgMutation::InsertOtherSegment { index: number(params, "index", 0.0) as usize, segment: JpgSegment { marker: number(params, "marker", 226.0) as u8, data: hex_decode(&params.str("data"))? } }),
             "remove-other-segment" => Ok(JpgMutation::RemoveOtherSegment { index: number(params, "index", 0.0) as usize }),
             "set-pixels" => {
                 let fill = fill_of(params, [9, 9, 9, 255]);

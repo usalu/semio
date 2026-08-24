@@ -167,6 +167,7 @@ impl FrameEngine {
     /// node, as the prepaint walk registers each element (`crate::PrepaintCx::register`/
     /// `with_children` — see this file's module docstring), never derived from geometry afterward.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[cfg(test)]
     pub fn build_frame<E: Element>(&mut self, mut root: E, inputs: FrameInputs<'_>) -> Result<FrameGeneration, SceneError> {
         let FrameInputs { resources, text, scheduler, viewport, dpr, time_seconds } = inputs;
 

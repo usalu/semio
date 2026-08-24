@@ -29,6 +29,25 @@ Feature: Apply every typed PLY 1.0 mutation to a real-world document
   own doc comment — so `set-format`'s conversion to `binaryLittleEndian` genuinely exercises real
   binary list encoding rather than avoiding it.
 
+  🔴 The Rust SUBJECT phase ran for this case for the first time and reproduced two defects on OUR
+  side of the comparison, both in this adapter's wiring rather than in the codec or the reference.
+  First, the subject encoded through `encode_ply`, which is the ascii-FORCING convenience
+  (`encode_ply_with_format(…, PlyFormat::Ascii)`) — so `set-format` → `binaryLittleEndian` moved the
+  typed `PlySnapshot` and then wrote plain ascii with a `format ascii 1.0` header, while the
+  reference really wrote binary. The mutation was unobservable in our document and the whole point
+  of the row — real binary list encoding on both sides — was never measured. The production pack
+  path had already read the field the right way (`🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/
+  📸️snapshot/🦀️component.rs` calls `encode_ply_with_format(self, self.format)` and names the
+  ascii-forcing call as the hazard); the adapter now mirrors it. Second, the no-byte-pass-through
+  tripwire was applied to the UNDO step as well as the forward one, so `inverse-no-mutation` failed
+  for the codec behaving exactly as its own retention law requires: the undo re-encodes this codec's
+  own first-generation output, and decode/encode is a documented fixed point from the second
+  generation onward, so an undo that restores the same model MUST reproduce those bytes. The
+  tripwire now guards only the step that reads the real committed fixture — a foreign writer's
+  bytes, which this codec's normal form cannot reproduce — and the pristine-input half of the law
+  still runs unweakened in `identity-round-trip` and in every forward step. No profile, fixture or
+  assertion was changed.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

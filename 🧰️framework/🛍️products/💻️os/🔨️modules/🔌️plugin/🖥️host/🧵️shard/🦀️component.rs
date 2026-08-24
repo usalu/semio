@@ -166,11 +166,7 @@ pub async fn to_actor_turn_result(mut result: TurnResult, session: u64, wall_us:
             while !result.ui_patches.close_step() {
                 semio_framework_async::yield_once().await;
             }
-            return Err(semio_framework::Fault::new(
-                semio_framework::FaultOrigin::Framework,
-                semio_framework::FaultCode::new("plugin.turn-patches-admission"),
-                "fixed turn patch transport admission refused the exact owner",
-            ));
+            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-admission"), "fixed turn patch transport admission refused the exact owner"));
         }
     };
     loop {
@@ -178,35 +174,17 @@ pub async fn to_actor_turn_result(mut result: TurnResult, session: u64, wall_us:
             semio_framework::kernel::UiTurnPatchTransportStep::MoreWork => semio_framework_async::yield_once().await,
             semio_framework::kernel::UiTurnPatchTransportStep::Ready => break,
             semio_framework::kernel::UiTurnPatchTransportStep::Cancelled | semio_framework::kernel::UiTurnPatchTransportStep::Stale => {
-                return Err(semio_framework::Fault::new(
-                    semio_framework::FaultOrigin::Framework,
-                    semio_framework::FaultCode::new("plugin.turn-patches-transport"),
-                    "fixed turn patch transport became stale before publication",
-                ));
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-transport"), "fixed turn patch transport became stale before publication"));
             }
         }
     }
-    let effects = serde_json::to_vec(&result.effects).map_err(|error| {
-            semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-effects-encode"), error.to_string())
-        })?;
-    let command_ingress = serde_json::to_vec(&result.command_ingress).map_err(|error| {
-            semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-ingress-encode"), error.to_string())
-        })?;
-    let ui_patches = patch_transport.take_ready().map(|token| token.to_vec()).ok_or_else(|| {
-        semio_framework::Fault::new(
-            semio_framework::FaultOrigin::Framework,
-            semio_framework::FaultCode::new("plugin.turn-patches-publication"),
-            "fixed turn patch transport did not publish a complete token",
-        )
-    })?;
-    Ok(semio_framework_actor::TurnResult {
-        ui_patches,
-        effects,
-        command_ingress,
-        next_wake: result.next_wake,
-        status,
-        usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes },
-    })
+    let effects = serde_json::to_vec(&result.effects).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-effects-encode"), error.to_string()))?;
+    let command_ingress = serde_json::to_vec(&result.command_ingress).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-ingress-encode"), error.to_string()))?;
+    let ui_patches = patch_transport
+        .take_ready()
+        .map(|token| token.to_vec())
+        .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-publication"), "fixed turn patch transport did not publish a complete token"))?;
+    Ok(semio_framework_actor::TurnResult { ui_patches, effects, command_ingress, next_wake: result.next_wake, status, usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes } })
 }
 //#endregion 🔀️BudgetBridge
 
@@ -561,9 +539,7 @@ impl ShardLoop {
     /// an invented magic constant — for an actor that has never been granted a budget at all (e.g.
     /// a standalone `ShardFrame::Envelope` arriving before any `Grant`, or a caller like the
     /// `semio-shard` `[[bin]]` that does not yet send `Grant` frames at all).
-    async fn granted_budget(&self, actor: u64) -> semio_framework_actor::Budget {
-        // 🚫️async: R10 residue shape 1 — `budget_for` is external/async, hoisted out of the
-        // `unwrap_or_else` sync closure.
+    fn granted_budget(&self, actor: u64) -> semio_framework_actor::Budget {
         match self.granted_budgets.get(&actor).copied() {
             Some(budget) => budget,
             None => semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance),
@@ -588,7 +564,7 @@ impl ShardLoop {
     /// same DRR `Scheduler` that would have supplied a `Grant`-level lane). See
     /// `📓️terra-shard-lane-report.md`'s "wire change avoided" note — a `lease-request` is open
     /// against those two files in case a `Grant`-level field is still wanted for a future packet.
-    async fn actor_lane(&self, actor: u64) -> semio_framework_actor::Lane {
+    fn actor_lane(&self, actor: u64) -> semio_framework_actor::Lane {
         self.actor_lanes.get(&actor).copied().unwrap_or(semio_framework_actor::Lane::Maintenance)
     }
 
@@ -773,8 +749,8 @@ impl ShardLoop {
                 return Ok(1);
             };
             // 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
-            let job_budget = job_budget_from_grant(self.granted_budget(actor_id).await);
-            let actor_lane = self.actor_lane(actor_id).await;
+            let job_budget = job_budget_from_grant(self.granted_budget(actor_id));
+            let actor_lane = self.actor_lane(actor_id);
             let watchdog_stage = interactive_stage_for(actor_lane);
             let Some(instance) = self.instances.get_mut(&actor_id) else {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
@@ -822,8 +798,8 @@ impl ShardLoop {
                     self.job_turns.remove(&(actor_id, job));
                     self.job_authorities.remove(&(actor_id, job));
                     self.job_placement.remove(&(actor_id, job));
-                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) })?;
-                    ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await }
+                    defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) })?;
+                    ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) }
                 }
             };
             self.send_outcome(&outcome).await?;
@@ -841,8 +817,8 @@ impl ShardLoop {
         // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)`/`self.actor_lane(..)`
         // need `&self` (the whole struct), which conflicts with the `&mut self.instances` borrow
         // `instance` holds for the rest of this call (E0502).
-        let turn_budget = turn_budget_from_grant(self.granted_budget(actor_id).await);
-        let actor_lane = self.actor_lane(actor_id).await;
+        let turn_budget = turn_budget_from_grant(self.granted_budget(actor_id));
+        let actor_lane = self.actor_lane(actor_id);
         let watchdog_stage = interactive_stage_for(actor_lane);
         let Some(instance) = self.instances.get_mut(&actor_id) else {
             self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
@@ -904,7 +880,7 @@ impl ShardLoop {
                                         &mut self.terminal_authorities,
                                         actor_lane,
                                         actor_id,
-                                        Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) },
+                                        Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) },
                                     )?;
                                 }
                             }
@@ -919,7 +895,7 @@ impl ShardLoop {
                                         self.job_placement.remove(&(actor_id, *job));
                                     }
                                     Err(fault) => {
-                                        let message = format!("ShardLoop::pump: cancel-job {job} failed; actor {actor_id} retired: {}", turn_fault_message(&fault).await);
+                                        let message = format!("ShardLoop::pump: cancel-job {job} failed; actor {actor_id} retired: {}", turn_fault_message(&fault));
                                         self.unregister(ActorId(actor_id)).await;
                                         self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message }).await?;
                                         return Ok(());
@@ -932,7 +908,7 @@ impl ShardLoop {
                 }
                 match to_actor_turn_result(result, actor_id, 0, 0).await {
                     Ok(result) => ShardOutcome::Turn { actor: actor_id, result },
-                    Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.to_string() },
+                    Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.message },
                 }
             }
             // 🛑️ terra-shard-lane piece 2: a background/maintenance turn that ran past its
@@ -963,10 +939,10 @@ impl ShardLoop {
                 };
                 match to_actor_turn_result(result, actor_id, 0, 0).await {
                     Ok(result) => ShardOutcome::Turn { actor: actor_id, result },
-                    Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.to_string() },
+                    Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.message },
                 }
             }
-            Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await },
+            Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) },
         };
         self.send_outcome(&outcome).await?;
         Ok(())
@@ -1174,7 +1150,8 @@ impl ShardLoop {
             };
             if let Err(fault) = result {
                 self.unregister(ActorId(actor_id)).await;
-                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor cancel-job {job} failed before retirement: {}", turn_fault_message(&fault).await) }).await?;
+                let message = format!("ShardLoop::pump: actor cancel-job {job} failed before retirement: {}", turn_fault_message(&fault));
+                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message }).await?;
                 return Ok(());
             }
             self.running_jobs.remove(&(actor_id, job));
@@ -1219,7 +1196,7 @@ impl ShardLoop {
         }
     }
 
-    async fn send_outcome(&self, outcome: &ShardOutcome) -> Result<(), PluginHostError> {
+    async fn send_outcome(&mut self, outcome: &ShardOutcome) -> Result<(), PluginHostError> {
         let mut bytes = Vec::new();
         outcome.pack_encode(&mut bytes).await;
         self.transport.send(&bytes).await;
@@ -1231,7 +1208,7 @@ impl ShardLoop {
     }
 }
 
-async fn turn_fault_message(fault: &TurnFault) -> String {
+fn turn_fault_message(fault: &TurnFault) -> String {
     fault.to_string()
 }
 
@@ -1253,7 +1230,7 @@ fn interactive_stage_for(lane: semio_framework_actor::Lane) -> InteractiveStage 
 /// (bytes), ..}`'s bytes always carry — every other fault-bearing `RequestOutcome::Err` in this
 /// crate already uses this encoding, so the guest's `crate::host::outcome_to_result` decodes it
 /// exactly like a normal `Event::Completed` failure, with no special-casing for jobs.
-async fn start_job_fault_bytes(fault: &TurnFault) -> Vec<u8> {
+fn start_job_fault_bytes(fault: &TurnFault) -> Vec<u8> {
     dsl::encode_fault_bytes(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("job.host-fault"), fault.to_string()))
 }
 
@@ -1411,7 +1388,15 @@ impl GuestRuntime for RecordingRuntime {
     async fn drop_instance(&self, _inst: GuestInstance) {}
     async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         *self.last_turn_budget.lock().expect("lock") = Some(budget);
-        Ok(TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: vec![], presence: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle })
+        Ok(TurnResult {
+            ui_patches: semio_framework::kernel::UiTurnPatches::default(),
+            effects: vec![],
+            presence: vec![],
+            next_wake: None,
+            status: semio_framework::kernel::TurnStatus::Idle,
+            fuel_used: 0,
+            command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+        })
     }
     async fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
         Ok(())
@@ -2033,7 +2018,7 @@ mod tests {
         shard.register(actor, instance);
         let driven = pump(&mut shard).await.expect("pump");
         assert_eq!(driven, 0, "no envelopes bundled — nothing to drive yet");
-        assert_eq!(shard.granted_budget(actor.0).await.fuel, 123_456, "the Grant's budget must be recorded even with no envelopes");
+        assert_eq!(shard.granted_budget(actor.0).fuel, 123_456, "the Grant's budget must be recorded even with no envelopes");
     }
     //#endregion 🔖️ShardFrameRoundTrips
 
@@ -2150,7 +2135,7 @@ mod tests {
         let actor = ActorId(73);
         let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(LoopbackTransport::default())).await;
         let expected = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
-        assert_eq!(shard.granted_budget(actor.0).await, expected);
+        assert_eq!(shard.granted_budget(actor.0), expected);
     }
     //#endregion 🔖️GrantBudgetExecution
 
@@ -2213,10 +2198,7 @@ mod tests {
         assert_eq!(bridged.usage.fuel, 999, "usage.fuel comes from the kernel TurnResult's own fuel_used");
         assert_eq!(bridged.usage.wall_us, 1234, "wall_us is host-measured, passed straight through");
         assert_eq!(bridged.usage.memory_bytes, 5678, "memory_bytes is host-measured, passed straight through");
-        let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1)
-            .expect("exact test transport")
-            .take_owner()
-            .expect("exact test owner");
+        let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1).expect("exact test transport").take_owner().expect("exact test owner");
         while !patches.close_step() {}
     }
 
@@ -2228,13 +2210,18 @@ mod tests {
             (semio_framework::kernel::TurnStatus::MoreWork, semio_framework_actor::TurnStatus::MoreWork),
             (semio_framework::kernel::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() }, semio_framework_actor::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() }),
         ] {
-            let kernel_result = TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: vec![], presence: vec![], next_wake: None, status: kernel_status, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
+            let kernel_result = TurnResult {
+                ui_patches: semio_framework::kernel::UiTurnPatches::default(),
+                effects: vec![],
+                presence: vec![],
+                next_wake: None,
+                status: kernel_status,
+                fuel_used: 0,
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            };
             let bridged = to_actor_turn_result(kernel_result, 1, 0, 0).await.expect("fixed turn encoding");
             assert_eq!(bridged.status, expected);
-            let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1)
-                .expect("exact test transport")
-                .take_owner()
-                .expect("exact test owner");
+            let mut patches = semio_framework::kernel::UiTurnPatchTransportLease::try_from_token(&bridged.ui_patches, 1).expect("exact test transport").take_owner().expect("exact test owner");
             while !patches.close_step() {}
         }
     }

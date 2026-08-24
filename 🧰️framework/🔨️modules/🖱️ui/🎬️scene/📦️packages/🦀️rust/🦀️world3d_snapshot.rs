@@ -9,6 +9,10 @@ pub const WORLD3D_SNAPSHOT_CAPACITY: usize = 8;
 pub const WORLD3D_SNAPSHOT_PAGE_CAPACITY: usize = 256;
 pub const WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY: usize = 64;
 pub const WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY: usize = 16 * 1024;
+pub const WORLD3D_SNAPSHOT_DRAW_CAPACITY: usize = WORLD3D_SNAPSHOT_CAPACITY * WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY;
+pub const WORLD3D_SNAPSHOT_DRAW_INSTANCE_CAPACITY: usize = WORLD3D_SNAPSHOT_CAPACITY * WORLD3D_SNAPSHOT_PAGE_CAPACITY * WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY;
+pub const WORLD3D_SNAPSHOT_DRAW_BYTE_CAPACITY: usize = WORLD3D_SNAPSHOT_CAPACITY * WORLD3D_SNAPSHOT_PAGE_CAPACITY * WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY;
+const WORLD3D_SNAPSHOT_RECOVERED_PAGE_CAPACITY: usize = WORLD3D_SNAPSHOT_CAPACITY * WORLD3D_SNAPSHOT_PAGE_CAPACITY;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -163,6 +167,18 @@ pub struct World3dSnapshotDescriptor {
     pub page_count: u16,
     pub item_count: u32,
     pub byte_count: u32,
+    pub draw_count: u16,
+    pub draw_instance_count: u32,
+    pub draw_byte_count: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct World3dSnapshotDrawPermit {
+    pub slot: u8,
+    pub epoch: u64,
+    pub draw_count: u16,
+    pub instance_count: u32,
+    pub byte_count: u32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -192,6 +208,8 @@ struct World3dSnapshotSlot {
     admitted_bytes: u32,
     sealed: bool,
     closing: bool,
+    draw_claimed: bool,
+    orphaned: bool,
 }
 
 impl World3dSnapshotSlot {
@@ -203,15 +221,36 @@ impl World3dSnapshotSlot {
 struct World3dSnapshotStore {
     epochs: [u64; WORLD3D_SNAPSHOT_CAPACITY],
     slots: [Option<World3dSnapshotSlot>; WORLD3D_SNAPSHOT_CAPACITY],
+    reserved_draws: usize,
+    reserved_draw_instances: usize,
+    reserved_draw_bytes: usize,
+    recovered_pages: [Option<World3dSnapshotPage>; WORLD3D_SNAPSHOT_RECOVERED_PAGE_CAPACITY],
+    recovered_page_count: usize,
 }
 
 impl World3dSnapshotStore {
     const fn new() -> Self {
-        Self { epochs: [0; WORLD3D_SNAPSHOT_CAPACITY], slots: [const { None }; WORLD3D_SNAPSHOT_CAPACITY] }
+        Self {
+            epochs: [0; WORLD3D_SNAPSHOT_CAPACITY],
+            slots: [const { None }; WORLD3D_SNAPSHOT_CAPACITY],
+            reserved_draws: 0,
+            reserved_draw_instances: 0,
+            reserved_draw_bytes: 0,
+            recovered_pages: [const { None }; WORLD3D_SNAPSHOT_RECOVERED_PAGE_CAPACITY],
+            recovered_page_count: 0,
+        }
     }
 }
 
 static WORLD3D_SNAPSHOTS: Mutex<World3dSnapshotStore> = Mutex::new(World3dSnapshotStore::new());
+
+fn world3d_snapshot_release_slot(store: &mut World3dSnapshotStore, index: usize) -> Result<(), World3dSnapshotFault> {
+    let slot = store.slots[index].take().ok_or(World3dSnapshotFault::Stale)?;
+    store.reserved_draws = store.reserved_draws.checked_sub(usize::from(slot.descriptor.draw_count)).ok_or(World3dSnapshotFault::PageState)?;
+    store.reserved_draw_instances = store.reserved_draw_instances.checked_sub(usize::try_from(slot.descriptor.draw_instance_count).map_err(|_| World3dSnapshotFault::PageState)?).ok_or(World3dSnapshotFault::PageState)?;
+    store.reserved_draw_bytes = store.reserved_draw_bytes.checked_sub(usize::try_from(slot.descriptor.draw_byte_count).map_err(|_| World3dSnapshotFault::PageState)?).ok_or(World3dSnapshotFault::PageState)?;
+    Ok(())
+}
 
 pub fn world3d_snapshot_begin(descriptor: World3dSnapshotDescriptor) -> Result<World3dSnapshotWriteToken, World3dSnapshotFault> {
     let pages = usize::from(descriptor.page_count);
@@ -219,15 +258,43 @@ pub fn world3d_snapshot_begin(descriptor: World3dSnapshotDescriptor) -> Result<W
         || pages > WORLD3D_SNAPSHOT_PAGE_CAPACITY
         || usize::try_from(descriptor.item_count).ok().is_none_or(|items| items > pages * WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY)
         || usize::try_from(descriptor.byte_count).ok().is_none_or(|bytes| bytes > pages * WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY)
+        || usize::from(descriptor.draw_count) > WORLD3D_SNAPSHOT_DRAW_CAPACITY
+        || usize::try_from(descriptor.draw_instance_count).ok().is_none_or(|instances| instances > WORLD3D_SNAPSHOT_DRAW_INSTANCE_CAPACITY)
+        || usize::try_from(descriptor.draw_byte_count).ok().is_none_or(|bytes| bytes > WORLD3D_SNAPSHOT_DRAW_BYTE_CAPACITY)
     {
         return Err(World3dSnapshotFault::Capacity);
     }
     let mut store = WORLD3D_SNAPSHOTS.lock().map_err(|_| World3dSnapshotFault::Unavailable)?;
+    let reserved_draws = store.reserved_draws.checked_add(usize::from(descriptor.draw_count)).filter(|count| *count <= WORLD3D_SNAPSHOT_DRAW_CAPACITY).ok_or(World3dSnapshotFault::Unavailable)?;
+    let reserved_draw_instances = store
+        .reserved_draw_instances
+        .checked_add(usize::try_from(descriptor.draw_instance_count).map_err(|_| World3dSnapshotFault::Capacity)?)
+        .filter(|count| *count <= WORLD3D_SNAPSHOT_DRAW_INSTANCE_CAPACITY)
+        .ok_or(World3dSnapshotFault::Unavailable)?;
+    let reserved_draw_bytes =
+        store.reserved_draw_bytes.checked_add(usize::try_from(descriptor.draw_byte_count).map_err(|_| World3dSnapshotFault::Capacity)?).filter(|count| *count <= WORLD3D_SNAPSHOT_DRAW_BYTE_CAPACITY).ok_or(World3dSnapshotFault::Unavailable)?;
     let slot = store.slots.iter().position(Option::is_none).ok_or(World3dSnapshotFault::Unavailable)?;
     let epoch = store.epochs[slot].wrapping_add(1).max(1);
     store.epochs[slot] = epoch;
-    store.slots[slot] = Some(World3dSnapshotSlot { epoch, descriptor, pages: Box::new([const { None }; WORLD3D_SNAPSHOT_PAGE_CAPACITY]), admitted_pages: 0, admitted_items: 0, admitted_bytes: 0, sealed: false, closing: false });
+    store.reserved_draws = reserved_draws;
+    store.reserved_draw_instances = reserved_draw_instances;
+    store.reserved_draw_bytes = reserved_draw_bytes;
+    store.slots[slot] =
+        Some(World3dSnapshotSlot { epoch, descriptor, pages: Box::new([const { None }; WORLD3D_SNAPSHOT_PAGE_CAPACITY]), admitted_pages: 0, admitted_items: 0, admitted_bytes: 0, sealed: false, closing: false, draw_claimed: false, orphaned: false });
     Ok(World3dSnapshotWriteToken { slot: slot as u8, epoch, revision: descriptor.revision, generation: descriptor.generation })
+}
+
+pub fn world3d_snapshot_claim_draw_permit(lease: World3dSnapshotLease, draw_count: u16, instance_count: u32, byte_count: u32) -> Result<World3dSnapshotDrawPermit, World3dSnapshotFault> {
+    let mut store = WORLD3D_SNAPSHOTS.lock().map_err(|_| World3dSnapshotFault::Unavailable)?;
+    let slot = store.slots.get_mut(usize::from(lease.slot)).and_then(Option::as_mut).ok_or(World3dSnapshotFault::Stale)?;
+    if slot.epoch != lease.epoch || slot.descriptor.revision != lease.revision || slot.descriptor.generation != lease.generation || !slot.sealed || slot.closing || slot.draw_claimed {
+        return Err(World3dSnapshotFault::Stale);
+    }
+    if slot.descriptor.draw_count != draw_count || slot.descriptor.draw_instance_count != instance_count || slot.descriptor.draw_byte_count != byte_count {
+        return Err(World3dSnapshotFault::Capacity);
+    }
+    slot.draw_claimed = true;
+    Ok(World3dSnapshotDrawPermit { slot: lease.slot, epoch: lease.epoch, draw_count, instance_count, byte_count })
 }
 
 pub fn world3d_snapshot_admit_page(token: World3dSnapshotWriteToken, page: World3dSnapshotPage) -> Result<(), World3dRejectedSnapshotPage> {
@@ -298,7 +365,7 @@ pub fn world3d_snapshot_abort_write_step(token: World3dSnapshotWriteToken) -> Re
     if !slot.terminal_is_empty() {
         return Err(World3dSnapshotFault::PageState);
     }
-    store.slots[index] = None;
+    world3d_snapshot_release_slot(&mut store, index)?;
     Ok(true)
 }
 
@@ -326,6 +393,64 @@ pub fn world3d_snapshot_begin_close(lease: World3dSnapshotLease) -> Result<(), W
     Ok(())
 }
 
+pub fn world3d_snapshot_recover_lease(lease: World3dSnapshotLease) -> Result<(), World3dSnapshotFault> {
+    let mut store = WORLD3D_SNAPSHOTS.lock().map_err(|_| World3dSnapshotFault::Unavailable)?;
+    let slot = store.slots.get_mut(usize::from(lease.slot)).and_then(Option::as_mut).ok_or(World3dSnapshotFault::Stale)?;
+    if slot.epoch != lease.epoch || slot.descriptor.revision != lease.revision || slot.descriptor.generation != lease.generation {
+        return Err(World3dSnapshotFault::Stale);
+    }
+    slot.closing = true;
+    slot.orphaned = true;
+    Ok(())
+}
+
+pub fn world3d_snapshot_recover_write(token: World3dSnapshotWriteToken) -> Result<(), World3dSnapshotFault> {
+    let mut store = WORLD3D_SNAPSHOTS.lock().map_err(|_| World3dSnapshotFault::Unavailable)?;
+    let slot = store.slots.get_mut(usize::from(token.slot)).and_then(Option::as_mut).ok_or(World3dSnapshotFault::Stale)?;
+    if slot.epoch != token.epoch || slot.descriptor.revision != token.revision || slot.descriptor.generation != token.generation {
+        return Err(World3dSnapshotFault::Stale);
+    }
+    slot.closing = true;
+    slot.orphaned = true;
+    Ok(())
+}
+
+pub fn world3d_snapshot_recover_page(page: World3dSnapshotPage) -> Result<(), World3dSnapshotPage> {
+    let Ok(mut store) = WORLD3D_SNAPSHOTS.lock() else { return Err(page) };
+    let Some(slot) = store.recovered_pages.iter_mut().find(|slot| slot.is_none()) else { return Err(page) };
+    *slot = Some(page);
+    store.recovered_page_count += 1;
+    Ok(())
+}
+
+pub fn world3d_snapshot_recovery_close_step(maximum_bytes: usize) -> Option<(usize, usize)> {
+    let mut store = WORLD3D_SNAPSHOTS.lock().ok()?;
+    if store.recovered_page_count != 0 {
+        if maximum_bytes < WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY {
+            return Some((0, 0));
+        }
+        let page = store.recovered_pages.iter_mut().find(|page| page.is_some())?.take()?;
+        store.recovered_page_count -= 1;
+        drop(page);
+        return Some((1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY));
+    }
+    let index = store.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.orphaned))?;
+    let slot = store.slots[index].as_mut()?;
+    if slot.admitted_pages != 0 {
+        if maximum_bytes < WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY {
+            return Some((0, 0));
+        }
+        slot.admitted_pages -= 1;
+        slot.pages[usize::from(slot.admitted_pages)] = None;
+        return Some((1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY));
+    }
+    if !slot.terminal_is_empty() {
+        return Some((0, 0));
+    }
+    world3d_snapshot_release_slot(&mut store, index).ok()?;
+    Some((1, 0))
+}
+
 pub fn world3d_snapshot_close_step(lease: World3dSnapshotLease) -> Result<bool, World3dSnapshotFault> {
     let mut store = WORLD3D_SNAPSHOTS.lock().map_err(|_| World3dSnapshotFault::Unavailable)?;
     let index = usize::from(lease.slot);
@@ -341,7 +466,7 @@ pub fn world3d_snapshot_close_step(lease: World3dSnapshotLease) -> Result<bool, 
     if !slot.terminal_is_empty() {
         return Err(World3dSnapshotFault::PageState);
     }
-    store.slots[index] = None;
+    world3d_snapshot_release_slot(&mut store, index)?;
     Ok(true)
 }
 
@@ -365,7 +490,7 @@ mod tests {
 
     #[test]
     fn fixed_page_snapshot_validates_aba_iteration_and_one_page_close() {
-        let descriptor = World3dSnapshotDescriptor { revision: 7, generation: 9, page_count: 2, item_count: 2, byte_count: 7 };
+        let descriptor = World3dSnapshotDescriptor { revision: 7, generation: 9, page_count: 2, item_count: 2, byte_count: 7, draw_count: 1, draw_instance_count: 2, draw_byte_count: 7 };
         let token = world3d_snapshot_begin(descriptor).unwrap();
         world3d_snapshot_admit_page(token, page(World3dSnapshotPageKind::Camera, "cam")).unwrap();
         world3d_snapshot_admit_page(token, page(World3dSnapshotPageKind::Instance, "item")).unwrap();
@@ -382,7 +507,7 @@ mod tests {
 
     #[test]
     fn descriptor_and_page_capacity_plus_one_fail_before_publication() {
-        let descriptor = World3dSnapshotDescriptor { revision: 1, generation: 1, page_count: WORLD3D_SNAPSHOT_PAGE_CAPACITY as u16 + 1, item_count: 0, byte_count: 0 };
+        let descriptor = World3dSnapshotDescriptor { revision: 1, generation: 1, page_count: WORLD3D_SNAPSHOT_PAGE_CAPACITY as u16 + 1, item_count: 0, byte_count: 0, draw_count: 0, draw_instance_count: 0, draw_byte_count: 0 };
         assert_eq!(world3d_snapshot_begin(descriptor), Err(World3dSnapshotFault::Capacity));
         let mut full = World3dSnapshotPage::new(World3dSnapshotPageKind::Instance);
         for _ in 0..WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY {
@@ -393,7 +518,7 @@ mod tests {
 
     #[test]
     fn interrupted_writer_aborts_one_admitted_page_per_step() {
-        let descriptor = World3dSnapshotDescriptor { revision: 3, generation: 5, page_count: 2, item_count: 2, byte_count: 2 };
+        let descriptor = World3dSnapshotDescriptor { revision: 3, generation: 5, page_count: 2, item_count: 2, byte_count: 2, draw_count: 0, draw_instance_count: 0, draw_byte_count: 0 };
         let token = world3d_snapshot_begin(descriptor).unwrap();
         world3d_snapshot_admit_page(token, page(World3dSnapshotPageKind::Status, "a")).unwrap();
         world3d_snapshot_admit_page(token, page(World3dSnapshotPageKind::Engagement, "b")).unwrap();
@@ -402,5 +527,30 @@ mod tests {
         assert!(!world3d_snapshot_abort_write_step(token).unwrap());
         assert!(world3d_snapshot_abort_write_step(token).unwrap());
         assert!(world3d_snapshot_write_terminal_is_empty(token));
+    }
+
+    #[test]
+    fn draw_permit_is_reserved_before_publication_and_orphan_close_is_one_page() {
+        let before = {
+            let store = WORLD3D_SNAPSHOTS.lock().unwrap();
+            (store.reserved_draws, store.reserved_draw_instances, store.reserved_draw_bytes)
+        };
+        let descriptor = World3dSnapshotDescriptor { revision: 17, generation: 19, page_count: 1, item_count: 1, byte_count: 1, draw_count: 1, draw_instance_count: 2, draw_byte_count: 7 };
+        let token = world3d_snapshot_begin(descriptor).unwrap();
+        {
+            let store = WORLD3D_SNAPSHOTS.lock().unwrap();
+            assert_eq!((store.reserved_draws, store.reserved_draw_instances, store.reserved_draw_bytes), (before.0 + 1, before.1 + 2, before.2 + 7));
+        }
+        world3d_snapshot_admit_page(token, page(World3dSnapshotPageKind::Mesh, "x")).unwrap();
+        let lease = world3d_snapshot_seal(token).unwrap();
+        let permit = world3d_snapshot_claim_draw_permit(lease, 1, 2, 7).unwrap();
+        assert_eq!((permit.draw_count, permit.instance_count, permit.byte_count), (1, 2, 7));
+        assert_eq!(world3d_snapshot_claim_draw_permit(lease, 1, 2, 7), Err(World3dSnapshotFault::Stale));
+        world3d_snapshot_recover_lease(lease).unwrap();
+        assert_eq!(world3d_snapshot_recovery_close_step(0), Some((0, 0)));
+        assert_eq!(world3d_snapshot_recovery_close_step(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY), Some((1, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY)));
+        assert_eq!(world3d_snapshot_recovery_close_step(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY), Some((1, 0)));
+        let store = WORLD3D_SNAPSHOTS.lock().unwrap();
+        assert_eq!((store.reserved_draws, store.reserved_draw_instances, store.reserved_draw_bytes), before);
     }
 }

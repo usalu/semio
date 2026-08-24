@@ -742,6 +742,27 @@ export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
 //#endregion 🏷️EntwerfenMitBestandVerfolgenBrand
 
 //#region 🎪️DemonstratorPanes
+/** @emoji ⏱️ Browser timing surface used by the demonstrator's paced pane-boot queue. */
+export type DemonstratorIdleScheduler = {
+  readonly setTimeout: (callback: () => void, delayMs: number) => number;
+  readonly clearTimeout: (handle: number) => void;
+  readonly requestIdleCallback?: (callback: () => void, options?: { readonly timeout: number }) => number;
+  readonly cancelIdleCallback?: (handle: number) => void;
+};
+
+/** @emoji 🐢️ Enforces a minimum delay before yielding the next warm boot to the browser's idle queue. */
+export function scheduleDemonstratorIdle(callback: () => void, delayMs: number, scheduler: DemonstratorIdleScheduler): () => void {
+  let idleHandle: number | null = null;
+  const timeoutHandle = scheduler.setTimeout(() => {
+    if (scheduler.requestIdleCallback) idleHandle = scheduler.requestIdleCallback(callback, { timeout: 1_000 });
+    else callback();
+  }, delayMs);
+  return () => {
+    scheduler.clearTimeout(timeoutHandle);
+    if (idleHandle != null) scheduler.cancelIdleCallback?.(idleHandle);
+  };
+}
+
 /** @emoji 🎪️ One live pane in the demonstrator's 3×2 grid — order here IS grid order (row-major: index
  * 0-2 top row, 3-5 bottom row). */
 export type DemonstratorPaneSpec = {
@@ -758,6 +779,13 @@ export function demonstratorPaneRuntimeVariant(variant: string): string {
   return variant === "generator" ? "procedural3d" : variant;
 }
 
+/** @emoji 🧭️ Separates the module-owning runtime variant from the branded pane's manifest row.
+ * Generator executes the standalone procedural module, but its branded `generator` row carries the
+ * canonical app id that the module manifest actually declares. */
+export function demonstratorPaneBootVariants(variant: string): { readonly runtime: string; readonly manifest: string } {
+  return { runtime: demonstratorPaneRuntimeVariant(variant), manifest: variant };
+}
+
 export const DEMONSTRATOR_PANES: readonly DemonstratorPaneSpec[] = [
   { id: "generator", variant: "generator", brand: ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND, label: "Generator", tagline: "Parametrische Abläufe", icon: "workflow" },
   { id: "koordinator", variant: "koordinator", brand: ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND, label: "Koordinator", tagline: "Modelle koordinieren", icon: "cad-shape" },
@@ -767,3 +795,42 @@ export const DEMONSTRATOR_PANES: readonly DemonstratorPaneSpec[] = [
   { id: "verfolgen", variant: "verfolgen", brand: ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND, label: "Verfolgen", tagline: "Herkunft verfolgen", icon: "gis2d" },
 ];
 //#endregion 🎪️DemonstratorPanes
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  //#region 🧪️DemonstratorPaneBootTests
+  describe("scheduleDemonstratorIdle", () => {
+    it("never enters the idle queue before the minimum delay", () => {
+      let delayed: (() => void) | null = null;
+      let idleCalls = 0;
+      let callbackCalls = 0;
+      const scheduler: DemonstratorIdleScheduler = {
+        setTimeout: (callback) => {
+          delayed = callback;
+          return 1;
+        },
+        clearTimeout: () => undefined,
+        requestIdleCallback: (callback) => {
+          idleCalls += 1;
+          callback();
+          return 2;
+        },
+      };
+      scheduleDemonstratorIdle(() => {
+        callbackCalls += 1;
+      }, 1_500, scheduler);
+      expect({ idleCalls, callbackCalls }).toEqual({ idleCalls: 0, callbackCalls: 0 });
+      delayed?.();
+      expect({ idleCalls, callbackCalls }).toEqual({ idleCalls: 1, callbackCalls: 1 });
+    });
+  });
+
+  describe("demonstratorPaneBootVariants", () => {
+    it("keeps Generator's branded app id while loading the standalone procedural module", () => {
+      expect(demonstratorPaneBootVariants("generator")).toEqual({ runtime: "procedural3d", manifest: "generator" });
+      expect(demonstratorPaneBootVariants("koordinator")).toEqual({ runtime: "koordinator", manifest: "koordinator" });
+    });
+  });
+  //#endregion 🧪️DemonstratorPaneBootTests
+}

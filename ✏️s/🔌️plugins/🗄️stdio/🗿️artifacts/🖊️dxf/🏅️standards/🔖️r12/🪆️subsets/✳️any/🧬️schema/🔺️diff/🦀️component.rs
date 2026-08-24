@@ -28,7 +28,7 @@
 //! for enums, `name{[removed];[modified];[added]}` for collection triples) — see
 //! `f6-recon-report.md` in this ticket folder.
 
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::artifacts::dxf::DxfSnapshot;
@@ -1527,19 +1527,28 @@ fn validate_named_targets<'a>(
     added: impl IntoIterator<Item = (usize, &'a str)>,
     prefix: &[String],
 ) -> MutationApplyResult<()> {
-    let mut base = BTreeSet::new();
+    // 🎯️ The precondition is about the TARGETS, not about the whole table. A name-keyed edit is
+    // ambiguous exactly when the name IT NAMES occurs more than once, and refusing that stays
+    // right; refusing an unambiguous edit because some UNRELATED name is duplicated elsewhere in
+    // the same table is not the same rule, and it is what the whole-base uniqueness check used to
+    // do. The real committed `🖊️bus-shelter-r12.dxf` carries `LAYER ["0","0","DIMS"]`,
+    // `STYLE ["ANNOTATIVE","STANDARD","STANDARD","NOTES"]` and two `CONTINUOUS` linetypes — the
+    // `dxf` 0.6 writer that DERIVED it adds its own `normalize()` defaults on top of the source's
+    // own entries — so every single layer/style/linetype edit in `mutate-dxf-r12` was refused,
+    // including `remove-layer {"name":"DIMS"}`, whose target is unique. Ten of the case's 39
+    // parity comparisons diverged on that alone.
+    let mut occurrences: BTreeMap<&str, usize> = BTreeMap::new();
     for key in base_keys {
-        let mut target = prefix.to_vec();
-        target.push(key.to_string());
-        if !base.insert(key) {
-            return Err(target_error("duplicate-base-target", "base names must be unique", target));
-        }
+        *occurrences.entry(key).or_insert(0) += 1;
     }
+    let base_len: usize = occurrences.values().sum();
+    let unique = |key: &str| occurrences.get(key) == Some(&1);
+    let present = |key: &str| occurrences.contains_key(key);
     let mut removed = BTreeSet::new();
     for key in removed_keys {
         let mut target = prefix.to_vec();
         target.push(key.to_string());
-        if !base.contains(key) || !removed.insert(key) {
+        if !unique(key) || !removed.insert(key) {
             return Err(target_error("invalid-remove-target", "removal target must exist exactly once", target));
         }
     }
@@ -1547,11 +1556,11 @@ fn validate_named_targets<'a>(
     for key in modified_keys {
         let mut target = prefix.to_vec();
         target.push(key.to_string());
-        if !base.contains(key) || removed.contains(key) || !modified.insert(key) {
+        if !unique(key) || removed.contains(key) || !modified.insert(key) {
             return Err(target_error("invalid-modify-target", "modification target must exist exactly once and remain present", target));
         }
     }
-    let mut length = base.len() - removed.len();
+    let mut length = base_len - removed.len();
     let mut additions: Vec<(usize, &str)> = added.into_iter().collect();
     additions.sort_by_key(|(index, _)| *index);
     let mut added_keys = BTreeSet::new();
@@ -1559,7 +1568,7 @@ fn validate_named_targets<'a>(
     for (index, key) in additions {
         let mut target = prefix.to_vec();
         target.push(key.to_string());
-        if base.contains(key) || !added_keys.insert(key) || index > length || previous == Some(index) {
+        if present(key) || !added_keys.insert(key) || index > length || previous == Some(index) {
             return Err(target_error("invalid-add-target", "addition name and position must be unique and valid", target));
         }
         previous = Some(index);

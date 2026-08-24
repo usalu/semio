@@ -7,10 +7,9 @@
 //! The subject half is gated behind the generated host's `sut` feature, so the oracle-only run never
 //! compiles the local implementation.
 //!
-//! `KINDS` is duplicated locally rather than imported from `semio_s_plugin_stdio` (which currently
-//! fails to compile repo-wide — an unrelated os-kernel refactor's `semio_framework::` cycle, see the
-//! wave brief) so oracle-only registration never needs the broken production crate. Keep this list in
-//! sync with `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
+//! `KINDS` is duplicated locally rather than imported from `semio_s_plugin_stdio` because the
+//! oracle-only host does not link that crate at all (`sut` is off), so registration must not name it.
+//! Keep this list in sync with `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
 //! `KINDS` and `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`'s
 //! `mutationCatalogs[0].kinds` — the `kinds_manifest_law` test there is what keeps those two honest;
 //! this third copy is test-harness wiring, not vocabulary.

@@ -1,0 +1,2 @@
+[test] level=exhaustive cases=1 executed=42 passed=42 failed=0 errored=0 parity=20/21
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html::mutate-html-5::mutate-set-snapshot::rust::subject (1 differences)

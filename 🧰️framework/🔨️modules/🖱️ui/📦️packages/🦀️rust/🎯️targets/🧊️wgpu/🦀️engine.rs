@@ -9,7 +9,6 @@
 
 use std::collections::HashMap;
 
-use crate::wgpu::IconName;
 use crate::wgpu::component::layout::WindowLayout;
 #[cfg(test)]
 use crate::wgpu::component::ui::UiNode;
@@ -17,14 +16,15 @@ use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
 use crate::wgpu::mounted_layout::{MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
-use crate::wgpu::paint::{RetainedNodePaintCursor, RetainedNodePaintStep, paint_node_step, paint_tree, sync_interactive_state_node};
-use crate::wgpu::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, collect_scene_slots, scene_slot_for_node};
+use crate::wgpu::paint::{paint_node_step, paint_tree, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
+use crate::wgpu::scene_slots::{collect_scene_slots, scene_slot_for_node, SceneHost, ScenePaintCursor, ScenePaintStep};
 use crate::wgpu::shell::{Shell, ShellEvent};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::Theme;
 use crate::wgpu::tree::{NodeFlags, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree};
+use crate::wgpu::IconName;
 use semio_framework_job::StepContext;
-use ui_contract::{SurfaceId, UI_DOCUMENT_NODES, UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedList, UiNodeId};
+use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedList, UiNodeId, UI_DOCUMENT_NODES};
 
 //#region 🔖️UiWindow
 /// 🪟️ One window's retained pipeline state: its `UiTree` (`reconcile`'s diff target), the taffy
@@ -157,6 +157,8 @@ struct RetainedPaintFrame {
     phase: RetainedPaintPhase,
     walk: RetainedPaintWalk,
     candidate: DrawList,
+    sync_node: Option<crate::wgpu::arena::NodeId>,
+    node_sync: RetainedInteractiveSyncCursor,
     paint_node: Option<(crate::wgpu::arena::NodeId, f32, f32)>,
     node_paint: RetainedNodePaintCursor,
     scene_node: Option<(crate::wgpu::arena::NodeId, f32, f32)>,
@@ -250,6 +252,11 @@ impl UiSurfaceRegistry {
         (slot.generation == token.generation).then_some(&slot.id)
     }
 
+    fn token_at(&self, index: usize) -> Option<UiSurfaceToken> {
+        let slot = self.slots.get(index)?.as_ref()?;
+        Some(UiSurfaceToken { slot: index as u8, generation: slot.generation })
+    }
+
     fn values(&self) -> impl Iterator<Item = &UiWindow> {
         self.slots.iter().filter_map(|slot| slot.as_ref().map(|slot| &slot.window))
     }
@@ -315,7 +322,7 @@ impl SurfaceLane {
 }
 
 struct SurfaceLaneRing {
-    slots: [Option<UiSurfaceToken>; UI_LAYOUT_SURFACE_SLOTS],
+    slots: [Option<SurfaceLaneEntry>; UI_LAYOUT_SURFACE_SLOTS],
     head: usize,
     len: usize,
 }
@@ -327,17 +334,17 @@ impl Default for SurfaceLaneRing {
 }
 
 impl SurfaceLaneRing {
-    fn try_push(&mut self, token: UiSurfaceToken) -> Result<(), UiSurfaceToken> {
+    fn try_push(&mut self, entry: SurfaceLaneEntry) -> Result<(), SurfaceLaneEntry> {
         if self.len == UI_LAYOUT_SURFACE_SLOTS {
-            return Err(token);
+            return Err(entry);
         }
         let tail = (self.head + self.len) % UI_LAYOUT_SURFACE_SLOTS;
-        self.slots[tail] = Some(token);
+        self.slots[tail] = Some(entry);
         self.len += 1;
         Ok(())
     }
 
-    fn pop(&mut self) -> Option<UiSurfaceToken> {
+    fn pop(&mut self) -> Option<SurfaceLaneEntry> {
         if self.len == 0 {
             return None;
         }
@@ -350,6 +357,40 @@ impl SurfaceLaneRing {
     #[cfg(test)]
     fn len(&self) -> usize {
         self.len
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum SurfaceLayoutReason {
+    Dirty,
+    Metrics,
+    Theme,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct SurfaceLaneEntry {
+    token: UiSurfaceToken,
+    reason: SurfaceLayoutReason,
+    epoch: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ThemePropagationPhase {
+    Validate,
+    Apply,
+    Publish,
+}
+
+struct ThemePropagationCursor {
+    theme: Theme,
+    tokens: [Option<UiSurfaceToken>; UI_LAYOUT_SURFACE_SLOTS],
+    slot: usize,
+    phase: ThemePropagationPhase,
+}
+
+impl ThemePropagationCursor {
+    fn new(theme: Theme) -> Self {
+        Self { theme, tokens: [None; UI_LAYOUT_SURFACE_SLOTS], slot: 0, phase: ThemePropagationPhase::Validate }
     }
 }
 
@@ -407,8 +448,11 @@ pub struct Ui {
     theme: Theme,
     pending_commands: Vec<UiCommand>,
     layout_queues: [SurfaceLaneRing; 3],
-    layout_pressure: Option<UiSurfaceToken>,
+    layout_pressure: Option<SurfaceLaneEntry>,
     lane_cursor: usize,
+    theme_propagation: Option<ThemePropagationCursor>,
+    pending_theme: Option<Theme>,
+    theme_fault: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -419,32 +463,30 @@ const _: fn() = || {
 
 impl Ui {
     pub fn new() -> Self {
-        Self { windows: UiSurfaceRegistry::default(), shell: Shell::new(), theme: Theme::default(), pending_commands: Vec::new(), layout_queues: std::array::from_fn(|_| SurfaceLaneRing::default()), layout_pressure: None, lane_cursor: 0 }
+        Self {
+            windows: UiSurfaceRegistry::default(),
+            shell: Shell::new(),
+            theme: Theme::default(),
+            pending_commands: Vec::new(),
+            layout_queues: std::array::from_fn(|_| SurfaceLaneRing::default()),
+            layout_pressure: None,
+            lane_cursor: 0,
+            theme_propagation: None,
+            pending_theme: None,
+            theme_fault: false,
+        }
     }
 
     pub fn set_theme(&mut self, theme: Theme) {
         let layout_changed = theme_layout_identity(&self.theme) != theme_layout_identity(&theme);
-        if !layout_changed {
+        if !layout_changed && self.theme_propagation.is_none() {
             self.theme = theme;
             return;
         }
-        if self.windows.values().any(|window| window.layout_generation == u64::MAX || window.theme_revision == u64::MAX) {
-            return;
-        }
-        self.theme = theme;
-        let ids: UiFixedList<SurfaceId, UI_LAYOUT_SURFACE_SLOTS> = self.windows.ids().cloned().fold(UiFixedList::default(), |mut ids, id| {
-            let _ = ids.try_push(id);
-            ids
-        });
-        for id in ids {
-            if let Some(window) = self.windows.get_mut(id.as_ref()) {
-                window.layout_generation += 1;
-                window.theme_revision += 1;
-                if let Some(root) = window.tree.root {
-                    window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
-                }
-            }
-            self.enqueue_layout(id.as_ref());
+        if self.theme_propagation.is_some() {
+            self.pending_theme = Some(theme);
+        } else {
+            self.theme_propagation = Some(ThemePropagationCursor::new(theme));
         }
     }
 
@@ -473,7 +515,7 @@ impl Ui {
         if let Some(root) = window.tree.root {
             window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
         }
-        self.enqueue_layout(window_id);
+        self.enqueue_layout_reason(window_id, SurfaceLayoutReason::Metrics);
     }
 
     /// 🔁️ Runs `UiTree::apply_tree` (`reconcile`) to diff `ui_node` into `window_id`'s retained tree,
@@ -655,14 +697,17 @@ impl Ui {
         if cx.should_yield() {
             return UiLayoutStep::Idle;
         }
-        if let Some(token) = self.layout_pressure.take() {
-            let lane = self.windows.get_token(token).map_or(SurfaceLane::Background, |window| window.lane);
-            if let Err(token) = self.layout_queues[lane.index()].try_push(token) {
-                self.layout_pressure = Some(token);
+        if self.drive_theme_propagation_one() {
+            return UiLayoutStep::Idle;
+        }
+        if let Some(entry) = self.layout_pressure.take() {
+            let lane = self.windows.get_token(entry.token).map_or(SurfaceLane::Background, |window| window.lane);
+            if let Err(entry) = self.layout_queues[lane.index()].try_push(entry) {
+                self.layout_pressure = Some(entry);
             }
             return UiLayoutStep::Idle;
         }
-        let Some((token, window_id, lane)) = self.next_layout() else { return UiLayoutStep::Idle };
+        let Some((token, window_id, lane, _reason)) = self.next_layout() else { return UiLayoutStep::Idle };
         let theme = self.theme;
         let Some(window) = self.windows.get_token_mut(token) else { return UiLayoutStep::Idle };
         window.queued = false;
@@ -796,32 +841,124 @@ impl Ui {
         }
     }
 
+    fn drive_theme_propagation_one(&mut self) -> bool {
+        let Some(mut cursor) = self.theme_propagation.take() else {
+            let Some(theme) = self.pending_theme.take() else { return false };
+            self.theme_propagation = Some(ThemePropagationCursor::new(theme));
+            return true;
+        };
+        match cursor.phase {
+            ThemePropagationPhase::Validate => {
+                if cursor.slot == UI_LAYOUT_SURFACE_SLOTS {
+                    cursor.slot = 0;
+                    cursor.phase = ThemePropagationPhase::Apply;
+                    self.theme_propagation = Some(cursor);
+                    return true;
+                }
+                let token = self.windows.token_at(cursor.slot);
+                if let Some(window) = token.and_then(|token| self.windows.get_token(token)) {
+                    if window.layout_generation == u64::MAX || window.theme_revision == u64::MAX {
+                        self.theme_fault = true;
+                        self.theme_propagation = Some(cursor);
+                        return true;
+                    }
+                }
+                cursor.tokens[cursor.slot] = token;
+                cursor.slot += 1;
+                self.theme_propagation = Some(cursor);
+                true
+            }
+            ThemePropagationPhase::Apply => {
+                if cursor.slot == UI_LAYOUT_SURFACE_SLOTS {
+                    cursor.phase = ThemePropagationPhase::Publish;
+                    self.theme_propagation = Some(cursor);
+                    return true;
+                }
+                let token = cursor.tokens[cursor.slot];
+                cursor.slot += 1;
+                if let Some(token) = token {
+                    let Some(window) = self.windows.get_token_mut(token) else {
+                        self.theme_propagation = Some(cursor);
+                        return true;
+                    };
+                    let Some(layout_generation) = window.layout_generation.checked_add(1) else {
+                        self.theme_fault = true;
+                        self.theme_propagation = Some(cursor);
+                        return true;
+                    };
+                    let Some(theme_revision) = window.theme_revision.checked_add(1) else {
+                        self.theme_fault = true;
+                        self.theme_propagation = Some(cursor);
+                        return true;
+                    };
+                    window.layout_generation = layout_generation;
+                    window.theme_revision = theme_revision;
+                    if let Some(root) = window.tree.root {
+                        window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+                    }
+                    self.enqueue_layout_token(token, SurfaceLayoutReason::Theme);
+                }
+                self.theme_propagation = Some(cursor);
+                true
+            }
+            ThemePropagationPhase::Publish => {
+                self.theme = cursor.theme;
+                self.theme_fault = false;
+                if let Some(theme) = self.pending_theme.take() {
+                    if theme_layout_identity(&self.theme) == theme_layout_identity(&theme) {
+                        self.theme = theme;
+                    } else {
+                        self.theme_propagation = Some(ThemePropagationCursor::new(theme));
+                    }
+                }
+                true
+            }
+        }
+    }
+
     fn enqueue_layout(&mut self, window_id: &str) {
+        self.enqueue_layout_reason(window_id, SurfaceLayoutReason::Dirty);
+    }
+
+    fn enqueue_layout_reason(&mut self, window_id: &str, reason: SurfaceLayoutReason) {
         let Some(token) = self.windows.token(window_id) else { return };
+        self.enqueue_layout_token(token, reason);
+    }
+
+    fn enqueue_layout_token(&mut self, token: UiSurfaceToken, reason: SurfaceLayoutReason) {
         let Some(window) = self.windows.get_token_mut(token) else { return };
         if window.queued {
             return;
         }
         window.queued = true;
-        if let Err(token) = self.layout_queues[window.lane.index()].try_push(token) {
-            self.layout_pressure = Some(token);
+        let lane = window.lane;
+        let entry = SurfaceLaneEntry { token, reason, epoch: window.layout_generation };
+        if let Err(entry) = self.layout_queues[lane.index()].try_push(entry) {
+            self.layout_pressure = Some(entry);
         }
     }
 
-    fn next_layout(&mut self) -> Option<(UiSurfaceToken, SurfaceId, SurfaceLane)> {
+    fn next_layout(&mut self) -> Option<(UiSurfaceToken, SurfaceId, SurfaceLane, SurfaceLayoutReason)> {
         for _ in 0..LANE_WHEEL.len() {
             let lane = LANE_WHEEL[self.lane_cursor];
             self.lane_cursor = (self.lane_cursor + 1) % LANE_WHEEL.len();
-            let Some(token) = self.layout_queues[lane.index()].pop() else { continue };
-            let Some(window) = self.windows.get_token(token) else { continue };
-            if window.lane != lane {
-                if let Err(token) = self.layout_queues[window.lane.index()].try_push(token) {
-                    self.layout_pressure = Some(token);
+            let Some(entry) = self.layout_queues[lane.index()].pop() else { continue };
+            let Some(window) = self.windows.get_token(entry.token) else { continue };
+            if window.layout_generation != entry.epoch {
+                let current = SurfaceLaneEntry { epoch: window.layout_generation, ..entry };
+                if let Err(current) = self.layout_queues[window.lane.index()].try_push(current) {
+                    self.layout_pressure = Some(current);
                 }
                 continue;
             }
-            let id = self.windows.id(token)?.clone();
-            return Some((token, id, lane));
+            if window.lane != lane {
+                if let Err(entry) = self.layout_queues[window.lane.index()].try_push(entry) {
+                    self.layout_pressure = Some(entry);
+                }
+                continue;
+            }
+            let id = self.windows.id(entry.token)?.clone();
+            return Some((entry.token, id, lane, entry.reason));
         }
         None
     }
@@ -851,7 +988,7 @@ impl Ui {
     /// schedules a future wake), so this is purely dirty-flag-driven; wiring a real animation deadline
     /// is separate follow-up work, not this façade's job to invent.
     pub fn needs_frame(&self) -> bool {
-        self.windows.values().any(UiWindow::is_dirty)
+        self.theme_propagation.is_some() || self.pending_theme.is_some() || self.windows.values().any(UiWindow::is_dirty)
     }
 
     /// 🖼️ The dirty-gated per-tick pipeline for `window_id`: `flex::LayoutEngine::compute` (itself a
@@ -911,6 +1048,8 @@ impl Ui {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
                 candidate: DrawList::default(),
+                sync_node: None,
+                node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
                 node_paint: RetainedNodePaintCursor::default(),
                 scene_node: None,
@@ -923,11 +1062,36 @@ impl Ui {
         }
         let fresh = window.paint_frame.as_ref().is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision);
         if !fresh {
+            if !window.paint_frame.as_mut().is_some_and(|frame| frame.node_sync.close_step()) {
+                return UiFrameStep::Pending;
+            }
             let Some(frame) = window.paint_frame.take() else { return UiFrameStep::Fault };
             window.retiring_draw = Some(frame.candidate);
             return UiFrameStep::Pending;
         }
         let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
+        if matches!(frame.phase, RetainedPaintPhase::Fault) {
+            if !frame.node_sync.close_step() {
+                return UiFrameStep::Pending;
+            }
+            frame.sync_node = None;
+            return UiFrameStep::Fault;
+        }
+        if matches!(frame.phase, RetainedPaintPhase::Synchronize) {
+            if let Some(node) = frame.sync_node {
+                match sync_interactive_state_node_step(&mut window.tree, node, &theme, &mut frame.node_sync) {
+                    RetainedInteractiveSyncStep::Pending => return UiFrameStep::Pending,
+                    RetainedInteractiveSyncStep::Complete => {
+                        frame.sync_node = None;
+                        return UiFrameStep::Pending;
+                    }
+                    RetainedInteractiveSyncStep::Fault => {
+                        frame.phase = RetainedPaintPhase::Fault;
+                        return UiFrameStep::Pending;
+                    }
+                }
+            }
+        }
         if matches!(frame.phase, RetainedPaintPhase::Paint) {
             if let Some((node, origin_x, origin_y)) = frame.paint_node {
                 match paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), &mut frame.candidate, &mut frame.node_paint) {
@@ -972,7 +1136,7 @@ impl Ui {
         match frame.phase {
             RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, _, _) => {
-                    sync_interactive_state_node(&mut window.tree, node, &theme);
+                    frame.sync_node = Some(node);
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -1059,6 +1223,8 @@ impl Ui {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
                 candidate: DrawList::default(),
+                sync_node: None,
+                node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
                 node_paint: RetainedNodePaintCursor::default(),
                 scene_node: None,
@@ -1071,11 +1237,36 @@ impl Ui {
         }
         let fresh = window.paint_frame.as_ref().is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision);
         if !fresh {
+            if !window.paint_frame.as_mut().is_some_and(|frame| frame.node_sync.close_step()) {
+                return UiFrameStep::Pending;
+            }
             let Some(frame) = window.paint_frame.take() else { return UiFrameStep::Fault };
             window.retiring_draw = Some(frame.candidate);
             return UiFrameStep::Pending;
         }
         let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
+        if matches!(frame.phase, RetainedPaintPhase::Fault) {
+            if !frame.node_sync.close_step() {
+                return UiFrameStep::Pending;
+            }
+            frame.sync_node = None;
+            return UiFrameStep::Fault;
+        }
+        if matches!(frame.phase, RetainedPaintPhase::Synchronize) {
+            if let Some(node) = frame.sync_node {
+                match sync_interactive_state_node_step(&mut window.tree, node, &theme, &mut frame.node_sync) {
+                    RetainedInteractiveSyncStep::Pending => return UiFrameStep::Pending,
+                    RetainedInteractiveSyncStep::Complete => {
+                        frame.sync_node = None;
+                        return UiFrameStep::Pending;
+                    }
+                    RetainedInteractiveSyncStep::Fault => {
+                        frame.phase = RetainedPaintPhase::Fault;
+                        return UiFrameStep::Pending;
+                    }
+                }
+            }
+        }
         if matches!(frame.phase, RetainedPaintPhase::Paint) {
             if let Some((node, origin_x, origin_y)) = frame.paint_node {
                 match paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), target, &mut frame.node_paint) {
@@ -1120,7 +1311,7 @@ impl Ui {
         match frame.phase {
             RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, _, _) => {
-                    sync_interactive_state_node(&mut window.tree, node, &theme);
+                    frame.sync_node = Some(node);
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -1299,20 +1490,20 @@ impl Ui {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wgpu::Label;
     use crate::wgpu::component::layout::ActionDescriptor;
     use crate::wgpu::component::ui::{
-        SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence, UiRingNode,
-        UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ui_node_to_control,
+        ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence,
+        UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
     use crate::wgpu::events::PointerButton;
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::input::InputState;
     use crate::wgpu::scene_slots::SceneSlot;
     use crate::wgpu::widgets::{
-        ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode, draw_text_on, draw_text_overlay_on, measure_widget,
-        render_scroll_region, render_widget, wrap_text,
+        draw_text_on, draw_text_overlay_on, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext,
+        WidgetInteractionMaps, WidgetNode,
     };
+    use crate::wgpu::Label;
     use std::collections::HashMap as StdHashMap;
 
     //#region 🔖️FacadeTests
@@ -1572,6 +1763,24 @@ mod tests {
         assert_eq!(ui.windows.get("theme").map(|window| window.layout_generation), before_generation);
         assert_eq!(ui.windows.get("theme").map(|window| window.theme_revision), before_theme_revision);
         assert_eq!(ui.layout_queues.iter().map(SurfaceLaneRing::len).sum::<usize>(), before_queue);
+    }
+
+    #[test]
+    fn changed_theme_propagates_one_fixed_surface_slot_per_opportunity() {
+        let mut ui = Ui::new();
+        ui.apply_tree("theme-a", &stack_ui(vec![button_ui("a", "A")]));
+        ui.apply_tree("theme-b", &stack_ui(vec![button_ui("b", "B")]));
+        let before_a = ui.windows.get("theme-a").map(|window| window.theme_revision);
+        let before_b = ui.windows.get("theme-b").map(|window| window.theme_revision);
+        let mut changed = ui.theme();
+        changed.gap_standard += 1.0;
+        ui.set_theme(changed);
+        assert_eq!(ui.windows.get("theme-a").map(|window| window.theme_revision), before_a);
+        assert_eq!(ui.windows.get("theme-b").map(|window| window.theme_revision), before_b);
+        assert!(ui.drive_theme_propagation_one());
+        assert!(ui.theme_propagation.as_ref().is_some_and(|cursor| cursor.phase == ThemePropagationPhase::Validate && cursor.slot == 1));
+        assert_eq!(ui.windows.get("theme-a").map(|window| window.theme_revision), before_a);
+        assert_eq!(ui.windows.get("theme-b").map(|window| window.theme_revision), before_b);
     }
 
     #[test]

@@ -5,7 +5,7 @@
 
 use crate::wgpu::arena::{Arena, NodeId};
 use crate::wgpu::component::ui::UiNode;
-use ui_contract::{SurfaceId, UI_DOCUMENT_NODES, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiNodeTable, UiRevision};
+use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiNodeTable, UiRevision, UI_DOCUMENT_NODES};
 
 //#region 🔖️RetainedDocument
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -354,7 +354,11 @@ impl UiTree {
     pub(crate) fn accepted_layout(&self, id: NodeId) -> Option<AcceptedLayout> {
         let node = self.arena.get(id)?;
         let mounted = node.mounted_layout[self.mounted_layout_active];
-        if self.mounted_layout_generation != 0 && mounted.generation == self.mounted_layout_generation { Some(mounted.layout) } else { Some(AcceptedLayout { x: node.layout.x, y: node.layout.y, width: node.layout.width, height: node.layout.height }) }
+        if self.mounted_layout_generation != 0 && mounted.generation == self.mounted_layout_generation {
+            Some(mounted.layout)
+        } else {
+            Some(AcceptedLayout { x: node.layout.x, y: node.layout.y, width: node.layout.width, height: node.layout.height })
+        }
     }
 
     pub(crate) fn write_inactive_layout(&mut self, id: NodeId, generation: u64, layout: AcceptedLayout) -> bool {
@@ -505,8 +509,8 @@ impl UiTree {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wgpu::Label;
     use crate::wgpu::component::ui::{UiNode, UiPresence, UiTextNode};
+    use crate::wgpu::Label;
     use ui_contract::{Component, SeparatorProps};
 
     fn text(value: &str) -> UiNode {

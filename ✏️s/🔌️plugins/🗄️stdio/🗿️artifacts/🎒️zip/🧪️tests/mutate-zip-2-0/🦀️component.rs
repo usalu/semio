@@ -6,8 +6,11 @@
 //! drives this repository's own decode/mutate/encode round trip through the real `ZipMutation`
 //! vocabulary, and both results are read back by the INDEPENDENT `zip` reader before the
 //! `semantic-archive-mutate-v1` profile compares them. The subject half is gated behind the
-//! generated host's `sut` feature so the oracle-only run never links `semio-s-plugin-stdio`, whose
-//! subject phase is peer-blocked right now (concurrent os-kernel refactor).
+//! generated host's `sut` feature so the oracle-only run never links `semio-s-plugin-stdio` at all.
+//! (That gate is a build-cost boundary, nothing more: the subject phase RUNS. This adapter used to
+//! say it was peer-blocked by a concurrent os-kernel refactor — that blocker was cleared on
+//! 2026-08-24, `cargo check -p semio-framework-os-kernel --lib` is exit 0, and this case's own
+//! `parity exhaustive --owner 🗄️stdio --case mutate-zip-2-0` reports `parity=15/15`.)
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::any::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_mutation};

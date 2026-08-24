@@ -3,7 +3,7 @@
 
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -12,7 +12,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::playground::create_playground_editor`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Schema", "Schema"), ..TextWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -22,7 +22,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// (`read_only: false`) — the framework-catalog `replace-text` action on this window kind, plus the
 /// surface's own `changeSchema` manifest action, both dispatch through `PlaygroundEditor::handle`'s
 /// one `PlaygroundCommand::ChangeSchema` row.
-pub async fn render(document: &PlaygroundSnapshot) -> UiNode {
+pub fn render(document: &PlaygroundSnapshot) -> UiAssemblyResult<BuiltNode> {
     TextWindowKit::render(&TextView { text: document.schema.clone(), language: Some("playground".into()), read_only: false })
 }
 //#endregion 🔖️Render
@@ -32,21 +32,20 @@ pub async fn render(document: &PlaygroundSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_an_editable_text_window() {
+    #[test]
+    fn definition_declares_an_editable_text_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
         assert!(def.actions.iter().any(|action| action.id == "replace-text"), "editable text window must carry the replace-text catalog action");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_carries_the_schema_field_as_editable_text() {
+    #[test]
+    fn render_carries_the_schema_field_as_editable_text() {
         let document = PlaygroundSnapshot { schema: "playground.custom".into() };
-        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.text_editor.expect("text_editor scene");
-        assert_eq!(scene.buffer, "playground.custom");
-        assert!(scene.settings_json.is_none(), "editable window must not stamp readOnly");
+        let json = serde_json::to_string(&render(&document).expect("render")).expect("serialize render");
+        assert!(json.contains("playground.custom"));
+        assert!(!json.contains("readOnly"), "editable window must not stamp readOnly");
     }
 }
 //#endregion 🧪️Tests

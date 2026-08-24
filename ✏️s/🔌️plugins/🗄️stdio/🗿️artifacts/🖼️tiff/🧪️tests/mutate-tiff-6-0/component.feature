@@ -24,6 +24,19 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   decode/re-encode, and the writer reproduces its own committed output exactly, which any
   reader/writer asymmetry would break.
 
+  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-insert-ifd` (parity 16/17, 2026-08-24). The row's `ifd` param
+  carries six entries and a real `pixels` strip. The oracle backs that page with actual strip bytes,
+  which forces `RowsPerStrip` to the page's `ImageLength` (TIFF6 §Strips: a single combined strip
+  needs `RowsPerStrip = height`, or a reader expects `ceil(height/RowsPerStrip)` strip offsets and
+  finds one), so its IFD 2 projects seven entries. `TiffSnapshot` has ONE `pixels` field — IFD 0's —
+  so this repository's encoder cannot back a non-primary IFD with raster at all and writes the six
+  declared entries verbatim; see `MultiIfdEncodeScopeNote` in
+  `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs`. The two sides genuinely produce
+  different documents: the oracle's inserted page has pixels, ours is metadata only. Closing it means
+  giving `TiffIfd` its own strip bytes — a schema-first change across the snapshot, diff, mutation,
+  proto/graphql/ts mirrors and the binary protocol — not a tolerance, an `ignoreKeys` entry or a
+  cosmetic `RowsPerStrip` our encoder would have nothing to back.
+
   @id-mutate
   @level-exhaustive
   @mode-differential

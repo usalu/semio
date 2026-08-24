@@ -23,6 +23,14 @@
 //! Without those patches `set-background-color-index` and `set-pixel-aspect-ratio` are accepted and
 //! silently discarded, which reports as a passing scenario.
 //!
+//! A FOURTH constant of the same family is the Global Color Table itself: `Encoder::new` documents
+//! that "if no global palette shall be used an empty slice may be supplied", and
+//! `write_global_palette` then sets the Global Color Table Flag unconditionally and writes
+//! `check_color_table`'s two-entry padding for an empty slice (gif 0.14.2 `src/encoder.rs:183-195`,
+//! `303-311`). A document declaring no global table therefore came back carrying a phantom
+//! two-colour one, so `set-snapshot {"gct": null}` was silently discarded the same way. `oracle_encode`
+//! clears the flag and drops those six bytes; see its own comment for why the result stays conformant.
+//!
 //! `project` (below) is this subset's OWN projection rather than the shared `raster::project_gif`:
 //! that one reports only screen geometry and per-frame rectangles plus an opaque-sample count, so
 //! the GCT, the background index, the aspect ratio, the interlace flag and the raw index buffers —
@@ -218,6 +226,27 @@ mod live {
         out[4] = b'7';
         out[11] = doc.background_color_index;
         out[12] = doc.pixel_aspect_ratio;
+        // 🎨 Fourth constant of the same kind (see the module docstring): `Encoder::new`'s own
+        // doc comment says "if no global palette shall be used an empty slice may be supplied",
+        // and `write_global_palette` (gif 0.14.2 `src/encoder.rs:183-195`) then sets
+        // `flags |= 0b1000_0000` UNCONDITIONALLY and writes `check_color_table`'s padding — for an
+        // empty slice, `flag_size(0) = 0`, so `2 << 0 = 2` all-zero entries. A document that
+        // declares no Global Color Table therefore comes back out of the reference writer carrying
+        // a phantom two-entry one, and `set-snapshot {"gct": null}` is silently discarded exactly
+        // the way the background index and aspect ratio were before their patches. Undone here:
+        // clear the Global Color Table Flag (GIF87a §18, bit 7 of the packed byte 10) and drop the
+        // six table bytes that follow the Logical Screen Descriptor. Every image is guaranteed to
+        // carry a Local Color Table in this branch — with an empty global palette the crate's own
+        // `write_frame` refuses a frame without one (`EncodingFormatError::MissingColorPalette`) —
+        // so the result is a conformant GIF, not one whose images resolve through a table that is
+        // no longer there.
+        if doc.gct.is_empty() {
+            if out.len() < 19 {
+                return Err("independent writer produced a stream too short to carry the phantom global color table".to_string());
+            }
+            out[10] &= 0b0111_1111;
+            out.drain(13..19);
+        }
         Ok(out)
     }
     //#endregion 🔖️Codec

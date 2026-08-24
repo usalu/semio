@@ -55,6 +55,20 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   which append genuinely restores. Widening the vocabulary (an insert-style that carries a position)
   is the fix, and it belongs to whoever owns that enum.
 
+  THE FIRST DIFFERENTIAL RUN OF THIS CASE FOUND A REAL DIVERGENCE, AND IT WAS FIXED IN OUR CODE.
+  `inverse-set-snapshot` came back 12 differences apart from the oracle: `$.styles[1..6]` — every
+  interior style — sat in the wrong place. `DocxMutation::SetSnapshot`'s inverse is
+  `SetSnapshot{snapshot: base}`, which is correct; what was wrong is that `DocxDiff::between` routed
+  the style list through a name-keyed collection triple that transported no ORDER, so applying it
+  kept the survivors in their base order and APPENDED the four re-added styles. `set-snapshot` is a
+  total replacement, so `apply(base, between(base, next))` has to land on `next` exactly — the
+  ordered style list `semantic-docx-ecma-376-mutate-v1` projects by index included. The triple now
+  carries the exact final key sequence, populated only when the survivors-then-additions default
+  would not reproduce it, and `inverse_named` restores the base's own sequence. No comparison
+  profile was touched, no `ignoreKeys` added, no Examples row changed; the oracle was already right.
+  This does NOT widen the vocabulary: `InsertStyle` still appends by definition, so the
+  interior-`remove-style` gap described above is exactly as non-invertible as it was.
+
   ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law module,
   so no scenario can pass merely because the reference composition declined to error.
   `mutate-<kind>` fails unless the mutation MOVES the very projection the case is compared through:

@@ -2,7 +2,7 @@
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <dev|build> [args…]`. */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmdStatus, runViteBunxDev, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmdStatus, runViteBunxDev, runVitest, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🟦️brand.ts";
@@ -13,8 +13,7 @@ const demonstratorRoot = import.meta.dir;
 /** @emoji 🎯️ Builds only the primary crate behind a runtime variant; its contributed extensions are
  * already included by the demonstrator crate's own consumer closure. */
 async function buildRuntimePlugin(variant: string): Promise<void> {
-  const pluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === variant)?.pluginId;
-  if (!pluginId) throw new Error(`unknown demonstrator runtime variant: ${variant}`);
+  const pluginId = runtimePluginId(variant);
   const previousPluginOnly = process.env.SEMIO_PLUGIN_ONLY;
   process.env.SEMIO_PLUGIN_ONLY = pluginId;
   try {
@@ -23,6 +22,27 @@ async function buildRuntimePlugin(variant: string): Promise<void> {
     if (previousPluginOnly === undefined) delete process.env.SEMIO_PLUGIN_ONLY;
     else process.env.SEMIO_PLUGIN_ONLY = previousPluginOnly;
   }
+}
+
+/** @emoji 🪪️ Resolves a playground variant to the plugin artifact it builds. */
+function runtimePluginId(variant: string): string {
+  const pluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === variant)?.pluginId;
+  if (!pluginId) throw new Error(`unknown demonstrator runtime variant: ${variant}`);
+  return pluginId;
+}
+
+/** @emoji 🧮️ Returns one representative runtime variant for each additional plugin artifact. */
+export function demonstratorRuntimeBuildVariants(primaryVariant: string): readonly string[] {
+  const seenPluginIds = new Set([runtimePluginId(primaryVariant)]);
+  const variants: string[] = [];
+  for (const pane of DEMONSTRATOR_PANES) {
+    const variant = demonstratorPaneRuntimeVariant(pane.variant);
+    const pluginId = runtimePluginId(variant);
+    if (seenPluginIds.has(pluginId)) continue;
+    seenPluginIds.add(pluginId);
+    variants.push(variant);
+  }
+  return variants;
 }
 
 /** @emoji 🎪️ Builds every pane's runtime plugin crate + declared engines into the shared
@@ -51,9 +71,8 @@ async function buildDemonstratorPlugins(): Promise<void> {
       await buildPlugins(primaryVariant);
     }
   }
-  const secondaryRuntimeVariants = [...new Set(DEMONSTRATOR_PANES.map((pane) => demonstratorPaneRuntimeVariant(pane.variant)))].filter((variant) => variant !== primaryVariant);
   if (process.env.SKIP_PLUGIN_BUILD !== "1") {
-    for (const variant of secondaryRuntimeVariants) await buildRuntimePlugin(variant);
+    for (const variant of demonstratorRuntimeBuildVariants(primaryVariant ?? "generator")) await buildRuntimePlugin(variant);
   }
   if (primaryVariant) await ensurePluginRegistry(primaryVariant);
   for (const pane of DEMONSTRATOR_PANES) {
@@ -84,6 +103,25 @@ class BuildScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript);
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    const { rest } = resolveTestLevel(segments);
+    runVitest(this.root, rest, "🧪️vitest.config.ts");
+  }
+}
 
-await runBundleScriptMain(router, import.meta.url);
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
+
+if (import.meta.main) await runBundleScriptMain(router, import.meta.url);
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  //#region 🧪️DemonstratorPluginBuildTests
+  describe("demonstratorRuntimeBuildVariants", () => {
+    it("builds one additional artifact for six pane runtime variants", () => {
+      expect(demonstratorRuntimeBuildVariants("generator")).toEqual(["procedural3d"]);
+    });
+  });
+  //#endregion 🧪️DemonstratorPluginBuildTests
+}

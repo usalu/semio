@@ -148,6 +148,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_plugin_stdio::ArtifactDsl;
     use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::mutations::apply_tsv_mutation;
     use semio_s_plugin_stdio::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{decode_tsv, encode_tsv, LineEnding};
     use semio_s_plugin_stdio::artifacts::tsv::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
@@ -245,7 +246,8 @@ mod subject {
     /// trailing newline, line ending — is captured and replayed verbatim), so a raw decode/encode
     /// round trip through those two functions alone can never diverge from a well-formed input:
     /// that would make the tripwire untestable, not satisfied by accident. This case instead goes
-    /// through the artifact's REAL document codec (`store::ArtifactDsl::parse_dsl`/`print_dsl`,
+    /// through the artifact's REAL document codec (`ArtifactDsl::parse_dsl`/`print_dsl`, re-exported
+    /// by `semio_s_plugin_stdio` — the generated subject host links that crate, never `store` directly,
     /// the same pair `register_document_codec` wires into production) — `print_dsl` always prepends
     /// the `semio iana.tsv.dsl v1` envelope line the real committed fixture does not carry, which is
     /// a genuine writer choice this artifact's persisted form makes, not a fabricated difference.
@@ -255,8 +257,8 @@ mod subject {
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let text = String::from_utf8(input.clone()).map_err(|error| format!("input is not UTF-8: {error}"))?;
-        let snapshot = <TsvSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| error.to_string())?;
-        let enveloped = <TsvSnapshot as store::ArtifactDsl>::print_dsl(&snapshot).into_bytes();
+        let snapshot = <TsvSnapshot as ArtifactDsl>::parse_dsl(&text).map_err(|error| error.to_string())?;
+        let enveloped = <TsvSnapshot as ArtifactDsl>::print_dsl(&snapshot).into_bytes();
         if enveloped == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }

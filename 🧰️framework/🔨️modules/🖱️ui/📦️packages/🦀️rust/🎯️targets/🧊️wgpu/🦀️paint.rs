@@ -15,14 +15,11 @@
 //! one rest-state-only exception — no scrollable-viewport paint exists yet, out of every pass to
 //! date's scope.
 
-use crate::wgpu::IconName;
-use crate::wgpu::Label;
-use crate::wgpu::UiTreeActionPlacement;
 use crate::wgpu::arena::NodeId;
-use crate::wgpu::chrome::{ICON_TINY, chrome_item_bg, item_bg, item_text, push_chrome_border, push_control_border, push_icon};
+use crate::wgpu::chrome::{chrome_item_bg, item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY};
 use crate::wgpu::component::ui::{
-    UI_INSPECTOR_MIXED_PLACEHOLDER, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode,
-    UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
+    UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem,
+    UiSelectNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
@@ -30,13 +27,16 @@ use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Level, Rgba, Theme};
 use crate::wgpu::tree::{EditState, NodeFlags, NodeKey, UiTree};
 use crate::wgpu::widgets::{draw_text_on, wrap_text};
+use crate::wgpu::IconName;
+use crate::wgpu::Label;
+use crate::wgpu::UiTreeActionPlacement;
 
 const PANEL_HEADER: f32 = 24.0;
 const TREE_ROW_HEIGHT: f32 = 24.0;
 const TREE_INDENT_PER_LEVEL: f32 = 10.0;
 const TREE_TOGGLE_WIDTH: f32 = 14.0;
 const TREE_ICON_SIZE: f32 = 14.0;
-pub(crate) const RETAINED_NODE_TEXT_MAX_BYTES: usize = 4 * 1024 * 1024;
+pub const RETAINED_NODE_TEXT_MAX_BYTES: usize = 4 * 1024 * 1024;
 const RETAINED_NODE_COLLECTION_ITEMS: usize = 256;
 const RETAINED_NODE_FIXED_OUTPUT_ITEMS: usize = 8;
 const RETAINED_NODE_FIXED_OUTPUT_BYTES: usize = 64 * 1024;
@@ -82,15 +82,7 @@ impl RetainedGlyphCursor {
 }
 
 /// ✒️ Advances one UTF-8 scalar and at most one exactly admitted glyph.
-pub fn paint_retained_glyph_step(
-    value: &str,
-    bounds: Rect,
-    size: f32,
-    color: Rgba,
-    atlas: &mut FontAtlas,
-    draw: &mut DrawList,
-    cursor: &mut RetainedGlyphCursor,
-) -> RetainedGlyphStep {
+pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rgba, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
     if value.len() > RETAINED_NODE_TEXT_MAX_BYTES || !value.is_char_boundary(cursor.byte) {
         return RetainedGlyphStep::Fault;
     }
@@ -154,22 +146,7 @@ pub(crate) struct RetainedNodePaintCursor {
 
 impl Default for RetainedNodePaintCursor {
     fn default() -> Self {
-        Self {
-            node: None,
-            glyph: RetainedGlyphCursor::default(),
-            origin_x: 0.0,
-            origin_y: 0.0,
-            chrome: false,
-            phase: 0,
-            item: 0,
-            section: 0,
-            depth: 0,
-            path: [0; RETAINED_TREE_DEPTH],
-            row_y: 0.0,
-            visited: 0,
-            ascending: false,
-            selected: None,
-        }
+        Self { node: None, glyph: RetainedGlyphCursor::default(), origin_x: 0.0, origin_y: 0.0, chrome: false, phase: 0, item: 0, section: 0, depth: 0, path: [0; RETAINED_TREE_DEPTH], row_y: 0.0, visited: 0, ascending: false, selected: None }
     }
 }
 
@@ -223,6 +200,7 @@ impl RetainedNodePaintCursor {
     fn advance(&mut self, phase: u16) {
         self.phase = phase;
         self.glyph.reset();
+        self.chrome = false;
         self.item = 0;
     }
 }
@@ -278,7 +256,7 @@ fn retained_tree_sibling_count(tree: &UiTreeNode, cursor: &RetainedNodePaintCurs
 fn retained_control_text(control: &UiControlNode) -> Option<&str> {
     match control {
         UiControlNode::Input(node) => Some(if node.value.is_empty() { node.placeholder.as_ref().map(Label::as_str).unwrap_or("") } else { node.value.as_str() }),
-        UiControlNode::Select(node) => node.items.iter().take(RETAINED_NODE_COLLECTION_ITEMS).find(|item| item.value == node.value).map(|item| item.label.as_str()).or_else(|| node.placeholder.as_ref().map(Label::as_str)),
+        UiControlNode::Select(node) => node.placeholder.as_ref().map(Label::as_str),
         UiControlNode::Toggle(node) => node.text.as_ref().map(Label::as_str),
         UiControlNode::Button(node) => Some(node.label.as_str()),
         UiControlNode::KeyValue(node) => node.entries.first().map(|entry| entry.value.as_str()),
@@ -292,25 +270,11 @@ fn retained_control_is_bounded(control: &UiControlNode) -> bool {
     match control {
         UiControlNode::Select(node) => node.items.len() <= RETAINED_NODE_COLLECTION_ITEMS,
         UiControlNode::KeyValue(node) => node.entries.len() <= RETAINED_NODE_COLLECTION_ITEMS,
-        UiControlNode::Input(_)
-        | UiControlNode::Toggle(_)
-        | UiControlNode::Button(_)
-        | UiControlNode::Slider(_)
-        | UiControlNode::NumberStepper(_)
-        | UiControlNode::Ring(_)
-        | UiControlNode::IconSelect(_) => true,
+        UiControlNode::Input(_) | UiControlNode::Toggle(_) | UiControlNode::Button(_) | UiControlNode::Slider(_) | UiControlNode::NumberStepper(_) | UiControlNode::Ring(_) | UiControlNode::IconSelect(_) => true,
     }
 }
 
-fn retained_tree_node_step(
-    tree: &UiTreeNode,
-    bounds: Rect,
-    theme: &Theme,
-    atlas: &mut FontAtlas,
-    icons: Option<&IconAtlas>,
-    draw: &mut DrawList,
-    cursor: &mut RetainedNodePaintCursor,
-) -> RetainedNodePaintStep {
+fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
     if tree.sections.len() > RETAINED_NODE_COLLECTION_ITEMS {
         return RetainedNodePaintStep::Fault;
     }
@@ -319,7 +283,11 @@ fn retained_tree_node_step(
             let result = retained_fixed_output(draw, |draw| draw.push_scissor(bounds));
             cursor.row_y = bounds.y;
             cursor.advance(1);
-            if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+            if result.is_err() {
+                RetainedNodePaintStep::Fault
+            } else {
+                RetainedNodePaintStep::Pending
+            }
         }
         1 => {
             let Some(section) = tree.sections.get(cursor.section) else {
@@ -331,6 +299,7 @@ fn retained_tree_node_step(
             }
             if !section.presence.visible() {
                 cursor.section += 1;
+                cursor.advance(1);
                 return RetainedNodePaintStep::Pending;
             }
             if !cursor.chrome {
@@ -421,7 +390,11 @@ fn retained_tree_node_step(
                 }
             });
             cursor.advance(4);
-            if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+            if result.is_err() {
+                RetainedNodePaintStep::Fault
+            } else {
+                RetainedNodePaintStep::Pending
+            }
         }
         4 => {
             let Some(item) = retained_tree_item_at(tree, cursor) else { return RetainedNodePaintStep::Fault };
@@ -477,7 +450,11 @@ fn retained_tree_node_step(
                     push_icon(draw, icons, action.icon_id.as_str(), x, cursor.row_y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
                 }
             });
-            if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+            if result.is_err() {
+                RetainedNodePaintStep::Fault
+            } else {
+                RetainedNodePaintStep::Pending
+            }
         }
         7 => {
             let Some(item) = retained_tree_item_at(tree, cursor) else { return RetainedNodePaintStep::Fault };
@@ -491,7 +468,20 @@ fn retained_tree_node_step(
                 cursor.chrome = true;
                 return if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending };
             }
-            let Some(value) = retained_control_text(control) else {
+            if let UiControlNode::Select(select) = control {
+                if cursor.selected.is_none() && cursor.item < select.items.len() {
+                    if select.items[cursor.item].value == select.value {
+                        cursor.selected = Some(cursor.item);
+                    }
+                    cursor.item += 1;
+                    return RetainedNodePaintStep::Pending;
+                }
+            }
+            let value = match control {
+                UiControlNode::Select(select) => cursor.selected.and_then(|index| select.items.get(index)).map(|item| item.label.as_str()).or_else(|| select.placeholder.as_ref().map(Label::as_str)),
+                control => retained_control_text(control),
+            };
+            let Some(value) = value else {
                 cursor.advance(8);
                 return RetainedNodePaintStep::Pending;
             };
@@ -508,6 +498,7 @@ fn retained_tree_node_step(
             if item.presence.visible() {
                 cursor.row_y += TREE_ROW_HEIGHT;
             }
+            cursor.selected = None;
             if item.default_open.unwrap_or(false) && item.items.as_ref().is_some_and(|items| !items.is_empty()) {
                 if cursor.depth >= RETAINED_TREE_DEPTH {
                     return RetainedNodePaintStep::Fault;
@@ -543,7 +534,11 @@ fn retained_tree_node_step(
         10 => {
             let result = retained_fixed_output(draw, DrawList::pop_scissor);
             cursor.advance(11);
-            if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+            if result.is_err() {
+                RetainedNodePaintStep::Fault
+            } else {
+                RetainedNodePaintStep::Pending
+            }
         }
         _ => retained_presence_step(draw, bounds, theme, &tree.presence),
     }
@@ -602,7 +597,11 @@ pub(crate) fn paint_node_step(
             if cursor.phase == 0 {
                 let result = retained_fixed_output(draw, |draw| paint_stack_frame(stack, bounds, flags, theme, draw));
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             } else {
                 retained_presence_step(draw, bounds, theme, presence)
             }
@@ -611,7 +610,11 @@ pub(crate) fn paint_node_step(
             if cursor.phase == 0 {
                 let result = retained_fixed_output(draw, |draw| paint_separator(bounds, theme, draw));
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             } else {
                 retained_presence_step(draw, bounds, theme, presence)
             }
@@ -626,7 +629,11 @@ pub(crate) fn paint_node_step(
                     }
                 });
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             }
             1 => match retained_text_node_step(button.label.as_str(), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
@@ -651,7 +658,11 @@ pub(crate) fn paint_node_step(
                         push_control_border(draw, bounds, theme, if flags.contains(NodeFlags::FOCUSED) { theme.border_emphasized } else { theme.border_normal }, theme.input_bg);
                     });
                     cursor.advance(1);
-                    if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
                 }
                 1 => match retained_text_node_step(display, bounds, theme.font_size_body, if input_node.value.is_empty() { theme.text_muted } else { theme.text }, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
@@ -677,7 +688,11 @@ pub(crate) fn paint_node_step(
                         }
                     });
                     cursor.advance(1);
-                    if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
                 }
                 1 if cursor.item < select.items.len() => {
                     if select.items[cursor.item].value == select.value {
@@ -706,7 +721,11 @@ pub(crate) fn paint_node_step(
                         draw.push_glass([menu.x, menu.y, menu.w, menu.h], theme.border_radius, theme.glass(Level::Menu));
                     });
                     cursor.advance(4);
-                    if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
                 }
                 4 if cursor.item < select.items.len() => {
                     let relative = select_popup_row_rect(bounds.w, bounds.h, cursor.item, theme);
@@ -719,7 +738,11 @@ pub(crate) fn paint_node_step(
                     });
                     cursor.phase = 5;
                     cursor.glyph.reset();
-                    if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
                 }
                 4 => {
                     cursor.advance(6);
@@ -753,7 +776,11 @@ pub(crate) fn paint_node_step(
                     }
                 });
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             }
             1 => {
                 let label = toggle.text.as_ref().map(Label::as_str).unwrap_or("");
@@ -811,7 +838,11 @@ pub(crate) fn paint_node_step(
                     draw.push_rounded([knob_x - 6.0, track_y - 6.0, 12.0, 12.0], theme.accent, 6.0);
                 });
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             }
             1 => {
                 let label = slider.unit.as_deref().unwrap_or("");
@@ -829,7 +860,11 @@ pub(crate) fn paint_node_step(
             0 => {
                 let result = retained_fixed_output(draw, |draw| push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg));
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             }
             1 => {
                 let label = if stepper.uniform { format!("{:.3}", stepper.value) } else { UI_INSPECTOR_MIXED_PLACEHOLDER.to_string() };
@@ -853,7 +888,11 @@ pub(crate) fn paint_node_step(
                 let a1 = std::f32::consts::TAU * (cursor.item + 1) as f32 / segments as f32;
                 let result = retained_fixed_output(draw, |draw| draw.push_line(cx + a0.cos() * radius, cy + a0.sin() * radius, cx + a1.cos() * radius, cy + a1.sin() * radius, theme.separator, 2.0));
                 cursor.item += 1;
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             } else if cursor.phase == 0 {
                 let result = retained_fixed_output(draw, |draw| {
                     let cx = bounds.x + bounds.w * 0.5;
@@ -863,7 +902,11 @@ pub(crate) fn paint_node_step(
                     draw.push_rounded([cx + angle.cos() * radius - 6.0, cy + angle.sin() * radius - 6.0, 12.0, 12.0], theme.accent, 6.0);
                 });
                 cursor.phase = 1;
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             } else {
                 retained_presence_step(draw, bounds, theme, presence)
             }
@@ -872,7 +915,11 @@ pub(crate) fn paint_node_step(
             0 => {
                 let result = retained_fixed_output(draw, |draw| push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg));
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             }
             1 => match retained_text_node_step(select.value.as_str(), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
@@ -913,7 +960,11 @@ pub(crate) fn paint_node_step(
                     }
                 });
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             } else if cursor.phase == 1 {
                 let label = section.label.as_ref().map(Label::as_str).unwrap_or("");
                 match retained_text_node_step(label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
@@ -935,7 +986,11 @@ pub(crate) fn paint_node_step(
                     }
                 });
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             } else if cursor.phase == 1 {
                 match retained_text_node_step(group.label.as_str(), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
@@ -955,7 +1010,11 @@ pub(crate) fn paint_node_step(
             } else if cursor.phase == 0 {
                 let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             } else if cursor.phase == 1 {
                 let label = image.alt.as_ref().map(Label::as_str).unwrap_or(image.id.as_str());
                 match retained_text_node_step(label, bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
@@ -975,7 +1034,11 @@ pub(crate) fn paint_node_step(
             } else if cursor.phase == 0 {
                 let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             } else if cursor.phase == 1 {
                 match retained_text_node_step(scene.surface_id.as_str(), bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
@@ -992,7 +1055,11 @@ pub(crate) fn paint_node_step(
             if cursor.phase == 0 {
                 let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
                 cursor.advance(1);
-                if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
+                if result.is_err() {
+                    RetainedNodePaintStep::Fault
+                } else {
+                    RetainedNodePaintStep::Pending
+                }
             } else if cursor.phase == 1 {
                 match retained_text_node_step(slot.body_key.as_str(), bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
@@ -1060,6 +1127,384 @@ fn clear_dirty_paint(tree: &mut UiTree, id: NodeId) {
 //    row-height/indent math `paint_tree_item` paints rows at, and their `NodeFlags::DRAG_SOURCE` bit
 //    is kept in sync with the *original* `UiTreeItemNode`'s `draggable` field (`reconcile` never
 //    drops fields, only clones them into `WidgetSpec` — see that module's own doc comment).
+
+const RETAINED_SYNC_COLLECTION_ITEMS: usize = 256;
+const RETAINED_SYNC_OUTPUTS: usize = RETAINED_SYNC_COLLECTION_ITEMS * 2;
+const RETAINED_SYNC_DEPTH: usize = 64;
+const RETAINED_SYNC_KEY_BYTES: usize = 256;
+
+#[derive(Clone, Copy)]
+struct RetainedSyncKey {
+    bytes: [u8; RETAINED_SYNC_KEY_BYTES],
+    len: u16,
+}
+
+impl RetainedSyncKey {
+    fn try_from_str(value: &str) -> Option<Self> {
+        if value.len() > RETAINED_SYNC_KEY_BYTES {
+            return None;
+        }
+        let mut bytes = [0; RETAINED_SYNC_KEY_BYTES];
+        bytes[..value.len()].copy_from_slice(value.as_bytes());
+        Some(Self { bytes, len: value.len() as u16 })
+    }
+
+    fn as_str(&self) -> Option<&str> {
+        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).ok()
+    }
+}
+
+#[derive(Clone, Copy)]
+struct RetainedSyncTreeRecord {
+    key: RetainedSyncKey,
+    parent: Option<usize>,
+    retained: Option<NodeId>,
+    y: f32,
+    height: f32,
+    draggable: bool,
+    section: bool,
+}
+
+#[derive(Clone, Copy)]
+struct RetainedSyncTreeFrame {
+    record: usize,
+    next_item: usize,
+    items_pointer: usize,
+    items_len: usize,
+    height: f32,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum RetainedInteractiveSyncPhase {
+    Bind,
+    SelectItem,
+    SelectScan,
+    SelectWrite,
+    StackWrite,
+    TreeSection,
+    TreeItem,
+    TreeApplyPrepare,
+    TreeApplyScan,
+    TreeApplyWrite,
+    TreeClose,
+}
+
+/// 🧭️ Retains one mounted interaction-layout synchronization authority.
+pub(crate) struct RetainedInteractiveSyncCursor {
+    node: Option<NodeId>,
+    phase: RetainedInteractiveSyncPhase,
+    item: usize,
+    child_scan: Option<NodeId>,
+    matched: Option<NodeId>,
+    select_width: f32,
+    select_height: f32,
+    tree_section: usize,
+    tree_section_y: f32,
+    tree_depth: usize,
+    tree_frames: [Option<RetainedSyncTreeFrame>; RETAINED_SYNC_DEPTH],
+    tree_records: [Option<RetainedSyncTreeRecord>; RETAINED_SYNC_OUTPUTS],
+    tree_record_len: usize,
+    tree_item_count: usize,
+    tree_apply: usize,
+}
+
+impl Default for RetainedInteractiveSyncCursor {
+    fn default() -> Self {
+        Self {
+            node: None,
+            phase: RetainedInteractiveSyncPhase::Bind,
+            item: 0,
+            child_scan: None,
+            matched: None,
+            select_width: 0.0,
+            select_height: 0.0,
+            tree_section: 0,
+            tree_section_y: 0.0,
+            tree_depth: 0,
+            tree_frames: [None; RETAINED_SYNC_DEPTH],
+            tree_records: [None; RETAINED_SYNC_OUTPUTS],
+            tree_record_len: 0,
+            tree_item_count: 0,
+            tree_apply: 0,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum RetainedInteractiveSyncStep {
+    Pending,
+    Complete,
+    Fault,
+}
+
+impl RetainedInteractiveSyncCursor {
+    fn finish(&mut self) -> RetainedInteractiveSyncStep {
+        self.node = None;
+        self.phase = RetainedInteractiveSyncPhase::Bind;
+        self.item = 0;
+        self.child_scan = None;
+        self.matched = None;
+        self.select_width = 0.0;
+        self.select_height = 0.0;
+        self.tree_section = 0;
+        self.tree_section_y = 0.0;
+        self.tree_depth = 0;
+        self.tree_item_count = 0;
+        self.tree_apply = 0;
+        RetainedInteractiveSyncStep::Complete
+    }
+
+    pub(crate) fn close_step(&mut self) -> bool {
+        if self.tree_record_len > 0 {
+            self.tree_record_len -= 1;
+            self.tree_records[self.tree_record_len] = None;
+            return false;
+        }
+        if self.tree_frames[self.tree_depth].take().is_some() {
+            if self.tree_depth > 0 {
+                self.tree_depth -= 1;
+            }
+            return false;
+        }
+        if self.node.take().is_some() {
+            self.phase = RetainedInteractiveSyncPhase::Bind;
+            self.child_scan = None;
+            self.matched = None;
+            return false;
+        }
+        true
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.node.is_none() && self.tree_record_len == 0 && self.tree_frames[0].is_none()
+    }
+}
+
+fn retained_sync_tree_item_step(cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
+    let Some(frame) = cursor.tree_frames[cursor.tree_depth] else { return RetainedInteractiveSyncStep::Fault };
+    if frame.next_item >= frame.items_len {
+        let complete = frame.height;
+        let record = frame.record;
+        let Some(output) = cursor.tree_records[record].as_mut() else { return RetainedInteractiveSyncStep::Fault };
+        output.height = complete;
+        cursor.tree_frames[cursor.tree_depth] = None;
+        if cursor.tree_depth == 0 {
+            cursor.tree_section_y += complete;
+            cursor.tree_section += 1;
+            cursor.phase = RetainedInteractiveSyncPhase::TreeSection;
+        } else {
+            cursor.tree_depth -= 1;
+            let Some(parent) = cursor.tree_frames[cursor.tree_depth].as_mut() else { return RetainedInteractiveSyncStep::Fault };
+            parent.height += complete;
+        }
+        return RetainedInteractiveSyncStep::Pending;
+    }
+    let item_index = frame.next_item;
+    let Some(next_item) = item_index.checked_add(1) else { return RetainedInteractiveSyncStep::Fault };
+    let Some(active) = cursor.tree_frames[cursor.tree_depth].as_mut() else { return RetainedInteractiveSyncStep::Fault };
+    active.next_item = next_item;
+    let Some(item) = (unsafe { (frame.items_pointer as *const UiTreeItemNode).add(item_index).as_ref() }) else { return RetainedInteractiveSyncStep::Fault };
+    if !item.presence.visible() {
+        return RetainedInteractiveSyncStep::Pending;
+    }
+    let Some(item_count) = cursor.tree_item_count.checked_add(1).filter(|count| *count <= RETAINED_SYNC_COLLECTION_ITEMS) else { return RetainedInteractiveSyncStep::Fault };
+    let Some(record_index) = cursor.tree_record_len.checked_add(1).filter(|count| *count <= RETAINED_SYNC_OUTPUTS).map(|_| cursor.tree_record_len) else { return RetainedInteractiveSyncStep::Fault };
+    let Some(key) = RetainedSyncKey::try_from_str(&item.id) else { return RetainedInteractiveSyncStep::Fault };
+    cursor.tree_records[record_index] = Some(RetainedSyncTreeRecord { key, parent: Some(frame.record), retained: None, y: frame.height, height: TREE_ROW_HEIGHT, draggable: item.draggable.unwrap_or(false), section: false });
+    cursor.tree_record_len += 1;
+    cursor.tree_item_count = item_count;
+    let children = item.items.as_deref().filter(|items| item.default_open.unwrap_or(false) && !items.is_empty());
+    if let Some(children) = children {
+        let Some(depth) = cursor.tree_depth.checked_add(1).filter(|depth| *depth < RETAINED_SYNC_DEPTH) else { return RetainedInteractiveSyncStep::Fault };
+        cursor.tree_depth = depth;
+        cursor.tree_frames[depth] = Some(RetainedSyncTreeFrame { record: record_index, next_item: 0, items_pointer: children.as_ptr() as usize, items_len: children.len(), height: TREE_ROW_HEIGHT });
+    } else {
+        let Some(parent) = cursor.tree_frames[cursor.tree_depth].as_mut() else { return RetainedInteractiveSyncStep::Fault };
+        parent.height += TREE_ROW_HEIGHT;
+    }
+    RetainedInteractiveSyncStep::Pending
+}
+
+/// 🧩️ Advances one retained synchronization item, child lookup, layout output, or close owner.
+pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, theme: &Theme, cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
+    if cursor.node.is_none() {
+        cursor.node = Some(id);
+        cursor.phase = RetainedInteractiveSyncPhase::Bind;
+        return RetainedInteractiveSyncStep::Pending;
+    }
+    if cursor.node != Some(id) {
+        return RetainedInteractiveSyncStep::Fault;
+    }
+    match cursor.phase {
+        RetainedInteractiveSyncPhase::Bind => {
+            let Some(node) = tree.node(id) else { return RetainedInteractiveSyncStep::Fault };
+            match &node.spec.0 {
+                UiNode::Select(select) if node.state.open => {
+                    if select.items.len() > RETAINED_SYNC_COLLECTION_ITEMS {
+                        return RetainedInteractiveSyncStep::Fault;
+                    }
+                    let Some(layout) = tree.accepted_layout(id) else { return RetainedInteractiveSyncStep::Fault };
+                    cursor.select_width = layout.width;
+                    cursor.select_height = layout.height;
+                    cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
+                    RetainedInteractiveSyncStep::Pending
+                }
+                UiNode::Stack(_) => {
+                    cursor.phase = RetainedInteractiveSyncPhase::StackWrite;
+                    RetainedInteractiveSyncStep::Pending
+                }
+                UiNode::Tree(tree_node) => {
+                    if tree_node.sections.len() > RETAINED_SYNC_COLLECTION_ITEMS || tree.accepted_layout(id).is_none() {
+                        return RetainedInteractiveSyncStep::Fault;
+                    }
+                    cursor.phase = RetainedInteractiveSyncPhase::TreeSection;
+                    RetainedInteractiveSyncStep::Pending
+                }
+                _ => cursor.finish(),
+            }
+        }
+        RetainedInteractiveSyncPhase::SelectItem => {
+            let Some(select) = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Select(select) => Some(select),
+                _ => None,
+            }) else {
+                return RetainedInteractiveSyncStep::Fault;
+            };
+            if cursor.item >= select.items.len() {
+                return cursor.finish();
+            }
+            cursor.child_scan = tree.node(id).and_then(|node| node.first_child);
+            cursor.matched = None;
+            cursor.phase = RetainedInteractiveSyncPhase::SelectScan;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::SelectScan => {
+            let Some(child) = cursor.child_scan else { return RetainedInteractiveSyncStep::Fault };
+            let matches = tree
+                .node(id)
+                .and_then(|node| match &node.spec.0 {
+                    UiNode::Select(select) => select.items.get(cursor.item),
+                    _ => None,
+                })
+                .is_some_and(|item| matches!(tree.node(child).map(|node| &node.key), Some(NodeKey::Explicit(key)) if key == &item.value));
+            if matches {
+                cursor.matched = Some(child);
+                cursor.phase = RetainedInteractiveSyncPhase::SelectWrite;
+            } else {
+                cursor.child_scan = tree.node(child).and_then(|node| node.next_sibling);
+            }
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::SelectWrite => {
+            let Some(child) = cursor.matched.take() else { return RetainedInteractiveSyncStep::Fault };
+            let rect = select_popup_row_rect(cursor.select_width, cursor.select_height, cursor.item, theme);
+            let Some(node) = tree.node_mut(child) else { return RetainedInteractiveSyncStep::Fault };
+            node.layout.x = rect.x;
+            node.layout.y = rect.y;
+            node.layout.width = rect.w;
+            node.layout.height = rect.h;
+            let Some(item) = cursor.item.checked_add(1) else { return RetainedInteractiveSyncStep::Fault };
+            cursor.item = item;
+            cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::StackWrite => {
+            let accepts_drop = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Stack(stack) => Some(stack.drop_action.is_some()),
+                _ => None,
+            });
+            let Some(accepts_drop) = accepts_drop else { return RetainedInteractiveSyncStep::Fault };
+            let Some(node) = tree.node_mut(id) else { return RetainedInteractiveSyncStep::Fault };
+            node.flags.set(NodeFlags::DROP_TARGET, accepts_drop);
+            cursor.finish()
+        }
+        RetainedInteractiveSyncPhase::TreeSection => {
+            let Some((sections_len, width)) = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Tree(tree_node) => tree.accepted_layout(id).map(|layout| (tree_node.sections.len(), layout.width)),
+                _ => None,
+            }) else {
+                return RetainedInteractiveSyncStep::Fault;
+            };
+            if cursor.tree_section >= sections_len {
+                cursor.tree_apply = 0;
+                cursor.phase = RetainedInteractiveSyncPhase::TreeApplyPrepare;
+                return RetainedInteractiveSyncStep::Pending;
+            }
+            let Some(section) = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Tree(tree_node) => tree_node.sections.get(cursor.tree_section),
+                _ => None,
+            }) else {
+                return RetainedInteractiveSyncStep::Fault;
+            };
+            let Some(record_index) = cursor.tree_record_len.checked_add(1).filter(|count| *count <= RETAINED_SYNC_OUTPUTS).map(|_| cursor.tree_record_len) else { return RetainedInteractiveSyncStep::Fault };
+            let Some(key) = RetainedSyncKey::try_from_str(&section.id) else { return RetainedInteractiveSyncStep::Fault };
+            let header = if section.label.is_some() { PANEL_HEADER } else { 0.0 };
+            cursor.tree_records[record_index] = Some(RetainedSyncTreeRecord { key, parent: None, retained: None, y: cursor.tree_section_y, height: header, draggable: false, section: true });
+            cursor.tree_record_len += 1;
+            cursor.tree_depth = 0;
+            cursor.tree_frames[0] = Some(RetainedSyncTreeFrame { record: record_index, next_item: 0, items_pointer: section.items.as_ptr() as usize, items_len: section.items.len(), height: header });
+            cursor.select_width = width;
+            cursor.phase = RetainedInteractiveSyncPhase::TreeItem;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::TreeItem => retained_sync_tree_item_step(cursor),
+        RetainedInteractiveSyncPhase::TreeApplyPrepare => {
+            if cursor.tree_apply >= cursor.tree_record_len {
+                cursor.phase = RetainedInteractiveSyncPhase::TreeClose;
+                return RetainedInteractiveSyncStep::Pending;
+            }
+            let Some(record) = cursor.tree_records[cursor.tree_apply] else { return RetainedInteractiveSyncStep::Fault };
+            let parent = match record.parent {
+                Some(parent) => cursor.tree_records.get(parent).and_then(|record| record.as_ref()).and_then(|record| record.retained),
+                None => Some(id),
+            };
+            let Some(parent) = parent else { return RetainedInteractiveSyncStep::Fault };
+            cursor.child_scan = tree.node(parent).and_then(|node| node.first_child);
+            cursor.matched = None;
+            cursor.phase = RetainedInteractiveSyncPhase::TreeApplyScan;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::TreeApplyScan => {
+            let Some(child) = cursor.child_scan else { return RetainedInteractiveSyncStep::Fault };
+            let Some(record) = cursor.tree_records[cursor.tree_apply] else { return RetainedInteractiveSyncStep::Fault };
+            let Some(target) = record.key.as_str() else { return RetainedInteractiveSyncStep::Fault };
+            if matches!(tree.node(child).map(|node| &node.key), Some(NodeKey::Explicit(key)) if key == target) {
+                cursor.matched = Some(child);
+                cursor.phase = RetainedInteractiveSyncPhase::TreeApplyWrite;
+            } else {
+                cursor.child_scan = tree.node(child).and_then(|node| node.next_sibling);
+            }
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::TreeApplyWrite => {
+            let Some(child) = cursor.matched.take() else { return RetainedInteractiveSyncStep::Fault };
+            let Some(record) = cursor.tree_records[cursor.tree_apply] else { return RetainedInteractiveSyncStep::Fault };
+            let Some(node) = tree.node_mut(child) else { return RetainedInteractiveSyncStep::Fault };
+            node.layout.x = 0.0;
+            node.layout.y = record.y;
+            node.layout.width = cursor.select_width;
+            node.layout.height = record.height;
+            if !record.section {
+                node.flags.set(NodeFlags::DRAG_SOURCE, record.draggable);
+            }
+            let Some(output) = cursor.tree_records[cursor.tree_apply].as_mut() else { return RetainedInteractiveSyncStep::Fault };
+            output.retained = Some(child);
+            let Some(next) = cursor.tree_apply.checked_add(1) else { return RetainedInteractiveSyncStep::Fault };
+            cursor.tree_apply = next;
+            cursor.phase = RetainedInteractiveSyncPhase::TreeApplyPrepare;
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::TreeClose => {
+            if cursor.tree_record_len > 0 {
+                cursor.tree_record_len -= 1;
+                cursor.tree_records[cursor.tree_record_len] = None;
+                RetainedInteractiveSyncStep::Pending
+            } else {
+                cursor.finish()
+            }
+        }
+    }
+}
 
 /// 🔎️ Finds `parent`'s retained child keyed `key` — `reconcile`'s synthesized `Select`/`Tree` rows
 /// are keyed by stable identity (`item.value`/`section.id`/`item.id`, see `reconcile::children_of`),
@@ -2557,10 +3002,140 @@ mod tests {
         let before = retained_glyph_count(&draw);
         assert_eq!(paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor), RetainedNodePaintStep::Pending);
         assert_eq!(retained_glyph_count(&draw), before + 1);
-        assert_eq!(cursor.byte, 1);
+        assert_eq!(cursor.glyph.byte(), 1);
         assert_eq!(paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor), RetainedNodePaintStep::Pending);
         assert_eq!(retained_glyph_count(&draw), before + 2);
-        assert_eq!(cursor.byte, 2);
+        assert_eq!(cursor.glyph.byte(), 2);
+    }
+
+    #[test]
+    fn retained_multi_megabyte_input_advances_one_scalar_per_grant() {
+        let value = "x".repeat(2 * 1_024 * 1_024);
+        let (tree, root, theme, mut atlas) = setup(&input("huge-input", &value));
+        let identity = match tree.node(root).map(|node| &node.spec.0) {
+            Some(UiNode::Input(input)) => input.value.as_ptr(),
+            _ => panic!("retained input owner"),
+        };
+        let mut draw = DrawList::default();
+        let mut cursor = RetainedNodePaintCursor::default();
+        assert_eq!(paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor), RetainedNodePaintStep::Pending);
+        assert_eq!(paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor), RetainedNodePaintStep::Pending);
+        let before = retained_glyph_count(&draw);
+        assert_eq!(paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor), RetainedNodePaintStep::Pending);
+        assert_eq!(retained_glyph_count(&draw), before + 1);
+        assert_eq!(cursor.glyph.byte(), 1);
+        assert_eq!(
+            tree.node(root).and_then(|node| match &node.spec.0 {
+                UiNode::Input(input) => Some(input.value.as_ptr()),
+                _ => None,
+            }),
+            Some(identity)
+        );
+    }
+
+    #[test]
+    fn retained_select_max_plus_one_refuses_before_output_without_moving_tree_owner() {
+        let mut authored = select("select-max-plus-one", "0");
+        let UiNode::Select(select) = &mut authored else { panic!("select fixture") };
+        select.items = (0..=RETAINED_NODE_COLLECTION_ITEMS).map(|index| UiSelectItem { value: index.to_string(), label: Label::data(index.to_string()) }).collect();
+        let (tree, root, theme, mut atlas) = setup(&authored);
+        let identity = match tree.node(root).map(|node| &node.spec.0) {
+            Some(UiNode::Select(select)) => select.items.as_ptr(),
+            _ => panic!("retained select owner"),
+        };
+        let mut draw = DrawList::default();
+        let mut cursor = RetainedNodePaintCursor::default();
+        assert_eq!(paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor), RetainedNodePaintStep::Pending);
+        assert_eq!(paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor), RetainedNodePaintStep::Fault);
+        assert_eq!(draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>(), 0);
+        assert_eq!(
+            tree.node(root).and_then(|node| match &node.spec.0 {
+                UiNode::Select(select) => Some(select.items.as_ptr()),
+                _ => None,
+            }),
+            Some(identity)
+        );
+    }
+
+    #[test]
+    fn retained_select_sync_writes_at_most_one_row_per_grant() {
+        let (mut tree, root, theme, _) = setup(&select("retained-sync-select", "a"));
+        let Some(root_node) = tree.node_mut(root) else { panic!("retained select root") };
+        root_node.state.open = true;
+        let children: Vec<NodeId> = tree.children(root).collect();
+        let mut cursor = RetainedInteractiveSyncCursor::default();
+        let mut complete = false;
+        for _ in 0..64 {
+            let before: Vec<(f32, f32, f32, f32)> = children.iter().filter_map(|child| tree.node(*child).map(|node| (node.layout.x, node.layout.y, node.layout.width, node.layout.height))).collect();
+            let step = sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor);
+            let changed = children.iter().zip(before.iter()).filter(|(child, before)| tree.node(**child).is_some_and(|node| (node.layout.x, node.layout.y, node.layout.width, node.layout.height) != **before)).count();
+            assert!(changed <= 1);
+            if step == RetainedInteractiveSyncStep::Complete {
+                complete = true;
+                break;
+            }
+            assert_ne!(step, RetainedInteractiveSyncStep::Fault);
+        }
+        assert!(complete);
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[test]
+    fn retained_select_sync_max_plus_one_fault_closes_exact_cursor_owner() {
+        let mut authored = select("retained-sync-max-plus-one", "0");
+        let UiNode::Select(select) = &mut authored else { panic!("retained select fixture") };
+        select.items = (0..=RETAINED_SYNC_COLLECTION_ITEMS).map(|index| UiSelectItem { value: index.to_string(), label: Label::data(index.to_string()) }).collect();
+        let (mut tree, root, theme, _) = setup(&authored);
+        let Some(root_node) = tree.node_mut(root) else { panic!("retained select root") };
+        root_node.state.open = true;
+        let identity = match tree.node(root).map(|node| &node.spec.0) {
+            Some(UiNode::Select(select)) => select.items.as_ptr(),
+            _ => panic!("retained select owner"),
+        };
+        let mut cursor = RetainedInteractiveSyncCursor::default();
+        assert_eq!(sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor), RetainedInteractiveSyncStep::Pending);
+        assert_eq!(sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor), RetainedInteractiveSyncStep::Fault);
+        assert!(!cursor.close_step());
+        assert!(cursor.close_step());
+        assert!(cursor.terminal_is_empty());
+        assert_eq!(
+            tree.node(root).and_then(|node| match &node.spec.0 {
+                UiNode::Select(select) => Some(select.items.as_ptr()),
+                _ => None,
+            }),
+            Some(identity)
+        );
+    }
+
+    #[test]
+    fn retained_tree_sync_abandonment_releases_one_record_or_depth_owner_per_grant() {
+        let mut nested = UiTreeItemNode::base("nested", Label::data("Nested"));
+        nested.default_open = Some(true);
+        nested.items = Some(vec![UiTreeItemNode::base("leaf", Label::data("Leaf"))]);
+        let authored = UiNode::Tree(UiTreeNode {
+            sections: vec![UiTreeSectionNode { id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }],
+            presence: UiPresence::default(),
+            drop_action: None,
+            menu: None,
+            interaction_domain: None,
+        });
+        let (mut tree, root, theme, _) = setup(&authored);
+        let mut cursor = RetainedInteractiveSyncCursor::default();
+        for _ in 0..32 {
+            assert_ne!(sync_interactive_state_node_step(&mut tree, root, &theme, &mut cursor), RetainedInteractiveSyncStep::Fault);
+            if cursor.tree_record_len >= 3 {
+                break;
+            }
+        }
+        assert!(cursor.tree_record_len >= 3);
+        while !cursor.terminal_is_empty() {
+            let records = cursor.tree_record_len;
+            let frames = cursor.tree_frames.iter().flatten().count();
+            assert!(!cursor.close_step());
+            let closed = records.saturating_sub(cursor.tree_record_len) + frames.saturating_sub(cursor.tree_frames.iter().flatten().count());
+            assert!(closed <= 1);
+        }
+        assert!(cursor.close_step());
     }
 
     #[test]

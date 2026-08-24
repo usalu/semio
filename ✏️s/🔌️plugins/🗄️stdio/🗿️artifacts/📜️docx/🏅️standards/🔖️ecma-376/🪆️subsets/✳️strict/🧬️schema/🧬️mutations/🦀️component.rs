@@ -274,7 +274,7 @@ fn parts_diff(modified: Vec<(String, DocxOpcPartDiff)>, added: Vec<OpcPart>, rem
     if modified.is_empty() && added.is_empty() && removed.is_empty() {
         return None;
     }
-    Some(NamedTripleDiff { removed, modified: modified.into_iter().map(|(key, diff)| NamedModified { key, diff }).collect(), added })
+    Some(NamedTripleDiff { removed, modified: modified.into_iter().map(|(key, diff)| NamedModified { key, diff }).collect(), added, ..Default::default() })
 }
 
 /// 🔺️ Sparse `[Content_Types].xml` override diff, keyed by the `/`-prefixed part name the typed

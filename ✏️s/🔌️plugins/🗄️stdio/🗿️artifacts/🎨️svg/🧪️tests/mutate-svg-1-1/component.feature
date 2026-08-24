@@ -52,18 +52,17 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
   half of the law applies in full on both sides. A scenario that only proved the reference library
   did not error would be vacuous — it is checkable without a second producer, so it is checked
   without one.
-  ⚠️ OPEN, and left red rather than tuned away: `inverse-remove-element` FAILS on the ORACLE side
-  today, and it is a real defect in the reference module's inverse ROUTING, not in the vocabulary.
-  `oracles::apply_mutation_inverse` re-serializes between the forward step and the undo step and
-  re-parses those bytes, so the two steps do not see the same tree. In the real drawing every `<g
-  …>\n<rect …/>\n</g>` group holds `[text "\n", rect, text "\n"]`; removing index 1 leaves two
-  ADJACENT text nodes, which XML parsing coalesces into the single node `"\n\n"` on the way back in.
-  The undo therefore inserts the rect at index 1 of a one-child list and the restored drawing
-  projects as `[text "\n\n", rect]` instead of the original three children. `mutate-xml-1-0` shares
-  the routing and does not show it only because its minified fixture carries no inter-element
-  whitespace at all. The remedy is to apply the forward step and its inverse to ONE parsed tree, or
-  to address the undo against the mutated document's own indices — either way in the oracle module,
-  not by relaxing the law here.
+  A note on `inverse-remove-element`, which WAS red and is not any more — kept here because the
+  defect is instructive and the remedy is the one this feature named rather than a relaxed law. The
+  reference module's `oracles::apply_mutation_inverse` used to re-serialize between the forward step
+  and the undo step and re-parse those bytes, so the two steps did not see the same tree: in the real
+  drawing every `<g …>\n<rect …/>\n</g>` group holds `[text "\n", rect, text "\n"]`, removing index
+  1 leaves two ADJACENT text nodes, and XML parsing coalesces them into the single node `"\n\n"` on
+  the way back in — so the undo inserted the rect at index 1 of a one-child list and the restored
+  drawing projected as `[text "\n\n", rect]`. It was fixed in the ORACLE MODULE, by applying the
+  forward step and its inverse to ONE parsed tree, exactly as prescribed; the law here was never
+  relaxed. `mutate-xml-1-0` shared the routing and never showed it, because its minified fixture
+  carries no inter-element whitespace at all.
 
   @id-mutate
   @level-exhaustive

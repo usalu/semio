@@ -229,6 +229,22 @@ impl CscSym {
         0.0
     }
 
+    pub(crate) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        match close_vec_owner_step(&mut self.vals, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
+        for owner in [&mut self.rowind, &mut self.colptr] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        (true, 0, 0)
+    }
+
     /// 🪟️ Mirrors into a full general CSR (for SpMV/PCG/residual use).
     pub fn to_csr_full(&self) -> Csr {
         let mut coo = Coo::new(self.n);
@@ -407,6 +423,75 @@ struct LdltColumnWorkspace {
 
 const LDLT_MAXIMUM_ORDER: usize = 40;
 const NUMERICAL_OWNER_PAGE_BYTES: usize = 16 * 1024;
+pub const MOUNTED_SCALAR_SLOTS: usize = 768;
+
+/// 🧮 Fixed mounted scalar owner with one admission, write, update, or close action per turn.
+pub struct MountedScalarSlots {
+    values: [f64; MOUNTED_SCALAR_SLOTS],
+    admitted: usize,
+    len: usize,
+}
+
+impl MountedScalarSlots {
+    pub fn new() -> Self {
+        Self { values: [0.0; MOUNTED_SCALAR_SLOTS], admitted: 0, len: 0 }
+    }
+
+    pub fn admit_one(&mut self, target: usize) -> Result<bool, ()> {
+        if target > MOUNTED_SCALAR_SLOTS {
+            return Err(());
+        }
+        if self.admitted < target {
+            self.admitted += 1;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    pub fn push(&mut self, value: f64) -> Result<(), f64> {
+        if self.len == self.admitted {
+            return Err(value);
+        }
+        self.values[self.len] = value;
+        self.len += 1;
+        Ok(())
+    }
+
+    pub fn add_at(&mut self, index: usize, value: f64) -> Result<(), ()> {
+        if index >= self.len {
+            return Err(());
+        }
+        self.values[index] += value;
+        Ok(())
+    }
+
+    pub fn get(&self, index: usize) -> Option<f64> {
+        (index < self.len).then(|| self.values[index])
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.len != 0 {
+            self.len -= 1;
+            self.values[self.len] = 0.0;
+            return false;
+        }
+        if self.admitted != 0 {
+            self.admitted -= 1;
+            return false;
+        }
+        true
+    }
+}
+
+impl Default for MountedScalarSlots {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 const NUMERICAL_CHECKPOINT_VERSION: u16 = 1;
 const NUMERICAL_CHECKPOINT_HEADER_BYTES: usize = 32;
 
@@ -2003,6 +2088,7 @@ impl PcgJob {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ModalInputStage {
+    ValidateMass,
     CountUpper,
     ReserveColptr,
     ReserveRowind,
@@ -2011,13 +2097,17 @@ enum ModalInputStage {
     ReserveMassIndptr,
     ReserveMassIndices,
     ReserveMassValues,
+    CopyMountedMass,
+    RetireMountedMass,
     BuildMass,
     Complete,
 }
 
-/// 🎼 Cursorized converged-stiffness transfer into LDLT plus an identity generalized-mode metric.
+/// 🎼 Cursorized converged-stiffness and physical lumped-mass transfer into generalized modes.
 pub struct ModalInputConstruction {
     matrix: Option<Csr>,
+    mass: Option<VecD>,
+    mounted_mass: Option<MountedScalarSlots>,
     stage: ModalInputStage,
     row: usize,
     entry: usize,
@@ -2032,10 +2122,12 @@ pub struct ModalInputConstruction {
 }
 
 impl ModalInputConstruction {
-    pub fn new(matrix: Csr) -> Self {
+    pub fn new(matrix: Csr, mass: VecD) -> Self {
         Self {
             matrix: Some(matrix),
-            stage: ModalInputStage::CountUpper,
+            mass: Some(mass),
+            mounted_mass: None,
+            stage: ModalInputStage::ValidateMass,
             row: 0,
             entry: 0,
             upper_count: 0,
@@ -2047,6 +2139,13 @@ impl ModalInputConstruction {
             mass_values: Vec::new(),
             complete: None,
         }
+    }
+
+    pub fn new_mounted(matrix: Csr, mass: MountedScalarSlots) -> Self {
+        let mut construction = Self::new(matrix, VecD::from_vec(Vec::new()));
+        construction.mass = None;
+        construction.mounted_mass = Some(mass);
+        construction
     }
 
     fn reserve<T>(owner: &mut Vec<T>, count: usize) -> Result<(), &'static [u8]> {
@@ -2061,6 +2160,23 @@ impl ModalInputConstruction {
         let matrix = self.matrix.as_ref().ok_or(b"modal-input-matrix-owner" as &'static [u8])?;
         let n = matrix.n;
         match self.stage {
+            ModalInputStage::ValidateMass => {
+                let mass_len = self.mass.as_ref().map(VecD::len).or_else(|| self.mounted_mass.as_ref().map(MountedScalarSlots::len)).ok_or(b"modal-input-mass-owner" as &'static [u8])?;
+                if mass_len != n {
+                    return Err(b"modal-input-mass-order");
+                }
+                if self.row < n {
+                    let value = self.mass.as_ref().map(|mass| mass.get(self.row)).or_else(|| self.mounted_mass.as_ref().and_then(|mass| mass.get(self.row))).ok_or(b"modal-input-mass-owner")?;
+                    if !value.is_finite() || value <= 0.0 {
+                        return Err(b"modal-input-mass-value");
+                    }
+                    self.row += 1;
+                } else {
+                    self.row = 0;
+                    self.entry = 0;
+                    self.stage = ModalInputStage::CountUpper;
+                }
+            }
             ModalInputStage::CountUpper => {
                 if self.row == n {
                     self.stage = ModalInputStage::ReserveColptr;
@@ -2121,21 +2237,41 @@ impl ModalInputConstruction {
                 self.stage = ModalInputStage::ReserveMassValues;
             }
             ModalInputStage::ReserveMassValues => {
-                Self::reserve(&mut self.mass_values, n)?;
-                self.row = 0;
-                self.stage = ModalInputStage::BuildMass;
+                if let Some(mut mass) = self.mass.take() {
+                    self.mass_values = std::mem::take(&mut mass.0);
+                    self.row = 0;
+                    self.stage = ModalInputStage::BuildMass;
+                } else {
+                    Self::reserve(&mut self.mass_values, n)?;
+                    self.row = 0;
+                    self.stage = ModalInputStage::CopyMountedMass;
+                }
+            }
+            ModalInputStage::CopyMountedMass => {
+                if self.row < n {
+                    let value = self.mounted_mass.as_ref().and_then(|mass| mass.get(self.row)).ok_or(b"modal-input-mounted-mass-owner")?;
+                    self.mass_values.push(value);
+                    self.row += 1;
+                } else {
+                    self.stage = ModalInputStage::RetireMountedMass;
+                }
+            }
+            ModalInputStage::RetireMountedMass => {
+                if self.mounted_mass.as_mut().is_some_and(|mass| mass.close_step()) {
+                    self.mounted_mass = None;
+                    self.row = 0;
+                    self.stage = ModalInputStage::BuildMass;
+                }
             }
             ModalInputStage::BuildMass => {
                 if self.row < n {
                     self.mass_indices.push(self.row as u32);
-                    self.mass_values.push(1.0);
                     self.mass_indptr.push((self.row + 1) as u32);
                     self.row += 1;
                 } else {
                     let stiffness = CscSym { n, colptr: std::mem::take(&mut self.colptr), rowind: std::mem::take(&mut self.rowind), vals: std::mem::take(&mut self.values) };
                     let mass = Csr::from_owned_parts(n, std::mem::take(&mut self.mass_indptr), std::mem::take(&mut self.mass_indices), std::mem::take(&mut self.mass_values));
                     self.complete = Some((stiffness, mass));
-                    self.matrix = None;
                     self.stage = ModalInputStage::Complete;
                 }
             }
@@ -2147,12 +2283,66 @@ impl ModalInputConstruction {
     pub fn take_complete(&mut self) -> Option<(CscSym, Csr)> {
         (self.stage == ModalInputStage::Complete).then(|| self.complete.take()).flatten()
     }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if let Some((stiffness, mass)) = self.complete.as_mut() {
+            if !stiffness.vals.is_empty() || !stiffness.rowind.is_empty() || !stiffness.colptr.is_empty() {
+                return stiffness.close_step(maximum_bytes);
+            }
+            let (terminal, items, bytes) = mass.close_step(maximum_bytes);
+            if !terminal {
+                return (false, items, bytes);
+            }
+            self.complete = None;
+            return (false, 1, 0);
+        }
+        if let Some(matrix) = self.matrix.as_mut() {
+            let (terminal, items, bytes) = matrix.close_step(maximum_bytes);
+            if !terminal {
+                return (false, items, bytes);
+            }
+            self.matrix = None;
+            return (false, 1, 0);
+        }
+        if let Some(mass) = self.mass.as_mut() {
+            match close_vec_owner_step(&mut mass.0, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+            self.mass = None;
+            return (false, 1, 0);
+        }
+        if let Some(mass) = self.mounted_mass.as_mut() {
+            if !mass.close_step() {
+                return (false, 1, 0);
+            }
+            self.mounted_mass = None;
+            return (false, 1, 0);
+        }
+        for owner in [&mut self.values, &mut self.mass_values] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        for owner in [&mut self.colptr, &mut self.rowind, &mut self.mass_indptr, &mut self.mass_indices] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        (true, 0, 0)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PcgConstructionStage {
     ReserveB,
     InitializeB,
+    RetireMountedB,
     ReserveX,
     InitializeX,
     ReserveDiagonal,
@@ -2176,6 +2366,7 @@ pub struct PcgJobConstruction {
     stage: PcgConstructionStage,
     cursor: usize,
     b: VecD,
+    mounted_b: Option<MountedScalarSlots>,
     x: VecD,
     diag: VecD,
     r: VecD,
@@ -2193,6 +2384,7 @@ impl PcgJobConstruction {
             stage: PcgConstructionStage::ReserveB,
             cursor: 0,
             b: VecD::from_vec(Vec::new()),
+            mounted_b: None,
             x: VecD::from_vec(Vec::new()),
             diag: VecD::from_vec(Vec::new()),
             r: VecD::from_vec(Vec::new()),
@@ -2214,6 +2406,7 @@ impl PcgJobConstruction {
             stage: PcgConstructionStage::ReserveX,
             cursor: 0,
             b: rhs,
+            mounted_b: None,
             x: VecD::from_vec(Vec::new()),
             diag: VecD::from_vec(Vec::new()),
             r: VecD::from_vec(Vec::new()),
@@ -2222,6 +2415,15 @@ impl PcgJobConstruction {
             ap: VecD::from_vec(Vec::new()),
             complete: None,
         })
+    }
+
+    pub fn new_with_mounted_rhs(operation: Operation, matrix: Csr, rhs: MountedScalarSlots) -> Result<Self, (Csr, MountedScalarSlots)> {
+        if matrix.n != rhs.len() {
+            return Err((matrix, rhs));
+        }
+        let mut construction = Self::new(operation, matrix);
+        construction.mounted_b = Some(rhs);
+        Ok(construction)
     }
 
     pub fn step_one(&mut self) -> Result<bool, &'static [u8]> {
@@ -2248,7 +2450,21 @@ impl PcgJobConstruction {
         }
         match self.stage {
             PcgConstructionStage::ReserveB => reserve!(self.b, PcgConstructionStage::InitializeB, b"pcg-construction-b-allocation"),
-            PcgConstructionStage::InitializeB => initialize!(self.b, 1.0, PcgConstructionStage::ReserveX),
+            PcgConstructionStage::InitializeB => {
+                if self.cursor < n {
+                    let value = self.mounted_b.as_ref().and_then(|rhs| rhs.get(self.cursor)).unwrap_or(1.0);
+                    self.b.0.push(value);
+                    self.cursor += 1;
+                } else {
+                    self.stage = if self.mounted_b.is_some() { PcgConstructionStage::RetireMountedB } else { PcgConstructionStage::ReserveX };
+                }
+            }
+            PcgConstructionStage::RetireMountedB => {
+                if self.mounted_b.as_mut().is_some_and(MountedScalarSlots::close_step) {
+                    self.mounted_b = None;
+                    self.stage = PcgConstructionStage::ReserveX;
+                }
+            }
             PcgConstructionStage::ReserveX => reserve!(self.x, PcgConstructionStage::InitializeX, b"pcg-construction-x-allocation"),
             PcgConstructionStage::InitializeX => initialize!(self.x, 0.0, PcgConstructionStage::ReserveDiagonal),
             PcgConstructionStage::ReserveDiagonal => reserve!(self.diag, PcgConstructionStage::InitializeDiagonal, b"pcg-construction-diagonal-allocation"),
@@ -2324,6 +2540,13 @@ impl PcgJobConstruction {
                 return (false, items, bytes);
             }
             self.matrix = None;
+            return (false, 1, 0);
+        }
+        if let Some(rhs) = self.mounted_b.as_mut() {
+            if !rhs.close_step() {
+                return (false, 1, 0);
+            }
+            self.mounted_b = None;
             return (false, 1, 0);
         }
         for vector in [&mut self.b, &mut self.x, &mut self.diag, &mut self.r, &mut self.z, &mut self.p, &mut self.ap] {

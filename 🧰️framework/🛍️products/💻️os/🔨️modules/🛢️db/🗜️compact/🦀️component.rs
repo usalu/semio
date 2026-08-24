@@ -831,14 +831,38 @@ const DATABASE_COMPACTION_TOTAL_ITEMS: u64 = DATABASE_COMPACTION_OPERATION_ITEMS
 const DATABASE_COMPACTION_TOTAL_BYTES: u64 = DATABASE_COMPACTION_OPERATION_BYTES * DATABASE_COMPACTION_SLOTS as u64;
 const DATABASE_COMPACTION_RETRY_LIMIT: u8 = 8;
 const DATABASE_COMPACTION_DEADLINE_MS: u64 = 30_000;
+const DATABASE_COMPACTION_TURN_MS: u64 = 8;
+const DATABASE_COMPACTION_INDEX_FUEL: usize = 256;
 
-fn database_compaction_observe_backing(items: usize, bytes: usize, label: &'static str) -> Result<(), DbError> {
-    let items = u64::try_from(items).map_err(|_| DbError::LimitExceeded(label))?;
-    let bytes = u64::try_from(bytes).map_err(|_| DbError::LimitExceeded(label))?;
-    if items > DATABASE_COMPACTION_OPERATION_ITEMS || bytes > DATABASE_COMPACTION_OPERATION_BYTES {
-        return Err(DbError::LimitExceeded(label));
+#[derive(Default)]
+struct DatabaseCompactionBackingLedger {
+    items: u64,
+    bytes: u64,
+}
+
+impl DatabaseCompactionBackingLedger {
+    fn observe(&mut self, items: usize, bytes: usize, label: &'static str) -> Result<(), DbError> {
+        let items = u64::try_from(items).map_err(|_| DbError::LimitExceeded(label))?;
+        let bytes = u64::try_from(bytes).map_err(|_| DbError::LimitExceeded(label))?;
+        let next_items = self.items.checked_add(items).ok_or(DbError::LimitExceeded(label))?;
+        let next_bytes = self.bytes.checked_add(bytes).ok_or(DbError::LimitExceeded(label))?;
+        if next_items > DATABASE_COMPACTION_OPERATION_ITEMS || next_bytes > DATABASE_COMPACTION_OPERATION_BYTES {
+            return Err(DbError::LimitExceeded(label));
+        }
+        self.items = next_items;
+        self.bytes = next_bytes;
+        Ok(())
     }
-    Ok(())
+
+    fn release(&mut self, items: usize, bytes: usize) -> Result<(), DbError> {
+        self.items = self.items.checked_sub(u64::try_from(items).map_err(|_| DbError::LimitExceeded("database compaction backing release items"))?).ok_or_else(|| DbError::Internal("database compaction backing items returned twice".to_string()))?;
+        self.bytes = self.bytes.checked_sub(u64::try_from(bytes).map_err(|_| DbError::LimitExceeded("database compaction backing release bytes"))?).ok_or_else(|| DbError::Internal("database compaction backing bytes returned twice".to_string()))?;
+        Ok(())
+    }
+}
+
+fn database_compaction_observe_backing(ledger: &mut DatabaseCompactionBackingLedger, items: usize, bytes: usize, label: &'static str) -> Result<(), DbError> {
+    ledger.observe(items, bytes, label)
 }
 
 fn database_compaction_descriptor_backing(descriptor: &db_snapshot::SnapshotDescriptor) -> Result<(usize, usize), DbError> {
@@ -855,7 +879,7 @@ fn database_compaction_descriptor_backing(descriptor: &db_snapshot::SnapshotDesc
     Ok((items, bytes))
 }
 
-async fn close_compaction_descriptor(mut descriptor: db_snapshot::SnapshotDescriptor) {
+async fn retire_compaction_descriptor(mut descriptor: db_snapshot::SnapshotDescriptor) {
     let new_pages = std::mem::take(&mut descriptor.new_pages);
     semio_framework_async::yield_once().await;
     drop(new_pages);
@@ -871,10 +895,31 @@ async fn close_compaction_descriptor(mut descriptor: db_snapshot::SnapshotDescri
     drop(document);
 }
 
-async fn database_compaction_admit_descriptor(descriptor: db_snapshot::SnapshotDescriptor) -> Result<db_snapshot::SnapshotDescriptor, DbError> {
-    let observed = database_compaction_descriptor_backing(&descriptor).and_then(|(items, bytes)| database_compaction_observe_backing(items, bytes, "database compaction snapshot backing"));
+async fn close_compaction_descriptor(descriptor: db_snapshot::SnapshotDescriptor, ledger: &mut DatabaseCompactionBackingLedger) -> Result<(), DbError> {
+    let (items, bytes) = database_compaction_descriptor_backing(&descriptor)?;
+    retire_compaction_descriptor(descriptor).await;
+    ledger.release(items, bytes)
+}
+
+async fn retire_compaction_snapshot_body(mut body: db_snapshot::SnapshotBody) {
+    let roots = std::mem::take(&mut body.roots);
+    semio_framework_async::yield_once().await;
+    drop(roots);
+    if let Some(vcs_head) = body.vcs_head.take() {
+        semio_framework_async::yield_once().await;
+        drop(vcs_head);
+    }
+}
+
+async fn close_compaction_snapshot_body(body: db_snapshot::SnapshotBody, ledger: &mut DatabaseCompactionBackingLedger, charge: (usize, usize)) -> Result<(), DbError> {
+    retire_compaction_snapshot_body(body).await;
+    ledger.release(charge.0, charge.1)
+}
+
+async fn database_compaction_admit_descriptor(descriptor: db_snapshot::SnapshotDescriptor, ledger: &mut DatabaseCompactionBackingLedger) -> Result<db_snapshot::SnapshotDescriptor, DbError> {
+    let observed = database_compaction_descriptor_backing(&descriptor).and_then(|(items, bytes)| database_compaction_observe_backing(ledger, items, bytes, "database compaction snapshot backing"));
     if let Err(error) = observed {
-        close_compaction_descriptor(descriptor).await;
+        retire_compaction_descriptor(descriptor).await;
         return Err(error);
     }
     Ok(descriptor)
@@ -1097,14 +1142,19 @@ async fn close_compaction_owner(mut close: impl FnMut() -> Result<bool, DbError>
     .await
 }
 
+async fn close_compaction_page(mut page: db_state::Page) -> Result<(), DbError> {
+    close_compaction_owner(|| Ok(page.close_step()?.is_some())).await
+}
+
 async fn retained_compaction_under_lease(
     storage: &db_storage::DbBackend,
     document: &ArtifactId,
     floor_head_seq: u64,
     consolidate_snapshots: bool,
     budget: CompactionBudget,
-    cancelled: &std::sync::atomic::AtomicBool,
+    cancelled: &Arc<std::sync::atomic::AtomicBool>,
     progress: &std::sync::atomic::AtomicU8,
+    ledger: &mut DatabaseCompactionBackingLedger,
 ) -> Result<CompactionReport, DbError> {
     let mut report = CompactionReport::default();
     let wal = storage.wal().await;
@@ -1212,16 +1262,40 @@ async fn retained_compaction_under_lease(
     for kind in db_index::IndexKind::ALL {
         compaction_opportunity(cancelled).await?;
         let index_document = document.clone();
-        database_compaction_observe_backing(1, index_document.0.capacity(), "database compaction index document backing")?;
+        let index_document_bytes = index_document.0.capacity();
+        database_compaction_observe_backing(ledger, 1, index_document_bytes, "database compaction index document backing")?;
         let handle = db_index::IndexHandle::new(&index_storage, index_document, kind).await;
-        let mut control = handle.operation_control(65_536)?;
-        let stats = handle.compact(&mut control).await?;
+        let stats = loop {
+            let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_COMPACTION_TURN_MS);
+            let mut control = match handle.retained_operation_control(cancelled.clone(), deadline, DATABASE_COMPACTION_INDEX_FUEL) {
+                Ok(control) => control,
+                Err(error) => break Err(error),
+            };
+            match handle.compact(&mut control).await {
+                Ok(stats) => break Ok(stats),
+                Err(DbError::LimitExceeded("index cursor fuel")) => {
+                    if let Err(error) = compaction_opportunity(cancelled).await {
+                        break Err(error);
+                    }
+                }
+                Err(DbError::Unavailable(message)) if message == "index cursor deadline reached" => {
+                    if let Err(error) = compaction_opportunity(cancelled).await {
+                        break Err(error);
+                    }
+                }
+                Err(DbError::Unavailable(message)) if message == "index cursor cancelled" => break Err(DbError::Closed),
+                Err(error) => break Err(error),
+            }
+        };
+        drop(handle);
+        ledger.release(1, index_document_bytes)?;
+        let stats = stats?;
         report.index_reports.push(IndexKindReport { kind, stats })?;
     }
     drop(index_storage);
 
     if consolidate_snapshots {
-        retained_compaction_snapshot(storage, document, budget, cancelled, progress, &mut report).await?;
+        retained_compaction_snapshot(storage, document, budget, cancelled, progress, ledger, &mut report).await?;
     }
     Ok(report)
 }
@@ -1230,76 +1304,175 @@ async fn retained_compaction_snapshot(
     storage: &db_storage::DbBackend,
     document: &ArtifactId,
     budget: CompactionBudget,
-    cancelled: &std::sync::atomic::AtomicBool,
+    cancelled: &Arc<std::sync::atomic::AtomicBool>,
     progress: &std::sync::atomic::AtomicU8,
+    ledger: &mut DatabaseCompactionBackingLedger,
     report: &mut CompactionReport,
 ) -> Result<(), DbError> {
     let snapshot = storage.snapshot().await;
     let manager = db_snapshot::SnapshotManager::new(&snapshot).await;
     let Some((latest_generation, latest_descriptor)) = manager.load_latest(document).await? else { return Ok(()) };
-    let latest_descriptor = database_compaction_admit_descriptor(latest_descriptor).await?;
-    let control = db_snapshot::SnapshotCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
+    let mut latest_descriptor = Some(database_compaction_admit_descriptor(latest_descriptor, ledger).await?);
+    let control = match db_snapshot::SnapshotCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_COMPACTION_TURN_MS), DATABASE_COMPACTION_INDEX_FUEL) {
+        Ok(control) => control,
+        Err(error) => {
+            if let Some(owner) = latest_descriptor.take() {
+                close_compaction_descriptor(owner, ledger).await?;
+            }
+            return Err(error);
+        }
+    };
     let mut cursor = manager.chain_cursor(document, latest_generation, control);
-    let mut descriptor = database_compaction_admit_descriptor(cursor.descriptor(latest_generation).await?).await?;
+    let mut descriptor = None;
     let mut pages = CompactionRetainedPages::new();
+    let mut page_items = 0usize;
+    let mut page_bytes = 0usize;
     let mut generations = 0u64;
     progress.store(DatabaseCompactionProgress::SnapshotCollect as u8, std::sync::atomic::Ordering::Release);
-    loop {
-        generations = generations.checked_add(1).ok_or(DbError::LimitExceeded("database compaction snapshot generations"))?;
-        check_len(generations, budget.max_snapshot_generations, "database compaction snapshot generations")?;
-        for hash in descriptor.new_pages.iter().copied() {
-            compaction_opportunity(cancelled).await?;
-            if !pages.contains(hash) {
-                pages.preflight_push()?;
-                let source = cursor.read_page(hash).await?;
-                let page = db_state::Page::try_from_pages(source).await?;
-                pages.push_preflighted(page);
+    let collection = async {
+        descriptor = Some(database_compaction_admit_descriptor(cursor.descriptor(latest_generation).await?, ledger).await?);
+        loop {
+            generations = generations.checked_add(1).ok_or(DbError::LimitExceeded("database compaction snapshot generations"))?;
+            check_len(generations, budget.max_snapshot_generations, "database compaction snapshot generations")?;
+            let hash_count = descriptor.as_ref().ok_or_else(|| DbError::Internal("database compaction descriptor cursor lost".to_string()))?.new_pages.len();
+            for index in 0..hash_count {
+                let hash = descriptor.as_ref().and_then(|owner| owner.new_pages.get(index)).copied().ok_or_else(|| DbError::Internal("database compaction descriptor hash cursor lost".to_string()))?;
+                compaction_opportunity(cancelled).await?;
+                if !pages.contains(hash) {
+                    pages.preflight_push()?;
+                    let source = cursor.read_page(hash).await?;
+                    let page = db_state::Page::try_from_pages(source).await?;
+                    let items = usize::from(page.pages().page_count());
+                    let bytes = items.checked_mul(db_storage::DB_IO_PAGE_BYTES).ok_or(DbError::LimitExceeded("database compaction snapshot page backing"))?;
+                    let next_items = match page_items.checked_add(items) {
+                        Some(next_items) => next_items,
+                        None => {
+                            close_compaction_page(page).await?;
+                            return Err(DbError::LimitExceeded("database compaction snapshot page items"));
+                        }
+                    };
+                    let next_bytes = match page_bytes.checked_add(bytes) {
+                        Some(next_bytes) => next_bytes,
+                        None => {
+                            close_compaction_page(page).await?;
+                            return Err(DbError::LimitExceeded("database compaction snapshot page bytes"));
+                        }
+                    };
+                    if let Err(error) = database_compaction_observe_backing(ledger, items, bytes, "database compaction snapshot page backing") {
+                        close_compaction_page(page).await?;
+                        return Err(error);
+                    }
+                    page_items = next_items;
+                    page_bytes = next_bytes;
+                    pages.push_preflighted(page);
+                }
+            }
+            match descriptor.as_ref().and_then(|owner| owner.parent_generation) {
+                Some(parent) => {
+                    let next = database_compaction_admit_descriptor(cursor.descriptor(parent).await?, ledger).await?;
+                    let previous = descriptor.replace(next).ok_or_else(|| DbError::Internal("database compaction descriptor replacement lost".to_string()))?;
+                    close_compaction_descriptor(previous, ledger).await?;
+                }
+                None => {
+                    let previous = descriptor.take().ok_or_else(|| DbError::Internal("database compaction descriptor terminal lost".to_string()))?;
+                    close_compaction_descriptor(previous, ledger).await?;
+                    break;
+                }
             }
         }
-        match descriptor.parent_generation {
-            Some(parent) => {
-                let next = database_compaction_admit_descriptor(cursor.descriptor(parent).await?).await?;
-                close_compaction_descriptor(descriptor).await;
-                descriptor = next;
-            }
-            None => {
-                close_compaction_descriptor(descriptor).await;
-                break;
-            }
+        Ok::<(), DbError>(())
+    }
+    .await;
+    if let Err(error) = collection {
+        if let Some(owner) = descriptor.take() {
+            close_compaction_descriptor(owner, ledger).await?;
         }
+        if let Some(owner) = latest_descriptor.take() {
+            close_compaction_descriptor(owner, ledger).await?;
+        }
+        close_compaction_owner(|| cursor.close_step()).await?;
+        close_compaction_owner(|| pages.close_step()).await?;
+        ledger.release(page_items, page_bytes)?;
+        return Err(error);
     }
-    close_compaction_owner(|| cursor.close_step()).await?;
-    progress.store(DatabaseCompactionProgress::SnapshotPublish as u8, std::sync::atomic::Ordering::Release);
-    compaction_opportunity(cancelled).await?;
-    let observed_generation = snapshot.latest_generation(document).await?;
-    if observed_generation != Some(latest_generation) {
-        close_compaction_descriptor(latest_descriptor).await;
-        return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(latest_generation), actual: crate::db_ids::GenerationId(observed_generation.unwrap_or(0)) });
+    let prepublication = async {
+        close_compaction_owner(|| cursor.close_step()).await?;
+        progress.store(DatabaseCompactionProgress::SnapshotPublish as u8, std::sync::atomic::Ordering::Release);
+        compaction_opportunity(cancelled).await
     }
-    let expected_generation = latest_generation.checked_add(1).ok_or(DbError::LimitExceeded("database compaction snapshot generation"))?;
+    .await;
+    if let Err(error) = prepublication {
+        if let Some(owner) = latest_descriptor.take() {
+            close_compaction_descriptor(owner, ledger).await?;
+        }
+        close_compaction_owner(|| pages.close_step()).await?;
+        ledger.release(page_items, page_bytes)?;
+        return Err(error);
+    }
+    let latest_descriptor = latest_descriptor.take().ok_or_else(|| DbError::Internal("database compaction latest descriptor lost".to_string()))?;
+    let latest_descriptor_charge = database_compaction_descriptor_backing(&latest_descriptor)?;
     let db_snapshot::SnapshotDescriptor { document: ArtifactId(latest_document), head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, new_pages: latest_new_pages, created_at_ms, .. } = latest_descriptor;
     semio_framework_async::yield_once().await;
     drop(latest_new_pages);
     semio_framework_async::yield_once().await;
     drop(latest_document);
-    let body = db_snapshot::SnapshotBody { head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, created_at_ms };
-    let new_generation = manager.publish_retained(document, db_snapshot::SnapshotOrigin::FullBaseline, pages.slots(), pages.len(), body).await?;
-    if new_generation != expected_generation {
-        return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(expected_generation), actual: crate::db_ids::GenerationId(new_generation) });
-    }
+    let mut body = db_snapshot::SnapshotBody { head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, created_at_ms };
+    let new_generation = loop {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_COMPACTION_TURN_MS);
+        let mut control = db_snapshot::SnapshotCursorControl::new(cancelled.clone(), deadline, DATABASE_COMPACTION_INDEX_FUEL)?;
+        match manager.publish_retained_expected(document, latest_generation, pages.slots(), pages.len(), body, &mut control).await {
+            Ok(publication) => {
+                let (generation, returned) = publication.into_parts();
+                close_compaction_snapshot_body(returned, ledger, latest_descriptor_charge).await?;
+                break generation;
+            }
+            Err(rejected) => {
+                let (error, returned) = rejected.into_parts();
+                body = returned;
+                match error {
+                    DbError::LimitExceeded("snapshot cursor fuel") => compaction_opportunity(cancelled).await?,
+                    DbError::Unavailable(message) if message == "snapshot cursor deadline reached" => compaction_opportunity(cancelled).await?,
+                    DbError::Unavailable(message) if message == "snapshot cursor cancelled" => {
+                        close_compaction_snapshot_body(body, ledger, latest_descriptor_charge).await?;
+                        close_compaction_owner(|| pages.close_step()).await?;
+                        ledger.release(page_items, page_bytes)?;
+                        return Err(DbError::Closed);
+                    }
+                    error => {
+                        close_compaction_snapshot_body(body, ledger, latest_descriptor_charge).await?;
+                        close_compaction_owner(|| pages.close_step()).await?;
+                        ledger.release(page_items, page_bytes)?;
+                        return Err(error);
+                    }
+                }
+            }
+        }
+    };
     report.snapshot_consolidated_generation = Some(new_generation);
     progress.store(DatabaseCompactionProgress::SnapshotRetain as u8, std::sync::atomic::Ordering::Release);
-    let mut generations = snapshot.list_generations(document).await?;
-    for generation in generations.as_slice().iter().copied() {
-        compaction_opportunity(cancelled).await?;
-        if generation < new_generation {
-            snapshot.delete_generation(document, generation).await?;
-            report.snapshot_generations_pruned = report.snapshot_generations_pruned.checked_add(1).ok_or(DbError::LimitExceeded("database compaction pruned generations"))?;
+    let mut generations = match snapshot.list_generations(document).await {
+        Ok(generations) => generations,
+        Err(error) => {
+            close_compaction_owner(|| pages.close_step()).await?;
+            ledger.release(page_items, page_bytes)?;
+            return Err(error);
         }
+    };
+    let retention = async {
+        for generation in generations.as_slice().iter().copied() {
+            compaction_opportunity(cancelled).await?;
+            if generation < new_generation {
+                snapshot.delete_generation(document, generation).await?;
+                report.snapshot_generations_pruned = report.snapshot_generations_pruned.checked_add(1).ok_or(DbError::LimitExceeded("database compaction pruned generations"))?;
+            }
+        }
+        Ok::<(), DbError>(())
     }
+    .await;
     close_compaction_owner(|| Ok(generations.close_step())).await?;
     close_compaction_owner(|| pages.close_step()).await?;
-    Ok(())
+    ledger.release(page_items, page_bytes)?;
+    retention
 }
 
 struct DatabaseCompactionExecution {
@@ -1307,6 +1480,80 @@ struct DatabaseCompactionExecution {
     document: ArtifactId,
     holder: db_storage::DbIoText,
     result: Result<CompactionReport, DbError>,
+}
+
+type DatabaseCompactionLeaseReleaseFuture = std::pin::Pin<Box<dyn Future<Output = Result<(), DbError>> + Send + 'static>>;
+
+struct DatabaseCompactionLeaseRecovery {
+    storage: Arc<db_storage::DbBackend>,
+    resource: db_storage::DbIoText,
+    holder: db_storage::DbIoText,
+    fence: std::sync::Mutex<Option<EpochFence>>,
+    releasing: std::sync::atomic::AtomicBool,
+    released: std::sync::atomic::AtomicBool,
+    #[cfg(test)]
+    controlled_release_failures: std::sync::atomic::AtomicUsize,
+    #[cfg(test)]
+    release_attempts: std::sync::atomic::AtomicUsize,
+}
+
+impl DatabaseCompactionLeaseRecovery {
+    fn new(storage: Arc<db_storage::DbBackend>, resource: db_storage::DbIoText, holder: db_storage::DbIoText) -> Arc<Self> {
+        Arc::new(Self {
+            storage,
+            resource,
+            holder,
+            fence: std::sync::Mutex::new(None),
+            releasing: std::sync::atomic::AtomicBool::new(false),
+            released: std::sync::atomic::AtomicBool::new(false),
+            #[cfg(test)]
+            controlled_release_failures: std::sync::atomic::AtomicUsize::new(0),
+            #[cfg(test)]
+            release_attempts: std::sync::atomic::AtomicUsize::new(0),
+        })
+    }
+
+    fn install(&self, fence: EpochFence) {
+        *self.fence.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(fence);
+    }
+
+    fn release_future(self: &Arc<Self>) -> Option<DatabaseCompactionLeaseReleaseFuture> {
+        if self.released.load(std::sync::atomic::Ordering::Acquire) || self.releasing.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return None;
+        }
+        let fence = *self.fence.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(fence) = fence else {
+            self.released.store(true, std::sync::atomic::Ordering::Release);
+            return None;
+        };
+        let recovery = self.clone();
+        Some(Box::pin(async move {
+            #[cfg(test)]
+            recovery.release_attempts.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            #[cfg(test)]
+            let injected = recovery.controlled_release_failures.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |remaining| remaining.checked_sub(1)).is_ok();
+            #[cfg(not(test))]
+            let injected = false;
+            let result = if injected { Err(DbError::Unavailable("database compaction controlled lease release failure".to_string())) } else { recovery.storage.lease().await.release(recovery.resource.as_str(), recovery.holder.as_str(), fence).await };
+            if result.is_ok() {
+                recovery.fence.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                recovery.released.store(true, std::sync::atomic::Ordering::Release);
+            } else {
+                recovery.releasing.store(false, std::sync::atomic::Ordering::Release);
+            }
+            result
+        }))
+    }
+
+    fn retry_release_after_panic(self: &Arc<Self>) -> Option<DatabaseCompactionLeaseReleaseFuture> {
+        self.releasing.store(false, std::sync::atomic::Ordering::Release);
+        self.release_future()
+    }
+
+    #[cfg(test)]
+    fn fail_release_attempts(&self, attempts: usize) {
+        self.controlled_release_failures.store(attempts, std::sync::atomic::Ordering::Release);
+    }
 }
 
 async fn retained_compaction_execute(
@@ -1319,16 +1566,18 @@ async fn retained_compaction_execute(
     cancelled: Arc<std::sync::atomic::AtomicBool>,
     expired: Arc<std::sync::atomic::AtomicBool>,
     progress: Arc<std::sync::atomic::AtomicU8>,
+    lease_recovery: Arc<DatabaseCompactionLeaseRecovery>,
 ) -> DatabaseCompactionExecution {
     let mut result = async {
+        let mut ledger = DatabaseCompactionBackingLedger::default();
         compaction_opportunity(cancelled.as_ref()).await?;
         progress.store(DatabaseCompactionProgress::SnapshotFloor as u8, std::sync::atomic::Ordering::Release);
         let snapshot = storage.snapshot().await;
         let floor = match db_snapshot::SnapshotManager::new(&snapshot).await.load_latest(&document).await? {
             Some((_, descriptor)) => {
-                let descriptor = database_compaction_admit_descriptor(descriptor).await?;
+                let descriptor = database_compaction_admit_descriptor(descriptor, &mut ledger).await?;
                 let floor = descriptor.head_seq;
-                close_compaction_descriptor(descriptor).await;
+                close_compaction_descriptor(descriptor, &mut ledger).await?;
                 floor
             }
             None => 0,
@@ -1336,14 +1585,17 @@ async fn retained_compaction_execute(
         drop(snapshot);
         compaction_opportunity(cancelled.as_ref()).await?;
         progress.store(DatabaseCompactionProgress::LeaseAcquire as u8, std::sync::atomic::Ordering::Release);
-        let mut resource = compaction_resource(&document)?;
         let lease = storage.lease().await;
-        let fence = lease.acquire(resource.as_str(), holder.as_str(), DEFAULT_LEASE_TTL_MS, now_ms).await?;
+        let fence = lease.acquire(lease_recovery.resource.as_str(), holder.as_str(), DEFAULT_LEASE_TTL_MS, now_ms).await?;
         drop(lease);
-        let run = retained_compaction_under_lease(storage.as_ref(), &document, floor, consolidate_snapshots, budget, cancelled.as_ref(), progress.as_ref()).await;
+        lease_recovery.install(fence);
+        let run = retained_compaction_under_lease(storage.as_ref(), &document, floor, consolidate_snapshots, budget, &cancelled, progress.as_ref(), &mut ledger).await;
         progress.store(DatabaseCompactionProgress::LeaseRelease as u8, std::sync::atomic::Ordering::Release);
-        let release = storage.lease().await.release(resource.as_str(), holder.as_str(), fence).await;
-        resource.close_step();
+        let release = match lease_recovery.release_future() {
+            Some(release) => release.await,
+            None if lease_recovery.released.load(std::sync::atomic::Ordering::Acquire) => Ok(()),
+            None => Err(DbError::Internal("database compaction lease release claim lost".to_string())),
+        };
         match (run, release) {
             (Ok(report), Ok(())) => Ok(report),
             (Err(error), _) => Err(error),
@@ -1414,7 +1666,12 @@ impl DatabaseCompactionTerminalOwners {
 struct DatabaseCompactionCore {
     future: Option<DatabaseCompactionExecutionFuture>,
     output: Option<DatabaseCompactionExecution>,
+    release_waiting: Option<DatabaseCompactionExecution>,
+    release_fault: Option<DbError>,
+    release_retry_fault: Option<DbError>,
     quarantined: Option<DatabaseCompactionExecutionFuture>,
+    release_quarantined: Option<DatabaseCompactionLeaseReleaseFuture>,
+    panic_release: Option<DatabaseCompactionLeaseReleaseFuture>,
 }
 
 struct DatabaseCompactionState {
@@ -1435,6 +1692,10 @@ struct DatabaseCompactionState {
     wake_requested: std::sync::atomic::AtomicBool,
     callback_close: std::sync::atomic::AtomicBool,
     callback_armed: std::sync::atomic::AtomicBool,
+    release_retry_armed: std::sync::atomic::AtomicBool,
+    panic_fault: std::sync::atomic::AtomicBool,
+    panic_retired: std::sync::atomic::AtomicBool,
+    lease_recovery: Arc<DatabaseCompactionLeaseRecovery>,
     waker: std::sync::Mutex<Option<std::task::Waker>>,
 }
 
@@ -1466,7 +1727,10 @@ impl DatabaseCompactionState {
 
     fn schedule(self: &Arc<Self>) {
         use std::sync::atomic::Ordering;
-        let execution_terminal = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).future.is_none();
+        let execution_terminal = {
+            let core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            core.future.is_none() && core.panic_release.is_none() && core.release_waiting.is_none() && core.release_fault.is_none() && core.release_retry_fault.is_none() && !self.release_retry_armed.load(Ordering::Acquire)
+        };
         if self.callback_close.load(Ordering::Acquire) && execution_terminal {
             self.arm_callback_close();
             return;
@@ -1517,6 +1781,58 @@ impl DatabaseCompactionState {
         }
     }
 
+    fn arm_release_retry(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.release_retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let state = self.clone();
+        self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || state.release_retry_callback());
+    }
+
+    fn release_retry_callback(self: Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        self.release_retry_armed.store(false, Ordering::Release);
+        if self.lease_recovery.released.load(Ordering::Acquire) {
+            let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(error) = core.release_retry_fault.take().or_else(|| core.release_fault.take()) {
+                drop(core);
+                drop(error);
+                self.arm_release_retry();
+                return;
+            }
+            if let Some(output) = core.release_waiting.take() {
+                core.output = Some(output);
+                drop(core);
+                if self.abandoned.load(Ordering::Acquire) || self.callback_close.load(Ordering::Acquire) {
+                    self.move_output_to_terminal();
+                    self.arm_callback_close();
+                } else if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                    waker.wake();
+                }
+            } else {
+                drop(core);
+                self.callback_close.store(true, Ordering::Release);
+                self.arm_callback_close();
+            }
+            return;
+        }
+        let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(error) = core.release_retry_fault.take() {
+            drop(error);
+        }
+        if core.panic_release.is_none() {
+            core.panic_release = self.lease_recovery.release_future();
+        }
+        let mounted = core.panic_release.is_some();
+        drop(core);
+        if mounted {
+            self.schedule();
+        } else {
+            self.arm_release_retry();
+        }
+    }
+
     fn drive_one(self: Arc<Self>) {
         use std::sync::atomic::Ordering;
         if self.driver.compare_exchange(DatabaseCompactionDriverAuthority::Queued as u8, DatabaseCompactionDriverAuthority::Driving as u8, Ordering::AcqRel, Ordering::Acquire).is_err() {
@@ -1535,6 +1851,44 @@ impl DatabaseCompactionState {
             self.cancelled.store(true, std::sync::atomic::Ordering::Release);
             self.progress.store(DatabaseCompactionProgress::Fault as u8, std::sync::atomic::Ordering::Release);
         }
+        let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if core.future.is_none() {
+            let Some(mut release) = core.panic_release.take() else { return false };
+            drop(core);
+            let waker = std::task::Waker::from(self.clone());
+            let mut context = std::task::Context::from_waker(&waker);
+            return match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| release.as_mut().poll(&mut context))) {
+                Ok(std::task::Poll::Pending) => {
+                    self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).panic_release = Some(release);
+                    true
+                }
+                Ok(std::task::Poll::Ready(Ok(()))) => {
+                    self.arm_release_retry();
+                    false
+                }
+                Ok(std::task::Poll::Ready(Err(error))) => {
+                    let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    if core.release_fault.is_none() {
+                        core.release_fault = Some(error);
+                    } else {
+                        core.release_retry_fault = Some(error);
+                    }
+                    drop(core);
+                    self.arm_release_retry();
+                    false
+                }
+                Err(_) => {
+                    let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    core.release_quarantined = Some(release);
+                    core.panic_release = self.lease_recovery.retry_release_after_panic();
+                    if core.panic_release.is_none() {
+                        self.callback_close.store(true, std::sync::atomic::Ordering::Release);
+                    }
+                    true
+                }
+            };
+        }
+        drop(core);
         let mut future = {
             let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             match core.future.take() {
@@ -1552,6 +1906,12 @@ impl DatabaseCompactionState {
                 true
             }
             Ok(std::task::Poll::Ready(output)) => {
+                if !self.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire) {
+                    core.release_waiting = Some(output);
+                    drop(core);
+                    self.arm_release_retry();
+                    return false;
+                }
                 core.output = Some(output);
                 drop(core);
                 if self.abandoned.load(std::sync::atomic::Ordering::Acquire) || self.callback_close.load(std::sync::atomic::Ordering::Acquire) {
@@ -1564,11 +1924,18 @@ impl DatabaseCompactionState {
             }
             Err(_) => {
                 core.quarantined = Some(future);
+                core.panic_release = if self.lease_recovery.releasing.load(std::sync::atomic::Ordering::Acquire) && !self.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire) {
+                    self.lease_recovery.retry_release_after_panic()
+                } else {
+                    self.lease_recovery.release_future()
+                };
+                let release_pending = core.panic_release.is_some();
+                self.panic_fault.store(true, std::sync::atomic::Ordering::Release);
                 self.progress.store(DatabaseCompactionProgress::Fault as u8, std::sync::atomic::Ordering::Release);
-                if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-                    waker.wake();
+                if !release_pending {
+                    self.callback_close.store(true, std::sync::atomic::Ordering::Release);
                 }
-                false
+                true
             }
         }
     }
@@ -1597,14 +1964,48 @@ impl DatabaseCompactionState {
     }
 
     fn close_terminal_one(&self) -> bool {
+        if self.panic_fault.load(std::sync::atomic::Ordering::Acquire) && self.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire) {
+            let mut core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(quarantine) = core.release_quarantined.take() {
+                drop(quarantine);
+                return true;
+            }
+            if let Some(quarantine) = core.quarantined.take() {
+                drop(quarantine);
+                return true;
+            }
+        }
         let mut terminal = self.terminal.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if terminal.as_mut().is_some_and(DatabaseCompactionTerminalOwners::close_one) {
             return true;
         }
-        if terminal.as_ref().is_some_and(DatabaseCompactionTerminalOwners::terminal_is_empty) {
+        let terminal_released = terminal.as_ref().is_some_and(DatabaseCompactionTerminalOwners::terminal_is_empty);
+        if terminal_released {
             terminal.take();
-            drop(terminal);
+        }
+        drop(terminal);
+        if terminal_released {
             self.release_terminal();
+        }
+        if self.panic_fault.load(std::sync::atomic::Ordering::Acquire) && self.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire) {
+            let core_empty = {
+                let core = self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                core.future.is_none()
+                    && core.output.is_none()
+                    && core.release_waiting.is_none()
+                    && core.release_fault.is_none()
+                    && core.release_retry_fault.is_none()
+                    && core.quarantined.is_none()
+                    && core.release_quarantined.is_none()
+                    && core.panic_release.is_none()
+            };
+            if core_empty {
+                self.release_terminal();
+                self.panic_retired.store(true, std::sync::atomic::Ordering::Release);
+                if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                    waker.wake();
+                }
+            }
         }
         false
     }
@@ -1642,7 +2043,13 @@ impl DatabaseCompactionState {
         let terminal_empty = self.terminal.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_none_or(DatabaseCompactionTerminalOwners::terminal_is_empty);
         core.future.is_none()
             && core.output.is_none()
+            && core.release_waiting.is_none()
+            && core.release_fault.is_none()
+            && core.release_retry_fault.is_none()
             && core.quarantined.is_none()
+            && core.release_quarantined.is_none()
+            && core.panic_release.is_none()
+            && !self.release_retry_armed.load(std::sync::atomic::Ordering::Acquire)
             && terminal_empty
             && self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
             && self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
@@ -1721,17 +2128,22 @@ impl DatabaseCompactionFuture {
         };
         let slot = admission.slot;
         let generation = admission.generation;
+        let resource = match compaction_resource(&document) {
+            Ok(resource) => resource,
+            Err(error) => return Err(DatabaseCompactionRejected::new(pool, error, storage, document, holder)),
+        };
+        let lease_recovery = DatabaseCompactionLeaseRecovery::new(storage.clone(), resource, holder.clone());
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let expired = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let progress = Arc::new(std::sync::atomic::AtomicU8::new(DatabaseCompactionProgress::Admitted as u8));
-        let future = Box::pin(retained_compaction_execute(storage, document, holder, consolidate_snapshots, budget, now_ms, cancelled.clone(), expired.clone(), progress.clone()));
+        let future = Box::pin(retained_compaction_execute(storage, document, holder, consolidate_snapshots, budget, now_ms, cancelled.clone(), expired.clone(), progress.clone(), lease_recovery.clone()));
         let deadline_ms = pool.now_ms().saturating_add(DATABASE_COMPACTION_DEADLINE_MS);
         let state = Arc::new(DatabaseCompactionState {
             pool: pool.clone(),
             slot,
             generation,
             admission: std::sync::Mutex::new(Some(admission)),
-            core: std::sync::Mutex::new(DatabaseCompactionCore { future: Some(future), output: None, quarantined: None }),
+            core: std::sync::Mutex::new(DatabaseCompactionCore { future: Some(future), output: None, release_waiting: None, release_fault: None, release_retry_fault: None, quarantined: None, release_quarantined: None, panic_release: None }),
             terminal: std::sync::Mutex::new(None),
             driver: std::sync::atomic::AtomicU8::new(DatabaseCompactionDriverAuthority::Idle as u8),
             retry_job: std::sync::Mutex::new(None),
@@ -1744,6 +2156,10 @@ impl DatabaseCompactionFuture {
             wake_requested: std::sync::atomic::AtomicBool::new(false),
             callback_close: std::sync::atomic::AtomicBool::new(false),
             callback_armed: std::sync::atomic::AtomicBool::new(false),
+            release_retry_armed: std::sync::atomic::AtomicBool::new(false),
+            panic_fault: std::sync::atomic::AtomicBool::new(false),
+            panic_retired: std::sync::atomic::AtomicBool::new(false),
+            lease_recovery,
             waker: std::sync::Mutex::new(None),
         });
         database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[slot] = Some(state.clone());
@@ -1791,6 +2207,11 @@ impl Future for DatabaseCompactionFuture {
             return std::task::Poll::Ready(Err(DbError::Closed));
         }
         let Some(state) = self.state.as_ref().cloned() else { return std::task::Poll::Ready(Err(DbError::Closed)) };
+        if state.panic_retired.load(std::sync::atomic::Ordering::Acquire) {
+            self.completed = true;
+            self.state.take();
+            return std::task::Poll::Ready(Err(DbError::Internal("database compaction worker panic released lease and retired quarantine".to_string())));
+        }
         if !state.current() {
             self.completed = true;
             state.abandoned.store(true, std::sync::atomic::Ordering::Release);
@@ -1803,10 +2224,6 @@ impl Future for DatabaseCompactionFuture {
             self.completed = true;
             self.state.take();
             return std::task::Poll::Ready(Ok(DatabaseCompactionResult { state: Some(state), execution: Some(execution) }));
-        }
-        if state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).quarantined.is_some() {
-            self.completed = true;
-            return std::task::Poll::Ready(Err(DbError::Internal("database compaction worker panic retained exact owner in quarantine".to_string())));
         }
         *state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
         if let Some(execution) = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).output.take() {
@@ -2127,7 +2544,8 @@ mod tests {
             new_pages: Vec::new(),
             created_at_ms: 1,
         };
-        assert_eq!(database_compaction_admit_descriptor(descriptor).await.unwrap_err(), DbError::LimitExceeded("database compaction snapshot backing"));
+        let mut descriptor_ledger = DatabaseCompactionBackingLedger::default();
+        assert_eq!(database_compaction_admit_descriptor(descriptor, &mut descriptor_ledger).await.unwrap_err(), DbError::LimitExceeded("database compaction snapshot backing"));
         for future in &admitted {
             future.cancel();
         }
@@ -2168,6 +2586,147 @@ mod tests {
         while owners.close_one() {}
         assert!(owners.terminal_is_empty());
         pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_index_child_uses_exact_parent_cancel_and_eight_ms_control() {
+        let storage = retained_compaction_storage().await;
+        let index_storage = storage.index().await;
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let handle = db_index::IndexHandle::new(&index_storage, ArtifactId(String::from("p1y-index-cancel")), db_index::IndexKind::Command).await;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_COMPACTION_TURN_MS);
+        let mut control = handle.retained_operation_control(cancelled.clone(), deadline, DATABASE_COMPACTION_INDEX_FUEL).unwrap();
+        cancelled.store(true, std::sync::atomic::Ordering::Release);
+        assert_eq!(handle.compact(&mut control).await, Err(DbError::Unavailable("index cursor cancelled".to_string())));
+        assert_eq!(DATABASE_COMPACTION_TURN_MS, 8);
+        assert_ne!(DATABASE_COMPACTION_INDEX_FUEL, 65_536);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_expected_snapshot_publication_never_persists_stale_baseline() {
+        let storage = retained_compaction_storage().await;
+        let snapshot = storage.snapshot().await;
+        let manager = db_snapshot::SnapshotManager::new(&snapshot).await;
+        let document = ArtifactId(String::from("p1y-publication-cas"));
+        assert_eq!(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(1).await).await.unwrap(), 0);
+        let expected = snapshot.latest_generation(&document).await.unwrap().unwrap();
+        assert_eq!(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(2).await).await.unwrap(), 1);
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut control = db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_millis(8), DATABASE_COMPACTION_INDEX_FUEL).unwrap();
+        let rejected = manager.publish_retained_expected(&document, expected, &[], 0, sample_body(1).await, &mut control).await.unwrap_err();
+        let (error, body) = rejected.into_parts();
+        assert_eq!(error, DbError::StaleGeneration { expected: crate::db_ids::GenerationId(0), actual: crate::db_ids::GenerationId(1) });
+        retire_compaction_snapshot_body(body).await;
+        let mut generations = snapshot.list_generations(&document).await.unwrap();
+        assert_eq!(generations.as_slice(), &[0, 1]);
+        close_compaction_owner(|| Ok(generations.close_step())).await.unwrap();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_panic_after_lease_acquire_releases_once_before_public_fault_and_registry_drain() {
+        let (pool, held) = held_compaction_worker_pool();
+        let storage = retained_compaction_storage().await;
+        let lease_storage = storage.clone();
+        let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-panic-release")), db_storage::DbIoText::try_from_str("panic-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+        let state = future.state.as_ref().unwrap().clone();
+        let fence = lease_storage.lease().await.acquire(state.lease_recovery.resource.as_str(), state.lease_recovery.holder.as_str(), DEFAULT_LEASE_TTL_MS, 0).await.unwrap();
+        state.lease_recovery.install(fence);
+        let injected: DatabaseCompactionExecutionFuture = Box::pin(async { panic!("p1y injected post-lease panic") });
+        let original = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).future.replace(injected).unwrap();
+        drop(original);
+        held.store(false, std::sync::atomic::Ordering::Release);
+        assert_eq!(future.await.unwrap_err(), DbError::Internal("database compaction worker panic released lease and retired quarantine".to_string()));
+        assert!(lease_storage.lease().await.current(state.lease_recovery.resource.as_str(), 0).await.unwrap().is_none());
+        assert!(state.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire));
+        assert!(state.panic_retired.load(std::sync::atomic::Ordering::Acquire));
+        assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_none());
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_release_error_retries_through_real_worker_loop_until_success_before_public_fault() {
+        let (pool, held) = held_compaction_worker_pool();
+        let storage = retained_compaction_storage().await;
+        let lease_storage = storage.clone();
+        let future =
+            DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-release-error-success")), db_storage::DbIoText::try_from_str("release-error-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+        let state = future.state.as_ref().unwrap().clone();
+        let fence = lease_storage.lease().await.acquire(state.lease_recovery.resource.as_str(), state.lease_recovery.holder.as_str(), DEFAULT_LEASE_TTL_MS, 0).await.unwrap();
+        state.lease_recovery.install(fence);
+        state.lease_recovery.fail_release_attempts(1);
+        let injected: DatabaseCompactionExecutionFuture = Box::pin(async { panic!("p1y release error then success") });
+        let original = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).future.replace(injected).unwrap();
+        drop(original);
+        held.store(false, std::sync::atomic::Ordering::Release);
+        assert_eq!(future.await.unwrap_err(), DbError::Internal("database compaction worker panic released lease and retired quarantine".to_string()));
+        assert!(state.lease_recovery.release_attempts.load(std::sync::atomic::Ordering::Acquire) >= 2);
+        assert!(state.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire));
+        assert!(state.lease_recovery.fence.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert!(lease_storage.lease().await.current(state.lease_recovery.resource.as_str(), 0).await.unwrap().is_none());
+        let core = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        assert!(core.future.is_none() && core.release_fault.is_none() && core.release_retry_fault.is_none());
+        drop(core);
+        assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_none());
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_perpetual_release_error_keeps_fence_fault_admission_and_registry_discoverable() {
+        let (pool, held) = held_compaction_worker_pool();
+        let storage = retained_compaction_storage().await;
+        let lease_storage = storage.clone();
+        let future =
+            DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-perpetual-release-error")), db_storage::DbIoText::try_from_str("perpetual-release-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+        let state = future.state.as_ref().unwrap().clone();
+        let fence = lease_storage.lease().await.acquire(state.lease_recovery.resource.as_str(), state.lease_recovery.holder.as_str(), DEFAULT_LEASE_TTL_MS, 0).await.unwrap();
+        state.lease_recovery.install(fence);
+        state.lease_recovery.fail_release_attempts(usize::MAX);
+        let injected: DatabaseCompactionExecutionFuture = Box::pin(async { panic!("p1y perpetual release error") });
+        let original = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).future.replace(injected).unwrap();
+        drop(original);
+        held.store(false, std::sync::atomic::Ordering::Release);
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        assert!(state.lease_recovery.release_attempts.load(std::sync::atomic::Ordering::Acquire) >= 2);
+        assert!(!state.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(*state.lease_recovery.fence.lock().unwrap_or_else(std::sync::PoisonError::into_inner), Some(fence));
+        let core = state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        assert!(core.future.is_none());
+        assert!(core.release_fault.is_some());
+        assert!(core.panic_release.is_some() || state.release_retry_armed.load(std::sync::atomic::Ordering::Acquire));
+        drop(core);
+        assert!(!state.panic_retired.load(std::sync::atomic::Ordering::Acquire));
+        assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
+        assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_some());
+        assert!(lease_storage.lease().await.current(state.lease_recovery.resource.as_str(), 0).await.unwrap().is_some());
+        state.lease_recovery.fail_release_attempts(0);
+        assert_eq!(future.await.unwrap_err(), DbError::Internal("database compaction worker panic released lease and retired quarantine".to_string()));
+        assert!(state.lease_recovery.released.load(std::sync::atomic::Ordering::Acquire));
+        assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert!(database_compaction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[state.slot].is_none());
+        pool.shutdown();
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_compaction_cumulative_observed_backing_rejects_individually_valid_combined_max_plus_one() {
+        let mut ledger = DatabaseCompactionBackingLedger::default();
+        let first = Vec::<u8>::with_capacity(DATABASE_COMPACTION_OPERATION_BYTES as usize / 2);
+        let second = Vec::<u8>::with_capacity(DATABASE_COMPACTION_OPERATION_BYTES as usize / 2 + 1);
+        let first_identity = first.as_ptr();
+        let second_identity = second.as_ptr();
+        database_compaction_observe_backing(&mut ledger, 1, first.capacity(), "p1y cumulative first").unwrap();
+        assert_eq!(database_compaction_observe_backing(&mut ledger, 1, second.capacity(), "p1y cumulative max plus one"), Err(DbError::LimitExceeded("p1y cumulative max plus one")));
+        assert_eq!(first.as_ptr(), first_identity);
+        assert_eq!(second.as_ptr(), second_identity);
+        ledger.release(1, first.capacity()).unwrap();
+        database_compaction_observe_backing(&mut ledger, 1, second.capacity(), "p1y cumulative recovered").unwrap();
+        ledger.release(1, second.capacity()).unwrap();
+        assert_eq!((ledger.items, ledger.bytes), (0, 0));
+        semio_framework_async::yield_once().await;
+        drop(first);
+        semio_framework_async::yield_once().await;
+        drop(second);
     }
 
     #[semio_framework_async_macros::async_test]

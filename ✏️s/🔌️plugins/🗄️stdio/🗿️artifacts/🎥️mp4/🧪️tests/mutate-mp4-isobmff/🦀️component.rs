@@ -86,6 +86,7 @@ mod subject {
     use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::{apply_mp4_mutation, Mp4Mutation};
     use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
     use semio_s_plugin_stdio_test_oracle::artifacts::mp4::standards::v_isobmff::subsets::any::project_mp4_mutation;
+    use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️SpecReading
     /// 🔎️ A second, independently written reading of the SAME `params` JSON schema the oracle reads
@@ -133,6 +134,28 @@ mod subject {
         Mp4Sample { data: bytes(value, "data"), duration: number(value, "duration", 0.0) as u32, cts_offset: number(value, "ctsOffset", 0.0) as i32, sync: boolean(value, "sync", true) }
     }
 
+    /// 🧮️ Re-groups a retained `stsc` chunking onto a shortened sample list, so the document
+    /// `set-snapshot` hands over is internally consistent rather than carrying a grouping that
+    /// claims more samples than the track holds. The encoder reconciles a stale grouping on its own
+    /// (`../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs`'s
+    /// `normalized_chunk_sample_counts`, pinned by its own test), but a case that means "replace the
+    /// document with THIS one" must hand over a document a real producer could have written.
+    fn grouping_for(retained: &[u32], samples: usize) -> Vec<u32> {
+        let mut remaining = samples;
+        let mut counts = Vec::new();
+        for count in retained {
+            let taken = (*count as usize).min(remaining);
+            remaining -= taken;
+            if taken > 0 {
+                counts.push(taken as u32);
+            }
+        }
+        if remaining > 0 {
+            counts.push(remaining as u32);
+        }
+        counts
+    }
+
     /// 🦠️ Builds the real `Mp4Mutation` this scenario's `{"kind", "params"}` doc string describes.
     /// `set-snapshot` mirrors the oracle's own reading (replace `ftyp`, drop the first track's last
     /// sample) — a real multi-facet whole-document replace rather than a `SetFtyp` alias.
@@ -147,6 +170,7 @@ mod subject {
                 snapshot.ftyp = ftyp_from_json(&params.get("ftyp").cloned().unwrap_or(Json::Object(Vec::new())), &base.ftyp);
                 if let Some(track) = snapshot.tracks.first_mut() {
                     track.samples.pop();
+                    track.chunk_sample_counts = grouping_for(&track.chunk_sample_counts, track.samples.len());
                 }
                 Ok(Mp4Mutation::SetSnapshot { snapshot })
             }
@@ -232,17 +256,32 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// 🎯️ Full parse into the typed snapshot, then re-serialize from the model ALONE — the tripwire
-    /// this whole wave exists to enforce: our writer cannot reproduce another writer's byte layout,
-    /// so bit-identical output would mean the input was smuggled through rather than parsed.
+    /// 🎯️ Full parse into the typed snapshot, then re-serialize from the model ALONE — asserted
+    /// through `law::carrier_is_exact`, the DOCUMENTED MIRROR of the no-byte-pass-through tripwire,
+    /// because for THIS codec reproducing the input exactly is the correct answer and anything else
+    /// is the defect. The reason is the third of the law's three admissible ones: `Mp4Snapshot`
+    /// carries no raw-byte escape hatch of any kind — every `mvhd`/`tkhd`/`mdhd` field, every edit
+    /// list entry, the visual sample entry, `colr`/`pasp`/`btrt`, the `avcC` extension and the
+    /// `stsc`/`stco` chunk grouping are typed fields — and `encode_mp4` rebuilds the whole `moov`
+    /// from them into one deterministic normal form (`ftyp`, `moov`, canonical empty `free`,
+    /// `mdat`) that this ffmpeg `-c copy -movflags +faststart` fixture's own layout already is.
+    /// That is not an excuse for a weaker claim, it is a STRONGER one, and the artifact holds
+    /// itself to it independently of this case:
+    /// `../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs`'s own
+    /// `exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte` asserts the same equality on the
+    /// full real recording. `law::reparsed_not_copied` would be exactly backwards here: it would
+    /// demand that a lossless container codec LOSE something. The evidence that a parse really
+    /// happened is the ten `mutate-*` rows above, which drive the same decode/encode pipeline and
+    /// every one of which moves both the bytes and the compared projection.
+    /// The ORACLE half of this same scenario keeps `law::reparsed_not_copied`, because `mp4` 0.14's
+    /// `Mp4Writer` is a different writer with its own box order and `mdat` layout.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         let snapshot = decode_mp4(&input).map_err(|error| format!("decode_mp4 failed: {error}"))?;
         let output = encode_mp4(&snapshot);
-        if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".to_string());
-        }
+        law::carrier_is_exact(&output, &input)?;
         let projection = project_mp4_mutation(&output)?;
+        law::round_trip_preserves(&projection, &project_mp4_mutation(&input)?)?;
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Scenarios

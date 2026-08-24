@@ -65,7 +65,7 @@ fn main() {
 
     let transport = semio_framework_async::block_on(StdioTransport::new(200));
     let mut shard = semio_framework_async::block_on(ShardLoop::new(runtime, ShardTransports::Stdio(transport)));
-    semio_framework_async::block_on(shard.register(ActorId(actor_id), instance));
+    shard.register(ActorId(actor_id), instance);
     eprintln!("[semio-shard] pid={} package={package_id} actor={actor_id} ready", std::process::id());
 
     // 🌀️ `ShardLoop::pump` only drains what is ALREADY buffered and never blocks (its own doc

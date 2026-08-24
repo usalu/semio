@@ -294,6 +294,8 @@ pub struct DrawList {
     glass_content_stack: Vec<usize>,
     screen_h: f32,
     retained_output: Option<RetainedOutputGrant>,
+    prepared_items: usize,
+    prepared_bytes: usize,
 }
 
 #[derive(Clone, Copy)]
@@ -307,13 +309,60 @@ struct RetainedOutputGrant {
 
 impl Default for DrawList {
     fn default() -> Self {
-        let mut list = Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 720.0, retained_output: None };
+        let mut list = Self {
+            scene_passes: Vec::new(),
+            layers: Vec::new(),
+            glass_regions: Vec::new(),
+            scissor_stack: Vec::new(),
+            clip_stack: Vec::new(),
+            glass_content_stack: Vec::new(),
+            screen_h: 720.0,
+            retained_output: None,
+            prepared_items: 0,
+            prepared_bytes: 0,
+        };
         list.layers.push(DrawLayer::default());
         list
     }
 }
 
+fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, usize)> {
+    let mut items = 1usize;
+    let mut bytes = std::mem::size_of::<ScenePass3d>();
+    let mut include = |next_items: usize, next_bytes: usize| {
+        items = items.checked_add(next_items)?;
+        bytes = bytes.checked_add(next_bytes)?;
+        Some(())
+    };
+    include(pass.draws.len(), pass.draws.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
+    include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
+    for draw in pass.draws.iter().chain(pass.translucent_draws.iter()) {
+        include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::Instance3d>())?)?;
+        for instance in &draw.instances {
+            include(instance.id.len(), instance.id.capacity())?;
+        }
+    }
+    include(pass.line_draws.len(), pass.line_draws.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::LineDraw3d>())?)?;
+    for draw in &pass.line_draws {
+        include(draw.vertices.len(), draw.vertices.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::LineVertex3d>())?)?;
+    }
+    include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::TexturedDraw3d>())?)?;
+    for draw in &pass.textured_draws {
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(std::mem::size_of::<crate::wgpu::kernel_3d_scene::TexturedInstance3d>())?)?;
+        for instance in &draw.instances {
+            include(instance.texture_key.len(), instance.texture_key.capacity())?;
+        }
+    }
+    Some((items, bytes))
+}
+
 impl DrawList {
+    /// 🪣 Creates an allocation-free transfer slot for a later exact draw admission.
+    pub fn empty() -> Self {
+        Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 0.0, retained_output: None, prepared_items: 0, prepared_bytes: 0 }
+    }
+
     /// 🎟️ Pre-admits fixed candidate backing before a retained paint child transfers output.
     pub fn try_reserve_retained_items(&mut self, items: usize) -> Result<(), ()> {
         if self.layers.is_empty() {
@@ -354,22 +403,32 @@ impl DrawList {
     }
 
     fn claim_retained_output(&mut self, items: usize, bytes: usize) -> bool {
-        let Some(grant) = self.retained_output.as_mut() else { return true };
-        let Some(next_items) = grant.items.checked_add(items) else {
-            grant.faulted = true;
-            return false;
-        };
-        let Some(next_bytes) = grant.bytes.checked_add(bytes) else {
-            grant.faulted = true;
-            return false;
-        };
-        if next_items > grant.item_limit || next_bytes > grant.byte_limit {
-            grant.faulted = true;
-            return false;
+        let Some(prepared_items) = self.prepared_items.checked_add(items) else { return false };
+        let Some(prepared_bytes) = self.prepared_bytes.checked_add(bytes) else { return false };
+        if let Some(grant) = self.retained_output.as_mut() {
+            let Some(next_items) = grant.items.checked_add(items) else {
+                grant.faulted = true;
+                return false;
+            };
+            let Some(next_bytes) = grant.bytes.checked_add(bytes) else {
+                grant.faulted = true;
+                return false;
+            };
+            if next_items > grant.item_limit || next_bytes > grant.byte_limit {
+                grant.faulted = true;
+                return false;
+            }
+            grant.items = next_items;
+            grant.bytes = next_bytes;
         }
-        grant.items = next_items;
-        grant.bytes = next_bytes;
+        self.prepared_items = prepared_items;
+        self.prepared_bytes = prepared_bytes;
         true
+    }
+
+    /// 📊 Returns the cumulative pre-transfer draw claim maintained at every producer push.
+    pub(crate) fn prepared_output_usage(&self) -> (usize, usize) {
+        (self.prepared_items, self.prepared_bytes)
     }
 
     pub(crate) fn retire_step(&mut self) -> bool {
@@ -379,7 +438,15 @@ impl DrawList {
                     if instance.texture_key.pop().is_some() {
                         return false;
                     }
+                    if instance.texture_key.capacity() > 0 {
+                        instance.texture_key = String::new();
+                        return false;
+                    }
                     draw.instances.pop();
+                    return false;
+                }
+                if draw.instances.capacity() > 0 {
+                    draw.instances = Vec::new();
                     return false;
                 }
                 pass.textured_draws.pop();
@@ -390,10 +457,22 @@ impl DrawList {
                     if instance.id.pop().is_some() {
                         return false;
                     }
+                    if instance.id.capacity() > 0 {
+                        instance.id = String::new();
+                        return false;
+                    }
                     draw.instances.pop();
                     return false;
                 }
+                if draw.instances.capacity() > 0 {
+                    draw.instances = Vec::new();
+                    return false;
+                }
                 if draw.mesh_key.pop().is_some() {
+                    return false;
+                }
+                if draw.mesh_key.capacity() > 0 {
+                    draw.mesh_key = String::new();
                     return false;
                 }
                 pass.translucent_draws.pop();
@@ -401,6 +480,10 @@ impl DrawList {
             }
             if let Some(draw) = pass.line_draws.last_mut() {
                 if draw.vertices.pop().is_some() {
+                    return false;
+                }
+                if draw.vertices.capacity() > 0 {
+                    draw.vertices = Vec::new();
                     return false;
                 }
                 pass.line_draws.pop();
@@ -411,13 +494,41 @@ impl DrawList {
                     if instance.id.pop().is_some() {
                         return false;
                     }
+                    if instance.id.capacity() > 0 {
+                        instance.id = String::new();
+                        return false;
+                    }
                     draw.instances.pop();
+                    return false;
+                }
+                if draw.instances.capacity() > 0 {
+                    draw.instances = Vec::new();
                     return false;
                 }
                 if draw.mesh_key.pop().is_some() {
                     return false;
                 }
+                if draw.mesh_key.capacity() > 0 {
+                    draw.mesh_key = String::new();
+                    return false;
+                }
                 pass.draws.pop();
+                return false;
+            }
+            if pass.textured_draws.capacity() > 0 {
+                pass.textured_draws = Vec::new();
+                return false;
+            }
+            if pass.translucent_draws.capacity() > 0 {
+                pass.translucent_draws = Vec::new();
+                return false;
+            }
+            if pass.line_draws.capacity() > 0 {
+                pass.line_draws = Vec::new();
+                return false;
+            }
+            if pass.draws.capacity() > 0 {
+                pass.draws = Vec::new();
                 return false;
             }
             self.scene_passes.pop();
@@ -428,6 +539,10 @@ impl DrawList {
                 if clip.scissors.pop().is_some() {
                     return false;
                 }
+                if clip.scissors.capacity() > 0 {
+                    clip.scissors = Vec::new();
+                    return false;
+                }
                 layer.clip = None;
                 return false;
             }
@@ -435,10 +550,34 @@ impl DrawList {
                 if key.pop().is_some() {
                     return false;
                 }
+                if key.capacity() > 0 {
+                    *key = String::new();
+                    return false;
+                }
                 layer.raster_instances.pop();
                 return false;
             }
             if layer.overlay_vector_vertices.pop().is_some() || layer.overlay_ui_instances.pop().is_some() || layer.vector_vertices.pop().is_some() || layer.ui_instances.pop().is_some() {
+                return false;
+            }
+            if layer.overlay_vector_vertices.capacity() > 0 {
+                layer.overlay_vector_vertices = Vec::new();
+                return false;
+            }
+            if layer.overlay_ui_instances.capacity() > 0 {
+                layer.overlay_ui_instances = Vec::new();
+                return false;
+            }
+            if layer.vector_vertices.capacity() > 0 {
+                layer.vector_vertices = Vec::new();
+                return false;
+            }
+            if layer.ui_instances.capacity() > 0 {
+                layer.ui_instances = Vec::new();
+                return false;
+            }
+            if layer.raster_instances.capacity() > 0 {
+                layer.raster_instances = Vec::new();
                 return false;
             }
             self.layers.pop();
@@ -451,14 +590,67 @@ impl DrawList {
             if clip.scissors.pop().is_some() {
                 return false;
             }
+            if clip.scissors.capacity() > 0 {
+                clip.scissors = Vec::new();
+                return false;
+            }
             self.clip_stack.pop();
+            return false;
+        }
+        if self.scene_passes.capacity() > 0 {
+            self.scene_passes = Vec::new();
+            return false;
+        }
+        if self.layers.capacity() > 0 {
+            self.layers = Vec::new();
+            return false;
+        }
+        if self.glass_regions.capacity() > 0 {
+            self.glass_regions = Vec::new();
+            return false;
+        }
+        if self.scissor_stack.capacity() > 0 {
+            self.scissor_stack = Vec::new();
+            return false;
+        }
+        if self.clip_stack.capacity() > 0 {
+            self.clip_stack = Vec::new();
+            return false;
+        }
+        if self.glass_content_stack.capacity() > 0 {
+            self.glass_content_stack = Vec::new();
+            return false;
+        }
+        if self.retained_output.take().is_some() {
+            return false;
+        }
+        if self.prepared_items != 0 {
+            self.prepared_items = 0;
+            return false;
+        }
+        if self.prepared_bytes != 0 {
+            self.prepared_bytes = 0;
             return false;
         }
         true
     }
 
     pub(crate) fn retirement_is_empty(&self) -> bool {
-        self.scene_passes.is_empty() && self.layers.is_empty() && self.glass_regions.is_empty() && self.scissor_stack.is_empty() && self.clip_stack.is_empty() && self.glass_content_stack.is_empty() && self.retained_output.is_none()
+        self.scene_passes.is_empty()
+            && self.scene_passes.capacity() == 0
+            && self.layers.is_empty()
+            && self.layers.capacity() == 0
+            && self.glass_regions.is_empty()
+            && self.glass_regions.capacity() == 0
+            && self.scissor_stack.is_empty()
+            && self.scissor_stack.capacity() == 0
+            && self.clip_stack.is_empty()
+            && self.clip_stack.capacity() == 0
+            && self.glass_content_stack.is_empty()
+            && self.glass_content_stack.capacity() == 0
+            && self.retained_output.is_none()
+            && self.prepared_items == 0
+            && self.prepared_bytes == 0
     }
 
     pub fn set_screen_height(&mut self, height: f32) {
@@ -510,6 +702,17 @@ impl DrawList {
 
     /// 🪟️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
     pub fn begin_silhouette_clip(&mut self, rects: &[crate::wgpu::geometry::Rect]) {
+        let Some(items) = rects.len().checked_add(2) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
+        let Some(bytes) = rects.len().checked_mul(std::mem::size_of::<ScissorRect>()).and_then(|bytes| bytes.checked_add(std::mem::size_of::<DrawLayer>())) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
+        if !self.claim_retained_output(items, bytes) {
+            return;
+        }
         let mut clip = ClipRegion::from_rects(rects, self.screen_h);
         if let Some(parent) = self.clip_stack.last() {
             clip = parent.intersect(&clip);
@@ -519,11 +722,21 @@ impl DrawList {
     }
 
     pub fn end_silhouette_clip(&mut self) {
+        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+            return;
+        }
         self.clip_stack.pop();
         self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
 
     pub fn push_scene_pass(&mut self, mut pass: ScenePass3d) {
+        let Some((items, bytes)) = prepared_scene_pass_usage(&pass) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
+        if !self.claim_retained_output(items, bytes) {
+            return;
+        }
         if self.layers.is_empty() {
             self.layers.push(DrawLayer::default());
         }
@@ -595,11 +808,17 @@ impl DrawList {
     }
 
     pub fn begin_glass_content(&mut self, region: usize) {
+        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+            return;
+        }
         self.glass_content_stack.push(region);
         self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: Some(region), ..DrawLayer::default() });
     }
 
     pub fn end_glass_content(&mut self) {
+        if !self.claim_retained_output(1, std::mem::size_of::<DrawLayer>()) {
+            return;
+        }
         self.glass_content_stack.pop();
         self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
     }
@@ -693,7 +912,11 @@ impl DrawList {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
-        if !self.claim_retained_output(1, vertices.saturating_mul(std::mem::size_of::<VectorVertex>())) {
+        let Some(bytes) = vertices.checked_mul(std::mem::size_of::<VectorVertex>()) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
+        if !self.claim_retained_output(1, bytes) {
             return;
         }
         let c = [color.r, color.g, color.b, color.a];
@@ -713,7 +936,11 @@ impl DrawList {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
-        if !self.claim_retained_output(1, vertices.saturating_mul(std::mem::size_of::<VectorVertex>())) {
+        let Some(bytes) = vertices.checked_mul(std::mem::size_of::<VectorVertex>()) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
+        if !self.claim_retained_output(1, bytes) {
             return;
         }
         let c = [color.r, color.g, color.b, color.a];
@@ -3648,7 +3875,282 @@ impl UiPipelines {
         );
     }
 
+    /// 🌑 Encodes the fixed scene clear packet without traversing retained draw owners.
+    pub fn clear_prepared_scene<'a>(&'a self, encoder: &mut wgpu::CommandEncoder, scene: &'a SceneColorTarget, depth_view: Option<&'a wgpu::TextureView>) {
+        let pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_scene_clear"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: scene.mip_view(0),
+                resolve_target: None,
+                ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color { r: 0.05, g: 0.05, b: 0.06, a: 1.0 }), store: wgpu::StoreOp::Store },
+                depth_slice: None,
+            })],
+            depth_stencil_attachment: depth_view.map(|depth| stencil_attachment(depth, wgpu::LoadOp::Clear(1.0), wgpu::LoadOp::Clear(0))),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        drop(pass);
+    }
+
+    /// 🔹 Encodes one retained UI instance without collecting or traversing sibling layers.
+    #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
+    pub fn encode_prepared_ui_scalar<'a>(
+        &'a self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        scene: &'a SceneColorTarget,
+        depth_view: &'a wgpu::TextureView,
+        frame_buffers: &'a mut FrameBuffers,
+        raster_store: &'a RasterTextureTable,
+        instance: &UiInstance,
+        raster_key: Option<&str>,
+        scissor: Option<ScissorRect>,
+        width: f32,
+        height: f32,
+        time_seconds: f32,
+    ) -> Result<(), &'static str> {
+        self.update_globals(queue, width, height, time_seconds);
+        let Some(buffer) = frame_buffers.ui_instances.upload(device, queue, std::slice::from_ref(instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_ui_scalar") else {
+            return Err("prepared UI scalar buffer admission failed");
+        };
+        let bind_group = match raster_key {
+            Some(key) => &raster_store.get(key).ok_or("prepared raster scalar texture was missing")?.bind_group,
+            None => &self.glyph_bind_group,
+        };
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_ui_scalar"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene.mip_view(0), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        set_pass_scissor(&mut pass, scissor, width, height);
+        pass.set_pipeline(&self.ui_pipeline);
+        pass.set_bind_group(0, bind_group, &[]);
+        pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
+        pass.set_vertex_buffer(1, buffer);
+        pass.draw(0..6, 0..1);
+        Ok(())
+    }
+
+    /// 🔺 Encodes one retained vector triangle without staging a dynamic batch.
+    #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
+    pub fn encode_prepared_vector_triangle<'a>(
+        &'a self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        scene: &'a SceneColorTarget,
+        depth_view: &'a wgpu::TextureView,
+        frame_buffers: &'a mut FrameBuffers,
+        vertices: &[VectorVertex],
+        scissor: Option<ScissorRect>,
+        width: f32,
+        height: f32,
+        time_seconds: f32,
+    ) -> Result<(), &'static str> {
+        if vertices.len() != 3 {
+            return Err("prepared vector scalar was not one triangle");
+        }
+        self.update_globals(queue, width, height, time_seconds);
+        let Some(buffer) = frame_buffers.vector_vertices.upload(device, queue, vertices, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_vector_triangle") else {
+            return Err("prepared vector triangle buffer admission failed");
+        };
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_vector_triangle"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene.mip_view(0), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        set_pass_scissor(&mut pass, scissor, width, height);
+        pass.set_pipeline(&self.vector_pipeline);
+        pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+        pass.set_vertex_buffer(0, buffer);
+        pass.draw(0..3, 0..1);
+        Ok(())
+    }
+
+    /// 🌐 Encodes one retained mesh instance under one scene-pass owner.
+    #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
+    pub fn encode_prepared_world_instance<'a>(
+        &'a mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        scene: &'a SceneColorTarget,
+        depth_view: &'a wgpu::TextureView,
+        frame_buffers: &'a mut FrameBuffers,
+        mesh_store: &'a MeshGpuTable,
+        pass_owner: &ScenePass3d,
+        mesh_key: &str,
+        mesh_version: u64,
+        instance: &crate::wgpu::kernel_3d_scene::Instance3d,
+        translucent: bool,
+        width: f32,
+        height: f32,
+    ) -> Result<(), &'static str> {
+        let globals = World3dGlobals { view_proj: pass_owner.view_proj, light_dir: [pass_owner.light_dir[0], pass_owner.light_dir[1], pass_owner.light_dir[2], 0.0] };
+        self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
+        self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
+        let gpu_instance = World3dGpuInstance::from_instance(instance.model.to_cols_array_m(), instance.color, instance.selected, instance.hovered);
+        let Some(instance_buffer) = frame_buffers.world_instances.upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_instance") else {
+            return Err("prepared world instance buffer admission failed");
+        };
+        let mesh = mesh_store.get_versioned(mesh_key, mesh_version).ok_or("prepared world mesh was missing")?;
+        let viewport = pass_owner.viewport;
+        let scene_scissor = ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 };
+        if scene_scissor.w == 0 || scene_scissor.h == 0 {
+            return Ok(());
+        }
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_world_instance"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene.mip_view(0), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
+        pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
+        pass.set_pipeline(if translucent { &self.world_pipeline_translucent } else { &self.world_pipeline });
+        pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
+        pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+        pass.set_vertex_buffer(1, instance_buffer);
+        pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+        pass.draw_indexed(0..mesh.index_count, 0, 0..1);
+        pass.set_viewport(0.0, 0.0, width, height, 0.0, 1.0);
+        Ok(())
+    }
+
+    /// 📏 Encodes one retained world line segment under one scene-pass owner.
+    #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
+    pub fn encode_prepared_world_line<'a>(
+        &'a mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        scene: &'a SceneColorTarget,
+        depth_view: &'a wgpu::TextureView,
+        frame_buffers: &'a mut FrameBuffers,
+        pass_owner: &ScenePass3d,
+        vertices: &[crate::wgpu::kernel_3d_scene::LineVertex3d],
+    ) -> Result<(), &'static str> {
+        if vertices.len() != 2 {
+            return Err("prepared world line scalar was not one segment");
+        }
+        let globals = World3dGlobals { view_proj: pass_owner.view_proj, light_dir: [pass_owner.light_dir[0], pass_owner.light_dir[1], pass_owner.light_dir[2], 0.0] };
+        self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
+        self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
+        let gpu_vertices = [WorldLineGpuVertex { position: vertices[0].position, color: vertices[0].color }, WorldLineGpuVertex { position: vertices[1].position, color: vertices[1].color }];
+        let Some(line_buffer) = frame_buffers.world_lines.upload(device, queue, &gpu_vertices, wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_line") else {
+            return Err("prepared world line buffer admission failed");
+        };
+        let viewport = pass_owner.viewport;
+        let scene_scissor = ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 };
+        if scene_scissor.w == 0 || scene_scissor.h == 0 {
+            return Ok(());
+        }
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_world_line"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: scene.mip_view(0), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
+        pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
+        pass.set_pipeline(&self.world_line_pipeline);
+        pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
+        pass.set_vertex_buffer(0, line_buffer);
+        pass.draw(0..2, 0..1);
+        Ok(())
+    }
+
+    /// 🌫️ Builds one fixed blur mip for retained glass sampling.
+    pub fn encode_prepared_blur_mip(&self, device: &wgpu::Device, queue: &wgpu::Queue, scene: &SceneColorTarget, mip: u32) -> Result<(), &'static str> {
+        if mip == 0 || mip >= SCENE_MIP_LEVELS {
+            return Err("prepared blur mip cursor was invalid");
+        }
+        let source = mip - 1;
+        queue.write_buffer(&self.blur_globals_buffer, 0, bytemuck::bytes_of(&BlurGlobals { src_mip: 0.0, _pad: [0.0; 7] }));
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("prepared_blur_mip"),
+            layout: &self.blur_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: self.blur_globals_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(scene.blur_scratch_mip_view(source)) },
+                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(scene.sampler()) },
+            ],
+        });
+        let mut copy = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_blur_copy") });
+        scene.copy_mip_to_blur_scratch(&mut copy, source);
+        queue.submit(Some(copy.finish()));
+        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_blur_mip") });
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_blur_mip"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: scene.mip_view(mip),
+                resolve_target: None,
+                ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT), store: wgpu::StoreOp::Store },
+                depth_slice: None,
+            })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        pass.set_pipeline(&self.blur_downsample_pipeline);
+        pass.set_bind_group(0, &bind_group, &[]);
+        pass.draw(0..6, 0..1);
+        drop(pass);
+        queue.submit(Some(encoder.finish()));
+        Ok(())
+    }
+
+    /// 🪟 Encodes one retained glass region after the scene snapshot is resident.
+    #[allow(clippy::too_many_arguments, reason = "one fixed owner per GPU boundary")]
+    pub fn encode_prepared_glass_scalar<'a>(
+        &'a self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        view: &'a wgpu::TextureView,
+        scene: &'a SceneColorTarget,
+        frame_buffers: &'a mut FrameBuffers,
+        region: &GlassRegion,
+    ) -> Result<(), &'static str> {
+        let instance = GlassInstance { rect: region.rect, tint: [region.tint.r, region.tint.g, region.tint.b, region.tint.a], params: [region.radius, region.alpha, Theme::glass_mip_level(region.blur_px, SCENE_MIP_LEVELS - 1), region.saturate] };
+        let Some(buffer) = frame_buffers.glass_instances.upload(device, queue, std::slice::from_ref(&instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_glass_scalar") else {
+            return Err("prepared glass scalar buffer admission failed");
+        };
+        let scene_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("prepared_glass_scene"),
+            layout: &self.scene_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(scene.sample_view()) }, wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(scene.sampler()) }],
+        });
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_glass_scalar"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        pass.set_pipeline(&self.glass_pipeline);
+        pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+        pass.set_bind_group(1, &scene_bind_group, &[]);
+        pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
+        pass.set_vertex_buffer(1, buffer);
+        pass.draw(0..6, 0..1);
+        Ok(())
+    }
+
+    /// 🖼️ Encodes one fixed scene-to-surface packet after all command pages are resident.
+    pub fn blit_prepared_scene<'a>(&'a self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder, view: &'a wgpu::TextureView, scene: &'a SceneColorTarget) {
+        self.blit_scene_to_swapchain(device, encoder, view, scene);
+    }
+
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[cfg(test)]
     pub fn render_scene_content<'a>(
         &'a mut self,
         device: &wgpu::Device,
@@ -3862,6 +4364,7 @@ impl UiPipelines {
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[cfg(test)]
     pub fn composite_to_swapchain<'a>(
         &'a mut self,
         device: &wgpu::Device,
@@ -3901,6 +4404,7 @@ impl UiPipelines {
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     #[allow(dead_code, reason = "top-level UiPipelines render entrypoint; not yet called internally, likely wired externally by framework/renderer/wgpu")]
+    #[cfg(test)]
     pub fn render<'a>(
         &'a mut self,
         device: &wgpu::Device,
@@ -3922,6 +4426,7 @@ impl UiPipelines {
         self.composite_to_swapchain(device, queue, encoder, view, scene, depth_view, draw, overlay, mesh_store, raster_store, frame_buffers, width, height);
     }
 
+    #[cfg(test)]
     fn run_blur_chain(&self, device: &wgpu::Device, queue: &wgpu::Queue, scene: &SceneColorTarget) {
         for mip in 1..SCENE_MIP_LEVELS {
             let src_mip = mip - 1;
@@ -4070,10 +4575,10 @@ impl UiPipelines {
 #[cfg(test)]
 mod tests {
     use super::{
-        ClipRegion, DrawList, FixedMeshGpuRegistry, FixedRasterTextureRegistry, MESH_GPU_KEEP_VERSION_CAPACITY, MESH_GPU_TABLE_CAPACITY, MeshGpuEntry, MeshGpuKey, RASTER_TEXTURE_ITEM_BYTE_CAPACITY, RASTER_TEXTURE_KEY_BYTES,
-        RASTER_TEXTURE_PROBE_CAPACITY, RASTER_TEXTURE_TABLE_CAPACITY, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureEntry, RasterTextureKey, RasterTextureReservation, RasterTextureReservationCloseCursor,
-        RasterTextureReservationRetirement, RasterTextureStageClaim, RasterTextureUploadCloseCursor, RasterTextureUploadCursor, RasterTextureWitness, RasterTextureWitnessSlot, ScissorRect, WORLD_GLOBALS_SLOT_SIZE, claim_raster_stage_tuple,
-        content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, raster_texture_bytes, raster_witness_is_stale,
+        claim_raster_stage_tuple, content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, raster_texture_bytes, raster_witness_is_stale, ClipRegion, DrawList, FixedMeshGpuRegistry,
+        FixedRasterTextureRegistry, MeshGpuEntry, MeshGpuKey, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureEntry, RasterTextureKey, RasterTextureReservation, RasterTextureReservationCloseCursor, RasterTextureReservationRetirement,
+        RasterTextureStageClaim, RasterTextureUploadCloseCursor, RasterTextureUploadCursor, RasterTextureWitness, RasterTextureWitnessSlot, ScissorRect, MESH_GPU_KEEP_VERSION_CAPACITY, MESH_GPU_TABLE_CAPACITY, RASTER_TEXTURE_ITEM_BYTE_CAPACITY,
+        RASTER_TEXTURE_KEY_BYTES, RASTER_TEXTURE_PROBE_CAPACITY, RASTER_TEXTURE_TABLE_CAPACITY, WORLD_GLOBALS_SLOT_SIZE,
     };
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::kernel_3d_scene::ScenePass3d;
@@ -4468,7 +4973,7 @@ mod tests {
 
     #[test]
     fn overlay_layers_collected_separately_from_backdrop_ui() {
-        use super::{LayerBatchFilter, build_layer_batches, build_overlay_layer_batches};
+        use super::{build_layer_batches, build_overlay_layer_batches, LayerBatchFilter};
         let mut draw = DrawList::default();
         draw.push_solid([0.0, 0.0, 100.0, 100.0], Rgba::new(0.1, 0.1, 0.1, 1.0));
         draw.push_glyph_overlay([10.0, 10.0, 20.0, 12.0], Rgba::new(1.0, 1.0, 1.0, 1.0), [0.0, 0.0, 0.1, 0.1]);
@@ -4503,7 +5008,7 @@ mod tests {
 
     #[test]
     fn glass_foreground_layers_excluded_from_backdrop_batches() {
-        use super::{LayerBatchFilter, Theme, build_layer_batches};
+        use super::{build_layer_batches, LayerBatchFilter, Theme};
         use crate::wgpu::theme::Level;
         let theme = Theme::default();
         let mut draw = DrawList::default();

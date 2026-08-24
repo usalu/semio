@@ -518,7 +518,13 @@ fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, Stri
     let mut ifd0 = carried;
     ifd0.push(TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) });
     ifd0.push(TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) });
-    ifd0.push(TiffTag { tag: TAG_BITS_PER_SAMPLE, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8]) });
+    // 🎨 TIFF6 §Baseline Fields (p.29): BitsPerSample's COUNT is SamplesPerPixel, one entry per
+    // channel — not one entry for the image. This encoder always writes chunky 8-bit RGB
+    // (`SamplesPerPixel` 3, two lines below), so the field is `[8, 8, 8]`. A single `[8]` is a
+    // count/SamplesPerPixel contradiction that lenient readers paper over and a conformant one
+    // reports verbatim; three SHORTs are 6 bytes, so the value moves out of line, which the layout
+    // pass below already sizes through `out_of_line_size`.
+    ifd0.push(TiffTag { tag: TAG_BITS_PER_SAMPLE, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8, 8, 8]) });
     ifd0.push(TiffTag { tag: TAG_COMPRESSION, kind: TiffFieldType::Short, values: TiffValues::Short(vec![compression as u16]) });
     ifd0.push(TiffTag { tag: TAG_PHOTOMETRIC, kind: TiffFieldType::Short, values: TiffValues::Short(vec![2]) });
     ifd0.push(TiffTag { tag: TAG_SAMPLES_PER_PIXEL, kind: TiffFieldType::Short, values: TiffValues::Short(vec![3]) });

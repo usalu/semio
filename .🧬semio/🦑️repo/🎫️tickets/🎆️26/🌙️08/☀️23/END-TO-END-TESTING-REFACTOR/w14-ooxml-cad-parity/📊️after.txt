@@ -1,0 +1,37 @@
+===== SUBJECT mutate-docx-ecma-376 =====
+[test] level=exhaustive cases=1 executed=27 passed=27 failed=0 errored=0 parity=0/0
+exit=0
+===== PARITY mutate-docx-ecma-376 =====
+[test] level=exhaustive cases=1 executed=54 passed=54 failed=0 errored=0 parity=27/27
+exit=0
+===== SUBJECT mutate-pptx-ecma-376 =====
+[test] level=exhaustive cases=1 executed=19 passed=19 failed=0 errored=0 parity=0/0
+exit=0
+===== PARITY mutate-pptx-ecma-376 =====
+[test] level=exhaustive cases=1 executed=38 passed=38 failed=0 errored=0 parity=19/19
+exit=0
+===== SUBJECT mutate-xlsx-ecma-376 =====
+[test] level=exhaustive cases=1 executed=21 passed=20 failed=1 errored=0 parity=0/0
+exit=1
+===== PARITY mutate-xlsx-ecma-376 =====
+[test] level=exhaustive cases=1 executed=42 passed=41 failed=1 errored=0 parity=15/21
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376::mutate-insert-shared-string::rust::subject (3 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376::mutate-remove-shared-string::rust::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376::mutate-set-shared-string::rust::subject (3 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376::inverse-insert-shared-string::rust::subject (3 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376::inverse-remove-shared-string::rust::subject (3 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376::inverse-set-shared-string::rust::subject (3 differences)
+exit=1
+===== SUBJECT mutate-bcf-2-1 =====
+[test] level=exhaustive cases=1 executed=29 passed=29 failed=0 errored=0 parity=0/0
+exit=0
+===== PARITY mutate-bcf-2-1 =====
+[test] level=exhaustive cases=1 executed=58 passed=58 failed=0 errored=0 parity=29/29
+exit=0
+===== SUBJECT mutate-ifc-2x3 =====
+[test] level=exhaustive cases=1 executed=11 passed=11 failed=0 errored=0 parity=0/0
+exit=0
+===== PARITY mutate-ifc-2x3 =====
+[test] level=exhaustive cases=1 executed=22 passed=22 failed=0 errored=0 parity=11/11
+exit=0
+===== SUBJECT mutate-ifc-4 =====

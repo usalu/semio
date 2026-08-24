@@ -607,6 +607,35 @@ struct OptionalSnapshotPages<'pages> {
     len: usize,
 }
 
+const SNAPSHOT_PUBLICATION_CLAIMS: usize = 64;
+
+static SNAPSHOT_PUBLICATION_CLAIM_STATE: [std::sync::atomic::AtomicU64; SNAPSHOT_PUBLICATION_CLAIMS] = [const { std::sync::atomic::AtomicU64::new(0) }; SNAPSHOT_PUBLICATION_CLAIMS];
+
+struct SnapshotPublicationClaim {
+    slot: usize,
+    identity: u64,
+}
+
+impl SnapshotPublicationClaim {
+    fn try_claim(document: &ArtifactId) -> Result<Self, DbError> {
+        let hash = blake3::hash(document.0.as_bytes());
+        let bytes = hash.as_bytes();
+        let identity = u64::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]]) | 1;
+        let slot = usize::try_from(identity % SNAPSHOT_PUBLICATION_CLAIMS as u64).map_err(|_| DbError::LimitExceeded("snapshot publication claim slot"))?;
+        match SNAPSHOT_PUBLICATION_CLAIM_STATE[slot].compare_exchange(0, identity, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire) {
+            Ok(_) => Ok(Self { slot, identity }),
+            Err(observed) if observed == identity => Err(DbError::Conflict("snapshot publication already claimed".to_string())),
+            Err(_) => Err(DbError::LimitExceeded("snapshot publication claim collision")),
+        }
+    }
+}
+
+impl Drop for SnapshotPublicationClaim {
+    fn drop(&mut self) {
+        let _ = SNAPSHOT_PUBLICATION_CLAIM_STATE[self.slot].compare_exchange(self.identity, 0, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire);
+    }
+}
+
 impl SnapshotPageSource for OptionalSnapshotPages<'_> {
     fn len(&self) -> usize {
         self.len
@@ -683,6 +712,97 @@ async fn build_generation_page_source<P: SnapshotPageSource + ?Sized>(descriptor
         sink.patch_parent_footer(parent_offset).await?;
     }
     sink.into_pages().await
+}
+
+fn retained_publication_descriptor_len(document: &ArtifactId, generation: u64, body: &SnapshotBody, page_count: usize) -> Result<usize, DbError> {
+    let mut len = 1usize;
+    for field in [
+        snapshot_field_len(document.0.as_bytes()),
+        snapshot_varint_len(generation),
+        1,
+        snapshot_varint_len(body.head_seq),
+        snapshot_varint_len(body.commit_seq),
+        snapshot_varint_len(body.epoch),
+        32,
+        snapshot_varint_len(body.protocol_version as u64),
+        1 + body.vcs_head.as_ref().map_or(0, |value| snapshot_field_len(value.as_bytes())),
+        1 + body.base_pack_hash.map_or(0, |_| 32),
+        snapshot_varint_len(body.roots.len() as u64) + body.roots.len().checked_mul(32).ok_or(DbError::LimitExceeded("snapshot roots bytes"))?,
+        snapshot_varint_len(page_count as u64) + page_count.checked_mul(32).ok_or(DbError::LimitExceeded("snapshot retained page hashes"))?,
+        snapshot_varint_len(body.created_at_ms),
+    ] {
+        len = len.checked_add(field).ok_or(DbError::LimitExceeded("snapshot retained publication descriptor bytes"))?;
+    }
+    Ok(len)
+}
+
+async fn write_retained_publication_descriptor<P: SnapshotPageSource + ?Sized>(segment: &mut pack::PackIdentitySegment<'_, SnapshotPageSink>, document: &ArtifactId, generation: u64, body: &SnapshotBody, new_pages: &P) -> Result<(), DbError> {
+    snapshot_segment_write(segment, &[DESCRIPTOR_FORMAT_VERSION]).await?;
+    snapshot_segment_write_field(segment, document.0.as_bytes()).await?;
+    snapshot_segment_write_varint(segment, generation).await?;
+    snapshot_segment_write(segment, &[0]).await?;
+    snapshot_segment_write_varint(segment, body.head_seq).await?;
+    snapshot_segment_write_varint(segment, body.commit_seq).await?;
+    snapshot_segment_write_varint(segment, body.epoch).await?;
+    snapshot_segment_write(segment, &body.chain_hash).await?;
+    snapshot_segment_write_varint(segment, body.protocol_version as u64).await?;
+    snapshot_segment_write(segment, &[u8::from(body.vcs_head.is_some())]).await?;
+    if let Some(head) = &body.vcs_head {
+        snapshot_segment_write_field(segment, head.as_bytes()).await?;
+    }
+    snapshot_segment_write(segment, &[u8::from(body.base_pack_hash.is_some())]).await?;
+    if let Some(hash) = body.base_pack_hash {
+        snapshot_segment_write(segment, &hash.0).await?;
+    }
+    snapshot_segment_write_varint(segment, body.roots.len() as u64).await?;
+    for hash in &body.roots {
+        snapshot_segment_write(segment, &hash.0).await?;
+    }
+    snapshot_segment_write_varint(segment, new_pages.len() as u64).await?;
+    for index in 0..new_pages.len() {
+        let page = new_pages.page(index).ok_or_else(|| DbError::Internal("snapshot retained publication lost a page owner".to_string()))?;
+        snapshot_segment_write(segment, &page.hash.0).await?;
+    }
+    snapshot_segment_write_varint(segment, body.created_at_ms).await
+}
+
+async fn build_generation_retained_expected<P: SnapshotPageSource + ?Sized>(document: &ArtifactId, generation: u64, body: &SnapshotBody, new_pages: &P, control: &mut SnapshotCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+    let required_flags = if new_pages.is_empty() { 0 } else { pack::REQUIRED_CHUNKED };
+    let options = pack::os_pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
+    let mut writer = pack::PackWriter::begin(SnapshotPageSink::try_new()?, &options).await?;
+    let mut descriptor_segment = writer.begin_identity_segment(pack::KIND_SNAPSHOT, retained_publication_descriptor_len(document, generation, body, new_pages.len())?).await?;
+    write_retained_publication_descriptor(&mut descriptor_segment, document, generation, body, new_pages).await?;
+    descriptor_segment.finish().await?;
+    for index in 0..new_pages.len() {
+        let page = new_pages.page(index).ok_or_else(|| DbError::Internal("snapshot retained publication lost a page owner".to_string()))?;
+        control.grant()?;
+        let mut chunk = writer.begin_identity_chunk(page.len()).await?;
+        for fragment in page.fragments() {
+            if let Err(error) = control.grant() {
+                chunk.close();
+                return Err(error);
+            }
+            if let Err(error) = chunk.write_fragment(fragment).await {
+                chunk.close();
+                return Err(error.into());
+            }
+        }
+        chunk.finish().await?;
+    }
+    let manifest = pack::Manifest {
+        schema_name: String::new(),
+        schema_hash: [0; 32],
+        doc_span: pack::ByteRange { offset: 0, len: 0 },
+        doc_frame_count: 0,
+        symbols_span: pack::ByteRange { offset: 0, len: 0 },
+        chunk_table_span: pack::ByteRange { offset: 0, len: 0 },
+        field_index_span: pack::ByteRange { offset: 0, len: 0 },
+        uncompressed_body_len: 0,
+        field_count: 0,
+        chunk_count: 0,
+        symbol_count: 0,
+    };
+    writer.finish(&manifest).await?.into_pages().await
 }
 
 pub async fn build_generation_pages(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>, control: &mut SnapshotCursorControl) -> Result<db_storage::DbIoPages, DbError> {
@@ -851,6 +971,32 @@ pub struct SnapshotBody {
     pub base_pack_hash: Option<ContentHash>,
     pub roots: Vec<ContentHash>,
     pub created_at_ms: u64,
+}
+
+/// 🧵️ Generation-qualified publication witness returning the exact dynamic body owner.
+#[derive(Debug)]
+pub struct SnapshotRetainedPublication {
+    generation: u64,
+    body: SnapshotBody,
+}
+
+impl SnapshotRetainedPublication {
+    pub fn into_parts(self) -> (u64, SnapshotBody) {
+        (self.generation, self.body)
+    }
+}
+
+/// 🛡️ Atomic publication refusal retaining the exact body owner for incremental close.
+#[derive(Debug)]
+pub struct SnapshotRetainedPublicationRejected {
+    error: DbError,
+    body: SnapshotBody,
+}
+
+impl SnapshotRetainedPublicationRejected {
+    pub fn into_parts(self) -> (DbError, SnapshotBody) {
+        (self.error, self.body)
+    }
 }
 
 /// @emoji 🎛️ Publish-time trigger thresholds — `should_snapshot` fires if any is met. This
@@ -1071,7 +1217,39 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         self.publish_page_source(document, origin, &OptionalSnapshotPages { slots: new_pages, len: retained_len }, body).await
     }
 
+    /// 🛡️ Publishes one full baseline only while `expected_generation` owns the atomic document claim.
+    pub async fn publish_retained_expected(
+        &self,
+        document: &ArtifactId,
+        expected_generation: u64,
+        new_pages: &[Option<Page>],
+        retained_len: usize,
+        body: SnapshotBody,
+        control: &mut SnapshotCursorControl,
+    ) -> Result<SnapshotRetainedPublication, SnapshotRetainedPublicationRejected> {
+        let publication = async {
+            if retained_len > new_pages.len() || new_pages[..retained_len].iter().any(Option::is_none) {
+                return Err(DbError::InvalidArgument("snapshot retained page source is not contiguous".to_string()));
+            }
+            let _claim = SnapshotPublicationClaim::try_claim(document)?;
+            let observed = self.storage.latest_generation(document).await?;
+            if observed != Some(expected_generation) {
+                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(expected_generation), actual: crate::db_ids::GenerationId(observed.unwrap_or(0)) });
+            }
+            let generation = expected_generation.checked_add(1).ok_or(DbError::LimitExceeded("snapshot publication generation"))?;
+            let pages = build_generation_retained_expected(document, generation, &body, &OptionalSnapshotPages { slots: new_pages, len: retained_len }, control).await?;
+            self.storage.write_generation(document, generation, pages).await?;
+            Ok(generation)
+        }
+        .await;
+        match publication {
+            Ok(generation) => Ok(SnapshotRetainedPublication { generation, body }),
+            Err(error) => Err(SnapshotRetainedPublicationRejected { error, body }),
+        }
+    }
+
     async fn publish_page_source<P: SnapshotPageSource + ?Sized>(&self, document: &ArtifactId, origin: SnapshotOrigin, new_pages: &P, body: SnapshotBody) -> Result<u64, DbError> {
+        let _claim = SnapshotPublicationClaim::try_claim(document)?;
         let latest = self.storage.latest_generation(document).await?;
         let (generation, parent_generation, parent_footer_position) = match origin {
             SnapshotOrigin::FullBaseline => (latest.map_or(0, |g| g + 1), None, None),
