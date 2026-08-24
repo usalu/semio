@@ -29,6 +29,41 @@ pub(crate) struct BrushFillVortexTarget {
     pub(crate) vortex_kind: Option<String>,
     pub(crate) vortex_index: usize,
 }
+
+pub(crate) trait BrushCatalogView {
+    fn objects(&self) -> &[ObjectKind];
+    fn vortices(&self) -> &[VortexKindCatalog];
+    fn cables(&self) -> &[CableKindCatalog];
+}
+
+impl BrushCatalogView for KindCatalogBundle {
+    fn objects(&self) -> &[ObjectKind] {
+        &self.objects
+    }
+
+    fn vortices(&self) -> &[VortexKindCatalog] {
+        &self.vortices
+    }
+
+    fn cables(&self) -> &[CableKindCatalog] {
+        &self.cables
+    }
+}
+
+pub(crate) trait BrushFixtureView {
+    fn object_count(&self) -> usize;
+    fn find_object_kind(&self, kind_id: &str) -> Option<&FixtureObject>;
+}
+
+impl BrushFixtureView for Fixture {
+    fn object_count(&self) -> usize {
+        self.objects.len()
+    }
+
+    fn find_object_kind(&self, kind_id: &str) -> Option<&FixtureObject> {
+        self.objects.iter().find(|object| object.object_kind.as_deref() == Some(kind_id))
+    }
+}
 //#endregion 🔖️VortexContext
 
 //#region 🔖️Compatibility
@@ -67,19 +102,19 @@ pub(crate) fn puzzle3d_single_letter_port_families_compatible(source: &str, targ
     }
 }
 
-fn catalog_vortex_by_id<'a>(catalogs: &'a KindCatalogBundle, vortex_kind: &str) -> Option<&'a VortexKindCatalog> {
-    catalogs.vortices.iter().find(|v| v.id == vortex_kind)
+fn catalog_vortex_by_id<'a>(catalogs: &'a impl BrushCatalogView, vortex_kind: &str) -> Option<&'a VortexKindCatalog> {
+    catalogs.vortices().iter().find(|v| v.id == vortex_kind)
 }
 
-fn catalog_cable_by_id<'a>(catalogs: &'a KindCatalogBundle, cable_kind: &str) -> Option<&'a CableKindCatalog> {
-    catalogs.cables.iter().find(|w| w.id == cable_kind)
+fn catalog_cable_by_id<'a>(catalogs: &'a impl BrushCatalogView, cable_kind: &str) -> Option<&'a CableKindCatalog> {
+    catalogs.cables().iter().find(|w| w.id == cable_kind)
 }
 
-pub(crate) fn resolve_cable_kind_for_vortex(vortex_kind: &str, catalogs: &KindCatalogBundle) -> String {
+pub(crate) fn resolve_cable_kind_for_vortex(vortex_kind: &str, catalogs: &impl BrushCatalogView) -> String {
     catalog_vortex_by_id(catalogs, vortex_kind).and_then(|v| v.default_cable_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_else(|| DEFAULT_CABLE_KIND_ID.to_string())
 }
 
-pub(crate) fn resolve_attraction_kind_for_cable(cable_kind: &str, catalogs: &KindCatalogBundle) -> String {
+pub(crate) fn resolve_attraction_kind_for_cable(cable_kind: &str, catalogs: &impl BrushCatalogView) -> String {
     catalog_cable_by_id(catalogs, cable_kind).and_then(|c| c.default_attraction_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default()
 }
 
@@ -98,7 +133,7 @@ pub(crate) fn specificity_rank(spec: Option<&str>) -> i32 {
     }
 }
 
-pub(crate) fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, catalogs: &KindCatalogBundle) -> bool {
+pub(crate) fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, catalogs: &impl BrushCatalogView) -> bool {
     let cable_src = resolve_cable_kind_for_vortex(attracting.vortex_kind.as_deref().unwrap_or(""), catalogs);
     let cable_tgt = resolve_cable_kind_for_vortex(attracted.vortex_kind.as_deref().unwrap_or(""), catalogs);
     let attraction_src = resolve_attraction_kind_for_cable(&cable_src, catalogs);
@@ -117,7 +152,7 @@ pub(crate) fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting
     }
 }
 
-pub(crate) fn vortices_attraction_compatible_for_drag(attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, rules: &[KindCompatEntry], catalogs: &KindCatalogBundle) -> bool {
+pub(crate) fn vortices_attraction_compatible_for_drag(attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, rules: &[KindCompatEntry], catalogs: &impl BrushCatalogView) -> bool {
     let sv = attracting.vortex_kind.as_deref().unwrap_or("");
     let tv = attracted.vortex_kind.as_deref().unwrap_or("");
     if !puzzle3d_vortex_port_shapes_compatible(sv, tv) {
@@ -250,17 +285,17 @@ pub(crate) fn brush_placement_uses_host_orientation(target: &AttractionVortexCon
     candidate_kind == target.object_kind.as_deref().unwrap_or("")
 }
 
-pub(crate) fn catalog_object_kind_by_id<'a>(catalogs: &'a KindCatalogBundle, id: &str) -> Option<&'a ObjectKind> {
-    catalogs.objects.iter().find(|k| k.id == id)
+pub(crate) fn catalog_object_kind_by_id<'a>(catalogs: &'a impl BrushCatalogView, id: &str) -> Option<&'a ObjectKind> {
+    catalogs.objects().iter().find(|k| k.id == id)
 }
 
-pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &KindCatalogBundle, fixture: &Fixture) -> Option<String> {
+pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &impl BrushCatalogView, fixture: &impl BrushFixtureView) -> Option<String> {
     if let Some(kind) = catalog_object_kind_by_id(catalogs, kind_id) {
         if let Some(url) = kind.representations.iter().map(|r| r.url.trim()).find(|u| !u.is_empty()) {
             return Some(url.to_string());
         }
     }
-    fixture.objects.iter().find(|o| o.object_kind.as_deref() == Some(kind_id)).and_then(|o| o.mesh_url.clone())
+    fixture.find_object_kind(kind_id).and_then(|object| object.mesh_url.clone())
 }
 
 pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules) -> Vec<BrushCompatibleCandidate> {
@@ -280,8 +315,15 @@ pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, cata
     scored.into_iter().map(|(c, _)| c).collect()
 }
 
-pub(crate) fn brush_fill_candidate_at(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules, kind_index: usize, source_vortex_index: usize) -> Option<(BrushCompatibleCandidate, i64)> {
-    let kind = catalogs.objects.get(kind_index)?;
+pub(crate) fn brush_fill_candidate_at(
+    target: &AttractionVortexContext,
+    catalogs: &impl BrushCatalogView,
+    rules: &[KindCompatEntry],
+    host_rules: &BrushHostRules,
+    kind_index: usize,
+    source_vortex_index: usize,
+) -> Option<(BrushCompatibleCandidate, i64)> {
+    let kind = catalogs.objects().get(kind_index)?;
     if kind.representations.iter().all(|representation| representation.url.trim().is_empty()) {
         return None;
     }
@@ -448,7 +490,14 @@ pub(crate) struct TargetVortexWorld {
     pub(crate) reference_orientation: Option<Quat>,
 }
 
-pub(crate) fn brush_preview_from_candidate(target_full_id: &str, candidate: &BrushCompatibleCandidate, target: &AttractionVortexContext, world: TargetVortexWorld, catalogs: &KindCatalogBundle, fixture: &Fixture) -> Option<BrushPreviewState> {
+pub(crate) fn brush_preview_from_candidate(
+    target_full_id: &str,
+    candidate: &BrushCompatibleCandidate,
+    target: &AttractionVortexContext,
+    world: TargetVortexWorld,
+    catalogs: &impl BrushCatalogView,
+    fixture: &impl BrushFixtureView,
+) -> Option<BrushPreviewState> {
     let kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)?;
     let template = kind.vortices.get(candidate.source_vortex_index)?;
     let mesh_url = resolve_object_kind_mesh_url(&candidate.object_kind_id, catalogs, fixture)?;
@@ -500,11 +549,11 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
 }
 
 /// 🪪️ Content-addressed brush object id — keyed by fixture size and placement payload (no global counter).
-pub(crate) fn brush_object_id(fixture: &Fixture, payload: &BrushPlacePayload) -> String {
+pub(crate) fn brush_object_id(fixture: &impl BrushFixtureView, payload: &BrushPlacePayload) -> String {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     let mut hasher = DefaultHasher::new();
-    fixture.objects.len().hash(&mut hasher);
+    fixture.object_count().hash(&mut hasher);
     payload.target_vortex_full_id.hash(&mut hasher);
     payload.object_kind_id.hash(&mut hasher);
     payload.source_vortex_index.hash(&mut hasher);

@@ -489,11 +489,12 @@ pub async fn replay_document(storage: &impl db_storage::WalStorage, document: &A
     for index in indices {
         let len = storage.segment_len(document, index).await?;
         let bytes = storage.read(document, index, pack::ByteRange { offset: 0, len }).await?;
-        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
+        let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
+        let report = protocol::format::recover(prepared.as_slice(), &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
         if report.bytes_recovered != bytes.len() as u64 {
             return Err(DbError::Corrupt(format!("wal segment {index} for {document} has a torn tail ({} of {} bytes trusted)", report.bytes_recovered, bytes.len())));
         }
-        all.extend(decode_records(&bytes[..report.bytes_recovered as usize]).await?);
+        all.extend(decode_records(&prepared.as_slice()[..report.bytes_recovered as usize]).await?);
     }
     Ok(all)
 }
@@ -559,7 +560,7 @@ impl SegmentWriter {
         }
         let commit_offset = self.writer.commit().await.map_err(protocol_err)?;
         let snapshot = self.buf.snapshot();
-        let pages = db_storage::DbIoPages::try_range(snapshot, self.flushed_len as usize).map_err(|_| DbError::LimitExceeded("WAL flush pages"))?;
+        let pages = db_storage::db_io_copy_pages(&snapshot[self.flushed_len as usize..])?.await?;
         let new_len = storage.append(&self.document, self.index, pages).await?;
         storage.sync(&self.document, self.index, class).await?;
         self.flushed_len = new_len;
@@ -645,7 +646,8 @@ impl ArtifactWal {
         for &index in &indices[..indices.len() - 1] {
             let len = storage.segment_len(&document, index).await?;
             let bytes = storage.read(&document, index, pack::ByteRange { offset: 0, len }).await?;
-            let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
+            let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
+            let report = protocol::format::recover(prepared.as_slice(), &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
             if report.bytes_recovered != bytes.len() as u64 {
                 return Err(DbError::Corrupt(format!("wal segment {index} for {document} has a torn tail ({} of {} bytes trusted) but is not the active segment", report.bytes_recovered, bytes.len())));
             }
@@ -653,9 +655,10 @@ impl ArtifactWal {
 
         let len = storage.segment_len(&document, last_index).await?;
         let bytes = storage.read(&document, last_index, pack::ByteRange { offset: 0, len }).await?;
-        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
+        let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
+        let report = protocol::format::recover(prepared.as_slice(), &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
         let torn_tail_bytes = bytes.len() as u64 - report.bytes_recovered;
-        let records = decode_records(&bytes[..report.bytes_recovered as usize]).await?;
+        let records = decode_records(&prepared.as_slice()[..report.bytes_recovered as usize]).await?;
 
         // 🎯️ Design choice (forced by `protocol::SprWriter`'s API — the same constraint
         // `protocol_io::HistoryFile::open_append` documents and works around identically): there
@@ -749,7 +752,11 @@ mod tests {
     use {ArtifactId, DurabilityClass, Frontier};
 
     fn pages(bytes: &[u8]) -> db_storage::DbIoPages {
-        db_storage::DbIoPages::try_new(bytes.to_vec()).expect("test WAL bytes must fit the fixed page owner")
+        let mut writer = db_storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).expect("test WAL writer admitted");
+        for fragment in bytes.chunks(db_storage::DB_IO_PAGE_BYTES) {
+            assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
+        }
+        writer.finish().unwrap()
     }
 
     async fn doc(id: &str) -> ArtifactId {

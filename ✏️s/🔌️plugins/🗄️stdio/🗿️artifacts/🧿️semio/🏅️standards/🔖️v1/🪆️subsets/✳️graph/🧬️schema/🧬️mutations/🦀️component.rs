@@ -59,6 +59,13 @@ pub enum SemioGraphMutation {
     CreateEdge(create_edge::mutation::CreateEdge),
     DeleteEdge(delete_edge::mutation::DeleteEdge),
 }
+
+/// 🏷️ Kebab-case spelling of every `SemioGraphMutation` variant, in declaration order — the
+/// vocabulary the `semio-v1-graph` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-semio-graph`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
+/// the_catalog` below is what keeps this list honest against the enum, since the framework never
+/// parses Rust.
+pub const KINDS: &[&str] = &["create-node", "delete-node", "change-node-kind", "change-node-label", "move-node", "add-node-port", "remove-node-port", "add-node-property", "remove-node-property", "create-edge", "delete-edge"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -262,6 +269,22 @@ mod tests {
         assert_eq!(mutation.semantics().kind, "delete-node");
         assert_eq!(mutation.semantics().record, "DeletedNode");
         assert_eq!(mutation.target(), vec!["n1".to_string()]);
+    }
+
+    /// 🏷️ `KINDS` (this facet's own const, consumed by `mutate-semio-graph`'s adapter) must name
+    /// every declared variant, in the exact order and spelling `#[derive(dsl::Mutations)]` assigns —
+    /// the framework never parses Rust, so this is what keeps the catalog honest.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = SemioGraphMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
     }
 }
 //#endregion 🧪️Tests

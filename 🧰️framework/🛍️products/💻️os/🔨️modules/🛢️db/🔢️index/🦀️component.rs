@@ -394,7 +394,9 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     }
 
     async fn load_run(&self, run_id: u64) -> Result<Vec<RunEntry>, DbError> {
-        decode_run(&self.storage.read_run(&self.document, run_id).await?, self.kind).await
+        let pages = self.storage.read_run(&self.document, run_id).await?;
+        let prepared = db_storage::db_io_prepare_platform(&pages)?.await?;
+        decode_run(prepared.as_slice(), self.kind).await
     }
 
     /// @emoji ✍️ Durably appends `entries` as one new, newest run (via `build_run` + `encode_run`),
@@ -412,7 +414,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         let built = build_run(entries);
         let encoded = encode_run(self.kind, &built).await?;
         let run_id = make_run_id(self.kind, self.next_sequence().await?)?;
-        let pages = db_storage::DbIoPages::try_new(encoded).map_err(|_| DbError::LimitExceeded("index run pages"))?;
+        let pages = db_storage::db_io_copy_pages(&encoded)?.await?;
         self.storage.write_run(&self.document, run_id, pages).await?;
         self.maybe_auto_merge().await
     }
@@ -477,7 +479,8 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
             }
             let (oldest, second_oldest) = (run_ids[0], run_ids[1]);
             let merged = merge_runs(&[self.load_run(oldest).await?, self.load_run(second_oldest).await?], false);
-            let pages = db_storage::DbIoPages::try_new(encode_run(self.kind, &merged).await?).map_err(|_| DbError::LimitExceeded("merged index run pages"))?;
+            let encoded = encode_run(self.kind, &merged).await?;
+            let pages = db_storage::db_io_copy_pages(&encoded)?.await?;
             self.storage.write_run(&self.document, oldest, pages).await?;
             self.storage.delete_run(&self.document, second_oldest).await?;
         }
@@ -494,7 +497,8 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
                 runs.push(self.load_run(run_id).await?);
             }
             let merged = merge_runs(&runs, true);
-            let pages = db_storage::DbIoPages::try_new(encode_run(self.kind, &merged).await?).map_err(|_| DbError::LimitExceeded("merged index run pages"))?;
+            let encoded = encode_run(self.kind, &merged).await?;
+            let pages = db_storage::db_io_copy_pages(&encoded)?.await?;
             self.storage.write_run(&self.document, run_ids[0], pages).await?;
             for &run_id in &run_ids[1..] {
                 self.storage.delete_run(&self.document, run_id).await?;
@@ -512,7 +516,8 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         for &run_id in &run_ids {
             let bytes = self.storage.read_run(&self.document, run_id).await?;
             total_bytes += bytes.len() as u64;
-            entry_count += peek_entry_count(&bytes, self.kind).await?;
+            let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
+            entry_count += peek_entry_count(prepared.as_slice(), self.kind).await?;
         }
         Ok(IndexStats { run_count: run_ids.len(), entry_count, total_bytes })
     }

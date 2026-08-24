@@ -100,14 +100,16 @@ pub struct AssemblyInferenceJob {
     restore: Option<crate::wfc_engine::job::WfcRestore<crate::wfc_engine::topology::GraphTopology>>,
     child: Option<crate::wfc_engine::job::WfcJob<crate::wfc_engine::topology::GraphTopology>>,
     child_commit: Option<crate::wfc_engine::job::WfcCommit>,
-    final_checkpoint: Option<Vec<u8>>,
+    final_checkpoint: Option<semio_framework_job::RetainedJobPayload>,
     assignments: BTreeMap<String, String>,
-    output: Vec<u8>,
+    output: Option<semio_framework_job::RetainedJobPayloadWriter>,
+    rejected_output_page: Option<semio_framework_job::JobPayloadPageSource>,
     output_started: bool,
     encoded_entries: usize,
     encode_total: usize,
     preview_units: u64,
     last_preview_ms: Option<u64>,
+    closing: bool,
 }
 
 impl AssemblyInferenceJob {
@@ -146,12 +148,14 @@ impl AssemblyInferenceJob {
             child_commit: None,
             final_checkpoint: None,
             assignments: BTreeMap::new(),
-            output: Vec::new(),
+            output: Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput)),
+            rejected_output_page: None,
             output_started: false,
             encoded_entries: 0,
             encode_total: 0,
             preview_units: 0,
             last_preview_ms: None,
+            closing: false,
         })
     }
 
@@ -184,10 +188,19 @@ impl AssemblyInferenceJob {
 
     fn emit_preview(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         let (completed, total) = self.progress();
-        let preview = AssemblyInferencePreview { sequence: context.next_preview_sequence(), stage: self.stage, completed, total };
+        let sequence = match context.next_preview_sequence() {
+            Ok(sequence) => sequence,
+            Err(_) => return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+        };
+        let mut preview = [0; 25];
+        preview[..8].copy_from_slice(&sequence.to_le_bytes());
+        preview[8..16].copy_from_slice(&(completed as u64).to_le_bytes());
+        preview[16..24].copy_from_slice(&(total as u64).to_le_bytes());
+        preview[24] = self.stage as u8;
         self.preview_units = 0;
         self.last_preview_ms = Some(context.now_ms());
-        semio_framework_job::StepOutcome::PreviewReady(serde_json::to_vec(&preview).expect("bounded assembly inference preview"))
+        let payload = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Preview, &preview).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview));
+        semio_framework_job::StepOutcome::PreviewReady(payload)
     }
 
     fn preview_due(&self, now_ms: u64) -> bool {
@@ -328,33 +341,35 @@ impl AssemblyInferenceJob {
         Ok(())
     }
 
-    fn append_output(&mut self, bytes: &[u8]) -> Result<(), String> {
-        if self.output.len().saturating_add(bytes.len()) > MAX_ASSEMBLY_OUTPUT_BYTES {
-            return Err("assembly-inference-output-admission-exceeded".into());
-        }
-        self.output.extend_from_slice(bytes);
-        Ok(())
-    }
-
-    fn encode_one(&mut self) -> Result<bool, String> {
+    fn encode_one(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, String> {
+        let source = self.rejected_output_page.take().unwrap_or_default();
+        let writer = self.output.as_mut().ok_or("assembly-output-writer-missing")?;
+        let mut page = match context.admit_payload_page(writer, source) {
+            Ok(page) => page,
+            Err(rejected) => {
+                self.rejected_output_page = Some(rejected.into_source());
+                return Err("assembly-inference-output-admission-exceeded".into());
+            }
+        };
         if !self.output_started {
-            self.append_output(br#"{"assignments":{"#)?;
+            page.write(br#"{"assignments":{"#).map_err(|_| "assembly-inference-output-page")?;
+            page.commit();
             self.output_started = true;
             return Ok(false);
         }
         if let Some((slot, module)) = self.assignments.pop_first() {
-            if self.output.last() != Some(&b'{') {
-                self.append_output(b",")?;
-            }
             let slot = serde_json::to_string(&slot).map_err(|error| error.to_string())?;
             let module = serde_json::to_string(&module).map_err(|error| error.to_string())?;
-            self.append_output(slot.as_bytes())?;
-            self.append_output(b":")?;
-            self.append_output(module.as_bytes())?;
+            if self.encoded_entries != 0 {
+                page.write(b",").map_err(|_| "assembly-inference-output-page")?;
+            }
+            page.write(slot.as_bytes()).and_then(|_| page.write(b":")).and_then(|_| page.write(module.as_bytes())).map_err(|_| "assembly-inference-output-page")?;
+            page.commit();
             self.encoded_entries += 1;
             return Ok(false);
         }
-        self.append_output(b"}}")?;
+        page.write(b"}}").map_err(|_| "assembly-inference-output-page")?;
+        page.commit();
         self.stage = AssemblyInferenceStage::Complete;
         Ok(true)
     }
@@ -367,7 +382,8 @@ impl semio_framework_job::InteractiveJob for AssemblyInferenceJob {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(semio_framework_job::JobFault { detail: b"stale-assembly-inference-operation".to_vec() });
+            let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"stale-assembly-inference-operation").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            return StepOutcome::Fault(semio_framework_job::JobFault { detail });
         }
         loop {
             context.set_stage(match self.stage {
@@ -395,7 +411,8 @@ impl semio_framework_job::InteractiveJob for AssemblyInferenceJob {
                 | AssemblyInferenceStage::Topology
                 | AssemblyInferenceStage::Fixed => {
                     if let Err(error) = self.advance_compile() {
-                        return StepOutcome::Fault(semio_framework_job::JobFault { detail: error.into_bytes() });
+                        let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, error.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        return StepOutcome::Fault(semio_framework_job::JobFault { detail });
                     }
                 }
                 AssemblyInferenceStage::Restore => {
@@ -426,15 +443,30 @@ impl semio_framework_job::InteractiveJob for AssemblyInferenceJob {
                 }
                 AssemblyInferenceStage::MapCommit => {
                     if let Err(error) = self.map_one() {
-                        return StepOutcome::Fault(semio_framework_job::JobFault { detail: error.into_bytes() });
+                        let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, error.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        return StepOutcome::Fault(semio_framework_job::JobFault { detail });
                     }
                 }
-                AssemblyInferenceStage::EncodeCommit => match self.encode_one() {
+                AssemblyInferenceStage::EncodeCommit => match self.encode_one(context) {
                     Ok(true) => {
-                        return StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.final_checkpoint.take().unwrap_or_default(), output: std::mem::take(&mut self.output) });
+                        let output = match self.output.take().expect("assembly output writer").finish() {
+                            Ok(output) => output,
+                            Err(mut writer) => {
+                                writer.begin_close();
+                                self.output = Some(writer);
+                                return StepOutcome::Yield;
+                            }
+                        };
+                        return StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                            state: self.final_checkpoint.take().unwrap_or_else(|| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState)),
+                            output,
+                        });
                     }
                     Ok(false) => {}
-                    Err(error) => return StepOutcome::Fault(semio_framework_job::JobFault { detail: error.into_bytes() }),
+                    Err(error) => {
+                        let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, error.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        return StepOutcome::Fault(semio_framework_job::JobFault { detail });
+                    }
                 },
                 AssemblyInferenceStage::Complete => unreachable!("complete returns immediately"),
             }
@@ -450,6 +482,78 @@ impl semio_framework_job::InteractiveJob for AssemblyInferenceJob {
                 return StepOutcome::Yield;
             }
         }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(restore) = self.restore.as_mut() {
+            restore.begin_close();
+        }
+        if let Some(child) = self.child.as_mut() {
+            child.begin_close();
+        }
+        if let Some(output) = self.output.as_mut() {
+            output.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if let Some(output) = self.output.as_mut() {
+            if !output.terminal_is_empty() {
+                return match output.close_step(maximum_items, maximum_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                };
+            }
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.output = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(checkpoint) = self.final_checkpoint.as_mut() {
+            if !checkpoint.terminal_is_empty() {
+                return match checkpoint.close_step(maximum_items, maximum_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                };
+            }
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.final_checkpoint = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(restore) = self.restore.as_mut() {
+            match restore.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::InteractiveJobCloseStep::Complete if restore.terminal_is_empty() => {
+                    self.restore = None;
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                step => return step,
+            }
+        }
+        if let Some(child) = self.child.as_mut() {
+            match child.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::InteractiveJobCloseStep::Complete if child.terminal_is_empty() => {
+                    self.child = None;
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                step => return step,
+            }
+        }
+        if self.rejected_output_page.is_some() {
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.rejected_output_page = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.output.is_none() && self.final_checkpoint.is_none() && self.restore.is_none() && self.child.is_none() && self.rejected_output_page.is_none()
     }
 }
 

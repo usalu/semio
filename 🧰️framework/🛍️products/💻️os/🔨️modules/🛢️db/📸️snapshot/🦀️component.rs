@@ -511,7 +511,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             created_at_ms: body.created_at_ms,
         };
         let bytes = build_generation(&descriptor, new_pages, parent_footer_position).await?;
-        let pages = db_storage::DbIoPages::try_new(bytes).map_err(|_| DbError::LimitExceeded("snapshot generation pages"))?;
+        let pages = db_storage::db_io_copy_pages(&bytes)?.await?;
         self.storage.write_generation(document, generation, pages).await?;
         Ok(generation)
     }
@@ -522,19 +522,22 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// doc). Used internally by `publish` and exposed for callers (`db_cli`, `db_compact`) that
     /// need the full lineage as one archive.
     pub async fn materialize_chain(&self, document: &ArtifactId, through_generation: u64) -> Result<Vec<u8>, DbError> {
-        let mut chain: Vec<Vec<u8>> = Vec::new();
+        let mut chain: Vec<db_storage::DbIoPages> = Vec::new();
         let mut current = Some(through_generation);
         while let Some(generation) = current {
             let bytes = self.storage.read_generation(document, generation).await?;
-            let handle = open_latest(&bytes).await?;
+            let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
+            let handle = open_latest(prepared.as_slice()).await?;
             current = handle.descriptor.parent_generation;
             chain.push(bytes);
         }
         chain.reverse();
-        let total: usize = chain.iter().map(Vec::len).sum();
+        let total: usize = chain.iter().map(db_storage::DbIoPages::len).sum();
         let mut combined = Vec::with_capacity(total);
         for bytes in chain {
-            combined.extend_from_slice(&bytes);
+            for fragment in bytes.fragments() {
+                combined.extend_from_slice(fragment);
+            }
         }
         Ok(combined)
     }
@@ -546,7 +549,8 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             None => Ok(None),
             Some(generation) => {
                 let bytes = self.storage.read_generation(document, generation).await?;
-                let handle = open_latest(&bytes).await?;
+                let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
+                let handle = open_latest(prepared.as_slice()).await?;
                 Ok(Some((generation, handle.descriptor)))
             }
         }
@@ -559,7 +563,8 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         let mut best: Option<(u64, u64)> = None;
         for generation in self.storage.list_generations(document).await? {
             let bytes = self.storage.read_generation(document, generation).await?;
-            let handle = open_latest(&bytes).await?;
+            let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
+            let handle = open_latest(prepared.as_slice()).await?;
             if handle.descriptor.head_seq <= at_most_head_seq {
                 let better = best.is_none_or(|(_, best_head_seq)| handle.descriptor.head_seq > best_head_seq);
                 if better {
@@ -575,7 +580,8 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// boundary on why an incremental floor is rejected rather than silently breaking its chain.
     pub async fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
         let floor_bytes = self.storage.read_generation(document, floor_generation).await?;
-        let floor_handle = open_latest(&floor_bytes).await?;
+        let floor_prepared = db_storage::db_io_prepare_platform(&floor_bytes)?.await?;
+        let floor_handle = open_latest(floor_prepared.as_slice()).await?;
         if floor_handle.descriptor.parent_generation.is_some() {
             return Err(DbError::InvalidArgument("retention floor must be a full-baseline generation (no parent)".to_string()));
         }
@@ -595,8 +601,9 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// no separate hash recomputation needed here.
     pub async fn verify(&self, document: &ArtifactId, generation: u64, level: pack::os_pack::VerificationLevel) -> Result<(), DbError> {
         let bytes = self.storage.read_generation(document, generation).await?;
-        let handle = open_latest(&bytes).await?;
-        let sub = SubSource { inner: &bytes, base: 0, len: bytes.len() as u64 };
+        let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
+        let handle = open_latest(prepared.as_slice()).await?;
+        let sub = SubSource { inner: prepared.as_slice(), base: 0, len: bytes.len() as u64 };
         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), level).await?;
         for index in 0..handle.descriptor.new_pages.len() {
             file.read_chunk(pack::ChunkId(index as u32), level).await?;
@@ -655,7 +662,11 @@ mod tests {
     use db_storage::MemoryStorage;
 
     fn pages(bytes: &[u8]) -> db_storage::DbIoPages {
-        db_storage::DbIoPages::try_new(bytes.to_vec()).expect("test snapshot bytes must fit the fixed page owner")
+        let mut writer = db_storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).expect("test snapshot writer admitted");
+        for fragment in bytes.chunks(db_storage::DB_IO_PAGE_BYTES) {
+            assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
+        }
+        writer.finish().unwrap()
     }
 
     //#region 🔖️Descriptor

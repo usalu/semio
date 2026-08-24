@@ -26,6 +26,16 @@ impl<'a> Context<'a> {
         std::fs::read(self.fixture(uri)?).map_err(|error| error.to_string())
     }
 
+    /// 🧫️ A resolved fixture parsed as JSON. Specification-vector cases — the ones resting on a
+    /// recorded no-oracle decision — carry their vectors as committed JSON beside the implementation,
+    /// and without this they had to be hand-transcribed into Rust literals, which is both laborious
+    /// and a place for the transcription to drift away from the fixture it claims to mirror.
+    pub fn fixture_json(&self, uri: &str) -> Result<crate::protocol::Json, String> {
+        let bytes = self.fixture_bytes(uri)?;
+        let text = String::from_utf8(bytes).map_err(|error| format!("fixture {} is not UTF-8: {}", uri, error))?;
+        crate::protocol::parse_json(&text).map_err(|error| format!("fixture {} is not valid JSON: {}", uri, error))
+    }
+
     /// 🧫️ Copies an immutable fixture into the work directory and returns the mutable copy's path.
     pub fn copy_fixture(&self, uri: &str, as_name: Option<&str>) -> Result<PathBuf, String> {
         let source = self.fixture(uri)?;

@@ -363,8 +363,8 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
 /// indices recovered by matching each canonical RGBA pixel's RGB triple against that table
 /// (`encode_bmp_indexed`, below). Every other snapshot — `bits_per_pixel` outside 1/4/8, or an
 /// empty palette — falls back to the original 24-bit `BI_RGB` direct-color path
-/// (`encode_bmp_direct`); 16/32-bit `BI_BITFIELDS` and >8-bit palettes remain decode-only, same
-/// scope cut as before. Both paths are 40-byte-header, uncompressed, honor `row_order` (drives
+/// (`encode_bmp_direct`); 16/32-bit `BI_BITFIELDS` remain decode-only, same scope cut as before.
+/// Both paths are 40-byte-header, uncompressed, honor `row_order` (drives
 /// the sign of the on-disk `height` field and the row-write direction), and round-trip
 /// `x_pixels_per_meter`/`y_pixels_per_meter`/`colors_used`/`colors_important` verbatim from the
 /// snapshot. `pixels` is always canonical 8-bit RGBA (row 0 = image top); both paths drop the

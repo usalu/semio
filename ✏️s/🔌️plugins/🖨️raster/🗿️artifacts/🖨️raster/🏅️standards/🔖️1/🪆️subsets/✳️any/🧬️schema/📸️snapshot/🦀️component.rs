@@ -9,8 +9,8 @@
 //! exact hex/bracket convention, never a hand-written slot list — `#[derive(ArtifactSchema)]` still
 //! emits `field_states()` for the top-level facets. `child_slots()` is honestly EMPTY for `assets`:
 //! the derive's `#[child(kind=...)]` mechanism (`🧬️schema/✨️derive/🦀️component.rs`) only recognizes a
-//! bare `ArtifactChild<T>`/`Vec<ArtifactChild<T>>` field directly on the struct, not a `BTreeMap`
-//! value — kept as a `BTreeMap<String, ArtifactChild<S>>` anyway (rather than reshaping to a `Vec`) to
+//! bare `ArtifactChild<T>`/`Vec<ArtifactChild<T>>` field directly on the struct, not an owned-map
+//! value — kept as a `RasterOwnedMap<ArtifactChild<S>>` anyway (rather than reshaping to a `Vec`) to
 //! preserve the SAME id-keyed addressing `image_key: Option<String>` already used pre-migration and
 //! every existing `add-layer-asset`/`remove-layer-asset` mutation already assumes. This is the exact
 //! same already-accepted shape of gap `💠️lowpoly`'s own `LowpolyObject.mesh` doc comment documents (a
@@ -40,6 +40,19 @@ pub struct RasterSnapshot {
     #[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]
     #[serde(default, skip_serializing_if = "RasterOwnedMap::is_empty")]
     pub assets: RasterOwnedMap<RasterAssetChild>,
+}
+
+pub(crate) const RASTER_POPULATED_OUTPUT_ERROR: &str = "Populated Raster snapshot output is forbidden; interactive production routes require the retained page output authority";
+
+impl RasterSnapshot {
+    /// 🛡️ Admits only the constant-size empty snapshot shell to legacy whole-output codecs.
+    pub(crate) fn require_empty_output_shell(&self) -> Result<(), &'static str> {
+        if self.layers.is_empty() && self.assets.is_empty() {
+            Ok(())
+        } else {
+            Err(RASTER_POPULATED_OUTPUT_ERROR)
+        }
+    }
 }
 //#endregion 🔖️Snapshot
 
@@ -107,7 +120,8 @@ pub(crate) async fn dec_child(s: &str) -> Result<RasterAssetChild, String> {
 }
 
 pub(crate) async fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String {
-    format!("[{}]", map.iter().map(|(k, v)| format!("[{},{}]", enc_str(k), enc_child(v))).collect::<Vec<_>>().join(","))
+    assert!(map.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");
+    "[]".to_string()
 }
 pub(crate) async fn dec_asset_map(s: &str) -> Result<RasterOwnedMap<RasterAssetChild>, String> {
     let mut out = RasterOwnedMap::new();
@@ -145,11 +159,10 @@ pub(crate) async fn dec_mask_opt(s: &str) -> Result<Option<RasterLayerMask>, Str
     dec_option(s, dec_mask)
 }
 
-/// 🧬️ `params: BTreeMap<String, dsl::DslValue>` — structured/untyped values, encoded JSON-then-hex per
-/// entry (matches `📐️cad`'s established `JsonFieldPrimitives` convention for the same shape, per this
-/// ticket's migration recipe §2).
+/// 🧬️ Empty parameter-map shell for the legacy codec; populated output requires retained paging.
 pub(crate) async fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String {
-    format!("[{}]", params.iter().map(|(k, v)| format!("[{},{}]", enc_str(k), hex_encode(&serde_json::to_vec(v).unwrap_or_default()))).collect::<Vec<_>>().join(","))
+    assert!(params.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");
+    "[]".to_string()
 }
 pub(crate) async fn dec_params(s: &str) -> Result<RasterOwnedMap<dsl::DslValue>, String> {
     let mut out = RasterOwnedMap::new();
@@ -237,7 +250,8 @@ pub(crate) async fn dec_layer(s: &str) -> Result<RasterLayerNode, String> {
     }
 }
 pub(crate) async fn enc_layer_list(list: &[RasterLayerNode]) -> String {
-    format!("[{}]", list.iter().map(enc_layer).collect::<Vec<_>>().join(","))
+    assert!(list.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");
+    "[]".to_string()
 }
 pub(crate) async fn dec_layer_list(s: &str) -> Result<Vec<RasterLayerNode>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_layer).collect()
@@ -246,6 +260,7 @@ pub(crate) async fn dec_layer_list(s: &str) -> Result<Vec<RasterLayerNode>, Stri
 
 //#region 🔖️TextPrimitives
 async fn print_raster_snapshot_body(s: &RasterSnapshot) -> String {
+    s.require_empty_output_shell().expect(RASTER_POPULATED_OUTPUT_ERROR);
     format!("schema={}\nid={}\ntitle={}\nlayers={}\nassets={}", enc_str(&s.schema), enc_str(&s.id), enc_opt_str(&s.title), enc_layer_list(&s.layers), enc_asset_map(&s.assets),)
 }
 async fn parse_raster_snapshot_body(body: &str) -> Result<RasterSnapshot, String> {
@@ -339,11 +354,8 @@ async fn read_child(reader: &mut store::ByteReader<'_>) -> Result<RasterAssetChi
 }
 
 async fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>) {
-    store::pack_rt::write_varint_u64(out, map.len() as u64);
-    for (k, v) in map {
-        write_str_lp(out, k);
-        write_child(out, v);
-    }
+    assert!(map.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");
+    store::pack_rt::write_varint_u64(out, 0);
 }
 async fn read_asset_map(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<RasterAssetChild>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -389,11 +401,8 @@ async fn read_mask_opt(reader: &mut store::ByteReader<'_>) -> Result<Option<Rast
 }
 
 async fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>) {
-    store::pack_rt::write_varint_u64(out, params.len() as u64);
-    for (k, v) in params {
-        write_str_lp(out, k);
-        write_bytes_lp(out, &serde_json::to_vec(v).unwrap_or_default());
-    }
+    assert!(params.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");
+    store::pack_rt::write_varint_u64(out, 0);
 }
 async fn read_params(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<dsl::DslValue>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -476,10 +485,8 @@ async fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<RasterLayerNod
     }
 }
 async fn write_layer_list(out: &mut Vec<u8>, list: &[RasterLayerNode]) {
-    store::pack_rt::write_varint_u64(out, list.len() as u64);
-    for l in list {
-        write_layer(out, l);
-    }
+    assert!(list.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");
+    store::pack_rt::write_varint_u64(out, 0);
 }
 async fn read_layer_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<RasterLayerNode>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -488,6 +495,7 @@ async fn read_layer_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<Raste
 
 async fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
+    s.require_empty_output_shell().expect(RASTER_POPULATED_OUTPUT_ERROR);
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
     write_str_lp(&mut out, &s.id);
@@ -513,9 +521,7 @@ async fn decode_raster_snapshot_binary(bytes: &[u8]) -> Result<RasterSnapshot, S
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack — hand-rolled (not derive-generated) because
-/// `RasterSnapshot.assets: BTreeMap<String, ArtifactChild<SemioImageSnapshot>>` has no `DslField`
-/// impl for the derive to bind against; see this file's own module doc comment.
+/// ✉️ Empty-shell ArtifactDsl/ArtifactPack bridge; populated snapshots require retained paging.
 impl store::ArtifactDsl for RasterSnapshot {
     const EXTENSION: &'static str = "raster";
     async fn envelope_id() -> &'static str {
@@ -529,6 +535,7 @@ impl store::ArtifactDsl for RasterSnapshot {
         parse_raster_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
+        self.require_empty_output_shell().expect(RASTER_POPULATED_OUTPUT_ERROR);
         let body = print_raster_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -538,6 +545,7 @@ impl store::ArtifactDsl for RasterSnapshot {
 impl store::ArtifactPack for RasterSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
+        self.require_empty_output_shell().map_err(|error| store::PackError::Schema(error.to_owned()))?;
         let raw = encode_raster_snapshot_binary(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))

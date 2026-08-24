@@ -39,6 +39,13 @@ pub enum SemioObjectMutation {
     CreateProperties(create_properties::mutation::CreateProperties),
     DeleteProperties(delete_properties::mutation::DeleteProperties),
 }
+
+/// 🏷️ Kebab-case spelling of every `SemioObjectMutation` variant, in declaration order — the
+/// vocabulary the `semio-v1-object` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares
+/// and `mutate-semio-object`'s exhaustive test case measures itself against. `kinds_match_the_enum_
+/// and_the_catalog` below is what keeps this list honest against the enum, since the framework
+/// never parses Rust.
+pub const KINDS: &[&str] = &["move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -166,6 +173,22 @@ mod tests {
         let mutation = SemioObjectMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh {});
         assert_eq!(mutation.semantics().kind, "delete-mesh");
         assert_eq!(mutation.semantics().record, "DeletedMesh");
+    }
+
+    /// 🏷️ `KINDS` (this facet's own const, consumed by `mutate-semio-object`'s adapter) must name
+    /// every declared variant, in the exact order and spelling `#[derive(dsl::Mutations)]` assigns —
+    /// the framework never parses Rust, so this is what keeps the catalog honest.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = SemioObjectMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
     }
 }
 //#endregion 🧪️Tests

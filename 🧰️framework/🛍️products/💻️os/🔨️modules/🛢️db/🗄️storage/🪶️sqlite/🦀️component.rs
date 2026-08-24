@@ -1,63 +1,23 @@
-//! 🗄️ `db_storage_sqlite` — a `db_storage::DbStorage` backend over `rusqlite` (bundled SQLite),
-//! the single-file, zero-service storage substrate option for the `db` crate family. Implements
-//! every sub-trait (`WalStorage`, `SnapshotStorage`, `PayloadStorage`, `CatalogStorage`,
-//! `IndexStorage`, `LeaseStorage`) directly against one `rusqlite::Connection`, matching
-//! `db_storage::FsStorage`'s semantics byte-for-byte (same error taxonomy, same idempotence/CAS
-//! laws) but persisted in SQLite tables instead of files. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
-//! (`## db crate family`).
-//!
-//! 🎯️ Design choice: this crate links the SAME bundled `rusqlite`/`libsqlite3-sys` version
-//! already pinned in the workspace `Cargo.lock` by `vcs` and
-//! `framework/product/os/semio_hub/storage/sqlite` (a Cargo workspace may only link one native
-//! `sqlite3` — `links = "sqlite3"` — so a version drift here would be a hard build break, not a
-//! style choice). Bundled sqlite's C build doesn't target `wasm32-unknown-unknown`, so — per the
-//! contract's "everything storage/thread-touching is `#[cfg(not(target_arch = "wasm32"))]`
-//! module-wrapped" rule, and mirroring this crate's own `Cargo.toml` gating `rusqlite` under
-//! `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` — the entire implementation lives
-//! in a wasm32-gated inner module; a wasm32 build of this crate is an (intentionally) empty shell.
-//!
-//! ⏳️ **Async-first (design ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet W6)**:
-//! `rusqlite` is a genuinely BLOCKING C client (unlike `sqlx`/`neo4rs`) — every `db_storage`
-//! sub-trait method here is a plain `async fn` whose body dispatches through `db_storage`'s own
-//! `run_blocking_op` bridge, which submits onto the process-wide `semio_framework_async::WorkerPool`
-//! (`Lane::Io`) rather than ever running the SQLite call on the calling async task's own thread.
-//! This crate names no `tokio`/executor of its own — mirrors `db_storage::FsStorage`'s identical
-//! crossing.
-//!
-//! 🔒️ Durability choice: the connection is opened with `PRAGMA synchronous = FULL` (in `WAL`
-//! journal mode, this fsyncs the WAL file on every commit — see SQLite's own docs on
-//! `synchronous`/`journal_mode`). Every write in this crate is a single autocommit statement (or
-//! an explicit transaction for compare-and-swap paths), so by the time a call returns, its
-//! effects are already at `DurabilityClass::Fsync` regardless of the class the caller requested —
-//! `WalStorage::sync` is therefore a documented no-op: it can never under-deliver relative to what
-//! the caller asked for, only (harmlessly) over-deliver for `Memory`/`Os` requests. A future
-//! perf-motivated revision could relax `synchronous` and make `sync` do real work for batching
-//! `Memory`/`Os`-class WAL appends; left as an extension seam since correctness, not throughput,
-//! is this wave's goal.
-//!
-//! 🔐️ CAS choice: `CatalogStorage::cas_root` and every `LeaseStorage` mutation run inside an
-//! `IMMEDIATE` SQLite transaction (acquires SQLite's own write lock up front), which — unlike
-//! `db_storage::FsStorage`'s `Mutex`-guarded `write_atomic` (documented there as in-process-only
-//! fencing) — genuinely serializes concurrent *cross-process* writers against the same `.sqlite3`
-//! file, not just concurrent threads in this process.
+//! 🗄️ SQLite storage behind the process-wide typed, retained database I/O lane.
 
 //#region 🔖️SqliteStorage
 #[cfg(not(target_arch = "wasm32"))]
 mod sqlite_storage {
     use crate::db_durability::{DurabilityClass, EpochFence};
     use crate::db_ids::{check_len, ArtifactId, DbError};
-    use crate::db_storage::{run_blocking_op, CatalogStorage, DbIoPages, DbIoRequest, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+    use crate::db_storage::{
+        register_db_io_backend, submit_db_io_task, CatalogStorage, DbIoBackendControl,
+        DbIoBackendKind, DbIoExecutionStep, DbIoLeaseResult, DbIoPageWriter,
+        DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText,
+        DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage,
+        StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
+    };
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
     use semio_framework_async::WorkerPool;
     use std::sync::{Arc, Mutex};
 
     //#region 🔖️Schema
-    /// @emoji 🧱️ One document's WAL segment, keyed `(document, segment_index)`. `sealed` is
-    /// stored as `0`/`1` (SQLite has no native boolean). `bytes` grows via `bytes || ?` (`append`)
-    /// or shrinks via `substr(bytes, 1, ?)` (`truncate_tail`) so the full segment never
-    /// round-trips through Rust memory just to grow it by a few bytes.
     const SCHEMA: &str = "\
 CREATE TABLE IF NOT EXISTS wal_segment (
     document TEXT NOT NULL,
@@ -94,997 +54,851 @@ CREATE TABLE IF NOT EXISTS lease (
     epoch INTEGER NOT NULL,
     expires_at_ms INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS db_io_stage (
+    operation INTEGER PRIMARY KEY,
+    bytes BLOB NOT NULL,
+    number INTEGER
+);
 ";
     //#endregion 🔖️Schema
 
-    //#region 🔖️Limits
-    /// @emoji 🛡️ Ceiling on any single blob this crate reads into memory in one call — validated
-    /// via `check_len` BEFORE the read buffer is allocated. Mirrors
-    /// `db_storage::MemoryStorage`/`FsStorage`'s own `MAX_READ_BYTES` choice (same number, kept
-    /// in lock-step deliberately: a caller swapping backends should hit the same ceiling on
-    /// every backend).
+    //#region 🔖️Authority
     const MAX_BLOB_BYTES: u64 = 496 * 1024;
-    //#endregion 🔖️Limits
+    const SQLITE_OPERATION_OWNERS: usize = 64;
 
-    //#region 🔖️Errors
-    /// @emoji 🚨️ Wraps a `rusqlite::Error` into `DbError::Io` — the only place a foreign driver
-    /// error type is allowed to appear, per the contract's "no foreign error type in a public
-    /// signature" rule. Every not-found/already-exists/conflict distinction this crate needs is
-    /// produced by an explicit existence check or an SQL `changes()` count before this ever
-    /// fires, so by the time a call reaches this mapping the error is a genuine driver/IO
-    /// failure, not a modeled outcome.
-    // 🔒️ Used as a bare fn-pointer error mapper (`.map_err(sqlite_err)`) throughout this file —
-    // `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the mapper with an owned `E`.
-    #[allow(clippy::needless_pass_by_value)]
-    // 🚫️async: E4 fn-pointer slot
-    fn sqlite_err(err: rusqlite::Error) -> DbError {
-        DbError::Io(err.to_string())
+    fn sqlite_err(error: rusqlite::Error) -> DbError {
+        DbError::Io(error.to_string())
     }
 
-    /// @emoji 🔢️ SQLite's `INTEGER` column type is a signed 64-bit value; this crate's `u64`
-    /// indices (segment/generation/run ids, epochs, millisecond timestamps) are validated to fit
-    /// before being cast, rather than silently reinterpreting an out-of-range value's bit pattern
-    /// as negative.
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn to_sql_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
         i64::try_from(value).map_err(|_| DbError::LimitExceeded(what))
     }
-    //#endregion 🔖️Errors
 
-    //#region 🔖️Connection
-    /// @emoji 🗄️ SQLite-backed `DbStorage`. One `rusqlite::Connection` behind an `Arc<Mutex<_>>`
-    /// (the `Arc` is what lets every trait method's blocking closure — dispatched through
-    /// `run_blocking_op`, see module doc — carry its own `'static` handle to the same connection)
-    /// — `rusqlite` is synchronous. Each call is an explicitly indivisible backend residual on
-    /// the shared I/O lane; the retained authority bounds admission and ownership, not syscall
-    /// duration. Phase 9 replaces that residual with the owned event log.
-    pub struct SqliteStorage {
-        conn: Arc<Mutex<Connection>>,
-        pool: Arc<WorkerPool>,
+    fn init_connection(connection: &Connection) -> Result<(), DbError> {
+        connection.pragma_update(None, "journal_mode", "WAL").map_err(sqlite_err)?;
+        connection.pragma_update(None, "synchronous", "FULL").map_err(sqlite_err)?;
+        connection.pragma_update(None, "foreign_keys", "OFF").map_err(sqlite_err)?;
+        connection.execute_batch(SCHEMA).map_err(sqlite_err)
     }
 
-    /// @emoji 🩹️ Recovers the connection mutex from a poisoned lock instead of panicking — a
-    /// single panicking caller must not turn every subsequent storage call into a cascading
-    /// panic (mirrors `db_storage::MemoryStorage`'s own `lock` helper).
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
-    fn lock(conn: &Mutex<Connection>) -> std::sync::MutexGuard<'_, Connection> {
-        conn.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    struct SqliteDbIoExecutor {
+        connection: Mutex<Option<Connection>>,
+        path: DbIoText,
+        in_memory: bool,
+        payload_hashes: [Mutex<Option<(u64, blake3::Hasher)>>; SQLITE_OPERATION_OWNERS],
     }
 
-    impl SqliteStorage {
-        /// @emoji 🚀️ Opens (creating the file and its parent directories if absent) a
-        /// `SqliteStorage` at `path` and bootstraps the schema. Safe to call repeatedly against
-        /// the same path (schema DDL is `IF NOT EXISTS`, data is untouched). Dispatches every
-        /// subsequent trait call's blocking body through `run_blocking_op` onto `pool`'s
-        /// `Lane::Io`; open and schema setup use that same retained authority.
-        pub async fn open(pool: Arc<WorkerPool>, path: &std::path::Path) -> Result<Self, DbError> {
-            let admitted_path = path.to_path_buf();
-            let conn = run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                if let Some(parent) = admitted_path.parent() {
-                    if !parent.as_os_str().is_empty() {
-                        std::fs::create_dir_all(parent).map_err(|err| DbError::Io(err.to_string()))?;
-                    }
+    impl SqliteDbIoExecutor {
+        fn new(path: DbIoText, in_memory: bool) -> Self {
+            Self {
+                connection: Mutex::new(None),
+                path,
+                in_memory,
+                payload_hashes: [const { Mutex::new(None) }; SQLITE_OPERATION_OWNERS],
+            }
+        }
+
+        fn operation(operation: u64) -> Result<i64, DbError> {
+            to_sql_i64(operation, "sqlite DB I/O operation")
+        }
+
+        fn ensure_write_stage(connection: &Connection, operation: i64) -> Result<(), DbError> {
+            connection
+                .execute(
+                    "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) VALUES (?1, x'', NULL)",
+                    params![operation],
+                )
+                .map_err(sqlite_err)?;
+            Ok(())
+        }
+
+        fn write_stage_step(connection: &Connection, operation: i64, input: &mut DbIoPages) -> Result<bool, DbError> {
+            Self::ensure_write_stage(connection, operation)?;
+            let Some(fragment) = input.page(0) else { return Ok(true) };
+            let fragment_len = fragment.len();
+            connection
+                .execute(
+                    "UPDATE db_io_stage SET bytes = bytes || ?2 WHERE operation = ?1",
+                    params![operation, fragment],
+                )
+                .map_err(sqlite_err)?;
+            input.advance(fragment_len)?;
+            Ok(false)
+        }
+
+        fn read_stage_step(connection: &Connection, operation: i64, output: &mut DbIoPageWriter) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
+            let total: i64 = connection
+                .query_row(
+                    "SELECT length(bytes) FROM db_io_stage WHERE operation = ?1",
+                    params![operation],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(sqlite_err)?
+                .ok_or_else(|| DbError::NotFound("SQLite DB I/O stage not found".to_string()))?;
+            check_len(total as u64, MAX_BLOB_BYTES, "sqlite retained stage read")?;
+            if output.len() == total as usize {
+                return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Pages(output.finish()?))));
+            }
+            let offset = to_sql_i64(output.len() as u64 + 1, "sqlite retained read offset")?;
+            let fragment: Vec<u8> = connection
+                .query_row(
+                    "SELECT substr(bytes, ?2, ?3) FROM db_io_stage WHERE operation = ?1",
+                    params![operation, offset, DB_IO_PAGE_BYTES as i64],
+                    |row| row.get(0),
+                )
+                .map_err(sqlite_err)?;
+            if fragment.is_empty() || fragment.len() > DB_IO_PAGE_BYTES {
+                return Err(DbError::Corrupt("SQLite returned an invalid fixed DB I/O fragment".to_string()));
+            }
+            output.write_fragment(&fragment)?;
+            Ok((DbIoExecutionStep::Yield, None))
+        }
+
+        fn list_step(connection: &Connection, sql: &str, document: &DbIoText, output: &mut DbIoU64List) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
+            let offset = to_sql_i64(output.len() as u64, "sqlite list cursor")?;
+            let next: Option<i64> = connection
+                .query_row(sql, params![document.as_str(), offset], |row| row.get(0))
+                .optional()
+                .map_err(sqlite_err)?;
+            if let Some(next) = next {
+                output.push(next as u64)?;
+                Ok((DbIoExecutionStep::Yield, None))
+            } else {
+                Ok((DbIoExecutionStep::Complete, Some(DbIoResult::List(std::mem::take(output)))))
+            }
+        }
+
+        fn payload_stage_step(&self, connection: &Connection, operation: u64, input: &mut DbIoPages) -> Result<Option<ContentHash>, DbError> {
+            let sql_operation = Self::operation(operation)?;
+            Self::ensure_write_stage(connection, sql_operation)?;
+            let slot = operation as usize % self.payload_hashes.len();
+            let mut state = self.payload_hashes[slot].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if state.as_ref().is_some_and(|(owner, _)| *owner != operation) {
+                return Err(DbError::Unavailable("SQLite payload hash cursor capacity exhausted".to_string()));
+            }
+            let (_, hasher) = state.get_or_insert_with(|| (operation, blake3::Hasher::new()));
+            if let Some(fragment) = input.page(0) {
+                let fragment_len = fragment.len();
+                connection
+                    .execute(
+                        "UPDATE db_io_stage SET bytes = bytes || ?2 WHERE operation = ?1",
+                        params![sql_operation, fragment],
+                    )
+                    .map_err(sqlite_err)?;
+                hasher.update(fragment);
+                input.advance(fragment_len)?;
+                return Ok(None);
+            }
+            let (_, hasher) = state.take().expect("SQLite payload hash cursor retained");
+            Ok(Some(ContentHash(*hasher.finalize().as_bytes())))
+        }
+
+        fn stage_read(
+            connection: &Connection,
+            operation: i64,
+            insert: impl FnOnce(&Connection, i64) -> Result<usize, rusqlite::Error>,
+            missing: impl FnOnce() -> DbError,
+        ) -> Result<(), DbError> {
+            let exists: bool = connection
+                .query_row(
+                    "SELECT EXISTS(SELECT 1 FROM db_io_stage WHERE operation = ?1)",
+                    params![operation],
+                    |row| row.get(0),
+                )
+                .map_err(sqlite_err)?;
+            if !exists && insert(connection, operation).map_err(sqlite_err)? == 0 {
+                return Err(missing());
+            }
+            Ok(())
+        }
+    }
+    //#endregion 🔖️Authority
+
+    //#region 🔖️Executor
+    impl DbIoTaskExecutor for SqliteDbIoExecutor {
+        fn execute_step(&self, operation: u64, task: &mut DbIoTask) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
+            if let DbIoTask::BackendOpen { path, .. } = task {
+                if path.as_str() != self.path.as_str() {
+                    return Err(DbError::InvalidArgument("SQLite path authority mismatch".to_string()));
                 }
-                let conn = Connection::open(admitted_path).map_err(sqlite_err)?;
-                init_connection(&conn)?;
-                Ok(conn)
-            })
-            .await?;
-            Ok(Self { conn: Arc::new(Mutex::new(conn)), pool })
-        }
-
-        /// @emoji 🧪️ Opens a private, in-memory `SqliteStorage` — never durable across process
-        /// exit; exists for fast unit tests that don't care about on-disk persistence (the
-        /// crash/reopen laws are exercised against a real file in `//#region 🧪️Tests` instead).
-        pub async fn open_in_memory(pool: Arc<WorkerPool>) -> Result<Self, DbError> {
-            let conn = run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                let conn = Connection::open_in_memory().map_err(sqlite_err)?;
-                init_connection(&conn)?;
-                Ok(conn)
-            })
-            .await?;
-            Ok(Self { conn: Arc::new(Mutex::new(conn)), pool })
-        }
-    }
-
-    fn init_connection(conn: &Connection) -> Result<(), DbError> {
-        conn.pragma_update(None, "journal_mode", "WAL").map_err(sqlite_err)?;
-        conn.pragma_update(None, "synchronous", "FULL").map_err(sqlite_err)?;
-        conn.pragma_update(None, "foreign_keys", "OFF").map_err(sqlite_err)?;
-        conn.execute_batch(SCHEMA).map_err(sqlite_err)
-    }
-    //#endregion 🔖️Connection
-
-    //#region 🔖️WalStorage
-    impl WalStorage for SqliteStorage {
-        async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let index = to_sql_i64(index, "wal_storage::create_segment index")?;
-                    let conn = lock(&conn);
-                    let exists: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM wal_segment WHERE document = ?1 AND segment_index = ?2)", params![document.0, index], |row| row.get(0)).map_err(sqlite_err)?;
-                    if exists {
-                        return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
-                    }
-                    conn.execute("INSERT INTO wal_segment (document, segment_index, bytes, sealed) VALUES (?1, ?2, x'', 0)", params![document.0, index]).map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
+                let mut owner = self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if owner.is_none() {
+                    let connection = if self.in_memory {
+                        Connection::open_in_memory().map_err(sqlite_err)?
+                    } else {
+                        let path = std::path::Path::new(self.path.as_str());
+                        if let Some(parent) = path.parent() {
+                            if !parent.as_os_str().is_empty() {
+                                std::fs::create_dir_all(parent).map_err(|error| DbError::Io(error.to_string()))?;
+                            }
+                        }
+                        Connection::open(path).map_err(sqlite_err)?
+                    };
+                    init_connection(&connection)?;
+                    *owner = Some(connection);
+                }
+                return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)));
             }
-        }
-
-        async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
-            if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "wal_storage::append") {
-                return { Err(err) };
+            if matches!(task, DbIoTask::BackendClose { .. }) {
+                self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)));
             }
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            let byte_len = bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
-                    let sql_index = to_sql_i64(index, "wal_storage::append index")?;
-                    let conn = lock(&conn);
-                    let sealed: i64 = conn
-                        .query_row("SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-                    if sealed != 0 {
-                        return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
-                    }
-                    // 🎯️ `CAST(... AS BLOB)`: SQLite's `||` operator degrades a BLOB||BLOB concatenation
-                    // to TEXT when the left-hand accumulator started life as the zero-length `x''`
-                    // literal from `create_segment` — an explicit cast keeps the column's stored type
-                    // BLOB regardless, so a later `row.get::<_, Vec<u8>>` never sees `Invalid column
-                    // type Text`.
-                    conn.execute("UPDATE wal_segment SET bytes = CAST(bytes || ?3 AS BLOB) WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, bytes.as_slice()]).map_err(sqlite_err)?;
-                    let new_len: i64 = conn.query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0)).map_err(sqlite_err)?;
-                    Ok(new_len as u64)
-                })
-                .await
-            }
-        }
-
-        async fn sync(&self, _document: &ArtifactId, _index: u64, _class: DurabilityClass) -> Result<(), DbError> {
-            // 🎯️ See module doc's "Durability choice": `synchronous = FULL` already fsyncs every
-            // commit, so every class this crate could be asked to sync to is already satisfied.
-            {
-                Ok(())
-            }
-        }
-
-        async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let sql_index = to_sql_i64(index, "wal_storage::seal index")?;
-                    let conn = lock(&conn);
-                    // 🎯️ `changes()` counts rows matched by the WHERE clause regardless of whether
-                    // `sealed`'s value actually flips, so this is idempotent-if-already-sealed for free:
-                    // `0` means no such row (not found), `1` means the row exists (sealed now, or
-                    // already was).
-                    let changed = conn.execute("UPDATE wal_segment SET sealed = 1 WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
+            let mut owner = self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let connection = owner.as_mut().ok_or(DbError::Closed)?;
+            let sql_operation = Self::operation(operation)?;
+            match task {
+                DbIoTask::WalCreate { document, index, .. } => {
+                    let index = to_sql_i64(*index, "sqlite WAL index")?;
+                    let changed = connection.execute(
+                        "INSERT OR IGNORE INTO wal_segment (document, segment_index, bytes, sealed) VALUES (?1, ?2, x'', 0)",
+                        params![document.as_str(), index],
+                    ).map_err(sqlite_err)?;
                     if changed == 0 {
-                        return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
+                        return Err(DbError::AlreadyExists(format!("WAL segment {index} for {} already exists", document.as_str())));
                     }
-                    Ok(())
-                })
-                .await
-            }
-        }
-
-        async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
-            if let Err(err) = check_len(range.len, MAX_BLOB_BYTES, "wal_storage::read") {
-                return { Err(err) };
-            }
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(range.len), move || {
-                    let sql_index = to_sql_i64(index, "wal_storage::read index")?;
-                    let sql_start = to_sql_i64(range.offset.checked_add(1).ok_or_else(|| DbError::InvalidArgument("wal read offset overflows u64".to_string()))?, "wal_storage::read offset")?;
-                    let sql_len = to_sql_i64(range.len, "wal_storage::read len")?;
-                    let conn = lock(&conn);
-                    let (bytes, current_len): (Vec<u8>, i64) = conn
-                        .query_row("SELECT CAST(substr(bytes, ?3, ?4) AS BLOB), length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, sql_start, sql_len], |row| Ok((row.get(0)?, row.get(1)?)))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-                    let start = range.offset as usize;
-                    let end = start.checked_add(range.len as usize).ok_or_else(|| DbError::InvalidArgument("wal read range overflows usize".to_string()))?;
-                    if end > current_len as usize {
-                        return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {current_len})")));
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::WalAppend { document, index, input, .. } => {
+                    if !Self::write_stage_step(connection, sql_operation, input)? {
+                        return Ok((DbIoExecutionStep::Yield, None));
                     }
-                    Ok(bytes)
-                })
-                .await
-            }
-        }
-
-        async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let sql_index = to_sql_i64(index, "wal_storage::segment_len index")?;
-                    let conn = lock(&conn);
-                    let len: i64 = conn
-                        .query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-                    Ok(len as u64)
-                })
-                .await
-            }
-        }
-
-        async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || {
-                    let conn = lock(&conn);
-                    let mut stmt = conn.prepare("SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC").map_err(sqlite_err)?;
-                    let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
-                    let mut out = Vec::new();
-                    for row in rows {
-                        if out.len() == 4096 {
-                            return Err(DbError::LimitExceeded("db_io list item credit"));
-                        }
-                        out.push(row.map_err(sqlite_err)? as u64);
+                    let index = to_sql_i64(*index, "sqlite WAL index")?;
+                    let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
+                    let sealed: Option<i64> = transaction.query_row(
+                        "SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
+                        params![document.as_str(), index],
+                        |row| row.get(0),
+                    ).optional().map_err(sqlite_err)?;
+                    match sealed {
+                        None => return Err(DbError::NotFound(format!("WAL segment {index} not found"))),
+                        Some(1) => return Err(DbError::InvalidArgument("cannot append to sealed WAL segment".to_string())),
+                        _ => {}
                     }
-                    Ok(out)
-                })
-                .await
-            }
-        }
-
-        async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let sql_index = to_sql_i64(index, "wal_storage::truncate_tail index")?;
-                    let conn = lock(&conn);
-                    let (sealed, current_len): (i64, i64) = conn
-                        .query_row("SELECT sealed, length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| Ok((row.get(0)?, row.get(1)?)))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
-                    if sealed != 0 {
-                        return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
+                    transaction.execute(
+                        "UPDATE wal_segment SET bytes = bytes || (SELECT bytes FROM db_io_stage WHERE operation = ?3) WHERE document = ?1 AND segment_index = ?2",
+                        params![document.as_str(), index, sql_operation],
+                    ).map_err(sqlite_err)?;
+                    let length: i64 = transaction.query_row(
+                        "SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
+                        params![document.as_str(), index],
+                        |row| row.get(0),
+                    ).map_err(sqlite_err)?;
+                    transaction.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
+                    transaction.commit().map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(length as u64))))
+                }
+                DbIoTask::WalSync { .. } => {
+                    connection.execute_batch("PRAGMA wal_checkpoint(PASSIVE)").map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::WalSeal { document, index, .. } => {
+                    let index = to_sql_i64(*index, "sqlite WAL index")?;
+                    let changed = connection.execute(
+                        "UPDATE wal_segment SET sealed = 1 WHERE document = ?1 AND segment_index = ?2",
+                        params![document.as_str(), index],
+                    ).map_err(sqlite_err)?;
+                    if changed == 0 {
+                        return Err(DbError::NotFound(format!("WAL segment {index} not found")));
                     }
-                    if new_len > current_len as u64 {
-                        return Err(DbError::InvalidArgument("truncate_tail new_len exceeds current segment length".to_string()));
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::WalRead { document, index, range, output, .. } => {
+                    let index = to_sql_i64(*index, "sqlite WAL index")?;
+                    let start = to_sql_i64(range.offset.saturating_add(1), "sqlite WAL offset")?;
+                    let length = to_sql_i64(range.len, "sqlite WAL length")?;
+                    let actual: Option<i64> = connection.query_row(
+                        "SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
+                        params![document.as_str(), index],
+                        |row| row.get(0),
+                    ).optional().map_err(sqlite_err)?;
+                    let actual = actual.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))? as u64;
+                    let end = range.offset.checked_add(range.len).ok_or(DbError::LimitExceeded("sqlite WAL range"))?;
+                    if end > actual {
+                        return Err(DbError::InvalidArgument("WAL read range exceeds segment length".to_string()));
                     }
-                    let sql_new_len = to_sql_i64(new_len, "wal_storage::truncate_tail new_len")?;
-                    conn.execute("UPDATE wal_segment SET bytes = CAST(substr(bytes, 1, ?3) AS BLOB) WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index, sql_new_len]).map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
-            }
-        }
-
-        async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let sql_index = to_sql_i64(index, "wal_storage::delete_segment index")?;
-                    let conn = lock(&conn);
-                    conn.execute("DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
-            }
-        }
-    }
-    //#endregion 🔖️WalStorage
-
-    //#region 🔖️SnapshotStorage
-    impl SnapshotStorage for SqliteStorage {
-        async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
-            if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "snapshot_storage::write_generation") {
-                return { Err(err) };
-            }
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            let byte_len = bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
-                    let sql_generation = to_sql_i64(generation, "snapshot_storage::write_generation generation")?;
-                    let conn = lock(&conn);
-                    conn.execute(
-                        "INSERT INTO snapshot_generation (document, generation, bytes) VALUES (?1, ?2, ?3)
-                     ON CONFLICT(document, generation) DO UPDATE SET bytes = excluded.bytes",
-                        params![document.0, sql_generation, bytes.as_slice()],
-                    )
-                    .map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
-            }
-        }
-
-        async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_BLOB_BYTES), move || {
-                    let sql_generation = to_sql_i64(generation, "snapshot_storage::read_generation generation")?;
-                    let conn = lock(&conn);
-                    let len: i64 = conn
-                        .query_row("SELECT length(bytes) FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![&document.0, sql_generation], |row| row.get(0))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?;
-                    check_len(len as u64, MAX_BLOB_BYTES, "snapshot_storage::read_generation")?;
-                    conn.query_row("SELECT bytes FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![&document.0, sql_generation], |row| row.get(0))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
-                })
-                .await
-            }
-        }
-
-        async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let conn = lock(&conn);
-                    let max: Option<i64> = conn.query_row("SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1", params![document.0], |row| row.get(0)).map_err(sqlite_err)?;
-                    Ok(max.map(|value| value as u64))
-                })
-                .await
-            }
-        }
-
-        async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || {
-                    let conn = lock(&conn);
-                    let mut stmt = conn.prepare("SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC").map_err(sqlite_err)?;
-                    let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
-                    let mut out = Vec::new();
-                    for row in rows {
-                        if out.len() == 4096 {
-                            return Err(DbError::LimitExceeded("db_io list item credit"));
-                        }
-                        out.push(row.map_err(sqlite_err)? as u64);
+                    Self::stage_read(
+                        connection,
+                        sql_operation,
+                        |connection, operation| connection.execute(
+                            "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, substr(bytes, ?4, ?5), NULL FROM wal_segment WHERE document = ?2 AND segment_index = ?3",
+                            params![operation, document.as_str(), index, start, length],
+                        ),
+                        || DbError::NotFound(format!("WAL segment {index} not found")),
+                    )?;
+                    Self::read_stage_step(connection, sql_operation, output)
+                }
+                DbIoTask::WalLength { document, index, .. } => {
+                    let index = to_sql_i64(*index, "sqlite WAL index")?;
+                    let length: Option<i64> = connection.query_row(
+                        "SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
+                        params![document.as_str(), index],
+                        |row| row.get(0),
+                    ).optional().map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(length.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))? as u64))))
+                }
+                DbIoTask::WalList { document, output, .. } => Self::list_step(
+                    connection,
+                    "SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC LIMIT 1 OFFSET ?2",
+                    document,
+                    output,
+                ),
+                DbIoTask::WalTruncate { document, index, new_len, .. } => {
+                    let index = to_sql_i64(*index, "sqlite WAL index")?;
+                    let new_len = to_sql_i64(*new_len, "sqlite WAL truncate length")?;
+                    let current: Option<(i64, i64)> = connection.query_row(
+                        "SELECT length(bytes), sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
+                        params![document.as_str(), index],
+                        |row| Ok((row.get(0)?, row.get(1)?)),
+                    ).optional().map_err(sqlite_err)?;
+                    let (current, sealed) = current.ok_or_else(|| DbError::NotFound(format!("WAL segment {index} not found")))?;
+                    if sealed != 0 || new_len > current {
+                        return Err(DbError::InvalidArgument("invalid sealed or growing WAL truncation".to_string()));
                     }
-                    Ok(out)
-                })
-                .await
-            }
-        }
-
-        async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let sql_generation = to_sql_i64(generation, "snapshot_storage::delete_generation generation")?;
-                    let conn = lock(&conn);
-                    conn.execute("DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation]).map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
-            }
-        }
-    }
-    //#endregion 🔖️SnapshotStorage
-
-    //#region 🔖️PayloadStorage
-    impl PayloadStorage for SqliteStorage {
-        async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
-            if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "payload_storage::put") {
-                return { Err(err) };
-            }
-            let conn = self.conn.clone();
-            let pool = self.pool.clone();
-            let byte_len = bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
-                    let hash = ContentHash(*blake3::hash(bytes.as_slice()).as_bytes());
-                    let conn = lock(&conn);
-                    conn.execute("INSERT INTO payload (hash, bytes, len) VALUES (?1, ?2, ?3) ON CONFLICT(hash) DO NOTHING", params![hash.to_string(), bytes.as_slice(), bytes.len() as i64]).map_err(sqlite_err)?;
-                    Ok(hash)
-                })
-                .await
-            }
-        }
-
-        async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
-            let conn = self.conn.clone();
-            let hash = *hash;
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_BLOB_BYTES), move || {
-                    let conn = lock(&conn);
-                    let len: i64 = conn.query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
-                    check_len(len as u64, MAX_BLOB_BYTES, "payload_storage::get")?;
-                    conn.query_row("SELECT bytes FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
-                })
-                .await
-            }
-        }
-
-        async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
-            let conn = self.conn.clone();
-            let hash = *hash;
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let conn = lock(&conn);
-                    conn.query_row("SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)", params![hash.to_string()], |row| row.get(0)).map_err(sqlite_err)
-                })
-                .await
-            }
-        }
-
-        async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
-            let conn = self.conn.clone();
-            let hash = *hash;
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let conn = lock(&conn);
-                    conn.execute("DELETE FROM payload WHERE hash = ?1", params![hash.to_string()]).map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
-            }
-        }
-
-        async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-            let conn = self.conn.clone();
-            let hash = *hash;
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let conn = lock(&conn);
-                    let len: i64 = conn.query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
-                    Ok(len as u64)
-                })
-                .await
-            }
-        }
-    }
-    //#endregion 🔖️PayloadStorage
-
-    //#region 🔖️CatalogStorage
-    impl CatalogStorage for SqliteStorage {
-        async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
-            let conn = self.conn.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_BLOB_BYTES), move || {
-                    let conn = lock(&conn);
-                    let len: Option<i64> = conn.query_row("SELECT length(bytes) FROM catalog_root WHERE id = 0", [], |row| row.get(0)).optional().map_err(sqlite_err)?;
-                    if let Some(len) = len {
-                        check_len(len as u64, MAX_BLOB_BYTES, "catalog_storage::read_root")?;
+                    connection.execute(
+                        "UPDATE wal_segment SET bytes = substr(bytes, 1, ?3) WHERE document = ?1 AND segment_index = ?2",
+                        params![document.as_str(), index, new_len],
+                    ).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::WalDelete { document, index, .. } => {
+                    connection.execute(
+                        "DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
+                        params![document.as_str(), to_sql_i64(*index, "sqlite WAL index")?],
+                    ).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::SnapshotWrite { document, generation, input, .. } => {
+                    if !Self::write_stage_step(connection, sql_operation, input)? {
+                        return Ok((DbIoExecutionStep::Yield, None));
                     }
-                    let row: Option<(Vec<u8>, i64)> = conn.query_row("SELECT bytes, epoch FROM catalog_root WHERE id = 0", [], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
-                    Ok(row.map(|(bytes, epoch)| (bytes, EpochFence { epoch: epoch as u64 })))
-                })
-                .await
-            }
-        }
-
-        async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
-            if let Err(err) = check_len(new_bytes.len() as u64, MAX_BLOB_BYTES, "catalog_storage::cas_root") {
-                return { Err(err) };
-            }
-            let conn = self.conn.clone();
-            let pool = self.pool.clone();
-            let byte_len = new_bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
-                    let mut conn = lock(&conn);
-                    // 🎯️ `IMMEDIATE` acquires SQLite's write lock before the read, so a concurrent writer
-                    // (another thread OR another OS process against the same file) can't slip a write in
-                    // between this read and this write — see module doc's "CAS choice".
-                    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-                    let current_epoch: Option<i64> = tx.query_row("SELECT epoch FROM catalog_root WHERE id = 0", [], |row| row.get(0)).optional().map_err(sqlite_err)?;
-                    let current_fence = current_epoch.map_or(EpochFence::INITIAL, |epoch| EpochFence { epoch: epoch as u64 });
-                    expected.check(current_fence)?;
-                    let new_fence = expected.next();
-                    let sql_epoch = to_sql_i64(new_fence.epoch, "catalog_storage::cas_root epoch")?;
-                    tx.execute(
-                        "INSERT INTO catalog_root (id, bytes, epoch) VALUES (0, ?1, ?2)
-                     ON CONFLICT(id) DO UPDATE SET bytes = excluded.bytes, epoch = excluded.epoch",
-                        params![new_bytes.as_slice(), sql_epoch],
-                    )
-                    .map_err(sqlite_err)?;
-                    tx.commit().map_err(sqlite_err)?;
-                    Ok(new_fence)
-                })
-                .await
-            }
-        }
-    }
-    //#endregion 🔖️CatalogStorage
-
-    //#region 🔖️IndexStorage
-    impl IndexStorage for SqliteStorage {
-        async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
-            if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "index_storage::write_run") {
-                return { Err(err) };
-            }
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            let byte_len = bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
-                    let sql_run_id = to_sql_i64(run_id, "index_storage::write_run run_id")?;
-                    let conn = lock(&conn);
-                    conn.execute(
-                        "INSERT INTO index_run (document, run_id, bytes) VALUES (?1, ?2, ?3)
-                     ON CONFLICT(document, run_id) DO UPDATE SET bytes = excluded.bytes",
-                        params![document.0, sql_run_id, bytes.as_slice()],
-                    )
-                    .map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
-            }
-        }
-
-        async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_BLOB_BYTES), move || {
-                    let sql_run_id = to_sql_i64(run_id, "index_storage::read_run run_id")?;
-                    let conn = lock(&conn);
-                    let len: i64 = conn
-                        .query_row("SELECT length(bytes) FROM index_run WHERE document = ?1 AND run_id = ?2", params![&document.0, sql_run_id], |row| row.get(0))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?;
-                    check_len(len as u64, MAX_BLOB_BYTES, "index_storage::read_run")?;
-                    conn.query_row("SELECT bytes FROM index_run WHERE document = ?1 AND run_id = ?2", params![&document.0, sql_run_id], |row| row.get(0))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
-                })
-                .await
-            }
-        }
-
-        async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || {
-                    let conn = lock(&conn);
-                    let mut stmt = conn.prepare("SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC").map_err(sqlite_err)?;
-                    let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
-                    let mut out = Vec::new();
-                    for row in rows {
-                        if out.len() == 4096 {
-                            return Err(DbError::LimitExceeded("db_io list item credit"));
-                        }
-                        out.push(row.map_err(sqlite_err)? as u64);
+                    connection.execute(
+                        "INSERT INTO snapshot_generation (document, generation, bytes) SELECT ?1, ?2, bytes FROM db_io_stage WHERE operation = ?3 ON CONFLICT(document, generation) DO UPDATE SET bytes = excluded.bytes",
+                        params![document.as_str(), to_sql_i64(*generation, "sqlite snapshot generation")?, sql_operation],
+                    ).map_err(sqlite_err)?;
+                    connection.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::SnapshotRead { document, generation, output, .. } => {
+                    let generation = to_sql_i64(*generation, "sqlite snapshot generation")?;
+                    Self::stage_read(
+                        connection,
+                        sql_operation,
+                        |connection, operation| connection.execute(
+                            "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, NULL FROM snapshot_generation WHERE document = ?2 AND generation = ?3",
+                            params![operation, document.as_str(), generation],
+                        ),
+                        || DbError::NotFound(format!("snapshot generation {generation} not found")),
+                    )?;
+                    Self::read_stage_step(connection, sql_operation, output)
+                }
+                DbIoTask::SnapshotLatest { document, .. } => {
+                    let latest: Option<i64> = connection.query_row(
+                        "SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1",
+                        params![document.as_str()],
+                        |row| row.get(0),
+                    ).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::OptionalLength(latest.map(|value| value as u64)))))
+                }
+                DbIoTask::SnapshotList { document, output, .. } => Self::list_step(
+                    connection,
+                    "SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC LIMIT 1 OFFSET ?2",
+                    document,
+                    output,
+                ),
+                DbIoTask::SnapshotDelete { document, generation, .. } => {
+                    connection.execute(
+                        "DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2",
+                        params![document.as_str(), to_sql_i64(*generation, "sqlite snapshot generation")?],
+                    ).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::PayloadPut { input, .. } => {
+                    let Some(hash) = self.payload_stage_step(connection, operation, input)? else {
+                        return Ok((DbIoExecutionStep::Yield, None));
+                    };
+                    connection.execute(
+                        "INSERT OR IGNORE INTO payload (hash, bytes, len) SELECT ?1, bytes, length(bytes) FROM db_io_stage WHERE operation = ?2",
+                        params![hash.to_string(), sql_operation],
+                    ).map_err(sqlite_err)?;
+                    connection.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Hash(hash))))
+                }
+                DbIoTask::PayloadGet { hash, output, .. } => {
+                    Self::stage_read(
+                        connection,
+                        sql_operation,
+                        |connection, operation| connection.execute(
+                            "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, NULL FROM payload WHERE hash = ?2",
+                            params![operation, hash.to_string()],
+                        ),
+                        || DbError::NotFound(format!("payload {hash} not found")),
+                    )?;
+                    Self::read_stage_step(connection, sql_operation, output)
+                }
+                DbIoTask::PayloadExists { hash, .. } => {
+                    let exists: bool = connection.query_row(
+                        "SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)",
+                        params![hash.to_string()],
+                        |row| row.get(0),
+                    ).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Exists(exists))))
+                }
+                DbIoTask::PayloadLength { hash, .. } => {
+                    let length: Option<i64> = connection.query_row(
+                        "SELECT len FROM payload WHERE hash = ?1",
+                        params![hash.to_string()],
+                        |row| row.get(0),
+                    ).optional().map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(length.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))? as u64))))
+                }
+                DbIoTask::PayloadDelete { hash, .. } => {
+                    connection.execute("DELETE FROM payload WHERE hash = ?1", params![hash.to_string()]).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::CatalogRead { output, .. } => {
+                    let inserted = connection.execute(
+                        "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, epoch FROM catalog_root WHERE id = 0",
+                        params![sql_operation],
+                    ).map_err(sqlite_err)?;
+                    let exists: bool = connection.query_row(
+                        "SELECT EXISTS(SELECT 1 FROM db_io_stage WHERE operation = ?1)",
+                        params![sql_operation],
+                        |row| row.get(0),
+                    ).map_err(sqlite_err)?;
+                    if inserted == 0 && !exists {
+                        return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::OptionalCatalog(None))));
                     }
-                    Ok(out)
-                })
-                .await
-            }
-        }
-
-        async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
-            let conn = self.conn.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let sql_run_id = to_sql_i64(run_id, "index_storage::delete_run run_id")?;
-                    let conn = lock(&conn);
-                    conn.execute("DELETE FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id]).map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
-            }
-        }
-    }
-    //#endregion 🔖️IndexStorage
-
-    //#region 🔖️LeaseStorage
-    impl LeaseStorage for SqliteStorage {
-        async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-            let conn = self.conn.clone();
-            let resource = resource.to_string();
-            let holder = holder.to_string();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let mut conn = lock(&conn);
-                    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-                    let existing: Option<(String, i64, i64)> = tx.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
+                    let (step, result) = Self::read_stage_step(connection, sql_operation, output)?;
+                    let fence: i64 = connection.query_row(
+                        "SELECT number FROM db_io_stage WHERE operation = ?1",
+                        params![sql_operation],
+                        |row| row.get(0),
+                    ).map_err(sqlite_err)?;
+                    Ok((step, result.map(|result| match result {
+                        DbIoResult::Pages(pages) => DbIoResult::OptionalCatalog(Some((pages, EpochFence { epoch: fence as u64 }))),
+                        _ => unreachable!("SQLite catalog stage returns pages"),
+                    })))
+                }
+                DbIoTask::CatalogCas { expected, input, .. } => {
+                    if !Self::write_stage_step(connection, sql_operation, input)? {
+                        return Ok((DbIoExecutionStep::Yield, None));
+                    }
+                    let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
+                    let current: Option<i64> = transaction.query_row("SELECT epoch FROM catalog_root WHERE id = 0", [], |row| row.get(0)).optional().map_err(sqlite_err)?;
+                    expected.check(current.map_or(EpochFence::INITIAL, |epoch| EpochFence { epoch: epoch as u64 }))?;
+                    let next = expected.next();
+                    transaction.execute(
+                        "INSERT INTO catalog_root (id, bytes, epoch) SELECT 0, bytes, ?2 FROM db_io_stage WHERE operation = ?1 ON CONFLICT(id) DO UPDATE SET bytes = excluded.bytes, epoch = excluded.epoch",
+                        params![sql_operation, to_sql_i64(next.epoch, "sqlite catalog epoch")?],
+                    ).map_err(sqlite_err)?;
+                    transaction.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
+                    transaction.commit().map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Fence(next))))
+                }
+                DbIoTask::IndexWrite { document, run_id, input, .. } => {
+                    if !Self::write_stage_step(connection, sql_operation, input)? {
+                        return Ok((DbIoExecutionStep::Yield, None));
+                    }
+                    connection.execute(
+                        "INSERT INTO index_run (document, run_id, bytes) SELECT ?1, ?2, bytes FROM db_io_stage WHERE operation = ?3 ON CONFLICT(document, run_id) DO UPDATE SET bytes = excluded.bytes",
+                        params![document.as_str(), to_sql_i64(*run_id, "sqlite index run")?, sql_operation],
+                    ).map_err(sqlite_err)?;
+                    connection.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![sql_operation]).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::IndexRead { document, run_id, output, .. } => {
+                    let run_id = to_sql_i64(*run_id, "sqlite index run")?;
+                    Self::stage_read(
+                        connection,
+                        sql_operation,
+                        |connection, operation| connection.execute(
+                            "INSERT OR IGNORE INTO db_io_stage (operation, bytes, number) SELECT ?1, bytes, NULL FROM index_run WHERE document = ?2 AND run_id = ?3",
+                            params![operation, document.as_str(), run_id],
+                        ),
+                        || DbError::NotFound(format!("index run {run_id} not found")),
+                    )?;
+                    Self::read_stage_step(connection, sql_operation, output)
+                }
+                DbIoTask::IndexList { document, output, .. } => Self::list_step(
+                    connection,
+                    "SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC LIMIT 1 OFFSET ?2",
+                    document,
+                    output,
+                ),
+                DbIoTask::IndexDelete { document, run_id, .. } => {
+                    connection.execute(
+                        "DELETE FROM index_run WHERE document = ?1 AND run_id = ?2",
+                        params![document.as_str(), to_sql_i64(*run_id, "sqlite index run")?],
+                    ).map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::LeaseAcquire { document, holder, now_ms, ttl_ms, .. } => {
+                    let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
+                    let existing: Option<(String, i64, i64)> = transaction.query_row(
+                        "SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1",
+                        params![document.as_str()],
+                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                    ).optional().map_err(sqlite_err)?;
                     let fence = match existing {
-                        Some((existing_holder, epoch, expires_at_ms)) if (now_ms as i64) < expires_at_ms => {
-                            if existing_holder != holder {
-                                return Err(DbError::Conflict(format!("resource {resource} is leased by another holder")));
+                        Some((existing_holder, epoch, expires)) if *now_ms < expires as u64 => {
+                            if existing_holder != holder.as_str() {
+                                return Err(DbError::Conflict("resource is leased by another holder".to_string()));
                             }
                             EpochFence { epoch: epoch as u64 }
                         }
                         Some((_, epoch, _)) => EpochFence { epoch: epoch as u64 }.next(),
                         None => EpochFence::INITIAL,
                     };
-                    let sql_epoch = to_sql_i64(fence.epoch, "lease_storage::acquire epoch")?;
-                    let sql_expires_at_ms = to_sql_i64(now_ms + ttl_ms, "lease_storage::acquire expires_at_ms")?;
-                    tx.execute(
-                        "INSERT INTO lease (resource, holder, epoch, expires_at_ms) VALUES (?1, ?2, ?3, ?4)
-                     ON CONFLICT(resource) DO UPDATE SET holder = excluded.holder, epoch = excluded.epoch, expires_at_ms = excluded.expires_at_ms",
-                        params![resource, holder, sql_epoch, sql_expires_at_ms],
-                    )
-                    .map_err(sqlite_err)?;
-                    tx.commit().map_err(sqlite_err)?;
-                    Ok(fence)
-                })
-                .await
-            }
-        }
-
-        async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-            let conn = self.conn.clone();
-            let resource = resource.to_string();
-            let holder = holder.to_string();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let mut conn = lock(&conn);
-                    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-                    let (existing_holder, epoch, expires_at_ms): (String, i64, i64) = tx
-                        .query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
-                    if now_ms as i64 >= expires_at_ms {
-                        return Err(DbError::Unavailable(format!("lease for {resource} already expired")));
+                    let expires = (*now_ms).checked_add(*ttl_ms).ok_or(DbError::LimitExceeded("sqlite lease expiry"))?;
+                    transaction.execute(
+                        "INSERT INTO lease (resource, holder, epoch, expires_at_ms) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(resource) DO UPDATE SET holder = excluded.holder, epoch = excluded.epoch, expires_at_ms = excluded.expires_at_ms",
+                        params![document.as_str(), holder.as_str(), to_sql_i64(fence.epoch, "sqlite lease epoch")?, to_sql_i64(expires, "sqlite lease expiry")?],
+                    ).map_err(sqlite_err)?;
+                    transaction.commit().map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Fence(fence))))
+                }
+                DbIoTask::LeaseRenew { document, holder, fence, now_ms, ttl_ms, .. } => {
+                    let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
+                    let existing: Option<(String, i64, i64)> = transaction.query_row(
+                        "SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1",
+                        params![document.as_str()],
+                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                    ).optional().map_err(sqlite_err)?;
+                    let (existing_holder, epoch, expires) = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
+                    if *now_ms >= expires as u64 {
+                        return Err(DbError::Unavailable("lease expired".to_string()));
                     }
-                    if existing_holder != holder {
-                        return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
+                    if existing_holder != holder.as_str() {
+                        return Err(DbError::Unauthorized("lease holder mismatch".to_string()));
                     }
                     fence.check(EpochFence { epoch: epoch as u64 })?;
-                    let sql_expires_at_ms = to_sql_i64(now_ms + ttl_ms, "lease_storage::renew expires_at_ms")?;
-                    tx.execute("UPDATE lease SET expires_at_ms = ?2 WHERE resource = ?1", params![resource, sql_expires_at_ms]).map_err(sqlite_err)?;
-                    tx.commit().map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
-            }
-        }
-
-        async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-            let conn = self.conn.clone();
-            let resource = resource.to_string();
-            let holder = holder.to_string();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let mut conn = lock(&conn);
-                    let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
-                    let (existing_holder, epoch): (String, i64) = tx
-                        .query_row("SELECT holder, epoch FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?)))
-                        .optional()
-                        .map_err(sqlite_err)?
-                        .ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
-                    if existing_holder != holder {
-                        return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
+                    let expires = (*now_ms).checked_add(*ttl_ms).ok_or(DbError::LimitExceeded("sqlite lease expiry"))?;
+                    transaction.execute(
+                        "UPDATE lease SET expires_at_ms = ?2 WHERE resource = ?1",
+                        params![document.as_str(), to_sql_i64(expires, "sqlite lease expiry")?],
+                    ).map_err(sqlite_err)?;
+                    transaction.commit().map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::LeaseRelease { document, holder, fence, .. } => {
+                    let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
+                    let existing: Option<(String, i64)> = transaction.query_row(
+                        "SELECT holder, epoch FROM lease WHERE resource = ?1",
+                        params![document.as_str()],
+                        |row| Ok((row.get(0)?, row.get(1)?)),
+                    ).optional().map_err(sqlite_err)?;
+                    let (existing_holder, epoch) = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
+                    if existing_holder != holder.as_str() {
+                        return Err(DbError::Unauthorized("lease holder mismatch".to_string()));
                     }
                     fence.check(EpochFence { epoch: epoch as u64 })?;
-                    tx.execute("DELETE FROM lease WHERE resource = ?1", params![resource]).map_err(sqlite_err)?;
-                    tx.commit().map_err(sqlite_err)?;
-                    Ok(())
-                })
-                .await
+                    transaction.execute("DELETE FROM lease WHERE resource = ?1", params![document.as_str()]).map_err(sqlite_err)?;
+                    transaction.commit().map_err(sqlite_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::LeaseGet { document, now_ms, .. } => {
+                    let existing: Option<(String, i64, i64)> = connection.query_row(
+                        "SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1",
+                        params![document.as_str()],
+                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                    ).optional().map_err(sqlite_err)?;
+                    let lease = match existing {
+                        Some((holder, epoch, expires)) if *now_ms < expires as u64 => Some(DbIoLeaseResult {
+                            resource: document.clone(),
+                            holder: DbIoText::try_from_str(&holder)?,
+                            fence: EpochFence { epoch: epoch as u64 },
+                            expires_at_ms: expires as u64,
+                        }),
+                        _ => None,
+                    };
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::OptionalLease(lease))))
+                }
+                DbIoTask::BackendOpen { .. } | DbIoTask::BackendClose { .. } => unreachable!("SQLite control tasks handled before connection lock"),
             }
         }
 
-        async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-            let conn = self.conn.clone();
-            let resource = resource.to_string();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let conn = lock(&conn);
-                    let existing: Option<(String, i64, i64)> =
-                        conn.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
-                    Ok(existing.and_then(
-                        |(holder, epoch, expires_at_ms)| {
-                            if (now_ms as i64) < expires_at_ms {
-                                Some(LeaseInfo { resource: resource.clone(), holder, fence: EpochFence { epoch: epoch as u64 }, expires_at_ms: expires_at_ms as u64 })
-                            } else {
-                                None
-                            }
-                        },
-                    ))
-                })
-                .await
+        fn close_operation_step(&self, operation: u64, _task: &DbIoTask) -> Result<bool, DbError> {
+            let mut owner = self.connection.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(connection) = owner.as_mut() {
+                if connection.execute("DELETE FROM db_io_stage WHERE operation = ?1", params![Self::operation(operation)?]).map_err(sqlite_err)? != 0 {
+                    return Ok(false);
+                }
             }
+            let slot = operation as usize % self.payload_hashes.len();
+            let mut hash = self.payload_hashes[slot].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if hash.as_ref().is_some_and(|(owner, _)| *owner == operation) {
+                hash.take();
+                return Ok(false);
+            }
+            Ok(true)
         }
     }
-    //#endregion 🔖️LeaseStorage
+    //#endregion 🔖️Executor
 
-    //#region 🔖️DbBackend
+    //#region 🔖️Facade
+    pub struct SqliteStorage {
+        control: DbIoBackendControl,
+        pool: Arc<WorkerPool>,
+    }
+
+    async fn execute(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoResult, DbError> {
+        submit_db_io_task(pool, task).map_err(|(error, _)| error)?.await.map_err(crate::db_storage::DbIoFault::into_db_error)
+    }
+
+    fn output_writer(bytes: u64) -> Result<DbIoPageWriter, DbError> {
+        let pages = usize::try_from(bytes).map_err(|_| DbError::LimitExceeded("sqlite output bytes"))?.div_ceil(DB_IO_PAGE_BYTES);
+        DbIoPageWriter::try_reserve(pages).map_err(DbIoPageWriterRejected::into_error)
+    }
+
+    fn document_text(document: &ArtifactId) -> Result<DbIoText, DbError> {
+        DbIoText::try_from_str(&document.0)
+    }
+
+    fn result_fault(expected: &'static str) -> DbError {
+        DbError::Internal(format!("SQLite executor did not return {expected}"))
+    }
+
+    fn unit(result: DbIoResult) -> Result<(), DbError> {
+        match result { DbIoResult::Unit => Ok(()), _ => Err(result_fault("unit")) }
+    }
+
+    fn length(result: DbIoResult) -> Result<u64, DbError> {
+        match result { DbIoResult::Length(value) => Ok(value), _ => Err(result_fault("length")) }
+    }
+
+    fn pages(result: DbIoResult) -> Result<DbIoPages, DbError> {
+        match result { DbIoResult::Pages(value) => Ok(value), _ => Err(result_fault("pages")) }
+    }
+
+    fn list(result: DbIoResult) -> Result<DbIoU64List, DbError> {
+        match result { DbIoResult::List(value) => Ok(value), _ => Err(result_fault("list")) }
+    }
+
     impl SqliteStorage {
-        /// @emoji 🎚️ Always durable, `fsync`-capable, CAS-capable — `synchronous = FULL` mode.
+        async fn open_owned(pool: Arc<WorkerPool>, path: DbIoText, in_memory: bool) -> Result<Self, DbError> {
+            let executor = Arc::new(SqliteDbIoExecutor::new(path.clone(), in_memory));
+            let control = register_db_io_backend(DbIoBackendKind::Sqlite, executor)?;
+            if let Err(error) = execute(pool.as_ref(), DbIoTask::BackendOpen { backend: control, path }).await {
+                let _ = execute(pool.as_ref(), DbIoTask::BackendClose { backend: control }).await;
+                return Err(error);
+            }
+            Ok(Self { control, pool })
+        }
+
+        pub async fn open(pool: Arc<WorkerPool>, path: &std::path::Path) -> Result<Self, DbError> {
+            let path = path.to_str().ok_or_else(|| DbError::InvalidArgument("SQLite path is not UTF-8".to_string()))?;
+            Self::open_owned(pool, DbIoText::try_from_str(path)?, false).await
+        }
+
+        pub async fn open_in_memory(pool: Arc<WorkerPool>) -> Result<Self, DbError> {
+            Self::open_owned(pool, DbIoText::try_from_str(":memory:")?, true).await
+        }
+
+        pub async fn close(&self) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::BackendClose { backend: self.control }).await?)
+        }
+
         pub async fn capabilities(&self) -> StorageCapabilities {
             StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
         }
     }
-    //#endregion 🔖️DbBackend
+
+    impl WalStorage for SqliteStorage {
+        async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalCreate { backend: self.control, document: document_text(document)?, index }).await?)
+        }
+
+        async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
+            check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite WAL append")?;
+            length(execute(self.pool.as_ref(), DbIoTask::WalAppend { backend: self.control, document: document_text(document)?, index, input: bytes }).await?)
+        }
+
+        async fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalSync { backend: self.control, document: document_text(document)?, index, class }).await?)
+        }
+
+        async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalSeal { backend: self.control, document: document_text(document)?, index }).await?)
+        }
+
+        async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
+            check_len(range.len, MAX_BLOB_BYTES, "sqlite WAL read")?;
+            pages(execute(self.pool.as_ref(), DbIoTask::WalRead { backend: self.control, document: document_text(document)?, index, range, output: output_writer(range.len)? }).await?)
+        }
+
+        async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
+            length(execute(self.pool.as_ref(), DbIoTask::WalLength { backend: self.control, document: document_text(document)?, index }).await?)
+        }
+
+        async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
+            list(execute(self.pool.as_ref(), DbIoTask::WalList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
+        }
+
+        async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalTruncate { backend: self.control, document: document_text(document)?, index, new_len }).await?)
+        }
+
+        async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::WalDelete { backend: self.control, document: document_text(document)?, index }).await?)
+        }
+    }
+
+    impl SnapshotStorage for SqliteStorage {
+        async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
+            check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite snapshot write")?;
+            unit(execute(self.pool.as_ref(), DbIoTask::SnapshotWrite { backend: self.control, document: document_text(document)?, generation, input: bytes }).await?)
+        }
+
+        async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
+            pages(execute(self.pool.as_ref(), DbIoTask::SnapshotRead { backend: self.control, document: document_text(document)?, generation, output: output_writer(MAX_BLOB_BYTES)? }).await?)
+        }
+
+        async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::SnapshotLatest { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await? {
+                DbIoResult::OptionalLength(value) => Ok(value),
+                _ => Err(result_fault("optional generation")),
+            }
+        }
+
+        async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
+            list(execute(self.pool.as_ref(), DbIoTask::SnapshotList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
+        }
+
+        async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::SnapshotDelete { backend: self.control, document: document_text(document)?, generation }).await?)
+        }
+    }
+
+    impl PayloadStorage for SqliteStorage {
+        async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
+            check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite payload put")?;
+            match execute(self.pool.as_ref(), DbIoTask::PayloadPut { backend: self.control, input: bytes }).await? {
+                DbIoResult::Hash(hash) => Ok(hash),
+                _ => Err(result_fault("hash")),
+            }
+        }
+
+        async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
+            pages(execute(self.pool.as_ref(), DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: output_writer(MAX_BLOB_BYTES)? }).await?)
+        }
+
+        async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::PayloadExists { backend: self.control, hash: *hash }).await? {
+                DbIoResult::Exists(value) => Ok(value),
+                _ => Err(result_fault("existence")),
+            }
+        }
+
+        async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::PayloadDelete { backend: self.control, hash: *hash }).await?)
+        }
+
+        async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
+            length(execute(self.pool.as_ref(), DbIoTask::PayloadLength { backend: self.control, hash: *hash }).await?)
+        }
+    }
+
+    impl CatalogStorage for SqliteStorage {
+        async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::CatalogRead { backend: self.control, output: output_writer(MAX_BLOB_BYTES)? }).await? {
+                DbIoResult::OptionalCatalog(value) => Ok(value),
+                _ => Err(result_fault("optional catalog")),
+            }
+        }
+
+        async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
+            check_len(new_bytes.len() as u64, MAX_BLOB_BYTES, "sqlite catalog CAS")?;
+            match execute(self.pool.as_ref(), DbIoTask::CatalogCas { backend: self.control, expected, input: new_bytes }).await? {
+                DbIoResult::Fence(value) => Ok(value),
+                _ => Err(result_fault("fence")),
+            }
+        }
+    }
+
+    impl IndexStorage for SqliteStorage {
+        async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
+            check_len(bytes.len() as u64, MAX_BLOB_BYTES, "sqlite index write")?;
+            unit(execute(self.pool.as_ref(), DbIoTask::IndexWrite { backend: self.control, document: document_text(document)?, run_id, input: bytes }).await?)
+        }
+
+        async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
+            pages(execute(self.pool.as_ref(), DbIoTask::IndexRead { backend: self.control, document: document_text(document)?, run_id, output: output_writer(MAX_BLOB_BYTES)? }).await?)
+        }
+
+        async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
+            list(execute(self.pool.as_ref(), DbIoTask::IndexList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
+        }
+
+        async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::IndexDelete { backend: self.control, document: document_text(document)?, run_id }).await?)
+        }
+    }
+
+    impl LeaseStorage for SqliteStorage {
+        async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::LeaseAcquire { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, now_ms, ttl_ms }).await? {
+                DbIoResult::Fence(value) => Ok(value),
+                _ => Err(result_fault("fence")),
+            }
+        }
+
+        async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::LeaseRenew { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, fence, now_ms, ttl_ms }).await?)
+        }
+
+        async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+            unit(execute(self.pool.as_ref(), DbIoTask::LeaseRelease { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, fence }).await?)
+        }
+
+        async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::LeaseGet { backend: self.control, document: DbIoText::try_from_str(resource)?, now_ms }).await? {
+                DbIoResult::OptionalLease(value) => Ok(value.map(|lease| LeaseInfo {
+                    resource: lease.resource.as_str().to_string(),
+                    holder: lease.holder.as_str().to_string(),
+                    fence: lease.fence,
+                    expires_at_ms: lease.expires_at_ms,
+                })),
+                _ => Err(result_fault("optional lease")),
+            }
+        }
+    }
+    //#endregion 🔖️Facade
 
     //#region 🧪️Tests
     #[cfg(test)]
     mod tests {
         use super::*;
-        use std::future::Future;
 
-        fn pages(bytes: &[u8]) -> DbIoPages {
-            DbIoPages::try_new(bytes.to_vec()).expect("test sqlite bytes must fit the fixed page owner")
-        }
-
-        /// @emoji ✅️ Test-only sync/async bridge. 🚫️async: E5 executor bridge — poll-once: every
-        /// future a `SqliteStorage` driven by `semio_framework_async::testkit::ManualRuntime` hands
-        /// back resolves on its first poll (`ManualRuntime::run_blocking` executes synchronously),
-        /// so this drives one to completion without needing a real executor.
-        async fn poll_once<T>(fut: impl Future<Output = T>) -> T {
-            fut.await
-        }
-
-        async fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
-            poll_once(fut).await
-        }
-
-        static SCRATCH_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
-        /// @emoji 🎲️ A fresh `SqliteStorage` rooted at a unique scratch file under
-        /// `std::env::temp_dir()` — a REAL on-disk `.sqlite3` file (not `:memory:`), so tests
-        /// that reopen it exercise genuine persistence, mirroring `db_storage::FsStorage`'s own
-        /// scratch helper convention (no external `tempfile` crate dependency).
-        fn sqlite_scratch_path(name: &str) -> std::path::PathBuf {
-            let pid = std::process::id();
-            let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            std::env::temp_dir().join(format!("db_storage_sqlite_test_{name}_{pid}_{counter}.sqlite3"))
-        }
-
-        /// @emoji 🎲️ Opened on the test-owned process pool, exercising the retained path.
-        async fn sqlite_scratch(name: &str) -> SqliteStorage {
-            poll_once(SqliteStorage::open(crate::db_storage::db_io_test_pool(), &sqlite_scratch_path(name))).await.unwrap()
-        }
-
-        //#region 🔖️WalStorage
-        #[semio_framework_async_macros::async_test]
-        async fn wal_storage_append_seal_truncate_and_bounds_laws() {
-            let storage = sqlite_scratch("wal_laws").await;
-            let document: ArtifactId = "doc-wal".into();
-
-            block_on_ready(storage.create_segment(&document, 0)).await.unwrap();
-            assert!(matches!(block_on_ready(storage.create_segment(&document, 0)).await, Err(DbError::AlreadyExists(_))));
-
-            let len_after_first = block_on_ready(storage.append(&document, 0, pages(b"hello "))).await.unwrap();
-            assert_eq!(len_after_first, 6);
-            let len_after_second = block_on_ready(storage.append(&document, 0, pages(b"world"))).await.unwrap();
-            assert_eq!(len_after_second, 11);
-            assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 11);
-
-            let read_back = block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 5 })).await.unwrap();
-            assert_eq!(read_back, b"world");
-            assert!(matches!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 100 })).await, Err(DbError::InvalidArgument(_))));
-
-            block_on_ready(storage.sync(&document, 0, DurabilityClass::Fsync)).await.unwrap();
-
-            block_on_ready(storage.truncate_tail(&document, 0, 6)).await.unwrap();
-            assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 6);
-            assert_eq!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 0, len: 6 })).await.unwrap(), b"hello ");
-
-            block_on_ready(storage.create_segment(&document, 1)).await.unwrap();
-            assert_eq!(block_on_ready(storage.list_segments(&document)).await.unwrap(), vec![0, 1]);
-
-            block_on_ready(storage.seal(&document, 0)).await.unwrap();
-            block_on_ready(storage.seal(&document, 0)).await.unwrap(); // idempotent
-            assert!(matches!(block_on_ready(storage.append(&document, 0, pages(b"!"))).await, Err(DbError::InvalidArgument(_))));
-            assert!(matches!(block_on_ready(storage.truncate_tail(&document, 0, 0)).await, Err(DbError::InvalidArgument(_))));
-
-            block_on_ready(storage.delete_segment(&document, 1)).await.unwrap();
-            assert_eq!(block_on_ready(storage.list_segments(&document)).await.unwrap(), vec![0]);
-
-            assert!(matches!(block_on_ready(storage.append(&document, 99, pages(b"x"))).await, Err(DbError::NotFound(_))));
-        }
-        //#endregion 🔖️WalStorage
-
-        //#region 🔖️SnapshotStorage
-        #[semio_framework_async_macros::async_test]
-        async fn snapshot_storage_generations_overwrite_and_delete_laws() {
-            let storage = sqlite_scratch("snapshot_laws").await;
-            let document: ArtifactId = "doc-snap".into();
-            assert_eq!(block_on_ready(storage.latest_generation(&document)).await.unwrap(), None);
-
-            block_on_ready(storage.write_generation(&document, 0, pages(b"gen-zero-bytes"))).await.unwrap();
-            block_on_ready(storage.write_generation(&document, 1, pages(b"gen-one-bytes"))).await.unwrap();
-            assert_eq!(block_on_ready(storage.list_generations(&document)).await.unwrap(), vec![0, 1]);
-            assert_eq!(block_on_ready(storage.latest_generation(&document)).await.unwrap(), Some(1));
-            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"gen-zero-bytes");
-
-            block_on_ready(storage.write_generation(&document, 0, pages(b"gen-zero-overwritten"))).await.unwrap();
-            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"gen-zero-overwritten");
-
-            block_on_ready(storage.delete_generation(&document, 0)).await.unwrap();
-            assert!(matches!(block_on_ready(storage.read_generation(&document, 0)).await, Err(DbError::NotFound(_))));
-            assert_eq!(block_on_ready(storage.list_generations(&document)).await.unwrap(), vec![1]);
-        }
-        //#endregion 🔖️SnapshotStorage
-
-        //#region 🔖️PayloadStorage
-        #[semio_framework_async_macros::async_test]
-        async fn payload_storage_is_content_addressed_and_idempotent() {
-            let storage = sqlite_scratch("payload_laws").await;
-            let bytes = b"a payload blob that gets content-addressed";
-            let hash_a = block_on_ready(storage.put(pages(bytes))).await.unwrap();
-            let hash_b = block_on_ready(storage.put(pages(bytes))).await.unwrap();
-            assert_eq!(hash_a, hash_b, "put is idempotent under content equality");
-            assert_eq!(hash_a, ContentHash(*blake3::hash(bytes).as_bytes()));
-
-            assert!(block_on_ready(storage.contains(&hash_a)).await.unwrap());
-            assert_eq!(block_on_ready(storage.get(&hash_a)).await.unwrap(), bytes);
-            assert_eq!(block_on_ready(storage.len(&hash_a)).await.unwrap(), bytes.len() as u64);
-
-            let other_hash = ContentHash([0xAB; 32]);
-            assert!(!block_on_ready(storage.contains(&other_hash)).await.unwrap());
-            assert!(matches!(block_on_ready(storage.get(&other_hash)).await, Err(DbError::NotFound(_))));
-
-            block_on_ready(storage.delete(&hash_a)).await.unwrap();
-            assert!(!block_on_ready(storage.contains(&hash_a)).await.unwrap());
-            assert!(matches!(block_on_ready(storage.get(&hash_a)).await, Err(DbError::NotFound(_))));
-        }
-        //#endregion 🔖️PayloadStorage
-
-        //#region 🔖️CatalogStorage
-        #[semio_framework_async_macros::async_test]
-        async fn catalog_storage_cas_root_fences_stale_writers() {
-            let storage = sqlite_scratch("catalog_laws").await;
-            assert_eq!(block_on_ready(storage.read_root()).await.unwrap(), None);
-
-            let epoch_1 = block_on_ready(storage.cas_root(EpochFence::INITIAL, pages(b"root-v1"))).await.unwrap();
-            assert_eq!(epoch_1, EpochFence::INITIAL.next());
-            let (bytes, fence) = block_on_ready(storage.read_root()).await.unwrap().unwrap();
-            assert_eq!(bytes, b"root-v1");
-            assert_eq!(fence, epoch_1);
-
-            // A stale `expected` (still `INITIAL`, but the root already moved to `epoch_1`) is fenced.
-            assert!(matches!(block_on_ready(storage.cas_root(EpochFence::INITIAL, pages(b"root-stale"))).await, Err(DbError::Fenced { .. })));
-
-            let epoch_2 = block_on_ready(storage.cas_root(epoch_1, pages(b"root-v2"))).await.unwrap();
-            assert_eq!(epoch_2, epoch_1.next());
-            assert_eq!(block_on_ready(storage.read_root()).await.unwrap().unwrap().0, b"root-v2");
-        }
-        //#endregion 🔖️CatalogStorage
-
-        //#region 🔖️IndexStorage
-        #[semio_framework_async_macros::async_test]
-        async fn index_storage_runs_list_read_and_delete_laws() {
-            let storage = sqlite_scratch("index_laws").await;
-            let document: ArtifactId = "doc-index".into();
-            block_on_ready(storage.write_run(&document, 0, pages(b"run-zero"))).await.unwrap();
-            block_on_ready(storage.write_run(&document, 1, pages(b"run-one"))).await.unwrap();
-            assert_eq!(block_on_ready(storage.list_runs(&document)).await.unwrap(), vec![0, 1]);
-            assert_eq!(block_on_ready(storage.read_run(&document, 1)).await.unwrap(), b"run-one");
-
-            block_on_ready(storage.delete_run(&document, 0)).await.unwrap();
-            assert_eq!(block_on_ready(storage.list_runs(&document)).await.unwrap(), vec![1]);
-            assert!(matches!(block_on_ready(storage.read_run(&document, 0)).await, Err(DbError::NotFound(_))));
-        }
-        //#endregion 🔖️IndexStorage
-
-        //#region 🔖️LeaseStorage
-        #[semio_framework_async_macros::async_test]
-        async fn lease_storage_acquire_renew_fence_and_handoff_laws() {
-            let storage = sqlite_scratch("lease_laws").await;
-            let fence_1 = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 0)).await.unwrap();
-            assert_eq!(fence_1, EpochFence::INITIAL);
-
-            // Re-acquiring the same, unexpired lease by the same holder is idempotent (same fence).
-            let fence_reacquire = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 100)).await.unwrap();
-            assert_eq!(fence_reacquire, fence_1);
-
-            // A different holder cannot acquire an unexpired lease.
-            assert!(matches!(block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 100)).await, Err(DbError::Conflict(_))));
-
-            block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 500)).await.unwrap();
-            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1.next(), 1_000, 500)).await, Err(DbError::Fenced { .. })));
-            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-b", fence_1, 1_000, 500)).await, Err(DbError::Unauthorized(_))));
-
-            let current = block_on_ready(storage.current("shard-1", 600)).await.unwrap().unwrap();
-            assert_eq!(current.holder, "node-a");
-            assert_eq!(current.fence, fence_1);
-
-            // After expiry (renewed at 500 for 1_000ms => expires at 1_500), a different holder can
-            // take over, bumping the fence — the fencing law a stale former holder is later rejected by.
-            assert_eq!(block_on_ready(storage.current("shard-1", 2_000)).await.unwrap(), None);
-            let fence_2 = block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 2_000)).await.unwrap();
-            assert_eq!(fence_2, fence_1.next());
-
-            // The old holder's stale fence is now rejected.
-            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 2_100)).await, Err(DbError::Unauthorized(_))));
-
-            block_on_ready(storage.release("shard-1", "node-b", fence_2)).await.unwrap();
-            assert_eq!(block_on_ready(storage.current("shard-1", 2_100)).await.unwrap(), None);
-            assert!(matches!(block_on_ready(storage.release("shard-1", "node-b", fence_2)).await, Err(DbError::NotFound(_))));
-        }
-        //#endregion 🔖️LeaseStorage
-
-        //#region 🔖️DbBackend
-        #[semio_framework_async_macros::async_test]
-        async fn db_backend_accessors_and_capabilities() {
-            let storage: crate::db_storage::DbBackend = crate::db_storage::DbBackend::Sqlite(poll_once(SqliteStorage::open(crate::db_storage::db_io_test_pool(), &sqlite_scratch_path("umbrella"))).await.unwrap());
-            let document: ArtifactId = "doc-umbrella".into();
-            block_on_ready(poll_once(storage.wal()).await.create_segment(&document, 0)).await.unwrap();
-            block_on_ready(poll_once(storage.catalog()).await.cas_root(EpochFence::INITIAL, pages(b"root"))).await.unwrap();
-            block_on_ready(poll_once(storage.index()).await.write_run(&document, 0, pages(b"run"))).await.unwrap();
-            assert_eq!(block_on_ready(poll_once(storage.index()).await.read_run(&document, 0)).await.unwrap(), b"run");
-
-            let capabilities = poll_once(storage.capabilities()).await;
-            assert!(capabilities.durable);
-            assert_eq!(capabilities.max_durability, DurabilityClass::Fsync);
-            assert!(capabilities.supports_fsync);
-            assert!(capabilities.supports_cas);
-        }
-        //#endregion 🔖️DbBackend
-
-        //#region 🔖️Connection
-        #[semio_framework_async_macros::async_test]
-        async fn write_survives_reopen_across_instances_against_a_real_file() {
-            let path = sqlite_scratch_path("reopen");
-            {
-                let storage = poll_once(SqliteStorage::open(crate::db_storage::db_io_test_pool(), &path)).await.unwrap();
-                let document: ArtifactId = "doc-reopen".into();
-                block_on_ready(storage.write_generation(&document, 0, pages(b"persisted across reopen"))).await.unwrap();
-                block_on_ready(storage.put(pages(b"payload persisted across reopen"))).await.unwrap();
-            }
-            {
-                let storage = poll_once(SqliteStorage::open(crate::db_storage::db_io_test_pool(), &path)).await.unwrap();
-                let document: ArtifactId = "doc-reopen".into();
-                assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"persisted across reopen");
-                let hash = ContentHash(*blake3::hash(b"payload persisted across reopen").as_bytes());
-                assert_eq!(block_on_ready(storage.get(&hash)).await.unwrap(), b"payload persisted across reopen");
-            }
+        async fn pages(bytes: &[u8]) -> DbIoPages {
+            crate::db_storage::db_io_copy_pages(bytes).unwrap().await.unwrap()
         }
 
         #[semio_framework_async_macros::async_test]
-        async fn in_memory_storage_works_without_a_file() {
-            let storage = poll_once(SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool())).await.unwrap();
-            let document: ArtifactId = "doc-mem".into();
-            block_on_ready(storage.create_segment(&document, 0)).await.unwrap();
-            assert_eq!(block_on_ready(storage.append(&document, 0, pages(b"in memory"))).await.unwrap(), 9);
+        async fn typed_lane_is_lossless_at_page_boundary_and_zero() {
+            let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
+            let document: ArtifactId = "typed-sqlite".into();
+            storage.create_segment(&document, 0).await.unwrap();
+            let bytes = vec![0x5a; DB_IO_PAGE_BYTES + 1];
+            assert_eq!(storage.append(&document, 0, pages(&bytes).await).await.unwrap(), bytes.len() as u64);
+            assert_eq!(storage.read(&document, 0, ByteRange { offset: 0, len: bytes.len() as u64 }).await.unwrap(), bytes);
+            let hash = storage.put(pages(&[]).await).await.unwrap();
+            assert_eq!(storage.get(&hash).await.unwrap(), b"");
+            storage.close().await.unwrap();
         }
-        //#endregion 🔖️Connection
+
+        #[semio_framework_async_macros::async_test]
+        async fn typed_list_and_catalog_cas_are_stable() {
+            let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
+            let document: ArtifactId = "typed-list".into();
+            storage.write_generation(&document, 2, pages(b"two").await).await.unwrap();
+            storage.write_generation(&document, 1, pages(b"one").await).await.unwrap();
+            assert_eq!(storage.list_generations(&document).await.unwrap(), [1, 2]);
+            assert_eq!(storage.latest_generation(&document).await.unwrap(), Some(2));
+            let fence = storage.cas_root(EpochFence::INITIAL, pages(b"root").await).await.unwrap();
+            assert_eq!(storage.read_root().await.unwrap().unwrap().1, fence);
+            assert!(matches!(storage.cas_root(EpochFence::INITIAL, pages(b"stale").await).await, Err(DbError::Fenced { .. })));
+        }
     }
     //#endregion 🧪️Tests
 }

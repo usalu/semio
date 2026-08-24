@@ -42,6 +42,950 @@ pub struct ChildPackEntry {
 }
 //#endregion 🔖️ChildPackEntry
 
+//#region 🔖️PagedCommandIngress
+pub const COMMAND_PAGE_MAXIMUM_BYTES: usize = 4_096;
+pub const COMMAND_MAXIMUM_PAGES: usize = 64;
+pub const COMMAND_MAXIMUM_BYTES: usize = COMMAND_PAGE_MAXIMUM_BYTES * COMMAND_MAXIMUM_PAGES;
+pub const COMMAND_BATCH_MAXIMUM_ITEMS: usize = 64;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct FixedCommandPage {
+    bytes: [u8; COMMAND_PAGE_MAXIMUM_BYTES],
+    len: u16,
+}
+
+impl FixedCommandPage {
+    pub fn try_from_array(bytes: [u8; COMMAND_PAGE_MAXIMUM_BYTES], len: u32) -> Result<Self, crate::Fault> {
+        let len = usize::try_from(len).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-length"), "command page length is not representable"))?;
+        if len > COMMAND_PAGE_MAXIMUM_BYTES {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-length"), "command page length exceeds its fixed 4096-byte authority"));
+        }
+        if bytes[len..].iter().any(|byte| *byte != 0) {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-padding"), "command page carries nonzero bytes outside its declared authority"));
+        }
+        Ok(Self { bytes, len: len as u16 })
+    }
+
+    pub fn try_copy_from(bytes: &[u8]) -> Result<Self, crate::Fault> {
+        if bytes.len() > COMMAND_PAGE_MAXIMUM_BYTES {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-length"), "command page length exceeds its fixed 4096-byte authority"));
+        }
+        let mut fixed = [0; COMMAND_PAGE_MAXIMUM_BYTES];
+        fixed[..bytes.len()].copy_from_slice(bytes);
+        Ok(Self { bytes: fixed, len: bytes.len() as u16 })
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        &self.bytes[..usize::from(self.len)]
+    }
+
+    pub fn len(&self) -> usize {
+        usize::from(self.len)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
+impl serde::Serialize for FixedCommandPage {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeTuple;
+        let mut tuple = serializer.serialize_tuple(self.len() + 1)?;
+        tuple.serialize_element(&self.len)?;
+        for byte in self.as_slice() {
+            tuple.serialize_element(byte)?;
+        }
+        tuple.end()
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for FixedCommandPage {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct FixedCommandPageVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for FixedCommandPageVisitor {
+            type Value = FixedCommandPage;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a length-prefixed fixed command page")
+            }
+
+            fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                let len = sequence.next_element::<u16>()?.ok_or_else(|| serde::de::Error::custom("fixed command page omitted its length"))?;
+                if usize::from(len) > COMMAND_PAGE_MAXIMUM_BYTES {
+                    return Err(serde::de::Error::custom("fixed command page exceeds 4096 bytes"));
+                }
+                let mut bytes = [0; COMMAND_PAGE_MAXIMUM_BYTES];
+                for byte in bytes.iter_mut().take(usize::from(len)) {
+                    *byte = sequence.next_element::<u8>()?.ok_or_else(|| serde::de::Error::custom("fixed command page ended before its declared length"))?;
+                }
+                if sequence.next_element::<u8>()?.is_some() {
+                    return Err(serde::de::Error::custom("fixed command page carries bytes beyond its declared length"));
+                }
+                Ok(FixedCommandPage { bytes, len })
+            }
+        }
+
+        deserializer.deserialize_seq(FixedCommandPageVisitor)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct CommandPageSet {
+    pages: std::collections::VecDeque<FixedCommandPage>,
+    byte_len: usize,
+    generic_shape_valid: bool,
+    all_nonempty: bool,
+}
+
+impl CommandPageSet {
+    pub fn try_new() -> Result<Self, crate::Fault> {
+        let mut pages = std::collections::VecDeque::new();
+        pages.try_reserve_exact(COMMAND_MAXIMUM_PAGES).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-allocation"), "fixed command page authority could not reserve its exact 64 slots"))?;
+        Ok(Self { pages, byte_len: 0, generic_shape_valid: true, all_nonempty: true })
+    }
+
+    pub fn try_push(&mut self, page: FixedCommandPage) -> Result<(), (crate::Fault, FixedCommandPage)> {
+        if self.pages.len() == COMMAND_MAXIMUM_PAGES {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "command page authority is saturated"), page));
+        }
+        let Some(byte_len) = self.byte_len.checked_add(page.len()).filter(|total| *total <= COMMAND_MAXIMUM_BYTES) else {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-byte-cap"), "command exceeds its fixed 262144-byte authority"), page));
+        };
+        if page.is_empty() {
+            self.generic_shape_valid = false;
+            self.all_nonempty = false;
+        }
+        if self.pages.back().is_some_and(|previous| previous.len() != COMMAND_PAGE_MAXIMUM_BYTES) {
+            self.generic_shape_valid = false;
+        }
+        self.pages.push_back(page);
+        self.byte_len = byte_len;
+        Ok(())
+    }
+
+    pub fn len(&self) -> usize {
+        self.pages.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.pages.is_empty()
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        let Some(length) = self.pages.front().map(FixedCommandPage::len) else {
+            return (true, 0);
+        };
+        if length > maximum_bytes {
+            return (false, 0);
+        }
+        let page = self.pages.pop_front().expect("fixed command page was present");
+        let released = page.len();
+        self.byte_len -= released;
+        drop(page);
+        (self.pages.is_empty(), released)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct PagedCommand {
+    pages: std::collections::VecDeque<FixedCommandPage>,
+    byte_len: usize,
+    kind: u8,
+    metadata: u32,
+    item_count: u32,
+}
+
+impl PagedCommand {
+    pub fn try_from_pages(pages: CommandPageSet) -> Result<Self, (crate::Fault, CommandPageSet)> {
+        if pages.is_empty() || pages.len() > COMMAND_MAXIMUM_PAGES {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "command requires 1..=64 admitted pages"), pages));
+        }
+        if !pages.generic_shape_valid {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-shape"), "command pages must be nonempty, at most 4096 bytes, and every nonterminal page must be full"), pages));
+        }
+        let Some(kind) = pages.pages.front().and_then(|page| page.as_slice().first()).copied() else {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-empty"), "command has no kind byte"), pages));
+        };
+        Ok(Self { pages: pages.pages, byte_len: pages.byte_len, kind, metadata: 0, item_count: 0 })
+    }
+
+    pub fn try_from_presence_pages(own_color: Option<u8>, pages: CommandPageSet, item_count: usize) -> Result<Self, (crate::Fault, CommandPageSet)> {
+        if item_count > COMMAND_BATCH_MAXIMUM_ITEMS || pages.len() != item_count.max(1) {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-presence-item-cap"), "Presence command requires one exact page per peer and at most 64 peers"), pages));
+        }
+        if (item_count == 0 && pages.byte_len != 0) || (item_count != 0 && !pages.all_nonempty) {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-presence-page-shape"), "each Presence peer page must be nonempty and at most 4096 bytes"), pages));
+        }
+        let metadata = own_color.map_or(0, |color| (1u32 << 8) | u32::from(color));
+        Ok(Self { pages: pages.pages, byte_len: pages.byte_len, kind: 28, metadata, item_count: item_count as u32 })
+    }
+
+    pub fn byte_len(&self) -> usize {
+        self.byte_len
+    }
+
+    pub fn page_len(&self) -> usize {
+        self.pages.len()
+    }
+
+    pub fn front_page(&self) -> Option<&FixedCommandPage> {
+        self.pages.front()
+    }
+
+    pub fn release_front_page(&mut self, maximum_bytes: usize) -> Option<(bool, usize)> {
+        let Some(page_len) = self.pages.front().map(FixedCommandPage::len) else {
+            return None;
+        };
+        if page_len > maximum_bytes {
+            return None;
+        }
+        let page = self.pages.pop_front().expect("front page was present");
+        self.byte_len -= page.len();
+        let released = page.len();
+        drop(page);
+        Some((self.pages.is_empty(), released))
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.pages.is_empty() && self.byte_len == 0
+    }
+
+    pub fn kind(&self) -> u8 {
+        self.kind
+    }
+
+    pub fn metadata(&self) -> u32 {
+        self.metadata
+    }
+
+    pub fn item_count(&self) -> u32 {
+        self.item_count
+    }
+}
+
+#[derive(Debug)]
+pub struct PagedCommandReader {
+    command: PagedCommand,
+    offset: usize,
+}
+
+impl PagedCommandReader {
+    pub fn new(command: PagedCommand) -> Self {
+        Self { command, offset: 0 }
+    }
+
+    pub fn kind(&self) -> u8 {
+        self.command.kind()
+    }
+
+    pub fn read_byte(&mut self) -> Result<u8, crate::Fault> {
+        let byte = self.command.front_page().and_then(|page| page.as_slice().get(self.offset)).copied().ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-truncated"), "paged command ended inside a field"))?;
+        self.offset += 1;
+        if self.command.front_page().is_some_and(|page| self.offset == page.len()) {
+            let _ = self.command.release_front_page(COMMAND_PAGE_MAXIMUM_BYTES).expect("fully consumed fixed page is releasable");
+            self.offset = 0;
+        }
+        Ok(byte)
+    }
+
+    pub fn read_varint(&mut self) -> Result<u64, crate::Fault> {
+        let mut value = 0u64;
+        for shift in (0..70).step_by(7) {
+            let byte = self.read_byte()?;
+            if shift == 63 && byte > 1 {
+                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-varint"), "paged command varint overflowed u64"));
+            }
+            value |= u64::from(byte & 0x7f) << shift;
+            if byte & 0x80 == 0 {
+                return Ok(value);
+            }
+        }
+        Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-varint"), "paged command varint exceeds ten bytes"))
+    }
+
+    pub fn read_bounded_bytes(&mut self, maximum: usize) -> Result<Vec<u8>, crate::Fault> {
+        let length = usize::try_from(self.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-length"), "paged command field length is not representable"))?;
+        if length > maximum {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-cap"), "paged command field exceeds its exact bounded decode authority"));
+        }
+        let mut bytes = Vec::new();
+        bytes.try_reserve_exact(length).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-allocation"), "paged command field could not reserve its exact bounded authority"))?;
+        for _ in 0..length {
+            bytes.push(self.read_byte()?);
+        }
+        Ok(bytes)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.offset == 0 && self.command.terminal_is_empty()
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        let Some(page_len) = self.command.front_page().map(FixedCommandPage::len) else {
+            return (self.offset == 0, 0);
+        };
+        if page_len > maximum_bytes {
+            return (false, 0);
+        }
+        let released = self.command.release_front_page(maximum_bytes).expect("front fixed page was grant-admitted").1;
+        self.offset = 0;
+        (self.command.terminal_is_empty(), released)
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct CommandEnvelope {
+    pub instance: u32,
+    pub seq: u64,
+    pub command: PagedCommand,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct CommandBatch {
+    pub generation: u64,
+    commands: std::collections::VecDeque<CommandBatchEntry>,
+    pages: std::collections::VecDeque<FixedCommandPage>,
+    bytes: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct CommandBatchEntry {
+    instance: u32,
+    seq: u64,
+    kind: u8,
+    metadata: u32,
+    item_count: u32,
+    page_count: u32,
+    remaining_pages: u32,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct CommandEnvelopeSet {
+    commands: std::collections::VecDeque<CommandBatchEntry>,
+    page_storage: std::collections::VecDeque<FixedCommandPage>,
+    pages: usize,
+    bytes: usize,
+}
+
+impl CommandEnvelopeSet {
+    pub fn try_new() -> Result<Self, crate::Fault> {
+        let mut commands = std::collections::VecDeque::new();
+        commands.try_reserve_exact(COMMAND_BATCH_MAXIMUM_ITEMS).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-allocation"), "fixed command batch authority could not reserve its exact 64 slots"))?;
+        let mut page_storage = std::collections::VecDeque::new();
+        page_storage.try_reserve_exact(COMMAND_MAXIMUM_PAGES).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-allocation"), "fixed command batch authority could not reserve its exact 64 page slots"))?;
+        Ok(Self { commands, page_storage, pages: 0, bytes: 0 })
+    }
+
+    pub fn try_push(&mut self, command: CommandEnvelope) -> Result<(), (crate::Fault, CommandEnvelope)> {
+        if self.commands.len() == COMMAND_BATCH_MAXIMUM_ITEMS {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-cap"), "command batch exceeds its exact 64-item authority"), command));
+        }
+        let pages = match self.pages.checked_add(command.command.page_len()) {
+            Some(pages) if pages <= COMMAND_MAXIMUM_PAGES => pages,
+            _ => return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-cap"), "command batch exceeds its aggregate 64-page authority"), command)),
+        };
+        let bytes = match self.bytes.checked_add(command.command.byte_len()) {
+            Some(bytes) if bytes <= COMMAND_MAXIMUM_BYTES => bytes,
+            _ => return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-byte-cap"), "command batch exceeds its aggregate 262144-byte authority"), command)),
+        };
+        let CommandEnvelope { instance, seq, command } = command;
+        let PagedCommand { pages: mut command_pages, kind, metadata, item_count, .. } = command;
+        let page_count = u32::try_from(command_pages.len()).expect("admitted command page count is u32-bounded");
+        self.commands.push_back(CommandBatchEntry { instance, seq, kind, metadata, item_count, page_count, remaining_pages: page_count });
+        while let Some(page) = command_pages.pop_front() {
+            self.page_storage.push_back(page);
+        }
+        self.pages = pages;
+        self.bytes = bytes;
+        Ok(())
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        let Some(command) = self.commands.front_mut() else {
+            return (self.page_storage.is_empty(), 0);
+        };
+        if command.remaining_pages == 0 {
+            let _terminal = self.commands.pop_front().expect("empty command-build shell was present");
+            return (self.commands.is_empty() && self.page_storage.is_empty(), 0);
+        }
+        let Some(page_len) = self.page_storage.front().map(FixedCommandPage::len) else {
+            return (false, 0);
+        };
+        if page_len > maximum_bytes {
+            return (false, 0);
+        }
+        let page = self.page_storage.pop_front().expect("command-build page was present");
+        let released = page.len();
+        self.pages -= 1;
+        self.bytes -= released;
+        command.remaining_pages -= 1;
+        drop(page);
+        if command.remaining_pages == 0 {
+            let _terminal = self.commands.pop_front().expect("empty command-build shell was present");
+        }
+        (self.commands.is_empty() && self.page_storage.is_empty(), released)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.commands.is_empty() && self.page_storage.is_empty() && self.pages == 0 && self.bytes == 0
+    }
+}
+
+#[derive(Debug)]
+pub struct RejectedCommandBuild {
+    rejected: Option<CommandEnvelope>,
+    admitted: CommandEnvelopeSet,
+}
+
+impl RejectedCommandBuild {
+    pub fn new(admitted: CommandEnvelopeSet, rejected: CommandEnvelope) -> Self {
+        Self { rejected: Some(rejected), admitted }
+    }
+
+    pub fn from_admitted(admitted: CommandEnvelopeSet) -> Self {
+        Self { rejected: None, admitted }
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        if let Some(rejected) = self.rejected.as_mut() {
+            let Some((empty, released)) = rejected.command.release_front_page(maximum_bytes) else {
+                return (false, 0);
+            };
+            if empty {
+                let _terminal = self.rejected.take().expect("rejected command reached terminal empty");
+            }
+            return (self.terminal_is_empty(), released);
+        }
+        self.admitted.close_step(maximum_bytes)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.rejected.is_none() && self.admitted.terminal_is_empty()
+    }
+
+    pub fn remaining_pages(&self) -> usize {
+        self.rejected.as_ref().map_or(0, |rejected| rejected.command.page_len()) + self.admitted.pages
+    }
+
+    pub fn remaining_bytes(&self) -> usize {
+        self.rejected.as_ref().map_or(0, |rejected| rejected.command.byte_len()) + self.admitted.bytes
+    }
+}
+
+#[derive(Debug)]
+pub struct RejectedCommandBuildRegistry<const CAPACITY: usize> {
+    slots: [Option<RejectedCommandBuild>; CAPACITY],
+    close_index: usize,
+    occupied: usize,
+}
+
+impl<const CAPACITY: usize> RejectedCommandBuildRegistry<CAPACITY> {
+    pub fn new() -> Self {
+        assert!(CAPACITY > 0);
+        Self { slots: std::array::from_fn(|_| None), close_index: 0, occupied: 0 }
+    }
+
+    pub fn can_insert(&self, key: u64) -> bool {
+        self.slots[key as usize % CAPACITY].is_none()
+    }
+
+    pub fn try_insert(&mut self, key: u64, owner: RejectedCommandBuild) -> Result<(), (crate::Fault, RejectedCommandBuild)> {
+        let index = key as usize % CAPACITY;
+        if self.slots[index].is_some() {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-build-close-capacity"), "fixed rejected command-build close registry is occupied or collided"), owner));
+        }
+        self.slots[index] = Some(owner);
+        self.occupied += 1;
+        Ok(())
+    }
+
+    pub fn insert_admitted(&mut self, key: u64, owner: RejectedCommandBuild) {
+        let index = key as usize % CAPACITY;
+        assert!(self.slots[index].is_none(), "fixed rejected command-build admission changed before insert");
+        self.slots[index] = Some(owner);
+        self.occupied += 1;
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if self.occupied == 0 {
+            return (true, 0, 0);
+        }
+        for _ in 0..CAPACITY {
+            let index = self.close_index;
+            self.close_index = (self.close_index + 1) % CAPACITY;
+            let Some(owner) = self.slots[index].as_mut() else {
+                continue;
+            };
+            let (terminal, released) = owner.close_step(maximum_bytes);
+            if terminal {
+                let terminal = self.slots[index].take().expect("terminal rejected command build was present");
+                self.occupied -= 1;
+                assert!(terminal.terminal_is_empty(), "rejected command build terminal witness changed before removal");
+            }
+            return (self.occupied == 0, 1, released);
+        }
+        (false, 0, 0)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.occupied == 0
+    }
+}
+
+impl CommandBatch {
+    pub fn try_new(generation: u64, commands: CommandEnvelopeSet) -> Result<Self, (crate::Fault, CommandEnvelopeSet)> {
+        if commands.commands.is_empty() {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-cap"), "command batch requires at least one exact command owner"), commands));
+        }
+        Ok(Self { generation, commands: commands.commands, pages: commands.page_storage, bytes: commands.bytes })
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    pub fn remaining_pages(&self) -> usize {
+        self.pages.len()
+    }
+
+    pub fn remaining_bytes(&self) -> usize {
+        self.bytes
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.commands.is_empty() && self.pages.is_empty() && self.bytes == 0
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CommandBatchProgress {
+    PageReady,
+    Waiting,
+    Complete,
+    Faulted,
+}
+
+#[derive(Debug)]
+pub struct CommandBatchDriver {
+    owner: u64,
+    batch: CommandBatch,
+    command_index: u32,
+    page_index: u32,
+    admitted_page_count: u32,
+    admitted_kind: u8,
+    faulted: bool,
+    waiting: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CommandDriverRetentionState {
+    Active,
+    Suspended,
+    Closing,
+}
+
+#[derive(Debug)]
+struct CommandDriverRetentionSlot {
+    key: u64,
+    generation: u64,
+    driver: CommandBatchDriver,
+    state: CommandDriverRetentionState,
+    close_previous: Option<u16>,
+    close_next: Option<u16>,
+}
+
+#[derive(Debug)]
+pub struct CommandDriverRegistry<const CAPACITY: usize> {
+    slots: [Option<CommandDriverRetentionSlot>; CAPACITY],
+    close_head: Option<u16>,
+    close_tail: Option<u16>,
+    occupied: usize,
+}
+
+impl<const CAPACITY: usize> CommandDriverRegistry<CAPACITY> {
+    pub fn new() -> Self {
+        assert!(CAPACITY > 0 && CAPACITY <= usize::from(u16::MAX));
+        Self { slots: std::array::from_fn(|_| None), close_head: None, close_tail: None, occupied: 0 }
+    }
+
+    pub fn try_insert(&mut self, key: u64, generation: u64, driver: CommandBatchDriver) -> Result<(), (crate::Fault, CommandBatchDriver)> {
+        if !self.can_insert(key) {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-capacity"), "fixed retained command-driver slot is occupied or collided"), driver));
+        }
+        self.insert_admitted(key, generation, driver);
+        Ok(())
+    }
+
+    pub fn can_insert(&self, key: u64) -> bool {
+        self.slots[key as usize % CAPACITY].is_none()
+    }
+
+    pub fn insert_admitted(&mut self, key: u64, generation: u64, driver: CommandBatchDriver) {
+        let index = key as usize % CAPACITY;
+        assert!(self.slots[index].is_none(), "fixed retained command-driver admission changed before insert");
+        self.slots[index] = Some(CommandDriverRetentionSlot { key, generation, driver, state: CommandDriverRetentionState::Active, close_previous: None, close_next: None });
+        self.occupied += 1;
+    }
+
+    pub fn with_driver_mut<R>(&mut self, key: u64, generation: u64, f: impl FnOnce(&mut CommandBatchDriver) -> R) -> Result<R, crate::Fault> {
+        let slot = self.slot_mut(key, generation)?;
+        if slot.state != CommandDriverRetentionState::Active {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-not-active"), "retained command driver is suspended or closing"));
+        }
+        Ok(f(&mut slot.driver))
+    }
+
+    pub fn prepare_suspend(&mut self, key: u64, generation: u64) -> Result<(), crate::Fault> {
+        let index = self.index_of(key, generation)?;
+        if self.slots[index].as_ref().expect("retained command slot exists").state != CommandDriverRetentionState::Active {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-suspend-state"), "retained command driver is not active before suspension"));
+        }
+        self.link_close(index);
+        self.slots[index].as_mut().expect("retained command slot exists").state = CommandDriverRetentionState::Suspended;
+        Ok(())
+    }
+
+    pub fn resume(&mut self, key: u64, generation: u64) -> Result<(), crate::Fault> {
+        let index = self.index_of(key, generation)?;
+        if self.slots[index].as_ref().expect("retained command slot exists").state != CommandDriverRetentionState::Suspended {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-resume-state"), "retained command driver is not suspended before resume"));
+        }
+        self.unlink_close(index);
+        self.slots[index].as_mut().expect("retained command slot exists").state = CommandDriverRetentionState::Active;
+        Ok(())
+    }
+
+    pub fn begin_close(&mut self, key: u64, generation: u64) -> Result<(), crate::Fault> {
+        let index = self.index_of(key, generation)?;
+        let state = self.slots[index].as_ref().expect("retained command slot exists").state;
+        if state == CommandDriverRetentionState::Active {
+            self.link_close(index);
+        }
+        self.slots[index].as_mut().expect("retained command slot exists").state = CommandDriverRetentionState::Closing;
+        Ok(())
+    }
+
+    pub fn begin_close_key(&mut self, key: u64) -> Result<u64, crate::Fault> {
+        let index = key as usize % CAPACITY;
+        let generation = match self.slots[index].as_ref() {
+            Some(slot) if slot.key == key => slot.generation,
+            _ => return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-stale"), "retained command driver key is stale")),
+        };
+        self.begin_close(key, generation)?;
+        Ok(generation)
+    }
+
+    pub fn remove_terminal(&mut self, key: u64, generation: u64) -> Result<(), crate::Fault> {
+        let index = self.index_of(key, generation)?;
+        if !self.slots[index].as_ref().expect("retained command slot exists").driver.terminal_is_empty() {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-nonterminal-remove"), "retained command driver cannot be removed before terminal empty"));
+        }
+        if self.slots[index].as_ref().expect("retained command slot exists").state != CommandDriverRetentionState::Active {
+            self.unlink_close(index);
+        }
+        let terminal = self.slots[index].take().expect("retained command slot exists");
+        self.occupied -= 1;
+        drop(terminal);
+        Ok(())
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        let Some(index) = self.close_head.map(usize::from) else {
+            return (self.occupied == 0, 0, 0);
+        };
+        let (terminal, released) = {
+            let slot = self.slots[index].as_mut().expect("close-list command slot exists");
+            slot.driver.close_step(maximum_bytes)
+        };
+        if terminal {
+            self.unlink_close(index);
+            let terminal = self.slots[index].take().expect("terminal command slot exists");
+            self.occupied -= 1;
+            drop(terminal);
+        }
+        (self.occupied == 0, 1, released)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.occupied == 0 && self.close_head.is_none() && self.close_tail.is_none()
+    }
+
+    pub fn has_close_work(&self) -> bool {
+        self.close_head.is_some()
+    }
+
+    pub fn contains(&self, key: u64, generation: u64) -> bool {
+        self.index_of(key, generation).is_ok()
+    }
+
+    pub fn is_active(&self, key: u64, generation: u64) -> bool {
+        self.index_of(key, generation).ok().and_then(|index| self.slots[index].as_ref()).is_some_and(|slot| slot.state == CommandDriverRetentionState::Active)
+    }
+
+    fn slot_mut(&mut self, key: u64, generation: u64) -> Result<&mut CommandDriverRetentionSlot, crate::Fault> {
+        let index = self.index_of(key, generation)?;
+        Ok(self.slots[index].as_mut().expect("retained command slot exists"))
+    }
+
+    fn index_of(&self, key: u64, generation: u64) -> Result<usize, crate::Fault> {
+        let index = key as usize % CAPACITY;
+        match self.slots[index].as_ref() {
+            Some(slot) if slot.key == key && slot.generation == generation => Ok(index),
+            _ => Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-driver-stale"), "retained command driver identity or generation is stale")),
+        }
+    }
+
+    fn link_close(&mut self, index: usize) {
+        let previous = self.close_tail;
+        let index_u16 = u16::try_from(index).expect("command registry capacity is u16-bounded");
+        {
+            let slot = self.slots[index].as_mut().expect("retained command slot exists");
+            slot.close_previous = previous;
+            slot.close_next = None;
+        }
+        if let Some(previous) = previous {
+            self.slots[usize::from(previous)].as_mut().expect("previous close slot exists").close_next = Some(index_u16);
+        } else {
+            self.close_head = Some(index_u16);
+        }
+        self.close_tail = Some(index_u16);
+    }
+
+    fn unlink_close(&mut self, index: usize) {
+        let (previous, next) = {
+            let slot = self.slots[index].as_ref().expect("retained command slot exists");
+            (slot.close_previous, slot.close_next)
+        };
+        if let Some(previous) = previous {
+            self.slots[usize::from(previous)].as_mut().expect("previous close slot exists").close_next = next;
+        } else {
+            self.close_head = next;
+        }
+        if let Some(next) = next {
+            self.slots[usize::from(next)].as_mut().expect("next close slot exists").close_previous = previous;
+        } else {
+            self.close_tail = previous;
+        }
+        let slot = self.slots[index].as_mut().expect("retained command slot exists");
+        slot.close_previous = None;
+        slot.close_next = None;
+    }
+}
+
+impl CommandBatchDriver {
+    pub fn new(owner: u64, batch: CommandBatch) -> Self {
+        Self { owner, batch, command_index: 0, page_index: 0, admitted_page_count: 0, admitted_kind: 0, faulted: false, waiting: false }
+    }
+
+    pub fn next_page(&mut self) -> Result<Option<(CommandPageCursor, FixedCommandPage)>, crate::Fault> {
+        if self.faulted || self.waiting {
+            return Ok(None);
+        }
+        let Some(command) = self.batch.commands.front() else {
+            return Ok(None);
+        };
+        if self.admitted_page_count == 0 {
+            self.admitted_page_count = command.page_count;
+            self.admitted_kind = command.kind;
+        }
+        let bytes = self.batch.pages.front().ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-empty"), "nonterminal command owner has no page"))?.clone();
+        let cursor = CommandPageCursor {
+            owner: self.owner,
+            generation: self.batch.generation,
+            command_index: self.command_index,
+            command_count: u32::try_from(self.batch.commands.len()).unwrap_or(u32::MAX).saturating_add(self.command_index),
+            instance: command.instance,
+            seq: command.seq,
+            kind: self.admitted_kind,
+            page_index: self.page_index,
+            page_count: self.admitted_page_count,
+            item_count: command.item_count,
+            metadata: command.metadata,
+        };
+        Ok(Some((cursor, bytes)))
+    }
+
+    pub fn observe(&mut self, status: &CommandIngressStatus, maximum_release_bytes: usize) -> Result<CommandBatchProgress, crate::Fault> {
+        let cursor = match status {
+            CommandIngressStatus::Idle => {
+                return Ok(if self.batch.commands.is_empty() {
+                    CommandBatchProgress::Complete
+                } else if self.faulted {
+                    CommandBatchProgress::Faulted
+                } else if self.waiting {
+                    CommandBatchProgress::Waiting
+                } else {
+                    CommandBatchProgress::PageReady
+                });
+            }
+            CommandIngressStatus::PageAccepted(cursor) | CommandIngressStatus::Backpressure(cursor) | CommandIngressStatus::CommandPending(cursor) | CommandIngressStatus::CommandComplete(cursor) => cursor,
+            CommandIngressStatus::Fault { cursor, .. } => cursor,
+        };
+        self.validate_cursor(cursor)?;
+        match status {
+            CommandIngressStatus::Backpressure(_) => Ok(CommandBatchProgress::PageReady),
+            CommandIngressStatus::PageAccepted(_) => {
+                let Some(command) = self.batch.commands.front_mut() else {
+                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "accepted page has no exact host owner"));
+                };
+                let page_len = self.batch.pages.front().map(FixedCommandPage::len).ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "accepted page has no exact retained batch page"))?;
+                if page_len > maximum_release_bytes {
+                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-release-budget"), "accepted page exceeds its exact release grant"));
+                }
+                let page = self.batch.pages.pop_front().expect("accepted retained batch page was present");
+                let released = page.len();
+                self.batch.bytes -= released;
+                drop(page);
+                command.remaining_pages =
+                    command.remaining_pages.checked_sub(1).ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-underflow"), "accepted page arrived after the retained command page owner was empty"))?;
+                let empty = command.remaining_pages == 0;
+                self.page_index = self.page_index.saturating_add(1);
+                if empty {
+                    self.waiting = true;
+                    Ok(CommandBatchProgress::Waiting)
+                } else {
+                    Ok(CommandBatchProgress::PageReady)
+                }
+            }
+            CommandIngressStatus::CommandPending(_) => {
+                self.waiting = true;
+                Ok(CommandBatchProgress::Waiting)
+            }
+            CommandIngressStatus::CommandComplete(_) => {
+                let Some(command) = self.batch.commands.front() else {
+                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "terminal command has no exact host owner"));
+                };
+                if command.remaining_pages != 0 {
+                    return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-terminal-pages"), "terminal acknowledgement arrived before every exact page was released"));
+                }
+                let _terminal = self.batch.commands.pop_front().expect("terminal command was present");
+                self.command_index = self.command_index.saturating_add(1);
+                self.page_index = 0;
+                self.admitted_page_count = 0;
+                self.admitted_kind = 0;
+                self.waiting = false;
+                Ok(if self.batch.commands.is_empty() { CommandBatchProgress::Complete } else { CommandBatchProgress::PageReady })
+            }
+            CommandIngressStatus::Fault { .. } => {
+                self.faulted = true;
+                Ok(CommandBatchProgress::Faulted)
+            }
+            CommandIngressStatus::Idle => unreachable!(),
+        }
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        let Some(command) = self.batch.commands.front_mut() else {
+            return (self.batch.pages.is_empty(), 0);
+        };
+        if command.remaining_pages == 0 {
+            let _terminal = self.batch.commands.pop_front().expect("empty retained command shell was present");
+            self.command_index = self.command_index.saturating_add(1);
+            self.page_index = 0;
+            self.admitted_page_count = 0;
+            self.admitted_kind = 0;
+            self.waiting = false;
+            return (self.batch.terminal_is_empty(), 0);
+        }
+        let Some(page_len) = self.batch.pages.front().map(FixedCommandPage::len) else {
+            return (false, 0);
+        };
+        if page_len > maximum_bytes {
+            return (false, 0);
+        }
+        let page = self.batch.pages.pop_front().expect("retained batch close page was present");
+        let released = page.len();
+        self.batch.bytes -= released;
+        drop(page);
+        command.remaining_pages -= 1;
+        let empty = command.remaining_pages == 0;
+        if empty {
+            let _terminal = self.batch.commands.pop_front().expect("empty command was present");
+            self.command_index = self.command_index.saturating_add(1);
+            self.page_index = 0;
+            self.admitted_page_count = 0;
+            self.admitted_kind = 0;
+            self.waiting = false;
+        }
+        (self.batch.terminal_is_empty(), released)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.batch.terminal_is_empty()
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.batch.generation
+    }
+
+    pub fn remaining_pages(&self) -> usize {
+        self.batch.pages.len()
+    }
+
+    pub fn remaining_bytes(&self) -> usize {
+        self.batch.bytes
+    }
+
+    fn validate_cursor(&self, cursor: &CommandPageCursor) -> Result<(), crate::Fault> {
+        let Some(command) = self.batch.commands.front() else {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "ingress status has no exact host owner"));
+        };
+        if cursor.owner != self.owner
+            || cursor.generation != self.batch.generation
+            || cursor.command_index != self.command_index
+            || cursor.instance != command.instance
+            || cursor.seq != command.seq
+            || cursor.kind != self.admitted_kind
+            || cursor.page_index != self.page_index
+            || cursor.page_count != self.admitted_page_count
+            || cursor.item_count != command.item_count
+            || cursor.metadata != command.metadata
+        {
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-cursor-mismatch"), "ingress status does not identify the exact retained host owner"));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandPageCursor {
+    pub owner: u64,
+    pub generation: u64,
+    pub command_index: u32,
+    pub command_count: u32,
+    pub instance: u32,
+    pub seq: u64,
+    pub kind: u8,
+    pub page_index: u32,
+    pub page_count: u32,
+    pub item_count: u32,
+    pub metadata: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum CommandIngressStatus {
+    Idle,
+    PageAccepted(CommandPageCursor),
+    Backpressure(CommandPageCursor),
+    CommandPending(CommandPageCursor),
+    CommandComplete(CommandPageCursor),
+    Fault { cursor: CommandPageCursor, fault: Vec<u8> },
+}
+//#endregion 🔖️PagedCommandIngress
+
 //#region 🔖️PresenceRosterWire
 pub const PRESENCE_ROSTER_MAXIMUM_ITEMS: usize = 64;
 pub const PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES: usize = 4_096;
@@ -121,7 +1065,7 @@ impl Default for PresenceRosterWire {
 pub const PRESENCE_COMMAND_MAXIMUM_BYTES: usize = PRESENCE_ROSTER_MAXIMUM_BYTES + PRESENCE_ROSTER_MAXIMUM_ITEMS * 10 + 32;
 
 pub struct PresenceCommandCursor {
-    page: Option<semio_framework::kernel::FixedCommandPage>,
+    page: Option<FixedCommandPage>,
     remaining: usize,
     seq: u64,
     own_color: Option<u8>,
@@ -129,18 +1073,18 @@ pub struct PresenceCommandCursor {
 }
 
 impl PresenceCommandCursor {
-    pub fn retain_rejected(page: semio_framework::kernel::FixedCommandPage, seq: u64) -> Self {
+    pub fn retain_rejected(page: FixedCommandPage, seq: u64) -> Self {
         Self { page: Some(page), remaining: 0, seq, own_color: None, next_page: 1 }
     }
 
-    pub fn admit_page(seq: u64, own_color: Option<u8>, item_count: u32, page: semio_framework::kernel::FixedCommandPage) -> Result<Self, (crate::os_spr::ProtocolError, semio_framework::kernel::FixedCommandPage)> {
+    pub fn admit_page(seq: u64, own_color: Option<u8>, item_count: u32, page: FixedCommandPage) -> Result<Self, (crate::os_spr::ProtocolError, FixedCommandPage)> {
         if item_count as usize > PRESENCE_ROSTER_MAXIMUM_ITEMS || page.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES || (item_count != 0 && page.is_empty()) || (item_count == 0 && !page.is_empty()) {
             return Err((malformed("channel presence page", 0, "Presence page violates its exact item or 4096-byte authority"), page));
         }
         Ok(Self { page: Some(page), remaining: item_count as usize, seq, own_color, next_page: 1 })
     }
 
-    pub fn push_page(&mut self, page_index: u32, page: semio_framework::kernel::FixedCommandPage) -> Result<(), (crate::os_spr::ProtocolError, semio_framework::kernel::FixedCommandPage)> {
+    pub fn push_page(&mut self, page_index: u32, page: FixedCommandPage) -> Result<(), (crate::os_spr::ProtocolError, FixedCommandPage)> {
         if self.page.is_some() || self.remaining == 0 || page_index != self.next_page || page.is_empty() || page.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES {
             return Err((malformed("channel presence page", page_index as u64, "page is out of order, saturated, empty, or oversized"), page));
         }
@@ -157,7 +1101,7 @@ impl PresenceCommandCursor {
         self.own_color
     }
 
-    pub fn take_next(&mut self) -> Result<Option<semio_framework::kernel::FixedCommandPage>, crate::os_spr::ProtocolError> {
+    pub fn take_next(&mut self) -> Result<Option<FixedCommandPage>, crate::os_spr::ProtocolError> {
         if self.remaining == 0 {
             return Ok(None);
         }
@@ -170,11 +1114,11 @@ impl PresenceCommandCursor {
         if self.remaining == 0 {
             return Ok(None);
         }
-        Ok(self.page.as_ref().map(semio_framework::kernel::FixedCommandPage::len))
+        Ok(self.page.as_ref().map(FixedCommandPage::len))
     }
 
     pub fn close_release(&mut self, maximum_bytes: usize) -> (bool, usize) {
-        let Some(page_len) = self.page.as_ref().map(semio_framework::kernel::FixedCommandPage::len) else {
+        let Some(page_len) = self.page.as_ref().map(FixedCommandPage::len) else {
             return (self.remaining == 0, 0);
         };
         if page_len > maximum_bytes {
@@ -198,7 +1142,7 @@ impl PresenceCommandCursor {
 //#endregion 🔖️PresenceCommandCursor
 
 //#region 🔖️PagedAppCommandDecode
-const APP_COMMAND_FIELD_MAXIMUM_BYTES: usize = semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES;
+const APP_COMMAND_FIELD_MAXIMUM_BYTES: usize = COMMAND_PAGE_MAXIMUM_BYTES;
 
 #[derive(Debug)]
 enum PagedAppCommandDecodeState {
@@ -216,7 +1160,7 @@ enum PagedAppCommandDecodeState {
 
 #[derive(Debug)]
 pub struct PagedAppCommandDecodeCursor {
-    reader: semio_framework::kernel::PagedCommandReader,
+    reader: PagedCommandReader,
     state: PagedAppCommandDecodeState,
 }
 
@@ -271,15 +1215,15 @@ impl DecodedAppCommandOwner {
 }
 
 impl PagedAppCommandDecodeCursor {
-    pub fn new(command: semio_framework::kernel::PagedCommand) -> Self {
-        Self { reader: semio_framework::kernel::PagedCommandReader::new(command), state: PagedAppCommandDecodeState::Header }
+    pub fn new(command: PagedCommand) -> Self {
+        Self { reader: PagedCommandReader::new(command), state: PagedAppCommandDecodeState::Header }
     }
 
     pub fn kind(&self) -> u8 {
         self.reader.kind()
     }
 
-    pub fn step(&mut self) -> Result<Option<AppCommand>, semio_framework::Fault> {
+    pub fn step(&mut self) -> Result<Option<AppCommand>, crate::Fault> {
         let state = std::mem::replace(&mut self.state, PagedAppCommandDecodeState::Faulted);
         let outcome = match state {
             PagedAppCommandDecodeState::Header => {
@@ -292,9 +1236,9 @@ impl PagedAppCommandDecodeCursor {
                     3 => PagedAppCommandDecodeState::ContextMenu { seq },
                     4 => PagedAppCommandDecodeState::ArtifactCommand { seq },
                     _ => {
-                        return Err(semio_framework::Fault::new(
-                            semio_framework::FaultOrigin::Framework,
-                            semio_framework::FaultCode::new("plugin.command-route-state-machine-required"),
+                        return Err(crate::Fault::new(
+                            crate::FaultOrigin::Framework,
+                            crate::FaultCode::new("plugin.command-route-state-machine-required"),
                             "this AppCommand kind requires its route-specific retained decoder before admission",
                         ));
                     }
@@ -326,7 +1270,7 @@ impl PagedAppCommandDecodeCursor {
                     Ok(line) => line,
                     Err(error) => {
                         self.state = PagedAppCommandDecodeState::RejectedFields { first: Some(error.into_bytes()), second: None };
-                        return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-field-utf8"), "paged command text is not valid UTF-8"));
+                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "paged command text is not valid UTF-8"));
                     }
                 };
                 Some(AppCommand::CommandText { seq, line })
@@ -341,10 +1285,10 @@ impl PagedAppCommandDecodeCursor {
             }
             PagedAppCommandDecodeState::RejectedFields { first, second } => {
                 self.state = PagedAppCommandDecodeState::RejectedFields { first, second };
-                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
+                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
             }
             PagedAppCommandDecodeState::Terminal | PagedAppCommandDecodeState::Faulted => {
-                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-decode-terminal"), "paged command decoder was stepped after terminal"));
+                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-terminal"), "paged command decoder was stepped after terminal"));
             }
         };
         if let Some(command) = outcome {
@@ -357,7 +1301,7 @@ impl PagedAppCommandDecodeCursor {
                     _ => unreachable!("route-specific AppCommand is never decoded by the generic paged cursor"),
                 };
                 self.state = PagedAppCommandDecodeState::RejectedFields { first, second };
-                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-decode-trailing"), "paged command carries trailing bytes after its terminal field"));
+                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-trailing"), "paged command carries trailing bytes after its terminal field"));
             }
             self.state = PagedAppCommandDecodeState::Terminal;
             Ok(Some(command))
@@ -854,30 +1798,30 @@ async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::o
 /// @emoji 📤️ Encodes one `AppCommand`: `tag u8 | fields`.
 
 struct CommandPageWriter {
-    pages: semio_framework::kernel::CommandPageSet,
-    current: [u8; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES],
+    pages: CommandPageSet,
+    current: [u8; COMMAND_PAGE_MAXIMUM_BYTES],
     current_len: usize,
     bytes: usize,
 }
 
 impl CommandPageWriter {
-    fn try_new() -> Result<Self, semio_framework::Fault> {
-        Ok(Self { pages: semio_framework::kernel::CommandPageSet::try_new()?, current: [0; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES], current_len: 0, bytes: 0 })
+    fn try_new() -> Result<Self, crate::Fault> {
+        Ok(Self { pages: CommandPageSet::try_new()?, current: [0; COMMAND_PAGE_MAXIMUM_BYTES], current_len: 0, bytes: 0 })
     }
 
-    fn flush(&mut self) -> Result<(), semio_framework::Fault> {
-        let current = std::mem::replace(&mut self.current, [0; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]);
-        let page = semio_framework::kernel::FixedCommandPage::try_from_array(current, self.current_len as u32)?;
+    fn flush(&mut self) -> Result<(), crate::Fault> {
+        let current = std::mem::replace(&mut self.current, [0; COMMAND_PAGE_MAXIMUM_BYTES]);
+        let page = FixedCommandPage::try_from_array(current, self.current_len as u32)?;
         self.current_len = 0;
         self.pages.try_push(page).map_err(|(fault, _page)| fault)
     }
 
-    fn write(&mut self, mut bytes: &[u8]) -> Result<(), semio_framework::Fault> {
+    fn write(&mut self, mut bytes: &[u8]) -> Result<(), crate::Fault> {
         while !bytes.is_empty() {
-            if self.current_len == semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES {
+            if self.current_len == COMMAND_PAGE_MAXIMUM_BYTES {
                 self.flush()?;
             }
-            let take = bytes.len().min(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES - self.current_len);
+            let take = bytes.len().min(COMMAND_PAGE_MAXIMUM_BYTES - self.current_len);
             self.current[self.current_len..self.current_len + take].copy_from_slice(&bytes[..take]);
             self.current_len += take;
             bytes = &bytes[take..];
@@ -886,11 +1830,11 @@ impl CommandPageWriter {
         Ok(())
     }
 
-    fn byte(&mut self, byte: u8) -> Result<(), semio_framework::Fault> {
+    fn byte(&mut self, byte: u8) -> Result<(), crate::Fault> {
         self.write(&[byte])
     }
 
-    fn varint(&mut self, mut value: u64) -> Result<(), semio_framework::Fault> {
+    fn varint(&mut self, mut value: u64) -> Result<(), crate::Fault> {
         loop {
             let mut byte = (value & 0x7f) as u8;
             value >>= 7;
@@ -904,16 +1848,16 @@ impl CommandPageWriter {
         }
     }
 
-    fn bytes(&mut self, bytes: &[u8]) -> Result<(), semio_framework::Fault> {
+    fn bytes(&mut self, bytes: &[u8]) -> Result<(), crate::Fault> {
         self.varint(bytes.len() as u64)?;
         self.write(bytes)
     }
 
-    fn string(&mut self, value: &str) -> Result<(), semio_framework::Fault> {
+    fn string(&mut self, value: &str) -> Result<(), crate::Fault> {
         self.bytes(value.as_bytes())
     }
 
-    fn envelope(&mut self, value: &crate::os_spr::causal::MutationEnvelope) -> Result<(), semio_framework::Fault> {
+    fn envelope(&mut self, value: &crate::os_spr::causal::MutationEnvelope) -> Result<(), crate::Fault> {
         self.string(&value.mutation_id.0)?;
         self.string(&value.document_id.0)?;
         self.string(&value.actor.0)?;
@@ -930,25 +1874,25 @@ impl CommandPageWriter {
         self.varint(value.timestamp.logical)
     }
 
-    fn finish(mut self) -> Result<semio_framework::kernel::PagedCommand, semio_framework::Fault> {
+    fn finish(mut self) -> Result<PagedCommand, crate::Fault> {
         if self.current_len != 0 {
             self.flush()?;
         }
-        semio_framework::kernel::PagedCommand::try_from_pages(self.pages).map_err(|(fault, _pages)| fault)
+        PagedCommand::try_from_pages(self.pages).map_err(|(fault, _pages)| fault)
     }
 }
 
 /// 📄️ Produces the exact pre-admitted page owner consumed by reactor command batches.
-pub async fn encode_app_command(command: &AppCommand) -> Result<semio_framework::kernel::PagedCommand, semio_framework::Fault> {
+pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, crate::Fault> {
     if let AppCommand::Presence { own_color, peers, .. } = command {
-        let mut pages = semio_framework::kernel::CommandPageSet::try_new()?;
+        let mut pages = CommandPageSet::try_new()?;
         for peer in peers.iter() {
-            pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(peer)?).map_err(|(fault, _page)| fault)?;
+            pages.try_push(FixedCommandPage::try_copy_from(peer)?).map_err(|(fault, _page)| fault)?;
         }
         if pages.is_empty() {
-            pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[])?).map_err(|(fault, _page)| fault)?;
+            pages.try_push(FixedCommandPage::try_copy_from(&[])?).map_err(|(fault, _page)| fault)?;
         }
-        return semio_framework::kernel::PagedCommand::try_from_presence_pages(*own_color, pages, peers.len()).map_err(|(fault, _pages)| fault);
+        return PagedCommand::try_from_presence_pages(*own_color, pages, peers.len()).map_err(|(fault, _pages)| fault);
     }
     let mut out = CommandPageWriter::try_new()?;
     match command {
@@ -1863,9 +2807,9 @@ mod tests {
         let mut roster = PresenceRosterWire::empty();
         roster.try_push(vec![1; 17]).unwrap();
         roster.try_push(vec![2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]).unwrap();
-        let mut cursor = PresenceCommandCursor::admit_page(77, Some(4), 2, semio_framework::kernel::FixedCommandPage::try_copy_from(&[1; 17]).unwrap()).map_err(|(error, _)| error).unwrap();
+        let mut cursor = PresenceCommandCursor::admit_page(77, Some(4), 2, FixedCommandPage::try_copy_from(&[1; 17]).unwrap()).map_err(|(error, _)| error).unwrap();
         assert_eq!(cursor.take_next().unwrap().unwrap().as_ref(), &[1; 17]);
-        cursor.push_page(1, semio_framework::kernel::FixedCommandPage::try_copy_from(&[2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]).unwrap()).map_err(|(error, _)| error).unwrap();
+        cursor.push_page(1, FixedCommandPage::try_copy_from(&[2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]).unwrap()).map_err(|(error, _)| error).unwrap();
         assert_eq!(cursor.take_next().unwrap().unwrap().as_ref(), &[2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]);
         assert!(cursor.take_next().unwrap().is_none());
         assert!(cursor.terminal_is_empty());
@@ -1877,7 +2821,7 @@ mod tests {
         roster.try_push(vec![7]).unwrap();
         let encoded = encode_app_command(&AppCommand::Presence { seq: 3, own_color: None, peers: roster }).await.unwrap();
         assert_eq!(encoded.kind(), 28);
-        let mut cursor = PresenceCommandCursor::admit_page(3, None, 1, semio_framework::kernel::FixedCommandPage::try_copy_from(&[7]).unwrap()).map_err(|(error, _)| error).unwrap();
+        let mut cursor = PresenceCommandCursor::admit_page(3, None, 1, FixedCommandPage::try_copy_from(&[7]).unwrap()).map_err(|(error, _)| error).unwrap();
         while !cursor.close_release(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES).0 {}
     }
 
@@ -1895,41 +2839,41 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn paged_generic_decoder_faults_hostile_field_length_and_closes_exact_owner() {
-        let page = semio_framework::kernel::FixedCommandPage::try_copy_from(&[0, 1, 0x81, 0x20]).unwrap();
-        let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+        let page = FixedCommandPage::try_copy_from(&[0, 1, 0x81, 0x20]).unwrap();
+        let mut pages = CommandPageSet::try_new().unwrap();
         pages.try_push(page).unwrap();
-        let mut cursor = PagedAppCommandDecodeCursor::new(semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap());
+        let mut cursor = PagedAppCommandDecodeCursor::new(PagedCommand::try_from_pages(pages).unwrap());
         assert!(cursor.step().unwrap().is_none());
         let fault = cursor.step().unwrap_err();
         assert_eq!(fault.code.0, "plugin.command-field-cap");
-        assert_eq!(cursor.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, 0));
+        assert_eq!(cursor.close_step(COMMAND_PAGE_MAXIMUM_BYTES), (true, 0));
         assert!(cursor.terminal_is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn paged_generic_decoder_retains_first_field_when_middle_field_is_truncated() {
-        let page = semio_framework::kernel::FixedCommandPage::try_copy_from(&[1, 1, 1, 9, 5, 7]).unwrap();
-        let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+        let page = FixedCommandPage::try_copy_from(&[1, 1, 1, 9, 5, 7]).unwrap();
+        let mut pages = CommandPageSet::try_new().unwrap();
         pages.try_push(page).unwrap();
-        let mut cursor = PagedAppCommandDecodeCursor::new(semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap());
+        let mut cursor = PagedAppCommandDecodeCursor::new(PagedCommand::try_from_pages(pages).unwrap());
         assert!(cursor.step().unwrap().is_none());
         assert!(cursor.step().unwrap().is_none());
         assert_eq!(cursor.step().unwrap_err().code.0, "plugin.command-decode-truncated");
         assert_eq!(cursor.close_step(1), (false, 1));
-        assert_eq!(cursor.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, 0));
+        assert_eq!(cursor.close_step(COMMAND_PAGE_MAXIMUM_BYTES), (true, 0));
         assert!(cursor.terminal_is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn paged_generic_decoder_retains_terminal_fields_when_trailing_bytes_fault() {
-        let page = semio_framework::kernel::FixedCommandPage::try_copy_from(&[3, 1, 1, 9, 0xFF]).unwrap();
-        let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+        let page = FixedCommandPage::try_copy_from(&[3, 1, 1, 9, 0xFF]).unwrap();
+        let mut pages = CommandPageSet::try_new().unwrap();
         pages.try_push(page).unwrap();
-        let mut cursor = PagedAppCommandDecodeCursor::new(semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap());
+        let mut cursor = PagedAppCommandDecodeCursor::new(PagedCommand::try_from_pages(pages).unwrap());
         assert!(cursor.step().unwrap().is_none());
         assert_eq!(cursor.step().unwrap_err().code.0, "plugin.command-decode-trailing");
         assert_eq!(cursor.close_step(1), (false, 1));
-        assert_eq!(cursor.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, 5));
+        assert_eq!(cursor.close_step(COMMAND_PAGE_MAXIMUM_BYTES), (true, 5));
         assert!(cursor.terminal_is_empty());
     }
 
@@ -2119,7 +3063,7 @@ mod tests {
         for (label, value) in channel_command_fixture_corpus().await {
             if let AppCommand::Presence { seq, own_color, peers } = &value {
                 let first = peers.iter().next().map(<[u8]>::to_vec).unwrap_or_default();
-                let mut cursor = PresenceCommandCursor::admit_page(*seq, *own_color, peers.len() as u32, semio_framework::kernel::FixedCommandPage::try_copy_from(&first).expect("encoded Presence page is fixed-authority"))
+                let mut cursor = PresenceCommandCursor::admit_page(*seq, *own_color, peers.len() as u32, FixedCommandPage::try_copy_from(&first).expect("encoded Presence page is fixed-authority"))
                     .map_err(|(error, _)| error)
                     .expect("Presence uses retained cursor admission");
                 assert_eq!(cursor.seq(), *seq);
@@ -2127,7 +3071,7 @@ mod tests {
                 let mut entries = Vec::new();
                 for (index, peer) in peers.iter().enumerate() {
                     if index != 0 {
-                        cursor.push_page(index as u32, semio_framework::kernel::FixedCommandPage::try_copy_from(peer).expect("encoded Presence page is fixed-authority")).map_err(|(error, _)| error).expect("ordered peer page");
+                        cursor.push_page(index as u32, FixedCommandPage::try_copy_from(peer).expect("encoded Presence page is fixed-authority")).map_err(|(error, _)| error).expect("ordered peer page");
                     }
                     if let Some(entry) = cursor.take_next().expect("bounded Presence entry") {
                         entries.push(entry);

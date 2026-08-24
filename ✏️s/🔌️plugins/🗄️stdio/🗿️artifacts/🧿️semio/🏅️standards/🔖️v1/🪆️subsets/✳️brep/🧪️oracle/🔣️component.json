@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.brep` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-brep-mutation-semantics",
+      "capabilities": ["semio-v1-brep-mutate"],
+      "rationale": "There is no third-party crate that reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, let alone one authoritative over this subset's `SemioBrepMutation` vocabulary (the thirteen entity-lifecycle and replacement verbs: create/delete-vertex, create/delete-edge, create/delete-face, create/delete-shell, create/delete-solid, replace-curve, replace-surface, move-vertex) — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. Confidence instead comes from the committed, independently handcrafted per-kind fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff)` specification vector per kind, authored by hand and already unit-tested inside the production crate itself (`kinds_match_the_enum_and_the_catalog`, `produces_committed_diff`, `committed_diff_applies_to_after`, `committed_json_is_canonical` per leaf), including the cascade-delete behaviour `delete-vertex` exercises against its dependent edges — plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation fixture (as a set, since the six id-keyed collections carry no user-meaningful order). This feature re-exercises those SAME committed fixtures end-to-end through `apply_semio_brep_mutation`, the entry point this ticket added, rather than calling `Mutation::diff`/`inverse` directly as the in-crate unit tests do.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-brep",
+      "capability": "semio-v1-brep-mutate",
+      "kinds": ["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"]
+    }
+  ]
+}

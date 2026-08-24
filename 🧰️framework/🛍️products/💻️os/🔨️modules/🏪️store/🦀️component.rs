@@ -1647,7 +1647,7 @@ where
 
 impl<P, Mutation> ArtifactStoreCloseView<'_, P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn maintenance_retirements_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
@@ -1773,7 +1773,7 @@ impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation> {
     fn retain(active: &mut std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>, owner: Option<Box<dyn ErasedSnapshotRetirement>>) -> SnapshotRetirementStep {
         match owner {
             Some(owner) => {
-                *active = Some(owner);
+                **active = Some(owner);
                 SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
             }
             None => SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 },
@@ -1783,7 +1783,7 @@ impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation> {
 
 impl<P, Mutation> ArtifactStoreOwnedDisposer<P, Mutation> for ArtifactStoreCursorDisposer<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
@@ -3316,7 +3316,6 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         if candidate.len == PRESENCE_PEER_SLOTS && !candidate.entries[..candidate.len].iter().any(|entry| entry.as_ref().is_some_and(|entry| entry.actor == actor)) {
             return Err(("presence peer root exceeds its fixed item authority".into(), presence));
         }
-        let presence = Arc::new(presence);
         let mut next = candidate.clone();
         let mut index = 0usize;
         while index < next.len && next.entries[index].as_ref().is_some_and(|entry| entry.actor.as_str() < actor.as_str()) {
@@ -3326,6 +3325,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         if self.created.len == PRESENCE_PEER_SLOTS || (replaces && self.retired.len == PRESENCE_PEER_SLOTS) {
             return Err(("presence peer publication ownership authority is saturated".into(), presence));
         }
+        let presence = Arc::new(presence);
         let inserted = Arc::new(PresencePeerEntry { actor, presence: Some(presence), received_at_ms });
         let retired = if replaces {
             next.entries[index].replace(inserted.clone())
@@ -3339,10 +3339,12 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         };
         let previous = self.candidate.replace(next).expect("presence peer publication candidate");
         drop(previous);
-        self.created.entries[self.created.len] = Some(inserted);
+        let created_index = self.created.len;
+        self.created.entries[created_index] = Some(inserted);
         self.created.len += 1;
         if let Some(retired) = retired {
-            self.retired.entries[self.retired.len] = Some(retired);
+            let retired_index = self.retired.len;
+            self.retired.entries[retired_index] = Some(retired);
             self.retired.len += 1;
         }
         Ok(())
@@ -3353,7 +3355,8 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
             return false;
         }
         self.created.len -= 1;
-        drop(self.created.entries[self.created.len].take());
+        let index = self.created.len;
+        drop(self.created.entries[index].take());
         true
     }
 
@@ -3397,7 +3400,8 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
         }
         if self.retired.len != 0 {
             self.retired.len -= 1;
-            drop(self.retired.entries[self.retired.len].take());
+            let index = self.retired.len;
+            drop(self.retired.entries[index].take());
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.created.len != 0 {
@@ -5069,13 +5073,16 @@ const ARTIFACT_OWNED_SPR_EDIT_FIELDS: &[OwnedSchemaFieldSpec] = &[
     OwnedSchemaFieldSpec { id: 10, key: "finishedAt", required: false },
 ];
 
-struct ArtifactOwnedSprMutationTarget<Mutation> {
+struct ArtifactOwnedSprMutationTarget<Mutation>
+where
+    Mutation: Send,
+{
     next_generation: u64,
     reservation: Option<ArtifactEnvelopeFieldReservation>,
     value: std::mem::ManuallyDrop<Option<Mutation>>,
 }
 
-impl<Mutation> ArtifactOwnedSprMutationTarget<Mutation> {
+impl<Mutation: Send> ArtifactOwnedSprMutationTarget<Mutation> {
     fn new() -> Self {
         Self { next_generation: 0, reservation: None, value: std::mem::ManuallyDrop::new(None) }
     }
@@ -5108,7 +5115,7 @@ impl<Mutation: Send> ArtifactEnvelopeMutationFieldTarget<Mutation> for ArtifactO
     }
 }
 
-impl<Mutation> Drop for ArtifactOwnedSprMutationTarget<Mutation> {
+impl<Mutation: Send> Drop for ArtifactOwnedSprMutationTarget<Mutation> {
     fn drop(&mut self) {
         assert!(self.reservation.is_none() && self.value.is_none(), "SPR mutation target reached Drop with a live reservation or value owner");
     }
@@ -5122,7 +5129,7 @@ enum ArtifactOwnedSprMutationArrayState {
     Closing,
 }
 
-struct ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
+struct ArtifactOwnedSprMutationArrayAuthority<P, Mutation: Send> {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     path: OwnedSchemaPath,
@@ -5140,7 +5147,7 @@ struct ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
     taken: bool,
 }
 
-impl<P, Mutation> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
+impl<P, Mutation: Send> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
     fn try_new(
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
@@ -5182,13 +5189,14 @@ impl<P, Mutation> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
         }
         if matches!(self.state, ArtifactOwnedSprMutationArrayState::Publishing) {
             let reservation = self.reservation.ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-reservation-missing", token.start))?;
-            let active = self.active.as_mut().ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-owner-missing", token.start))?;
+            let path = self.path;
+            let active = self.active.as_mut().ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-owner-missing", offset: token.start, line: 0, column: 0, path })?;
             return match active.publish_reserved(&mut self.target, reservation, cx)? {
                 ArtifactEnvelopeFieldDecodeStep::Pending => Ok(ArtifactEnvelopeFieldDecodeStep::Pending),
                 ArtifactEnvelopeFieldDecodeStep::FieldComplete | ArtifactEnvelopeFieldDecodeStep::TokenComplete => {
                     self.reservation = None;
-                    let value = self.target.value.take().ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-value-missing", token.start))?;
-                    let values = self.values.as_mut().ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-values-missing", token.start))?;
+                    let value = self.target.value.take().ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-value-missing", offset: token.start, line: 0, column: 0, path })?;
+                    let values = self.values.as_mut().ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-values-missing", offset: token.start, line: 0, column: 0, path })?;
                     if values.len() == values.capacity() {
                         *self.target.value = Some(value);
                         return Err(self.diagnostic("artifact-spr.mutation-array-capacity", token.start));
@@ -5293,7 +5301,8 @@ impl<P, Mutation> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| self.diagnostic("artifact-spr.mutation-array-retirement-fault", 0))? {
+            let path = self.path;
+            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-retirement-fault", offset: 0, line: 0, column: 0, path })? {
                 SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                     drop(self.retirement.take());
                     Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -5318,19 +5327,23 @@ impl<P, Mutation> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
     }
 }
 
-impl<P, Mutation> Drop for ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
+impl<P, Mutation: Send> Drop for ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
     fn drop(&mut self) {
         assert!(self.terminal_is_empty(), "SPR mutation array reached Drop before every exact mutation owner was published or cursor-retired");
     }
 }
 
-enum ArtifactOwnedSprEditActive<P, Mutation> {
+enum ArtifactOwnedSprEditActive<P, Mutation: Send> {
     String { field_id: u16, authority: OwnedSchemaStringAuthority<ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES> },
     Mutations { field_id: u16, authority: ArtifactOwnedSprMutationArrayAuthority<P, Mutation> },
     EmptyMetadata(OwnedSchemaEmptyArrayAuthority),
 }
 
-struct ArtifactOwnedSprEditAuthority<P, Mutation> {
+struct ArtifactOwnedSprEditAuthority<P, Mutation>
+where
+    P: Send + 'static,
+    Mutation: Send + 'static,
+{
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     path: OwnedSchemaPath,
@@ -5349,7 +5362,7 @@ struct ArtifactOwnedSprEditAuthority<P, Mutation> {
     terminal: bool,
 }
 
-impl<P, Mutation> ArtifactOwnedSprEditAuthority<P, Mutation> {
+impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<P, Mutation> {
     fn new(
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
@@ -5461,16 +5474,16 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEntryAutho
                     return Err(self.diagnostic("artifact-spr.edit-string-scalar", token.start));
                 }
                 let authority = OwnedSchemaStringAuthority::try_new(self.operation, self.generation, token, self.path).map_err(|token| self.diagnostic("artifact-spr.edit-string", token.start))?;
-                self.active = Some(ArtifactOwnedSprEditActive::String { field_id, authority });
+                *self.active = Some(ArtifactOwnedSprEditActive::String { field_id, authority });
                 self.accept_token(token, true, source, cx)
             }
             OwnedSchemaNestedRecordStep::FieldToken { field_id, token, terminal } if matches!(field_id, 3 | 4) => {
                 let authority = ArtifactOwnedSprMutationArrayAuthority::try_new(self.operation, self.generation, self.path, self.catalog.clone(), self.mutation_factory.clone())?;
-                self.active = Some(ArtifactOwnedSprEditActive::Mutations { field_id, authority });
+                *self.active = Some(ArtifactOwnedSprEditActive::Mutations { field_id, authority });
                 self.accept_token(token, terminal, source, cx)
             }
             OwnedSchemaNestedRecordStep::FieldToken { field_id: 5, token, terminal } => {
-                self.active = Some(ArtifactOwnedSprEditActive::EmptyMetadata(OwnedSchemaEmptyArrayAuthority::new(self.path)));
+                *self.active = Some(ArtifactOwnedSprEditActive::EmptyMetadata(OwnedSchemaEmptyArrayAuthority::new(self.path)));
                 self.accept_token(token, terminal, source, cx)
             }
             OwnedSchemaNestedRecordStep::FieldToken { field_id: 8, token, terminal: true } if token.kind == OwnedSchemaTokenKind::Number => {
@@ -5520,7 +5533,8 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEntryAutho
             return Ok(step);
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| self.diagnostic("artifact-spr.edit-retirement-fault", 0))? {
+            let path = self.path;
+            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-retirement-fault", offset: 0, line: 0, column: 0, path })? {
                 SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                     drop(self.retirement.take());
                     self.terminal = true;
@@ -5566,7 +5580,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEntryAutho
     }
 }
 
-impl<P, Mutation> Drop for ArtifactOwnedSprEditAuthority<P, Mutation> {
+impl<P: Send + 'static, Mutation: Send + 'static> Drop for ArtifactOwnedSprEditAuthority<P, Mutation> {
     fn drop(&mut self) {
         assert!(ArtifactOwnedHistoryEntryAuthority::terminal_is_empty(self), "SPR edit decode reached Drop before exact publication or bounded retirement");
     }
@@ -5669,7 +5683,8 @@ impl<T: DeserializeOwned + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T>
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| self.diagnostic("artifact-envelope.history-entry-retirement-fault", 0))? {
+            let path = self.path;
+            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-entry-retirement-fault", offset: 0, line: 0, column: 0, path })? {
                 SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                     drop(self.retirement.take());
                     self.terminal = true;
@@ -6351,6 +6366,7 @@ impl<T> OwnedSchemaBoundedArrayAuthority<T> {
 
     fn accept(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
         if let Some(decoder) = self.active_decoder.as_mut() {
+            let path = self.path;
             let entry_terminal = self.entry_depth == 1 && token.kind == OwnedSchemaTokenKind::ObjectEnd;
             return match decoder.accept_token(token, entry_terminal, source, cx)? {
                 ArtifactEnvelopeFieldDecodeStep::Pending => Ok(ArtifactEnvelopeFieldDecodeStep::Pending),
@@ -6360,15 +6376,15 @@ impl<T> OwnedSchemaBoundedArrayAuthority<T> {
                 step => {
                     match token.kind {
                         OwnedSchemaTokenKind::ObjectStart | OwnedSchemaTokenKind::ArrayStart => {
-                            self.entry_depth = self.entry_depth.checked_add(1).ok_or_else(|| self.diagnostic("artifact-envelope.history-depth", token))?;
+                            self.entry_depth = self.entry_depth.checked_add(1).ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path })?;
                         }
                         OwnedSchemaTokenKind::ObjectEnd | OwnedSchemaTokenKind::ArrayEnd => {
-                            self.entry_depth = self.entry_depth.checked_sub(1).ok_or_else(|| self.diagnostic("artifact-envelope.history-depth", token))?;
+                            self.entry_depth = self.entry_depth.checked_sub(1).ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path })?;
                         }
                         _ => {}
                     }
                     if self.entry_depth == 0 {
-                        let value = decoder.take_value().ok_or_else(|| self.diagnostic("artifact-envelope.history-entry-owner-missing", token))?;
+                        let value = decoder.take_value().ok_or_else(|| OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-entry-owner-missing", offset: token.start, line: 0, column: 0, path })?;
                         if !decoder.terminal_is_empty() {
                             *self.rejected = Some(value);
                             return Err(self.diagnostic("artifact-envelope.history-entry-live-after-take", token));
@@ -7317,7 +7333,7 @@ enum ArtifactEnvelopeFreshVcsActive<Mutation> {
 
 /// @emoji 🌱️ Concrete repository VCS authority for a paged envelope. It accepts one
 /// owner-supplied snapshot and four fixed-capacity, one-entry-at-a-time history arrays.
-pub struct ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
+pub struct ArtifactEnvelopeFreshVcsAuthority<P: Send + 'static, Mutation: Send + 'static> {
     cursor: OwnedSchemaNestedRecordCursor,
     snapshot: Option<Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>>,
     snapshot_target: ArtifactEnvelopeFreshSnapshotTarget<P>,
@@ -7334,7 +7350,7 @@ pub struct ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
     terminal: bool,
 }
 
-impl<P, Mutation> ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
+impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
     pub fn new(
         snapshot: Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>,
         initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
@@ -7648,19 +7664,23 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFieldAuthor
     }
 }
 
-impl<P, Mutation> Drop for ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
+impl<P: Send + 'static, Mutation: Send + 'static> Drop for ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
     fn drop(&mut self) {
         assert!(self.owners_terminal_empty(), "fresh VCS authority reached Drop before every nested owner was published or cursor-retired");
     }
 }
 
-struct ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
+struct ArtifactEnvelopeFreshRecordTarget<P, Mutation>
+where
+    P: Send,
+    Mutation: Send,
+{
     next_generation: u64,
     reserved: Option<ArtifactEnvelopeFieldReservation>,
     vcs: Option<ArtifactVcs<P, Mutation>>,
 }
 
-impl<P, Mutation> ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
+impl<P: Send, Mutation: Send> ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
     fn new() -> Self {
         Self { next_generation: 0, reserved: None, vcs: None }
     }
@@ -7709,7 +7729,7 @@ enum ArtifactEnvelopeFreshRecordActive<P, Mutation> {
 
 /// @emoji 📋️ Concrete 12-field catalog consumer for one fresh document envelope. All optional
 /// fields must be absent or null; history/edit/conflict collections must be exact empty arrays.
-pub struct ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
+pub struct ArtifactEnvelopeFreshFieldDecoder<P: Send + 'static, Mutation: Send + 'static> {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
@@ -7726,7 +7746,7 @@ pub struct ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
     terminal: bool,
 }
 
-impl<P, Mutation> ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
+impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
     pub fn new(
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
@@ -7979,7 +7999,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
     }
 }
 
-impl<P, Mutation> Drop for ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
+impl<P: Send + 'static, Mutation: Send + 'static> Drop for ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
     fn drop(&mut self) {
         assert!(self.owners_terminal_empty(), "fresh envelope field decoder reached Drop before its completed record or rejected owners reached terminal empty");
     }
@@ -8156,7 +8176,7 @@ impl ArtifactCodec {
     /// `P::EXTENSION`. One call site per document kind (`register_document_codec_for_app`).
     pub fn of<P, Mutation>(schema: impl Into<String>) -> Self
     where
-        P: Clone + PartialEq + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + Send + 'static,
+        P: Clone + PartialEq + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
         Mutation: self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpText + OpBinary + Send + 'static,
     {
         // 🚫️async: E4 fn-pointer erasure-table thunk — VALUE goes into `ArtifactCodec::compile_dsl`
@@ -8189,8 +8209,8 @@ impl ArtifactCodec {
         // 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
         fn apply_ops_binary_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>>
         where
-            P: Clone + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack,
-            Mutation: OpText + OpBinary + self::Mutation<P>,
+            P: Clone + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
+            Mutation: OpText + OpBinary + self::Mutation<P> + Send + 'static,
         {
             Box::pin(async move {
                 if ops_vec.is_empty() {
@@ -11087,7 +11107,8 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         if self.applied_edit_ids.len() == crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY {
             return Err("artifact store applied ledger is saturated".into());
         }
-        Self::push_revision_record(&mut self.revision.applied, self.revision.identity_digest, b"applied", &id, edit_digest)?;
+        let identity_digest = self.revision.identity_digest;
+        Self::push_revision_record(&mut self.revision.applied, identity_digest, b"applied", &id, edit_digest)?;
         self.applied_edit_ids.push(id);
         Ok(())
     }
@@ -11096,7 +11117,8 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         if self.redo_edit_ids.len() == crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY {
             return Err("artifact store redo ledger is saturated".into());
         }
-        Self::push_revision_record(&mut self.revision.redo, self.revision.identity_digest, b"redo", &id, edit_digest)?;
+        let identity_digest = self.revision.identity_digest;
+        Self::push_revision_record(&mut self.revision.redo, identity_digest, b"redo", &id, edit_digest)?;
         self.redo_edit_ids.push(id);
         Ok(())
     }
@@ -11862,7 +11884,7 @@ where
 
 impl<P, Mutation> ErasedSnapshotRetirement for ArtifactStoreResolutionCandidateRetirement<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
@@ -12395,7 +12417,10 @@ where
     }
 
     /// 🧵️ Immutable O(1) snapshot capability for worker and composition boundaries.
-    pub async fn snapshot_read(&self) -> Result<SnapshotRead<P>, VcsError> {
+    pub async fn snapshot_read(&self) -> Result<SnapshotRead<P>, VcsError>
+    where
+        P: Sync,
+    {
         if !self.snapshot_read_leases.publish_authority(self.generation, self.content_revision) {
             return Err(VcsError::ValidationFailed("snapshot read commit authority is busy or exhausted".into()));
         }
@@ -12802,7 +12827,10 @@ where
         }
     }
 
-    pub fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError> {
+    pub fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError>
+    where
+        P: Sync,
+    {
         if !self.snapshot_read_leases.has_returned() {
             return Ok(None);
         }
@@ -13258,7 +13286,10 @@ where
         self.envelope.edit_messages.get_by_id(edit_id).map_or(&[], |entry| entry.messages.as_slice())
     }
 
-    pub async fn dispatch(&mut self, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError> {
+    pub async fn dispatch(&mut self, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
+    where
+        P: Sync,
+    {
         self.pump().await?;
         // 🌀️ The unawaited future borrows `command`, which is then moved into `dispatch_inner`
         // below — awaited immediately instead of deferred to avoid a move-while-borrowed (E0505).
@@ -13281,7 +13312,10 @@ where
         Ok(CommandReceipt { edit_ids, generation: self.generation().await, messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
     }
 
-    async fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError> {
+    async fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError>
+    where
+        P: Sync,
+    {
         match command {
             // 🌀️ Mutual recursion with `dispatch` (which itself awaits `dispatch_inner`) — `Box::pin`
             // breaks the cycle so neither opaque future type has to embed the other (R10 shape 3).
@@ -13759,6 +13793,7 @@ where
     pub async fn dispatch_text(&mut self, command_text: &str) -> Result<CommandReceipt, VcsError>
     where
         Mutation: OpText,
+        P: Sync,
     {
         let command = parse_command(command_text).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.dispatch(command).await
@@ -13769,6 +13804,7 @@ where
     pub async fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<CommandReceipt, VcsError>
     where
         Mutation: OpBinary,
+        P: Sync,
     {
         let command = <ArtifactCommand<Mutation> as OpBinary>::decode_op(command_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.dispatch(command).await
@@ -13788,7 +13824,7 @@ where
 
     /// @emoji 📦️ Serializes the full document envelope (snapshot + VCS history) as JSON.
     pub async fn envelope_json(&self) -> Result<String, VcsError> {
-        serde_json::to_string(&self.envelope).map_err(|e| VcsError::Serialize(e.to_string()))
+        serde_json::to_string(&*self.envelope).map_err(|e| VcsError::Serialize(e.to_string()))
     }
 
     /// @emoji 🔗️ Attaches a backbone channel, reconciling any already-persisted state before
@@ -13868,7 +13904,7 @@ where
             let mut edit = edit_from_operation_envelope::<Mutation>(&ready_envelope).await?;
             edit.actor = Some(ready_envelope.actor.0.clone());
             if let Some(existing) = self.envelope.vcs.edits.iter().find(|existing| existing.id == edit.id) {
-                self.assert_equivalent_remote_envelope(existing, ready_envelope).await?;
+                self.assert_equivalent_remote_envelope(existing, &ready_envelope).await?;
                 continue;
             }
             if batch.iter().any(|existing: &Edit<Mutation>| existing.id == edit.id) {
@@ -14181,7 +14217,10 @@ where
         Ok(())
     }
 
-    fn retire_resolution_candidate(&mut self, authority: ArtifactStoreResolutionCandidateAuthority<P, Mutation>) {
+    fn retire_resolution_candidate(&mut self, authority: ArtifactStoreResolutionCandidateAuthority<P, Mutation>)
+    where
+        P: Sync,
+    {
         assert_eq!(self.displaced_retirements.candidate_reservation, Some(authority.reservation_generation), "resolution candidate retirement handoff used a stale admission generation");
         let (candidate, reservation_generation) = authority.into_candidate();
         let retirement = Box::new(ArtifactStoreResolutionCandidateRetirement::new(candidate)) as Box<dyn ErasedSnapshotRetirement>;
@@ -14226,7 +14265,10 @@ where
     /// `Discarded`. `Degraded`+`Accept` only flips the status: the batch is already durable history,
     /// resolving never rewrites it. `Degraded`+`Discard` is refused outright — shared history is
     /// never rewritten.
-    pub async fn resolve_conflict(&mut self, conflict_id: &str, resolution: crate::os_spr::ConflictResolution) -> Result<crate::os_spr::MergeReport, VcsError> {
+    pub async fn resolve_conflict(&mut self, conflict_id: &str, resolution: crate::os_spr::ConflictResolution) -> Result<crate::os_spr::MergeReport, VcsError>
+    where
+        P: Sync,
+    {
         let index = self.envelope.conflicts.iter().position(|conflict| conflict.id.0 == conflict_id && conflict.status == crate::os_spr::ConflictStatus::Open).ok_or_else(|| VcsError::UnknownConflict(conflict_id.to_string()))?;
         let conflict = self.envelope.conflicts[index].clone();
         match (conflict.kind.clone(), resolution) {
@@ -17141,8 +17183,8 @@ pub mod test_support {
     /// post-apply snapshot, and replay-materialization agrees with the live store snapshot.
     pub async fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
     where
-        P: Clone + Serialize + DeserializeOwned + ArtifactPack + PartialEq + std::fmt::Debug,
-        Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+        P: Clone + Serialize + DeserializeOwned + ArtifactPack + PartialEq + std::fmt::Debug + Send + Sync + 'static,
+        Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
         let mut store = ArtifactStore::new(envelope).await.expect("test support store construction");
@@ -17292,8 +17334,8 @@ pub mod test_support {
     /// {@link parse_document_text} on any technology once it implements `ArtifactDsl` + `OpText`.
     pub async fn assert_document_text_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Mutation: Clone + OpText + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpBinary,
+        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned + Send + 'static,
+        Mutation: Clone + OpText + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpBinary + Send + 'static,
     {
         let live = store.snapshot().await.expect("store snapshot");
         let files = print_document_text(store.envelope().await).await.expect("print document text");
@@ -17308,8 +17350,8 @@ pub mod test_support {
     /// storage formats must never diverge on the same store.
     pub async fn assert_document_pack_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Mutation: Clone + OpText + OpBinary + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned,
+        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned + Send + 'static,
+        Mutation: Clone + OpText + OpBinary + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + Send + 'static,
     {
         let live = store.snapshot().await.expect("store snapshot");
         let pack_files = print_document_pack(store.envelope().await).await.expect("print document pack");
@@ -17382,8 +17424,8 @@ pub mod test_support {
     /// the replay ground truth.
     pub async fn assert_live_equals_replay<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+        P: Clone + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned + Send + 'static,
+        Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         let live = store.snapshot().await.expect("store snapshot");
         let replayed = materialize_document_snapshot(store.envelope().await, store.applied_edit_ids().await).await.expect("replay");
@@ -17449,7 +17491,11 @@ pub mod test_support {
 
     /// 🔁 Drive S0–S10 subset roundtrip stages. Stages that need unavailable hooks are skipped only when
     /// the corresponding trait method returns an explicit Err starting with "SKIP:"; otherwise failures panic with stage id.
-    pub async fn assert_subset_roundtrip<S: SubsetRoundtripSpec>(example: &ExampleAsset<'_>, negative: Option<&ExampleAsset<'_>>) {
+    pub async fn assert_subset_roundtrip<S: SubsetRoundtripSpec>(example: &ExampleAsset<'_>, negative: Option<&ExampleAsset<'_>>)
+    where
+        S::Snapshot: Send + Sync + 'static,
+        S::Mutation: Send + 'static,
+    {
         assert!(!example.bytes.is_empty(), "S0: example bytes must be non-empty");
         assert!(!example.provenance.is_empty(), "S0: example provenance must be non-empty");
 

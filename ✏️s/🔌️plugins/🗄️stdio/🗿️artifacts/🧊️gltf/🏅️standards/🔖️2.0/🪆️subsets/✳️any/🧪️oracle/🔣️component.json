@@ -1,0 +1,43 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform. Unlike every other stdio artifact, glTF has no `pub enum GltfMutation` -- its vocabulary is a descriptor table, `GLTF_MUTATION_LEAF_DESCRIPTORS` in `../🧬️schema/🧬️mutations/🦀️component.rs`. 120 real leaf directories exist on disk (complete `🦠️mutation`/`🔺️diff`/`↩️inverse` files, no stubs, one committed fixture case each), but only 7 are mounted as production modules in `📦️glue.rs` AND listed in the descriptor assembly -- the other 113 are real but unmounted, which is `📦️glue.rs`-owned wiring out of this ticket's scope (ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION owns that expansion). The 4 that were mounted-but-not-registered (`bind-node-child`, `unbind-node-child`, `bind-scene-root-node`, `unbind-scene-root-node`) were added to the assembly for this ticket -- their `DESCRIPTOR` consts and fixture tests already existed and already passed, only the array entry was missing. This catalog declares exactly those 7 real, dispatchable kinds, honestly smaller than the 120 on disk. The `gltf` crate (1.4.1, MIT) is a credible reader and IS already production-reachable (`🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs`'s `mesh_to_glb`/`mesh_from_glb`/`GlbExporter`/`GlbImporter`) but confirmed genuinely independent of this subset's own codec (`../🧬️schema/📸️snapshot/🦀️component.rs`'s `GltfSnapshot` never names `gltf::`, no `impl From<gltf::...>` anywhere, `decode_glb`/`encode_glb` are hand-rolled over `serde_json` alone) -- registering it here with a `productionDebt` record naming that one file would have been legitimate, exactly like `image`/`png`. It was not registered anyway: linking it needs a `Cargo.toml` edit this ticket must not make itself. `json` (json-rust) 0.12 is already linked (`oracles` feature, `../../../../../../🧪️oracle/📦️packages/🦀️rust/Cargo.toml`) and already proven independent for `stdio.json`'s own RFC 8259 oracle -- it appears nowhere in this repository's production dependency graph, unlike `serde_json`, which this subset's own codec also uses and which is therefore excluded for the same reason it was excluded there.",
+  "oracles": [
+    {
+      "id": "json-rust-gltf-2-0-mutate",
+      "ecosystem": "rust",
+      "package": "json",
+      "version": "0.12",
+      "capabilities": ["gltf-2-0-mutate"],
+      "comparisonProfiles": ["semantic-gltf-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/maciejhirsz/json-rust",
+      "rationale": "`json` is domain-BLIND -- it knows nothing about glTF's own schema, unlike the `gltf` crate -- so every one of the 7 registered kinds' actual semantics (index bounds, self-parent/cycle/duplicate-root rejection, `alphaMode` enum validity, no-observable-change rejection, the `document/scene` remap `create-scene` performs) is reimplemented from scratch in `../🧪️oracle/🦀️component.rs`, operating on a hand-parsed GLB container (12-byte header, `JSON`/`BIN\\0` chunk iteration, its own chunk-bounds checks) and a plain `json::JsonValue` tree -- never this subset's own `GltfSnapshot`/`decode_glb`/`encode_glb`/leaf descriptors. `json` supplies only the independent JSON tokenizer/serializer underneath that, exactly the role it already plays for `stdio.json`'s RFC 8259 oracle, for the identical reason: `serde_json` is ruled out because this subset's own production codec already depends on it (`../🧬️schema/📸️snapshot/🦀️component.rs`'s doc comment: `serde_json::{from_str,to_vec}::<GltfDocument>`), so a `serde_json` differential would compare this implementation against something it already relies on. `json` appears nowhere in this repository's production dependency graph.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "gltf-2-0-any",
+      "capability": "gltf-2-0-mutate",
+      "kinds": [
+        "bind-node-child",
+        "bind-scene-root-node",
+        "change-material-alpha-mode",
+        "change-material-double-sided",
+        "create-scene",
+        "unbind-node-child",
+        "unbind-scene-root-node"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-gltf-v1",
+      "description": "glTF 2.0 documents compared by the default scene, every scene's root node list, every node's child list and every material's alphaMode/doubleSided -- the entire normative surface the 7 registered mutation kinds touch. Geometry, accessors, buffers, images, samplers, textures, skins, animations, cameras and extensions are out of scope: no registered kind observes them, the same way semantic-mesh-v1 leaves precision and naming to writer freedom.",
+      "ignoreKeys": ["byteLength", "fileSize", "generator", "copyright"]
+    }
+  ]
+}

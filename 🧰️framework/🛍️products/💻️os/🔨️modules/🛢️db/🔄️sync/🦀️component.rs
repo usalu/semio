@@ -198,7 +198,7 @@ pub async fn commands_server_frame(state: &ArtifactSyncState, envelopes: Vec<pro
 /// the pre-wire-encoding twin of `protocol::Bootstrap` (kept separate so this crate's core
 /// decision logic stays testable without constructing full `ServerFrame`s; `build_welcome` below
 /// lowers it to the wire shape).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum BootstrapPlan {
     /// @emoji ✅️ The replica is already fully caught up — nothing to send.
     None,
@@ -207,7 +207,7 @@ pub enum BootstrapPlan {
     Tail { envelopes: Vec<protocol::MutationEnvelope> },
     /// @emoji 📸️ The replica is behind the retained WAL floor (or brand new against a compacted
     /// document): ship it a whole snapshot generation first.
-    Snapshot { generation: u64, bytes: Vec<u8>, pack_hash: [u8; 32] },
+    Snapshot { generation: u64, pages: db_storage::DbIoPages, pack_hash: [u8; 32] },
 }
 
 /// @emoji 🧭️ Decides `BootstrapPlan` for `replica` (`None` meaning a totally fresh replica with no
@@ -226,9 +226,13 @@ pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl db_sto
         .latest_generation(&state.frontier.document)
         .await?
         .ok_or_else(|| DbError::Unavailable(format!("replica head_seq {replica_head_seq} is behind the retained WAL floor {} and no snapshot generation is available", state.floor_head_seq)))?;
-    let bytes = snapshots.read_generation(&state.frontier.document, generation).await?;
-    let pack_hash = *blake3::hash(&bytes).as_bytes();
-    Ok(BootstrapPlan::Snapshot { generation, bytes, pack_hash })
+    let pages = snapshots.read_generation(&state.frontier.document, generation).await?;
+    let mut hasher = blake3::Hasher::new();
+    for fragment in pages.fragments() {
+        hasher.update(fragment);
+    }
+    let pack_hash = *hasher.finalize().as_bytes();
+    Ok(BootstrapPlan::Snapshot { generation, pages, pack_hash })
 }
 //#endregion 🔖️Bootstrap
 
@@ -252,23 +256,80 @@ pub struct WelcomeResponse {
     pub follow_up: Vec<protocol::ServerFrame>,
 }
 
+struct BootstrapPageRangeCopy<'a> {
+    pages: &'a db_storage::DbIoPages,
+    skip: usize,
+    remaining: usize,
+    page: u8,
+    output: Option<Vec<u8>>,
+}
+
+impl std::future::Future for BootstrapPageRangeCopy<'_> {
+    type Output = Result<Vec<u8>, DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        let owner = self.as_mut().get_mut();
+        if owner.remaining == 0 {
+            return std::task::Poll::Ready(Ok(owner.output.take().expect("bootstrap page range output consumed once")));
+        }
+        let Some(fragment) = owner.pages.page(owner.page) else {
+            return std::task::Poll::Ready(Err(DbError::Corrupt("bootstrap page range exceeded its retained owner".to_string())));
+        };
+        if owner.skip >= fragment.len() {
+            owner.skip -= fragment.len();
+            owner.page += 1;
+            context.waker().wake_by_ref();
+            return std::task::Poll::Pending;
+        }
+        let available = &fragment[owner.skip..];
+        let written = available.len().min(owner.remaining);
+        owner.output.as_mut().expect("bootstrap page range output retained").extend_from_slice(&available[..written]);
+        owner.skip = 0;
+        owner.remaining -= written;
+        owner.page += 1;
+        context.waker().wake_by_ref();
+        std::task::Poll::Pending
+    }
+}
+
+fn bootstrap_page_range_copy(pages: &db_storage::DbIoPages, start: usize, len: usize) -> Result<BootstrapPageRangeCopy<'_>, DbError> {
+    let end = start.checked_add(len).ok_or(DbError::LimitExceeded("bootstrap page range"))?;
+    if end > pages.len() {
+        return Err(DbError::InvalidArgument("bootstrap page range exceeds its retained owner".to_string()));
+    }
+    let mut output = Vec::new();
+    output.try_reserve_exact(len).map_err(|_| DbError::Unavailable("bootstrap protocol result capacity exhausted".to_string()))?;
+    Ok(BootstrapPageRangeCopy { pages, skip: start, remaining: len, page: 0, output: Some(output) })
+}
+
 /// @emoji 🏗️ Lowers a `BootstrapPlan` to the wire `protocol::Bootstrap` shape plus its follow-up
 /// frames. A `Snapshot` whose bytes fit within `snapshot_chunk_bytes` is inlined directly into
 /// `Bootstrap::Snapshot.inline` (no follow-up frames); a larger one is chunked instead — this
 /// crate's own choice of threshold behavior, since the contract fixes `Bootstrap::Snapshot`'s two
 /// shapes but not when to prefer one over the other.
-async fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &ArtifactSyncState, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> (protocol::Bootstrap, Vec<protocol::ServerFrame>) {
+async fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &ArtifactSyncState, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<(protocol::Bootstrap, Vec<protocol::ServerFrame>), DbError> {
     match plan {
-        BootstrapPlan::None => (protocol::Bootstrap::None, Vec::new()),
-        BootstrapPlan::Tail { envelopes } => (protocol::Bootstrap::Tail, vec![commands_server_frame(state, envelopes.clone(), origin.clone()).await]),
-        BootstrapPlan::Snapshot { bytes, pack_hash, .. } => {
-            if bytes.len() <= snapshot_chunk_bytes {
-                (protocol::Bootstrap::Snapshot { pack_hash: *pack_hash, inline: Some(bytes.clone()) }, Vec::new())
+        BootstrapPlan::None => Ok((protocol::Bootstrap::None, Vec::new())),
+        BootstrapPlan::Tail { envelopes } => Ok((protocol::Bootstrap::Tail, vec![commands_server_frame(state, envelopes.clone(), origin.clone()).await])),
+        BootstrapPlan::Snapshot { pages, pack_hash, .. } => {
+            if pages.len() <= snapshot_chunk_bytes {
+                let bytes = bootstrap_page_range_copy(pages, 0, pages.len())?.await?;
+                Ok((protocol::Bootstrap::Snapshot { pack_hash: *pack_hash, inline: Some(bytes) }, Vec::new()))
             } else {
-                let chunks: Vec<&[u8]> = bytes.chunks(snapshot_chunk_bytes).collect();
-                let mut follow_up: Vec<protocol::ServerFrame> = chunks.iter().enumerate().map(|(seq, chunk)| protocol::ServerFrame::SnapshotChunk { seq: seq as u32, bytes: chunk.to_vec() }).collect();
-                follow_up.push(protocol::ServerFrame::SnapshotDone { seq_count: chunks.len() as u32 });
-                (protocol::Bootstrap::Snapshot { pack_hash: *pack_hash, inline: None }, follow_up)
+                let chunks = pages.len().div_ceil(snapshot_chunk_bytes);
+                if chunks > db_storage::DB_IO_OPERATION_ITEMS {
+                    return Err(DbError::LimitExceeded("bootstrap protocol chunk items"));
+                }
+                let mut follow_up = Vec::new();
+                follow_up.try_reserve_exact(chunks + 1).map_err(|_| DbError::Unavailable("bootstrap protocol item capacity exhausted".to_string()))?;
+                for seq in 0..chunks {
+                    let start = seq * snapshot_chunk_bytes;
+                    let len = snapshot_chunk_bytes.min(pages.len() - start);
+                    let bytes = bootstrap_page_range_copy(pages, start, len)?.await?;
+                    follow_up.push(protocol::ServerFrame::SnapshotChunk { seq: seq as u32, bytes });
+                }
+                follow_up.push(protocol::ServerFrame::SnapshotDone { seq_count: chunks as u32 });
+                Ok((protocol::Bootstrap::Snapshot { pack_hash: *pack_hash, inline: None }, follow_up))
             }
         }
     }
@@ -282,7 +343,7 @@ pub async fn build_welcome(state: &ArtifactSyncState, plan: &BootstrapPlan, sess
         return Err(DbError::InvalidArgument("snapshot_chunk_bytes must be non-zero".to_string()));
     }
     let resume_token = issue_resume_token(&state.frontier).await?;
-    let (bootstrap, follow_up) = lower_bootstrap_plan(plan, state, origin, snapshot_chunk_bytes).await;
+    let (bootstrap, follow_up) = lower_bootstrap_plan(plan, state, origin, snapshot_chunk_bytes).await?;
     let welcome = protocol::ServerFrame::Welcome { session_id, resume_token, server_frontier: state_frontier_summary(state).await, bootstrap };
     Ok(WelcomeResponse { welcome, follow_up })
 }
@@ -551,9 +612,9 @@ mod tests {
         let stale_replica = Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 };
         let plan = db_actor::block_on(decide_bootstrap(&state, &storage, Some(&stale_replica))).unwrap();
         match plan {
-            BootstrapPlan::Snapshot { generation, bytes, pack_hash } => {
+            BootstrapPlan::Snapshot { generation, pages, pack_hash } => {
                 assert_eq!(generation, 7);
-                assert_eq!(bytes, b"snapshot-bytes");
+                assert_eq!(pages, b"snapshot-bytes");
                 assert_eq!(pack_hash, *blake3::hash(b"snapshot-bytes").as_bytes());
             }
             other => panic!("expected a Snapshot plan, got {other:?}"),

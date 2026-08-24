@@ -6,17 +6,29 @@
 //! different mutations, and a subset that shares an implementation with another reaches it through
 //! the shared `raster` module rather than by copying it.
 //!
-//! `BmpSnapshot::pixels` is always the DECODED, palette-resolved canonical RGBA buffer — a palette
-//! entry is auxiliary metadata a `BITMAPINFOHEADER`-only, 24-bit `encode_bmp` never persists
-//! (`🚪️io/🦀️component.rs`'s own `EncodeScopeNote`; confirmed against `image` 0.25's own
-//! `BmpEncoder`, which likewise hardcodes DPI/`colorsImportant` to zero and only accepts a palette
-//! for `L8`/`La8` targets). `insert-palette-entry`/`remove-palette-entry`/`set-palette-entry`
-//! therefore re-encode UNCHANGED pixel content here, exactly mirroring what the subject's own
-//! `encode_bmp` actually does with those same mutations — a faithful, not a fabricated, agreement.
-//! `set-header-fields` is exercised through `row_order`, the one header field with a real on-disk
-//! effect that still can never change the DECODED, canonicalized samples either side's independent
-//! reader recovers. Only `set-snapshot` and `set-pixel-data` touch pixel content, and both re-encode
-//! through it.
+//! `BmpSnapshot::pixels` is always the DECODED, palette-resolved canonical RGBA buffer — it is
+//! independent of `BmpSnapshot::palette` (a `InsertPaletteEntry`/`RemovePaletteEntry`/
+//! `SetPaletteEntry` mutation only ever touches `palette`, never remaps `pixels`). The subject's own
+//! `encode_bmp` (`🚪️io/🦀️component.rs`'s own `EncodeScopeNote`) now DOES persist a real 1/4/8-bit
+//! indexed BITMAPINFOHEADER when the snapshot declares one — the old always-24-bit,
+//! palette-discarding behaviour was the bug this module used to document as a fact of life. What
+//! stays true here is narrower than before: `image` 0.25's own reference `BmpEncoder` still has no
+//! API to apply a targeted palette edit independently (it only ever accepts a whole palette
+//! up-front for `L8`/`La8` targets), so this oracle's honest independent answer for
+//! `insert-palette-entry`/`remove-palette-entry`/`set-palette-entry` remains "decode and re-encode
+//! unchanged" — the DECODED sample buffer these three ever touch is nothing, on either side, since
+//! they only ever edit `palette` metadata, and the subject's own fixture-derived scenarios (see
+//! `../../../../🧪️tests/mutate-bmp-v3/component.feature`) target a palette entry no pixel actually
+//! resolves to, so the subject's now-real indexed re-encode stays representable and decodes back to
+//! the identical samples too — a faithful, not a fabricated, agreement, just no longer one caused by
+//! the subject silently dropping the palette. A mutation that instead recolors or removes the ONLY
+//! remaining palette entry some pixel's canonical color resolves to makes that pixel genuinely
+//! unrepresentable in the new table; the subject's `encode_bmp` reports that as an `Err` rather than
+//! silently narrowing or falling back to 24-bit — see `🚪️io/🦀️component.rs`'s own
+//! `unrepresentable_palette_edit_is_reported_not_narrowed` test. `set-header-fields` is exercised
+//! through `row_order`, the one header field with a real on-disk effect that still can never change
+//! the DECODED, canonicalized samples either side's independent reader recovers. Only `set-snapshot`
+//! and `set-pixel-data` touch pixel content, and both re-encode through it.
 //!
 //! The real fixture is 2334x2560 (~24M RGBA bytes); `raster::RasterSpec::projection`'s flat
 //! per-sample JSON array is fine for the small synthetic gradients it was built for but is the

@@ -52,6 +52,29 @@ pub enum SemioKitMutation {
     RemoveDesign(remove_design::mutation::RemoveDesign),
     EditDesign(edit_design::mutation::EditDesign),
 }
+
+/// 🏷️ Kebab-case spelling of every `SemioKitMutation` variant, in declaration order — the
+/// vocabulary the `semio-v1-kit` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-semio-kit`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
+/// the_catalog` below is what keeps this list honest against the enum, since the framework never
+/// parses Rust.
+pub const KINDS: &[&str] = &[
+    "create-object",
+    "delete-object",
+    "create-model",
+    "delete-model",
+    "create-properties",
+    "delete-properties",
+    "bind-representation",
+    "unbind-representation",
+    "change-representation-pin",
+    "add-type",
+    "remove-type",
+    "rename-type",
+    "add-design",
+    "remove-design",
+    "edit-design",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -62,6 +85,25 @@ pub fn apply_semio_kit_mutation(snapshot: &mut SemioKitSnapshot, mutation: &Semi
     use protocol::Mutation;
     let outcome = <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ Computes `mutation`'s own inverse against `base` — thin wrapper around `protocol::Mutation::
+/// inverse` so external Rust callers that cannot name this crate's private `protocol` extern-crate
+/// item (e.g. `mutate-semio-kit`'s test adapter, whose `@id-inverse` scenario needs a mutation's
+/// own computed inverse and cannot `use protocol::Mutation;` itself) can still exercise the
+/// inverse-law scenario `apply_semio_kit_mutation` alone can't reach.
+pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
+    use protocol::Mutation;
+    mutation.inverse(base)
+}
+
+/// 📥️ Decodes this subset's own default-derived JSON projection — the exact shape the committed
+/// `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification-vector fixtures carry
+/// (externally tagged by variant name, snake_case payload fields — no `#[serde(rename_all)]` on
+/// this enum or its payload structs) — into a real `SemioKitMutation`. Same rationale as
+/// `../📸️snapshot/🦀️component.rs`'s `decode_kit_snapshot_json`.
+pub fn decode_kit_mutation_json(text: &str) -> Result<SemioKitMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -232,6 +274,22 @@ mod tests {
         let mutation = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 1 });
         assert_eq!(mutation.semantics().kind, "unbind-representation");
         assert_eq!(mutation.semantics().record, "UnboundRepresentation");
+    }
+
+    /// 🏷️ `KINDS` (this facet's own const, consumed by `mutate-semio-kit`'s adapter) must name
+    /// every declared variant, in the exact order and spelling `#[derive(dsl::Mutations)]` assigns —
+    /// the framework never parses Rust, so this is what keeps the catalog honest.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = SemioKitMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
     }
 }
 //#endregion 🧪️Tests

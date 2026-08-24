@@ -218,8 +218,7 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
             let frontier = db_sync::replay_sync_state(&follower.wal().await, document).await?.frontier;
             Ok(ReplicationOutcome::TailApplied { frontier, count })
         }
-        db_sync::BootstrapPlan::Snapshot { generation, bytes, pack_hash } => {
-            let pages = db_storage::DbIoPages::try_new(bytes).map_err(|_| DbError::LimitExceeded("replicated snapshot pages"))?;
+        db_sync::BootstrapPlan::Snapshot { generation, pages, pack_hash } => {
             follower.snapshot().await.write_generation(&document, generation, pages).await?;
             Ok(ReplicationOutcome::SnapshotTransferred { generation, pack_hash })
         }

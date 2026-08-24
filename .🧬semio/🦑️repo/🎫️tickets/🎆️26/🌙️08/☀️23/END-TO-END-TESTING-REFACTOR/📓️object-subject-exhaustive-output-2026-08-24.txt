@@ -1,0 +1,1217 @@
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-object (recorded no-oracle decision semio-object-mutation-semantics — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=1 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=1
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-object: rust subject host exited 101 without emitting results
+[test] warning: method `push` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:142:8
+    |
+109 | impl<T> MutationDagFixedSlots<T> {
+    | -------------------------------- method in this implementation
+...
+142 |     fn push(&mut self, value: T) -> Result<(), T> {
+    |        ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `terminal_is_empty` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️math.rs:527:8
+    |
+440 | impl Mesh3dOwner {
+    | ---------------- method in this implementation
+...
+527 |     fn terminal_is_empty(&self) -> bool {
+    |        ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `estimate_record_bytes` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:1226:4
+     |
+1226 | fn estimate_record_bytes(record: &ui_contract::UiNodeRecord) -> usize {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:317:34
+    |
+317 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: constant `RELS_CONTENT_TYPE` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:183:11
+    |
+183 |     const RELS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-package.relationships+xml";
+    |           ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1768:13
+     |
+1768 |     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1768 -     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+1768 +     marker: PhantomData<fn() -> (P, Mutation)>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1773:119
+     |
+1773 | ...active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+     |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1773 -         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+1773 +         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5050:49
+     |
+5050 | struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5050 - struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+5050 + struct ArtifactRepositoryHistoryEntryDecoder<T>(PhantomData<T>);
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5054:14
+     |
+5054 |         Self(std::marker::PhantomData)
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5054 -         Self(std::marker::PhantomData)
+5054 +         Self(PhantomData)
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5136:14
+     |
+5136 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5136 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5136 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5137:23
+     |
+5137 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5137 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5137 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5155:18
+     |
+5155 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5155 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5155 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5156:27
+     |
+5156 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5156 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5156 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5344:14
+     |
+5344 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5344 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5344 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5345:23
+     |
+5345 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5345 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5345 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5346:25
+     |
+5346 |     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5346 -     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5346 +     retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5364:18
+     |
+5364 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5364 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5364 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5365:27
+     |
+5365 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5365 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5365 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5366:29
+     |
+5366 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5366 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5366 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5584:14
+     |
+5584 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5584 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5584 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5585:23
+     |
+5585 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5585 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5585 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5594:29
+     |
+5594 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5594 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5594 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5810:12
+     |
+5810 |     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5810 -     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+5810 +     state: Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5828:20
+     |
+5828 | ...   state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECO...
+     |              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5828 -             state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+5828 +             state: Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7111:12
+     |
+7111 |     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7111 -     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+7111 +     state: Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7121:32
+     |
+7121 | ...   Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_...
+     |                              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7121 -         Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+7121 +         Arc::new(Self { state: Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+     |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11033:26
+      |
+11033 |             .checked_mul(std::mem::size_of::<String>())?
+      |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11033 -             .checked_mul(std::mem::size_of::<String>())?
+11033 +             .checked_mul(size_of::<String>())?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11034:68
+      |
+11034 |             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11034 -             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+11034 +             .checked_add(self.redo_edit_ids.capacity().checked_mul(size_of::<String>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11035:71
+      |
+11035 |             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+      |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11035 -             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+11035 +             .checked_add(self.applied_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11036:68
+      |
+11036 |             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11036 -             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+11036 +             .checked_add(self.redo_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11591:6
+      |
+11591 | impl serde::Serialize for ArtifactEditMessageLedger {
+      |      ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11591 - impl serde::Serialize for ArtifactEditMessageLedger {
+11591 + impl Serialize for ArtifactEditMessageLedger {
+      |
+
+error[E0277]: `P` cannot be shared between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13291:14
+      |
+13291 |         self.dispatch_inner(command).await?;
+      |              ^^^^^^^^^^^^^^ `P` cannot be shared between threads safely
+      |
+note: required by a bound in `os_store::component::ArtifactStore::<P, Mutation>::dispatch_inner`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13304:12
+      |
+13302 |     async fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError>
+      |              -------------- required by a bound in this associated function
+13303 |     where
+13304 |         P: Sync,
+      |            ^^^^ required by this bound in `ArtifactStore::<P, Mutation>::dispatch_inner`
+help: consider further restricting type parameter `P` with trait `Sync`
+      |
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static + std::marker::Sync,
+      |                                                                             +++++++++++++++++++
+
+error[E0277]: `P` cannot be shared between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13291:9
+      |
+13291 |         self.dispatch_inner(command).await?;
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `P` cannot be shared between threads safely
+      |
+note: required by a bound in `os_store::component::ArtifactStore::<P, Mutation>::dispatch_inner`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13304:12
+      |
+13302 |     async fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError>
+      |              -------------- required by a bound in this associated function
+13303 |     where
+13304 |         P: Sync,
+      |            ^^^^ required by this bound in `ArtifactStore::<P, Mutation>::dispatch_inner`
+help: consider further restricting type parameter `P` with trait `Sync`
+      |
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static + std::marker::Sync,
+      |                                                                             +++++++++++++++++++
+
+error[E0277]: `P` cannot be shared between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13291:38
+      |
+13291 |         self.dispatch_inner(command).await?;
+      |                                      ^^^^^ `P` cannot be shared between threads safely
+      |
+note: required by a bound in `os_store::component::ArtifactStore::<P, Mutation>::dispatch_inner`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13304:12
+      |
+13302 |     async fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError>
+      |              -------------- required by a bound in this associated function
+13303 |     where
+13304 |         P: Sync,
+      |            ^^^^ required by this bound in `ArtifactStore::<P, Mutation>::dispatch_inner`
+help: consider further restricting type parameter `P` with trait `Sync`
+      |
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static + std::marker::Sync,
+      |                                                                             +++++++++++++++++++
+
+error[E0277]: `P` cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17175:44
+      |
+17175 |         let mut store = ArtifactStore::new(envelope).await.expect("test support store construction");
+      |                         ------------------ ^^^^^^^^ `P` cannot be sent between threads safely
+      |                         |
+      |                         required by a bound introduced by this call
+      |
+note: required by a bound in `os_store::component::ArtifactStore::<P, Mutation>::new`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ required by this bound in `ArtifactStore::<P, Mutation>::new`
+...
+12071 |     pub async fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Result<Self, VcsError> {
+      |                  --- required by a bound in this associated function
+help: consider further restricting type parameter `P` with trait `Send`
+      |
+17171 |         P: Clone + Serialize + DeserializeOwned + ArtifactPack + PartialEq + std::fmt::Debug + std::marker::Send,
+      |                                                                                              +++++++++++++++++++
+
+error[E0277]: `P` cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17175:25
+      |
+17175 |         let mut store = ArtifactStore::new(envelope).await.expect("test support store construction");
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `P` cannot be sent between threads safely
+      |
+note: required by a bound in `os_store::component::ArtifactStore<P, Mutation>`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ required by this bound in `ArtifactStore<P, Mutation>`
+help: consider further restricting type parameter `P` with trait `Send`
+      |
+17171 |         P: Clone + Serialize + DeserializeOwned + ArtifactPack + PartialEq + std::fmt::Debug + std::marker::Send,
+      |                                                                                              +++++++++++++++++++
+
+error[E0277]: `P` cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17175:54
+      |
+17175 |         let mut store = ArtifactStore::new(envelope).await.expect("test support store construction");
+      |                                                      ^^^^^ `P` cannot be sent between threads safely
+      |
+note: required by a bound in `os_store::component::ArtifactStore<P, Mutation>`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ required by this bound in `ArtifactStore<P, Mutation>`
+help: consider further restricting type parameter `P` with trait `Send`
+      |
+17171 |         P: Clone + Serialize + DeserializeOwned + ArtifactPack + PartialEq + std::fmt::Debug + std::marker::Send,
+      |                                                                                              +++++++++++++++++++
+
+error[E0599]: the method `dispatch` exists for struct `os_store::component::ArtifactStore<P, _>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17176:15
+      |
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `dispatch` not found for this struct
+...
+17176 |         store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");
+      |               ^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, _>` due to unsatisfied trait bounds
+      |
+note: trait bound `P: Send` was not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `snapshot` exists for struct `os_store::component::ArtifactStore<P, _>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17177:26
+      |
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `snapshot` not found for this struct
+...
+17177 |         let post = store.snapshot().await.expect("post snapshot");
+      |                          ^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, _>` due to unsatisfied trait bounds
+      |
+note: trait bound `P: Send` was not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `dispatch` exists for struct `os_store::component::ArtifactStore<P, _>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17178:15
+      |
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `dispatch` not found for this struct
+...
+17178 |         store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+      |               ^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, _>` due to unsatisfied trait bounds
+      |
+note: trait bound `P: Send` was not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `snapshot` exists for struct `os_store::component::ArtifactStore<P, _>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17179:26
+      |
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `snapshot` not found for this struct
+...
+17179 |         assert_eq!(store.snapshot().await.expect("undo snapshot"), initial, "undo did not restore initial snapshot");
+      |                          ^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, _>` due to unsatisfied trait bounds
+      |
+note: trait bound `P: Send` was not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `dispatch` exists for struct `os_store::component::ArtifactStore<P, _>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17180:15
+      |
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `dispatch` not found for this struct
+...
+17180 |         store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+      |               ^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, _>` due to unsatisfied trait bounds
+      |
+note: trait bound `P: Send` was not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `snapshot` exists for struct `os_store::component::ArtifactStore<P, _>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17181:26
+      |
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `snapshot` not found for this struct
+...
+17181 |         assert_eq!(store.snapshot().await.expect("redo snapshot"), post, "redo did not restore post snapshot");
+      |                          ^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, _>` due to unsatisfied trait bounds
+      |
+note: trait bound `P: Send` was not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `envelope` exists for struct `os_store::component::ArtifactStore<P, _>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17182:60
+      |
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `envelope` not found for this struct
+...
+17182 |         let replayed = materialize_document_snapshot(store.envelope().await, store.applied_edit_ids().await).await.expect("replay");
+      |                                                            ^^^^^^^^-- help: remove the arguments
+      |                                                            |
+      |                                                            field, not a method
+      |
+note: trait bound `P: Send` was not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `applied_edit_ids` exists for struct `os_store::component::ArtifactStore<P, _>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17182:84
+      |
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `applied_edit_ids` not found for this struct
+...
+17182 |         let replayed = materialize_document_snapshot(store.envelope().await, store.applied_edit_ids().await).await.expect("replay");
+      |                                                                                    ^^^^^^^^^^^^^^^^-- help: remove the arguments
+      |                                                                                    |
+      |                                                                                    field, not a method
+      |
+note: trait bound `P: Send` was not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `snapshot` exists for reference `&os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17325:26
+      |
+17325 |         let live = store.snapshot().await.expect("store snapshot");
+      |                          ^^^^^^^^ method cannot be called on `&os_store::component::ArtifactStore<P, Mutation>` due to unsatisfied trait bounds
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `envelope` exists for reference `&os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17326:47
+      |
+17326 |         let files = print_document_text(store.envelope().await).await.expect("print document text");
+      |                                               ^^^^^^^^-- help: remove the arguments
+      |                                               |
+      |                                               field, not a method
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `envelope` exists for reference `&os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17328:43
+      |
+17328 |         assert!(&parsed.envelope == store.envelope().await, "document-text round trip lost durable history");
+      |                                           ^^^^^^^^-- help: remove the arguments
+      |                                           |
+      |                                           field, not a method
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `snapshot` exists for reference `&os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17341:26
+      |
+17341 |         let live = store.snapshot().await.expect("store snapshot");
+      |                          ^^^^^^^^ method cannot be called on `&os_store::component::ArtifactStore<P, Mutation>` due to unsatisfied trait bounds
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `envelope` exists for reference `&os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17342:52
+      |
+17342 |         let pack_files = print_document_pack(store.envelope().await).await.expect("print document pack");
+      |                                                    ^^^^^^^^-- help: remove the arguments
+      |                                                    |
+      |                                                    field, not a method
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `envelope` exists for reference `&os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17346:52
+      |
+17346 |         let text_files = print_document_text(store.envelope().await).await.expect("print document text");
+      |                                                    ^^^^^^^^-- help: remove the arguments
+      |                                                    |
+      |                                                    field, not a method
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `snapshot` exists for reference `&os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17415:26
+      |
+17415 |         let live = store.snapshot().await.expect("store snapshot");
+      |                          ^^^^^^^^ method cannot be called on `&os_store::component::ArtifactStore<P, Mutation>` due to unsatisfied trait bounds
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `envelope` exists for reference `&os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17416:60
+      |
+17416 |         let replayed = materialize_document_snapshot(store.envelope().await, store.applied_edit_ids().await).await.expect("replay");
+      |                                                            ^^^^^^^^-- help: remove the arguments
+      |                                                            |
+      |                                                            field, not a method
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `applied_edit_ids` exists for reference `&os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:17416:84
+      |
+17416 |         let replayed = materialize_document_snapshot(store.envelope().await, store.applied_edit_ids().await).await.expect("replay");
+      |                                                                                    ^^^^^^^^^^^^^^^^-- help: remove the arguments
+      |                                                                                    |
+      |                                                                                    field, not a method
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0277]: the trait bound `ArtifactEnvelope<P, Mutation>: Clone` is not satisfied
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8827:5
+     |
+8825 | #[derive(Clone, Debug, PartialEq)]
+     |          ----- in this derive macro expansion
+8826 | pub struct ParsedDocumentText<P, Mutation> {
+8827 |     pub envelope: ArtifactEnvelope<P, Mutation>,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |
+help: the trait `Clone` is not implemented for `ArtifactEnvelope<P, Mutation>`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2158:1
+     |
+2158 | pub struct ArtifactEnvelope<P, Mutation> {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: `P` cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7418:36
+     |
+7418 | ...Some(Box::new(ArtifactStoreVcsRetirement::new(vcs, self.initial_snapshot_factory.clone(), self.mutation_factory.clone())));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `P` cannot be sent between threads safely
+     |
+note: required for `ArtifactStoreVcsRetirement<P, Mutation>` to implement `ErasedSnapshotRetirement`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1148:19
+     |
+1148 | impl<P, Mutation> ErasedSnapshotRetirement for ArtifactStoreVcsRetirement<P, Mutation>
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1149 | where
+1150 |     P: Send + 'static,
+     |        ---- unsatisfied trait bound introduced here
+     = note: required for the cast from `Box<ArtifactStoreVcsRetirement<P, Mutation>>` to `Box<dyn ErasedSnapshotRetirement>`
+help: consider restricting type parameter `P` with trait `Send`
+     |
+7347 | impl<P: std::marker::Send, Mutation> ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
+     |       +++++++++++++++++++
+
+error[E0277]: `Mutation` cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7418:36
+     |
+7418 | ...Some(Box::new(ArtifactStoreVcsRetirement::new(vcs, self.initial_snapshot_factory.clone(), self.mutation_factory.clone())));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Mutation` cannot be sent between threads safely
+     |
+note: required for `ArtifactStoreVcsRetirement<P, Mutation>` to implement `ErasedSnapshotRetirement`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1148:19
+     |
+1148 | impl<P, Mutation> ErasedSnapshotRetirement for ArtifactStoreVcsRetirement<P, Mutation>
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+1151 |     Mutation: Send + 'static,
+     |               ---- unsatisfied trait bound introduced here
+     = note: required for the cast from `Box<ArtifactStoreVcsRetirement<P, Mutation>>` to `Box<dyn ErasedSnapshotRetirement>`
+help: consider restricting type parameter `Mutation` with trait `Send`
+     |
+7347 | impl<P, Mutation: std::marker::Send> ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
+     |                 +++++++++++++++++++
+
+error[E0277]: `Mutation` cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7490:40
+     |
+7490 |                 self.retirement = Some(Box::new(ArtifactStoreDecodedEditRetirement::new(value, self.mutation_factory.clone())));
+     |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Mutation` cannot be sent between threads safely
+     |
+note: required for `ArtifactStoreDecodedEditRetirement<Mutation>` to implement `ErasedSnapshotRetirement`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1096:32
+     |
+1096 | impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecodedEditRetirement<Mutation> {
+     |                ----            ^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |                |
+     |                unsatisfied trait bound introduced here
+     = note: required for the cast from `Box<ArtifactStoreDecodedEditRetirement<Mutation>>` to `Box<dyn ErasedSnapshotRetirement>`
+help: consider restricting type parameter `Mutation` with trait `Send`
+     |
+7347 | impl<P, Mutation: std::marker::Send> ArtifactEnvelopeFreshVcsAuthority<P, Mutation> {
+     |                 +++++++++++++++++++
+
+error[E0277]: `P` cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8229:52
+      |
+ 8229 |                     let store = ArtifactStore::new(envelope).await?;
+      |                                 ------------------ ^^^^^^^^ `P` cannot be sent between threads safely
+      |                                 |
+      |                                 required by a bound introduced by this call
+      |
+note: required by a bound in `os_store::component::ArtifactStore::<P, Mutation>::new`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ required by this bound in `ArtifactStore::<P, Mutation>::new`
+...
+12071 |     pub async fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Result<Self, VcsError> {
+      |                  --- required by a bound in this associated function
+help: consider further restricting type parameter `P` with trait `Send`
+      |
+ 8202 |             P: Clone + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + std::marker::Send,
+      |                                                                                  +++++++++++++++++++
+
+error[E0277]: `Mutation` cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8229:52
+      |
+ 8229 |                     let store = ArtifactStore::new(envelope).await?;
+      |                                 ------------------ ^^^^^^^^ `Mutation` cannot be sent between threads safely
+      |                                 |
+      |                                 required by a bound introduced by this call
+      |
+note: required by a bound in `os_store::component::ArtifactStore::<P, Mutation>::new`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12039:94
+      |
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ required by this bound in `ArtifactStore::<P, Mutation>::new`
+...
+12071 |     pub async fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Result<Self, VcsError> {
+      |                  --- required by a bound in this associated function
+help: consider further restricting type parameter `Mutation` with trait `Send`
+      |
+ 8203 |             Mutation: OpText + OpBinary + self::Mutation<P> + std::marker::Send,
+      |                                                             +++++++++++++++++++
+
+error[E0277]: `P` cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8229:33
+      |
+ 8229 |                     let store = ArtifactStore::new(envelope).await?;
+      |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `P` cannot be sent between threads safely
+      |
+note: required by a bound in `os_store::component::ArtifactStore<P, Mutation>`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ required by this bound in `ArtifactStore<P, Mutation>`
+help: consider further restricting type parameter `P` with trait `Send`
+      |
+ 8202 |             P: Clone + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + std::marker::Send,
+      |                                                                                  +++++++++++++++++++
+
+error[E0277]: `Mutation` cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8229:33
+      |
+ 8229 |                     let store = ArtifactStore::new(envelope).await?;
+      |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Mutation` cannot be sent between threads safely
+      |
+note: required by a bound in `os_store::component::ArtifactStore<P, Mutation>`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12039:94
+      |
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ required by this bound in `ArtifactStore<P, Mutation>`
+help: consider further restricting type parameter `Mutation` with trait `Send`
+      |
+ 8203 |             Mutation: OpText + OpBinary + self::Mutation<P> + std::marker::Send,
+      |                                                             +++++++++++++++++++
+
+error[E0277]: `P` cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8229:62
+      |
+ 8229 |                     let store = ArtifactStore::new(envelope).await?;
+      |                                                              ^^^^^ `P` cannot be sent between threads safely
+      |
+note: required by a bound in `os_store::component::ArtifactStore<P, Mutation>`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ required by this bound in `ArtifactStore<P, Mutation>`
+help: consider further restricting type parameter `P` with trait `Send`
+      |
+ 8202 |             P: Clone + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + std::marker::Send,
+      |                                                                                  +++++++++++++++++++
+
+error[E0277]: `Mutation` cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8229:62
+      |
+ 8229 |                     let store = ArtifactStore::new(envelope).await?;
+      |                                                              ^^^^^ `Mutation` cannot be sent between threads safely
+      |
+note: required by a bound in `os_store::component::ArtifactStore<P, Mutation>`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12039:94
+      |
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ required by this bound in `ArtifactStore<P, Mutation>`
+help: consider further restricting type parameter `Mutation` with trait `Send`
+      |
+ 8203 |             Mutation: OpText + OpBinary + self::Mutation<P> + std::marker::Send,
+      |                                                             +++++++++++++++++++
+
+error[E0599]: the method `dispatch` exists for struct `os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8232:23
+      |
+ 8232 |                 store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await?;
+      |                       ^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, Mutation>` due to unsatisfied trait bounds
+...
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `dispatch` not found for this struct
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `envelope` exists for struct `os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8233:55
+      |
+ 8233 |                 let files = print_document_pack(store.envelope().await).await?;
+      |                                                       ^^^^^^^^-- help: remove the arguments
+      |                                                       |
+      |                                                       field, not a method
+...
+11655 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `envelope` not found for this struct
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12038:62
+      |
+12036 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12037 | where
+12038 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12039 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `reserve_field` exists for struct `ArtifactEnvelopeFreshRecordTarget<P, Mutation>`, but its trait bounds were not satisfied
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7789:47
+     |
+7667 | struct ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
+     | ----------------------------------------------------- method `reserve_field` not found for this struct because it doesn't satisfy `_: ArtifactEnvelopeDecodedRecordTarget<P, Mutation>`
+...
+7789 |                 let reservation = self.target.reserve_field(field_id)?;
+     |                                               ^^^^^^^^^^^^^ method cannot be called on `ArtifactEnvelopeFreshRecordTarget<P, Mutation>` due to unsatisfied trait bounds
+     |
+note: the following trait bounds were not satisfied:
+      `Mutation: Send`
+      `P: Send`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7679:9
+     |
+7679 | impl<P: Send, Mutation: Send> ArtifactEnvelopeDecodedRecordTarget<P, Mutation> for ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
+     |         ^^^^            ^^^^  ------------------------------------------------     ----------------------------------------------
+     |         |               |
+     |         |               unsatisfied trait bound introduced here
+     |         unsatisfied trait bound introduced here
+help: consider restricting the type parameters to satisfy the trait bounds
+     |
+7667 | struct ArtifactEnvelopeFreshRecordTarget<P, Mutation> where Mutation: Send, P: Send {
+     |                                                       +++++++++++++++++++++++++++++
+
+error[E0277]: `P` cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5579:71
+     |
+5579 | ...   assert!(ArtifactOwnedHistoryEntryAuthority::terminal_is_empty(self), "SPR edit decode reached Drop before exact publication ...
+     |               ----------------------------------------------------- ^^^^ `P` cannot be sent between threads safely
+     |               |
+     |               required by a bound introduced by this call
+     |
+note: required for `ArtifactOwnedSprEditAuthority<P, Mutation>` to implement `ArtifactOwnedHistoryEntryAuthority<protocol::Edit<Mutation>>`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5416:51
+     |
+5416 | ...P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEntryAuthority<Edit<Mutation>> for ArtifactOwnedSprEditAuthority<P, Mutation> {
+     |       ----                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |       |
+     |       unsatisfied trait bound introduced here
+help: consider restricting type parameter `P` with trait `Send`
+     |
+5577 | impl<P: std::marker::Send, Mutation> Drop for ArtifactOwnedSprEditAuthority<P, Mutation> {
+     |       +++++++++++++++++++
+
+error[E0277]: `P` cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7812:39
+     |
+7812 | ...Some(Box::new(ArtifactStoreVcsRetirement::new(vcs, self.initial_snapshot_factory.clone(), self.mutation_factory.clone())));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `P` cannot be sent between threads safely
+     |
+note: required for `ArtifactStoreVcsRetirement<P, Mutation>` to implement `ErasedSnapshotRetirement`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1148:19
+     |
+1148 | impl<P, Mutation> ErasedSnapshotRetirement for ArtifactStoreVcsRetirement<P, Mutation>
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1149 | where
+1150 |     P: Send + 'static,
+     |        ---- unsatisfied trait bound introduced here
+     = note: required for the cast from `Box<ArtifactStoreVcsRetirement<P, Mutation>>` to `Box<dyn ErasedSnapshotRetirement>`
+help: consider restricting type parameter `P` with trait `Send`
+     |
+7739 | impl<P: std::marker::Send, Mutation> ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
+     |       +++++++++++++++++++
+
+error[E0277]: `Mutation` cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7812:39
+     |
+7812 | ...Some(Box::new(ArtifactStoreVcsRetirement::new(vcs, self.initial_snapshot_factory.clone(), self.mutation_factory.clone())));
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Mutation` cannot be sent between threads safely
+     |
+note: required for `ArtifactStoreVcsRetirement<P, Mutation>` to implement `ErasedSnapshotRetirement`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1148:19
+     |
+1148 | impl<P, Mutation> ErasedSnapshotRetirement for ArtifactStoreVcsRetirement<P, Mutation>
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+1151 |     Mutation: Send + 'static,
+     |               ---- unsatisfied trait bound introduced here
+     = note: required for the cast from `Box<ArtifactStoreVcsRetirement<P, Mutation>>` to `Box<dyn ErasedSnapshotRetirement>`
+help: consider restricting type parameter `Mutation` with trait `Send`
+     |
+7739 | impl<P, Mutation: std::marker::Send> ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
+     |                 +++++++++++++++++++
+
+error[E0277]: `Mutation` cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5579:71
+     |
+5579 | ...   assert!(ArtifactOwnedHistoryEntryAuthority::terminal_is_empty(self), "SPR edit decode reached Drop before exact publication ...
+     |               ----------------------------------------------------- ^^^^ `Mutation` cannot be sent between threads safely
+     |               |
+     |               required by a bound introduced by this call
+     |
+note: required for `ArtifactOwnedSprEditAuthority<P, Mutation>` to implement `ArtifactOwnedHistoryEntryAuthority<protocol::Edit<Mutation>>`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5416:51
+     |
+5416 | ...ation: Send + 'static> ArtifactOwnedHistoryEntryAuthority<Edit<Mutation>> for ArtifactOwnedSprEditAuthority<P, Mutation> {
+     |           ----            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |           |
+     |           unsatisfied trait bound introduced here
+help: consider restricting type parameter `Mutation` with trait `Send`
+     |
+5577 | impl<P, Mutation: std::marker::Send> Drop for ArtifactOwnedSprEditAuthority<P, Mutation> {
+     |                 +++++++++++++++++++
+
+error[E0277]: `Mutation` cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5193:50
+     |
+5193 |             return match active.publish_reserved(&mut self.target, reservation, cx)? {
+     |                                                  ^^^^^^^^^^^^^^^^ `Mutation` cannot be sent between threads safely
+     |
+note: required for `ArtifactOwnedSprMutationTarget<Mutation>` to implement `ArtifactEnvelopeMutationFieldTarget<Mutation>`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5091:22
+     |
+5091 | impl<Mutation: Send> ArtifactEnvelopeMutationFieldTarget<Mutation> for ArtifactOwnedSprMutationTarget<Mutation> {
+     |                ----  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |                |
+     |                unsatisfied trait bound introduced here
+     = note: required for the cast from `&mut ArtifactOwnedSprMutationTarget<Mutation>` to `&mut dyn ArtifactEnvelopeMutationFieldTarget<Mutation>`
+help: consider restricting type parameter `Mutation` with trait `Send`
+     |
+5150 | impl<P, Mutation: std::marker::Send> ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
+     |                 +++++++++++++++++++
+
+error[E0599]: the method `reserve_mutation` exists for struct `ArtifactOwnedSprMutationTarget<Mutation>`, but its trait bounds were not satisfied
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5255:47
+     |
+5079 | struct ArtifactOwnedSprMutationTarget<Mutation> {
+     | ----------------------------------------------- method `reserve_mutation` not found for this struct because it doesn't satisfy `_: ArtifactEnvelopeMutationFieldTarget<Mutation>`
+...
+5255 |                 let reservation = self.target.reserve_mutation()?;
+     |                                               ^^^^^^^^^^^^^^^^ method cannot be called on `ArtifactOwnedSprMutationTarget<Mutation>` due to unsatisfied trait bounds
+     |
+note: trait bound `Mutation: Send` was not satisfied
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5091:16
+     |
+5091 | impl<Mutation: Send> ArtifactEnvelopeMutationFieldTarget<Mutation> for ArtifactOwnedSprMutationTarget<Mutation> {
+     |                ^^^^  ---------------------------------------------     ----------------------------------------
+     |                |
+     |                unsatisfied trait bound introduced here
+help: consider restricting the type parameter to satisfy the trait bound
+     |
+5079 | struct ArtifactOwnedSprMutationTarget<Mutation> where Mutation: Send {
+     |                                                 ++++++++++++++++++++
+
+error[E0599]: the method `cancel_mutation_reservation` exists for struct `ArtifactOwnedSprMutationTarget<Mutation>`, but its trait bounds were not satisfied
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5295:25
+     |
+5079 | struct ArtifactOwnedSprMutationTarget<Mutation> {
+     | ----------------------------------------------- method `cancel_mutation_reservation` not found for this struct because it doesn't satisfy `_: ArtifactEnvelopeMutationFieldTarget<Mutation>`
+...
+5295 |             self.target.cancel_mutation_reservation(reservation)?;
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ method cannot be called on `ArtifactOwnedSprMutationTarget<Mutation>` due to unsatisfied trait bounds
+     |
+note: trait bound `Mutation: Send` was not satisfied
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5091:16
+     |
+5091 | impl<Mutation: Send> ArtifactEnvelopeMutationFieldTarget<Mutation> for ArtifactOwnedSprMutationTarget<Mutation> {
+     |                ^^^^  ---------------------------------------------     ----------------------------------------
+     |                |
+     |                unsatisfied trait bound introduced here
+help: consider restricting the type parameter to satisfy the trait bound
+     |
+5079 | struct ArtifactOwnedSprMutationTarget<Mutation> where Mutation: Send {
+     |                                                 ++++++++++++++++++++
+
+error[E0277]: `P` cannot be shared between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1817:76
+     |
+1817 | ...dReads => match store.take_returned_snapshot_read_retirement().map_err(|error| error.to_string())? {
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `P` cannot be shared between threads safely
+     |
+note: required by a bound in `ArtifactStoreCloseView::<'_, P, Mutation>::take_returned_snapshot_read_retirement`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1663:12
+     |
+1661 |     pub fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError>
+     |            -------------------------------------- required by a bound in this associated function
+1662 |     where
+1663 |         P: Sync,
+     |            ^^^^ required by this bound in `ArtifactStoreCloseView::<'_, P, Mutation>::take_returned_snapshot_read_retirement`
+help: consider further restricting type parameter `P` with trait `Sync`
+     |
+1789 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static + std::marker::Sync,
+     |                                                                             +++++++++++++++++++
+
+Some errors have detailed explanations: E0277, E0599.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `semio-framework-os-kernel` (lib) due to 44 previous errors; 26 warnings emitted
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-object: no result stream at /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-semio-97645a-mutate-semio-object-subject-rust/📤️results.jsonl

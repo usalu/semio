@@ -78,6 +78,13 @@ pub enum SemioBrepMutation {
     ReplaceSurface(replace_surface::mutation::ReplaceSurface),
     MoveVertex(move_vertex::mutation::MoveVertex),
 }
+
+/// 🏷️ Kebab-case spelling of every `SemioBrepMutation` variant, in declaration order — the
+/// vocabulary the `semio-v1-brep` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-semio-brep`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
+/// the_catalog` below is what keeps this list honest against the enum, since the framework never
+/// parses Rust.
+pub const KINDS: &[&str] = &["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -439,6 +446,24 @@ mod tests {
         assert_eq!(mutation.target(), vec!["v1".to_string()]);
     }
     //#endregion 🧪️SemanticKinds
+
+    //#region 🧪️KindsCatalog
+    /// 🏷️ `KINDS` (this facet's own const, consumed by `mutate-semio-brep`'s adapter) must name
+    /// every declared variant, in the exact order and spelling `#[derive(dsl::Mutations)]` assigns —
+    /// the framework never parses Rust, so this is what keeps the catalog honest.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = SemioBrepMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
+    }
+    //#endregion 🧪️KindsCatalog
 }
 //#endregion 🧪️Tests
 

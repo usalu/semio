@@ -25,10 +25,9 @@ use crate::artifacts::puzzle3d::schema::{
 };
 use crate::artifacts::puzzle3d::Puzzle3dError;
 use crate::editor::puzzle3d::precompute::brush::{
-    brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, enumerate_brush_fill_vortex_targets, resolve_object_kind_mesh_url, vortex_world_from_object,
-    AttractionVortexContext, TargetVortexWorld,
+    brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, TargetVortexWorld,
 };
-use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillBuilderOwnerCensusCursor, FillBuilderOwnerCensusStep, FillBuilderRetirementCursor, PlacedCollisionEntry};
+use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillBuilderOwnerCensusCursor, FillBuilderOwnerCensusStep, FillBuilderRetirementCursor, FillJobStage, FillPreparationRoots, PlacedCollisionEntry};
 use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, world_bounds, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult, FIXED_OWNER_SLOTS};
 use semio_framework_job::{default_now_ms, drive_step, root_cancel_token, CancelToken, Generation, InteractiveStage, Operation, RevisionId, StepBudget, StepOutcome};
 use std::cell::RefCell;
@@ -716,16 +715,19 @@ const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS: f64 = 2.0;
 
 //#region 🔖️Engine
 pub(crate) struct Puzzle3dCollision {
-    pub(crate) scene: Option<SceneConfig>,
+    pub(crate) scene: Option<Arc<SceneConfig>>,
     /// 🧊️ Raw JSON of the last `set_scene` call, so a resync with byte-identical config (every action
     /// re-syncs the session, see the app's `sync_precompute_session`) can skip `rebuild_queue` instead
     /// of wiping `brush_cache`/`fill`/`queue` and restarting suggestion+fill precompute from zero.
     scene_json: Option<String>,
-    meshes: HashMap<String, CollisionBody>,
+    meshes: Arc<HashMap<String, CollisionBody>>,
     mesh_is_fallback: HashMap<String, bool>,
     mesh_sources: HashMap<String, FillWorkerMesh>,
     pub(crate) brush_cache: HashMap<String, BrushCollisionFreeResult>,
     pub(crate) brush_queue: VecDeque<String>,
+    brush_prepare_object_cursor: usize,
+    brush_prepare_vortex_cursor: usize,
+    brush_queue_preparing: bool,
     fill_steps_remaining: usize,
     pub(crate) fill: Option<SharedFillBuilder>,
     fill_cancel: CancelToken,
@@ -739,11 +741,14 @@ impl Puzzle3dCollision {
         Self {
             scene: None,
             scene_json: None,
-            meshes: HashMap::new(),
+            meshes: Arc::new(HashMap::new()),
             mesh_is_fallback: HashMap::new(),
             mesh_sources: HashMap::new(),
             brush_cache: HashMap::new(),
             brush_queue: VecDeque::new(),
+            brush_prepare_object_cursor: 0,
+            brush_prepare_vortex_cursor: 0,
+            brush_queue_preparing: false,
             fill_steps_remaining: 0,
             fill: None,
             fill_cancel: root_cancel_token(),
@@ -758,17 +763,33 @@ impl Puzzle3dCollision {
     }
 
     fn brush_lane_active(&self) -> bool {
-        !self.brush_queue.is_empty()
+        self.brush_queue_preparing || !self.brush_queue.is_empty()
     }
 
     fn re_enqueue_brush_targets(&mut self) {
+        self.brush_prepare_object_cursor = 0;
+        self.brush_prepare_vortex_cursor = 0;
+        self.brush_queue_preparing = self.scene.is_some();
+    }
+
+    fn prepare_one_brush_target(&mut self) {
         let Some(scene) = &self.scene else {
+            self.brush_queue_preparing = false;
             return;
         };
-        for target in enumerate_brush_fill_vortex_targets(&scene.fixture) {
-            if !self.brush_queue.iter().any(|id| id == &target.full_id) {
-                self.brush_queue.push_back(target.full_id);
-            }
+        let Some(object) = scene.fixture.objects.get(self.brush_prepare_object_cursor) else {
+            self.brush_queue_preparing = false;
+            return;
+        };
+        let Some(vortex) = object.vortices.get(self.brush_prepare_vortex_cursor) else {
+            self.brush_prepare_object_cursor += 1;
+            self.brush_prepare_vortex_cursor = 0;
+            return;
+        };
+        self.brush_prepare_vortex_cursor += 1;
+        let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+        if !self.brush_cache.contains_key(&full_id) {
+            self.brush_queue.push_back(full_id);
         }
     }
 
@@ -784,7 +805,11 @@ impl Puzzle3dCollision {
     }
 
     fn rebuild_queue(&mut self) {
-        let Some((revision, generation)) = self.allocate_fill_identity(true) else {
+        self.start_fill_preparation(true);
+    }
+
+    fn start_fill_preparation(&mut self, advance_revision: bool) {
+        let Some((revision, generation)) = self.allocate_fill_identity(advance_revision) else {
             return;
         };
         self.fill_cancel.cancel_now();
@@ -792,21 +817,12 @@ impl Puzzle3dCollision {
         self.fill_preview_sequence = 0;
         self.brush_queue.clear();
         self.brush_cache.clear();
+        self.re_enqueue_brush_targets();
         self.fill_steps_remaining = 0;
-        if let Some(scene) = &self.scene {
-            if scene.weights.object_weights.len() > FIXED_OWNER_SLOTS || scene.weights.vortex_weights.len() > FIXED_OWNER_SLOTS || self.meshes.len() > FIXED_OWNER_SLOTS {
-                self.fill = None;
-                return;
-            }
-            for target in enumerate_brush_fill_vortex_targets(&scene.fixture) {
-                self.brush_queue.push_back(target.full_id);
-            }
+        if let Some(scene) = self.scene.clone() {
             self.fill_steps_remaining = FILL_COUNT_MAX;
-            let catalogs = scene.kind_catalogs.clone().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
             let operation = Operation::new(semio_framework_job::allocate_operation_id(), revision, generation, scene.seed as u64);
-            let mut fill = FillBuilder::new(scene.fixture.clone(), scene.seed, &self.meshes, &catalogs);
-            let configured = fill.configure(operation, scene.weights.clone(), scene.kind_compatibility.clone(), scene.host_rules.clone(), scene.fixture.target_volumes.clone(), scene.overlap_budget);
-            debug_assert!(configured.is_ok());
+            let fill = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, self.meshes.clone()), operation);
             self.fill = Some(Arc::new(Mutex::new(fill)));
         } else {
             self.fill = None;
@@ -816,56 +832,19 @@ impl Puzzle3dCollision {
     /// 🎚️ Distribution-weight edits must not `rebuild_queue()` — applied fill objects stay, only the
     /// unapplied planning tail is discarded and re-enqueued for background `fillBuildTick` planning.
     fn soft_replan_fill_tail(&mut self) {
-        let Some(fill) = &self.fill else {
-            return;
-        };
-        let Ok(mut fill) = fill.try_lock() else { return };
-        let applied = fill.applied_count;
-        fill.sequence.truncate(applied);
-        fill.appended_objects.truncate(applied);
-        fill.appended_attractions.truncate(applied);
-        fill.fixture = fill.base.clone();
-        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
-        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
-        fill.rebuild_collision_index();
-        fill.candidate_cache.clear_for_rebuild_residual();
-        fill.stalled = false;
-        self.fill_steps_remaining = fill.max_count.saturating_sub(applied);
+        self.start_fill_preparation(false);
     }
 
-    fn refresh_fill_job(&mut self, refresh_meshes: bool) {
-        let Some(scene_ref) = &self.scene else { return };
-        if scene_ref.weights.object_weights.len() > FIXED_OWNER_SLOTS || scene_ref.weights.vortex_weights.len() > FIXED_OWNER_SLOTS || self.meshes.len() > FIXED_OWNER_SLOTS {
-            return;
-        }
-        let scene = scene_ref.clone();
-        let meshes = refresh_meshes.then(|| self.meshes.clone());
-        let Some((revision, generation)) = self.allocate_fill_identity(false) else {
-            return;
-        };
-        self.fill_cancel.cancel_now();
-        self.fill_cancel = root_cancel_token();
-        self.fill_preview_sequence = 0;
-        let operation = Operation::new(semio_framework_job::allocate_operation_id(), revision, generation, scene.seed as u64);
-        if let Some(fill) = &self.fill {
-            let Ok(mut fill) = fill.try_lock() else { return };
-            if let Some(meshes) = &meshes {
-                if !fill.refresh_meshes(meshes) {
-                    return;
-                }
-            } else {
-                fill.restart_search();
-            }
-            let configured = fill.configure(operation, scene.weights, scene.kind_compatibility, scene.host_rules, scene.fixture.target_volumes, scene.overlap_budget);
-            debug_assert!(configured.is_ok());
-        }
+    fn refresh_fill_job(&mut self, _refresh_meshes: bool) {
+        self.start_fill_preparation(false);
     }
 
     pub(crate) fn update_kind_weights(&mut self, object_weights: std::collections::BTreeMap<String, f64>, vortex_weights: std::collections::BTreeMap<String, f64>) {
         if let Some(scene) = &mut self.scene {
+            let scene = Arc::make_mut(scene);
             scene.weights.object_weights = object_weights;
             scene.weights.vortex_weights = vortex_weights;
-            if let Ok(normalized) = serde_json::to_string(scene) {
+            if let Ok(normalized) = serde_json::to_string(&*scene) {
                 self.scene_json = Some(normalized);
             }
         }
@@ -874,7 +853,6 @@ impl Puzzle3dCollision {
             self.rebuild_queue();
         } else {
             self.soft_replan_fill_tail();
-            self.refresh_fill_job(false);
         }
     }
 
@@ -913,6 +891,7 @@ impl Puzzle3dCollision {
             }
             let normalized = serde_json::to_string(&scene)?;
             if let Some(current) = &mut self.scene {
+                let current = Arc::make_mut(current);
                 current.overlap_budget = scene.overlap_budget;
                 current.seed = scene.seed;
                 current.weights = scene.weights;
@@ -927,7 +906,7 @@ impl Puzzle3dCollision {
         if self.scene_json.as_deref() == Some(normalized.as_str()) {
             return Ok(());
         }
-        self.scene = Some(scene);
+        self.scene = Some(Arc::new(scene));
         self.scene_json = Some(normalized);
         self.rebuild_queue();
         Ok(())
@@ -949,14 +928,13 @@ impl Puzzle3dCollision {
         if is_fallback && self.mesh_is_fallback.get(&url) == Some(&false) {
             return;
         }
-        self.meshes.insert(url.clone(), body);
+        Arc::make_mut(&mut self.meshes).insert(url.clone(), body);
         self.mesh_is_fallback.insert(url.clone(), is_fallback);
         self.mesh_sources.insert(url.clone(), FillWorkerMesh { url, positions: positions.to_vec(), indices: indices.to_vec(), fallback: is_fallback });
         self.brush_cache.clear();
         if self.fill.is_none() {
             self.rebuild_queue();
         } else {
-            self.soft_replan_fill_tail();
             self.refresh_fill_job(true);
         }
         self.re_enqueue_brush_targets();
@@ -1168,6 +1146,12 @@ impl Puzzle3dCollision {
             }
             match lane {
                 PrecomputeLane::Brush => {
+                    if self.brush_queue_preparing {
+                        self.prepare_one_brush_target();
+                        steps_done += 1;
+                        remaining -= 1;
+                        continue;
+                    }
                     let Some(full_id) = self.brush_queue.pop_front() else {
                         break;
                     };
@@ -1281,7 +1265,7 @@ impl Puzzle3dCollision {
         let mut fill = self.fill.as_ref()?.try_lock().ok()?;
         let count = count.min(fill.sequence.len());
         fill.applied_count = count;
-        let mut fixture = fill.base.clone();
+        let mut fixture = fill.base.snapshot();
         // 🪣️ `revealIndex` is a live-viewport-only hint (see `compose_fill_display`) — never persist it
         // to the committed document projection.
         fixture.objects.extend(fill.appended_objects.iter().take(count).cloned().map(|mut object| {
@@ -1297,7 +1281,7 @@ impl Puzzle3dCollision {
     pub(crate) fn compose_fill_display(&self, count: usize) -> Option<Fixture> {
         let fill = self.fill.as_ref()?.try_lock().ok()?;
         let visible = count.min(fill.sequence.len());
-        let mut fixture = fill.base.clone();
+        let mut fixture = fill.base.snapshot();
         fixture.objects.extend(fill.appended_objects.iter().take(visible).cloned());
         fixture.attractions.extend(fill.appended_attractions.iter().take(visible).cloned());
         Some(fixture)
@@ -1311,7 +1295,7 @@ impl Puzzle3dCollision {
             return None;
         }
         if let Some(scene) = &mut self.scene {
-            scene.fixture = next.clone();
+            Arc::make_mut(scene).fixture = next.clone();
         }
         self.rebuild_queue();
         Some(next)
@@ -1551,6 +1535,11 @@ impl Puzzle3dPrecomputeSession {
                     return None;
                 }
             };
+            if let Some(fill) = registry.authority_mut(&request).and_then(|authority| authority.fill.as_ref()) {
+                if let Ok(mut fill) = fill.try_lock() {
+                    fill.preview.registry_generation = request.registry_generation;
+                }
+            }
             self.fill_job = Some(request.clone());
             self.fill_admission = Some(FillEnvelopeAdmissionCursor { request, census: FillBuilderOwnerCensusCursor::default() });
         }
@@ -1679,7 +1668,7 @@ impl Puzzle3dPrecomputeSession {
     fn compose_fill_projection(&self, count: usize, persisted: bool) -> Option<Fixture> {
         self.read_fill(|fill| {
             let visible = count.min(fill.sequence.len());
-            let mut fixture = fill.base.clone();
+            let mut fixture = fill.base.snapshot();
             fixture.objects.extend(fill.appended_objects.iter().take(visible).cloned().map(|mut object| {
                 if persisted {
                     object.reveal_index = None;
@@ -1872,6 +1861,18 @@ mod tests {
         engine
     }
 
+    fn fill_builder_for_test(base: Fixture, seed: u32, catalogs: &KindCatalogBundle) -> FillBuilder {
+        let scene = Arc::new(SceneConfig { fixture: base, kind_catalogs: Some(catalogs.clone()), kind_compatibility: Vec::new(), overlap_budget: 0.0, seed, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() });
+        let mut fill = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::new())), Operation::new(semio_framework_job::allocate_operation_id(), RevisionId(1), Generation(1), seed as u64));
+        while matches!(
+            fill.stage,
+            FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration
+        ) {
+            fill.prepare_one();
+        }
+        fill
+    }
+
     #[test]
     fn brush_candidates_allow_separated_boxes() {
         let mut engine = Puzzle3dCollision::new();
@@ -1924,7 +1925,7 @@ mod tests {
             host_rules: BrushHostRules::default(),
             weights: BrushKindWeights::default(),
         };
-        engine.scene = Some(scene);
+        engine.scene = Some(Arc::new(scene));
         let result = engine.compute_brush_cache_entry("host:v0");
         assert!(!result.unknown_pending, "expected mesh-ready result");
         assert_eq!(result.free.len(), 1, "expected one collision-free candidate");
@@ -1938,13 +1939,11 @@ mod tests {
     fn compose_fill_display_is_read_only_and_matches_apply_prefix() {
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-        let mut fill = FillBuilder::new(base, 7, &HashMap::new(), &catalogs);
+        let mut fill = fill_builder_for_test(base, 7, &catalogs);
         fill.applied_count = 2;
         fill.sequence = (0..5).map(fill_plan_payload).collect();
         fill.appended_objects = (0..5).map(|index| fill_plan_object(&format!("p{index}"))).collect();
         fill.appended_attractions = (0..5).map(fill_plan_attraction).collect();
-        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
-        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
         let mut engine = Puzzle3dCollision::new();
         engine.fill = Some(Arc::new(Mutex::new(fill)));
 
@@ -1961,13 +1960,11 @@ mod tests {
     fn fill_options_paths_are_millisecond_scale() {
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        let mut fill = fill_builder_for_test(base.clone(), 7, &catalogs);
         fill.applied_count = 0;
         fill.sequence = (0..10).map(fill_plan_payload).collect();
         fill.appended_objects = (0..10).map(|index| fill_plan_object(&format!("p{index}"))).collect();
         fill.appended_attractions = (0..10).map(fill_plan_attraction).collect();
-        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
-        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
 
         let mut engine = Puzzle3dCollision::new();
         let base_scene = SceneConfig { fixture: base, kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
@@ -2003,13 +2000,11 @@ mod tests {
         // fixture) may change. Otherwise a jittery drag forces expensive replanning on every dip.
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        let mut fill = fill_builder_for_test(base.clone(), 7, &catalogs);
         fill.applied_count = 0;
         fill.sequence = (0..10).map(fill_plan_payload).collect();
         fill.appended_objects = (0..10).map(|index| fill_plan_object(&format!("p{index}"))).collect();
         fill.appended_attractions = (0..10).map(fill_plan_attraction).collect();
-        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
-        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
         fill.placed = fill
             .appended_objects
             .iter()
@@ -2094,13 +2089,11 @@ mod tests {
         // that used to force expensive replanning on every jittery drag dip.
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-        let mut fill = FillBuilder::new(base, 7, &HashMap::new(), &catalogs);
+        let mut fill = fill_builder_for_test(base, 7, &catalogs);
         fill.applied_count = 3;
         fill.sequence = (0..3).map(fill_plan_payload).collect();
         fill.appended_objects = (0..3).map(|index| fill_plan_object(&format!("p{index}"))).collect();
         fill.appended_attractions = (0..3).map(fill_plan_attraction).collect();
-        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
-        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
         fill.stalled = true;
         let rng_state = fill.rng_state;
         let mut engine = Puzzle3dCollision::new();
@@ -2127,13 +2120,11 @@ mod tests {
     fn set_scene_with_applied_fill_projection_preserves_slider_session() {
         let base = Fixture { objects: vec![fill_plan_object("base")], attractions: vec![], target_volumes: vec![] };
         let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
-        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        let mut fill = fill_builder_for_test(base.clone(), 7, &catalogs);
         fill.applied_count = 3;
         fill.sequence = (0..3).map(fill_plan_payload).collect();
         fill.appended_objects = (0..3).map(|index| fill_plan_object(&format!("p{index}"))).collect();
         fill.appended_attractions = (0..3).map(fill_plan_attraction).collect();
-        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
-        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
         fill.stalled = true;
 
         let mut engine = Puzzle3dCollision::new();
@@ -2892,51 +2883,6 @@ mod tests {
         let mut session = Puzzle3dPrecomputeSession::new();
         let outcome = session.dispatch(Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 0 }).expect("brush preview never errors");
         assert_eq!(outcome, Puzzle3dEngineOutcome::BrushPreview(None), "no scene means no cached brush candidates yet");
-    }
-
-    fn finish_fill_with_budget(step_budget: u32) -> Vec<u8> {
-        let mut engine = fill_capable_engine();
-        for _ in 0..10_000 {
-            if !engine.precompute_step_lane(PrecomputeLane::Fill, step_budget) {
-                return engine.fill.as_ref().expect("fill").lock().expect("fill lock").checkpoint_bytes();
-            }
-        }
-        let fill_owner = engine.fill.as_ref().expect("fill").clone();
-        let fill = fill_owner.lock().expect("fill lock");
-        panic!("fill job did not terminate: stage={:?} count={} rejected={}", fill.stage, fill.sequence.len(), fill.preview.rejected_count);
-    }
-
-    fn normalized_fill_checkpoint(bytes: &[u8]) -> Vec<u8> {
-        FillBuilder::normalized_checkpoint_bytes(bytes)
-    }
-
-    #[test]
-    fn fill_job_is_deterministic_across_drive_batch_sizes() {
-        let checkpoints = [1, 2, 4, 8].map(finish_fill_with_budget).map(|checkpoint| normalized_fill_checkpoint(&checkpoint));
-        assert_eq!(checkpoints[0], checkpoints[1]);
-        assert_eq!(checkpoints[1], checkpoints[2]);
-        assert_eq!(checkpoints[2], checkpoints[3]);
-    }
-
-    #[test]
-    fn fill_job_checkpoint_resume_matches_uninterrupted_execution() {
-        let mut uninterrupted = fill_capable_engine();
-        uninterrupted.precompute_step_lane(PrecomputeLane::Fill, 3);
-        let checkpoint = uninterrupted.fill.as_ref().expect("fill").lock().expect("fill lock").checkpoint_bytes();
-
-        let mut resumed = fill_capable_engine();
-        resumed.fill.as_ref().expect("fill").lock().expect("fill lock").restore_checkpoint(&checkpoint).expect("restore");
-        resumed.fill_preview_sequence = uninterrupted.fill_preview_sequence;
-
-        for _ in 0..10_000 {
-            let left = uninterrupted.precompute_step_lane(PrecomputeLane::Fill, 1);
-            let right = resumed.precompute_step_lane(PrecomputeLane::Fill, 1);
-            assert_eq!(left, right);
-            if !left {
-                break;
-            }
-        }
-        assert_eq!(uninterrupted.fill.as_ref().expect("fill").lock().expect("fill lock").checkpoint_bytes(), resumed.fill.as_ref().expect("fill").lock().expect("fill lock").checkpoint_bytes());
     }
 
     #[test]

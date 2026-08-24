@@ -33,8 +33,8 @@
 //! Backends split two ways: genuinely-async drivers (`db_storage_postgres`'s `sqlx`,
 //! `db_storage_neo4j`'s `neo4rs`) simply `.await` their already-async bodies; genuinely-blocking
 //! backends (this crate's own `FsStorage`, plus the sibling `db_storage_sqlite`) cross the
-//! sync/async boundary via this crate's own dependency-free [`run_blocking_op`] bridge, which
-//! submits the blocking body to the ONE process-wide `semio_framework_async::WorkerPool` on
+//! sync/async boundary through schema-first [`DbIoTask`] owners submitted to the ONE
+//! process-wide `semio_framework_async::WorkerPool` on
 //! `Lane::Io` — never a private `tokio::runtime` (this crate names no `tokio` at all; see the
 //! repo's "`tokio` only in `🛎️services`" rule) and never `HostAsyncRuntime::run_blocking` (removed
 //! from that trait — Phase 1 of `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`; callers now submit
@@ -56,10 +56,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-/// @emoji 📊️ This crate's one blocking-bridge queue depth signal — every [`run_blocking_op`]
-/// submission increments it, every completion decrements it, so the Phase 1 exit gate can observe
-/// the Io lane's queue never growing unbounded. One process-wide counter (not per-backend): the
-/// bridge itself is the shared resource being bounded, regardless of which `DbBackend` arm called it.
+/// @emoji 📊️ One process-wide typed DB I/O task depth signal.
 static BLOCKING_QUEUE: semio_framework_trace::QueueCounter = semio_framework_trace::QueueCounter::new();
 
 //#region 🔖️Limits
@@ -71,564 +68,1884 @@ static BLOCKING_QUEUE: semio_framework_trace::QueueCounter = semio_framework_tra
 /// length before trying to allocate it.
 const MAX_READ_BYTES: u64 = 496 * 1024;
 
-/// @emoji 📄️ Exact owned database input split into at most 31 logical 16 KiB pages.
-/// Construction transfers an existing `Vec` without copying; rejection returns that exact owner.
-#[derive(Debug)]
-pub struct DbIoPages {
-    owner: Vec<u8>,
-    start: usize,
-    pages: u8,
+pub const DB_IO_PAGE_BYTES: usize = 16 * 1024;
+const DB_IO_OPERATION_PAGES: usize = 64;
+const DB_IO_TOTAL_PAGES: usize = 1024;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DbIoPagePhase {
+    Free,
+    CheckedOutInput,
+    CheckedOutWriter,
+    Queued,
+    Executing,
+    TerminalResult,
+    Rejected,
+    Closing,
 }
 
-#[derive(Debug)]
-pub struct DbIoPagesRejected {
-    error: DbError,
-    owner: Vec<u8>,
+struct DbIoPageBacking(std::cell::UnsafeCell<[u8; DB_IO_PAGE_BYTES]>);
+
+impl DbIoPageBacking {
+    const fn new() -> Self {
+        Self(std::cell::UnsafeCell::new([0; DB_IO_PAGE_BYTES]))
+    }
 }
 
-impl DbIoPages {
-    pub fn try_new(owner: Vec<u8>) -> Result<Self, DbIoPagesRejected> {
-        if owner.len() as u64 > MAX_READ_BYTES {
-            return Err(DbIoPagesRejected { error: DbError::LimitExceeded("db_io input pages"), owner });
+unsafe impl Sync for DbIoPageBacking {}
+
+static DB_IO_PAGE_BACKINGS: [DbIoPageBacking; DB_IO_TOTAL_PAGES] = [const { DbIoPageBacking::new() }; DB_IO_TOTAL_PAGES];
+
+#[derive(Clone, Copy)]
+struct DbIoPageSlot {
+    generation: u64,
+    operation: u64,
+    phase: DbIoPagePhase,
+}
+
+const EMPTY_DB_IO_PAGE_SLOT: DbIoPageSlot = DbIoPageSlot { generation: 0, operation: 0, phase: DbIoPagePhase::Free };
+
+struct DbIoPageArenaState {
+    slots: [DbIoPageSlot; DB_IO_TOTAL_PAGES],
+    free: [u16; DB_IO_TOTAL_PAGES],
+    free_read: usize,
+    free_len: usize,
+    retired: [Option<(u16, u64)>; DB_IO_TOTAL_PAGES],
+    retired_read: usize,
+    retired_len: usize,
+    next_generation: u64,
+}
+
+impl DbIoPageArenaState {
+    fn new() -> Self {
+        Self {
+            slots: [EMPTY_DB_IO_PAGE_SLOT; DB_IO_TOTAL_PAGES],
+            free: std::array::from_fn(|index| index as u16),
+            free_read: 0,
+            free_len: DB_IO_TOTAL_PAGES,
+            retired: [None; DB_IO_TOTAL_PAGES],
+            retired_read: 0,
+            retired_len: 0,
+            next_generation: 1,
         }
-        let pages = owner.len().div_ceil(16 * 1024) as u8;
-        Ok(Self { owner, start: 0, pages })
+    }
+}
+
+static DB_IO_PAGE_ARENA: std::sync::OnceLock<std::sync::Mutex<DbIoPageArenaState>> = std::sync::OnceLock::new();
+static DB_IO_NEXT_OPERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+
+fn db_io_page_arena() -> &'static std::sync::Mutex<DbIoPageArenaState> {
+    DB_IO_PAGE_ARENA.get_or_init(|| std::sync::Mutex::new(DbIoPageArenaState::new()))
+}
+
+fn db_io_next_operation() -> Result<u64, DbError> {
+    DB_IO_NEXT_OPERATION
+        .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |current| current.checked_add(1).filter(|next| *next != 0))
+        .map_err(|_| DbError::LimitExceeded("db_io operation generation"))
+}
+
+#[derive(Debug)]
+struct DbIoPageLease {
+    slot: u16,
+    generation: u64,
+    operation: u64,
+    used: u16,
+    returned: bool,
+}
+
+impl DbIoPageLease {
+    fn transition(&self, expected: DbIoPagePhase, next: DbIoPagePhase) -> Result<(), DbError> {
+        let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = &mut state.slots[self.slot as usize];
+        if slot.generation != self.generation || slot.operation != self.operation || slot.phase != expected {
+            return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(slot.generation) });
+        }
+        slot.phase = next;
+        Ok(())
     }
 
-    pub fn try_range(owner: Vec<u8>, start: usize) -> Result<Self, DbIoPagesRejected> {
-        if start > owner.len() || owner.len() - start > MAX_READ_BYTES as usize {
-            return Err(DbIoPagesRejected { error: DbError::LimitExceeded("db_io input page range"), owner });
+    fn bytes(&self) -> &[u8] {
+        let used = usize::from(self.used);
+        unsafe { &(*DB_IO_PAGE_BACKINGS[self.slot as usize].0.get())[..used] }
+    }
+
+    fn write(&mut self, offset: usize, source: &[u8]) -> Result<(), DbError> {
+        let end = offset.checked_add(source.len()).ok_or(DbError::LimitExceeded("db_io page write"))?;
+        if end > DB_IO_PAGE_BYTES || offset > usize::from(self.used) {
+            return Err(DbError::LimitExceeded("db_io page writer reservation"));
         }
-        let pages = (owner.len() - start).div_ceil(16 * 1024) as u8;
-        Ok(Self { owner, start, pages })
+        let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = state.slots[self.slot as usize];
+        if slot.generation != self.generation || slot.operation != self.operation || !matches!(slot.phase, DbIoPagePhase::CheckedOutWriter | DbIoPagePhase::Executing) {
+            return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(slot.generation) });
+        }
+        unsafe { (*DB_IO_PAGE_BACKINGS[self.slot as usize].0.get())[offset..end].copy_from_slice(source) };
+        self.used = end as u16;
+        Ok(())
+    }
+
+    fn return_to_arena(mut self) -> Result<usize, DbError> {
+        let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = &mut state.slots[self.slot as usize];
+        if slot.generation != self.generation || slot.operation != self.operation || slot.phase != DbIoPagePhase::Closing {
+            return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.generation), actual: crate::db_ids::GenerationId(slot.generation) });
+        }
+        *slot = EMPTY_DB_IO_PAGE_SLOT;
+        let write = (state.free_read + state.free_len) % DB_IO_TOTAL_PAGES;
+        state.free[write] = self.slot;
+        state.free_len += 1;
+        self.returned = true;
+        Ok(DB_IO_PAGE_BYTES)
+    }
+
+    fn install_lost_handle(&mut self) {
+        let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = &mut state.slots[self.slot as usize];
+        if slot.generation != self.generation || slot.operation != self.operation || slot.phase == DbIoPagePhase::Free {
+            return;
+        }
+        slot.phase = DbIoPagePhase::Closing;
+        assert!(state.retired_len < DB_IO_TOTAL_PAGES, "DB I/O fixed page retirement arena saturated");
+        let write = (state.retired_read + state.retired_len) % DB_IO_TOTAL_PAGES;
+        state.retired[write] = Some((self.slot, self.generation));
+        state.retired_len += 1;
+        self.returned = true;
+    }
+}
+
+impl Drop for DbIoPageLease {
+    fn drop(&mut self) {
+        if !self.returned {
+            self.install_lost_handle();
+        }
+    }
+}
+
+fn db_io_checkout_pages(operation: u64, count: usize, phase: DbIoPagePhase) -> Result<[Option<DbIoPageLease>; DB_IO_OPERATION_PAGES], DbError> {
+    if operation == 0 || count > DB_IO_OPERATION_PAGES {
+        return Err(DbError::LimitExceeded("db_io operation page credit"));
+    }
+    let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    db_io_preflight_page_checkout(&state, count)?;
+    let mut leases: [Option<DbIoPageLease>; DB_IO_OPERATION_PAGES] = std::array::from_fn(|_| None);
+    for lease in leases.iter_mut().take(count) {
+        let slot = state.free[state.free_read];
+        state.free_read = (state.free_read + 1) % DB_IO_TOTAL_PAGES;
+        state.free_len -= 1;
+        let generation = state.next_generation;
+        state.next_generation += 1;
+        state.slots[slot as usize] = DbIoPageSlot { generation, operation, phase };
+        *lease = Some(DbIoPageLease { slot, generation, operation, used: 0, returned: false });
+    }
+    Ok(leases)
+}
+
+fn db_io_preflight_page_checkout(state: &DbIoPageArenaState, count: usize) -> Result<(), DbError> {
+    if count > state.free_len || state.next_generation.checked_add(count as u64).is_none() {
+        return Err(DbError::Unavailable("db I/O process page capacity exhausted".to_string()));
+    }
+    Ok(())
+}
+
+/// @emoji ✍️ Retained writer backed only by exact fixed arena page leases.
+pub struct DbIoPageWriter {
+    operation: u64,
+    pages: [Option<DbIoPageLease>; DB_IO_OPERATION_PAGES],
+    reserved: u8,
+    cursor: u8,
+    total_len: usize,
+}
+
+#[derive(Debug)]
+pub struct DbIoPageWriterRejected {
+    error: DbError,
+    writer: Option<DbIoPageWriter>,
+}
+
+impl DbIoPageWriter {
+    pub fn try_reserve(reserved_pages: usize) -> Result<Self, DbIoPageWriterRejected> {
+        let operation = db_io_next_operation().map_err(|error| DbIoPageWriterRejected { error, writer: None })?;
+        let pages = db_io_checkout_pages(operation, reserved_pages, DbIoPagePhase::CheckedOutWriter).map_err(|error| DbIoPageWriterRejected { error, writer: None })?;
+        Ok(Self { operation, pages, reserved: reserved_pages as u8, cursor: 0, total_len: 0 })
+    }
+
+    pub fn operation(&self) -> u64 {
+        self.operation
+    }
+
+    pub fn write_fragment(&mut self, source: &[u8]) -> Result<usize, DbError> {
+        let Some(page) = self.pages.get_mut(self.cursor as usize).and_then(Option::as_mut) else {
+            return Err(DbError::LimitExceeded("db_io writer page reservation"));
+        };
+        let available = DB_IO_PAGE_BYTES - usize::from(page.used);
+        let written = available.min(source.len());
+        page.write(usize::from(page.used), &source[..written])?;
+        self.total_len = self.total_len.checked_add(written).ok_or(DbError::LimitExceeded("db_io writer total"))?;
+        if usize::from(page.used) == DB_IO_PAGE_BYTES {
+            self.cursor += 1;
+        }
+        Ok(written)
+    }
+
+    pub fn seal(mut self) -> Result<DbIoPages, DbIoPageWriterRejected> {
+        match self.finish() {
+            Ok(pages) => Ok(pages),
+            Err(error) => Err(DbIoPageWriterRejected { error, writer: Some(self) }),
+        }
+    }
+
+    pub fn finish(&mut self) -> Result<DbIoPages, DbError> {
+        let visible = if self.total_len == 0 { 0 } else { self.total_len.div_ceil(DB_IO_PAGE_BYTES) };
+        let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let current = self.pages.iter().take(self.reserved as usize).flatten().next().map_or(DbIoPagePhase::CheckedOutWriter, |page| state.slots[page.slot as usize].phase);
+        if !matches!(current, DbIoPagePhase::CheckedOutWriter | DbIoPagePhase::Executing) {
+            return Err(DbError::Internal("DB I/O writer finished outside an owned phase".to_string()));
+        }
+        for page in self.pages.iter().take(self.reserved as usize).flatten() {
+            let slot = state.slots[page.slot as usize];
+            if slot.generation != page.generation || slot.operation != page.operation || slot.phase != current {
+                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(page.generation), actual: crate::db_ids::GenerationId(slot.generation) });
+            }
+        }
+        let next = if current == DbIoPagePhase::Executing { DbIoPagePhase::TerminalResult } else { DbIoPagePhase::CheckedOutInput };
+        for page in self.pages.iter().take(self.reserved as usize).flatten() {
+            state.slots[page.slot as usize].phase = next;
+        }
+        drop(state);
+        let pages = std::mem::replace(&mut self.pages, std::array::from_fn(|_| None));
+        let owner = DbIoPages { operation: self.operation, pages, retained: self.reserved, visible: visible as u8, first_offset: 0, total_len: self.total_len };
+        self.reserved = 0;
+        self.cursor = 0;
+        self.total_len = 0;
+        Ok(owner)
     }
 
     pub fn len(&self) -> usize {
-        self.owner.len() - self.start
+        self.total_len
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.total_len == 0
     }
 
-    pub fn page_count(&self) -> u8 {
-        self.pages
+    pub fn close_step(&mut self) -> Result<Option<usize>, DbError> {
+        let Some(page) = self.pages.iter_mut().rev().find_map(Option::take) else { return Ok(None) };
+        let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let phase = state.slots[page.slot as usize].phase;
+        drop(state);
+        page.transition(phase, DbIoPagePhase::Closing)?;
+        page.return_to_arena().map(Some)
     }
 
-    pub fn page(&self, index: u8) -> Option<&[u8]> {
-        let start = self.start.checked_add(usize::from(index).checked_mul(16 * 1024)?)?;
-        self.owner.get(start..std::cmp::min(start.saturating_add(16 * 1024), self.owner.len()))
+    pub fn terminal_is_empty(&self) -> bool {
+        self.pages.iter().all(Option::is_none)
     }
 
-    pub fn as_slice(&self) -> &[u8] {
-        &self.owner[self.start..]
-    }
-
-    pub fn into_vec(self) -> Vec<u8> {
-        if self.start == 0 {
-            self.owner
-        } else {
-            self.owner[self.start..].to_vec()
+    fn transition(&self, expected: DbIoPagePhase, next: DbIoPagePhase) -> Result<(), DbError> {
+        let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        for page in self.pages.iter().take(self.reserved as usize).flatten() {
+            let slot = state.slots[page.slot as usize];
+            if slot.generation != page.generation || slot.operation != page.operation || slot.phase != expected {
+                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(page.generation), actual: crate::db_ids::GenerationId(slot.generation) });
+            }
         }
+        for page in self.pages.iter().take(self.reserved as usize).flatten() {
+            state.slots[page.slot as usize].phase = next;
+        }
+        Ok(())
     }
 }
 
-impl DbIoPagesRejected {
+impl std::fmt::Debug for DbIoPageWriter {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("DbIoPageWriter").field("operation", &self.operation).field("reserved", &self.reserved).field("cursor", &self.cursor).field("total_len", &self.total_len).finish()
+    }
+}
+
+impl DbIoPageWriterRejected {
     pub fn error(&self) -> &DbError {
         &self.error
     }
 
-    pub fn into_owner(self) -> Vec<u8> {
-        self.owner
+    pub fn into_writer(self) -> Option<DbIoPageWriter> {
+        self.writer
     }
 
-    pub fn into_parts(self) -> (DbError, Vec<u8>) {
-        (self.error, self.owner)
-    }
-}
-//#endregion 🔖️Limits
-
-//#region 🔖️BlockingBridge
-const DB_IO_OPERATION_ITEMS: usize = 64;
-const DB_IO_PAGE_BYTES: u64 = 16 * 1024;
-const DB_IO_OPERATION_PAGES: u64 = 64;
-const DB_IO_OPERATION_BYTES: u64 = DB_IO_PAGE_BYTES * DB_IO_OPERATION_PAGES;
-const DB_IO_TOTAL_PAGES: u64 = 1024;
-const DB_IO_TOTAL_BYTES: u64 = DB_IO_PAGE_BYTES * DB_IO_TOTAL_PAGES;
-const DB_IO_RETRY_MS: u64 = 1;
-const DB_IO_RETRY_LIMIT: u8 = 8;
-const DB_IO_LIST_ITEMS: u64 = 4096;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum DbIoOperationKind {
-    Metadata,
-    Read,
-    Write,
-    ReadTransform,
-    List,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct DbIoRequest {
-    kind: DbIoOperationKind,
-    input_bytes: u64,
-    output_bytes: u64,
-    output_items: u64,
-}
-
-impl DbIoRequest {
-    pub(crate) const fn metadata() -> Self {
-        Self { kind: DbIoOperationKind::Metadata, input_bytes: 0, output_bytes: 0, output_items: 0 }
-    }
-
-    pub(crate) const fn read(output_bytes: u64) -> Self {
-        Self { kind: DbIoOperationKind::Read, input_bytes: 0, output_bytes, output_items: 0 }
-    }
-
-    pub(crate) const fn write(input_bytes: u64) -> Self {
-        Self { kind: DbIoOperationKind::Write, input_bytes, output_bytes: 0, output_items: 0 }
-    }
-
-    pub(crate) const fn read_transform(input_bytes: u64, output_bytes: u64) -> Self {
-        Self { kind: DbIoOperationKind::ReadTransform, input_bytes, output_bytes, output_items: 0 }
-    }
-
-    pub(crate) const fn list(output_items: u64) -> Self {
-        Self { kind: DbIoOperationKind::List, input_bytes: 0, output_bytes: 0, output_items }
-    }
-
-    fn admitted_bytes(self) -> Result<u64, DbError> {
-        if self.output_items > DB_IO_LIST_ITEMS {
-            return Err(DbError::LimitExceeded("db_io list item credit"));
-        }
-        let item_bytes = self.output_items.checked_mul(std::mem::size_of::<u64>() as u64).ok_or(DbError::LimitExceeded("db_io nested item bytes"))?;
-        let bytes = DB_IO_PAGE_BYTES.checked_add(self.input_bytes).and_then(|bytes| bytes.checked_add(self.output_bytes)).and_then(|bytes| bytes.checked_add(item_bytes)).ok_or(DbError::LimitExceeded("db_io nested byte credit"))?;
-        let pages = bytes.checked_add(DB_IO_PAGE_BYTES - 1).ok_or(DbError::LimitExceeded("db_io page rounding"))? / DB_IO_PAGE_BYTES;
-        let admitted = pages.checked_mul(DB_IO_PAGE_BYTES).ok_or(DbError::LimitExceeded("db_io page credit"))?;
-        if admitted > DB_IO_OPERATION_BYTES {
-            return Err(DbError::LimitExceeded("db_io operation byte credit"));
-        }
-        Ok(admitted)
+    pub fn into_error(self) -> DbError {
+        self.error
     }
 }
 
-#[derive(Clone, Copy)]
-struct DbIoAdmissionSlot {
-    generation: u64,
-    bytes: u64,
-    occupied: bool,
+/// @emoji 📥 One-fragment-per-poll copy into already checked-out fixed pages.
+pub struct DbIoPageCopy<'a> {
+    source: &'a [u8],
+    cursor: usize,
+    writer: Option<DbIoPageWriter>,
 }
 
-const EMPTY_DB_IO_SLOT: DbIoAdmissionSlot = DbIoAdmissionSlot { generation: 0, bytes: 0, occupied: false };
-
-struct DbIoAdmissionState {
-    slots: [DbIoAdmissionSlot; DB_IO_OPERATION_ITEMS],
-    bytes: u64,
-    next_generation: u64,
+pub struct DbIoPageOwnerCopy<'a> {
+    source: &'a DbIoPages,
+    cursor: u8,
+    writer: Option<DbIoPageWriter>,
 }
 
-static DB_IO_ADMISSION: std::sync::Mutex<DbIoAdmissionState> = std::sync::Mutex::new(DbIoAdmissionState { slots: [EMPTY_DB_IO_SLOT; DB_IO_OPERATION_ITEMS], bytes: 0, next_generation: 1 });
-
-struct DbIoAdmission {
-    slot: usize,
-    generation: u64,
-    bytes: u64,
+pub fn db_io_copy_pages(source: &[u8]) -> Result<DbIoPageCopy<'_>, DbError> {
+    let pages = source.len().div_ceil(DB_IO_PAGE_BYTES);
+    let writer = DbIoPageWriter::try_reserve(pages).map_err(DbIoPageWriterRejected::into_error)?;
+    Ok(DbIoPageCopy { source, cursor: 0, writer: Some(writer) })
 }
 
-impl DbIoAdmission {
-    fn try_claim(bytes: u64) -> Result<Self, DbError> {
-        if bytes == 0 || bytes > DB_IO_OPERATION_BYTES {
-            return Err(DbError::LimitExceeded("db_io operation byte credit"));
-        }
-        let mut state = DB_IO_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(slot) = state.slots.iter().position(|entry| !entry.occupied) else {
-            return Err(DbError::Unavailable("db I/O operation item capacity exhausted".to_string()));
-        };
-        if state.bytes.checked_add(bytes).is_none_or(|next| next > DB_IO_TOTAL_BYTES) {
-            return Err(DbError::Unavailable("db I/O operation byte capacity exhausted".to_string()));
-        }
-        let generation = state.next_generation;
-        state.next_generation = state.next_generation.checked_add(1).ok_or(DbError::LimitExceeded("db_io operation generation"))?;
-        state.slots[slot] = DbIoAdmissionSlot { generation, bytes, occupied: true };
-        state.bytes += bytes;
-        Ok(Self { slot, generation, bytes })
-    }
+pub fn db_io_copy_page_owner(source: &DbIoPages) -> Result<DbIoPageOwnerCopy<'_>, DbError> {
+    let writer = DbIoPageWriter::try_reserve(source.page_count() as usize).map_err(DbIoPageWriterRejected::into_error)?;
+    Ok(DbIoPageOwnerCopy { source, cursor: 0, writer: Some(writer) })
 }
 
-impl Drop for DbIoAdmission {
-    fn drop(&mut self) {
-        let mut state = DB_IO_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let entry = &mut state.slots[self.slot];
-        if !entry.occupied || entry.generation != self.generation || entry.bytes != self.bytes {
-            return;
-        }
-        *entry = EMPTY_DB_IO_SLOT;
-        state.bytes = state.bytes.checked_sub(self.bytes).expect("db I/O byte credit underflow");
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum DbIoProgress {
-    Admitted,
-    Scheduled,
-    Executing,
-    Completed,
-    Cancelled,
-    Fault,
-}
-
-type DbIoWork<T> = Box<dyn FnOnce() -> Result<T, DbError> + Send + 'static>;
-
-struct DbIoState<T: Send + 'static> {
-    pool: WorkerPool,
-    generation: u64,
-    admission: std::sync::Mutex<Option<DbIoAdmission>>,
-    work: std::sync::Mutex<Option<DbIoWork<T>>>,
-    completion: std::sync::Mutex<Option<Result<T, DbError>>>,
-    terminal_work: std::sync::Mutex<Option<DbIoWork<T>>>,
-    terminal_result: std::sync::Mutex<Option<Result<T, DbError>>>,
-    retry_job: std::sync::Mutex<Option<(Job, u8)>>,
-    terminal_job: std::sync::Mutex<Option<(WorkerSubmitErrorKind, Job)>>,
-    waker: std::sync::Mutex<Option<std::task::Waker>>,
-    retry_armed: std::sync::atomic::AtomicBool,
-    retry_generation: std::sync::atomic::AtomicU64,
-    scheduled: std::sync::atomic::AtomicBool,
-    cancelled: std::sync::atomic::AtomicBool,
-    abandoned: std::sync::atomic::AtomicBool,
-    finished: std::sync::atomic::AtomicBool,
-    counted: std::sync::atomic::AtomicBool,
-    progress: std::sync::atomic::AtomicU8,
-}
-
-pub(crate) struct DbIoOperation<T: Send + 'static> {
-    state: Arc<DbIoState<T>>,
-    resolved: bool,
-}
-
-pub(crate) struct DbIoTerminalJob<T: Send + 'static> {
-    state: Arc<DbIoState<T>>,
-    owner: Option<(WorkerSubmitErrorKind, Job)>,
-}
-
-impl<T: Send + 'static> DbIoState<T> {
-    fn set_progress(&self, progress: DbIoProgress) {
-        self.progress.store(progress as u8, std::sync::atomic::Ordering::Release);
-    }
-
-    fn wake_waiter(&self) {
-        if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            waker.wake();
-        }
-    }
-
-    fn finish(&self) {
-        if self.finished.swap(true, std::sync::atomic::Ordering::AcqRel) {
-            return;
-        }
-        self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        if self.counted.swap(false, std::sync::atomic::Ordering::AcqRel) {
-            BLOCKING_QUEUE.dequeued(0);
-        }
-    }
-
-    fn complete(&self, result: Result<T, DbError>, progress: DbIoProgress) {
-        self.set_progress(progress);
-        if self.abandoned.load(std::sync::atomic::Ordering::Acquire) {
-            *self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
-            return;
-        }
-        *self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
-        self.wake_waiter();
-    }
-
-    fn schedule(self: &Arc<Self>) {
-        if self.finished.load(std::sync::atomic::Ordering::Acquire) || self.scheduled.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
-            return;
-        }
-        self.set_progress(DbIoProgress::Scheduled);
-        let state = self.clone();
-        let generation = self.generation;
-        self.submit_exact(Box::new(move || state.drive_one(generation)), 0);
-    }
-
-    fn submit_exact(self: &Arc<Self>, job: Job, attempt: u8) {
-        match self.pool.try_submit(Lane::Io, job) {
-            Ok(()) => {}
-            Err(error) => match error.kind() {
-                WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated if attempt < DB_IO_RETRY_LIMIT => {
-                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
-                    self.arm_retry();
-                }
-                kind => {
-                    let job = error.into_job();
-                    self.set_progress(DbIoProgress::Fault);
-                    self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                    if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-                        *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
-                    }
-                    if self.abandoned.load(std::sync::atomic::Ordering::Acquire) {
-                        drop(job);
-                        self.finish();
-                    } else {
-                        *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
-                        *self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Err(DbError::Unavailable(format!("db I/O WorkerPool submission failed: {kind:?}"))));
-                        self.wake_waiter();
-                    }
-                }
-            },
-        }
-    }
-
-    fn arm_retry(self: &Arc<Self>) {
-        if self.retry_armed.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
-            return;
-        }
-        let generation = self.retry_generation.fetch_add(1, std::sync::atomic::Ordering::AcqRel).checked_add(1).expect("db I/O retry generation exhausted");
-        let state = self.clone();
-        self.pool.callback_at(self.pool.now_ms().saturating_add(DB_IO_RETRY_MS), move || {
-            if generation != state.retry_generation.load(std::sync::atomic::Ordering::Acquire) {
-                return;
-            }
-            state.retry_armed.store(false, std::sync::atomic::Ordering::Release);
-            let retry = state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-            if let Some((job, attempt)) = retry {
-                if state.cancelled.load(std::sync::atomic::Ordering::Acquire) || state.abandoned.load(std::sync::atomic::Ordering::Acquire) {
-                    drop(job);
-                    state.cancel_before_execution();
-                } else {
-                    state.submit_exact(job, attempt);
-                }
-            }
-        });
-    }
-
-    fn drive_one(self: Arc<Self>, generation: u64) {
-        if generation != self.generation {
-            return;
-        }
-        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
-            self.cancel_before_execution();
-            return;
-        }
-        let work = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        let Some(work) = work else { return };
-        self.set_progress(DbIoProgress::Executing);
-        let result = work();
-        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
-            *self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
-            self.complete(Err(DbError::Closed), DbIoProgress::Cancelled);
-        } else {
-            self.complete(result, DbIoProgress::Completed);
-        }
-    }
-
-    fn cancel_before_execution(&self) {
-        if self.finished.load(std::sync::atomic::Ordering::Acquire) || self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
-            return;
-        }
-        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-        if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
-        }
-        self.complete(Err(DbError::Closed), DbIoProgress::Cancelled);
-    }
-
-    fn close_one(&self) -> bool {
-        if let Some((_, job)) = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            drop(job);
-            return true;
-        }
-        if let Some((job, _)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            drop(job);
-            return true;
-        }
-        if let Some(work) = self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            drop(work);
-            return true;
-        }
-        if let Some(result) = self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            drop(result);
-            return true;
-        }
-        false
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
-            && self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
-            && self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
-            && self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
-            && self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
-            && self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
-    }
-
-    fn finish_if_terminal_empty(&self) {
-        if self.terminal_is_empty() && !self.scheduled.load(std::sync::atomic::Ordering::Acquire) && !self.retry_armed.load(std::sync::atomic::Ordering::Acquire) {
-            self.finish();
-        }
-    }
-}
-
-impl<T: Send + 'static> DbIoOperation<T> {
-    fn submit<F>(pool: &WorkerPool, request: DbIoRequest, work: F) -> Self
-    where
-        F: FnOnce() -> Result<T, DbError> + Send + 'static,
-    {
-        let admission = request.admitted_bytes().and_then(DbIoAdmission::try_claim);
-        let admission_error = admission.as_ref().err().map(ToString::to_string);
-        let generation = admission.as_ref().map_or(0, |owner| owner.generation);
-        let state = Arc::new(DbIoState {
-            pool: pool.clone(),
-            generation,
-            admission: std::sync::Mutex::new(admission.ok()),
-            work: std::sync::Mutex::new(Some(Box::new(work))),
-            completion: std::sync::Mutex::new(None),
-            terminal_work: std::sync::Mutex::new(None),
-            terminal_result: std::sync::Mutex::new(None),
-            retry_job: std::sync::Mutex::new(None),
-            terminal_job: std::sync::Mutex::new(None),
-            waker: std::sync::Mutex::new(None),
-            retry_armed: std::sync::atomic::AtomicBool::new(false),
-            retry_generation: std::sync::atomic::AtomicU64::new(1),
-            scheduled: std::sync::atomic::AtomicBool::new(false),
-            cancelled: std::sync::atomic::AtomicBool::new(false),
-            abandoned: std::sync::atomic::AtomicBool::new(false),
-            finished: std::sync::atomic::AtomicBool::new(false),
-            counted: std::sync::atomic::AtomicBool::new(generation != 0),
-            progress: std::sync::atomic::AtomicU8::new(DbIoProgress::Admitted as u8),
-        });
-        if generation == 0 {
-            let work = state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-            *state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = work;
-            *state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Err(DbError::Unavailable(admission_error.unwrap_or_else(|| "db I/O admission capacity exhausted".to_string()))));
-            state.set_progress(DbIoProgress::Fault);
-        } else {
-            BLOCKING_QUEUE.enqueued(0);
-            state.schedule();
-        }
-        Self { state, resolved: false }
-    }
-
-    pub(crate) fn generation(&self) -> u64 {
-        self.state.generation
-    }
-
-    pub(crate) fn progress(&self) -> DbIoProgress {
-        match self.state.progress.load(std::sync::atomic::Ordering::Acquire) {
-            0 => DbIoProgress::Admitted,
-            1 => DbIoProgress::Scheduled,
-            2 => DbIoProgress::Executing,
-            3 => DbIoProgress::Completed,
-            4 => DbIoProgress::Cancelled,
-            _ => DbIoProgress::Fault,
-        }
-    }
-
-    pub(crate) fn cancel(&self) {
-        if matches!(self.progress(), DbIoProgress::Completed | DbIoProgress::Cancelled | DbIoProgress::Fault) {
-            return;
-        }
-        self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
-        if !self.state.scheduled.load(std::sync::atomic::Ordering::Acquire) && self.progress() != DbIoProgress::Executing {
-            self.state.cancel_before_execution();
-        }
-    }
-
-    pub(crate) fn take_terminal_job(&self) -> Option<DbIoTerminalJob<T>> {
-        self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|owner| DbIoTerminalJob { state: self.state.clone(), owner: Some(owner) })
-    }
-
-    pub(crate) fn take_terminal_result(&self) -> Option<Result<T, DbError>> {
-        let result = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        if result.is_some() {
-            self.state.finish_if_terminal_empty();
-        }
-        result
-    }
-
-    pub(crate) fn take_terminal_work(&self) -> Option<DbIoWork<T>> {
-        let work = self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        if work.is_some() {
-            self.state.finish_if_terminal_empty();
-        }
-        work
-    }
-
-    pub(crate) fn close_step(&self) -> bool {
-        self.state.close_one()
-    }
-
-    pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.state.terminal_is_empty()
-    }
-}
-
-impl<T: Send + 'static> Future for DbIoOperation<T> {
-    type Output = Result<T, DbError>;
+impl Future for DbIoPageCopy<'_> {
+    type Output = Result<DbIoPages, DbError>;
 
     fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        if let Some(result) = result {
-            self.resolved = true;
-            self.state.finish_if_terminal_empty();
-            return std::task::Poll::Ready(result);
+        let owner = self.as_mut().get_mut();
+        if owner.cursor == owner.source.len() {
+            let writer = owner.writer.take().expect("DB I/O page copy writer consumed once");
+            return std::task::Poll::Ready(writer.seal().map_err(DbIoPageWriterRejected::into_error));
         }
-        *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
+        let start = owner.cursor;
+        let end = start.saturating_add(DB_IO_PAGE_BYTES).min(owner.source.len());
+        let source = &owner.source[start..end];
+        let written = owner.writer.as_mut().expect("DB I/O page copy writer retained").write_fragment(source)?;
+        owner.cursor += written;
+        context.waker().wake_by_ref();
         std::task::Poll::Pending
     }
 }
 
-impl<T: Send + 'static> Drop for DbIoOperation<T> {
+impl Future for DbIoPageOwnerCopy<'_> {
+    type Output = Result<DbIoPages, DbError>;
+
+    fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        let owner = self.as_mut().get_mut();
+        let Some(source) = owner.source.page(owner.cursor) else {
+            let writer = owner.writer.take().expect("DB I/O page-owner copy writer consumed once");
+            return std::task::Poll::Ready(writer.seal().map_err(DbIoPageWriterRejected::into_error));
+        };
+        let written = owner.writer.as_mut().expect("DB I/O page-owner copy writer retained").write_fragment(source)?;
+        if written != source.len() {
+            return std::task::Poll::Ready(Err(DbError::Internal("DB I/O source fragment exceeded one fixed page".to_string())));
+        }
+        owner.cursor += 1;
+        context.waker().wake_by_ref();
+        std::task::Poll::Pending
+    }
+}
+
+const DB_IO_PLATFORM_BUFFERS: usize = 16;
+const DB_IO_PLATFORM_BUFFER_BYTES: usize = MAX_READ_BYTES as usize;
+
+struct DbIoPlatformBacking(std::cell::UnsafeCell<[u8; DB_IO_PLATFORM_BUFFER_BYTES]>);
+
+impl DbIoPlatformBacking {
+    const fn new() -> Self {
+        Self(std::cell::UnsafeCell::new([0; DB_IO_PLATFORM_BUFFER_BYTES]))
+    }
+}
+
+unsafe impl Sync for DbIoPlatformBacking {}
+
+static DB_IO_PLATFORM_BACKINGS: [DbIoPlatformBacking; DB_IO_PLATFORM_BUFFERS] = [const { DbIoPlatformBacking::new() }; DB_IO_PLATFORM_BUFFERS];
+
+#[derive(Clone, Copy)]
+struct DbIoPlatformSlot {
+    generation: u64,
+    occupied: bool,
+}
+
+struct DbIoPlatformArena {
+    slots: [DbIoPlatformSlot; DB_IO_PLATFORM_BUFFERS],
+    retired: [Option<(u8, u64)>; DB_IO_PLATFORM_BUFFERS],
+    retired_read: usize,
+    retired_len: usize,
+    next_generation: u64,
+}
+
+static DB_IO_PLATFORM_ARENA: std::sync::Mutex<DbIoPlatformArena> = std::sync::Mutex::new(DbIoPlatformArena {
+    slots: [DbIoPlatformSlot { generation: 0, occupied: false }; DB_IO_PLATFORM_BUFFERS],
+    retired: [None; DB_IO_PLATFORM_BUFFERS],
+    retired_read: 0,
+    retired_len: 0,
+    next_generation: 1,
+});
+
+/// @emoji 🧩 Explicit contiguous platform-call buffer backed by a fixed process slot.
+pub struct DbIoPlatformBuffer {
+    slot: u8,
+    generation: u64,
+    len: usize,
+    copied: usize,
+    credit: DbIoPageWriter,
+    returned: bool,
+}
+
+pub struct DbIoPlatformCopy<'a> {
+    source: &'a DbIoPages,
+    cursor: u8,
+    owner: Option<DbIoPlatformBuffer>,
+}
+
+pub fn db_io_prepare_platform(source: &DbIoPages) -> Result<DbIoPlatformCopy<'_>, DbError> {
+    let _ = db_io_platform_maintenance_step()?;
+    if source.len() > DB_IO_PLATFORM_BUFFER_BYTES {
+        return Err(DbError::LimitExceeded("db_io prepared platform buffer"));
+    }
+    let (slot, generation) = {
+        let mut arena = DB_IO_PLATFORM_ARENA.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = arena.slots.iter().position(|slot| !slot.occupied).ok_or_else(|| DbError::Unavailable("DB I/O prepared platform capacity exhausted".to_string()))?;
+        let generation = arena.next_generation;
+        arena.next_generation = arena.next_generation.checked_add(1).filter(|next| *next != 0).ok_or(DbError::LimitExceeded("db_io platform generation"))?;
+        arena.slots[slot] = DbIoPlatformSlot { generation, occupied: true };
+        (slot as u8, generation)
+    };
+    let credit = match DbIoPageWriter::try_reserve(source.page_count() as usize) {
+        Ok(credit) => credit,
+        Err(error) => {
+            let mut arena = DB_IO_PLATFORM_ARENA.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            arena.slots[slot as usize] = DbIoPlatformSlot { generation: 0, occupied: false };
+            return Err(error.into_error());
+        }
+    };
+    let owner = DbIoPlatformBuffer { slot, generation, len: source.len(), copied: 0, credit, returned: false };
+    Ok(DbIoPlatformCopy { source, cursor: 0, owner: Some(owner) })
+}
+
+impl DbIoPlatformBuffer {
+    pub fn as_slice(&self) -> &[u8] {
+        unsafe { &(*DB_IO_PLATFORM_BACKINGS[self.slot as usize].0.get())[..self.len] }
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, DbError> {
+        if self.credit.close_step()?.is_some() {
+            return Ok(true);
+        }
+        if self.returned {
+            return Ok(false);
+        }
+        let mut arena = DB_IO_PLATFORM_ARENA.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = &mut arena.slots[self.slot as usize];
+        if !slot.occupied || slot.generation != self.generation {
+            return Err(DbError::Internal("DB I/O prepared platform slot lost ABA authority".to_string()));
+        }
+        *slot = DbIoPlatformSlot { generation: 0, occupied: false };
+        self.returned = true;
+        Ok(true)
+    }
+}
+
+impl Drop for DbIoPlatformBuffer {
     fn drop(&mut self) {
-        if self.resolved {
-            self.state.close_one();
-            self.state.finish_if_terminal_empty();
+        if !self.returned {
+            let mut arena = DB_IO_PLATFORM_ARENA.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let slot = arena.slots[self.slot as usize];
+            if slot.occupied && slot.generation == self.generation {
+                assert!(arena.retired_len < DB_IO_PLATFORM_BUFFERS, "DB I/O fixed platform retirement arena saturated");
+                let write = (arena.retired_read + arena.retired_len) % DB_IO_PLATFORM_BUFFERS;
+                arena.retired[write] = Some((self.slot, self.generation));
+                arena.retired_len += 1;
+                self.returned = true;
+            }
+        }
+    }
+}
+
+pub fn db_io_platform_maintenance_step() -> Result<bool, DbError> {
+    let mut arena = DB_IO_PLATFORM_ARENA.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if arena.retired_len == 0 {
+        return Ok(false);
+    }
+    let read = arena.retired_read;
+    let (slot, generation) = arena.retired[read].take().expect("DB I/O platform retired length names an exact owner");
+    let owner = arena.slots[slot as usize];
+    if !owner.occupied || owner.generation != generation {
+        return Err(DbError::Internal("DB I/O platform retirement lost ABA authority".to_string()));
+    }
+    arena.slots[slot as usize] = DbIoPlatformSlot { generation: 0, occupied: false };
+    arena.retired_read = (read + 1) % DB_IO_PLATFORM_BUFFERS;
+    arena.retired_len -= 1;
+    Ok(true)
+}
+
+impl Future for DbIoPlatformCopy<'_> {
+    type Output = Result<DbIoPlatformBuffer, DbError>;
+
+    fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        let owner = self.as_mut().get_mut();
+        let Some(fragment) = owner.source.page(owner.cursor) else {
+            return std::task::Poll::Ready(Ok(owner.owner.take().expect("DB I/O prepared platform buffer consumed once")));
+        };
+        let platform = owner.owner.as_mut().expect("DB I/O prepared platform buffer retained");
+        let end = platform.copied.checked_add(fragment.len()).ok_or(DbError::LimitExceeded("db_io prepared platform cursor"))?;
+        unsafe { (*DB_IO_PLATFORM_BACKINGS[platform.slot as usize].0.get())[platform.copied..end].copy_from_slice(fragment) };
+        platform.copied = end;
+        owner.cursor += 1;
+        context.waker().wake_by_ref();
+        std::task::Poll::Pending
+    }
+}
+
+/// @emoji 📄 Exact ordered fixed-page leases with a zero-copy movable range cursor.
+#[derive(Debug)]
+pub struct DbIoPages {
+    operation: u64,
+    pages: [Option<DbIoPageLease>; DB_IO_OPERATION_PAGES],
+    retained: u8,
+    visible: u8,
+    first_offset: usize,
+    total_len: usize,
+}
+
+impl DbIoPages {
+    pub fn operation(&self) -> u64 {
+        self.operation
+    }
+
+    pub fn len(&self) -> usize {
+        self.total_len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.total_len == 0
+    }
+
+    pub fn page_count(&self) -> u8 {
+        self.visible
+    }
+
+    pub fn page(&self, index: u8) -> Option<&[u8]> {
+        if index >= self.visible {
+            return None;
+        }
+        let physical = usize::from(index) + self.first_offset / DB_IO_PAGE_BYTES;
+        let page = self.pages.get(physical)?.as_ref()?.bytes();
+        let start = if index == 0 { self.first_offset % DB_IO_PAGE_BYTES } else { 0 };
+        let preceding = usize::from(index).checked_mul(DB_IO_PAGE_BYTES)?.saturating_sub(if index == 0 { 0 } else { self.first_offset % DB_IO_PAGE_BYTES });
+        let remaining = self.total_len.saturating_sub(preceding);
+        page.get(start..start.saturating_add(remaining.min(page.len().saturating_sub(start))))
+    }
+
+    pub fn fragments(&self) -> DbIoPageReader<'_> {
+        DbIoPageReader { pages: self, cursor: 0 }
+    }
+
+    pub fn try_range(mut self, start: usize) -> Result<Self, Self> {
+        if start > self.total_len {
+            return Err(self);
+        }
+        self.first_offset += start;
+        self.total_len -= start;
+        self.visible = if self.total_len == 0 { 0 } else { (self.first_offset % DB_IO_PAGE_BYTES + self.total_len).div_ceil(DB_IO_PAGE_BYTES) as u8 };
+        Ok(self)
+    }
+
+    pub fn try_prefix(mut self, len: usize) -> Result<Self, Self> {
+        if len > self.total_len {
+            return Err(self);
+        }
+        self.total_len = len;
+        self.visible = if len == 0 { 0 } else { (self.first_offset % DB_IO_PAGE_BYTES + len).div_ceil(DB_IO_PAGE_BYTES) as u8 };
+        Ok(self)
+    }
+
+    pub fn advance(&mut self, len: usize) -> Result<(), DbError> {
+        if len > self.total_len {
+            return Err(DbError::InvalidArgument("DB I/O page cursor advanced past its retained range".to_string()));
+        }
+        self.first_offset += len;
+        self.total_len -= len;
+        self.visible = if self.total_len == 0 { 0 } else { (self.first_offset % DB_IO_PAGE_BYTES + self.total_len).div_ceil(DB_IO_PAGE_BYTES) as u8 };
+        Ok(())
+    }
+
+    fn transition(&self, expected: DbIoPagePhase, next: DbIoPagePhase) -> Result<(), DbError> {
+        let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        for page in self.pages.iter().take(self.retained as usize).flatten() {
+            let slot = state.slots[page.slot as usize];
+            if slot.generation != page.generation || slot.operation != page.operation || slot.phase != expected {
+                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(page.generation), actual: crate::db_ids::GenerationId(slot.generation) });
+            }
+        }
+        for page in self.pages.iter().take(self.retained as usize).flatten() {
+            state.slots[page.slot as usize].phase = next;
+        }
+        Ok(())
+    }
+
+    fn admit(&self) -> Result<(), DbError> {
+        let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        for page in self.pages.iter().take(self.retained as usize).flatten() {
+            let slot = state.slots[page.slot as usize];
+            if slot.generation != page.generation || slot.operation != page.operation || !matches!(slot.phase, DbIoPagePhase::CheckedOutInput | DbIoPagePhase::TerminalResult) {
+                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(page.generation), actual: crate::db_ids::GenerationId(slot.generation) });
+            }
+        }
+        for page in self.pages.iter().take(self.retained as usize).flatten() {
+            state.slots[page.slot as usize].phase = DbIoPagePhase::Queued;
+        }
+        Ok(())
+    }
+
+    pub fn close_step(&mut self) -> Result<Option<usize>, DbError> {
+        let Some(page) = self.pages.iter_mut().rev().find_map(Option::take) else { return Ok(None) };
+        let state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let phase = state.slots[page.slot as usize].phase;
+        drop(state);
+        page.transition(phase, DbIoPagePhase::Closing)?;
+        page.return_to_arena().map(Some)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.pages.iter().all(Option::is_none)
+    }
+}
+
+impl PartialEq<[u8]> for DbIoPages {
+    fn eq(&self, expected: &[u8]) -> bool {
+        if self.len() != expected.len() {
+            return false;
+        }
+        let mut offset = 0;
+        for fragment in self.fragments() {
+            let end = offset + fragment.len();
+            if fragment != &expected[offset..end] {
+                return false;
+            }
+            offset = end;
+        }
+        true
+    }
+}
+
+impl PartialEq for DbIoPages {
+    fn eq(&self, expected: &Self) -> bool {
+        if self.len() != expected.len() {
+            return false;
+        }
+        let mut left = self.fragments();
+        let mut right = expected.fragments();
+        let (mut left_fragment, mut right_fragment) = (left.next().unwrap_or_default(), right.next().unwrap_or_default());
+        let (mut left_offset, mut right_offset) = (0, 0);
+        while left_offset < left_fragment.len() || right_offset < right_fragment.len() || self.len() == 0 {
+            if self.len() == 0 {
+                return true;
+            }
+            let compared = (left_fragment.len() - left_offset).min(right_fragment.len() - right_offset);
+            if left_fragment[left_offset..left_offset + compared] != right_fragment[right_offset..right_offset + compared] {
+                return false;
+            }
+            left_offset += compared;
+            right_offset += compared;
+            if left_offset == left_fragment.len() {
+                let Some(next) = left.next() else { return right_offset == right_fragment.len() && right.next().is_none() };
+                left_fragment = next;
+                left_offset = 0;
+            }
+            if right_offset == right_fragment.len() {
+                let Some(next) = right.next() else { return left_offset == left_fragment.len() && left.next().is_none() };
+                right_fragment = next;
+                right_offset = 0;
+            }
+        }
+        true
+    }
+}
+
+impl Eq for DbIoPages {}
+
+impl PartialEq<&[u8]> for DbIoPages {
+    fn eq(&self, expected: &&[u8]) -> bool {
+        self == *expected
+    }
+}
+
+impl<const N: usize> PartialEq<[u8; N]> for DbIoPages {
+    fn eq(&self, expected: &[u8; N]) -> bool {
+        self == expected.as_slice()
+    }
+}
+
+impl PartialEq<Vec<u8>> for DbIoPages {
+    fn eq(&self, expected: &Vec<u8>) -> bool {
+        self == expected.as_slice()
+    }
+}
+
+pub struct DbIoPageReader<'a> {
+    pages: &'a DbIoPages,
+    cursor: u8,
+}
+
+impl<'a> Iterator for DbIoPageReader<'a> {
+    type Item = &'a [u8];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let fragment = self.pages.page(self.cursor)?;
+        self.cursor += 1;
+        Some(fragment)
+    }
+}
+
+pub fn db_io_page_maintenance_step() -> Result<Option<usize>, DbError> {
+    let mut state = db_io_page_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some((slot, generation)) = state.retired[state.retired_read].take() else { return Ok(None) };
+    state.retired_read = (state.retired_read + 1) % DB_IO_TOTAL_PAGES;
+    state.retired_len -= 1;
+    let owner = state.slots[slot as usize];
+    if owner.generation != generation || owner.phase != DbIoPagePhase::Closing {
+        return Err(DbError::Internal("db I/O page retirement lost ABA authority".to_string()));
+    }
+    state.slots[slot as usize] = EMPTY_DB_IO_PAGE_SLOT;
+    let write = (state.free_read + state.free_len) % DB_IO_TOTAL_PAGES;
+    state.free[write] = slot;
+    state.free_len += 1;
+    Ok(Some(DB_IO_PAGE_BYTES))
+}
+
+const DB_IO_TEXT_BYTES: usize = 1024;
+const DB_IO_LIST_ITEMS: usize = 4096;
+
+/// @emoji 🔤 Fixed repository-owned path, document, key or fault text.
+#[derive(Clone, PartialEq, Eq)]
+pub struct DbIoText {
+    bytes: [u8; DB_IO_TEXT_BYTES],
+    len: u16,
+}
+
+impl DbIoText {
+    fn new() -> Self {
+        Self { bytes: [0; DB_IO_TEXT_BYTES], len: 0 }
+    }
+
+    pub fn try_from_str(value: &str) -> Result<Self, DbError> {
+        if value.len() > DB_IO_TEXT_BYTES {
+            return Err(DbError::LimitExceeded("db_io text authority"));
+        }
+        let mut bytes = [0; DB_IO_TEXT_BYTES];
+        bytes[..value.len()].copy_from_slice(value.as_bytes());
+        Ok(Self { bytes, len: value.len() as u16 })
+    }
+
+    pub fn as_str(&self) -> &str {
+        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).expect("DB I/O text is admitted from UTF-8")
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    fn close_step(&mut self) -> bool {
+        if self.len == 0 {
+            return false;
+        }
+        self.len = 0;
+        true
+    }
+}
+
+impl std::fmt::Write for DbIoText {
+    fn write_str(&mut self, value: &str) -> std::fmt::Result {
+        let start = usize::from(self.len);
+        let end = start.checked_add(value.len()).ok_or(std::fmt::Error)?;
+        let target = self.bytes.get_mut(start..end).ok_or(std::fmt::Error)?;
+        target.copy_from_slice(value.as_bytes());
+        self.len = end as u16;
+        Ok(())
+    }
+}
+
+impl std::fmt::Debug for DbIoText {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_tuple("DbIoText").field(&self.as_str()).finish()
+    }
+}
+
+/// @emoji 🔢 Fixed typed list result without a dynamic vector owner.
+pub struct DbIoU64List {
+    values: [u64; DB_IO_LIST_ITEMS],
+    len: u16,
+}
+
+impl DbIoU64List {
+    pub fn new() -> Self {
+        Self { values: [0; DB_IO_LIST_ITEMS], len: 0 }
+    }
+
+    pub fn push(&mut self, value: u64) -> Result<(), DbError> {
+        let index = usize::from(self.len);
+        let Some(slot) = self.values.get_mut(index) else { return Err(DbError::LimitExceeded("db_io list authority")) };
+        *slot = value;
+        self.len += 1;
+        Ok(())
+    }
+
+    pub fn as_slice(&self) -> &[u64] {
+        &self.values[..usize::from(self.len)]
+    }
+
+    pub fn len(&self) -> usize {
+        usize::from(self.len)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn sort_unstable(&mut self) {
+        let len = usize::from(self.len);
+        self.values[..len].sort_unstable();
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.len == 0 {
+            return false;
+        }
+        self.len -= 1;
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
+impl Default for DbIoU64List {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl std::ops::Deref for DbIoU64List {
+    type Target = [u64];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_slice()
+    }
+}
+
+impl std::ops::DerefMut for DbIoU64List {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        let len = usize::from(self.len);
+        &mut self.values[..len]
+    }
+}
+
+impl std::fmt::Debug for DbIoU64List {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_list().entries(self.as_slice()).finish()
+    }
+}
+
+impl PartialEq<Vec<u64>> for DbIoU64List {
+    fn eq(&self, expected: &Vec<u64>) -> bool {
+        self.as_slice() == expected.as_slice()
+    }
+}
+
+impl<const N: usize> PartialEq<[u64; N]> for DbIoU64List {
+    fn eq(&self, expected: &[u64; N]) -> bool {
+        self.as_slice() == expected.as_slice()
+    }
+}
+
+impl IntoIterator for DbIoU64List {
+    type Item = u64;
+    type IntoIter = std::iter::Take<std::array::IntoIter<u64, DB_IO_LIST_ITEMS>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let len = usize::from(self.len);
+        self.values.into_iter().take(len)
+    }
+}
+
+/// @emoji 🧭 Repository-owned backend identity; external driver values never cross this boundary.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DbIoBackendControl {
+    Memory { slot: u16, generation: u64 },
+    Filesystem { slot: u16, generation: u64 },
+    Sqlite { slot: u16, generation: u64 },
+    Postgres { slot: u16, generation: u64 },
+    Neo4j { slot: u16, generation: u64 },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DbIoBackendKind {
+    Memory,
+    Filesystem,
+    Sqlite,
+    Postgres,
+    Neo4j,
+}
+
+/// @emoji 🗂️ Schema-first database I/O task owner.
+pub enum DbIoTask {
+    BackendOpen { backend: DbIoBackendControl, path: DbIoText },
+    WalCreate { backend: DbIoBackendControl, document: DbIoText, index: u64 },
+    WalAppend { backend: DbIoBackendControl, document: DbIoText, index: u64, input: DbIoPages },
+    WalSync { backend: DbIoBackendControl, document: DbIoText, index: u64, class: DurabilityClass },
+    WalSeal { backend: DbIoBackendControl, document: DbIoText, index: u64 },
+    WalRead { backend: DbIoBackendControl, document: DbIoText, index: u64, range: ByteRange, output: DbIoPageWriter },
+    WalLength { backend: DbIoBackendControl, document: DbIoText, index: u64 },
+    WalList { backend: DbIoBackendControl, document: DbIoText, output: DbIoU64List },
+    WalTruncate { backend: DbIoBackendControl, document: DbIoText, index: u64, new_len: u64 },
+    WalDelete { backend: DbIoBackendControl, document: DbIoText, index: u64 },
+    SnapshotWrite { backend: DbIoBackendControl, document: DbIoText, generation: u64, input: DbIoPages },
+    SnapshotRead { backend: DbIoBackendControl, document: DbIoText, generation: u64, output: DbIoPageWriter },
+    SnapshotLatest { backend: DbIoBackendControl, document: DbIoText, output: DbIoU64List },
+    SnapshotList { backend: DbIoBackendControl, document: DbIoText, output: DbIoU64List },
+    SnapshotDelete { backend: DbIoBackendControl, document: DbIoText, generation: u64 },
+    PayloadPut { backend: DbIoBackendControl, input: DbIoPages },
+    PayloadGet { backend: DbIoBackendControl, hash: ContentHash, output: DbIoPageWriter },
+    PayloadExists { backend: DbIoBackendControl, hash: ContentHash },
+    PayloadLength { backend: DbIoBackendControl, hash: ContentHash },
+    PayloadDelete { backend: DbIoBackendControl, hash: ContentHash },
+    CatalogRead { backend: DbIoBackendControl, output: DbIoPageWriter },
+    CatalogCas { backend: DbIoBackendControl, expected: EpochFence, input: DbIoPages },
+    IndexWrite { backend: DbIoBackendControl, document: DbIoText, run_id: u64, input: DbIoPages },
+    IndexRead { backend: DbIoBackendControl, document: DbIoText, run_id: u64, output: DbIoPageWriter },
+    IndexList { backend: DbIoBackendControl, document: DbIoText, output: DbIoU64List },
+    IndexDelete { backend: DbIoBackendControl, document: DbIoText, run_id: u64 },
+    LeaseAcquire { backend: DbIoBackendControl, document: DbIoText, holder: DbIoText, now_ms: u64, ttl_ms: u64 },
+    LeaseRenew { backend: DbIoBackendControl, document: DbIoText, holder: DbIoText, fence: EpochFence, now_ms: u64, ttl_ms: u64 },
+    LeaseRelease { backend: DbIoBackendControl, document: DbIoText, holder: DbIoText, fence: EpochFence },
+    LeaseGet { backend: DbIoBackendControl, document: DbIoText, now_ms: u64 },
+    BackendClose { backend: DbIoBackendControl },
+}
+
+/// @emoji 📬 Exact typed database I/O terminal result.
+pub enum DbIoResult {
+    Unit,
+    Length(u64),
+    OptionalLength(Option<u64>),
+    Exists(bool),
+    Hash(ContentHash),
+    Fence(EpochFence),
+    Pages(DbIoPages),
+    OptionalCatalog(Option<(DbIoPages, EpochFence)>),
+    List(DbIoU64List),
+    Lease(DbIoLeaseResult),
+    OptionalLease(Option<DbIoLeaseResult>),
+}
+
+pub struct DbIoLeaseResult {
+    pub resource: DbIoText,
+    pub holder: DbIoText,
+    pub fence: EpochFence,
+    pub expires_at_ms: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DbIoTaskPhase {
+    Admitted,
+    Queued,
+    Executing,
+    Completed,
+    Cancelled,
+    Faulted,
+    Closing,
+}
+
+impl DbIoTask {
+    pub fn backend(&self) -> DbIoBackendControl {
+        match self {
+            Self::BackendOpen { backend, .. }
+            | Self::WalCreate { backend, .. }
+            | Self::WalAppend { backend, .. }
+            | Self::WalSync { backend, .. }
+            | Self::WalSeal { backend, .. }
+            | Self::WalRead { backend, .. }
+            | Self::WalLength { backend, .. }
+            | Self::WalList { backend, .. }
+            | Self::WalTruncate { backend, .. }
+            | Self::WalDelete { backend, .. }
+            | Self::SnapshotWrite { backend, .. }
+            | Self::SnapshotRead { backend, .. }
+            | Self::SnapshotLatest { backend, .. }
+            | Self::SnapshotList { backend, .. }
+            | Self::SnapshotDelete { backend, .. }
+            | Self::PayloadPut { backend, .. }
+            | Self::PayloadGet { backend, .. }
+            | Self::PayloadExists { backend, .. }
+            | Self::PayloadLength { backend, .. }
+            | Self::PayloadDelete { backend, .. }
+            | Self::CatalogRead { backend, .. }
+            | Self::CatalogCas { backend, .. }
+            | Self::IndexWrite { backend, .. }
+            | Self::IndexRead { backend, .. }
+            | Self::IndexList { backend, .. }
+            | Self::IndexDelete { backend, .. }
+            | Self::LeaseAcquire { backend, .. }
+            | Self::LeaseRenew { backend, .. }
+            | Self::LeaseRelease { backend, .. }
+            | Self::LeaseGet { backend, .. }
+            | Self::BackendClose { backend } => *backend,
+        }
+    }
+
+    fn admit_pages(&self) -> Result<(), DbError> {
+        match self {
+            Self::WalAppend { input, .. }
+            | Self::SnapshotWrite { input, .. }
+            | Self::PayloadPut { input, .. }
+            | Self::CatalogCas { input, .. }
+            | Self::IndexWrite { input, .. } => input.admit(),
+            Self::WalRead { output, .. }
+            | Self::SnapshotRead { output, .. }
+            | Self::PayloadGet { output, .. }
+            | Self::CatalogRead { output, .. }
+            | Self::IndexRead { output, .. } => output.transition(DbIoPagePhase::CheckedOutWriter, DbIoPagePhase::Queued),
+            _ => Ok(()),
+        }
+    }
+
+    fn transition_pages(&self, expected: DbIoPagePhase, next: DbIoPagePhase) -> Result<(), DbError> {
+        match self {
+            Self::WalAppend { input, .. }
+            | Self::SnapshotWrite { input, .. }
+            | Self::PayloadPut { input, .. }
+            | Self::CatalogCas { input, .. }
+            | Self::IndexWrite { input, .. } => input.transition(expected, next),
+            Self::WalRead { output, .. }
+            | Self::SnapshotRead { output, .. }
+            | Self::PayloadGet { output, .. }
+            | Self::CatalogRead { output, .. }
+            | Self::IndexRead { output, .. } => output.transition(expected, next),
+            _ => Ok(()),
+        }
+    }
+
+    fn close_step(&mut self) -> Result<Option<usize>, DbError> {
+        match self {
+            Self::WalAppend { document, input, .. }
+            | Self::SnapshotWrite { document, input, .. }
+            | Self::IndexWrite { document, input, .. } => {
+                if let Some(bytes) = input.close_step()? {
+                    return Ok(Some(bytes));
+                }
+                if document.close_step() {
+                    return Ok(Some(0));
+                }
+            }
+            Self::PayloadPut { input, .. } | Self::CatalogCas { input, .. } => {
+                if let Some(bytes) = input.close_step()? {
+                    return Ok(Some(bytes));
+                }
+            }
+            Self::WalRead { document, output, .. }
+            | Self::SnapshotRead { document, output, .. }
+            | Self::IndexRead { document, output, .. } => {
+                if let Some(bytes) = output.close_step()? {
+                    return Ok(Some(bytes));
+                }
+                if document.close_step() {
+                    return Ok(Some(0));
+                }
+            }
+            Self::PayloadGet { output, .. } | Self::CatalogRead { output, .. } => {
+                if let Some(bytes) = output.close_step()? {
+                    return Ok(Some(bytes));
+                }
+            }
+            Self::BackendOpen { path, .. } => {
+                if path.close_step() {
+                    return Ok(Some(0));
+                }
+            }
+            Self::WalList { document, output, .. }
+            | Self::SnapshotLatest { document, output, .. }
+            | Self::SnapshotList { document, output, .. }
+            | Self::IndexList { document, output, .. } => {
+                if output.close_step() || document.close_step() {
+                    return Ok(Some(0));
+                }
+            }
+            Self::WalCreate { document, .. }
+            | Self::WalSync { document, .. }
+            | Self::WalSeal { document, .. }
+            | Self::WalLength { document, .. }
+            | Self::WalTruncate { document, .. }
+            | Self::WalDelete { document, .. }
+            | Self::SnapshotDelete { document, .. }
+            | Self::IndexDelete { document, .. } => {
+                if document.close_step() {
+                    return Ok(Some(0));
+                }
+            }
+            Self::LeaseAcquire { document, holder, .. }
+            | Self::LeaseRenew { document, holder, .. }
+            | Self::LeaseRelease { document, holder, .. } => {
+                if holder.close_step() || document.close_step() {
+                    return Ok(Some(0));
+                }
+            }
+            Self::LeaseGet { document, .. } => {
+                if document.close_step() {
+                    return Ok(Some(0));
+                }
+            }
+            Self::PayloadExists { .. } | Self::PayloadLength { .. } | Self::PayloadDelete { .. } | Self::BackendClose { .. } => {}
+        }
+        Ok(None)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        match self {
+            Self::WalAppend { document, input, .. }
+            | Self::SnapshotWrite { document, input, .. }
+            | Self::IndexWrite { document, input, .. } => document.terminal_is_empty() && input.terminal_is_empty(),
+            Self::PayloadPut { input, .. } | Self::CatalogCas { input, .. } => input.terminal_is_empty(),
+            Self::WalRead { document, output, .. }
+            | Self::SnapshotRead { document, output, .. }
+            | Self::IndexRead { document, output, .. } => document.terminal_is_empty() && output.terminal_is_empty(),
+            Self::PayloadGet { output, .. } | Self::CatalogRead { output, .. } => output.terminal_is_empty(),
+            Self::BackendOpen { path, .. } => path.terminal_is_empty(),
+            Self::WalList { document, output, .. }
+            | Self::SnapshotLatest { document, output, .. }
+            | Self::SnapshotList { document, output, .. }
+            | Self::IndexList { document, output, .. } => document.terminal_is_empty() && output.terminal_is_empty(),
+            Self::WalCreate { document, .. }
+            | Self::WalSync { document, .. }
+            | Self::WalSeal { document, .. }
+            | Self::WalLength { document, .. }
+            | Self::WalTruncate { document, .. }
+            | Self::WalDelete { document, .. }
+            | Self::SnapshotDelete { document, .. }
+            | Self::IndexDelete { document, .. }
+            | Self::LeaseGet { document, .. } => document.terminal_is_empty(),
+            Self::LeaseAcquire { document, holder, .. }
+            | Self::LeaseRenew { document, holder, .. }
+            | Self::LeaseRelease { document, holder, .. } => document.terminal_is_empty() && holder.terminal_is_empty(),
+            Self::PayloadExists { .. } | Self::PayloadLength { .. } | Self::PayloadDelete { .. } | Self::BackendClose { .. } => true,
+        }
+    }
+}
+
+impl DbIoResult {
+    fn close_step(&mut self) -> Result<Option<usize>, DbError> {
+        match self {
+            Self::Pages(pages) => pages.close_step(),
+            Self::OptionalCatalog(Some((pages, _))) => pages.close_step(),
+            Self::List(list) => Ok(list.close_step().then_some(0)),
+            Self::Lease(lease) | Self::OptionalLease(Some(lease)) => {
+                if lease.holder.close_step() || lease.resource.close_step() {
+                    return Ok(Some(0));
+                }
+                Ok(None)
+            }
+            Self::Unit
+            | Self::Length(_)
+            | Self::OptionalLength(_)
+            | Self::Exists(_)
+            | Self::Hash(_)
+            | Self::Fence(_)
+            | Self::OptionalCatalog(None)
+            | Self::OptionalLease(None) => Ok(None),
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        match self {
+            Self::Pages(pages) => pages.terminal_is_empty(),
+            Self::OptionalCatalog(Some((pages, _))) => pages.terminal_is_empty(),
+            Self::List(list) => list.terminal_is_empty(),
+            Self::Lease(lease) | Self::OptionalLease(Some(lease)) => lease.resource.terminal_is_empty() && lease.holder.terminal_is_empty(),
+            Self::Unit
+            | Self::Length(_)
+            | Self::OptionalLength(_)
+            | Self::Exists(_)
+            | Self::Hash(_)
+            | Self::Fence(_)
+            | Self::OptionalCatalog(None)
+            | Self::OptionalLease(None) => true,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DbIoExecutionStep {
+    Yield,
+    Complete,
+}
+
+/// @emoji 🔌 Platform drivers implement one typed, resumable task step behind repository owners.
+pub trait DbIoTaskExecutor: Send + Sync {
+    fn execute_step(&self, operation: u64, task: &mut DbIoTask) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError>;
+
+    fn close_operation_step(&self, operation: u64, task: &DbIoTask) -> Result<bool, DbError>;
+}
+
+const DB_IO_BACKEND_CONTROLS: usize = 64;
+
+struct DbIoBackendRegistrySlot {
+    generation: u64,
+    executor: Option<Arc<dyn DbIoTaskExecutor>>,
+}
+
+struct DbIoBackendRegistry {
+    slots: [DbIoBackendRegistrySlot; DB_IO_BACKEND_CONTROLS],
+    free: [u16; DB_IO_BACKEND_CONTROLS],
+    free_read: usize,
+    free_len: usize,
+    next_generation: u64,
+}
+
+impl DbIoBackendRegistry {
+    fn new() -> Self {
+        Self {
+            slots: std::array::from_fn(|_| DbIoBackendRegistrySlot { generation: 0, executor: None }),
+            free: std::array::from_fn(|index| index as u16),
+            free_read: 0,
+            free_len: DB_IO_BACKEND_CONTROLS,
+            next_generation: 1,
+        }
+    }
+}
+
+static DB_IO_BACKEND_REGISTRY: std::sync::OnceLock<std::sync::Mutex<DbIoBackendRegistry>> = std::sync::OnceLock::new();
+
+fn db_io_backend_registry() -> &'static std::sync::Mutex<DbIoBackendRegistry> {
+    DB_IO_BACKEND_REGISTRY.get_or_init(|| std::sync::Mutex::new(DbIoBackendRegistry::new()))
+}
+
+pub fn register_db_io_backend(kind: DbIoBackendKind, executor: Arc<dyn DbIoTaskExecutor>) -> Result<DbIoBackendControl, DbError> {
+    let mut registry = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if registry.free_len == 0 || registry.next_generation == u64::MAX {
+        return Err(DbError::Unavailable("db I/O backend control capacity exhausted".to_string()));
+    }
+    let slot = registry.free[registry.free_read];
+    registry.free_read = (registry.free_read + 1) % DB_IO_BACKEND_CONTROLS;
+    registry.free_len -= 1;
+    let generation = registry.next_generation;
+    registry.next_generation += 1;
+    registry.slots[slot as usize] = DbIoBackendRegistrySlot { generation, executor: Some(executor) };
+    let control = match kind {
+        DbIoBackendKind::Memory => DbIoBackendControl::Memory { slot, generation },
+        DbIoBackendKind::Filesystem => DbIoBackendControl::Filesystem { slot, generation },
+        DbIoBackendKind::Sqlite => DbIoBackendControl::Sqlite { slot, generation },
+        DbIoBackendKind::Postgres => DbIoBackendControl::Postgres { slot, generation },
+        DbIoBackendKind::Neo4j => DbIoBackendControl::Neo4j { slot, generation },
+    };
+    Ok(control)
+}
+
+fn db_io_backend_parts(control: DbIoBackendControl) -> (u16, u64) {
+    match control {
+        DbIoBackendControl::Memory { slot, generation }
+        | DbIoBackendControl::Filesystem { slot, generation }
+        | DbIoBackendControl::Sqlite { slot, generation }
+        | DbIoBackendControl::Postgres { slot, generation }
+        | DbIoBackendControl::Neo4j { slot, generation } => (slot, generation),
+    }
+}
+
+fn db_io_executor(control: DbIoBackendControl) -> Result<Arc<dyn DbIoTaskExecutor>, DbError> {
+    let (slot, generation) = db_io_backend_parts(control);
+    let registry = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let owner = &registry.slots[slot as usize];
+    if owner.generation != generation {
+        return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(generation), actual: crate::db_ids::GenerationId(owner.generation) });
+    }
+    owner.executor.clone().ok_or(DbError::Closed)
+}
+
+pub fn unregister_db_io_backend(control: DbIoBackendControl) -> Result<(), DbError> {
+    let (slot, generation) = db_io_backend_parts(control);
+    let mut registry = db_io_backend_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let owner = &registry.slots[slot as usize];
+    if owner.generation != generation || owner.executor.is_none() {
+        return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(generation), actual: crate::db_ids::GenerationId(owner.generation) });
+    }
+    registry.slots[slot as usize] = DbIoBackendRegistrySlot { generation: 0, executor: None };
+    let write = (registry.free_read + registry.free_len) % DB_IO_BACKEND_CONTROLS;
+    registry.free[write] = slot;
+    registry.free_len += 1;
+    Ok(())
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DbIoFaultKind {
+    Backend,
+    Cancelled,
+    Panic,
+    Saturated,
+    Stale,
+}
+
+pub struct DbIoFault {
+    pub kind: DbIoFaultKind,
+    pub detail: DbIoText,
+}
+
+impl DbIoFault {
+    pub fn into_db_error(self) -> DbError {
+        match self.kind {
+            DbIoFaultKind::Cancelled => DbError::Closed,
+            DbIoFaultKind::Saturated => DbError::Unavailable(self.detail.as_str().to_string()),
+            DbIoFaultKind::Stale => DbError::Internal(self.detail.as_str().to_string()),
+            DbIoFaultKind::Backend | DbIoFaultKind::Panic => DbError::Internal(self.detail.as_str().to_string()),
+        }
+    }
+}
+
+enum DbIoTerminal {
+    Result(DbIoResult),
+    Fault(DbIoFault),
+    Cancelled,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct DbIoTaskHandle {
+    slot: u16,
+    generation: u64,
+    operation: u64,
+}
+
+struct DbIoTaskSlot {
+    generation: u64,
+    operation: u64,
+    phase: DbIoTaskPhase,
+    task: Option<DbIoTask>,
+    terminal: Option<DbIoTerminal>,
+    pool: Option<WorkerPool>,
+    retry_job: Option<(Job, u8)>,
+    terminal_job: Option<(WorkerSubmitErrorKind, Job)>,
+    waker: Option<std::task::Waker>,
+    retry_generation: u64,
+    cancelled: bool,
+    abandoned: bool,
+    close_enqueued: bool,
+    backend_cleanup_done: bool,
+    backend_to_close: Option<DbIoBackendControl>,
+    counted: bool,
+}
+
+impl DbIoTaskSlot {
+    const fn empty() -> Self {
+        Self {
+            generation: 0,
+            operation: 0,
+            phase: DbIoTaskPhase::Closing,
+            task: None,
+            terminal: None,
+            pool: None,
+            retry_job: None,
+            terminal_job: None,
+            waker: None,
+            retry_generation: 0,
+            cancelled: false,
+            abandoned: false,
+            close_enqueued: false,
+            backend_cleanup_done: false,
+            backend_to_close: None,
+            counted: false,
+        }
+    }
+}
+
+static DB_IO_TASK_SLOTS: [std::sync::Mutex<DbIoTaskSlot>; DB_IO_OPERATION_ITEMS] = [const { std::sync::Mutex::new(DbIoTaskSlot::empty()) }; DB_IO_OPERATION_ITEMS];
+
+struct DbIoTaskArena {
+    free: [u16; DB_IO_OPERATION_ITEMS],
+    free_read: usize,
+    free_len: usize,
+    closing: [Option<DbIoTaskHandle>; DB_IO_OPERATION_ITEMS],
+    closing_read: usize,
+    closing_len: usize,
+    next_generation: u64,
+}
+
+impl DbIoTaskArena {
+    fn new() -> Self {
+        Self {
+            free: std::array::from_fn(|index| index as u16),
+            free_read: 0,
+            free_len: DB_IO_OPERATION_ITEMS,
+            closing: [None; DB_IO_OPERATION_ITEMS],
+            closing_read: 0,
+            closing_len: 0,
+            next_generation: 1,
+        }
+    }
+}
+
+static DB_IO_TASK_ARENA: std::sync::OnceLock<std::sync::Mutex<DbIoTaskArena>> = std::sync::OnceLock::new();
+
+fn db_io_task_arena() -> &'static std::sync::Mutex<DbIoTaskArena> {
+    DB_IO_TASK_ARENA.get_or_init(|| std::sync::Mutex::new(DbIoTaskArena::new()))
+}
+
+fn db_io_task_fault(kind: DbIoFaultKind, error: &DbError) -> DbIoFault {
+    use std::fmt::Write as _;
+    let mut detail = DbIoText::new();
+    if write!(&mut detail, "{error}").is_err() {
+        detail = DbIoText::try_from_str("DB I/O fault detail exceeded fixed authority").expect("fixed fault literal");
+    }
+    DbIoFault { kind, detail }
+}
+
+fn db_io_allocate_task(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoTaskHandle, (DbError, DbIoTask)> {
+    let operation = match db_io_next_operation() {
+        Ok(operation) => operation,
+        Err(error) => return Err((error, task)),
+    };
+    let mut arena = db_io_task_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if arena.free_len == 0 || arena.next_generation == u64::MAX {
+        return Err((DbError::Unavailable("db I/O task capacity exhausted".to_string()), task));
+    }
+    if let Err(error) = task.admit_pages() {
+        return Err((error, task));
+    }
+    let slot = arena.free[arena.free_read];
+    arena.free_read = (arena.free_read + 1) % DB_IO_OPERATION_ITEMS;
+    arena.free_len -= 1;
+    let generation = arena.next_generation;
+    arena.next_generation += 1;
+    drop(arena);
+    let handle = DbIoTaskHandle { slot, generation, operation };
+    let mut owner = DB_IO_TASK_SLOTS[slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let backend_to_close = match &task {
+        DbIoTask::BackendClose { backend } => Some(*backend),
+        _ => None,
+    };
+    *owner = DbIoTaskSlot {
+        generation,
+        operation,
+        phase: DbIoTaskPhase::Admitted,
+        task: Some(task),
+        terminal: None,
+        pool: Some(pool.clone()),
+        retry_job: None,
+        terminal_job: None,
+        waker: None,
+        retry_generation: 1,
+        cancelled: false,
+        abandoned: false,
+        close_enqueued: false,
+        backend_cleanup_done: false,
+        backend_to_close,
+        counted: true,
+    };
+    BLOCKING_QUEUE.enqueued(0);
+    Ok(handle)
+}
+
+fn db_io_slot_matches(slot: &DbIoTaskSlot, handle: DbIoTaskHandle) -> bool {
+    slot.generation == handle.generation && slot.operation == handle.operation && handle.generation != 0 && handle.operation != 0
+}
+
+fn db_io_enqueue_close(handle: DbIoTaskHandle) -> Result<(), DbError> {
+    let mut arena = db_io_task_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if arena.closing_len == DB_IO_OPERATION_ITEMS {
+        return Err(DbError::Unavailable("DB I/O task close arena saturated".to_string()));
+    }
+    let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if !db_io_slot_matches(&owner, handle) {
+        return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(handle.generation), actual: crate::db_ids::GenerationId(owner.generation) });
+    }
+    if owner.close_enqueued {
+        return Ok(());
+    }
+    owner.close_enqueued = true;
+    owner.phase = DbIoTaskPhase::Closing;
+    drop(owner);
+    let write = (arena.closing_read + arena.closing_len) % DB_IO_OPERATION_ITEMS;
+    arena.closing[write] = Some(handle);
+    arena.closing_len += 1;
+    Ok(())
+}
+
+fn db_io_submit_close_job(pool: WorkerPool, job: Job) {
+    match pool.try_submit(Lane::Io, job) {
+        Ok(()) => {}
+        Err(error) => {
+            let job = error.into_job();
+            let retry_pool = pool.clone();
+            pool.callback_at(pool.now_ms().saturating_add(DB_IO_RETRY_MS), move || db_io_submit_close_job(retry_pool, job));
+        }
+    }
+}
+
+fn db_io_schedule_close(handle: DbIoTaskHandle) {
+    let pool = {
+        let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !db_io_slot_matches(&owner, handle) {
             return;
         }
-        self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
-        self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
-        self.state.close_one();
-        self.state.finish_if_terminal_empty();
+        owner.pool.clone()
+    };
+    if let Some(pool) = pool {
+        let resubmit_pool = pool.clone();
+        db_io_submit_close_job(
+            pool,
+            Box::new(move || {
+                let _ = db_io_task_close_step();
+                let active = {
+                    let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    db_io_slot_matches(&owner, handle)
+                };
+                if active {
+                    db_io_schedule_close(handle);
+                }
+                drop(resubmit_pool);
+            }),
+        );
     }
 }
 
-impl<T: Send + 'static> DbIoTerminalJob<T> {
-    pub(crate) fn reason(&self) -> WorkerSubmitErrorKind {
-        self.owner.as_ref().expect("terminal DB I/O job already resolved").0
-    }
+fn db_io_wake(owner: &mut DbIoTaskSlot) -> Option<std::task::Waker> {
+    owner.waker.take()
+}
 
-    pub(crate) fn resume(mut self) {
-        let (_, job) = self.owner.take().expect("terminal DB I/O job already resolved");
-        self.state.scheduled.store(true, std::sync::atomic::Ordering::Release);
-        self.state.submit_exact(job, 0);
-    }
-
-    pub(crate) fn close(mut self) {
-        let (_, job) = self.owner.take().expect("terminal DB I/O job already resolved");
-        drop(job);
-        self.state.finish_if_terminal_empty();
+fn db_io_submit_job(handle: DbIoTaskHandle, job: Job, attempt: u8) {
+    let pool = {
+        let owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !db_io_slot_matches(&owner, handle) {
+            return;
+        }
+        owner.pool.clone()
+    };
+    let Some(pool) = pool else { return };
+    match pool.try_submit(Lane::Io, job) {
+        Ok(()) => {
+            let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if db_io_slot_matches(&owner, handle) {
+                owner.phase = DbIoTaskPhase::Queued;
+            }
+        }
+        Err(error) => match error.kind() {
+            WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated if attempt < DB_IO_RETRY_LIMIT => {
+                let retry = error.into_job();
+                let generation = {
+                    let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    if !db_io_slot_matches(&owner, handle) {
+                        return;
+                    }
+                    owner.retry_job = Some((retry, attempt + 1));
+                    owner.retry_generation = owner.retry_generation.checked_add(1).expect("DB I/O retry generation exhausted");
+                    owner.retry_generation
+                };
+                pool.callback_at(pool.now_ms().saturating_add(DB_IO_RETRY_MS), move || db_io_retry(handle, generation));
+            }
+            kind => {
+                let job = error.into_job();
+                let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if !db_io_slot_matches(&owner, handle) {
+                    return;
+                }
+                owner.phase = DbIoTaskPhase::Faulted;
+                owner.terminal_job = Some((kind, job));
+                owner.terminal = Some(DbIoTerminal::Fault(DbIoFault { kind: DbIoFaultKind::Saturated, detail: DbIoText::try_from_str("DB I/O WorkerPool submission failed").expect("fixed submission fault") }));
+                if let Some(waker) = db_io_wake(&mut owner) {
+                    drop(owner);
+                    waker.wake();
+                }
+            }
+        },
     }
 }
 
-impl<T: Send + 'static> Drop for DbIoTerminalJob<T> {
+fn db_io_retry(handle: DbIoTaskHandle, retry_generation: u64) {
+    let retry = {
+        let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !db_io_slot_matches(&owner, handle) || owner.retry_generation != retry_generation {
+            return;
+        }
+        owner.retry_job.take()
+    };
+    if let Some((job, attempt)) = retry {
+        db_io_submit_job(handle, job, attempt);
+    }
+}
+
+fn db_io_drive_one(handle: DbIoTaskHandle) {
+    let (mut task, cancelled) = {
+        let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !db_io_slot_matches(&owner, handle) || owner.close_enqueued {
+            return;
+        }
+        owner.phase = DbIoTaskPhase::Executing;
+        (owner.task.take(), owner.cancelled)
+    };
+    let Some(mut task_owner) = task.take() else { return };
+    if cancelled {
+        let _ = task_owner.transition_pages(DbIoPagePhase::Queued, DbIoPagePhase::TerminalResult);
+        let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        owner.task = Some(task_owner);
+        owner.phase = DbIoTaskPhase::Cancelled;
+        owner.terminal = Some(DbIoTerminal::Cancelled);
+        if let Some(waker) = db_io_wake(&mut owner) {
+            drop(owner);
+            waker.wake();
+        }
+        return;
+    }
+    let mut panicked = false;
+    let execution = task_owner.transition_pages(DbIoPagePhase::Queued, DbIoPagePhase::Executing).and_then(|()| {
+        db_io_executor(task_owner.backend()).and_then(|executor| {
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| executor.execute_step(handle.operation, &mut task_owner))) {
+                Ok(result) => result,
+                Err(_) => {
+                    panicked = true;
+                    Err(DbError::Internal("DB I/O backend panicked".to_string()))
+                }
+            }
+        })
+    });
+    let execution = match execution {
+        Ok((DbIoExecutionStep::Yield, None)) => task_owner.transition_pages(DbIoPagePhase::Executing, DbIoPagePhase::Queued).map(|()| (DbIoExecutionStep::Yield, None)),
+        terminal => {
+            let transition = task_owner.transition_pages(DbIoPagePhase::Executing, DbIoPagePhase::TerminalResult);
+            match (terminal, transition) {
+                (Ok(step), Ok(())) => Ok(step),
+                (Err(error), _) | (_, Err(error)) => Err(error),
+            }
+        }
+    };
+    let mut resubmit = false;
+    let mut waker = None;
+    {
+        let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !db_io_slot_matches(&owner, handle) {
+            return;
+        }
+        owner.task = Some(task_owner);
+        match execution {
+            Ok((DbIoExecutionStep::Yield, None)) => {
+                owner.phase = DbIoTaskPhase::Queued;
+                resubmit = !owner.cancelled && !owner.abandoned;
+            }
+            Ok((DbIoExecutionStep::Complete, Some(result))) => {
+                owner.phase = if owner.cancelled { DbIoTaskPhase::Cancelled } else { DbIoTaskPhase::Completed };
+                owner.terminal = Some(if owner.cancelled { DbIoTerminal::Cancelled } else { DbIoTerminal::Result(result) });
+                waker = db_io_wake(&mut owner);
+            }
+            Ok(_) => {
+                owner.phase = DbIoTaskPhase::Faulted;
+                owner.terminal = Some(DbIoTerminal::Fault(DbIoFault { kind: DbIoFaultKind::Backend, detail: DbIoText::try_from_str("DB I/O executor returned an invalid typed step").expect("fixed typed-step fault") }));
+                waker = db_io_wake(&mut owner);
+            }
+            Err(error) => {
+                owner.phase = DbIoTaskPhase::Faulted;
+                owner.terminal = Some(DbIoTerminal::Fault(db_io_task_fault(if panicked { DbIoFaultKind::Panic } else { DbIoFaultKind::Backend }, &error)));
+                waker = db_io_wake(&mut owner);
+            }
+        }
+    }
+    if let Some(waker) = waker {
+        waker.wake();
+    }
+    if resubmit {
+        db_io_submit_job(handle, Box::new(move || db_io_drive_one(handle)), 0);
+    }
+}
+
+pub struct DbIoTaskOperation {
+    handle: DbIoTaskHandle,
+    resolved: bool,
+}
+
+pub fn submit_db_io_task(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoTaskOperation, (DbError, DbIoTask)> {
+    let handle = db_io_allocate_task(pool, task)?;
+    db_io_submit_job(handle, Box::new(move || db_io_drive_one(handle)), 0);
+    Ok(DbIoTaskOperation { handle, resolved: false })
+}
+
+impl DbIoTaskOperation {
+    pub fn phase(&self) -> DbIoTaskPhase {
+        let owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if db_io_slot_matches(&owner, self.handle) {
+            owner.phase
+        } else {
+            DbIoTaskPhase::Closing
+        }
+    }
+
+    pub fn cancel(&self) -> Result<(), DbError> {
+        let mut owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !db_io_slot_matches(&owner, self.handle) {
+            return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.handle.generation), actual: crate::db_ids::GenerationId(owner.generation) });
+        }
+        owner.cancelled = true;
+        Ok(())
+    }
+
+    pub fn resume(&self) -> Result<bool, DbError> {
+        let retry_generation = {
+            let owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if !db_io_slot_matches(&owner, self.handle) {
+                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.handle.generation), actual: crate::db_ids::GenerationId(owner.generation) });
+            }
+            if owner.retry_job.is_none() {
+                return Ok(false);
+            }
+            owner.retry_generation
+        };
+        db_io_retry(self.handle, retry_generation);
+        Ok(true)
+    }
+
+    pub fn take(&mut self) -> Result<Option<Result<DbIoResult, DbIoFault>>, DbError> {
+        {
+            let owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if !db_io_slot_matches(&owner, self.handle) {
+                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.handle.generation), actual: crate::db_ids::GenerationId(owner.generation) });
+            }
+            if owner.terminal.is_none() {
+                return Ok(None);
+            }
+        }
+        db_io_enqueue_close(self.handle)?;
+        let terminal = {
+            let mut owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if !db_io_slot_matches(&owner, self.handle) {
+                return Err(DbError::StaleGeneration { expected: crate::db_ids::GenerationId(self.handle.generation), actual: crate::db_ids::GenerationId(owner.generation) });
+            }
+            owner.terminal.take().ok_or_else(|| DbError::Internal("DB I/O terminal owner changed during exact take".to_string()))?
+        };
+        self.resolved = true;
+        db_io_schedule_close(self.handle);
+        Ok(Some(match terminal {
+            DbIoTerminal::Result(result) => Ok(result),
+            DbIoTerminal::Fault(fault) => Err(fault),
+            DbIoTerminal::Cancelled => Err(DbIoFault { kind: DbIoFaultKind::Cancelled, detail: DbIoText::try_from_str("DB I/O task cancelled").expect("fixed cancellation fault") }),
+        }))
+    }
+}
+
+impl Future for DbIoTaskOperation {
+    type Output = Result<DbIoResult, DbIoFault>;
+
+    fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        match self.take() {
+            Ok(Some(terminal)) => return std::task::Poll::Ready(terminal),
+            Ok(None) => {}
+            Err(error) => return std::task::Poll::Ready(Err(db_io_task_fault(DbIoFaultKind::Stale, &error))),
+        }
+        let terminal_published = {
+            let mut owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if !db_io_slot_matches(&owner, self.handle) {
+                return std::task::Poll::Ready(Err(DbIoFault { kind: DbIoFaultKind::Stale, detail: DbIoText::try_from_str("stale DB I/O terminal handle").expect("fixed stale fault") }));
+            }
+            if owner.terminal.is_some() {
+                true
+            } else {
+                owner.waker = Some(context.waker().clone());
+                false
+            }
+        };
+        if terminal_published {
+            return std::task::Poll::Ready(match self.take() {
+                Ok(Some(terminal)) => terminal,
+                Ok(None) => Err(DbIoFault { kind: DbIoFaultKind::Stale, detail: DbIoText::try_from_str("DB I/O terminal owner changed during poll").expect("fixed stale fault") }),
+                Err(error) => Err(db_io_task_fault(DbIoFaultKind::Stale, &error)),
+            });
+        }
+        std::task::Poll::Pending
+    }
+}
+
+impl Drop for DbIoTaskOperation {
     fn drop(&mut self) {
-        if let Some(owner) = self.owner.take() {
-            *self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        if self.resolved {
+            return;
+        }
+        let mut owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if db_io_slot_matches(&owner, self.handle) {
+            owner.abandoned = true;
+            owner.cancelled = true;
+        }
+        drop(owner);
+        if db_io_enqueue_close(self.handle).is_ok() {
+            db_io_schedule_close(self.handle);
         }
     }
 }
 
-/// @emoji 🧱️ Creates one retained database-I/O operation on the process WorkerPool I/O lane.
-/// The backend syscall remains one explicitly indivisible blocking opportunity; admission,
-/// retry, cancellation, freshness, result handback, and terminal close are retained and bounded.
-pub(crate) fn run_blocking_op<T, F>(pool: &WorkerPool, request: DbIoRequest, work: F) -> DbIoOperation<T>
-where
-    T: Send + 'static,
-    F: FnOnce() -> Result<T, DbError> + Send + 'static,
-{
-    DbIoOperation::submit(pool, request, work)
+pub fn db_io_task_close_step() -> Result<Option<usize>, DbError> {
+    let handle = {
+        let arena = db_io_task_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if arena.closing_len == 0 {
+            return Ok(None);
+        }
+        arena.closing[arena.closing_read].expect("DB I/O closing length names an exact handle")
+    };
+    let mut owner = DB_IO_TASK_SLOTS[handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if !db_io_slot_matches(&owner, handle) {
+        return Err(DbError::Internal("DB I/O close lost task ABA authority".to_string()));
+    }
+    if owner.phase == DbIoTaskPhase::Executing || owner.phase == DbIoTaskPhase::Queued && owner.retry_job.is_none() {
+        return Ok(Some(0));
+    }
+    if !owner.backend_cleanup_done {
+        let task = owner.task.as_ref().ok_or_else(|| DbError::Internal("DB I/O cleanup lost typed task owner".to_string()))?;
+        if !db_io_executor(task.backend())?.close_operation_step(handle.operation, task)? {
+            return Ok(Some(0));
+        }
+        owner.backend_cleanup_done = true;
+        return Ok(Some(0));
+    }
+    if let Some(terminal) = owner.terminal.as_mut() {
+        let step = match terminal {
+            DbIoTerminal::Result(result) => result.close_step()?,
+            DbIoTerminal::Fault(fault) => fault.detail.close_step().then_some(0),
+            DbIoTerminal::Cancelled => None,
+        };
+        if let Some(bytes) = step {
+            return Ok(Some(bytes));
+        }
+        owner.terminal = None;
+        return Ok(Some(0));
+    }
+    if let Some(task) = owner.task.as_mut() {
+        if let Some(bytes) = task.close_step()? {
+            return Ok(Some(bytes));
+        }
+        if !task.terminal_is_empty() {
+            return Err(DbError::Internal("DB I/O task reported false terminal".to_string()));
+        }
+        owner.task = None;
+        return Ok(Some(0));
+    }
+    if owner.retry_job.take().is_some() || owner.terminal_job.take().is_some() || owner.waker.take().is_some() || owner.pool.take().is_some() {
+        return Ok(Some(0));
+    }
+    if owner.counted {
+        owner.counted = false;
+        BLOCKING_QUEUE.dequeued(0);
+        return Ok(Some(0));
+    }
+    let backend_to_close = owner.backend_to_close.take();
+    *owner = DbIoTaskSlot::empty();
+    drop(owner);
+    let mut arena = db_io_task_arena().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let retired = arena.closing[arena.closing_read].take();
+    if retired != Some(handle) {
+        return Err(DbError::Internal("DB I/O close queue changed exact handle".to_string()));
+    }
+    arena.closing_read = (arena.closing_read + 1) % DB_IO_OPERATION_ITEMS;
+    arena.closing_len -= 1;
+    let write = (arena.free_read + arena.free_len) % DB_IO_OPERATION_ITEMS;
+    arena.free[write] = handle.slot;
+    arena.free_len += 1;
+    drop(arena);
+    if let Some(backend) = backend_to_close {
+        unregister_db_io_backend(backend)?;
+    }
+    Ok(Some(0))
 }
+//#endregion 🔖️Limits
+
+//#region 🔖️RetainedDbIo
+pub const DB_IO_OPERATION_ITEMS: usize = 64;
+#[cfg(test)]
+const DB_IO_OPERATION_BYTES: u64 = (DB_IO_PAGE_BYTES * DB_IO_OPERATION_PAGES) as u64;
+const DB_IO_RETRY_MS: u64 = 1;
+const DB_IO_RETRY_LIMIT: u8 = 8;
 
 #[cfg(test)]
 pub(crate) fn db_io_test_pool() -> Arc<WorkerPool> {
@@ -653,7 +1970,7 @@ async fn poll_once<T>(fut: impl Future<Output = T>) -> T {
 async fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
     poll_once(fut).await
 }
-//#endregion 🔖️BlockingBridge
+//#endregion 🔖️RetainedDbIo
 
 //#region 🔖️Capabilities
 /// @emoji 🎚️ What a concrete `DbStorage` backend actually supports — negotiated once at
@@ -698,14 +2015,14 @@ pub trait WalStorage: Send + Sync {
 
     /// @emoji 📖️ Reads `range` of segment `index`'s bytes. Errors `NotFound` if the segment
     /// doesn't exist, `InvalidArgument` if `range` extends past the segment's current length.
-    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError>;
+    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError>;
 
     /// @emoji 📏️ The current length in bytes of segment `index`.
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError>;
 
     /// @emoji 📋️ Every segment index that exists for `document`, ascending. Empty (not an error)
     /// if `document` has no WAL yet.
-    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError>;
+    async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError>;
 
     /// @emoji ✂️ Truncates the ACTIVE (unsealed) segment `index` down to `new_len` bytes — the
     /// crash-recovery primitive for discarding a torn/uncommitted tail write. Errors
@@ -731,14 +2048,14 @@ pub trait SnapshotStorage: Send + Sync {
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError>;
 
     /// @emoji 📖️ Reads generation `generation`'s complete bytes. Errors `NotFound` if absent.
-    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError>;
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError>;
 
     /// @emoji 🥇️ The highest generation number stored for `document`, or `None` if it has no
     /// snapshot yet.
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError>;
 
     /// @emoji 📋️ Every generation number stored for `document`, ascending.
-    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError>;
+    async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError>;
 
     /// @emoji 🗑️ Deletes generation `generation`, e.g. once `db_compact`'s retention policy
     /// supersedes it. Idempotent if already absent.
@@ -756,7 +2073,7 @@ pub trait PayloadStorage: Send + Sync {
     async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError>;
 
     /// @emoji 📖️ Reads the payload stored under `hash`. Errors `NotFound` if absent.
-    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError>;
+    async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError>;
 
     /// @emoji ❓️ True iff a payload is stored under `hash`, without reading it.
     async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError>;
@@ -778,7 +2095,7 @@ pub trait PayloadStorage: Send + Sync {
 pub trait CatalogStorage: Send + Sync {
     /// @emoji 📖️ The current root bytes and the `EpochFence` they were written under, or `None`
     /// if `cas_root` has never succeeded yet (a fresh, empty `DbStorage`).
-    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError>;
+    async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError>;
 
     /// @emoji ✅️ Compare-and-swap: succeeds only if `expected` matches the epoch of the currently
     /// stored root (or `EpochFence::INITIAL` if no root has ever been written), in which case the
@@ -798,10 +2115,10 @@ pub trait IndexStorage: Send + Sync {
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError>;
 
     /// @emoji 📖️ Reads run `run_id`'s complete bytes. Errors `NotFound` if absent.
-    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError>;
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError>;
 
     /// @emoji 📋️ Every run id stored for `document`, ascending.
-    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError>;
+    async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError>;
 
     /// @emoji 🗑️ Deletes run `run_id`, e.g. after `db_index`'s merge policy folds it into a
     /// larger run. Idempotent if already absent.
@@ -1068,7 +2385,7 @@ impl<'a> WalStorage for WalRef<'a> {
         }
     }
 
-    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
         match self {
             Self::Memory(s) => s.read(document, index, range).await,
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -1098,7 +2415,7 @@ impl<'a> WalStorage for WalRef<'a> {
         }
     }
 
-    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         match self {
             Self::Memory(s) => s.list_segments(document).await,
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -1177,7 +2494,7 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
         }
     }
 
-    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
         match self {
             Self::Memory(s) => s.read_generation(document, generation).await,
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -1207,7 +2524,7 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
         }
     }
 
-    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         match self {
             Self::Memory(s) => s.list_generations(document).await,
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -1271,7 +2588,7 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
         }
     }
 
-    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+    async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
         match self {
             Self::Memory(s) => s.get(hash).await,
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -1350,7 +2667,7 @@ pub enum CatalogRef<'a> {
 }
 
 impl<'a> CatalogStorage for CatalogRef<'a> {
-    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
+    async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
         match self {
             Self::Memory(s) => s.read_root().await,
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -1417,7 +2734,7 @@ impl<'a> IndexStorage for IndexRef<'a> {
         }
     }
 
-    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
         match self {
             Self::Memory(s) => s.read_run(document, run_id).await,
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -1432,7 +2749,7 @@ impl<'a> IndexStorage for IndexRef<'a> {
         }
     }
 
-    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         match self {
             Self::Memory(s) => s.list_runs(document).await,
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -1559,10 +2876,10 @@ struct MemWalSegment {
 #[derive(Default)]
 pub struct MemoryStorage {
     wal: std::sync::Mutex<std::collections::HashMap<ArtifactId, std::collections::HashMap<u64, MemWalSegment>>>,
-    snapshots: std::sync::Mutex<std::collections::HashMap<ArtifactId, std::collections::HashMap<u64, Vec<u8>>>>,
-    payloads: std::sync::Mutex<std::collections::HashMap<ContentHash, Vec<u8>>>,
-    catalog: std::sync::Mutex<Option<(Vec<u8>, EpochFence)>>,
-    index_runs: std::sync::Mutex<std::collections::HashMap<ArtifactId, std::collections::HashMap<u64, Vec<u8>>>>,
+    snapshots: std::sync::Mutex<std::collections::HashMap<ArtifactId, std::collections::HashMap<u64, DbIoPages>>>,
+    payloads: std::sync::Mutex<std::collections::HashMap<ContentHash, DbIoPages>>,
+    catalog: std::sync::Mutex<Option<(DbIoPages, EpochFence)>>,
+    index_runs: std::sync::Mutex<std::collections::HashMap<ArtifactId, std::collections::HashMap<u64, DbIoPages>>>,
     leases: std::sync::Mutex<std::collections::HashMap<String, LeaseInfo>>,
 }
 
@@ -1597,7 +2914,9 @@ impl WalStorage for MemoryStorage {
         if segment.sealed {
             return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
         }
-        segment.bytes.extend_from_slice(bytes.as_slice());
+        for fragment in bytes.fragments() {
+            segment.bytes.extend_from_slice(fragment);
+        }
         Ok(segment.bytes.len() as u64)
     }
 
@@ -1615,7 +2934,7 @@ impl WalStorage for MemoryStorage {
         Ok(())
     }
 
-    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
         check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
         let wal = lock(&self.wal);
         let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
@@ -1624,7 +2943,7 @@ impl WalStorage for MemoryStorage {
         if end > segment.bytes.len() {
             return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {})", segment.bytes.len())));
         }
-        Ok(segment.bytes[start..end].to_vec())
+        db_io_copy_pages(&segment.bytes[start..end])?.await
     }
 
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
@@ -1633,9 +2952,14 @@ impl WalStorage for MemoryStorage {
         Ok(segment.bytes.len() as u64)
     }
 
-    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let wal = lock(&self.wal);
-        let mut indices: Vec<u64> = wal.get(document).map(|segments| segments.keys().copied().collect()).unwrap_or_default();
+        let mut indices = DbIoU64List::new();
+        if let Some(segments) = wal.get(document) {
+            for index in segments.keys().copied() {
+                indices.push(index)?;
+            }
+        }
         indices.sort_unstable();
         Ok(indices)
     }
@@ -1666,13 +2990,14 @@ impl WalStorage for MemoryStorage {
 impl SnapshotStorage for MemoryStorage {
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         let mut snapshots = lock(&self.snapshots);
-        snapshots.entry(document.clone()).or_default().insert(generation, bytes.into_vec());
+        snapshots.entry(document.clone()).or_default().insert(generation, bytes);
         Ok(())
     }
 
-    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
         let snapshots = lock(&self.snapshots);
-        snapshots.get(document).and_then(|generations| generations.get(&generation)).cloned().ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
+        let bytes = snapshots.get(document).and_then(|generations| generations.get(&generation)).ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?;
+        db_io_copy_page_owner(bytes)?.await
     }
 
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
@@ -1680,9 +3005,14 @@ impl SnapshotStorage for MemoryStorage {
         Ok(snapshots.get(document).and_then(|generations| generations.keys().max().copied()))
     }
 
-    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let snapshots = lock(&self.snapshots);
-        let mut generations: Vec<u64> = snapshots.get(document).map(|generations| generations.keys().copied().collect()).unwrap_or_default();
+        let mut generations = DbIoU64List::new();
+        if let Some(owners) = snapshots.get(document) {
+            for generation in owners.keys().copied() {
+                generations.push(generation)?;
+            }
+        }
         generations.sort_unstable();
         Ok(generations)
     }
@@ -1699,15 +3029,20 @@ impl SnapshotStorage for MemoryStorage {
 impl PayloadStorage for MemoryStorage {
     async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
-        let hash = ContentHash(*blake3::hash(bytes.as_slice()).as_bytes());
+        let mut hasher = blake3::Hasher::new();
+        for fragment in bytes.fragments() {
+            hasher.update(fragment);
+        }
+        let hash = ContentHash(*hasher.finalize().as_bytes());
         let mut payloads = lock(&self.payloads);
-        payloads.entry(hash).or_insert_with(|| bytes.into_vec());
+        payloads.entry(hash).or_insert(bytes);
         Ok(hash)
     }
 
-    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+    async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
         let payloads = lock(&self.payloads);
-        payloads.get(hash).cloned().ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
+        let bytes = payloads.get(hash).ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
+        db_io_copy_page_owner(bytes)?.await
     }
 
     async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
@@ -1726,8 +3061,12 @@ impl PayloadStorage for MemoryStorage {
 }
 
 impl CatalogStorage for MemoryStorage {
-    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
-        Ok(lock(&self.catalog).clone())
+    async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
+        let catalog = lock(&self.catalog);
+        match catalog.as_ref() {
+            Some((pages, fence)) => Ok(Some((db_io_copy_page_owner(pages)?.await?, *fence))),
+            None => Ok(None),
+        }
     }
 
     async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
@@ -1736,7 +3075,7 @@ impl CatalogStorage for MemoryStorage {
         let current_fence = catalog.as_ref().map_or(EpochFence::INITIAL, |(_, fence)| *fence);
         expected.check(current_fence)?;
         let new_fence = expected.next();
-        *catalog = Some((new_bytes.into_vec(), new_fence));
+        *catalog = Some((new_bytes, new_fence));
         Ok(new_fence)
     }
 }
@@ -1744,18 +3083,24 @@ impl CatalogStorage for MemoryStorage {
 impl IndexStorage for MemoryStorage {
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
         let mut runs = lock(&self.index_runs);
-        runs.entry(document.clone()).or_default().insert(run_id, bytes.into_vec());
+        runs.entry(document.clone()).or_default().insert(run_id, bytes);
         Ok(())
     }
 
-    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
         let runs = lock(&self.index_runs);
-        runs.get(document).and_then(|runs| runs.get(&run_id)).cloned().ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
+        let bytes = runs.get(document).and_then(|runs| runs.get(&run_id)).ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?;
+        db_io_copy_page_owner(bytes)?.await
     }
 
-    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let runs = lock(&self.index_runs);
-        let mut ids: Vec<u64> = runs.get(document).map(|runs| runs.keys().copied().collect()).unwrap_or_default();
+        let mut ids = DbIoU64List::new();
+        if let Some(owners) = runs.get(document) {
+            for id in owners.keys().copied() {
+                ids.push(id)?;
+            }
+        }
         ids.sort_unstable();
         Ok(ids)
     }
@@ -1833,13 +3178,11 @@ impl MemoryStorage {
 /// (8-byte LE epoch prefix + opaque bytes), `index/<doc>/run-<id>.bin`, `lease/<resource>.bin`.
 /// Every multi-step write (`cas_root`, lease grants, snapshot/index/payload writes) goes through
 /// `pack::write_atomic` (temp file + `fsync` + `rename`) so a reader never observes a torn file.
-/// Every trait method here is genuinely blocking (`std::fs`), so every body runs through
-/// [`run_blocking_op`] on the process [`WorkerPool`] handed to [`FsStorage::open`] rather than
-/// blocking the calling async task's own thread — see the module doc's "Async-first" section.
+/// Every blocking filesystem step runs as one typed task grant on the process I/O lane.
 #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
 mod fs_storage {
     use super::check_len;
-    use super::{run_blocking_op, ArtifactId, ByteRange, ContentHash, DbError, DbIoPages, DbIoRequest, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
+    use super::{register_db_io_backend, submit_db_io_task, ArtifactId, ByteRange, ContentHash, DbError, DbIoBackendControl, DbIoBackendKind, DbIoExecutionStep, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
     use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use semio_framework_async::WorkerPool;
     use std::io::{Read, Seek, SeekFrom, Write};
@@ -1869,7 +3212,6 @@ mod fs_storage {
     /// @emoji 🛡️ Rejects a path component that could escape `root` (empty, `.`, `..`, or
     /// containing a path separator/NUL) — every document id, resource name, etc. that becomes a
     /// filesystem path component is validated through this before use.
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn safe_component(raw: &str) -> Result<&str, DbError> {
         if raw.is_empty() || raw == "." || raw == ".." || raw.contains('/') || raw.contains('\\') || raw.contains('\0') {
             return Err(DbError::InvalidArgument(format!("unsafe storage path component: {raw:?}")));
@@ -1877,121 +3219,544 @@ mod fs_storage {
         Ok(raw)
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn wal_dir(root: &Path, document: &ArtifactId) -> Result<PathBuf, DbError> {
         Ok(root.join("wal").join(safe_component(&document.0)?))
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn snapshot_dir(root: &Path, document: &ArtifactId) -> Result<PathBuf, DbError> {
         Ok(root.join("snapshot").join(safe_component(&document.0)?))
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn index_dir(root: &Path, document: &ArtifactId) -> Result<PathBuf, DbError> {
         Ok(root.join("index").join(safe_component(&document.0)?))
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn payload_path(root: &Path, hash: &ContentHash) -> PathBuf {
         let hex = hash.to_string();
         root.join("payload").join(&hex[0..2]).join(format!("{hex}.bin"))
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn catalog_path(root: &Path) -> PathBuf {
         root.join("catalog").join("root.bin")
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn lease_path(root: &Path, resource: &str) -> Result<PathBuf, DbError> {
         Ok(root.join("lease").join(format!("{}.bin", safe_component(resource)?)))
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn segment_path(dir: &Path, index: u64) -> PathBuf {
         dir.join(format!("segment-{index:020}.bin"))
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn sealed_marker_path(dir: &Path, index: u64) -> PathBuf {
         dir.join(format!("segment-{index:020}.sealed"))
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn generation_path(dir: &Path, generation: u64) -> PathBuf {
         dir.join(format!("gen-{generation:020}.pack"))
     }
 
-    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn run_path(dir: &Path, run_id: u64) -> PathBuf {
         dir.join(format!("run-{run_id:020}.bin"))
     }
 
-    /// @emoji 📋️ Lists `dir`'s entries matching `<prefix><20-digit-number><suffix>`, returning the
-    /// parsed numbers ascending. Returns an empty list (not an error) if `dir` doesn't exist yet.
-    // 🚫️async: E1 pure accessor (blocking `std::fs::read_dir`), every caller is a sync
-    // `run_blocking_op` closure — see R9
-    fn list_indexed_files(dir: &Path, prefix: &str, suffix: &str) -> Result<Vec<u64>, DbError> {
-        if !dir.exists() {
-            return Ok(Vec::new());
-        }
-        let mut out = Vec::new();
-        for entry in std::fs::read_dir(dir).map_err(io_err)? {
-            let entry = entry.map_err(io_err)?;
-            let name = entry.file_name();
-            let name = name.to_string_lossy();
-            if let Some(number) = name.strip_prefix(prefix).and_then(|rest| rest.strip_suffix(suffix)) {
-                if let Ok(parsed) = number.parse::<u64>() {
-                    if out.len() == 4096 {
-                        return Err(DbError::LimitExceeded("db_io list item credit"));
-                    }
-                    out.push(parsed);
-                }
-            }
-        }
-        out.sort_unstable();
-        Ok(out)
-    }
 
-    /// @emoji ✍️ `epoch(8 LE) || expires_at_ms(8 LE) || holder_len(varint) || holder` — the lease
-    /// file wire encoding, built on `pack`'s own byte writer rather than hand-rolled offsets.
-    fn encode_lease(fence: EpochFence, expires_at_ms: u64, holder: &str) -> Vec<u8> {
-        let mut writer = pack::ByteWriter::new();
-        writer.write_u64_le(fence.epoch);
-        writer.write_u64_le(expires_at_ms);
-        writer.write_varint_u64(holder.len() as u64);
-        writer.write_bytes(holder.as_bytes());
-        writer.into_bytes()
-    }
-
-    fn decode_lease(bytes: &[u8]) -> Result<(EpochFence, u64, String), DbError> {
-        let mut reader = pack::ByteReader::new(bytes);
-        let epoch = reader.read_u64_le()?;
-        let expires_at_ms = reader.read_u64_le()?;
-        let holder_len = reader.read_varint_u64()?;
-        check_len(holder_len, MAX_READ_BYTES, "lease_storage::decode holder")?;
-        let holder_bytes = reader.read_bytes(holder_len as usize)?;
-        let holder = String::from_utf8(holder_bytes.to_vec()).map_err(|_| DbError::Corrupt("lease holder is not valid utf-8".to_string()))?;
-        Ok((EpochFence { epoch }, expires_at_ms, holder))
-    }
-
-    // 🚫️async: E1 pure-shaped accessor, every caller is a sync `run_blocking_op` closure — see R9
-    fn read_lease_file(path: &Path) -> Result<Option<(EpochFence, u64, String)>, DbError> {
+    fn read_lease_file(path: &Path) -> Result<Option<(EpochFence, u64, DbIoText)>, DbError> {
         if !path.exists() {
             return Ok(None);
         }
-        let bytes = std::fs::read(path).map_err(io_err)?;
-        decode_lease(&bytes).map(Some)
+        let mut file = std::fs::File::open(path).map_err(io_err)?;
+        let mut header = [0u8; 18];
+        file.read_exact(&mut header).map_err(io_err)?;
+        let epoch = u64::from_le_bytes(header[..8].try_into().expect("fixed lease epoch"));
+        let expires_at_ms = u64::from_le_bytes(header[8..16].try_into().expect("fixed lease expiry"));
+        let holder_len = usize::from(u16::from_le_bytes(header[16..18].try_into().expect("fixed lease holder length")));
+        if holder_len > super::DB_IO_TEXT_BYTES || file.metadata().map_err(io_err)?.len() != (18 + holder_len) as u64 {
+            return Err(DbError::Corrupt("lease record exceeds its fixed authority".to_string()));
+        }
+        let mut holder = [0u8; super::DB_IO_TEXT_BYTES];
+        file.read_exact(&mut holder[..holder_len]).map_err(io_err)?;
+        let holder = std::str::from_utf8(&holder[..holder_len]).map_err(|_| DbError::Corrupt("lease holder is not valid UTF-8".to_string()))?;
+        Ok(Some((EpochFence { epoch }, expires_at_ms, DbIoText::try_from_str(holder)?)))
     }
 
-    // 🚫️async: E1 pure-shaped accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn write_lease_file(path: &Path, fence: EpochFence, expires_at_ms: u64, holder: &str) -> Result<(), DbError> {
+        let holder = DbIoText::try_from_str(holder)?;
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(io_err)?;
         }
-        pack::write_atomic(path, &encode_lease(fence, expires_at_ms, holder))?;
+        let mut record = [0u8; 18 + super::DB_IO_TEXT_BYTES];
+        record[..8].copy_from_slice(&fence.epoch.to_le_bytes());
+        record[8..16].copy_from_slice(&expires_at_ms.to_le_bytes());
+        record[16..18].copy_from_slice(&(holder.as_str().len() as u16).to_le_bytes());
+        record[18..18 + holder.as_str().len()].copy_from_slice(holder.as_str().as_bytes());
+        pack::write_atomic(path, &record[..18 + holder.as_str().len()])?;
         Ok(())
+    }
+
+    struct FsDbIoExecutor {
+        root: DbIoText,
+        catalog_lock: Mutex<()>,
+        lease_lock: Mutex<()>,
+        payload_hashes: [Mutex<Option<(u64, blake3::Hasher)>>; 64],
+        readers: [Mutex<Option<FsReadState>>; 64],
+    }
+
+    struct FsReadState {
+        operation: u64,
+        file: std::fs::File,
+        offset: u64,
+        total: usize,
+        fence: Option<EpochFence>,
+    }
+
+    impl FsDbIoExecutor {
+        fn new(root: DbIoText) -> Self {
+            Self { root, catalog_lock: Mutex::new(()), lease_lock: Mutex::new(()), payload_hashes: [const { Mutex::new(None) }; 64], readers: [const { Mutex::new(None) }; 64] }
+        }
+
+        fn root(&self) -> &Path {
+            Path::new(self.root.as_str())
+        }
+
+        fn document_dir(&self, family: &str, document: &DbIoText) -> Result<PathBuf, DbError> {
+            Ok(self.root().join(family).join(safe_component(document.as_str())?))
+        }
+
+        fn read_step(&self, operation: u64, path: &Path, offset: u64, exact_len: Option<u64>, catalog: bool, output: &mut DbIoPageWriter) -> Result<(DbIoExecutionStep, Option<(DbIoPages, Option<EpochFence>)>), DbError> {
+            let slot = operation as usize % self.readers.len();
+            let mut owner = self.readers[slot].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if owner.as_ref().is_some_and(|reader| reader.operation != operation) {
+                return Err(DbError::Unavailable("filesystem read cursor capacity exhausted".to_string()));
+            }
+            if owner.is_none() {
+                let mut file = std::fs::File::open(path).map_err(|error| open_err(error, || format!("database I/O object {} not found", path.display())))?;
+                let available = file.metadata().map_err(io_err)?.len().checked_sub(offset).ok_or_else(|| DbError::InvalidArgument("DB I/O read offset exceeds object length".to_string()))?;
+                let total = exact_len.unwrap_or(available);
+                check_len(total, MAX_READ_BYTES, "db_io typed filesystem read")?;
+                if total > available {
+                    return Err(DbError::InvalidArgument("DB I/O read range exceeds object length".to_string()));
+                }
+                let fence = if catalog {
+                    let mut header = [0u8; 8];
+                    file.read_exact(&mut header).map_err(io_err)?;
+                    Some(EpochFence { epoch: u64::from_le_bytes(header) })
+                } else {
+                    None
+                };
+                *owner = Some(FsReadState { operation, file, offset, total: total as usize, fence });
+            }
+            let reader = owner.as_mut().expect("filesystem read cursor retained");
+            if output.len() == reader.total {
+                let fence = reader.fence;
+                owner.take();
+                return Ok((DbIoExecutionStep::Complete, Some((output.finish()?, fence))));
+            }
+            let mut fragment = [0u8; super::DB_IO_PAGE_BYTES];
+            let fragment_len = (reader.total - output.len()).min(fragment.len());
+            reader.file.seek(SeekFrom::Start(reader.offset + output.len() as u64)).map_err(io_err)?;
+            reader.file.read_exact(&mut fragment[..fragment_len]).map_err(io_err)?;
+            if output.write_fragment(&fragment[..fragment_len])? != fragment_len {
+                return Err(DbError::Internal("DB I/O output writer accepted a partial fixed fragment".to_string()));
+            }
+            Ok((DbIoExecutionStep::Yield, None))
+        }
+
+        fn read_pages_step(&self, operation: u64, path: &Path, offset: u64, exact_len: Option<u64>, output: &mut DbIoPageWriter) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
+            let (step, result) = self.read_step(operation, path, offset, exact_len, false, output)?;
+            Ok((step, result.map(|(pages, _)| DbIoResult::Pages(pages))))
+        }
+
+        fn replace_step(&self, path: &Path, operation: u64, input: &mut DbIoPages, header: &[u8]) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
+            let parent = path.parent().ok_or_else(|| DbError::InvalidArgument("DB I/O replacement path has no parent".to_string()))?;
+            std::fs::create_dir_all(parent).map_err(io_err)?;
+            let name = path.file_name().and_then(std::ffi::OsStr::to_str).ok_or_else(|| DbError::InvalidArgument("DB I/O replacement path is not UTF-8".to_string()))?;
+            let temporary = parent.join(format!(".{name}.{operation:016x}.dbio"));
+            if !temporary.exists() {
+                let mut file = std::fs::OpenOptions::new().write(true).create_new(true).open(&temporary).map_err(io_err)?;
+                if !header.is_empty() {
+                    file.write_all(header).map_err(io_err)?;
+                }
+            }
+            if let Some(fragment) = input.page(0) {
+                let fragment_len = fragment.len();
+                let mut file = std::fs::OpenOptions::new().append(true).open(&temporary).map_err(io_err)?;
+                file.write_all(fragment).map_err(io_err)?;
+                input.advance(fragment_len)?;
+                if !input.is_empty() {
+                    return Ok((DbIoExecutionStep::Yield, None));
+                }
+            }
+            let file = std::fs::OpenOptions::new().write(true).open(&temporary).map_err(io_err)?;
+            file.sync_all().map_err(io_err)?;
+            std::fs::rename(temporary, path).map_err(io_err)?;
+            Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+        }
+
+        fn list_step(&self, dir: &Path, prefix: &str, suffix: &str, list: &mut DbIoU64List) -> Result<bool, DbError> {
+            if !dir.exists() {
+                return Ok(true);
+            }
+            let after = list.as_slice().last().copied();
+            let mut next = None;
+            for entry in std::fs::read_dir(dir).map_err(io_err)? {
+                let name = entry.map_err(io_err)?.file_name();
+                let name = name.to_string_lossy();
+                let Some(number) = name.strip_prefix(prefix).and_then(|rest| rest.strip_suffix(suffix)) else { continue };
+                let Ok(value) = number.parse::<u64>() else { continue };
+                if after.is_none_or(|after| value > after) && next.is_none_or(|next| value < next) {
+                    next = Some(value);
+                }
+            }
+            if let Some(value) = next {
+                list.push(value)?;
+                Ok(false)
+            } else {
+                Ok(true)
+            }
+        }
+
+        fn payload_hash_step(&self, operation: u64, input: &mut DbIoPages) -> Result<Option<ContentHash>, DbError> {
+            let slot = operation as usize % self.payload_hashes.len();
+            let mut state = self.payload_hashes[slot].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if state.as_ref().is_some_and(|(owner, _)| *owner != operation) {
+                return Err(DbError::Unavailable("DB I/O filesystem hash cursor capacity exhausted".to_string()));
+            }
+            let (_, hasher) = state.get_or_insert_with(|| (operation, blake3::Hasher::new()));
+            if let Some(fragment) = input.page(0) {
+                let len = fragment.len();
+                hasher.update(fragment);
+                input.advance(len)?;
+            }
+            if !input.is_empty() {
+                return Ok(None);
+            }
+            let (_, hasher) = state.take().expect("DB I/O payload hash cursor retained");
+            Ok(Some(ContentHash(*hasher.finalize().as_bytes())))
+        }
+    }
+
+    impl DbIoTaskExecutor for FsDbIoExecutor {
+        fn execute_step(&self, operation: u64, task: &mut DbIoTask) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
+            match task {
+                DbIoTask::BackendOpen { path, .. } => {
+                    if path.as_str() != self.root.as_str() {
+                        return Err(DbError::InvalidArgument("DB I/O filesystem root authority mismatch".to_string()));
+                    }
+                    std::fs::create_dir_all(self.root()).map_err(io_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::WalCreate { document, index, .. } => {
+                    let dir = self.document_dir("wal", document)?;
+                    std::fs::create_dir_all(&dir).map_err(io_err)?;
+                    let path = segment_path(&dir, *index);
+                    if path.exists() {
+                        return Err(DbError::AlreadyExists(format!("wal segment {index} for {} already exists", document.as_str())));
+                    }
+                    std::fs::File::create(path).map_err(io_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::WalAppend { document, index, input, .. } => {
+                    let dir = self.document_dir("wal", document)?;
+                    if sealed_marker_path(&dir, *index).exists() {
+                        return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
+                    }
+                    let path = segment_path(&dir, *index);
+                    if let Some(fragment) = input.page(0) {
+                        let len = fragment.len();
+                        let mut file = std::fs::OpenOptions::new().append(true).open(&path).map_err(|error| open_err(error, || format!("wal segment {index} not found")))?;
+                        file.write_all(fragment).map_err(io_err)?;
+                        input.advance(len)?;
+                        if !input.is_empty() {
+                            return Ok((DbIoExecutionStep::Yield, None));
+                        }
+                    }
+                    let len = std::fs::metadata(path).map_err(io_err)?.len();
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(len))))
+                }
+                DbIoTask::WalSync { document, index, class, .. } => {
+                    if matches!(class, DurabilityClass::Fsync | DurabilityClass::Quorum(_)) {
+                        let path = segment_path(&self.document_dir("wal", document)?, *index);
+                        std::fs::OpenOptions::new().write(true).open(path).map_err(io_err)?.sync_all().map_err(io_err)?;
+                    }
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::WalSeal { document, index, .. } => {
+                    let dir = self.document_dir("wal", document)?;
+                    if !segment_path(&dir, *index).exists() {
+                        return Err(DbError::NotFound(format!("wal segment {index} not found")));
+                    }
+                    std::fs::File::create(sealed_marker_path(&dir, *index)).map_err(io_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::WalRead { document, index, range, output, .. } => {
+                    let path = segment_path(&self.document_dir("wal", document)?, *index);
+                    self.read_pages_step(operation, &path, range.offset, Some(range.len), output)
+                }
+                DbIoTask::WalLength { document, index, .. } => {
+                    let path = segment_path(&self.document_dir("wal", document)?, *index);
+                    let len = std::fs::metadata(path).map_err(|error| open_err(error, || format!("wal segment {index} not found")))?.len();
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(len))))
+                }
+                DbIoTask::WalList { document, output, .. } => {
+                    if self.list_step(&self.document_dir("wal", document)?, "segment-", ".bin", output)? {
+                        Ok((DbIoExecutionStep::Complete, Some(DbIoResult::List(std::mem::take(output)))))
+                    } else {
+                        Ok((DbIoExecutionStep::Yield, None))
+                    }
+                }
+                DbIoTask::WalTruncate { document, index, new_len, .. } => {
+                    let dir = self.document_dir("wal", document)?;
+                    if sealed_marker_path(&dir, *index).exists() {
+                        return Err(DbError::InvalidArgument("cannot truncate sealed wal segment".to_string()));
+                    }
+                    let path = segment_path(&dir, *index);
+                    let file = std::fs::OpenOptions::new().write(true).open(path).map_err(io_err)?;
+                    if *new_len > file.metadata().map_err(io_err)?.len() {
+                        return Err(DbError::InvalidArgument("truncate_tail new_len exceeds current segment length".to_string()));
+                    }
+                    file.set_len(*new_len).map_err(io_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::WalDelete { document, index, .. } => {
+                    let dir = self.document_dir("wal", document)?;
+                    for path in [segment_path(&dir, *index), sealed_marker_path(&dir, *index)] {
+                        if path.exists() {
+                            std::fs::remove_file(path).map_err(io_err)?;
+                        }
+                    }
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::SnapshotWrite { document, generation, input, .. } => self.replace_step(&generation_path(&self.document_dir("snapshot", document)?, *generation), operation, input, &[]),
+                DbIoTask::SnapshotRead { document, generation, output, .. } => self.read_pages_step(operation, &generation_path(&self.document_dir("snapshot", document)?, *generation), 0, None, output),
+                DbIoTask::SnapshotLatest { document, output, .. } => {
+                    if self.list_step(&self.document_dir("snapshot", document)?, "gen-", ".pack", output)? {
+                        Ok((DbIoExecutionStep::Complete, Some(DbIoResult::OptionalLength(output.as_slice().last().copied()))))
+                    } else {
+                        Ok((DbIoExecutionStep::Yield, None))
+                    }
+                }
+                DbIoTask::SnapshotList { document, output, .. } => {
+                    if self.list_step(&self.document_dir("snapshot", document)?, "gen-", ".pack", output)? {
+                        Ok((DbIoExecutionStep::Complete, Some(DbIoResult::List(std::mem::take(output)))))
+                    } else {
+                        Ok((DbIoExecutionStep::Yield, None))
+                    }
+                }
+                DbIoTask::SnapshotDelete { document, generation, .. } => {
+                    let path = generation_path(&self.document_dir("snapshot", document)?, *generation);
+                    if path.exists() {
+                        std::fs::remove_file(path).map_err(io_err)?;
+                    }
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::PayloadPut { input, .. } => {
+                    let temporary = self.root().join("payload").join(format!(".{operation:016x}.dbio"));
+                    if !temporary.exists() {
+                        if let Some(parent) = temporary.parent() {
+                            std::fs::create_dir_all(parent).map_err(io_err)?;
+                        }
+                        std::fs::File::create(&temporary).map_err(io_err)?;
+                    }
+                    if let Some(fragment) = input.page(0) {
+                        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(&temporary).map_err(io_err)?;
+                        file.write_all(fragment).map_err(io_err)?;
+                    }
+                    let Some(hash) = self.payload_hash_step(operation, input)? else { return Ok((DbIoExecutionStep::Yield, None)) };
+                    let path = payload_path(self.root(), &hash);
+                    if temporary.exists() {
+                        if let Some(parent) = path.parent() {
+                            std::fs::create_dir_all(parent).map_err(io_err)?;
+                        }
+                        if !path.exists() {
+                            std::fs::rename(temporary, path).map_err(io_err)?;
+                        } else {
+                            std::fs::remove_file(temporary).map_err(io_err)?;
+                        }
+                    }
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Hash(hash))))
+                }
+                DbIoTask::PayloadGet { hash, output, .. } => self.read_pages_step(operation, &payload_path(self.root(), hash), 0, None, output),
+                DbIoTask::PayloadExists { hash, .. } => Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Exists(payload_path(self.root(), hash).exists())))),
+                DbIoTask::PayloadLength { hash, .. } => {
+                    let len = std::fs::metadata(payload_path(self.root(), hash)).map_err(|error| open_err(error, || format!("payload {hash} not found")))?.len();
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Length(len))))
+                }
+                DbIoTask::PayloadDelete { hash, .. } => {
+                    let path = payload_path(self.root(), hash);
+                    if path.exists() {
+                        std::fs::remove_file(path).map_err(io_err)?;
+                    }
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::CatalogRead { output, .. } => {
+                    let path = catalog_path(self.root());
+                    if !path.exists() {
+                        return Ok((DbIoExecutionStep::Complete, Some(DbIoResult::OptionalCatalog(None))));
+                    }
+                    let (step, result) = self.read_step(operation, &path, 8, None, true, output)?;
+                    Ok((step, result.map(|(pages, fence)| DbIoResult::OptionalCatalog(Some((pages, fence.expect("catalog read cursor retains fence")))))))
+                }
+                DbIoTask::CatalogCas { expected, input, .. } => {
+                    let _guard = self.catalog_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    let current = read_root_fence(self.root())?.unwrap_or(EpochFence::INITIAL);
+                    expected.check(current)?;
+                    let next = expected.next();
+                    let (step, result) = self.replace_step(&catalog_path(self.root()), operation, input, &next.epoch.to_le_bytes())?;
+                    Ok((step, result.map(|_| DbIoResult::Fence(next))))
+                }
+                DbIoTask::IndexWrite { document, run_id, input, .. } => self.replace_step(&run_path(&self.document_dir("index", document)?, *run_id), operation, input, &[]),
+                DbIoTask::IndexRead { document, run_id, output, .. } => self.read_pages_step(operation, &run_path(&self.document_dir("index", document)?, *run_id), 0, None, output),
+                DbIoTask::IndexList { document, output, .. } => {
+                    if self.list_step(&self.document_dir("index", document)?, "run-", ".bin", output)? {
+                        Ok((DbIoExecutionStep::Complete, Some(DbIoResult::List(std::mem::take(output)))))
+                    } else {
+                        Ok((DbIoExecutionStep::Yield, None))
+                    }
+                }
+                DbIoTask::IndexDelete { document, run_id, .. } => {
+                    let path = run_path(&self.document_dir("index", document)?, *run_id);
+                    if path.exists() {
+                        std::fs::remove_file(path).map_err(io_err)?;
+                    }
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::LeaseAcquire { document, holder, now_ms, ttl_ms, .. } => {
+                    let _guard = self.lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    let path = lease_path(self.root(), document.as_str())?;
+                    let fence = match read_lease_file(&path)? {
+                        Some((fence, expires, existing)) if *now_ms < expires && existing.as_str() != holder.as_str() => return Err(DbError::Conflict("resource is leased by another holder".to_string())),
+                        Some((fence, expires, _)) if *now_ms < expires => fence,
+                        Some((fence, _, _)) => fence.next(),
+                        None => EpochFence::INITIAL,
+                    };
+                    write_lease_file(&path, fence, (*now_ms).saturating_add(*ttl_ms), holder.as_str())?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Fence(fence))))
+                }
+                DbIoTask::LeaseRenew { document, holder, fence, now_ms, ttl_ms, .. } => {
+                    let _guard = self.lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    let path = lease_path(self.root(), document.as_str())?;
+                    let (current, expires, existing) = read_lease_file(&path)?.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
+                    if *now_ms >= expires || existing.as_str() != holder.as_str() {
+                        return Err(DbError::Unauthorized("lease owner or expiry mismatch".to_string()));
+                    }
+                    fence.check(current)?;
+                    write_lease_file(&path, *fence, (*now_ms).saturating_add(*ttl_ms), holder.as_str())?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::LeaseRelease { document, holder, fence, .. } => {
+                    let _guard = self.lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    let path = lease_path(self.root(), document.as_str())?;
+                    let (current, _, existing) = read_lease_file(&path)?.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
+                    if existing.as_str() != holder.as_str() {
+                        return Err(DbError::Unauthorized("lease owner mismatch".to_string()));
+                    }
+                    fence.check(current)?;
+                    std::fs::remove_file(path).map_err(io_err)?;
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit)))
+                }
+                DbIoTask::LeaseGet { document, now_ms, .. } => {
+                    let lease = read_lease_file(&lease_path(self.root(), document.as_str())?)?;
+                    let result = match lease {
+                        Some((fence, expires_at_ms, holder)) if *now_ms < expires_at_ms => Some(super::DbIoLeaseResult { resource: document.clone(), holder, fence, expires_at_ms }),
+                        _ => None,
+                    };
+                    Ok((DbIoExecutionStep::Complete, Some(DbIoResult::OptionalLease(result))))
+                }
+                DbIoTask::BackendClose { .. } => Ok((DbIoExecutionStep::Complete, Some(DbIoResult::Unit))),
+            }
+        }
+
+        fn close_operation_step(&self, operation: u64, task: &DbIoTask) -> Result<bool, DbError> {
+            let read_slot = operation as usize % self.readers.len();
+            let mut reader = self.readers[read_slot].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if reader.as_ref().is_some_and(|owner| owner.operation == operation) {
+                reader.take();
+                return Ok(false);
+            }
+            drop(reader);
+            let temporary = match task {
+                DbIoTask::SnapshotWrite { document, generation, .. } => {
+                    let path = generation_path(&self.document_dir("snapshot", document)?, *generation);
+                    path.parent().zip(path.file_name().and_then(std::ffi::OsStr::to_str)).map(|(parent, name)| parent.join(format!(".{name}.{operation:016x}.dbio")))
+                }
+                DbIoTask::IndexWrite { document, run_id, .. } => {
+                    let path = run_path(&self.document_dir("index", document)?, *run_id);
+                    path.parent().zip(path.file_name().and_then(std::ffi::OsStr::to_str)).map(|(parent, name)| parent.join(format!(".{name}.{operation:016x}.dbio")))
+                }
+                DbIoTask::CatalogCas { .. } => {
+                    let path = catalog_path(self.root());
+                    path.parent().zip(path.file_name().and_then(std::ffi::OsStr::to_str)).map(|(parent, name)| parent.join(format!(".{name}.{operation:016x}.dbio")))
+                }
+                DbIoTask::PayloadPut { .. } => Some(self.root().join("payload").join(format!(".{operation:016x}.dbio"))),
+                _ => None,
+            };
+            if let Some(temporary) = temporary {
+                if temporary.exists() {
+                    std::fs::remove_file(temporary).map_err(io_err)?;
+                    return Ok(false);
+                }
+            }
+            let slot = operation as usize % self.payload_hashes.len();
+            let mut state = self.payload_hashes[slot].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if state.as_ref().is_some_and(|(owner, _)| *owner == operation) {
+                state.take();
+                return Ok(false);
+            }
+            Ok(true)
+        }
+    }
+
+    async fn execute(pool: &WorkerPool, task: DbIoTask) -> Result<DbIoResult, DbError> {
+        submit_db_io_task(pool, task).map_err(|(error, _)| error)?.await.map_err(super::DbIoFault::into_db_error)
+    }
+
+    fn document_text(document: &ArtifactId) -> Result<DbIoText, DbError> {
+        DbIoText::try_from_str(&document.0)
+    }
+
+    fn output_writer(bytes: u64) -> Result<DbIoPageWriter, DbError> {
+        let pages = usize::try_from(bytes).map_err(|_| DbError::LimitExceeded("db_io output writer bytes"))?.div_ceil(super::DB_IO_PAGE_BYTES);
+        DbIoPageWriter::try_reserve(pages).map_err(DbIoPageWriterRejected::into_error)
+    }
+
+    fn typed_result_fault(expected: &'static str) -> DbError {
+        DbError::Internal(format!("DB I/O filesystem executor did not return {expected}"))
+    }
+
+    fn unit(result: DbIoResult) -> Result<(), DbError> {
+        match result {
+            DbIoResult::Unit => Ok(()),
+            _ => Err(typed_result_fault("unit")),
+        }
+    }
+
+    fn length(result: DbIoResult) -> Result<u64, DbError> {
+        match result {
+            DbIoResult::Length(value) => Ok(value),
+            _ => Err(typed_result_fault("length")),
+        }
+    }
+
+    fn optional_length(result: DbIoResult) -> Result<Option<u64>, DbError> {
+        match result {
+            DbIoResult::OptionalLength(value) => Ok(value),
+            _ => Err(typed_result_fault("optional length")),
+        }
+    }
+
+    fn pages(result: DbIoResult) -> Result<DbIoPages, DbError> {
+        match result {
+            DbIoResult::Pages(value) => Ok(value),
+            _ => Err(typed_result_fault("pages")),
+        }
+    }
+
+    fn list(result: DbIoResult) -> Result<DbIoU64List, DbError> {
+        match result {
+            DbIoResult::List(value) => Ok(value),
+            _ => Err(typed_result_fault("list")),
+        }
     }
 
     /// @emoji 📁️ The zero-touch default `DbStorage` backend — see module doc for the on-disk
@@ -2001,25 +3766,31 @@ mod fs_storage {
     /// is what every trait method dispatches its blocking body through (see module doc); its
     /// `Arc` is cloned into each method's `'static` blocking closure.
     pub struct FsStorage {
-        root: PathBuf,
-        catalog_lock: Arc<Mutex<()>>,
-        lease_lock: Arc<Mutex<()>>,
+        control: DbIoBackendControl,
         pool: Arc<WorkerPool>,
     }
 
     impl FsStorage {
         /// @emoji 🚀️ Opens (creating if absent) a `FsStorage` rooted at `root`, dispatching every
-        /// subsequent trait call's blocking body through `run_blocking_op` onto `pool`'s
+        /// subsequent trait call's blocking body through the typed task owner onto `pool`'s
         /// `Lane::Io`. The constructor's directory creation uses that same retained authority;
         /// callers never prepare the root synchronously or through a pool-less fallback.
         pub async fn open(pool: Arc<WorkerPool>, root: &Path) -> Result<Self, DbError> {
-            let admitted_root = root.to_path_buf();
-            run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                std::fs::create_dir_all(admitted_root).map_err(io_err)?;
-                Ok(())
-            })
-            .await?;
-            Ok(Self { root: root.to_path_buf(), catalog_lock: Arc::new(Mutex::new(())), lease_lock: Arc::new(Mutex::new(())), pool })
+            let root = root.to_str().ok_or_else(|| DbError::InvalidArgument("filesystem storage root is not UTF-8".to_string())).and_then(DbIoText::try_from_str)?;
+            let control = register_db_io_backend(DbIoBackendKind::Filesystem, Arc::new(FsDbIoExecutor::new(root.clone())))?;
+            let task = DbIoTask::BackendOpen { backend: control, path: root };
+            if let Err(error) = execute(pool.as_ref(), task).await {
+                let _ = execute(pool.as_ref(), DbIoTask::BackendClose { backend: control }).await;
+                return Err(error);
+            }
+            Ok(Self { control, pool })
+        }
+
+        pub async fn close(&self) -> Result<(), DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::BackendClose { backend: self.control }).await? {
+                DbIoResult::Unit => Ok(()),
+                _ => Err(DbError::Internal("filesystem backend close returned the wrong typed result".to_string())),
+            }
         }
 
         /// @emoji 🎚️ Always durable, `fsync`-capable, CAS-capable — the on-disk default.
@@ -2030,246 +3801,67 @@ mod fs_storage {
 
     impl WalStorage for FsStorage {
         async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let dir = wal_dir(&root, &document)?;
-                    std::fs::create_dir_all(&dir).map_err(io_err)?;
-                    let path = segment_path(&dir, index);
-                    if path.exists() {
-                        return Err(DbError::AlreadyExists(format!("wal segment {index} for {document} already exists")));
-                    }
-                    std::fs::File::create(&path).map_err(io_err)?;
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::WalCreate { backend: self.control, document: document_text(document)?, index }).await?)
         }
 
         async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
             check_len(bytes.len() as u64, MAX_READ_BYTES, "wal_storage::append")?;
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            let byte_len = bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
-                    let dir = wal_dir(&root, &document)?;
-                    if sealed_marker_path(&dir, index).exists() {
-                        return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
-                    }
-                    let path = segment_path(&dir, index);
-                    let mut file = std::fs::OpenOptions::new().append(true).open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
-                    file.write_all(bytes.as_slice()).map_err(io_err)?;
-                    file.metadata().map_err(io_err).map(|meta| meta.len())
-                })
-                .await
-            }
+            length(execute(self.pool.as_ref(), DbIoTask::WalAppend { backend: self.control, document: document_text(document)?, index, input: bytes }).await?)
         }
 
         async fn sync(&self, document: &ArtifactId, index: u64, class: DurabilityClass) -> Result<(), DbError> {
-            // 🎯️ `Memory`/`Os` are satisfied by the ordinary `write(2)` `append` already performed;
-            // only `Fsync`/`Quorum` need this trait to force data to physical storage.
-            if matches!(class, DurabilityClass::Memory | DurabilityClass::Os) {
-                return { Ok(()) };
-            }
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let dir = wal_dir(&root, &document)?;
-                    let path = segment_path(&dir, index);
-                    let file = std::fs::OpenOptions::new().write(true).open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
-                    file.sync_all().map_err(io_err)
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::WalSync { backend: self.control, document: document_text(document)?, index, class }).await?)
         }
 
         async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let dir = wal_dir(&root, &document)?;
-                    let path = segment_path(&dir, index);
-                    if !path.exists() {
-                        return Err(DbError::NotFound(format!("wal segment {index} for {document} not found")));
-                    }
-                    std::fs::File::create(sealed_marker_path(&dir, index)).map_err(io_err)?;
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::WalSeal { backend: self.control, document: document_text(document)?, index }).await?)
         }
 
-        async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+        async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
             if let Err(err) = check_len(range.len, MAX_READ_BYTES, "wal_storage::read") {
                 return { Err(err) };
             }
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(range.len), move || {
-                    let dir = wal_dir(&root, &document)?;
-                    let path = segment_path(&dir, index);
-                    let mut file = std::fs::File::open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
-                    let current_len = file.metadata().map_err(io_err)?.len();
-                    let end = range.offset.checked_add(range.len).ok_or_else(|| DbError::InvalidArgument("wal read range overflows u64".to_string()))?;
-                    // 🎯️ Bounds-check against the file's actual length before seeking/reading, so a
-                    // too-long range reports `InvalidArgument` (matching `MemoryStorage`'s behavior)
-                    // rather than surfacing a raw `UnexpectedEof` as an opaque `DbError::Io`.
-                    if end > current_len {
-                        return Err(DbError::InvalidArgument(format!("wal read range {}..{end} out of bounds (len {current_len})", range.offset)));
-                    }
-                    file.seek(SeekFrom::Start(range.offset)).map_err(io_err)?;
-                    let mut buf = vec![0u8; range.len as usize];
-                    file.read_exact(&mut buf).map_err(io_err)?;
-                    Ok(buf)
-                })
-                .await
-            }
+            let output = output_writer(range.len)?;
+            pages(execute(self.pool.as_ref(), DbIoTask::WalRead { backend: self.control, document: document_text(document)?, index, range, output }).await?)
         }
 
         async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let dir = wal_dir(&root, &document)?;
-                    let path = segment_path(&dir, index);
-                    std::fs::metadata(&path).map(|meta| meta.len()).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))
-                })
-                .await
-            }
+            length(execute(self.pool.as_ref(), DbIoTask::WalLength { backend: self.control, document: document_text(document)?, index }).await?)
         }
 
-        async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || list_indexed_files(&wal_dir(&root, &document)?, "segment-", ".bin")).await
-            }
+        async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
+            list(execute(self.pool.as_ref(), DbIoTask::WalList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
         }
 
         async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let dir = wal_dir(&root, &document)?;
-                    if sealed_marker_path(&dir, index).exists() {
-                        return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
-                    }
-                    let path = segment_path(&dir, index);
-                    let file = std::fs::OpenOptions::new().write(true).open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
-                    let current_len = file.metadata().map_err(io_err)?.len();
-                    if new_len > current_len {
-                        return Err(DbError::InvalidArgument("truncate_tail new_len exceeds current segment length".to_string()));
-                    }
-                    file.set_len(new_len).map_err(io_err)
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::WalTruncate { backend: self.control, document: document_text(document)?, index, new_len }).await?)
         }
 
         async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let dir = wal_dir(&root, &document)?;
-                    let path = segment_path(&dir, index);
-                    if path.exists() {
-                        std::fs::remove_file(&path).map_err(io_err)?;
-                    }
-                    let marker = sealed_marker_path(&dir, index);
-                    if marker.exists() {
-                        std::fs::remove_file(&marker).map_err(io_err)?;
-                    }
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::WalDelete { backend: self.control, document: document_text(document)?, index }).await?)
         }
     }
 
     impl SnapshotStorage for FsStorage {
         async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            let byte_len = bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
-                    let dir = snapshot_dir(&root, &document)?;
-                    std::fs::create_dir_all(&dir).map_err(io_err)?;
-                    pack::write_atomic(&generation_path(&dir, generation), bytes.as_slice())?;
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::SnapshotWrite { backend: self.control, document: document_text(document)?, generation, input: bytes }).await?)
         }
 
-        async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_READ_BYTES), move || {
-                    let dir = snapshot_dir(&root, &document)?;
-                    let path = generation_path(&dir, generation);
-                    let meta = std::fs::metadata(&path).map_err(|err| open_err(err, || format!("snapshot generation {generation} for {document} not found")))?;
-                    check_len(meta.len(), MAX_READ_BYTES, "snapshot_storage::read_generation")?;
-                    std::fs::read(&path).map_err(io_err)
-                })
-                .await
-            }
+        async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
+            pages(execute(self.pool.as_ref(), DbIoTask::SnapshotRead { backend: self.control, document: document_text(document)?, generation, output: output_writer(MAX_READ_BYTES)? }).await?)
         }
 
         async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || Ok(list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")?.into_iter().max())).await
-            }
+            optional_length(execute(self.pool.as_ref(), DbIoTask::SnapshotLatest { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
         }
 
-        async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")).await
-            }
+        async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
+            list(execute(self.pool.as_ref(), DbIoTask::SnapshotList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
         }
 
         async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let dir = snapshot_dir(&root, &document)?;
-                    let path = generation_path(&dir, generation);
-                    if path.exists() {
-                        std::fs::remove_file(&path).map_err(io_err)?;
-                    }
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::SnapshotDelete { backend: self.control, document: document_text(document)?, generation }).await?)
         }
     }
 
@@ -2278,85 +3870,37 @@ mod fs_storage {
             if let Err(err) = check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put") {
                 return { Err(err) };
             }
-            let root = self.root.clone();
-            let pool = self.pool.clone();
-            let byte_len = bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
-                    let hash = ContentHash(*blake3::hash(bytes.as_slice()).as_bytes());
-                    let path = payload_path(&root, &hash);
-                    if !path.exists() {
-                        if let Some(parent) = path.parent() {
-                            std::fs::create_dir_all(parent).map_err(io_err)?;
-                        }
-                        pack::write_atomic(&path, bytes.as_slice())?;
-                    }
-                    Ok(hash)
-                })
-                .await
+            match execute(self.pool.as_ref(), DbIoTask::PayloadPut { backend: self.control, input: bytes }).await? {
+                DbIoResult::Hash(hash) => Ok(hash),
+                _ => Err(typed_result_fault("content hash")),
             }
         }
 
-        async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
-            let root = self.root.clone();
-            let hash = *hash;
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_READ_BYTES), move || {
-                    let path = payload_path(&root, &hash);
-                    let meta = std::fs::metadata(&path).map_err(|err| open_err(err, || format!("payload {hash} not found")))?;
-                    check_len(meta.len(), MAX_READ_BYTES, "payload_storage::get")?;
-                    std::fs::read(&path).map_err(io_err)
-                })
-                .await
-            }
+        async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
+            pages(execute(self.pool.as_ref(), DbIoTask::PayloadGet { backend: self.control, hash: *hash, output: output_writer(MAX_READ_BYTES)? }).await?)
         }
 
         async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
-            let root = self.root.clone();
-            let hash = *hash;
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || Ok(payload_path(&root, &hash).exists())).await
+            match execute(self.pool.as_ref(), DbIoTask::PayloadExists { backend: self.control, hash: *hash }).await? {
+                DbIoResult::Exists(exists) => Ok(exists),
+                _ => Err(typed_result_fault("existence")),
             }
         }
 
         async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
-            let root = self.root.clone();
-            let hash = *hash;
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let path = payload_path(&root, &hash);
-                    if path.exists() {
-                        std::fs::remove_file(&path).map_err(io_err)?;
-                    }
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::PayloadDelete { backend: self.control, hash: *hash }).await?)
         }
 
         async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-            let root = self.root.clone();
-            let hash = *hash;
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let path = payload_path(&root, &hash);
-                    std::fs::metadata(&path).map(|meta| meta.len()).map_err(|err| open_err(err, || format!("payload {hash} not found")))
-                })
-                .await
-            }
+            length(execute(self.pool.as_ref(), DbIoTask::PayloadLength { backend: self.control, hash: *hash }).await?)
         }
     }
 
     impl CatalogStorage for FsStorage {
-        async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
-            let root = self.root.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_READ_BYTES), move || read_root_sync(&root)).await
+        async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
+            match execute(self.pool.as_ref(), DbIoTask::CatalogRead { backend: self.control, output: output_writer(MAX_READ_BYTES)? }).await? {
+                DbIoResult::OptionalCatalog(root) => Ok(root),
+                _ => Err(typed_result_fault("optional catalog root")),
             }
         }
 
@@ -2364,209 +3908,70 @@ mod fs_storage {
             if let Err(err) = check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root") {
                 return { Err(err) };
             }
-            let root = self.root.clone();
-            let catalog_lock = self.catalog_lock.clone();
-            let pool = self.pool.clone();
-            let byte_len = new_bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read_transform(MAX_READ_BYTES, byte_len), move || {
-                    // 🎯️ In-process serialization only: two OS processes racing on the same `root` could
-                    // both pass this `expected.check` before either renames its `write_atomic` temp file
-                    // into place. Genuinely cross-process fencing needs an OS file lock (`flock`) or a
-                    // single owning process (which this campaign's `db_cluster` ownership lease already
-                    // provides in front of catalog writes) — deliberately left as an extension seam rather
-                    // than a half-implemented `flock` here, since `db_cluster` isn't implemented yet either.
-                    let _guard = catalog_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    let current_fence = read_root_sync(&root)?.map_or(EpochFence::INITIAL, |(_, fence)| fence);
-                    expected.check(current_fence)?;
-                    let new_fence = expected.next();
-                    let mut out = Vec::with_capacity(8 + new_bytes.len());
-                    out.extend_from_slice(&new_fence.epoch.to_le_bytes());
-                    out.extend_from_slice(new_bytes.as_slice());
-                    let path = catalog_path(&root);
-                    if let Some(parent) = path.parent() {
-                        std::fs::create_dir_all(parent).map_err(io_err)?;
-                    }
-                    pack::write_atomic(&path, &out)?;
-                    Ok(new_fence)
-                })
-                .await
+            match execute(self.pool.as_ref(), DbIoTask::CatalogCas { backend: self.control, expected, input: new_bytes }).await? {
+                DbIoResult::Fence(fence) => Ok(fence),
+                _ => Err(typed_result_fault("catalog fence")),
             }
         }
     }
 
     /// @emoji 📖️ The blocking body behind `CatalogStorage::read_root` — factored out so
-    /// `cas_root` can reuse it under `catalog_lock` without recursing through `run_blocking_op`.
-    // 🚫️async: E1 pure-shaped accessor (blocking `std::fs::read`), every caller is a sync
-    // `run_blocking_op` closure — see R9
-    fn read_root_sync(root: &Path) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
+    /// `cas_root` can reuse it under `catalog_lock` without recursive task submission.
+    // 🚫️async: E1 pure-shaped typed-task accessor.
+    fn read_root_fence(root: &Path) -> Result<Option<EpochFence>, DbError> {
         let path = catalog_path(root);
         if !path.exists() {
             return Ok(None);
         }
-        let bytes = std::fs::read(&path).map_err(io_err)?;
-        check_len(bytes.len().saturating_sub(8) as u64, MAX_READ_BYTES, "catalog_storage::read_root")?;
-        if bytes.len() < 8 {
+        let metadata = std::fs::metadata(&path).map_err(io_err)?;
+        if metadata.len() < 8 {
             return Err(DbError::Corrupt("catalog root file is shorter than its 8-byte epoch header".to_string()));
         }
         let mut epoch_bytes = [0u8; 8];
-        epoch_bytes.copy_from_slice(&bytes[..8]);
-        Ok(Some((bytes[8..].to_vec(), EpochFence { epoch: u64::from_le_bytes(epoch_bytes) })))
+        std::fs::File::open(&path).map_err(io_err)?.read_exact(&mut epoch_bytes).map_err(io_err)?;
+        Ok(Some(EpochFence { epoch: u64::from_le_bytes(epoch_bytes) }))
     }
 
     impl IndexStorage for FsStorage {
         async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_READ_BYTES, "index_storage::write_run")?;
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            let byte_len = bytes.len() as u64;
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::write(byte_len), move || {
-                    let dir = index_dir(&root, &document)?;
-                    std::fs::create_dir_all(&dir).map_err(io_err)?;
-                    pack::write_atomic(&run_path(&dir, run_id), bytes.as_slice())?;
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::IndexWrite { backend: self.control, document: document_text(document)?, run_id, input: bytes }).await?)
         }
 
-        async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::read(MAX_READ_BYTES), move || {
-                    let dir = index_dir(&root, &document)?;
-                    let path = run_path(&dir, run_id);
-                    let meta = std::fs::metadata(&path).map_err(|err| open_err(err, || format!("index run {run_id} for {document} not found")))?;
-                    check_len(meta.len(), MAX_READ_BYTES, "index_storage::read_run")?;
-                    std::fs::read(&path).map_err(io_err)
-                })
-                .await
-            }
+        async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
+            pages(execute(self.pool.as_ref(), DbIoTask::IndexRead { backend: self.control, document: document_text(document)?, run_id, output: output_writer(MAX_READ_BYTES)? }).await?)
         }
 
-        async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::list(4096), move || list_indexed_files(&index_dir(&root, &document)?, "run-", ".bin")).await
-            }
+        async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
+            list(execute(self.pool.as_ref(), DbIoTask::IndexList { backend: self.control, document: document_text(document)?, output: DbIoU64List::new() }).await?)
         }
 
         async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
-            let root = self.root.clone();
-            let document = document.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let dir = index_dir(&root, &document)?;
-                    let path = run_path(&dir, run_id);
-                    if path.exists() {
-                        std::fs::remove_file(&path).map_err(io_err)?;
-                    }
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::IndexDelete { backend: self.control, document: document_text(document)?, run_id }).await?)
         }
     }
 
     impl LeaseStorage for FsStorage {
         async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-            let root = self.root.clone();
-            let resource = resource.to_string();
-            let holder = holder.to_string();
-            let lease_lock = self.lease_lock.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let path = lease_path(&root, &resource)?;
-                    let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    let fence = match read_lease_file(&path)? {
-                        Some((fence, expires_at_ms, existing_holder)) if now_ms < expires_at_ms => {
-                            if existing_holder != holder {
-                                return Err(DbError::Conflict(format!("resource {resource} is leased by another holder")));
-                            }
-                            fence
-                        }
-                        Some((fence, _, _)) => fence.next(),
-                        None => EpochFence::INITIAL,
-                    };
-                    write_lease_file(&path, fence, now_ms + ttl_ms, &holder)?;
-                    Ok(fence)
-                })
-                .await
+            match execute(self.pool.as_ref(), DbIoTask::LeaseAcquire { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, now_ms, ttl_ms }).await? {
+                DbIoResult::Fence(fence) => Ok(fence),
+                _ => Err(typed_result_fault("lease fence")),
             }
         }
 
         async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-            let root = self.root.clone();
-            let resource = resource.to_string();
-            let holder = holder.to_string();
-            let lease_lock = self.lease_lock.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let path = lease_path(&root, &resource)?;
-                    let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    let (current_fence, expires_at_ms, current_holder) = read_lease_file(&path)?.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
-                    if now_ms >= expires_at_ms {
-                        return Err(DbError::Unavailable(format!("lease for {resource} already expired")));
-                    }
-                    if current_holder != holder {
-                        return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
-                    }
-                    fence.check(current_fence)?;
-                    write_lease_file(&path, current_fence, now_ms + ttl_ms, &holder)?;
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::LeaseRenew { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, fence, now_ms, ttl_ms }).await?)
         }
 
         async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-            let root = self.root.clone();
-            let resource = resource.to_string();
-            let holder = holder.to_string();
-            let lease_lock = self.lease_lock.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let path = lease_path(&root, &resource)?;
-                    let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    let (current_fence, _, current_holder) = read_lease_file(&path)?.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
-                    if current_holder != holder {
-                        return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
-                    }
-                    fence.check(current_fence)?;
-                    if path.exists() {
-                        std::fs::remove_file(&path).map_err(io_err)?;
-                    }
-                    Ok(())
-                })
-                .await
-            }
+            unit(execute(self.pool.as_ref(), DbIoTask::LeaseRelease { backend: self.control, document: DbIoText::try_from_str(resource)?, holder: DbIoText::try_from_str(holder)?, fence }).await?)
         }
 
         async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-            let root = self.root.clone();
-            let resource = resource.to_string();
-            let lease_lock = self.lease_lock.clone();
-            let pool = self.pool.clone();
-            {
-                run_blocking_op(pool.as_ref(), DbIoRequest::metadata(), move || {
-                    let path = lease_path(&root, &resource)?;
-                    let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    match read_lease_file(&path)? {
-                        Some((fence, expires_at_ms, holder)) if now_ms < expires_at_ms => Ok(Some(LeaseInfo { resource: resource.clone(), holder, fence, expires_at_ms })),
-                        _ => Ok(None),
-                    }
-                })
-                .await
+            match execute(self.pool.as_ref(), DbIoTask::LeaseGet { backend: self.control, document: DbIoText::try_from_str(resource)?, now_ms }).await? {
+                DbIoResult::OptionalLease(Some(lease)) => Ok(Some(LeaseInfo { resource: lease.resource.as_str().to_string(), holder: lease.holder.as_str().to_string(), fence: lease.fence, expires_at_ms: lease.expires_at_ms })),
+                DbIoResult::OptionalLease(None) => Ok(None),
+                _ => Err(typed_result_fault("optional lease")),
             }
         }
     }
@@ -2576,138 +3981,123 @@ mod fs_storage {
 pub use fs_storage::FsStorage;
 //#endregion 🔖️Fs
 
+
 #[cfg(test)]
 mod db_io_retained_fixtures {
     use super::*;
-    use std::sync::mpsc;
 
     static FIXTURE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
-    fn pool() -> WorkerPool {
-        WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1))
-    }
-
-    fn occupy_io(pool: &WorkerPool) -> (mpsc::Sender<()>, mpsc::Receiver<()>) {
-        let (started_tx, started_rx) = mpsc::channel();
-        let (release_tx, release_rx) = mpsc::channel();
-        pool.submit(
-            Lane::Io,
-            Box::new(move || {
-                started_tx.send(()).expect("signal occupied DB I/O worker");
-                release_rx.recv().expect("release occupied DB I/O worker");
-            }),
-        );
-        (release_tx, started_rx)
-    }
-
-    #[test]
-    fn db_io_missing_pool_is_unrepresentable_and_has_no_inline_fallback() {
-        fn submit_requires_pool(pool: &WorkerPool) -> DbIoOperation<u8> {
-            run_blocking_op(pool, DbIoRequest::metadata(), || Ok(5))
+    fn pages(bytes: &[u8]) -> DbIoPages {
+        let mut writer = DbIoPageWriter::try_reserve(bytes.len().div_ceil(DB_IO_PAGE_BYTES)).expect("fixture pages admitted");
+        for fragment in bytes.chunks(DB_IO_PAGE_BYTES) {
+            assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
         }
-        let constructor: fn(&WorkerPool) -> DbIoOperation<u8> = submit_requires_pool;
-        let pool = pool();
-        let mut operation = constructor(&pool);
-        assert_eq!(semio_framework_async::block_on(&mut operation).unwrap(), 5);
-        pool.shutdown();
+        writer.finish().unwrap()
+    }
+
+    fn drain_pages(mut pages: DbIoPages) {
+        while pages.close_step().unwrap().is_some() {}
+        while db_io_page_maintenance_step().unwrap().is_some() {}
     }
 
     #[test]
-    fn db_io_item_cap_plus_one_and_process_byte_cap_return_without_mutation() {
+    fn db_io_fixed_page_max_plus_one_and_zero_are_exact() {
         let _serial = FIXTURE_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let mut items = Vec::new();
-        for _ in 0..DB_IO_OPERATION_ITEMS {
-            items.push(DbIoAdmission::try_claim(DB_IO_PAGE_BYTES).expect("fixed item slot"));
+        let empty = pages(&[]);
+        assert!(empty.is_empty());
+        drain_pages(empty);
+        let max = vec![0x5a; DB_IO_OPERATION_BYTES as usize];
+        let retained = pages(&max);
+        assert_eq!(retained.len(), max.len());
+        assert_eq!(usize::from(retained.page_count()), DB_IO_OPERATION_PAGES);
+        assert!(DbIoPageWriter::try_reserve(DB_IO_OPERATION_PAGES + 1).is_err());
+        drain_pages(retained);
+    }
+
+    #[test]
+    fn db_io_range_moves_the_same_page_leases_without_suffix_copy() {
+        let _serial = FIXTURE_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let bytes = vec![0x33; DB_IO_PAGE_BYTES + 3];
+        let owner = pages(&bytes);
+        let operation = owner.operation();
+        let suffix = owner.try_range(DB_IO_PAGE_BYTES).unwrap();
+        assert_eq!(suffix.operation(), operation);
+        assert_eq!(suffix, [0x33; 3]);
+        drain_pages(suffix);
+    }
+
+    #[test]
+    fn db_io_list_capacity_plus_one_does_not_mutate_the_fixed_owner() {
+        let mut list = DbIoU64List::new();
+        for value in 0..DB_IO_LIST_ITEMS as u64 {
+            list.push(value).unwrap();
         }
-        assert!(DbIoAdmission::try_claim(DB_IO_PAGE_BYTES).is_err());
-        drop(items);
-        let mut bytes = Vec::new();
+        assert!(list.push(DB_IO_LIST_ITEMS as u64).is_err());
+        assert_eq!(list.len(), DB_IO_LIST_ITEMS);
+        assert_eq!(list.as_slice().last(), Some(&((DB_IO_LIST_ITEMS - 1) as u64)));
+    }
+
+    #[test]
+    fn db_io_process_page_max_plus_one_preflight_is_atomic() {
+        let mut state = DbIoPageArenaState::new();
         for _ in 0..DB_IO_TOTAL_PAGES / DB_IO_OPERATION_PAGES {
-            bytes.push(DbIoAdmission::try_claim(DB_IO_OPERATION_BYTES).expect("fixed process pages"));
+            db_io_preflight_page_checkout(&state, DB_IO_OPERATION_PAGES).unwrap();
+            state.free_len -= DB_IO_OPERATION_PAGES;
         }
-        assert!(DbIoAdmission::try_claim(DB_IO_PAGE_BYTES).is_err());
+        let before = (state.free_read, state.free_len, state.next_generation);
+        assert!(db_io_preflight_page_checkout(&state, 1).is_err());
+        assert_eq!((state.free_read, state.free_len, state.next_generation), before);
     }
 
     #[test]
-    fn db_io_operation_bytes_plus_one_and_nested_page_owner_hand_back_are_exact() {
+    fn db_io_result_page_reservation_plus_one_returns_the_writer() {
         let _serial = FIXTURE_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        assert_eq!(DbIoRequest::write(DB_IO_OPERATION_BYTES - DB_IO_PAGE_BYTES).admitted_bytes().unwrap(), DB_IO_OPERATION_BYTES);
-        assert!(DbIoRequest::write(DB_IO_OPERATION_BYTES - DB_IO_PAGE_BYTES + 1).admitted_bytes().is_err());
-        let owner = vec![7; MAX_READ_BYTES as usize + 1];
-        let rejected = DbIoPages::try_new(owner).expect_err("cap + 1 must return the exact owner");
-        assert_eq!(rejected.into_owner(), vec![7; MAX_READ_BYTES as usize + 1]);
-        let pages = DbIoPages::try_range((0..(DB_IO_PAGE_BYTES as usize + 3)).map(|value| value as u8).collect(), DB_IO_PAGE_BYTES as usize).unwrap();
-        assert_eq!(pages.page_count(), 1);
-        assert_eq!(pages.as_slice(), &[0, 1, 2]);
+        let mut writer = DbIoPageWriter::try_reserve(1).unwrap();
+        assert_eq!(writer.write_fragment(&[0x44; DB_IO_PAGE_BYTES]).unwrap(), DB_IO_PAGE_BYTES);
+        assert!(matches!(writer.write_fragment(&[0x55]), Err(DbError::LimitExceeded(_))));
+        assert_eq!(writer.len(), DB_IO_PAGE_BYTES);
+        assert!(writer.close_step().unwrap().is_some());
+        assert!(writer.terminal_is_empty());
     }
 
     #[test]
-    fn db_io_cancel_before_execution_retains_exact_work_owner() {
+    fn db_io_interrupted_close_retires_one_page_or_owner_per_grant() {
         let _serial = FIXTURE_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let pool = pool();
-        let (release, started) = occupy_io(&pool);
-        started.recv().unwrap();
-        let mut operation = run_blocking_op(&pool, DbIoRequest::metadata(), || Ok::<_, DbError>(11));
-        operation.cancel();
-        release.send(()).unwrap();
-        assert!(matches!(semio_framework_async::block_on(&mut operation), Err(DbError::Closed)));
-        assert!(operation.take_terminal_work().is_some());
-        pool.shutdown();
+        let input = pages(&[0x66; DB_IO_PAGE_BYTES + 1]);
+        let mut task = DbIoTask::WalAppend {
+            backend: DbIoBackendControl::Memory { slot: 0, generation: 1 },
+            document: DbIoText::try_from_str("close-fixture").unwrap(),
+            index: 0,
+            input,
+        };
+        assert_eq!(task.close_step().unwrap(), Some(DB_IO_PAGE_BYTES));
+        assert!(!task.terminal_is_empty());
+        assert_eq!(task.close_step().unwrap(), Some(DB_IO_PAGE_BYTES));
+        assert!(!task.terminal_is_empty());
+        assert_eq!(task.close_step().unwrap(), Some(0));
+        assert!(task.terminal_is_empty());
+        assert_eq!(task.close_step().unwrap(), None);
     }
 
     #[test]
-    fn db_io_cancel_during_execution_retains_result_and_cancel_after_completion_is_stable() {
-        let _serial = FIXTURE_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let pool = pool();
-        let (started_tx, started_rx) = mpsc::channel();
-        let (release_tx, release_rx) = mpsc::channel();
-        let mut operation = run_blocking_op(&pool, DbIoRequest::metadata(), move || {
-            started_tx.send(()).unwrap();
-            release_rx.recv().unwrap();
-            Ok::<_, DbError>(23)
-        });
-        started_rx.recv().unwrap();
-        operation.cancel();
-        release_tx.send(()).unwrap();
-        assert!(matches!(semio_framework_async::block_on(&mut operation), Err(DbError::Closed)));
-        assert_eq!(operation.take_terminal_result().unwrap().unwrap(), 23);
-        let mut completed = run_blocking_op(&pool, DbIoRequest::metadata(), || Ok::<_, DbError>(29));
-        assert_eq!(semio_framework_async::block_on(&mut completed).unwrap(), 29);
-        completed.cancel();
-        assert_eq!(completed.progress(), DbIoProgress::Completed);
-        pool.shutdown();
+    fn db_io_retry_generation_and_operation_reject_stale_aba_handles() {
+        let current = DbIoTaskSlot { generation: 8, operation: 12, ..DbIoTaskSlot::empty() };
+        assert!(db_io_slot_matches(&current, DbIoTaskHandle { slot: 0, generation: 8, operation: 12 }));
+        assert!(!db_io_slot_matches(&current, DbIoTaskHandle { slot: 0, generation: 7, operation: 12 }));
+        assert!(!db_io_slot_matches(&current, DbIoTaskHandle { slot: 0, generation: 8, operation: 11 }));
     }
 
     #[test]
-    fn db_io_stale_generation_cannot_consume_current_work() {
+    fn db_io_lost_page_handle_resumes_the_same_retirement_cursor() {
         let _serial = FIXTURE_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let pool = pool();
-        let (release, started) = occupy_io(&pool);
-        started.recv().unwrap();
-        let mut operation = run_blocking_op(&pool, DbIoRequest::metadata(), || Ok::<_, DbError>(31));
-        let generation = operation.generation();
-        operation.state.clone().drive_one(generation.checked_add(1).unwrap());
-        assert!(operation.state.work.lock().unwrap().is_some());
-        release.send(()).unwrap();
-        assert_eq!(semio_framework_async::block_on(&mut operation).unwrap(), 31);
-        pool.shutdown();
-    }
-
-    #[test]
-    fn db_io_shutdown_terminal_job_take_resume_and_interrupted_close_are_one_owner_per_grant() {
-        let _serial = FIXTURE_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let pool = pool();
-        pool.shutdown();
-        let mut operation = run_blocking_op(&pool, DbIoRequest::metadata(), || Ok::<_, DbError>(37));
-        assert!(matches!(semio_framework_async::block_on(&mut operation), Err(DbError::Unavailable(_))));
-        let terminal = operation.take_terminal_job().expect("exact rejected closure is observable");
-        assert_eq!(terminal.reason(), WorkerSubmitErrorKind::Shutdown);
-        terminal.resume();
-        assert!(operation.take_terminal_job().is_some());
-        assert!(!operation.terminal_is_empty());
-        assert!(operation.close_step());
-        assert!(operation.close_step());
-        assert!(operation.terminal_is_empty());
+        let owner = pages(&[0x77; DB_IO_PAGE_BYTES + 1]);
+        let operation = owner.operation();
+        drop(owner);
+        assert_eq!(db_io_page_maintenance_step().unwrap(), Some(DB_IO_PAGE_BYTES));
+        assert_eq!(db_io_page_maintenance_step().unwrap(), Some(DB_IO_PAGE_BYTES));
+        assert_eq!(db_io_page_maintenance_step().unwrap(), None);
+        assert_ne!(operation, 0);
     }
 }
 
@@ -2717,7 +4107,11 @@ mod tests {
     use super::*;
 
     fn pages(bytes: &[u8]) -> DbIoPages {
-        DbIoPages::try_new(bytes.to_vec()).expect("test storage bytes must fit the fixed page owner")
+        let mut writer = DbIoPageWriter::try_reserve(bytes.len().div_ceil(DB_IO_PAGE_BYTES)).expect("test storage pages admitted");
+        for fragment in bytes.chunks(DB_IO_PAGE_BYTES) {
+            assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
+        }
+        writer.finish().unwrap()
     }
 
     //#region 🔖️WalStorage

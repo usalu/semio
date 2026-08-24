@@ -2,12 +2,8 @@
 
 use semio_framework_job::{CommitCandidate, InteractiveJob, StepContext, StepOutcome};
 use std::fs::{File, ReadDir};
-use std::future::Future;
 use std::io::{Read, Seek, Write};
 use std::path::PathBuf;
-use std::pin::Pin;
-use std::sync::{Arc, Mutex};
-use std::task::{Context, Poll, Waker};
 
 //#region 📂️Schema
 
@@ -33,51 +29,6 @@ pub enum NativeIoValue {
 
 //#endregion 📂️Schema
 
-//#region 📬️Completion
-
-#[derive(Default)]
-struct CompletionSlot {
-    result: Mutex<Option<Result<NativeIoValue, String>>>,
-    waker: Mutex<Option<Waker>>,
-}
-
-impl CompletionSlot {
-    fn complete(&self, result: Result<NativeIoValue, String>) {
-        *self.result.lock().expect("native I/O result lock") = Some(result);
-        if let Some(waker) = self.waker.lock().expect("native I/O waker lock").take() {
-            waker.wake();
-        }
-    }
-}
-
-pub struct NativeIoCompletion {
-    slot: Arc<CompletionSlot>,
-}
-
-impl NativeIoCompletion {
-    pub fn try_take(&self) -> Option<Result<NativeIoValue, String>> {
-        self.slot.result.lock().expect("native I/O result lock").take()
-    }
-}
-
-impl Future for NativeIoCompletion {
-    type Output = Result<NativeIoValue, String>;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        if let Some(result) = self.try_take() {
-            return Poll::Ready(result);
-        }
-        *self.slot.waker.lock().expect("native I/O waker lock") = Some(cx.waker().clone());
-        if let Some(result) = self.try_take() {
-            Poll::Ready(result)
-        } else {
-            Poll::Pending
-        }
-    }
-}
-
-//#endregion 📬️Completion
-
 //#region 👷️Job
 
 enum NativeIoState {
@@ -91,51 +42,66 @@ enum NativeIoState {
 
 pub struct NativeIoJob {
     state: NativeIoState,
-    completion: Arc<CompletionSlot>,
+    result: Option<Result<NativeIoValue, String>>,
+    closing: bool,
 }
 
 impl NativeIoJob {
-    pub fn new(request: NativeIoRequest) -> (Self, NativeIoCompletion) {
-        let completion = Arc::new(CompletionSlot::default());
-        (Self { state: NativeIoState::Pending(request), completion: completion.clone() }, NativeIoCompletion { slot: completion })
+    pub fn new(request: NativeIoRequest) -> Self {
+        Self { state: NativeIoState::Pending(request), result: None, closing: false }
     }
 
-    fn finish(&mut self, result: Result<NativeIoValue, String>) -> StepOutcome {
-        let fault = result.as_ref().err().map(|error| semio_framework_job::JobFault { detail: error.as_bytes().to_vec() });
-        self.completion.complete(result);
+    pub fn take_result(&mut self) -> Option<Result<NativeIoValue, String>> {
+        self.result.take()
+    }
+
+    fn finish(&mut self, result: Result<NativeIoValue, String>, cx: &mut StepContext<'_>) -> StepOutcome {
+        let fault = result.as_ref().err().map(|error| {
+            let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, error.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            semio_framework_job::JobFault { detail }
+        });
+        self.result = Some(result);
         self.state = NativeIoState::Finished;
-        fault.map_or_else(|| StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() }), StepOutcome::Fault)
+        fault.map_or_else(
+            || {
+                StepOutcome::Complete(CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                })
+            },
+            StepOutcome::Fault,
+        )
     }
 
-    fn start(&mut self, request: NativeIoRequest) -> StepOutcome {
+    fn start(&mut self, request: NativeIoRequest, cx: &mut StepContext<'_>) -> StepOutcome {
         match request {
             NativeIoRequest::ReadBytes(path) => match File::open(&path) {
                 Ok(file) => {
                     self.state = NativeIoState::Reading { file, bytes: Vec::new() };
                     StepOutcome::Yield
                 }
-                Err(error) => self.finish(Err(format!("{}: {error}", path.display()))),
+                Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
             },
             NativeIoRequest::ReadPage { path, offset, max_bytes } => {
                 if max_bytes == 0 || max_bytes > 64 * 1024 {
-                    return self.finish(Err("native I/O page exceeded fixed byte credits".into()));
+                    return self.finish(Err("native I/O page exceeded fixed byte credits".into()), cx);
                 }
                 match File::open(&path) {
                     Ok(mut file) => {
                         let length = match file.metadata() {
                             Ok(metadata) => metadata.len(),
-                            Err(error) => return self.finish(Err(format!("{}: {error}", path.display()))),
+                            Err(error) => return self.finish(Err(format!("{}: {error}", path.display())), cx),
                         };
                         if offset > length {
-                            return self.finish(Err(format!("{}: page offset exceeds file length", path.display())));
+                            return self.finish(Err(format!("{}: page offset exceeds file length", path.display())), cx);
                         }
                         if let Err(error) = file.seek(std::io::SeekFrom::Start(offset)) {
-                            return self.finish(Err(format!("{}: {error}", path.display())));
+                            return self.finish(Err(format!("{}: {error}", path.display())), cx);
                         }
                         self.state = NativeIoState::ReadingPage { file, offset, length, max_bytes };
                         StepOutcome::Yield
                     }
-                    Err(error) => self.finish(Err(format!("{}: {error}", path.display()))),
+                    Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
                 }
             }
             NativeIoRequest::ScanDirectory { path, directories_only, extension, first_only } => match std::fs::read_dir(&path) {
@@ -143,17 +109,17 @@ impl NativeIoJob {
                     self.state = NativeIoState::Scanning { entries, paths: Vec::new(), directories_only, extension, first_only };
                     StepOutcome::Yield
                 }
-                Err(error) => self.finish(Err(format!("{}: {error}", path.display()))),
+                Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
             },
             NativeIoRequest::Modified(paths) => {
                 let modified = paths.into_iter().filter_map(|path| std::fs::metadata(&path).ok().and_then(|metadata| metadata.modified().ok()).map(|modified| (path, modified))).collect();
-                self.finish(Ok(NativeIoValue::Modified(modified)))
+                self.finish(Ok(NativeIoValue::Modified(modified)), cx)
             }
             NativeIoRequest::WriteBytes { path, bytes, create_parent } => {
                 if create_parent {
                     if let Some(parent) = path.parent() {
                         if let Err(error) = std::fs::create_dir_all(parent) {
-                            return self.finish(Err(format!("{}: {error}", parent.display())));
+                            return self.finish(Err(format!("{}: {error}", parent.display())), cx);
                         }
                     }
                 }
@@ -162,10 +128,10 @@ impl NativeIoJob {
                         self.state = NativeIoState::Writing { file, bytes, cursor: 0 };
                         StepOutcome::Yield
                     }
-                    Err(error) => self.finish(Err(format!("{}: {error}", path.display()))),
+                    Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
                 }
             }
-            NativeIoRequest::ProcessResidentBytes => self.finish(Ok(NativeIoValue::ResidentBytes(process_resident_bytes()))),
+            NativeIoRequest::ProcessResidentBytes => self.finish(Ok(NativeIoValue::ResidentBytes(process_resident_bytes())), cx),
         }
     }
 }
@@ -173,7 +139,7 @@ impl NativeIoJob {
 impl InteractiveJob for NativeIoJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         if cx.is_cancelled() {
-            self.completion.complete(Err("native I/O cancelled".into()));
+            self.result = Some(Err("native I/O cancelled".into()));
             self.state = NativeIoState::Finished;
             return StepOutcome::Cancelled;
         }
@@ -183,17 +149,17 @@ impl InteractiveJob for NativeIoJob {
         cx.set_stage("NativePlatformIo");
         cx.consume_fuel(1);
         match std::mem::replace(&mut self.state, NativeIoState::Finished) {
-            NativeIoState::Pending(request) => self.start(request),
+            NativeIoState::Pending(request) => self.start(request, cx),
             NativeIoState::Reading { mut file, mut bytes } => {
                 let mut chunk = [0u8; 32 * 1024];
                 match file.read(&mut chunk) {
-                    Ok(0) => self.finish(Ok(NativeIoValue::Bytes(bytes))),
+                    Ok(0) => self.finish(Ok(NativeIoValue::Bytes(bytes)), cx),
                     Ok(count) => {
                         bytes.extend_from_slice(&chunk[..count]);
                         self.state = NativeIoState::Reading { file, bytes };
                         StepOutcome::Yield
                     }
-                    Err(error) => self.finish(Err(error.to_string())),
+                    Err(error) => self.finish(Err(error.to_string()), cx),
                 }
             }
             NativeIoState::ReadingPage { mut file, offset, length, max_bytes } => {
@@ -202,14 +168,14 @@ impl InteractiveJob for NativeIoJob {
                 match file.read(&mut bytes) {
                     Ok(count) => {
                         bytes.truncate(count);
-                        self.finish(Ok(NativeIoValue::Page { bytes, eof: offset.saturating_add(count as u64) >= length }))
+                        self.finish(Ok(NativeIoValue::Page { bytes, eof: offset.saturating_add(count as u64) >= length }), cx)
                     }
-                    Err(error) => self.finish(Err(error.to_string())),
+                    Err(error) => self.finish(Err(error.to_string()), cx),
                 }
             }
             NativeIoState::Scanning { mut entries, mut paths, directories_only, extension, first_only } => {
                 for _ in 0..32 {
-                    let Some(entry) = entries.next() else { return self.finish(Ok(NativeIoValue::Paths(paths))) };
+                    let Some(entry) = entries.next() else { return self.finish(Ok(NativeIoValue::Paths(paths)), cx) };
                     let Ok(entry) = entry else { continue };
                     let path = entry.path();
                     if directories_only && !path.is_dir() {
@@ -220,7 +186,7 @@ impl InteractiveJob for NativeIoJob {
                     }
                     paths.push(path);
                     if first_only {
-                        return self.finish(Ok(NativeIoValue::Paths(paths)));
+                        return self.finish(Ok(NativeIoValue::Paths(paths)), cx);
                     }
                 }
                 self.state = NativeIoState::Scanning { entries, paths, directories_only, extension, first_only };
@@ -229,16 +195,45 @@ impl InteractiveJob for NativeIoJob {
             NativeIoState::Writing { mut file, bytes, cursor } => {
                 let end = (cursor + 32 * 1024).min(bytes.len());
                 match file.write_all(&bytes[cursor..end]) {
-                    Ok(()) if end == bytes.len() => self.finish(Ok(NativeIoValue::Written)),
+                    Ok(()) if end == bytes.len() => self.finish(Ok(NativeIoValue::Written), cx),
                     Ok(()) => {
                         self.state = NativeIoState::Writing { file, bytes, cursor: end };
                         StepOutcome::Yield
                     }
-                    Err(error) => self.finish(Err(error.to_string())),
+                    Err(error) => self.finish(Err(error.to_string()), cx),
                 }
             }
-            NativeIoState::Finished => StepOutcome::Fault(semio_framework_job::JobFault { detail: b"native I/O job polled after completion".to_vec() }),
+            NativeIoState::Finished => {
+                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"native I/O job polled after completion").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                StepOutcome::Fault(semio_framework_job::JobFault { detail })
+            }
         }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !matches!(self.state, NativeIoState::Finished) {
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.state = NativeIoState::Finished;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.result.is_some() {
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.result = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && matches!(self.state, NativeIoState::Finished) && self.result.is_none()
     }
 }
 
@@ -291,7 +286,7 @@ mod tests {
     use super::*;
 
     fn run(request: NativeIoRequest) -> Result<NativeIoValue, String> {
-        let (mut job, completion) = NativeIoJob::new(request);
+        let mut job = NativeIoJob::new(request);
         let params = semio_framework_job::BatchJobParams {
             operation: semio_framework_job::allocate_operation_id(),
             generation: semio_framework_job::Generation(1),
@@ -304,16 +299,30 @@ mod tests {
             },
             now_ms: semio_framework_job::default_now_ms,
         };
-        let outcome = semio_framework_job::run_to_completion(&mut job, &params);
-        assert!(matches!(outcome, StepOutcome::Complete(_)));
-        completion.try_take().expect("native I/O completion")
+        let mut preview_sequence = 0;
+        loop {
+            let outcome = semio_framework_job::drive_step(
+                &mut job,
+                params.config.site,
+                params.operation,
+                params.generation,
+                params.config.stage,
+                semio_framework_job::StepBudget::new(params.config.fuel_per_step, u64::MAX),
+                params.cancel.clone(),
+                params.now_ms,
+                &mut preview_sequence,
+            );
+            if outcome.is_terminal() {
+                break;
+            }
+        }
+        job.take_result().expect("native I/O terminal result")
     }
 
     #[test]
     fn request_and_completion_are_send() {
         fn assert_send<T: Send>() {}
         assert_send::<NativeIoJob>();
-        assert_send::<NativeIoCompletion>();
     }
 
     #[test]

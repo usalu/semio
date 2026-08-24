@@ -283,6 +283,33 @@ type WorldBrushPreviewRecord = {
   readonly orientation?: readonly [number, number, number, number];
   readonly scale?: readonly [number, number, number] | number;
   readonly color?: string;
+  readonly fillBuildPreview?: WorldFillDiagnosticRecord;
+};
+
+type WorldFillDiagnosticRecord = {
+  readonly operation: number;
+  readonly baseRevision: number;
+  readonly registryGeneration: number;
+  readonly sequence: number;
+  readonly generation: number;
+  readonly stage: string;
+  readonly targetVortexFullId: string | null;
+  readonly candidateObjectKindId: string | null;
+  readonly candidateGhost: WorldBrushPreviewRecord | null;
+  readonly currentPairObjectId: string | null;
+  readonly collisionCount: number;
+  readonly sampleCursor: number;
+  readonly insideBoth: number;
+  readonly lastSample: readonly [number, number, number] | null;
+  readonly candidatePage: readonly (string | null)[];
+  readonly truncated: boolean;
+  readonly rejectionReason: string | null;
+  readonly targetCursor: number;
+  readonly candidateCursor: number;
+  readonly acceptedCount: number;
+  readonly totalCount: number;
+  readonly searchCount: number;
+  readonly rejectedCount: number;
 };
 
 /** ☁️ One point-cloud rendering layer (`World3dScene.pointsJson` entries) — the cheap path for
@@ -1079,7 +1106,53 @@ function parseLod(lodJson: string | undefined): WorldLodRecord {
 function parseBrushPreview(brushPreviewJson: string | undefined): WorldBrushPreviewRecord | null {
   if (!brushPreviewJson) return null;
   try {
-    return JSON.parse(brushPreviewJson) as WorldBrushPreviewRecord;
+    const parsed = JSON.parse(brushPreviewJson) as WorldBrushPreviewRecord;
+    const diagnostic = parsed.fillBuildPreview;
+    const nullableString = (value: unknown) => value === null || typeof value === "string";
+    const nonnegativeInteger = (value: unknown) => Number.isSafeInteger(value) && (value as number) >= 0;
+    if (
+      diagnostic &&
+      (!Number.isSafeInteger(diagnostic.operation) ||
+        diagnostic.operation <= 0 ||
+        !Number.isSafeInteger(diagnostic.baseRevision) ||
+        diagnostic.baseRevision <= 0 ||
+        !Number.isSafeInteger(diagnostic.registryGeneration) ||
+        diagnostic.registryGeneration <= 0 ||
+        !Number.isSafeInteger(diagnostic.generation) ||
+        diagnostic.generation <= 0 ||
+        !Number.isSafeInteger(diagnostic.sequence) ||
+        diagnostic.sequence < 0 ||
+        typeof diagnostic.stage !== "string" ||
+        !nullableString(diagnostic.targetVortexFullId) ||
+        !nullableString(diagnostic.candidateObjectKindId) ||
+        !nullableString(diagnostic.currentPairObjectId) ||
+        !nullableString(diagnostic.rejectionReason) ||
+        !nonnegativeInteger(diagnostic.collisionCount) ||
+        !nonnegativeInteger(diagnostic.sampleCursor) ||
+        !nonnegativeInteger(diagnostic.insideBoth) ||
+        !nonnegativeInteger(diagnostic.targetCursor) ||
+        !nonnegativeInteger(diagnostic.candidateCursor) ||
+        !nonnegativeInteger(diagnostic.acceptedCount) ||
+        !nonnegativeInteger(diagnostic.totalCount) ||
+        !nonnegativeInteger(diagnostic.searchCount) ||
+        !nonnegativeInteger(diagnostic.rejectedCount) ||
+        typeof diagnostic.truncated !== "boolean" ||
+        !Array.isArray(diagnostic.candidatePage) ||
+        diagnostic.candidatePage.length > 8 ||
+        !diagnostic.candidatePage.every(nullableString) ||
+        (diagnostic.lastSample !== null && (!Array.isArray(diagnostic.lastSample) || diagnostic.lastSample.length !== 3 || !diagnostic.lastSample.every(Number.isFinite))) ||
+        (diagnostic.candidateGhost !== null && typeof diagnostic.candidateGhost !== "object") ||
+        (diagnostic.candidateGhost !== null &&
+          (diagnostic.candidateGhost.targetVortexFullId !== parsed.targetVortexFullId ||
+            diagnostic.candidateGhost.objectKindId !== parsed.objectKindId ||
+            diagnostic.candidateGhost.meshUrl !== parsed.meshUrl ||
+            JSON.stringify(diagnostic.candidateGhost.origin) !== JSON.stringify(parsed.origin) ||
+            JSON.stringify(diagnostic.candidateGhost.orientation) !== JSON.stringify(parsed.orientation) ||
+            JSON.stringify(diagnostic.candidateGhost.scale) !== JSON.stringify(parsed.scale))))
+    ) {
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -2764,6 +2837,54 @@ function BrushPreviewGhost({ preview, meshes, palette }: { readonly preview: Wor
   );
 }
 
+/** @emoji 🪣️ Bounded fill progress/rejection readout; it is deliberately independent from the optional placement ghost. */
+function FillDiagnosticOverlay({ diagnostic }: { readonly diagnostic: WorldFillDiagnosticRecord }) {
+  const target = diagnostic.targetVortexFullId ?? "—";
+  const candidate = diagnostic.candidateObjectKindId ?? "—";
+  const rejection = diagnostic.rejectionReason ?? "—";
+  const page = diagnostic.candidatePage.filter((value): value is string => typeof value === "string").join(", ");
+  const sample = diagnostic.lastSample?.join(",") ?? "—";
+  const label = [
+    diagnostic.stage,
+    String(diagnostic.acceptedCount) + "/" + String(diagnostic.totalCount),
+    "target " + target,
+    "candidate " + candidate,
+    "collisions " + String(diagnostic.collisionCount),
+    "rejection " + rejection,
+    "candidates " + (page || "—"),
+    "sample " + sample,
+  ].join("; ");
+  return (
+    <div
+      className={cn("pointer-events-none absolute bottom-3 left-3 max-w-[28rem] rounded px-2 py-1 text-xs shadow-sm", glassClass)}
+      data-fill-operation={diagnostic.operation}
+      data-fill-base-revision={diagnostic.baseRevision}
+      data-fill-registry-generation={diagnostic.registryGeneration}
+      data-fill-generation={diagnostic.generation}
+      data-fill-sequence={diagnostic.sequence}
+      data-fill-stage={diagnostic.stage}
+      data-fill-target-cursor={diagnostic.targetCursor}
+      data-fill-candidate-cursor={diagnostic.candidateCursor}
+      data-fill-search-count={diagnostic.searchCount}
+      data-fill-rejected-count={diagnostic.rejectedCount}
+      data-fill-sample-cursor={diagnostic.sampleCursor}
+      data-fill-inside-both={diagnostic.insideBoth}
+      data-fill-current-pair={diagnostic.currentPairObjectId ?? undefined}
+      data-fill-has-ghost={diagnostic.candidateGhost != null}
+      data-fill-truncated={diagnostic.truncated}
+      role="status"
+      aria-label={label}
+    >
+      <span>{diagnostic.stage}</span>
+      <span className="ml-2">
+        {diagnostic.acceptedCount}/{diagnostic.totalCount}
+      </span>
+      <span className="ml-2">{diagnostic.rejectionReason ?? String(diagnostic.collisionCount) + " collisions"}</span>
+      {diagnostic.truncated ? <span className="ml-2">…</span> : null}
+    </div>
+  );
+}
+
 function EngagementPreviewLayer({ items, color }: { readonly items: readonly WorldEngagementPreviewItem[]; readonly color: string }) {
   if (!items.length) return null;
   return (
@@ -3697,6 +3818,25 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const lod = useMemo(() => parseLod(scene?.lodJson), [scene?.lodJson]);
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
   const brushPreview = useMemo(() => parseBrushPreview(scene?.brushPreviewJson), [scene?.brushPreviewJson]);
+  const latestFillIdentityRef = useRef<readonly [number, number, number, number, number] | null>(null);
+  const suppliedFillDiagnostic = brushPreview?.fillBuildPreview ?? null;
+  let fillDiagnostic: WorldFillDiagnosticRecord | null = null;
+  if (suppliedFillDiagnostic) {
+    const identity = [suppliedFillDiagnostic.operation, suppliedFillDiagnostic.baseRevision, suppliedFillDiagnostic.registryGeneration, suppliedFillDiagnostic.generation, suppliedFillDiagnostic.sequence] as const;
+    const latest = latestFillIdentityRef.current;
+    const fresh =
+      !latest ||
+      identity[0] > latest[0] ||
+      (identity[0] === latest[0] &&
+        (identity[1] > latest[1] ||
+          (identity[1] === latest[1] &&
+            (identity[2] > latest[2] ||
+              (identity[2] === latest[2] && (identity[3] > latest[3] || (identity[3] === latest[3] && identity[4] >= latest[4]))))));
+    if (fresh) {
+      latestFillIdentityRef.current = identity;
+      fillDiagnostic = suppliedFillDiagnostic;
+    }
+  }
   const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);
   const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
@@ -3711,6 +3851,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [scene?.statusJson]);
   const activeUtility = interaction.activeUtility ?? "select";
   const fillMode = activeUtility === "fill";
+  const visibleBrushPreview = fillMode ? (fillDiagnostic?.candidateGhost ? brushPreview : null) : brushPreview;
   const brushMode = activeUtility === "brush";
   const volumeBrushMode = activeUtility === "volumeBrush";
   const volumeLayersInteractive = !brushMode && !fillMode && !volumeBrushMode;
@@ -4817,6 +4958,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
                 <span>{shellLabel("ui.common.loading")}</span>
               </div>
             ) : null}
+            {fillDiagnostic ? <FillDiagnosticOverlay diagnostic={fillDiagnostic} /> : null}
           </>
         }
       >
@@ -4924,8 +5066,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             />
             {connectDragSource && connectDragHoverPosition ? <WorldConnectRubberBand from={connectDragSource.position} to={connectDragHoverPosition} /> : null}
             <WorldAttractionLines attractions={attractions} />
-            {brushPreview ? <BrushPreviewGhost preview={brushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
-            {!brushPreview && catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : null}
+            {visibleBrushPreview ? <BrushPreviewGhost preview={visibleBrushPreview} meshes={meshes} palette={meshStylePalette} /> : null}
+            {!visibleBrushPreview && catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : null}
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer
               volumes={targetVolumes

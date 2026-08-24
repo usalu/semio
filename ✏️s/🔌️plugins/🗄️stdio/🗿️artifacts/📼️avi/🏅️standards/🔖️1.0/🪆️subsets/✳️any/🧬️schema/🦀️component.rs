@@ -21,16 +21,19 @@ pub struct AviArtifact {
     #[state(artifact)]
     #[serde(default)]
     pub unknown_chunks: Vec<RiffChunk>,
+    #[state(artifact)]
+    #[serde(default)]
+    pub hdrl_extra: Vec<RiffChunk>,
 }
 
 impl AviArtifact {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> AviSnapshot {
-        AviSnapshot { schema: self.schema.clone(), main_header: self.main_header.clone(), streams: self.streams.clone(), idx1_present: self.idx1_present, unknown_chunks: self.unknown_chunks.clone() }
+        AviSnapshot { schema: self.schema.clone(), main_header: self.main_header.clone(), streams: self.streams.clone(), idx1_present: self.idx1_present, unknown_chunks: self.unknown_chunks.clone(), hdrl_extra: self.hdrl_extra.clone() }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: AviSnapshot) -> Self {
-        Self { schema: snapshot.schema, main_header: snapshot.main_header, streams: snapshot.streams, idx1_present: snapshot.idx1_present, unknown_chunks: snapshot.unknown_chunks }
+        Self { schema: snapshot.schema, main_header: snapshot.main_header, streams: snapshot.streams, idx1_present: snapshot.idx1_present, unknown_chunks: snapshot.unknown_chunks, hdrl_extra: snapshot.hdrl_extra }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: AviSnapshot) {
@@ -39,6 +42,7 @@ impl AviArtifact {
         self.streams = snapshot.streams;
         self.idx1_present = snapshot.idx1_present;
         self.unknown_chunks = snapshot.unknown_chunks;
+        self.hdrl_extra = snapshot.hdrl_extra;
     }
 }
 

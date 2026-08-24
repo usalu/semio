@@ -113,23 +113,24 @@ enum ClipboardIoOperation {
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ClipboardIoJob {
     operation: Option<ClipboardIoOperation>,
+    closing: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ClipboardIoJob {
     pub fn read() -> Self {
-        Self { operation: Some(ClipboardIoOperation::Read) }
+        Self { operation: Some(ClipboardIoOperation::Read), closing: false }
     }
 
     pub fn write(text: String) -> Self {
-        Self { operation: Some(ClipboardIoOperation::Write(text)) }
+        Self { operation: Some(ClipboardIoOperation::Write(text)), closing: false }
     }
 
     /// 📥️ Decodes a successful read candidate. Write candidates and empty clipboards return
     /// `None`; cancellation/fault/yield are not terminal results and also return `None`.
     pub fn read_candidate(outcome: &semio_framework_job::StepOutcome) -> Option<String> {
         let semio_framework_job::StepOutcome::Complete(candidate) = outcome else { return None };
-        let (&present, bytes) = candidate.output.split_first()?;
+        let (&present, bytes) = candidate.output.page(0)?.split_first()?;
         (present == 1).then(|| String::from_utf8(bytes.to_vec()).ok()).flatten()
     }
 }
@@ -146,25 +147,54 @@ impl semio_framework_job::InteractiveJob for ClipboardIoJob {
         cx.set_stage("ClipboardIo");
         use arboard as system_clipboard;
         let output = match self.operation.take() {
-            Some(ClipboardIoOperation::Read) => system_clipboard::Clipboard::new().ok().and_then(|mut clipboard| clipboard.get_text().ok()).map_or_else(
-                || vec![0],
-                |text| {
-                    let mut output = Vec::with_capacity(text.len() + 1);
-                    output.push(1);
-                    output.extend_from_slice(text.as_bytes());
-                    output
-                },
-            ),
+            Some(ClipboardIoOperation::Read) => {
+                let mut writer = semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput);
+                let source = semio_framework_job::JobPayloadPageSource::new();
+                let mut page = match cx.admit_payload_page(&mut writer, source) {
+                    Ok(page) => page,
+                    Err(_) => return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
+                };
+                let text = system_clipboard::Clipboard::new().ok().and_then(|mut clipboard| clipboard.get_text().ok());
+                let write = match text.as_ref() {
+                    Some(text) if text.len() < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => page.write(&[1]).and_then(|_| page.write(text.as_bytes())),
+                    Some(_) => page.write(&[0]),
+                    None => page.write(&[0]),
+                };
+                if write.is_err() {
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                }
+                page.commit();
+                writer.finish().unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput))
+            }
             Some(ClipboardIoOperation::Write(text)) => {
                 if let Ok(mut clipboard) = system_clipboard::Clipboard::new() {
                     let _ = clipboard.set_text(text);
                 }
-                Vec::new()
+                semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput)
             }
-            None => Vec::new(),
+            None => semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
         };
         cx.consume_fuel(1);
-        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output })
+        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if self.operation.is_some() {
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.operation = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.operation.is_none()
     }
 }
 

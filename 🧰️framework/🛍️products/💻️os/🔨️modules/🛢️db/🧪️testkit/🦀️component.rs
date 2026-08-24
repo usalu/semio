@@ -33,7 +33,7 @@ use std::sync::{Arc, Mutex};
 use crate::db_durability::Frontier;
 use crate::db_ids::DbError;
 use crate::*;
-use db_storage::{CatalogStorage, DbBackend, DbIoPages, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use db_storage::{db_io_copy_pages, CatalogStorage, DbBackend, DbIoPages, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 
 //#region 🔖️Prng
 /// @emoji 🎲️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
@@ -343,11 +343,9 @@ impl WalStorage for FaultStorage {
             if let Some((torn_call, keep_bytes)) = script.torn_write_at {
                 if torn_call == call {
                     let keep = (keep_bytes as usize).min(bytes.len());
-                    let mut owner = bytes.into_vec();
-                    owner.truncate(keep);
-                    let pages = match DbIoPages::try_new(owner) {
+                    let pages = match bytes.try_prefix(keep) {
                         Ok(pages) => pages,
-                        Err(_) => return Err(DbError::Internal("fault_storage torn prefix exceeded the admitted DB page owner".to_string())),
+                        Err(_) => return Err(DbError::Internal("fault_storage torn prefix exceeded the retained DB page owner".to_string())),
                     };
                     return self.inner.wal().await.append(document, index, pages).await;
                 }
@@ -368,7 +366,7 @@ impl WalStorage for FaultStorage {
         self.inner.wal().await.seal(document, index).await
     }
 
-    async fn read(&self, document: &ArtifactId, index: u64, range: pack::ByteRange) -> Result<Vec<u8>, DbError> {
+    async fn read(&self, document: &ArtifactId, index: u64, range: pack::ByteRange) -> Result<DbIoPages, DbError> {
         self.inner.wal().await.read(document, index, range).await
     }
 
@@ -376,7 +374,7 @@ impl WalStorage for FaultStorage {
         self.inner.wal().await.segment_len(document, index).await
     }
 
-    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         self.inner.wal().await.list_segments(document).await
     }
 
@@ -394,7 +392,7 @@ impl SnapshotStorage for FaultStorage {
         self.inner.snapshot().await.write_generation(document, generation, bytes).await
     }
 
-    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
         self.inner.snapshot().await.read_generation(document, generation).await
     }
 
@@ -402,7 +400,7 @@ impl SnapshotStorage for FaultStorage {
         self.inner.snapshot().await.latest_generation(document).await
     }
 
-    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         self.inner.snapshot().await.list_generations(document).await
     }
 
@@ -416,7 +414,7 @@ impl PayloadStorage for FaultStorage {
         self.inner.payload().await.put(bytes).await
     }
 
-    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+    async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
         self.inner.payload().await.get(hash).await
     }
 
@@ -434,7 +432,7 @@ impl PayloadStorage for FaultStorage {
 }
 
 impl CatalogStorage for FaultStorage {
-    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
+    async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
         self.inner.catalog().await.read_root().await
     }
 
@@ -456,11 +454,11 @@ impl IndexStorage for FaultStorage {
         self.inner.index().await.write_run(document, run_id, bytes).await
     }
 
-    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
         self.inner.index().await.read_run(document, run_id).await
     }
 
-    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         self.inner.index().await.list_runs(document).await
     }
 
@@ -566,7 +564,7 @@ impl CrashHarness {
 
 /// @emoji 💥️ A fresh `FaultStorage`-wrapped `MemoryStorage`, already living inside its
 /// [`DbBackend::Fault`] variant — `MemoryStorage` does no genuinely-blocking I/O, so
-/// `CrashHarness`'s workloads never touch `run_blocking_op`'s `WorkerPool` bridge at all.
+/// `CrashHarness`'s workloads never enter the shared typed I/O lane.
 async fn new_fault_backend() -> Arc<DbBackend> {
     Arc::new(DbBackend::Fault(Box::new(FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new().await))).await)))
 }
@@ -875,10 +873,12 @@ pub async fn assert_sync_convergence(seed: u64, op_count: usize) {
 /// `MemoryStorage` and `FsStorage` in this crate's own tests).
 pub async fn assert_fencing_excludes_stale_writer(storage: &impl CatalogStorage) {
     let stale_epoch = storage.read_root().await.expect("read_root").map_or(EpochFence::INITIAL, |(_, fence)| fence);
-    let winner_epoch = storage.cas_root(stale_epoch, DbIoPages::try_new(b"writer-a".to_vec()).expect("law root bytes fit the fixed page owner")).await.expect("the first writer presenting the current epoch must win");
+    let winner_pages = db_io_copy_pages(b"writer-a").expect("law root writer admitted").await.expect("law root pages retained");
+    let winner_epoch = storage.cas_root(stale_epoch, winner_pages).await.expect("the first writer presenting the current epoch must win");
     assert_ne!(winner_epoch, stale_epoch, "a successful cas_root must advance the epoch");
 
-    let stale_attempt = storage.cas_root(stale_epoch, DbIoPages::try_new(b"writer-b-should-be-rejected".to_vec()).expect("law root bytes fit the fixed page owner")).await;
+    let stale_pages = db_io_copy_pages(b"writer-b-should-be-rejected").expect("law stale writer admitted").await.expect("law stale pages retained");
+    let stale_attempt = storage.cas_root(stale_epoch, stale_pages).await;
     assert!(matches!(stale_attempt, Err(DbError::Fenced { .. })), "a writer presenting a superseded epoch must be fenced, not silently accepted");
 
     let (root_bytes, root_epoch) = storage.read_root().await.expect("read_root").expect("root must exist after the winning write");
@@ -967,7 +967,11 @@ mod tests {
     }
 
     fn pages(bytes: &[u8]) -> DbIoPages {
-        DbIoPages::try_new(bytes.to_vec()).expect("testkit bytes must fit the fixed page owner")
+        let mut writer = crate::db_storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(crate::db_storage::DB_IO_PAGE_BYTES)).expect("testkit writer admitted");
+        for fragment in bytes.chunks(crate::db_storage::DB_IO_PAGE_BYTES) {
+            assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
+        }
+        writer.finish().unwrap()
     }
 
     //#region 🔖️Prng + Generators

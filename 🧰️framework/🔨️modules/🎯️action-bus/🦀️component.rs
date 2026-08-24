@@ -176,6 +176,18 @@ impl InteractiveJob for ErasedToolJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         self.inner.step(cx)
     }
+
+    fn begin_close(&mut self) {
+        self.inner.begin_close();
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.inner.close_step(maximum_items, maximum_bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.inner.terminal_is_empty()
+    }
 }
 
 pub trait ToolJobFactory: Send + 'static {

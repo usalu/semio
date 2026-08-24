@@ -50,6 +50,13 @@ pub enum SemioTableMutation {
     ReorderRows(reorder_rows::mutation::ReorderRows),
     EditCell(edit_cell::mutation::EditCell),
 }
+
+/// 🏷️ Kebab-case spelling of every `SemioTableMutation` variant, in declaration order — the
+/// vocabulary the `semio-v1-table` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-semio-table`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
+/// the_catalog` below is what keeps this list honest against the enum, since the framework never
+/// parses Rust.
+pub const KINDS: &[&str] = &["create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -225,6 +232,22 @@ mod tests {
         assert_eq!(mutation.semantics().kind, "remove-row");
         assert_eq!(mutation.semantics().record, "RemovedRow");
         assert_eq!(mutation.target(), vec!["2".to_string()]);
+    }
+
+    /// 🏷️ `KINDS` (this facet's own const, consumed by `mutate-semio-table`'s adapter) must name
+    /// every declared variant, in the exact order and spelling `#[derive(dsl::Mutations)]` assigns —
+    /// the framework never parses Rust, so this is what keeps the catalog honest.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = SemioTableMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
     }
 }
 //#endregion 🧪️Tests

@@ -400,21 +400,22 @@ pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &
     serde_json::to_string(&value).ok()
 }
 
-/// 🪣️ Latest-wins fill ghost: the renderer receives the same mesh/pose payload as a brush ghost,
-/// plus the complete typed fill preview for collision/search overlays and diagnostics.
+/// 🪣️ Latest-wins bounded fill diagnostic, with an optional ghost projection.
 pub fn world_fill_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> Option<String> {
     if envelope.active_utility != "fill" {
         return None;
     }
     let build = session.fill_progress().preview?;
-    let ghost = build.candidate_ghost.as_ref()?;
-    let color = object_kind_color(&envelope.fixture.meta, Some(ghost.object_kind_id.as_str()));
-    let mut value = serde_json::to_value(ghost).ok()?;
-    if let Some(object) = value.as_object_mut() {
-        object.insert("color".into(), json!(color));
-        object.insert("opacity".into(), json!(0.35));
-        object.insert("fillBuildPreview".into(), serde_json::to_value(build).ok()?);
+    if build.operation == 0 || build.registry_generation == 0 || build.generation == 0 || build.stage == "complete" {
+        return None;
     }
+    let mut value = build.candidate_ghost.as_ref().map_or_else(|| json!({}), |ghost| serde_json::to_value(ghost).unwrap_or_else(|_| json!({})));
+    let object = value.as_object_mut()?;
+    if let Some(ghost) = build.candidate_ghost.as_ref() {
+        object.insert("color".into(), json!(object_kind_color(&envelope.fixture.meta, Some(ghost.object_kind_id.as_str()))));
+        object.insert("opacity".into(), json!(0.35));
+    }
+    object.insert("fillBuildPreview".into(), serde_json::to_value(build).ok()?);
     serde_json::to_string(&value).ok()
 }
 

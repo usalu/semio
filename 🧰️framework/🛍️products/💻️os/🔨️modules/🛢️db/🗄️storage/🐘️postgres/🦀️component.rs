@@ -79,14 +79,14 @@ async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
 //#region 🔖️Connection
 use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
-use crate::db_storage::{CatalogStorage, DbIoPages, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use crate::db_storage::{db_io_copy_pages, db_io_prepare_platform, CatalogStorage, DbIoPages, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use pack::{ByteRange, ContentHash};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 
 /// @emoji 🛡️ Mirrors `db_storage`'s own read-size ceiling (its `MAX_READ_BYTES` is private to that
 /// crate) — validated via `check_len` before a `Vec<u8>` sized by an untrusted on-disk
 /// length is allocated, per the repo's "validate before allocating" invariant.
-const MAX_READ_BYTES: u64 = 1024 * 1024 * 1024;
+const MAX_READ_BYTES: u64 = 496 * 1024;
 
 /// @emoji 🐘️ A `db_storage::DbStorage` backend over PostgreSQL — `pool` is the connection pool
 /// every trait method below runs its query against directly (no runtime of its own to bridge
@@ -195,6 +195,7 @@ impl WalStorage for PostgresStorage {
     }
 
     async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
+        let prepared = db_io_prepare_platform(&bytes)?.await?;
         let idx = to_i64(index)?;
         let doc = document.0.as_str();
         let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
@@ -204,7 +205,7 @@ impl WalStorage for PostgresStorage {
             return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
         }
         let (new_len,): (i64,) =
-            sqlx::query_as("UPDATE db_wal_segment SET bytes = bytes || $1 WHERE document_id = $2 AND segment_index = $3 RETURNING octet_length(bytes)").bind(bytes.as_slice()).bind(doc).bind(idx).fetch_one(&mut *tx).await.map_err(map_sqlx_error)?;
+            sqlx::query_as("UPDATE db_wal_segment SET bytes = bytes || $1 WHERE document_id = $2 AND segment_index = $3 RETURNING octet_length(bytes)").bind(prepared.as_slice()).bind(doc).bind(idx).fetch_one(&mut *tx).await.map_err(map_sqlx_error)?;
         tx.commit().await.map_err(map_sqlx_error)?;
         Ok(new_len as u64)
     }
@@ -230,7 +231,7 @@ impl WalStorage for PostgresStorage {
         result.map(|_| ()).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
     }
 
-    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
         check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
         let idx = to_i64(index)?;
         let doc = document.0.as_str();
@@ -239,7 +240,7 @@ impl WalStorage for PostgresStorage {
         let (offset, len) = validate_read_range(current_len, range)?;
         let (bytes,): (Vec<u8>,) =
             sqlx::query_as("SELECT substring(bytes FROM $1 FOR $2) FROM db_wal_segment WHERE document_id = $3 AND segment_index = $4").bind(offset + 1).bind(len).bind(doc).bind(idx).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
-        Ok(bytes)
+        db_io_copy_pages(&bytes)?.await
     }
 
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
@@ -248,9 +249,13 @@ impl WalStorage for PostgresStorage {
         row.map(|(len,)| len as u64).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
     }
 
-    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let rows: Vec<(i64,)> = sqlx::query_as("SELECT segment_index FROM db_wal_segment WHERE document_id = $1 ORDER BY segment_index ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
-        Ok(rows.into_iter().map(|(index,)| index as u64).collect())
+        let mut result = DbIoU64List::new();
+        for (index,) in rows {
+            result.push(index as u64)?;
+        }
+        Ok(result)
     }
 
     async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
@@ -277,27 +282,28 @@ impl WalStorage for PostgresStorage {
 impl SnapshotStorage for PostgresStorage {
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         let gen = to_i64(generation)?;
+        let prepared = db_io_prepare_platform(&bytes)?.await?;
         sqlx::query(
             "INSERT INTO db_snapshot_generation (document_id, generation, bytes) VALUES ($1, $2, $3)
                  ON CONFLICT (document_id, generation) DO UPDATE SET bytes = EXCLUDED.bytes",
         )
         .bind(document.0.as_str())
         .bind(gen)
-        .bind(bytes.as_slice())
+        .bind(prepared.as_slice())
         .execute(&self.pool)
         .await
         .map_err(map_sqlx_error)?;
         Ok(())
     }
 
-    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
         let gen = to_i64(generation)?;
         let doc = document.0.as_str();
         let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(doc).bind(gen).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let len = len_row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?.0;
         check_len(len as u64, MAX_READ_BYTES, "snapshot_storage::read_generation")?;
         let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(doc).bind(gen).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
-        Ok(bytes)
+        db_io_copy_pages(&bytes)?.await
     }
 
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
@@ -305,9 +311,13 @@ impl SnapshotStorage for PostgresStorage {
         Ok(row.0.map(|generation| generation as u64))
     }
 
-    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let rows: Vec<(i64,)> = sqlx::query_as("SELECT generation FROM db_snapshot_generation WHERE document_id = $1 ORDER BY generation ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
-        Ok(rows.into_iter().map(|(generation,)| generation as u64).collect())
+        let mut result = DbIoU64List::new();
+        for (generation,) in rows {
+            result.push(generation as u64)?;
+        }
+        Ok(result)
     }
 
     async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
@@ -322,17 +332,22 @@ impl SnapshotStorage for PostgresStorage {
 impl PayloadStorage for PostgresStorage {
     async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
-        let hash = ContentHash(*blake3::hash(bytes.as_slice()).as_bytes());
-        sqlx::query("INSERT INTO db_payload (hash, bytes) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING").bind(&hash.0[..]).bind(bytes.as_slice()).execute(&self.pool).await.map_err(map_sqlx_error)?;
+        let mut hasher = blake3::Hasher::new();
+        for fragment in bytes.fragments() {
+            hasher.update(fragment);
+        }
+        let hash = ContentHash(*hasher.finalize().as_bytes());
+        let prepared = db_io_prepare_platform(&bytes)?.await?;
+        sqlx::query("INSERT INTO db_payload (hash, bytes) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING").bind(&hash.0[..]).bind(prepared.as_slice()).execute(&self.pool).await.map_err(map_sqlx_error)?;
         Ok(hash)
     }
 
-    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+    async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
         let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let len = len_row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?.0;
         check_len(len as u64, MAX_READ_BYTES, "payload_storage::get")?;
         let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
-        Ok(bytes)
+        db_io_copy_pages(&bytes)?.await
     }
 
     async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
@@ -354,13 +369,17 @@ impl PayloadStorage for PostgresStorage {
 
 //#region 🔖️CatalogStorage
 impl CatalogStorage for PostgresStorage {
-    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
+    async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
         let (epoch, bytes): (i64, Option<Vec<u8>>) = sqlx::query_as("SELECT epoch, bytes FROM db_catalog_root WHERE id = 1").fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
-        Ok(bytes.map(|bytes| (bytes, EpochFence { epoch: epoch as u64 })))
+        match bytes {
+            Some(bytes) => Ok(Some((db_io_copy_pages(&bytes)?.await?, EpochFence { epoch: epoch as u64 }))),
+            None => Ok(None),
+        }
     }
 
     async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
         check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
+        let prepared = db_io_prepare_platform(&new_bytes)?.await?;
         let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
         // 🎯️ The bootstrap-seeded singleton row (`id = 1`) always exists, so `SELECT ... FOR
         // UPDATE` here is a real, always-present row lock — unlike `FsStorage::cas_root`'s
@@ -370,7 +389,7 @@ impl CatalogStorage for PostgresStorage {
         let current_fence = EpochFence { epoch: current_epoch as u64 };
         expected.check(current_fence)?;
         let new_fence = expected.next();
-        sqlx::query("UPDATE db_catalog_root SET epoch = $1, bytes = $2 WHERE id = 1").bind(to_i64(new_fence.epoch)?).bind(new_bytes.as_slice()).execute(&mut *tx).await.map_err(map_sqlx_error)?;
+        sqlx::query("UPDATE db_catalog_root SET epoch = $1, bytes = $2 WHERE id = 1").bind(to_i64(new_fence.epoch)?).bind(prepared.as_slice()).execute(&mut *tx).await.map_err(map_sqlx_error)?;
         tx.commit().await.map_err(map_sqlx_error)?;
         Ok(new_fence)
     }
@@ -381,32 +400,37 @@ impl CatalogStorage for PostgresStorage {
 impl IndexStorage for PostgresStorage {
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
         let run = to_i64(run_id)?;
+        let prepared = db_io_prepare_platform(&bytes)?.await?;
         sqlx::query(
             "INSERT INTO db_index_run (document_id, run_id, bytes) VALUES ($1, $2, $3)
                  ON CONFLICT (document_id, run_id) DO UPDATE SET bytes = EXCLUDED.bytes",
         )
         .bind(document.0.as_str())
         .bind(run)
-        .bind(bytes.as_slice())
+        .bind(prepared.as_slice())
         .execute(&self.pool)
         .await
         .map_err(map_sqlx_error)?;
         Ok(())
     }
 
-    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
         let run = to_i64(run_id)?;
         let doc = document.0.as_str();
         let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(doc).bind(run).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
         let len = len_row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?.0;
         check_len(len as u64, MAX_READ_BYTES, "index_storage::read_run")?;
         let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(doc).bind(run).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
-        Ok(bytes)
+        db_io_copy_pages(&bytes)?.await
     }
 
-    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let rows: Vec<(i64,)> = sqlx::query_as("SELECT run_id FROM db_index_run WHERE document_id = $1 ORDER BY run_id ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
-        Ok(rows.into_iter().map(|(run_id,)| run_id as u64).collect())
+        let mut result = DbIoU64List::new();
+        for (run_id,) in rows {
+            result.push(run_id as u64)?;
+        }
+        Ok(result)
     }
 
     async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {

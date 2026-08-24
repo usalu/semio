@@ -553,7 +553,7 @@ pub struct WorldVolumeProps {
 
 /// 🏗️ A puzzle-3d scene's object/attraction/target-volume state, reachable through
 /// `apply_brush_placement_to_fixture`'s public signature.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
 pub struct Fixture {
     #[serde(default)]
     pub attractions: Vec<AttractionProps>,
@@ -650,6 +650,8 @@ pub struct FillBuildPreview {
     pub operation: u64,
     #[serde(default)]
     pub base_revision: u64,
+    #[serde(default)]
+    pub registry_generation: u64,
     pub sequence: u64,
     pub generation: u64,
     pub stage: String,
@@ -657,21 +659,22 @@ pub struct FillBuildPreview {
     pub candidate_object_kind_id: Option<String>,
     #[serde(default)]
     pub candidate_ghost: Option<BrushPreviewState>,
-    pub broad_phase_object_ids: Vec<String>,
     pub current_pair_object_id: Option<String>,
     #[serde(default)]
-    pub colliding_object_ids: Vec<String>,
+    pub collision_count: usize,
     pub sample_cursor: usize,
     pub inside_both: usize,
     pub last_sample: Option<[f32; 3]>,
     #[serde(default)]
-    pub collision_samples: Vec<[f32; 3]>,
+    pub candidate_page: [Option<String>; 8],
+    #[serde(default)]
+    pub truncated: bool,
     pub rejection_reason: Option<String>,
     pub target_cursor: usize,
     pub candidate_cursor: usize,
     pub accepted_count: usize,
     #[serde(default)]
-    pub accepted_prefix: Vec<BrushPlacePayload>,
+    pub total_count: usize,
     #[serde(default)]
     pub search_count: u64,
     #[serde(default)]

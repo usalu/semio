@@ -533,3 +533,179 @@ fixture.
 
 Sixth-remediation verdict: **source-audit-ready, not accepted**. Rust typechecking and execution of
 the new Rust fixture remain unrun until the serialized build lane is assigned. P2a1 was not started.
+
+## Seventh independent remediation
+
+The sole blocker in
+`terra-independent-p8yw-raster-sixth-remediation-final-audit-2026-08-24.md` is repaired in the
+public snapshot DSL/pack codecs, all eight mounted format exporters, an exact-owner fixture, and the
+permanent verifier. The accepted sixth serde repair and every prior Raster ownership invariant are
+preserved. This is a source-audit handback; it does not claim Rust typechecking or runtime
+acceptance, and P2a1 was not started.
+
+### Populated legacy output is fail-closed
+
+The retained Raster authority does not yet own the legacy whole `String`/`Vec<u8>` output
+formats, so this remediation does not pretend to route them through an authority that cannot
+faithfully encode them. `RasterSnapshot::require_empty_output_shell` performs one O(1) preflight:
+only a snapshot with both an empty top-level layer list and empty asset map may reach the legacy
+codecs. Rejecting every nonempty layer is intentionally conservative because determining whether a
+nested adjustment map is populated would itself require an uncredited recursive traversal.
+
+`print_raster_snapshot_body` and `encode_raster_snapshot_binary` run that preflight before
+allocating their result. The infallible `ArtifactDsl::print_dsl` contract contains its populated
+path as a panic; `ArtifactPack::encode_pack_with` returns a schema error before binary allocation.
+The GIF, TIFF, SVG, BMP, PDF, JPG, PNG, and DWG mounted serializers each return the same populated
+output error before invoking `print_dsl`. Empty document shells remain available through the
+existing interfaces.
+
+The former `enc_asset_map` and `enc_params`
+`iter().map().collect::<Vec<_>>().join` implementations are gone. Both functions now assert empty
+before inspecting an entry and emit only the constant empty-map shell. `write_asset_map` and
+`write_params` likewise assert empty and write only a zero count; their direct populated-map
+`for` loops and per-value `serde_json::to_vec` calls are deleted. The text and binary layer-list
+writers are also empty-only, so no populated layer tree can create a partial whole output before a
+nested map refusal.
+
+### Hostile output fixture and exact closure
+
+`raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact`
+fills both parameter and asset maps to the exact 64-entry maximum, places a value at the exact
+maximum admitted nested depth, and proves both 65th insertions return their original key/value or
+key/child allocation. It then proves the shared preflight returns the explicit fault, contains the
+infallible DSL path's panic, and leaves the first parameter and asset key pointers unchanged.
+
+Both rejected pairs receive a zero-item/zero-byte close grant before retained retirement. The
+populated snapshot then receives the same cancellation-shaped zero grant and closes through the
+existing one-owner cursor to terminal-empty. The fixture requires standalone controls, retirement
+pages, and initialization controls all to end at zero.
+
+### Seventh-remediation permanent mutations
+
+The Raster predicate now reads the snapshot codec and the exact eight mounted serializer sources in
+addition to the previously retained codec/schema census. It requires the O(1) empty-shell
+preflight, both public codec entry guards, four empty-map writer guards, two empty-layer-list guards,
+all eight mounted exporter guards/callers, and the hostile fixture. It rejects any
+`collect::<Vec<_>>().join` whole output, per-value `serde_json::to_vec(v)`, or direct
+`for (k, v) in map/params` output in the mounted source census.
+
+Faithful self-test mutations restore each actual former implementation independently:
+`enc_asset_map`, `enc_params`, `write_asset_map`, and `write_params`. Further mutations
+remove one mounted exporter preflight, the public DSL preflight, the public pack preflight, and the
+hostile fixture. Every mutation must make the Raster predicate fail.
+
+### Seventh-remediation source gates
+
+| Gate | Result |
+|---|---|
+| scoped edition-2021 `rustfmt --check` | **PASS** on the snapshot codec, retained codec fixture, and eight mounted exporter files |
+| scoped Raster/root-verifier `git diff --check` | **PASS** |
+| populated snapshot output loop census | **PASS**: zero production whole join, per-value JSON byte serialization, or direct asset/parameter map output loops |
+| mounted populated output guard census | **PASS**: exactly eight guarded GIF/TIFF/SVG/BMP/PDF/JPG/PNG/DWG serializers |
+| public serde recheck | **PASS**: no `RasterOwnedMap: Serialize` implementation and exactly three accepted empty-only derive guards remain |
+| permanent tool-job verifier self-test | **PASS**: **328** self-tests clean, including the four restored codec loops and mounted/public guard mutations |
+| live tool-job source verifier | expected global **RED** with 884 remaining commands and unrelated global failure classes; no Raster predicate failure |
+| Cargo / Nx / native / Wasm / browser / runtime / network / broad builds | **not run by instruction** |
+
+Seventh-remediation verdict: **source-audit-ready, not accepted**. Rust typechecking and execution of
+the new Rust fixture remain unrun until the serialized build lane is assigned. P2a1 was not started.
+
+## Eighth independent remediation
+
+The sole proof blocker in
+`terra-independent-p8yw-raster-seventh-remediation-final-audit-2026-08-24.md` is repaired in the
+seventh hostile fixture and permanent verifier. No production output source changed: the accepted
+O(1) populated fail-closure, eight mounted exporter guards, sixth serde repair, and all earlier
+Raster ownership invariants remain intact. P2a1 was not started.
+
+### Exact rejected payload identity
+
+The parameter `+1` owner is no longer constructed inline. The fixture creates a named nonempty
+`String`, captures its heap backing pointer, moves it into the actual
+`DslValue::String` submitted to the saturated map, pattern-matches the returned rejected value,
+and compares its backing pointer with the pre-insertion witness. A clone or content-only
+reconstruction owns a different live backing and cannot satisfy this identity assertion.
+
+The asset `+1` owner is likewise named before insertion. The fixture captures the
+`RasterAssetChild.child_id` heap backing pointer, moves the actual child into the saturated asset
+map, and compares the returned rejected child's `child_id` backing pointer with that witness.
+Both assertions execute before the returned values move into their existing retained retirement
+cursors. The prior exact-key checks, zero-item/zero-byte grants, terminal close, and process-counter
+zero assertions remain unchanged.
+
+### Eighth-remediation verifier discrimination
+
+The permanent predicate now requires capture → saturated insertion → returned-value assertion
+ordering independently for the parameter value and asset child. Its synthetic accepted source
+contains both exact payload witnesses.
+
+Four new faithful mutations are killed:
+
+- remove the rejected `DslValue` allocation identity assertion;
+- substitute its already-existing key-only assertion;
+- remove the rejected `RasterAssetChild` allocation identity assertion; and
+- substitute its already-existing key-only assertion.
+
+Neither fixture-name presence nor content equality can satisfy the new predicate.
+
+### Eighth-remediation source gates
+
+| Gate | Result |
+|---|---|
+| scoped edition-2021 `rustfmt --check` | **PASS** on the retained Raster codec fixture |
+| scoped Raster/root-verifier `git diff --check` | **PASS** |
+| exact rejected payload witness census | **PASS**: parameter value and asset child each capture before insertion and compare after handback |
+| permanent tool-job verifier self-test | **PASS**: **328** self-tests clean, including removal and key-only substitution for both payload assertions |
+| live tool-job source verifier | expected global **RED** with 884 remaining commands and unrelated global failure classes; no Raster predicate failure |
+| Cargo / Nx / native / Wasm / browser / runtime / network / broad builds | **not run by instruction** |
+
+Eighth-remediation verdict: **source-audit-ready, not accepted**. Rust typechecking and fixture
+execution remain unrun until the serialized build lane is assigned. P2a1 was not started.
+
+## Ninth independent remediation
+
+The sole permanent-proof ordering blocker in
+`terra-independent-p8yw-raster-eighth-remediation-final-audit-2026-08-24.md` is repaired entirely in
+the permanent tool-job verifier. Production Raster source and the accepted hostile fixture remain
+unchanged, preserving the seventh populated-output fail-closure, sixth serde closure, rejected
+payload identity witnesses, and all earlier retained ownership invariants. P2a1 was not started.
+
+### Fixture-scoped exact ordering
+
+`toolJobRasterEnvelopeCallerRetainedExact` now slices only the hostile populated-snapshot-output
+fixture, ending at the following retained-depth fixture, before resolving any proof positions. The
+parameter proof requires the exact backing capture before the exact moved `params.insert`, followed
+by the actual returned `DslValue::String` match binding, the exact value-backing assertion, and the
+corresponding `RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { ... })` transfer.
+
+The asset proof independently requires the exact child backing capture before the exact moved
+`assets.insert`, followed by the actual returned-child field-access token in the identity assertion,
+the identity comparison tail, and the corresponding
+`RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { ... })` transfer. All comparisons
+are strict position inequalities within the fixture slice, so matching tokens elsewhere in the
+Raster source cannot satisfy either chain.
+
+### Ninth-remediation faithful mutations
+
+The four eighth assertion-removal and key-only substitutions remain. Four additional reorderings
+retain the relevant proof tokens while violating one required edge at a time:
+
+- move the returned parameter-value match binding before its moved insertion;
+- move the parameter retirement construction before its backing assertion;
+- move the returned asset-child access/assertion before its moved insertion; and
+- move the asset retirement construction before its backing assertion.
+
+Every reordered source is rejected by the same permanent predicate.
+
+### Ninth-remediation source gates
+
+| Gate | Result |
+|---|---|
+| production/fixture source diff | **PASS**: verifier-only repair; no Raster Rust source changed |
+| scoped Raster/root-verifier `git diff --check` | **PASS** |
+| permanent tool-job verifier self-test | **PASS**: **328** self-tests clean, including all four new ordering mutations |
+| live tool-job source verifier | expected global **RED** with 884 remaining commands and unrelated global failure classes, including concurrent Draw drift; no Raster predicate failure |
+| Cargo / Nx / native / Wasm / browser / runtime / network / broad builds | **not run by instruction** |
+
+Ninth-remediation verdict: **source-audit-ready, not accepted**. Rust typechecking and fixture
+execution remain unrun until the serialized build lane is assigned. P2a1 was not started.

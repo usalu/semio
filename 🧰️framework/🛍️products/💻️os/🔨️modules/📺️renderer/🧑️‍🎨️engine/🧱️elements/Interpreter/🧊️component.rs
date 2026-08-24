@@ -375,6 +375,8 @@ static POINTER_EDGE_STATE: WorkerCell<std::collections::HashMap<String, (bool, i
  * want to react to itself (e.g. an actual OS clipboard read for `ClipboardPasteRequested` is a `host`
  * concern, not this function's). */
 pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::wgpu::UiCommand> {
+    #[cfg(all(not(target_arch = "wasm32"), not(test)))]
+    pump_clipboard_io_one();
     let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, event));
     apply_ui_commands(&commands, input);
     commands
@@ -555,22 +557,107 @@ fn write_os_clipboard(text: &str) {
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
-fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce(semio_framework_job::StepOutcome) + Send + 'static) {
+struct MountedClipboardIo {
+    session: semio_framework_job::WorkerJobSession<ui_wgpu::wgpu::ClipboardIoJob>,
+    ticket: Option<semio_framework_job::WorkerJobTicket>,
+    complete: Option<Box<dyn FnOnce(Result<Option<String>, String>)>>,
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+struct MountedClipboardSlot {
+    generation: u64,
+    mounted: Option<MountedClipboardIo>,
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+thread_local! {
+    static MOUNTED_CLIPBOARD_IO: std::cell::RefCell<[MountedClipboardSlot; 32]> = std::cell::RefCell::new(std::array::from_fn(|_| MountedClipboardSlot { generation: 0, mounted: None }));
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce(Result<Option<String>, String>) + 'static) {
     use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
-    let params = BatchJobParams {
-        operation: allocate_operation_id(),
-        generation: Generation(0),
-        cancel: root_cancel_token(),
-        config: BatchDriveConfig { site: "renderer_clipboard_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
-        now_ms: semio_framework_job::default_now_ms,
-    };
-    crate::renderer_worker_pool().submit(
-        semio_framework_async::Lane::Io,
-        Box::new(move || {
-            let mut job = job;
-            complete(semio_framework_job::run_to_completion(&mut job, &params));
-        }),
-    );
+    let mut complete = Some(Box::new(complete) as Box<dyn FnOnce(Result<Option<String>, String>)>);
+    let mut job = Some(job);
+    MOUNTED_CLIPBOARD_IO.with(|registry| {
+        let mut registry = registry.borrow_mut();
+        let Some(slot) = registry.iter_mut().find(|slot| slot.mounted.is_none() && slot.generation != u64::MAX) else {
+            complete.take().expect("clipboard completion owner")(Err("clipboard retained session registry is full".into()));
+            return;
+        };
+        let Some(generation) = slot.generation.checked_add(1) else {
+            complete.take().expect("clipboard completion owner")(Err("clipboard retained session generation exhausted".into()));
+            return;
+        };
+        slot.generation = generation;
+        let params = BatchJobParams {
+            operation: allocate_operation_id(),
+            generation: Generation(generation),
+            cancel: root_cancel_token(),
+            config: BatchDriveConfig { site: "renderer_clipboard_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
+            now_ms: semio_framework_job::default_now_ms,
+        };
+        match semio_framework_job::WorkerJobSession::try_new(job.take().expect("clipboard job owner"), params) {
+            Ok(session) => slot.mounted = Some(MountedClipboardIo { session, ticket: None, complete: complete.take() }),
+            Err(_) => complete.take().expect("clipboard completion owner")(Err("universal retained session registry is full".into())),
+        }
+    });
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+fn pump_clipboard_io_one() {
+    let mut callback = None;
+    MOUNTED_CLIPBOARD_IO.with(|registry| {
+        let mut registry = registry.borrow_mut();
+        let Some(slot) = registry.iter_mut().find(|slot| slot.mounted.is_some()) else { return };
+        let mounted = slot.mounted.as_mut().expect("mounted clipboard slot");
+        match mounted.session.poll() {
+            semio_framework_job::WorkerJobPoll::Idle => match mounted.session.try_submit_step(&crate::renderer_worker_pool(), semio_framework_async::Lane::Io) {
+                Ok(ticket) => mounted.ticket = Some(ticket),
+                Err(semio_framework_job::WorkerJobSubmitFault::Pool(_)) => {
+                    if let Ok(rejected) = mounted.session.take_rejected() {
+                        rejected.resume();
+                    }
+                }
+                Err(error) => {
+                    let _ = mounted.session.begin_close();
+                    callback = mounted.complete.take().map(|complete| (complete, Err(format!("clipboard worker submission failed: {error:?}"))));
+                }
+            },
+            semio_framework_job::WorkerJobPoll::Outcome => {
+                if let Some(ticket) = mounted.ticket.take() {
+                    if let Ok(mut owner) = mounted.session.take_outcome(ticket) {
+                        if matches!(owner.take_outcome(), semio_framework_job::StepOutcome::Yield) {
+                            let _ = owner.resume();
+                        } else {
+                            owner.begin_close();
+                            callback = mounted.complete.take().map(|complete| (complete, Err("clipboard job published an unexpected nonterminal payload".into())));
+                        }
+                    }
+                }
+            }
+            semio_framework_job::WorkerJobPoll::Terminal => {
+                if let Ok(owner) = mounted.session.take_terminal() {
+                    let result = Ok(ui_wgpu::wgpu::ClipboardIoJob::read_candidate(owner.outcome()));
+                    owner.begin_close();
+                    callback = mounted.complete.take().map(|complete| (complete, result));
+                }
+            }
+            semio_framework_job::WorkerJobPoll::Rejected => {
+                if let Ok(rejected) = mounted.session.take_rejected() {
+                    rejected.resume();
+                }
+            }
+            semio_framework_job::WorkerJobPoll::Closing => {
+                let _ = mounted.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            semio_framework_job::WorkerJobPoll::TerminalEmpty => slot.mounted = None,
+            semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::CheckedOut => {}
+        }
+    });
+    if let Some((complete, result)) = callback {
+        complete(result);
+    }
 }
 
 #[cfg(all(not(target_arch = "wasm32"), test))]
@@ -597,8 +684,8 @@ fn apply_clipboard_paste_requested(window_id: &str, input: &mut ui_wgpu::wgpu::I
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
 fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     let window_id = window_id.to_string();
-    submit_clipboard_io(ui_wgpu::wgpu::ClipboardIoJob::read(), move |outcome| {
-        let Some(text) = ui_wgpu::wgpu::ClipboardIoJob::read_candidate(&outcome) else { return };
+    submit_clipboard_io(ui_wgpu::wgpu::ClipboardIoJob::read(), move |result| {
+        let Ok(Some(text)) = result else { return };
         UI_ENGINE.with(|cell| {
             cell.borrow_mut().dispatch_event(&window_id, ui_wgpu::wgpu::UiEvent::Paste { text });
         });
@@ -1048,6 +1135,8 @@ pub fn render_ui_node(
     icon_render_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
     board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
 ) {
+    #[cfg(all(not(target_arch = "wasm32"), not(test)))]
+    pump_clipboard_io_one();
     if let Err(message) = validate_ui_node(node, &RENDER_PLAN_LIMITS) {
         return render_plan_error_widget(&message, bounds, ctx);
     }

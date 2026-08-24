@@ -2725,14 +2725,92 @@ pub(crate) fn renderer_worker_pool() -> semio_framework_async::WorkerPool {
 
 #[cfg(not(target_arch = "wasm32"))]
 struct RendererIoHandle {
-    completion: semio_framework_os_services::NativeIoCompletion,
+    session: semio_framework_job::WorkerJobSession<semio_framework_os_services::NativeIoJob>,
+    ticket: Option<semio_framework_job::WorkerJobTicket>,
+    result: Option<Result<semio_framework_os_services::NativeIoValue, String>>,
     cancel: semio_framework_async::CancelToken,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RendererIoHandle {
-    fn try_take(&self) -> Option<Result<semio_framework_os_services::NativeIoValue, String>> {
-        self.completion.try_take()
+    fn try_take(&mut self) -> Option<Result<semio_framework_os_services::NativeIoValue, String>> {
+        self.drive_one(None)
+    }
+
+    fn drive_one(&mut self, waker: Option<&std::task::Waker>) -> Option<Result<semio_framework_os_services::NativeIoValue, String>> {
+        if self.result.is_some() {
+            let _ = self.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if self.session.terminal_is_empty() {
+                return self.result.take();
+            }
+            if let Some(waker) = waker {
+                waker.wake_by_ref();
+            }
+            return None;
+        }
+        if let Some(waker) = waker {
+            let _ = self.session.register_wake(waker);
+        }
+        match self.session.poll() {
+            semio_framework_job::WorkerJobPoll::Idle => match self.session.try_submit_step(&renderer_worker_pool(), semio_framework_async::Lane::Io) {
+                Ok(ticket) => self.ticket = Some(ticket),
+                Err(semio_framework_job::WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended)) => {
+                    if let Ok(rejected) = self.session.take_rejected() {
+                        rejected.resume();
+                    }
+                }
+                Err(error) => {
+                    if let Ok(rejected) = self.session.take_rejected() {
+                        rejected.begin_close();
+                    } else {
+                        let _ = self.session.begin_close();
+                    }
+                    self.result = Some(Err(format!("native I/O worker submission failed: {error:?}")));
+                }
+            },
+            semio_framework_job::WorkerJobPoll::Outcome => {
+                let Some(ticket) = self.ticket.take() else {
+                    self.result = Some(Err("native I/O outcome lost its exact ticket".into()));
+                    let _ = self.session.begin_close();
+                    return None;
+                };
+                match self.session.take_outcome(ticket) {
+                    Ok(mut owner) => {
+                        if matches!(owner.take_outcome(), semio_framework_job::StepOutcome::Yield) {
+                            if owner.resume().is_err() {
+                                self.result = Some(Err("native I/O yield could not resume exact owner".into()));
+                            }
+                        } else {
+                            owner.begin_close();
+                            self.result = Some(Err("native I/O published a nonterminal retained payload".into()));
+                        }
+                    }
+                    Err(_) => self.result = Some(Err("native I/O outcome handback contention".into())),
+                }
+            }
+            semio_framework_job::WorkerJobPoll::Terminal => match self.session.take_terminal() {
+                Ok(mut owner) => {
+                    self.result = owner.job_mut().take_result().or_else(|| Some(Err("native I/O terminal owner had no structured result".into())));
+                    owner.begin_close();
+                }
+                Err(_) => self.result = Some(Err("native I/O terminal handback contention".into())),
+            },
+            semio_framework_job::WorkerJobPoll::Rejected => {
+                if let Ok(rejected) = self.session.take_rejected() {
+                    rejected.resume();
+                }
+            }
+            semio_framework_job::WorkerJobPoll::Closing => {
+                let _ = self.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::CheckedOut | semio_framework_job::WorkerJobPoll::TerminalEmpty => {}
+        }
+        if let Some(waker) = waker {
+            if !matches!(self.session.poll(), semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::CheckedOut) {
+                waker.wake_by_ref();
+            }
+        }
+        None
     }
 }
 
@@ -2741,7 +2819,7 @@ impl std::future::Future for RendererIoHandle {
     type Output = Result<semio_framework_os_services::NativeIoValue, String>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        std::future::Future::poll(std::pin::Pin::new(&mut self.completion), cx)
+        self.drive_one(Some(cx.waker())).map_or(std::task::Poll::Pending, std::task::Poll::Ready)
     }
 }
 
@@ -2749,13 +2827,14 @@ impl std::future::Future for RendererIoHandle {
 impl Drop for RendererIoHandle {
     fn drop(&mut self) {
         self.cancel.cancel_now();
+        let _ = self.session.begin_close();
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> RendererIoHandle {
+fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<RendererIoHandle, String> {
     use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
-    let (job, completion) = semio_framework_os_services::NativeIoJob::new(request);
+    let job = semio_framework_os_services::NativeIoJob::new(request);
     let cancel = root_cancel_token();
     let params = BatchJobParams {
         operation: allocate_operation_id(),
@@ -2764,13 +2843,13 @@ fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> 
         config: BatchDriveConfig { site: "os_renderer_native_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
         now_ms: semio_framework_job::default_now_ms,
     };
-    let _ = semio_framework_job::run_on_worker(&renderer_worker_pool(), semio_framework_async::Lane::Io, job, params);
-    RendererIoHandle { completion, cancel }
+    let session = semio_framework_job::WorkerJobSession::try_new(job, params).map_err(|_| "native I/O retained session registry is full".to_string())?;
+    Ok(RendererIoHandle { session, ticket: None, result: None, cancel })
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 async fn run_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<semio_framework_os_services::NativeIoValue, String> {
-    submit_renderer_io(request).await
+    submit_renderer_io(request)?.await
 }
 //#endregion 🧵️RendererWorkerPool
 
@@ -9225,6 +9304,7 @@ impl AppPresenter {
     }
 
     pub(crate) fn present_step(&mut self) -> Result<AppPresentStep, String> {
+        let _ = semio_framework_job::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         if self.pending.is_none() {
             let Some(retirement) = self.retirement.as_mut() else { return Ok(AppPresentStep::Idle) };
             if retirement.step(&mut self.gpu, &self.gate)? {
@@ -9573,7 +9653,7 @@ async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut
 impl AppRuntime {
     #[cfg(not(target_arch = "wasm32"))]
     fn poll_native_plugin_hot_swap(&mut self) {
-        if let Some(scan) = self.native_hot_swap_scan.as_ref() {
+        if let Some(scan) = self.native_hot_swap_scan.as_mut() {
             let Some(result) = scan.try_take() else { return };
             self.native_hot_swap_scan = None;
             match result {
@@ -9592,7 +9672,7 @@ impl AppRuntime {
             return;
         }
         let paths = self.shell.plugins.iter().filter_map(|program| program.wasm_artifact_path().map(std::path::Path::to_path_buf)).collect();
-        self.native_hot_swap_scan = Some(submit_renderer_io(semio_framework_os_services::NativeIoRequest::Modified(paths)));
+        self.native_hot_swap_scan = submit_renderer_io(semio_framework_os_services::NativeIoRequest::Modified(paths)).ok();
     }
 
     /// 🎠️ Hot-reload preparation snapshots only the filter and module root. Loading runs on the

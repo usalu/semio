@@ -1,8 +1,12 @@
 //! 🧬️ Open GLTF mutation descriptor contract and root assembly.
 
+use crate::artifacts::gltf::schema::mutations::bind_node_child::DESCRIPTOR as BIND_NODE_CHILD_DESCRIPTOR;
+use crate::artifacts::gltf::schema::mutations::bind_scene_root_node::DESCRIPTOR as BIND_SCENE_ROOT_NODE_DESCRIPTOR;
 use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::DESCRIPTOR as CHANGE_MATERIAL_ALPHA_MODE_DESCRIPTOR;
 use crate::artifacts::gltf::schema::mutations::change_material_double_sided::DESCRIPTOR as CHANGE_MATERIAL_DOUBLE_SIDED_DESCRIPTOR;
 use crate::artifacts::gltf::schema::mutations::create_scene::DESCRIPTOR as CREATE_SCENE_DESCRIPTOR;
+use crate::artifacts::gltf::schema::mutations::unbind_node_child::DESCRIPTOR as UNBIND_NODE_CHILD_DESCRIPTOR;
+use crate::artifacts::gltf::schema::mutations::unbind_scene_root_node::DESCRIPTOR as UNBIND_SCENE_ROOT_NODE_DESCRIPTOR;
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 
 //#region 🔖️DescriptorContract
@@ -44,13 +48,58 @@ pub struct GltfMutationLeafDescriptor {
 //#endregion 🔖️DescriptorContract
 
 //#region 🔖️Assembly
-pub const GLTF_MUTATION_LEAF_DESCRIPTORS: &[GltfMutationLeafDescriptor] = &[CHANGE_MATERIAL_ALPHA_MODE_DESCRIPTOR, CHANGE_MATERIAL_DOUBLE_SIDED_DESCRIPTOR, CREATE_SCENE_DESCRIPTOR];
+// 🧭️ All seven entries below are already mounted as production modules in `📦️glue.rs` and already
+// carry a complete `DESCRIPTOR` const (`plan`/`plan_inverse`/`apply_diff`/`apply_inverse`) and a
+// passing fixture case under `mod fixture_tests` above -- the four bind/unbind-node/scene-root
+// entries were simply never listed here. Wired for ticket 26/08/23/END-TO-END-TESTING-REFACTOR so
+// the mutation-dispatch registry (`🔨️modules/🧭️mutation-dispatch`) and this ticket's oracle can
+// exercise all seven; the other 113 leaves on disk are real but not yet mounted in `📦️glue.rs` at
+// all, which is a `📦️glue.rs`-owned wiring step out of this ticket's scope.
+pub const GLTF_MUTATION_LEAF_DESCRIPTORS: &[GltfMutationLeafDescriptor] = &[
+    CHANGE_MATERIAL_ALPHA_MODE_DESCRIPTOR,
+    CHANGE_MATERIAL_DOUBLE_SIDED_DESCRIPTOR,
+    CREATE_SCENE_DESCRIPTOR,
+    BIND_NODE_CHILD_DESCRIPTOR,
+    UNBIND_NODE_CHILD_DESCRIPTOR,
+    BIND_SCENE_ROOT_NODE_DESCRIPTOR,
+    UNBIND_SCENE_ROOT_NODE_DESCRIPTOR,
+];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn gltf_mutation_leaf_descriptors() -> &'static [GltfMutationLeafDescriptor] {
     GLTF_MUTATION_LEAF_DESCRIPTORS
 }
+
+/// 🏷️ Kebab-case spelling of every currently-registered `GLTF_MUTATION_LEAF_DESCRIPTORS` command id
+/// -- the vocabulary the `gltf-2-0-any` mutation catalog
+/// (`../../../../🧪️oracle/🔣️component.json`) declares and ticket
+/// 26/08/23/END-TO-END-TESTING-REFACTOR's `mutate-gltf-2-0` case measures itself against.
+/// `kinds_match_registered_descriptors` below is what keeps this list honest against the assembly,
+/// since the framework never parses Rust.
+pub const KINDS: &[&str] = &["bind-node-child", "bind-scene-root-node", "change-material-alpha-mode", "change-material-double-sided", "create-scene", "unbind-node-child", "unbind-scene-root-node"];
 //#endregion 🔖️Assembly
+
+//#region 🧪️KindsCoverageLaw
+#[cfg(test)]
+mod kinds_tests {
+    use super::*;
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn kind_of(command_id: &str) -> &str {
+        command_id.strip_prefix("s.stdio.gltf.mutation.").and_then(|rest| rest.strip_suffix(".v1")).unwrap_or(command_id)
+    }
+
+    #[test]
+    fn kinds_match_registered_descriptors() {
+        let mut registered: Vec<&str> = GLTF_MUTATION_LEAF_DESCRIPTORS.iter().map(|descriptor| kind_of(descriptor.command_id)).collect();
+        registered.sort_unstable();
+        let mut declared: Vec<&str> = KINDS.to_vec();
+        declared.sort_unstable();
+        assert_eq!(registered, declared, "KINDS must name exactly the descriptors GLTF_MUTATION_LEAF_DESCRIPTORS registers");
+        assert_eq!(KINDS.len(), 7, "gltf-2-0-any declares 7 registered descriptor kinds");
+    }
+}
+//#endregion 🧪️KindsCoverageLaw
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION): one

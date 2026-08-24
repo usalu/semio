@@ -119,7 +119,15 @@ async fn bench_op_dag_insert(c: &mut Criterion) {
                 for envelope in envelopes {
                     dag.insert(envelope.clone()).expect("insert");
                 }
-                black_box(dag.drain_applied_envelopes())
+                let mut applied = Vec::new();
+                loop {
+                    match dag.take_next_applied() {
+                        protocol::MutationDagAppliedStep::Envelope(envelope) => applied.push(envelope),
+                        protocol::MutationDagAppliedStep::SeededIdentity => {}
+                        protocol::MutationDagAppliedStep::Complete => break,
+                    }
+                }
+                black_box(applied)
             });
         });
     }

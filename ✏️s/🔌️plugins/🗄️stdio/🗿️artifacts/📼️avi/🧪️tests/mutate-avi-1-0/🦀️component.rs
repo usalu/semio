@@ -162,6 +162,13 @@ mod subject {
             rc_frame_top: number(value, "rcFrameTop") as i32,
             rc_frame_right: number(value, "rcFrameRight") as i32,
             rc_frame_bottom: number(value, "rcFrameBottom") as i32,
+            // 🧭 The oracle's own strh JSON grammar has no `rcFrameWidth`/`strhExtra` keys (its
+            // `write_strh` always normalizes to the full 64-byte form -- see the oracle module's own
+            // doc comment); a mutation that sets a whole `strh` this way is authoring a FRESH header,
+            // so this mirrors that same complete/preferred form rather than inventing new JSON keys
+            // the oracle side would never produce or consume.
+            rc_frame_width: 16,
+            strh_extra: Vec::new(),
         }
     }
 
@@ -224,7 +231,10 @@ mod subject {
     }
 
     fn stream_from_json(value: &Json) -> Result<AviStream, String> {
-        Ok(AviStream { strh: strh_from_json(&value.get("strh").cloned().unwrap_or(Json::Null)), strf: strf_from_json(&value.get("strf").cloned().unwrap_or(Json::Null))?, chunks: value.array("chunks").iter().map(chunk_from_json).collect() })
+        // 🧭 The oracle's own stream JSON grammar has no `strlExtra` key (nested `strl` auxiliaries
+        // such as `vprp`/`JUNK` have no addressable mutation surface -- see `AviMutation`'s module
+        // doc comment), so a mutation-authored stream never carries any.
+        Ok(AviStream { strh: strh_from_json(&value.get("strh").cloned().unwrap_or(Json::Null)), strf: strf_from_json(&value.get("strf").cloned().unwrap_or(Json::Null))?, chunks: value.array("chunks").iter().map(chunk_from_json).collect(), strl_extra: Vec::new() })
     }
 
     fn snapshot_from_json(value: &Json) -> Result<AviSnapshot, String> {
@@ -233,6 +243,9 @@ mod subject {
             main_header: main_header_from_json(&value.get("mainHeader").cloned().unwrap_or(Json::Null)),
             streams: value.array("streams").iter().map(stream_from_json).collect::<Result<_, _>>()?,
             idx1_present: flag(value, "idx1Present"),
+            // 🧭 Same reasoning as `strl_extra` above, one level up: no `hdrlExtra` key in the
+            // oracle's `set-snapshot` JSON grammar.
+            hdrl_extra: Vec::new(),
             unknown_chunks: value.array("unknownChunks").iter().map(riff_chunk_from_json).collect(),
         })
     }

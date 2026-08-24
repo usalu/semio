@@ -128,6 +128,19 @@ fn fourcc4(s: &str) -> [u8; 4] {
     }
     out
 }
+
+/// ✍️ One typed-raw [`RiffChunk`] re-serialized — a `LIST` of unknown type (tagged `"LIST:<type>"`
+/// on decode) writes back as a `LIST`, everything else as a plain chunk. Shared by top-level
+/// `unknown_chunks`, `hdrl_extra`, and every stream's `strl_extra` — the SAME typed-raw convention
+/// one level down.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_riff_chunk(item: &RiffChunk) -> Vec<u8> {
+    if let Some(list_type) = item.fourcc.strip_prefix("LIST:") {
+        write_list(&fourcc4(list_type), &item.data)
+    } else {
+        write_chunk(&fourcc4(&item.fourcc), &item.data)
+    }
+}
 //#endregion 🔖️Riff
 
 //#region 🔖️Sniff
@@ -173,14 +186,32 @@ fn write_avih(h: &AviMainHeader) -> Vec<u8> {
     out
 }
 
+/// 📥️ Parses `strh` (AVISTREAMHEADER). The 13 fixed fields up to `dwSampleSize` are always 48
+/// bytes; the trailing `rcFrame` is NOT fixed-width on the wire — real encoders (ffmpeg's own
+/// AVI-1.0 muxer included) still write the classic pre-Win32 form where `rcFrame` is 4 16-bit
+/// `SHORT`s (56 bytes total), not only the modern 4 `LONG`s form (64 bytes) most docs describe.
+/// Confirmed against the real committed fixture: its own `strh` is 56 bytes, and bytes 48..56 read
+/// as 4 `SHORT`s decode to `(0, 0, 480, 432)` — the video's real frame rectangle, not garbage — so
+/// this is a genuine, common, spec-legal producer behaviour, not bytes simply omitted. Anything
+/// shorter than 48 bytes (missing a required fixed field) is still rejected; anything at or beyond
+/// 48 is accepted, defaulting `rcFrame` to zero only when truly absent (48..56 bytes).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_strh(payload: &[u8]) -> Result<AviStreamHeader, String> {
-    if payload.len() < 64 {
-        return Err("avi: strh shorter than 64 bytes".into());
+    if payload.len() < 48 {
+        return Err(format!("avi: strh is {} byte(s), need at least 48", payload.len()));
     }
     let u32le = |o: usize| u32::from_le_bytes(payload[o..o + 4].try_into().unwrap());
     let i32le = |o: usize| i32::from_le_bytes(payload[o..o + 4].try_into().unwrap());
     let u16le = |o: usize| u16::from_le_bytes(payload[o..o + 2].try_into().unwrap());
+    let i16le = |o: usize| i16::from_le_bytes(payload[o..o + 2].try_into().unwrap());
+    let (rc_frame_left, rc_frame_top, rc_frame_right, rc_frame_bottom, rc_frame_width) = if payload.len() >= 64 {
+        (i32le(48), i32le(52), i32le(56), i32le(60), 16u8)
+    } else if payload.len() >= 56 {
+        (i16le(48) as i32, i16le(50) as i32, i16le(52) as i32, i16le(54) as i32, 8u8)
+    } else {
+        (0, 0, 0, 0, 0u8)
+    };
+    let strh_extra = if payload.len() > 64 { payload[64..].to_vec() } else { Vec::new() };
     Ok(AviStreamHeader {
         fcc_type: fourcc_str(&payload[0..4].try_into().unwrap()),
         fcc_handler: fourcc_str(&payload[4..8].try_into().unwrap()),
@@ -195,16 +226,21 @@ fn parse_strh(payload: &[u8]) -> Result<AviStreamHeader, String> {
         suggested_buffer_size: u32le(36),
         quality: i32le(40),
         sample_size: u32le(44),
-        rc_frame_left: i32le(48),
-        rc_frame_top: i32le(52),
-        rc_frame_right: i32le(56),
-        rc_frame_bottom: i32le(60),
+        rc_frame_left,
+        rc_frame_top,
+        rc_frame_right,
+        rc_frame_bottom,
+        rc_frame_width,
+        strh_extra,
     })
 }
 
+/// ✍️ Re-serializes `strh` at whichever `rcFrame` width [`parse_strh`] recorded (`h.rc_frame_width`)
+/// — 0 (omitted), 8 (4 `SHORT`s, classic 56-byte form) or 16 (4 `LONG`s, modern 64-byte form) —
+/// rather than always promoting to 64 bytes, so a real 56-byte source round-trips byte-for-byte.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_strh(h: &AviStreamHeader) -> Vec<u8> {
-    let mut out = Vec::with_capacity(64);
+    let mut out = Vec::with_capacity(64 + h.strh_extra.len());
     out.extend_from_slice(&fourcc4(&h.fcc_type));
     out.extend_from_slice(&fourcc4(&h.fcc_handler));
     out.extend_from_slice(&h.flags.to_le_bytes());
@@ -218,9 +254,20 @@ fn write_strh(h: &AviStreamHeader) -> Vec<u8> {
     out.extend_from_slice(&h.suggested_buffer_size.to_le_bytes());
     out.extend_from_slice(&h.quality.to_le_bytes());
     out.extend_from_slice(&h.sample_size.to_le_bytes());
-    for v in [h.rc_frame_left, h.rc_frame_top, h.rc_frame_right, h.rc_frame_bottom] {
-        out.extend_from_slice(&v.to_le_bytes());
+    match h.rc_frame_width {
+        16 => {
+            for v in [h.rc_frame_left, h.rc_frame_top, h.rc_frame_right, h.rc_frame_bottom] {
+                out.extend_from_slice(&v.to_le_bytes());
+            }
+        }
+        8 => {
+            for v in [h.rc_frame_left, h.rc_frame_top, h.rc_frame_right, h.rc_frame_bottom] {
+                out.extend_from_slice(&(v as i16).to_le_bytes());
+            }
+        }
+        _ => {}
     }
+    out.extend_from_slice(&h.strh_extra);
     out
 }
 
@@ -295,9 +342,11 @@ fn write_strf(f: &AviStreamFormat) -> Vec<u8> {
 //#endregion 🔖️Header
 
 //#region 🔖️Decode
-/// 📥️ Real RIFF/AVI decode: `hdrl` (`avih` + every `strl`'s `strh`/`strf`), `movi` (every chunk,
-/// assigned to its owning stream by the leading 2-digit stream number in its fourcc), `idx1`
-/// (positionally matched to `movi` chunks for the keyframe flag — see module doc comment).
+/// 📥️ Real RIFF/AVI decode: `hdrl` (`avih` + every `strl`'s `strh`/`strf`, plus any nested
+/// `hdrl`/`strl` auxiliary children such as `vprp`/`JUNK` typed-raw retained in `hdrl_extra`/
+/// `strl_extra`), `movi` (every chunk, assigned to its owning stream by the leading 2-digit stream
+/// number in its fourcc), `idx1` (positionally matched to `movi` chunks for the keyframe flag —
+/// see module doc comment).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
     if !sniff_real_bytes(bytes) {
@@ -306,7 +355,8 @@ pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
     let body = &bytes[12..bytes.len().min(u32::from_le_bytes(bytes[4..8].try_into().unwrap()) as usize + 8)];
 
     let mut main_header = None;
-    let mut stream_headers: Vec<(AviStreamHeader, AviStreamFormat)> = Vec::new();
+    let mut hdrl_extra: Vec<RiffChunk> = Vec::new();
+    let mut stream_headers: Vec<(AviStreamHeader, AviStreamFormat, Vec<RiffChunk>)> = Vec::new();
     let mut movi_chunks: Vec<(String, Vec<u8>)> = Vec::new();
     let mut idx1_entries: Vec<u32> = Vec::new();
     let mut idx1_present = false;
@@ -327,18 +377,32 @@ pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                             let strl_body = &h.payload[4..];
                             let mut strh = None;
                             let mut strf_bytes: Option<&[u8]> = None;
+                            let mut strl_extra: Vec<RiffChunk> = Vec::new();
                             for sitem in iter_riff(strl_body) {
                                 let s = sitem?;
                                 if &s.fourcc == b"strh" {
                                     strh = Some(parse_strh(s.payload)?);
-                                }
-                                if &s.fourcc == b"strf" {
+                                } else if &s.fourcc == b"strf" {
                                     strf_bytes = Some(s.payload);
+                                } else if &s.fourcc == b"LIST" {
+                                    let sub_type = fourcc_str(&s.payload[0..4].try_into().unwrap());
+                                    strl_extra.push(RiffChunk { fourcc: format!("LIST:{sub_type}"), data: s.payload[4..].to_vec() });
+                                } else {
+                                    // 📦 e.g. a real `vprp` (video properties) or `JUNK` padding chunk — no
+                                    // typed slot of its own, retained verbatim (see snapshot's module doc).
+                                    strl_extra.push(RiffChunk { fourcc: fourcc_str(&s.fourcc), data: s.payload.to_vec() });
                                 }
                             }
                             let strh = strh.ok_or("avi: strl missing strh")?;
                             let strf = parse_strf(&strh.fcc_type, strf_bytes.ok_or("avi: strl missing strf")?);
-                            stream_headers.push((strh, strf));
+                            stream_headers.push((strh, strf, strl_extra));
+                        } else if &h.fourcc == b"LIST" {
+                            let sub_type = fourcc_str(&h.payload[0..4].try_into().unwrap());
+                            hdrl_extra.push(RiffChunk { fourcc: format!("LIST:{sub_type}"), data: h.payload[4..].to_vec() });
+                        } else {
+                            // 📦 e.g. a real `JUNK` padding chunk directly inside `hdrl` — no typed slot
+                            // of its own, retained verbatim (see snapshot's module doc).
+                            hdrl_extra.push(RiffChunk { fourcc: fourcc_str(&h.fourcc), data: h.payload.to_vec() });
                         }
                     }
                 }
@@ -362,7 +426,7 @@ pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
         }
     }
 
-    let mut streams: Vec<AviStream> = stream_headers.into_iter().map(|(strh, strf)| AviStream { strh, strf, chunks: Vec::new() }).collect();
+    let mut streams: Vec<AviStream> = stream_headers.into_iter().map(|(strh, strf, strl_extra)| AviStream { strh, strf, chunks: Vec::new(), strl_extra }).collect();
     let idx1_matches_by_position = idx1_present && idx1_entries.len() == movi_chunks.len();
     for (i, (fourcc, data)) in movi_chunks.into_iter().enumerate() {
         let stream_index: usize = fourcc.get(0..2).and_then(|s| s.parse().ok()).unwrap_or(0);
@@ -374,15 +438,16 @@ pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
         }
     }
 
-    Ok(AviSnapshot { schema: STDIO_AVI_DOCUMENT_SCHEMA.into(), main_header: main_header.ok_or("avi: hdrl missing avih")?, streams, idx1_present, unknown_chunks })
+    Ok(AviSnapshot { schema: STDIO_AVI_DOCUMENT_SCHEMA.into(), main_header: main_header.ok_or("avi: hdrl missing avih")?, streams, idx1_present, unknown_chunks, hdrl_extra })
 }
 //#endregion 🔖️Decode
 
 //#region 🔖️Encode
 /// ✍️ Real RIFF/AVI encode — layout mirrors this ticket's own `make_avi.py` fixture generator
-/// exactly (`hdrl(avih + strl(strh,strf)*)`, `movi(chunk*)`, `idx1` with offsets relative to the
-/// `movi` LIST's payload start INCLUDING its own `movi` tag, per the OpenDML convention that
-/// generator documents) — byte-identical for the untouched round trip on a single-stream fixture.
+/// exactly (`hdrl(avih + strl(strh,strf,strl_extra*)* + hdrl_extra*)`, `movi(chunk*)`, `idx1` with
+/// offsets relative to the `movi` LIST's payload start INCLUDING its own `movi` tag, per the
+/// OpenDML convention that generator documents) — byte-identical for the untouched round trip on a
+/// single-stream fixture with no nested auxiliaries.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
     let avih = write_chunk(b"avih", &write_avih(&snapshot.main_header));
@@ -392,10 +457,12 @@ pub fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
         .flat_map(|s| {
             let strh = write_chunk(b"strh", &write_strh(&s.strh));
             let strf = write_chunk(b"strf", &write_strf(&s.strf));
-            write_list(b"strl", &[strh, strf].concat())
+            let extra: Vec<u8> = s.strl_extra.iter().flat_map(write_riff_chunk).collect();
+            write_list(b"strl", &[strh, strf, extra].concat())
         })
         .collect();
-    let hdrl = write_list(b"hdrl", &[avih, strls].concat());
+    let hdrl_extra: Vec<u8> = snapshot.hdrl_extra.iter().flat_map(write_riff_chunk).collect();
+    let hdrl = write_list(b"hdrl", &[avih, strls, hdrl_extra].concat());
 
     let movi_chunks: Vec<u8> = snapshot.streams.iter().flat_map(|s| s.chunks.iter().flat_map(|c| write_chunk(&fourcc4(&c.fourcc), &c.data))).collect();
     let movi = write_list(b"movi", &movi_chunks);
@@ -416,10 +483,8 @@ pub fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
 
     let mut unknown: Vec<u8> = Vec::new();
     for u in &snapshot.unknown_chunks {
-        if let Some(list_type) = u.fourcc.strip_prefix("LIST:") {
-            unknown.extend(write_list(&fourcc4(list_type), &u.data));
-        } else if !u.fourcc.starts_with("movi:") {
-            unknown.extend(write_chunk(&fourcc4(&u.fourcc), &u.data));
+        if !u.fourcc.starts_with("movi:") {
+            unknown.extend(write_riff_chunk(u));
         }
     }
 
@@ -480,12 +545,16 @@ mod codec_tests {
                     rc_frame_top: 0,
                     rc_frame_right: 16,
                     rc_frame_bottom: 16,
+                    rc_frame_width: 16,
+                    strh_extra: vec![],
                 },
                 strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 140, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
                 chunks: vec![AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3, 4], keyframe: true }, AviChunk { fourcc: "00dc".into(), data: vec![5, 6, 7], keyframe: true }],
+                strl_extra: vec![],
             }],
             idx1_present: true,
             unknown_chunks: vec![],
+            hdrl_extra: vec![],
         }
     }
 
@@ -530,9 +599,12 @@ mod codec_tests {
                 rc_frame_top: 0,
                 rc_frame_right: 0,
                 rc_frame_bottom: 0,
+                rc_frame_width: 16,
+                strh_extra: vec![],
             },
             strf: AviStreamFormat::WaveFormat { format_tag: 1, channels: 1, samples_per_sec: 44100, avg_bytes_per_sec: 88200, block_align: 2, bits_per_sample: 16, extra: vec![] },
             chunks: vec![AviChunk { fourcc: "01wb".into(), data: vec![9, 9], keyframe: true }],
+            strl_extra: vec![],
         });
         snap.main_header.streams = 2;
         let bytes = encode_avi(&snap);
@@ -595,6 +667,42 @@ mod codec_tests {
         }
     }
     //#endregion codec_retention_law
+
+    //#region real_ffmpeg_fixture — BUG 1 + BUG 2, see the ticket's own w7-avi-1-0-mutate-report.md
+    /// 🎥️ Real 3-second Motion-JPEG AVI-1.0, ffmpeg-derived from this repository's only real video
+    /// (`♻️mit-bestand/.../🎥️bauen-mit-bestand.mp4`). Its own `strh` is 56 bytes (BUG 1: ffmpeg's
+    /// AVI-1.0 muxer writes the classic form) and its `hdrl`/`strl` carry real `JUNK`/`vprp`
+    /// auxiliary chunks (BUG 2) — confirmed by direct hex inspection, not assumed.
+    const REAL_FFMPEG_AVI: &[u8] = include_bytes!("../../../../../🧫️fixtures/📼️bauen-mit-bestand-mjpeg.avi");
+
+    #[semio_framework_async_macros::async_test]
+    async fn decode_avi_accepts_the_real_ffmpeg_56_byte_strh() {
+        let snap = decode_avi(REAL_FFMPEG_AVI).expect("decode_avi must accept a real ffmpeg AVI-1.0 strh (56 bytes, classic SHORT-rcFrame form)");
+        assert_eq!(snap.streams.len(), 1);
+        let strh = &snap.streams[0].strh;
+        assert_eq!(strh.fcc_type, "vids");
+        assert_eq!(strh.fcc_handler, "MJPG");
+        assert_eq!(strh.rc_frame_width, 8, "the real fixture's strh is the classic 56-byte SHORT-rcFrame form, not the 64-byte LONG form");
+        assert_eq!((strh.rc_frame_left, strh.rc_frame_top, strh.rc_frame_right, strh.rc_frame_bottom), (0, 0, 480, 432), "rcFrame read as 4 SHORTs must be the real 480x432 frame rectangle, not misread as 2 LONGs");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn decode_avi_retains_nested_hdrl_and_strl_auxiliary_chunks() {
+        let snap = decode_avi(REAL_FFMPEG_AVI).expect("decode");
+        assert!(snap.hdrl_extra.iter().any(|c| c.fourcc == "JUNK"), "the real fixture's hdrl carries its own 260-byte JUNK padding chunk");
+        let strl_extra = &snap.streams[0].strl_extra;
+        assert!(strl_extra.iter().any(|c| c.fourcc == "JUNK"), "the real fixture's strl carries a 4120-byte JUNK padding chunk");
+        assert!(strl_extra.iter().any(|c| c.fourcc == "vprp"), "the real fixture's strl carries a real vprp (video properties) chunk");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn decode_encode_round_trips_the_real_ffmpeg_fixtures_strh_and_nested_chunks() {
+        let snap = decode_avi(REAL_FFMPEG_AVI).expect("decode");
+        let re_encoded = encode_avi(&snap);
+        let round_tripped = decode_avi(&re_encoded).expect("re-decode");
+        assert_eq!(round_tripped, snap, "decode -> encode -> decode must be a fixed point, including the 56-byte strh width and the nested hdrl/strl auxiliaries");
+    }
+    //#endregion real_ffmpeg_fixture
 }
 
 //#region 🚪️DerivedIoRegistry

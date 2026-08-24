@@ -633,6 +633,27 @@ impl store::ArtifactPack for SemioKitSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🔖️JsonBridge
+/// 📥️ Decodes this subset's own `#[serde(rename_all = "camelCase")]` JSON projection — the exact
+/// shape the committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/
+/// 🔣️component.json` specification-vector fixtures carry — into a real `SemioKitSnapshot`. A thin
+/// `serde_json` wrapper (already a direct dependency of this crate, used behind this interface per
+/// CLAUDE.md's "external libraries behind an interface" rule, never a new one) so external Rust
+/// callers that cannot name this crate's private `store`/`serde_json` extern-crate items (e.g.
+/// `mutate-semio-kit`'s test adapter — see its own doc comment for why) can still decode a snapshot
+/// from committed fixture text without hand-transcribing one field at a time, which is both
+/// laborious and a place for the transcription to silently drift away from the fixture it claims to
+/// mirror.
+pub fn decode_kit_snapshot_json(text: &str) -> Result<SemioKitSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `serde_json` inverse of `decode_kit_snapshot_json` — same rationale.
+pub fn encode_kit_snapshot_json(snapshot: &SemioKitSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioKitSnapshot serialization is infallible")
+}
+//#endregion 🔖️JsonBridge
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.kit` — one type ("chair") with one representation link, one design
 /// ("living-room") with two pieces and one connection, one owned object child, one owned model

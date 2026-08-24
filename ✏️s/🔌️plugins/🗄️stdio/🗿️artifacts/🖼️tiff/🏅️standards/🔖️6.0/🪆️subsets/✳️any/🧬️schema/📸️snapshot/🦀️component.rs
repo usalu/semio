@@ -7,8 +7,9 @@
 //! VALUE is still stored losslessly via this same triple (the tag/type/value model IS the
 //! raw-retention mechanism; no separate raw-bytes fallback needed, unlike PNG's
 //! `unknown_chunks`). Decoded pixels stay a flat `pixels: Vec<u8>` (documented normalization:
-//! canonical 8-bit RGBA, row-major, decoded from IFD 0 only — see `⚙️engine`'s
-//! `EncodeScopeNote`/decode doc for the full completeness accounting).
+//! canonical 8-bit RGBA, row-major, decoded from IFD 0 only — see `../../🚪️io/🦀️component.rs`'s
+//! `MultiIfdEncodeScopeNote`/decode doc for the full completeness accounting, including the honest
+//! gap that this single `pixels` field cannot back a real raster for any IFD beyond the first).
 
 use crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;

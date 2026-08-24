@@ -41,7 +41,7 @@
 
 use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
-use crate::db_storage::{CatalogStorage, DbIoPages, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
+use crate::db_storage::{db_io_copy_pages, db_io_prepare_platform, CatalogStorage, DbIoPages, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use neo4rs::{query, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
@@ -50,7 +50,7 @@ use pack::{ByteRange, ContentHash};
 /// @emoji 🛡️ Ceiling on any single blob this backend reads into memory in one call — mirrors
 /// `db_storage`'s own `MAX_READ_BYTES` choice (this crate's own choice too, the contract doesn't
 /// fix a number): validated via `check_len` BEFORE the base64 decode buffer is allocated.
-const MAX_READ_BYTES: u64 = 1024 * 1024 * 1024;
+const MAX_READ_BYTES: u64 = 496 * 1024;
 
 /// @emoji ✍️ Encodes a byte blob for storage in a Neo4j string property.
 fn encode_bytes(bytes: &[u8]) -> String {
@@ -79,12 +79,12 @@ fn i64_to_u64(value: i64, what: &'static str) -> Result<u64, DbError> {
 /// @emoji ✂️ Slices `bytes[range.offset..range.offset+range.len]`, bounds-checked against
 /// `bytes`'s actual length — the shared implementation `WalStorage::read` validates against,
 /// mirroring `MemoryStorage`/`FsStorage`'s identical bounds-checking law.
-fn slice_range(bytes: &[u8], range: ByteRange) -> Result<Vec<u8>, DbError> {
+fn slice_range(bytes: &[u8], range: ByteRange) -> Result<&[u8], DbError> {
     let end = range.offset.checked_add(range.len).ok_or_else(|| DbError::InvalidArgument("read range overflows u64".to_string()))?;
     if end > bytes.len() as u64 {
         return Err(DbError::InvalidArgument(format!("read range {}..{end} out of bounds (len {})", range.offset, bytes.len())));
     }
-    Ok(bytes[range.offset as usize..end as usize].to_vec())
+    Ok(&bytes[range.offset as usize..end as usize])
 }
 //#endregion 🔖️Codec
 
@@ -403,6 +403,7 @@ impl WalStorage for Neo4jStorage {
 
     async fn append(&self, document: &ArtifactId, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "wal_storage::append")?;
+        let prepared = db_io_prepare_platform(&bytes)?.await?;
         let idx = u64_to_i64(index, "wal segment index")?;
         let mut txn = self.graph.start_txn().await.map_err(map_neo4rs_error)?;
         let mut stream = txn.execute(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await.map_err(map_neo4rs_error)?;
@@ -414,7 +415,7 @@ impl WalStorage for Neo4jStorage {
         check_len(current_len, MAX_READ_BYTES, "wal_storage::append current length")?;
         let current = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
         let sealed: bool = row.get("sealed").map_err(map_de_error)?;
-        let updated = apply_append(&current, sealed, bytes.as_slice())?;
+        let updated = apply_append(&current, sealed, prepared.as_slice())?;
         let new_len = updated.len() as u64;
         txn.run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", encode_bytes(&updated)).param("len", u64_to_i64(new_len, "wal segment length")?)).await.map_err(map_neo4rs_error)?;
         txn.commit().await.map_err(map_neo4rs_error)?;
@@ -436,7 +437,7 @@ impl WalStorage for Neo4jStorage {
         Ok(())
     }
 
-    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
+    async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
         check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
         let idx = u64_to_i64(index, "wal segment index")?;
         let row = self.fetch_one(query(CYPHER_WAL_READ_ROW).param("document", document.0.clone()).param("index", idx)).await?;
@@ -444,7 +445,7 @@ impl WalStorage for Neo4jStorage {
         let current_len = i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")?;
         check_len(current_len, MAX_READ_BYTES, "wal_storage::read current length")?;
         let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
-        slice_range(&bytes, range)
+        db_io_copy_pages(slice_range(&bytes, range)?)?.await
     }
 
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
@@ -454,11 +455,11 @@ impl WalStorage for Neo4jStorage {
         i64_to_u64(row.get("len").map_err(map_de_error)?, "wal segment length")
     }
 
-    async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let mut stream = self.graph.execute(query(CYPHER_WAL_LIST_SEGMENTS).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
-        let mut out = Vec::new();
+        let mut out = DbIoU64List::new();
         while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
-            out.push(i64_to_u64(row.get("segIndex").map_err(map_de_error)?, "wal segment index")?);
+            out.push(i64_to_u64(row.get("segIndex").map_err(map_de_error)?, "wal segment index")?)?;
         }
         Ok(out)
     }
@@ -493,17 +494,19 @@ impl SnapshotStorage for Neo4jStorage {
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
-        self.run(query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(bytes.as_slice())).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?))
+        let prepared = db_io_prepare_platform(&bytes)?.await?;
+        self.run(query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(prepared.as_slice())).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?))
             .await
     }
 
-    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
         let row = self.fetch_one(query(CYPHER_SNAPSHOT_READ).param("document", document.0.clone()).param("generation", generation_param)).await?;
         let row = row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?;
         let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "snapshot generation length")?;
         check_len(len, MAX_READ_BYTES, "snapshot_storage::read_generation")?;
-        decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
+        let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
+        db_io_copy_pages(&bytes)?.await
     }
 
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
@@ -514,11 +517,11 @@ impl SnapshotStorage for Neo4jStorage {
         }
     }
 
-    async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let mut stream = self.graph.execute(query(CYPHER_SNAPSHOT_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
-        let mut out = Vec::new();
+        let mut out = DbIoU64List::new();
         while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
-            out.push(i64_to_u64(row.get("generation").map_err(map_de_error)?, "snapshot generation")?);
+            out.push(i64_to_u64(row.get("generation").map_err(map_de_error)?, "snapshot generation")?)?;
         }
         Ok(out)
     }
@@ -534,17 +537,23 @@ impl SnapshotStorage for Neo4jStorage {
 impl PayloadStorage for Neo4jStorage {
     async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
-        let hash = ContentHash(*blake3::hash(bytes.as_slice()).as_bytes());
-        self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", encode_bytes(bytes.as_slice())).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await?;
+        let mut hasher = blake3::Hasher::new();
+        for fragment in bytes.fragments() {
+            hasher.update(fragment);
+        }
+        let hash = ContentHash(*hasher.finalize().as_bytes());
+        let prepared = db_io_prepare_platform(&bytes)?.await?;
+        self.run(query(CYPHER_PAYLOAD_PUT).param("hash", hash.to_string()).param("bytes", encode_bytes(prepared.as_slice())).param("len", u64_to_i64(bytes.len() as u64, "payload length")?)).await?;
         Ok(hash)
     }
 
-    async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+    async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
         let row = self.fetch_one(query(CYPHER_PAYLOAD_GET).param("hash", hash.to_string())).await?;
         let row = row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
         let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "payload length")?;
         check_len(len, MAX_READ_BYTES, "payload_storage::get")?;
-        decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
+        let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
+        db_io_copy_pages(&bytes)?.await
     }
 
     async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
@@ -567,7 +576,7 @@ impl PayloadStorage for Neo4jStorage {
 
 //#region 🔖️CatalogStorage
 impl CatalogStorage for Neo4jStorage {
-    async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
+    async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
         let row = self.fetch_one(query(CYPHER_CATALOG_READ)).await?;
         let Some(row) = row else {
             return Ok(None);
@@ -576,18 +585,19 @@ impl CatalogStorage for Neo4jStorage {
         let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "catalog root length")?;
         check_len(len, MAX_READ_BYTES, "catalog_storage::read_root")?;
         let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
-        Ok(Some((bytes, EpochFence { epoch })))
+        Ok(Some((db_io_copy_pages(&bytes)?.await?, EpochFence { epoch })))
     }
 
     async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
         check_len(new_bytes.len() as u64, MAX_READ_BYTES, "catalog_storage::cas_root")?;
         let new_fence = expected.next();
+        let prepared = db_io_prepare_platform(&new_bytes)?.await?;
         let row = self
             .fetch_one(
                 query(CYPHER_CATALOG_CAS)
                     .param("expected", u64_to_i64(expected.epoch, "catalog epoch")?)
                     .param("newEpoch", u64_to_i64(new_fence.epoch, "catalog epoch")?)
-                    .param("bytes", encode_bytes(new_bytes.as_slice()))
+                    .param("bytes", encode_bytes(prepared.as_slice()))
                     .param("len", u64_to_i64(new_bytes.len() as u64, "catalog root length")?),
             )
             .await?;
@@ -608,23 +618,25 @@ impl IndexStorage for Neo4jStorage {
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "index_storage::write_run")?;
         let run_id_param = u64_to_i64(run_id, "index run id")?;
-        self.run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", encode_bytes(bytes.as_slice())).param("len", u64_to_i64(bytes.len() as u64, "index run length")?)).await
+        let prepared = db_io_prepare_platform(&bytes)?.await?;
+        self.run(query(CYPHER_INDEX_WRITE).param("document", document.0.clone()).param("runId", run_id_param).param("bytes", encode_bytes(prepared.as_slice())).param("len", u64_to_i64(bytes.len() as u64, "index run length")?)).await
     }
 
-    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
+    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
         let run_id_param = u64_to_i64(run_id, "index run id")?;
         let row = self.fetch_one(query(CYPHER_INDEX_READ).param("document", document.0.clone()).param("runId", run_id_param)).await?;
         let row = row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?;
         let len = i64_to_u64(row.get("len").map_err(map_de_error)?, "index run length")?;
         check_len(len, MAX_READ_BYTES, "index_storage::read_run")?;
-        decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)
+        let bytes = decode_bytes(&row.get::<String>("bytes").map_err(map_de_error)?)?;
+        db_io_copy_pages(&bytes)?.await
     }
 
-    async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
+    async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         let mut stream = self.graph.execute(query(CYPHER_INDEX_LIST).param("document", document.0.clone())).await.map_err(map_neo4rs_error)?;
-        let mut out = Vec::new();
+        let mut out = DbIoU64List::new();
         while let Some(row) = stream.next().await.map_err(map_neo4rs_error)? {
-            out.push(i64_to_u64(row.get("runId").map_err(map_de_error)?, "index run id")?);
+            out.push(i64_to_u64(row.get("runId").map_err(map_de_error)?, "index run id")?)?;
         }
         Ok(out)
     }

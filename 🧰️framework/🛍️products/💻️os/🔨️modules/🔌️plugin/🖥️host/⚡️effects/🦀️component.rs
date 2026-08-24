@@ -40,7 +40,7 @@ use semio_framework_actor::{ActorId as RuntimeActorId, Envelope, Lane as ActorLa
 use semio_framework_async::{CancelToken, CapabilityTokenId, ChannelPolicy, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeOwner, TraceId};
 #[cfg(test)]
 use semio_framework_job::CommitCandidate;
-use semio_framework_job::{InteractiveJob, JobFault, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadCloseStep, JobPayloadStream, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
 use semio_framework_os_services::{
     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
 };
@@ -418,9 +418,26 @@ impl InteractiveJob for DynRouterEffectJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
         self.0.step(cx)
     }
+
+    fn begin_close(&mut self) {
+        self.0.begin_close();
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        self.0.close_step(maximum_items, maximum_bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.0.terminal_is_empty()
+    }
 }
 
-struct FaultRouterEffectJob(Option<Vec<u8>>);
+struct FaultRouterEffectJob {
+    detail: Option<Vec<u8>>,
+    writer: Option<RetainedJobPayloadWriter>,
+    cursor: usize,
+    closing: bool,
+}
 
 impl InteractiveJob for FaultRouterEffectJob {
     fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
@@ -430,12 +447,60 @@ impl InteractiveJob for FaultRouterEffectJob {
         if cx.should_yield() {
             return StepOutcome::Yield;
         }
-        StepOutcome::Fault(JobFault { detail: self.0.take().unwrap_or_else(|| b"router effect job polled after completion".to_vec()) })
+        if self.detail.is_none() {
+            self.detail = Some(b"router effect job polled after completion".to_vec());
+            self.cursor = 0;
+        }
+        let writer = self.writer.get_or_insert_with(|| RetainedJobPayloadWriter::new(JobPayloadStream::Fault));
+        let complete = writer.write_slice_page(cx, self.detail.as_deref().expect("router fault detail"), &mut self.cursor).unwrap_or(false);
+        if !complete {
+            return StepOutcome::Yield;
+        }
+        self.detail = None;
+        let writer = self.writer.take().expect("router fault writer");
+        StepOutcome::Fault(JobFault { detail: writer.finish().unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::Fault)) })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(writer) = self.writer.as_mut() {
+            writer.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        self.begin_close();
+        if let Some(writer) = self.writer.as_mut() {
+            return match writer.close_step(maximum_items, maximum_bytes) {
+                JobPayloadCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                JobPayloadCloseStep::Complete => {
+                    self.writer = None;
+                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+            };
+        }
+        if self.detail.is_some() {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.detail = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.detail.is_none() && self.writer.is_none()
     }
 }
 
 #[cfg(test)]
-struct CompleteRouterEffectJob(Option<Vec<u8>>);
+struct CompleteRouterEffectJob {
+    output: Option<Vec<u8>>,
+    writer: Option<RetainedJobPayloadWriter>,
+    cursor: usize,
+    closing: bool,
+}
 
 #[cfg(test)]
 impl InteractiveJob for CompleteRouterEffectJob {
@@ -446,7 +511,46 @@ impl InteractiveJob for CompleteRouterEffectJob {
         if cx.should_yield() {
             return StepOutcome::Yield;
         }
-        StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: self.0.take().unwrap_or_default() })
+        let writer = self.writer.get_or_insert_with(|| RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
+        let complete = writer.write_slice_page(cx, self.output.as_deref().unwrap_or_default(), &mut self.cursor).unwrap_or(false);
+        if !complete {
+            return StepOutcome::Yield;
+        }
+        self.output = None;
+        let writer = self.writer.take().expect("router output writer");
+        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: writer.finish().unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::CommitOutput)) })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(writer) = self.writer.as_mut() {
+            writer.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        self.begin_close();
+        if let Some(writer) = self.writer.as_mut() {
+            return match writer.close_step(maximum_items, maximum_bytes) {
+                JobPayloadCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                JobPayloadCloseStep::Complete => {
+                    self.writer = None;
+                    InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+            };
+        }
+        if self.output.is_some() {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.output = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.output.is_none() && self.writer.is_none()
     }
 }
 
@@ -478,7 +582,7 @@ pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, r
 pub struct UnwiredRouterEffectHandler;
 impl RouterEffectHandler for UnwiredRouterEffectHandler {
     fn create_job(&self, effect: RouterEffect) -> Box<dyn InteractiveJob> {
-        Box::new(FaultRouterEffectJob(Some(format!("AsyncEffectExecutor: no RouterEffectHandler wired yet for {effect:?} (see the packet report's honest gaps)").into_bytes())))
+        Box::new(FaultRouterEffectJob { detail: Some(format!("AsyncEffectExecutor: no RouterEffectHandler wired yet for {effect:?} (see the packet report's honest gaps)").into_bytes()), writer: None, cursor: 0, closing: false })
     }
 }
 //#endregion 🌉️RouterEffectHandler
@@ -1164,8 +1268,9 @@ mod tests {
     struct RecordingRouterHandler(Arc<AtomicUsize>);
 
     struct RecordingRouterJob {
-        calls: Arc<AtomicUsize>,
+        calls: Option<Arc<AtomicUsize>>,
         yielded: bool,
+        closing: bool,
     }
 
     impl InteractiveJob for RecordingRouterJob {
@@ -1181,14 +1286,35 @@ mod tests {
                 self.yielded = true;
                 return StepOutcome::Yield;
             }
-            self.calls.fetch_add(1, Ordering::SeqCst);
-            StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: b"ok".to_vec() })
+            self.calls.as_ref().expect("recording router calls").fetch_add(1, Ordering::SeqCst);
+            let output = cx.payload_from_bytes(JobPayloadStream::CommitOutput, b"ok").unwrap_or_else(|_| RetainedJobPayload::empty(JobPayloadStream::CommitOutput));
+            StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output })
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+            self.begin_close();
+            if self.calls.is_some() {
+                if maximum_items == 0 {
+                    return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                self.calls = None;
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.calls.is_none()
         }
     }
 
     impl RouterEffectHandler for RecordingRouterHandler {
         fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob> {
-            Box::new(RecordingRouterJob { calls: self.0.clone(), yielded: false })
+            Box::new(RecordingRouterJob { calls: Some(self.0.clone()), yielded: false, closing: false })
         }
     }
 
@@ -1228,7 +1354,7 @@ mod tests {
         struct AlwaysOkRouterHandler;
         impl RouterEffectHandler for AlwaysOkRouterHandler {
             fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob> {
-                Box::new(CompleteRouterEffectJob(Some(b"ok".to_vec())))
+                Box::new(CompleteRouterEffectJob { output: Some(b"ok".to_vec()), writer: None, cursor: 0, closing: false })
             }
         }
         executor.router_handler = Arc::new(AlwaysOkRouterHandler);

@@ -82,7 +82,7 @@ pub const KINDS: &[&str] = &[
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn stream_diff_for(stream_index: usize, inner: AviStreamDiff) -> AviDiff {
-    AviDiff { main_header: None, streams: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: stream_index, diff: inner }], added: vec![] }), idx1_present: None, unknown_chunks: None }
+    AviDiff { main_header: None, streams: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: stream_index, diff: inner }], added: vec![] }), idx1_present: None, unknown_chunks: None, hdrl_extra: None }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -230,12 +230,16 @@ mod tests {
                     rc_frame_top: 0,
                     rc_frame_right: 16,
                     rc_frame_bottom: 16,
+                    rc_frame_width: 16,
+                    strh_extra: vec![],
                 },
                 strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 140, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
                 chunks: vec![AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3], keyframe: true }],
+                strl_extra: vec![],
             }],
             idx1_present: true,
             unknown_chunks: vec![RiffChunk { fourcc: "JUNK".into(), data: vec![0] }],
+            hdrl_extra: vec![],
         }
     }
 
@@ -246,7 +250,7 @@ mod tests {
         let variants = vec![
             AviMutation::SetMainHeader { main_header: AviMainHeader { width: 32, ..base.main_header.clone() } },
             AviMutation::SetIdx1Present { idx1_present: false },
-            AviMutation::InsertStream { index: 1, stream: AviStream { strh: base.streams[0].strh.clone(), strf: base.streams[0].strf.clone(), chunks: vec![] } },
+            AviMutation::InsertStream { index: 1, stream: AviStream { strh: base.streams[0].strh.clone(), strf: base.streams[0].strf.clone(), chunks: vec![], strl_extra: vec![] } },
             AviMutation::SetStreamHeader { stream_index: 0, strh: AviStreamHeader { rate: 30, ..base.streams[0].strh.clone() } },
             AviMutation::SetStreamFormat { stream_index: 0, strf: AviStreamFormat::Raw { data: vec![9] } },
             AviMutation::InsertChunk { stream_index: 0, index: 1, chunk: AviChunk { fourcc: "00dc".into(), data: vec![9, 9], keyframe: false } },
@@ -273,7 +277,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn remove_stream_then_insert_stream_round_trips() {
         let mut base = base_snapshot();
-        base.streams.push(AviStream { strh: base.streams[0].strh.clone(), strf: base.streams[0].strf.clone(), chunks: vec![] });
+        base.streams.push(AviStream { strh: base.streams[0].strh.clone(), strf: base.streams[0].strf.clone(), chunks: vec![], strl_extra: vec![] });
         let m = AviMutation::RemoveStream { index: 0 };
         let mut snap = base.clone();
         apply_avi_mutation(&mut snap, &m);

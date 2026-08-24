@@ -2,9 +2,8 @@
 
 use semio_framework_job::{CancelToken, Generation, OperationId, StepBudget, StepContext};
 use semio_framework_ui_contract as ui_contract;
-use semio_framework_ui_runtime::{ComponentTree, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcileRejected, SurfaceReconcileTerminal, SurfaceReconciler, SURFACE_RECONCILE_ADMISSION_SLOTS};
+use semio_framework_ui_runtime::{ComponentTree, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcileRejected, SurfaceReconcileReservation, SurfaceReconcileTerminal, SurfaceReconciler, SURFACE_RECONCILE_ADMISSION_SLOTS};
 use std::cell::RefCell;
-use std::collections::VecDeque;
 
 const READY_PATCH_CAPACITY: usize = SURFACE_RECONCILE_ADMISSION_SLOTS;
 
@@ -13,6 +12,7 @@ struct SurfaceSlot {
     generation: u64,
     operation: OperationId,
     preview_sequence: u64,
+    acknowledged_revision: ui_contract::UiRevision,
     cancel: CancelToken,
     reconciler: Option<SurfaceReconciler>,
     job: Option<SurfaceReconcileJob>,
@@ -29,10 +29,16 @@ struct RejectedSlot {
     authority: SurfaceReconcileRejected,
 }
 
+struct ReadySlot {
+    generation: u64,
+    patch: ui_contract::UiPatch,
+}
+
 struct UnadmittedSlot {
     generation: u64,
     surface: String,
     tree: Option<ComponentTree>,
+    reservation: Option<SurfaceReconcileReservation>,
 }
 
 /// 🎟️ Exact mounted render reservation; the tree cannot exist before its fixed slot does.
@@ -84,8 +90,9 @@ struct PatchTrackerState {
     deferred: [Option<String>; SURFACE_RECONCILE_ADMISSION_SLOTS],
     unadmitted: [Option<UnadmittedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS + 1],
     closing_instances: [Option<ClosingInstance>; SURFACE_RECONCILE_ADMISSION_SLOTS],
-    ready: VecDeque<(u64, ui_contract::UiPatch)>,
+    ready: [Option<ReadySlot>; READY_PATCH_CAPACITY],
     next_generation: u64,
+    generation_exhausted: bool,
     drive_cursor: usize,
     close_cursor: usize,
 }
@@ -99,8 +106,9 @@ impl Default for PatchTrackerState {
             deferred: std::array::from_fn(|_| None),
             unadmitted: std::array::from_fn(|_| None),
             closing_instances: [None; SURFACE_RECONCILE_ADMISSION_SLOTS],
-            ready: VecDeque::with_capacity(READY_PATCH_CAPACITY),
+            ready: std::array::from_fn(|_| None),
             next_generation: 0,
+            generation_exhausted: false,
             drive_cursor: 0,
             close_cursor: 0,
         }
@@ -127,7 +135,7 @@ impl PatchTracker {
             return false;
         }
         if let Some(slot) = state.slots.iter().flatten().find(|slot| slot.surface == surface) {
-            return slot.job.is_none() && slot.reconciler.is_some();
+            return slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0);
         }
         state.slots.iter().any(Option::is_none)
     }
@@ -147,7 +155,11 @@ impl PatchTracker {
 
     pub fn take_deferred_ready(&self) -> Option<String> {
         let mut state = self.state.borrow_mut();
-        let index = state.deferred.iter().position(|entry| entry.as_ref().is_some_and(|surface| state.slots.iter().flatten().find(|slot| slot.surface == *surface).is_none_or(|slot| slot.job.is_none() && slot.reconciler.is_some())))?;
+        let index = state.deferred.iter().position(|entry| {
+            entry.as_ref().is_some_and(|surface| {
+                state.slots.iter().flatten().find(|slot| slot.surface == *surface).is_none_or(|slot| slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0))
+            })
+        })?;
         state.deferred[index].take()
     }
 
@@ -155,16 +167,12 @@ impl PatchTracker {
         if surface.len() > 256 {
             return Err((surface, tree));
         }
-        let generation = {
-            let mut state = self.state.borrow_mut();
-            state.next_generation = state.next_generation.checked_add(1).unwrap_or(u64::MAX);
-            state.next_generation
-        };
-        self.begin_generation(surface, tree, generation)?;
+        let Some(generation) = issue_generation(&mut self.state.borrow_mut()) else { return Err((surface, tree)) };
+        self.begin_generation(surface, tree, generation, None)?;
         Ok(generation)
     }
 
-    fn begin_generation(&self, surface: String, tree: ComponentTree, generation: u64) -> Result<(), (String, ComponentTree)> {
+    fn begin_generation(&self, surface: String, tree: ComponentTree, generation: u64, reservation: Option<SurfaceReconcileReservation>) -> Result<(), (String, ComponentTree)> {
         let mut state = self.state.borrow_mut();
         let index = if let Some(index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.surface == surface)) {
             index
@@ -175,6 +183,7 @@ impl PatchTracker {
                 generation: 0,
                 operation: semio_framework_job::allocate_operation_id(),
                 preview_sequence: 0,
+                acknowledged_revision: ui_contract::UiRevision::default(),
                 cancel: semio_framework_job::root_cancel_token(),
                 job: None,
             });
@@ -186,7 +195,11 @@ impl PatchTracker {
             return Err((surface, tree));
         }
         let current = state.slots[index].as_mut().and_then(|slot| slot.reconciler.take()).expect("idle surface owns its reconciler");
-        match SurfaceReconcileJob::try_new(current, tree, generation) {
+        let admission = match reservation {
+            Some(reservation) => SurfaceReconcileJob::try_new_reserved(current, tree, reservation),
+            None => SurfaceReconcileJob::try_new(current, tree, generation),
+        };
+        match admission {
             Ok(job) => {
                 let slot = state.slots[index].as_mut().expect("surface slot was selected");
                 slot.generation = generation;
@@ -211,9 +224,9 @@ impl PatchTracker {
         }
         let mut state = self.state.borrow_mut();
         let Some(index) = state.unadmitted.iter().position(Option::is_none) else { return Err((surface, tree)) };
-        state.next_generation = state.next_generation.checked_add(1).unwrap_or(u64::MAX);
-        let generation = state.next_generation;
-        state.unadmitted[index] = Some(UnadmittedSlot { generation, surface, tree: Some(tree) });
+        let Some(generation) = issue_generation(&mut state) else { return Err((surface, tree)) };
+        let Some(reservation) = SurfaceReconcileReservation::try_new(generation) else { return Err((surface, tree)) };
+        state.unadmitted[index] = Some(UnadmittedSlot { generation, surface, tree: Some(tree), reservation: Some(reservation) });
         Ok(generation)
     }
 
@@ -226,9 +239,9 @@ impl PatchTracker {
             return Err(surface);
         }
         let Some(index) = state.unadmitted.iter().position(Option::is_none) else { return Err(surface) };
-        state.next_generation = state.next_generation.checked_add(1).unwrap_or(u64::MAX);
-        let generation = state.next_generation;
-        state.unadmitted[index] = Some(UnadmittedSlot { generation, surface, tree: None });
+        let Some(generation) = issue_generation(&mut state) else { return Err(surface) };
+        let Some(reservation) = SurfaceReconcileReservation::try_new(generation) else { return Err(surface) };
+        state.unadmitted[index] = Some(UnadmittedSlot { generation, surface, tree: None, reservation: Some(reservation) });
         drop(state);
         Ok(MountedReconcileGrant { tracker: self, index, generation, active: true })
     }
@@ -245,20 +258,28 @@ impl PatchTracker {
             state.unadmitted.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.tree.is_some())).and_then(|index| state.unadmitted[index].take().map(|owner| (index, owner)))
         };
         if let Some((index, mut owner)) = retry {
+            if owner.reservation.is_none() {
+                owner.reservation = SurfaceReconcileReservation::try_new(owner.generation);
+                let mut state = self.state.borrow_mut();
+                state.unadmitted[index] = Some(owner);
+                return true;
+            }
             let tree = owner.tree.take().expect("retry selected a rendered tree");
+            let reservation = owner.reservation.take().expect("retry selected its pre-materialization credit");
             let generation = owner.generation;
             let surface = owner.surface;
-            if let Err((surface, tree)) = self.begin_generation(surface, tree, generation) {
+            if let Err((surface, tree)) = self.begin_generation(surface, tree, generation, Some(reservation)) {
                 let mut state = self.state.borrow_mut();
                 debug_assert!(state.unadmitted[index].is_none());
-                state.unadmitted[index] = Some(UnadmittedSlot { generation, surface, tree: Some(tree) });
+                let reservation = SurfaceReconcileReservation::try_new(generation);
+                state.unadmitted[index] = Some(UnadmittedSlot { generation, surface, tree: Some(tree), reservation });
             }
             return true;
         }
         let mut state = self.state.borrow_mut();
         let index = state.drive_cursor;
         state.drive_cursor = (state.drive_cursor + 1) % SURFACE_RECONCILE_ADMISSION_SLOTS;
-        let ready_has_capacity = state.ready.len() < READY_PATCH_CAPACITY;
+        let ready_has_capacity = state.ready.iter().any(Option::is_none);
         let Some(mut slot) = state.slots[index].take() else { return has_work(&state) };
         let Some(mut job) = slot.job.take() else {
             state.slots[index] = Some(slot);
@@ -270,16 +291,20 @@ impl PatchTracker {
             return true;
         }
         let mut preview_sequence = slot.preview_sequence;
-        let context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
-        let outcome = job.drive_one(&context);
+        let mut context = StepContext::new(slot.operation, Generation(slot.generation), StepBudget::new(1, u64::MAX), slot.cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+        let outcome = job.drive_one(&mut context);
         slot.preview_sequence = preview_sequence;
         match outcome {
             SurfaceReconcileJobStep::MoreWork => slot.job = Some(job),
             SurfaceReconcileJobStep::Ready => match job.take_ready() {
                 Ok((reconciler, patch)) => {
+                    if patch.is_none() {
+                        slot.acknowledged_revision = reconciler.revision();
+                    }
                     slot.reconciler = Some(reconciler);
                     if let Some(patch) = patch {
-                        state.ready.push_back((slot.generation, patch));
+                        let target = state.ready.iter_mut().find(|entry| entry.is_none()).expect("ready capacity was preflighted");
+                        *target = Some(ReadySlot { generation: slot.generation, patch });
                     }
                 }
                 Err(job) => slot.job = Some(job),
@@ -302,20 +327,19 @@ impl PatchTracker {
 
     pub fn take_ready_patch(&self) -> Option<ui_contract::UiPatch> {
         let mut state = self.state.borrow_mut();
-        let ready_generation = state.ready.iter().filter(|(_, patch)| !state.closing_instances.iter().flatten().any(|closing| surface_instance(&patch.surface.0) == Some(closing.instance))).map(|(generation, _)| *generation).min()?;
+        let ready_generation = state.ready.iter().flatten().filter(|ready| !state.closing_instances.iter().flatten().any(|closing| surface_instance(&ready.patch.surface.0) == Some(closing.instance))).map(|ready| ready.generation).min()?;
         let pending_generation = state.slots.iter().flatten().filter(|slot| slot.job.is_some()).map(|slot| slot.generation).min();
         if pending_generation.is_some_and(|pending| pending < ready_generation) {
             return None;
         }
-        let index = state.ready.iter().position(|(generation, _)| *generation == ready_generation)?;
-        state.ready.remove(index).map(|(_, patch)| patch)
+        let index = state.ready.iter().position(|ready| ready.as_ref().is_some_and(|ready| ready.generation == ready_generation))?;
+        state.ready[index].take().map(|ready| ready.patch)
     }
 
     pub fn mark_rejected(&self, surface: &str) {
         let mut state = self.state.borrow_mut();
         let Some(index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.surface == surface)) else { return };
-        state.next_generation = state.next_generation.checked_add(1).unwrap_or(u64::MAX);
-        let generation = state.next_generation;
+        let Some(generation) = issue_generation(&mut state) else { return };
         let Some(target_index) = state.terminals.iter().position(Option::is_none) else { return };
         let terminal = {
             let slot = state.slots[index].as_mut().expect("surface slot existed");
@@ -329,7 +353,14 @@ impl PatchTracker {
         }
     }
 
-    pub fn mark_ack(&self, _surface: &str, _revision: u64) {}
+    pub fn mark_ack(&self, surface: &str, revision: u64) {
+        let mut state = self.state.borrow_mut();
+        let Some(slot) = state.slots.iter_mut().flatten().find(|slot| slot.surface == surface) else { return };
+        let current = slot.reconciler.as_ref().map_or_else(|| slot.job.as_ref().map_or(ui_contract::UiRevision::default(), SurfaceReconcileJob::base_revision), SurfaceReconciler::revision);
+        if revision <= current.0 && revision >= slot.acknowledged_revision.0 {
+            slot.acknowledged_revision = ui_contract::UiRevision(revision);
+        }
+    }
 
     pub fn revision(&self, surface: &str) -> ui_contract::UiRevision {
         self.state
@@ -357,8 +388,18 @@ impl PatchTracker {
         if let Some(closing_index) = state.closing_instances.iter().position(Option::is_some) {
             let closing = state.closing_instances[closing_index].expect("closing instance existed");
             let terminal_target = state.terminals.iter().position(Option::is_none);
-            if let (Some(ready_index), Some(target)) = (state.ready.iter().position(|(_, patch)| surface_instance(&patch.surface.0) == Some(closing.instance)), terminal_target) {
-                let (generation, patch) = state.ready.remove(ready_index).expect("matching ready patch");
+            if terminal_target.is_none() {
+                if let Some(index) = state.terminals.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == Some(closing.instance))) {
+                    let terminal = state.terminals[index].as_mut().expect("matching capacity-producing terminal");
+                    terminal.close = true;
+                    if terminal.authority.close_step() && terminal.authority.terminal_is_empty() {
+                        state.terminals[index] = None;
+                    }
+                    return false;
+                }
+            }
+            if let (Some(ready_index), Some(target)) = (state.ready.iter().position(|ready| ready.as_ref().is_some_and(|ready| surface_instance(&ready.patch.surface.0) == Some(closing.instance))), terminal_target) {
+                let ReadySlot { generation, patch } = state.ready[ready_index].take().expect("matching ready patch");
                 state.terminals[target] = Some(TerminalSlot { instance: Some(closing.instance), authority: SurfaceReconcileTerminal::from_patch(patch, generation), close: true });
                 return false;
             }
@@ -374,8 +415,9 @@ impl PatchTracker {
                 let Some(target) = terminal_target else { return false };
                 let mut owner = state.unadmitted[index].take().expect("matching unadmitted tree");
                 let tree = owner.tree.take().expect("rendered owner");
+                let reservation = owner.reservation.take().expect("rendered owner retains aggregate credit");
                 let current = SurfaceReconciler::new(owner.surface.as_str());
-                state.terminals[target] = Some(TerminalSlot { instance: Some(closing.instance), authority: SurfaceReconcileTerminal::from_sources(current, tree, owner.generation), close: true });
+                state.terminals[target] = Some(TerminalSlot { instance: Some(closing.instance), authority: SurfaceReconcileTerminal::from_reserved_sources(current, tree, reservation), close: true });
                 return false;
             }
             if let Some(index) = state.rejected.iter().position(|entry| entry.as_ref().is_some_and(|entry| surface_instance(&entry.surface) == Some(closing.instance))) {
@@ -459,7 +501,7 @@ impl PatchTracker {
             && state.terminals.iter().all(Option::is_none)
             && state.unadmitted.iter().all(Option::is_none)
             && state.deferred.iter().all(Option::is_none)
-            && state.ready.is_empty()
+            && state.ready.iter().all(Option::is_none)
             && state.closing_instances.iter().all(Option::is_none)
     }
 }
@@ -470,7 +512,17 @@ fn has_work(state: &PatchTrackerState) -> bool {
         || state.deferred.iter().any(Option::is_some)
         || state.unadmitted.iter().any(Option::is_some)
         || state.closing_instances.iter().any(Option::is_some)
-        || !state.ready.is_empty()
+        || state.ready.iter().any(Option::is_some)
+}
+
+fn issue_generation(state: &mut PatchTrackerState) -> Option<u64> {
+    if state.generation_exhausted {
+        return None;
+    }
+    let generation = state.next_generation.checked_add(1)?;
+    state.next_generation = generation;
+    state.generation_exhausted = generation == u64::MAX;
+    Some(generation)
 }
 
 fn surface_instance(surface: &str) -> Option<u32> {
@@ -499,6 +551,24 @@ mod tests {
         None
     }
 
+    fn saturate_terminals(tracker: &PatchTracker, instance: u32, generation: u64) {
+        let mut state = tracker.state.borrow_mut();
+        for (index, terminal) in state.terminals.iter_mut().enumerate() {
+            *terminal = Some(TerminalSlot { instance: Some(instance), authority: SurfaceReconcileTerminal::from_reconciler(SurfaceReconciler::new(format!("{instance}:terminal-{index}")), generation + index as u64), close: true });
+        }
+    }
+
+    fn close_instance_to_empty(tracker: &PatchTracker, instance: u32) {
+        tracker.begin_close_instance(instance);
+        for _ in 0..65_536 {
+            tracker.close_step();
+            if tracker.terminal_is_empty() {
+                return;
+            }
+        }
+        panic!("instance {instance} did not reach terminal empty");
+    }
+
     #[test]
     fn mounted_path_advances_one_reconcile_opportunity_per_grant() {
         let tracker = PatchTracker::new();
@@ -521,6 +591,7 @@ mod tests {
                     generation: index as u64 + 1,
                     operation: semio_framework_job::allocate_operation_id(),
                     preview_sequence: 0,
+                    acknowledged_revision: ui_contract::UiRevision::default(),
                     cancel: semio_framework_job::root_cancel_token(),
                     reconciler: Some(SurfaceReconciler::new(format!("{index}:main"))),
                     job: None,
@@ -628,11 +699,11 @@ mod tests {
         tracker.begin("12:ready".into(), leaf("root", "ready")).expect("ready source");
         for _ in 0..128 {
             tracker.drive_one();
-            if !tracker.state.borrow().ready.is_empty() {
+            if tracker.state.borrow().ready.iter().any(Option::is_some) {
                 break;
             }
         }
-        assert!(!tracker.state.borrow().ready.is_empty());
+        assert!(tracker.state.borrow().ready.iter().any(Option::is_some));
         assert!(tracker.defer("12:deferred".into()));
         tracker.retain_unadmitted("12:queued".into(), leaf("root", "queued")).expect("unadmitted");
         tracker.begin("12:active".into(), leaf("root", "active")).expect("active");
@@ -674,5 +745,66 @@ mod tests {
         assert!(released.terminal_is_empty());
         tracker.mark_rejected("44:active");
         assert!(tracker.take_terminal(generation).is_some(), "freed capacity receives the original generation");
+    }
+
+    #[test]
+    fn terminal_full_plus_matching_unadmitted_advances_capacity_before_conversion() {
+        let tracker = PatchTracker::new();
+        saturate_terminals(&tracker, 51, 510_000);
+        tracker.retain_unadmitted("51:queued".into(), leaf("root", "queued")).expect("pre-admitted owner");
+        close_instance_to_empty(&tracker, 51);
+    }
+
+    #[test]
+    fn terminal_full_plus_matching_rejected_advances_capacity_before_conversion() {
+        let tracker = PatchTracker::new();
+        for index in 0..=4 {
+            tracker.begin(format!("52:surface-{index}"), leaf("root", "rejected")).expect("fixed surface slot");
+        }
+        assert!(tracker.state.borrow().rejected.iter().any(Option::is_some), "aggregate cap produces an exact rejected owner");
+        saturate_terminals(&tracker, 52, 520_000);
+        close_instance_to_empty(&tracker, 52);
+    }
+
+    #[test]
+    fn terminal_full_plus_matching_surface_advances_capacity_before_conversion() {
+        let tracker = PatchTracker::new();
+        {
+            let mut state = tracker.state.borrow_mut();
+            state.slots[0] = Some(SurfaceSlot {
+                surface: "53:idle".into(),
+                generation: 530_000,
+                operation: semio_framework_job::allocate_operation_id(),
+                preview_sequence: 0,
+                acknowledged_revision: ui_contract::UiRevision::default(),
+                cancel: semio_framework_job::root_cancel_token(),
+                reconciler: Some(SurfaceReconciler::new("53:idle")),
+                job: None,
+            });
+        }
+        saturate_terminals(&tracker, 53, 531_000);
+        close_instance_to_empty(&tracker, 53);
+    }
+
+    #[test]
+    fn generation_max_is_issued_once_and_repeated_exhaustion_returns_exact_owners_without_mutation() {
+        let tracker = PatchTracker::new();
+        {
+            let mut state = tracker.state.borrow_mut();
+            state.next_generation = u64::MAX - 2;
+        }
+        assert_eq!(tracker.begin("61:first".into(), leaf("root", "first")).expect("near maximum"), u64::MAX - 1);
+        assert_eq!(tracker.retain_unadmitted("61:maximum".into(), leaf("root", "maximum")).expect("maximum once"), u64::MAX);
+        let refused = leaf("root", "post-maximum");
+        let refused_pointer = refused.root.key.as_ptr();
+        let (_, refused) = tracker.begin("61:refused".into(), refused).expect_err("first post-maximum refuses");
+        assert_eq!(refused.root.key.as_ptr(), refused_pointer);
+        let repeated = leaf("root", "repeated");
+        let repeated_pointer = repeated.root.key.as_ptr();
+        let (_, repeated) = tracker.retain_unadmitted("61:repeated".into(), repeated).expect_err("repeated refusal is stable");
+        assert_eq!(repeated.root.key.as_ptr(), repeated_pointer);
+        let state = tracker.state.borrow();
+        assert_eq!(state.next_generation, u64::MAX);
+        assert!(state.generation_exhausted);
     }
 }

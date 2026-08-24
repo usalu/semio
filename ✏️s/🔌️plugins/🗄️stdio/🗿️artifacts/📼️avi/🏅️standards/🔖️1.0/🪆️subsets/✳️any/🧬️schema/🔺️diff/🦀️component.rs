@@ -263,6 +263,11 @@ pub struct AviStreamDiff {
     pub strf: Option<AviStreamFormat>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub chunks: Option<AviChunksDiff>,
+    /// 📦️ Whole-value replace, same treatment as `strh`/`strf` — this stream's retained `strl`
+    /// auxiliaries (`vprp`, `JUNK`, ...) have no addressable per-item mutation surface (see
+    /// `AviMutation`'s module doc comment), so they only ever change as a unit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub strl_extra: Option<Vec<RiffChunk>>,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -271,6 +276,7 @@ fn apply_stream_diff(base: &AviStream, d: &AviStreamDiff) -> AviStream {
         strh: d.strh.clone().unwrap_or_else(|| base.strh.clone()),
         strf: d.strf.clone().unwrap_or_else(|| base.strf.clone()),
         chunks: d.chunks.as_ref().map_or_else(|| base.chunks.clone(), |cd| apply_indexed(&base.chunks, cd, apply_chunk_diff)),
+        strl_extra: d.strl_extra.clone().unwrap_or_else(|| base.strl_extra.clone()),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -281,11 +287,16 @@ fn apply_stream_diff_mut(item: &mut AviStream, d: &AviStreamDiff) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn between_stream(a: &AviStream, b: &AviStream) -> AviStreamDiff {
     let chunks_diff = between_indexed(&a.chunks, &b.chunks, between_chunk, chunk_diff_is_empty);
-    AviStreamDiff { strh: (a.strh != b.strh).then(|| b.strh.clone()), strf: (a.strf != b.strf).then(|| b.strf.clone()), chunks: (!chunks_diff.is_empty()).then_some(chunks_diff) }
+    AviStreamDiff {
+        strh: (a.strh != b.strh).then(|| b.strh.clone()),
+        strf: (a.strf != b.strf).then(|| b.strf.clone()),
+        chunks: (!chunks_diff.is_empty()).then_some(chunks_diff),
+        strl_extra: (a.strl_extra != b.strl_extra).then(|| b.strl_extra.clone()),
+    }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn stream_diff_is_empty(d: &AviStreamDiff) -> bool {
-    d.strh.is_none() && d.strf.is_none() && d.chunks.is_none()
+    d.strh.is_none() && d.strf.is_none() && d.chunks.is_none() && d.strl_extra.is_none()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_stream_diff(a: &mut AviStreamDiff, b: AviStreamDiff) {
@@ -294,6 +305,9 @@ fn absorb_stream_diff(a: &mut AviStreamDiff, b: AviStreamDiff) {
     }
     if b.strf.is_some() {
         a.strf = b.strf;
+    }
+    if b.strl_extra.is_some() {
+        a.strl_extra = b.strl_extra;
     }
     match (&mut a.chunks, b.chunks) {
         (Some(existing), Some(other)) => absorb_indexed(existing, other, absorb_chunk_diff, apply_chunk_diff_mut),
@@ -318,6 +332,11 @@ pub struct AviDiff {
     pub idx1_present: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unknown_chunks: Option<AviUnknownChunksDiff>,
+    /// 📦️ Whole-value replace, same treatment as `main_header` — the retained `hdrl` auxiliaries
+    /// (`JUNK`, ...) have no addressable per-item mutation surface (see `AviMutation`'s module doc
+    /// comment), so they only ever change as a unit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hdrl_extra: Option<Vec<RiffChunk>>,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -353,6 +372,7 @@ impl MutationDiff<AviSnapshot> for AviDiff {
             streams: self.streams.as_ref().map_or_else(|| base.streams.clone(), |sd| apply_indexed(&base.streams, sd, apply_stream_diff)),
             idx1_present: self.idx1_present.unwrap_or(base.idx1_present),
             unknown_chunks: self.unknown_chunks.as_ref().map_or_else(|| base.unknown_chunks.clone(), |cd| apply_indexed(&base.unknown_chunks, cd, apply_riff_diff)),
+            hdrl_extra: self.hdrl_extra.clone().unwrap_or_else(|| base.hdrl_extra.clone()),
         })
     }
 
@@ -362,6 +382,9 @@ impl MutationDiff<AviSnapshot> for AviDiff {
         }
         if other.idx1_present.is_some() {
             self.idx1_present = other.idx1_present;
+        }
+        if other.hdrl_extra.is_some() {
+            self.hdrl_extra = other.hdrl_extra;
         }
         match (&mut self.streams, other.streams) {
             (Some(existing), Some(other_streams)) => absorb_indexed(existing, other_streams, absorb_stream_diff, apply_stream_diff_mut),
@@ -393,6 +416,7 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
             streams: (!streams_diff.is_empty()).then_some(streams_diff),
             idx1_present: (base.idx1_present != other.idx1_present).then_some(other.idx1_present),
             unknown_chunks: (!chunks_diff.is_empty()).then_some(chunks_diff),
+            hdrl_extra: (base.hdrl_extra != other.hdrl_extra).then(|| other.hdrl_extra.clone()),
         }
     }
     fn inverse(&self, base: &AviSnapshot) -> Self {
@@ -410,10 +434,13 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
         if let Some(v) = &self.unknown_chunks {
             after.unknown_chunks = apply_indexed(&base.unknown_chunks, v, apply_riff_diff);
         }
+        if let Some(v) = &self.hdrl_extra {
+            after.hdrl_extra = v.clone();
+        }
         Self::between(&after, base)
     }
     fn is_empty(&self) -> bool {
-        self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none()
+        self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none() && self.hdrl_extra.is_none()
     }
 }
 
@@ -456,9 +483,12 @@ mod tests {
                 rc_frame_top: 0,
                 rc_frame_right: 16,
                 rc_frame_bottom: 16,
+                rc_frame_width: 16,
+                strh_extra: vec![],
             },
             strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 0, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
             chunks,
+            strl_extra: vec![],
         }
     }
 
@@ -482,6 +512,7 @@ mod tests {
             streams,
             idx1_present: true,
             unknown_chunks: vec![],
+            hdrl_extra: vec![],
         }
     }
 
@@ -492,16 +523,19 @@ mod tests {
         b.main_header.width = 32;
         b.streams[0].chunks.remove(0);
         b.streams[0].chunks.push(chunk(9));
+        b.streams[0].strl_extra.push(RiffChunk { fourcc: "vprp".into(), data: vec![7] });
         b.streams.remove(1);
         b.streams.push(stream(vec![chunk(5)]));
         b.idx1_present = false;
         b.unknown_chunks.push(RiffChunk { fourcc: "JUNK".into(), data: vec![1] });
+        b.hdrl_extra.push(RiffChunk { fourcc: "JUNK".into(), data: vec![2] });
 
         let d = <AviDiff as DiffAlgebra<AviSnapshot>>::between(&a, &b);
         assert!(d.main_header.is_some());
         assert!(d.streams.is_some());
         assert!(d.idx1_present.is_some());
         assert!(d.unknown_chunks.is_some());
+        assert!(d.hdrl_extra.is_some());
         assert_eq!(d.apply(&a).unwrap(), b);
         assert_eq!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&b, &a).apply(&b).unwrap(), a);
         assert!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&a, &a).is_empty());

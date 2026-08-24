@@ -171,7 +171,7 @@ impl Default for DbLimits {
 /// @emoji 📏️ Validates `len` against `max` BEFORE the caller allocates anything sized by it —
 /// shared by every length check across the `db` family so the "validate before allocating"
 /// invariant has exactly one implementation to audit.
-// 🚫️async: E1 pure accessor called from sync `run_blocking_op` closures throughout `db_storage` — see R9
+// 🚫️async: E1 pure accessor called from bounded storage executors — see R9
 pub fn check_len(len: u64, max: u64, what: &'static str) -> Result<(), DbError> {
     if len > max {
         return Err(DbError::LimitExceeded(what));

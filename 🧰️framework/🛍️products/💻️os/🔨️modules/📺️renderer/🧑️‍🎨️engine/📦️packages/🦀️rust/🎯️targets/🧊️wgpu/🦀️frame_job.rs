@@ -44,11 +44,12 @@ pub(crate) struct FrameDirectives {
 pub(crate) struct FrameBuildJob {
     wheel_zoom_deadline_cleared: bool,
     complete: Option<FrameDirectives>,
+    closing: bool,
 }
 
 impl FrameBuildJob {
     pub(crate) fn new(inputs: FrameBuildInputs) -> Self {
-        Self { wheel_zoom_deadline_cleared: inputs.wheel_zoom_deadline_ms > 0.0 && inputs.now_ms >= inputs.wheel_zoom_deadline_ms, complete: None }
+        Self { wheel_zoom_deadline_cleared: inputs.wheel_zoom_deadline_ms > 0.0 && inputs.now_ms >= inputs.wheel_zoom_deadline_ms, complete: None, closing: false }
     }
 
     pub(crate) fn take_directives(&mut self) -> Option<FrameDirectives> {
@@ -80,7 +81,29 @@ impl InteractiveJob for FrameBuildJob {
         }
         self.complete = Some(FrameDirectives { wheel_zoom_deadline_cleared: self.wheel_zoom_deadline_cleared });
         cx.consume_fuel(1);
-        StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() })
+        StepOutcome::Complete(CommitCandidate {
+            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+        })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 && self.complete.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if FrameBuildJob::close_step(self) {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.complete.is_none()
     }
 }
 //#endregion 🧩️FrameBuildJob

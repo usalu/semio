@@ -260,6 +260,24 @@ pub mod artifacts {
         }
     }
     #[path = "."]
+    pub mod gltf {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v2_0 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
     pub mod html {
         #[path = "."]
         pub mod standards {

@@ -37,7 +37,9 @@
         "rcFrameLeft": 0,
         "rcFrameTop": 0,
         "rcFrameRight": 2,
-        "rcFrameBottom": 2
+        "rcFrameBottom": 2,
+        "rcFrameWidth": 16,
+        "strhExtra": []
       },
       "strf": {
         "format": "bitmapInfo",
@@ -74,7 +76,8 @@
           ],
           "keyframe": true
         }
-      ]
+      ],
+      "strlExtra": []
     }
   ],
   "idx1Present": true,
@@ -86,5 +89,6 @@
         0
       ]
     }
-  ]
+  ],
+  "hdrlExtra": []
 }

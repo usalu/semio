@@ -107,9 +107,10 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: AviDiff = serde_json::from_str(DIFF).expect("committed AVI diff decodes");
-    assert!(decoded.main_header.is_none() && decoded.idx1_present.is_none() && decoded.unknown_chunks.is_none(), "avi/set-snapshot: the committed diff must touch nothing but the streams triple");
+    assert!(decoded.main_header.is_none() && decoded.idx1_present.is_none() && decoded.unknown_chunks.is_none() && decoded.hdrl_extra.is_none(), "avi/set-snapshot: the committed diff must touch nothing but the streams triple");
     let streams = decoded.streams.as_ref().expect("the committed diff carries a streams triple");
     assert!(streams.removed.is_empty() && streams.added.is_empty() && streams.modified.len() == 1, "avi/set-snapshot: the single stream must be patched in place, never removed and re-added");
+    assert!(streams.modified[0].diff.strl_extra.is_none(), "avi/set-snapshot: this fixture never touches strl_extra");
     let reencoded = serde_json::to_value(&decoded).expect("AVI diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed AVI diff reparses");
     assert_eq!(reencoded, original, "avi/set-snapshot: committed diff JSON is not canonical");

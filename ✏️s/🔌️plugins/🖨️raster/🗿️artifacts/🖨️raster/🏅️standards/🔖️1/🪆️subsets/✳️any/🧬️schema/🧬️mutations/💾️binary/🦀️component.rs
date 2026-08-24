@@ -4796,6 +4796,101 @@ mod tests {
     }
 
     #[test]
+    fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact() {
+        let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
+        let mut deepest = dsl::DslValue::String("deep-output-owner".into());
+        for _ in 1..RASTER_MAXIMUM_NESTED_DEPTH {
+            deepest = dsl::DslValue::Array(vec![deepest]);
+        }
+        let mut params = RasterOwnedMap::new();
+        let mut first_param_pointer = std::ptr::null();
+        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+            let key = format!("output-param-{index:02}");
+            if index == 0 {
+                first_param_pointer = key.as_ptr();
+            }
+            let value = if index == 0 { std::mem::replace(&mut deepest, dsl::DslValue::Null) } else { dsl::DslValue::String(format!("output-value-{index}")) };
+            params.insert(key, value).expect("maximum populated output parameter map remains exactly admitted");
+        }
+        let plus_one_param_key = String::from("output-param-plus-one");
+        let plus_one_param_pointer = plus_one_param_key.as_ptr();
+        let plus_one_param_value = String::from("rejected-output-value");
+        let plus_one_param_value_pointer = plus_one_param_value.as_ptr();
+        let rejected_param = params.insert(plus_one_param_key, dsl::DslValue::String(plus_one_param_value)).expect_err("output parameter capacity plus one returns both exact owners");
+        assert_eq!(rejected_param.key.as_ptr(), plus_one_param_pointer);
+        let rejected_param_value = match &rejected_param.value {
+            dsl::DslValue::String(value) => value,
+            _ => unreachable!("rejected output parameter remains the exact string variant"),
+        };
+        assert_eq!(rejected_param_value.as_ptr(), plus_one_param_value_pointer, "rejected output parameter returns the exact value allocation");
+        assert_eq!(rejected_param.reason, "raster-map.item-capacity");
+        let mut rejected_param_retirement = RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: rejected_param.key, value: Some(rejected_param.value) });
+        assert!(matches!(
+            store::ErasedSnapshotRetirement::close_step(&mut rejected_param_retirement, 0, 0).expect("zero-grant output parameter close preserves the rejected pair"),
+            store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
+        ));
+        close_raster_retirement(&mut rejected_param_retirement);
+        drop(rejected_param_retirement);
+
+        let mut assets = RasterOwnedMap::new();
+        let mut first_asset_pointer = std::ptr::null();
+        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+            let key = format!("output-asset-{index:02}");
+            if index == 0 {
+                first_asset_pointer = key.as_ptr();
+            }
+            assets
+                .insert(
+                    key,
+                    store::ArtifactChild::new(
+                        format!("output-child-{index:02}"),
+                        store::os_io::ArtifactRef { artifact_id: format!("output-artifact-{index:02}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+                    ),
+                )
+                .expect("maximum populated output asset map remains exactly admitted");
+        }
+        let plus_one_asset_key = String::from("output-asset-plus-one");
+        let plus_one_asset_pointer = plus_one_asset_key.as_ptr();
+        let plus_one_asset_child = store::ArtifactChild::new(
+            "output-child-plus-one".into(),
+            store::os_io::ArtifactRef { artifact_id: "output-artifact-plus-one".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+        );
+        let plus_one_asset_child_pointer = plus_one_asset_child.child_id.as_ptr();
+        let rejected_asset = assets.insert(plus_one_asset_key, plus_one_asset_child).expect_err("output asset capacity plus one returns both exact owners");
+        assert_eq!(rejected_asset.key.as_ptr(), plus_one_asset_pointer);
+        assert_eq!(rejected_asset.value.child_id.as_ptr(), plus_one_asset_child_pointer, "rejected output asset returns the exact child allocation");
+        assert_eq!(rejected_asset.reason, "raster-map.item-capacity");
+        let mut rejected_asset_retirement = RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: rejected_asset.key, child: Some(rejected_asset.value) });
+        assert!(matches!(
+            store::ErasedSnapshotRetirement::close_step(&mut rejected_asset_retirement, 0, 0).expect("zero-grant mounted output close preserves the rejected child pair"),
+            store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
+        ));
+        close_raster_retirement(&mut rejected_asset_retirement);
+        drop(rejected_asset_retirement);
+
+        let layer = RasterLayerNode::Adjustment { id: "retained-output".into(), name: "Retained Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "deep".into(), params };
+        let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets };
+        assert_eq!(snapshot.require_empty_output_shell(), Err(crate::artifacts::raster::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR));
+        let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| snapshot.require_empty_output_shell().expect(crate::artifacts::raster::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR)));
+        assert!(panic.is_err(), "public DSL panic path contains the fail-closed populated output before allocation");
+        let params = match &snapshot.layers[0] {
+            RasterLayerNode::Adjustment { params, .. } => params,
+            _ => unreachable!("output fixture remains an adjustment"),
+        };
+        assert_eq!(params.entry_at(0).expect("fault and panic retain the first parameter owner").0.as_ptr(), first_param_pointer);
+        assert_eq!(snapshot.assets.entry_at(0).expect("all mounted exporters retain the first asset owner").0.as_ptr(), first_asset_pointer);
+
+        let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
+        assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 0, 0).expect("cancelled output preserves every populated snapshot owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        close_raster_retirement(&mut retirement);
+        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&retirement));
+        drop(retirement);
+        assert_eq!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0, "populated output rejection and close return every standalone control");
+        assert_eq!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire), 0, "populated output rejection and close return every stack page credit");
+        assert_eq!(RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0, "populated output rejection never claims or leaks an initialization control");
+    }
+
+    #[test]
     fn raster_maximum_combined_layer_and_value_depth_retires_to_terminal() {
         let mut value = dsl::DslValue::String("terminal".into());
         for _ in 1..RASTER_MAXIMUM_NESTED_DEPTH {

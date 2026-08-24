@@ -47,6 +47,13 @@ pub enum SemioTextMutation {
     AddMark(add_mark::mutation::AddMark),
     RemoveMark(remove_mark::mutation::RemoveMark),
 }
+
+/// 🏷️ Kebab-case spelling of every `SemioTextMutation` variant, in declaration order — the
+/// vocabulary the `semio-v1-text` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and
+/// `mutate-semio-text`'s exhaustive test case measures itself against. `kinds_match_the_enum_and_
+/// the_catalog` below is what keeps this list honest against the enum, since the framework never
+/// parses Rust.
+pub const KINDS: &[&str] = &["insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -184,6 +191,22 @@ mod tests {
         assert_eq!(mutation.semantics().kind, "remove-run");
         assert_eq!(mutation.semantics().record, "RemovedRun");
         assert_eq!(mutation.target(), vec!["2".to_string()]);
+    }
+
+    /// 🏷️ `KINDS` (this facet's own const, consumed by `mutate-semio-text`'s adapter) must name
+    /// every declared variant, in the exact order and spelling `#[derive(dsl::Mutations)]` assigns —
+    /// the framework never parses Rust, so this is what keeps the catalog honest.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = SemioTextMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
     }
 }
 //#endregion 🧪️Tests

@@ -438,7 +438,11 @@ mod tests {
     use {DurabilityClass, Frontier};
 
     fn pages(bytes: &[u8]) -> db_storage::DbIoPages {
-        db_storage::DbIoPages::try_new(bytes.to_vec()).expect("test compaction bytes must fit the fixed page owner")
+        let mut writer = db_storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).expect("test compaction writer admitted");
+        for fragment in bytes.chunks(db_storage::DB_IO_PAGE_BYTES) {
+            assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
+        }
+        writer.finish().unwrap()
     }
 
     async fn doc(id: &str) -> ArtifactId {

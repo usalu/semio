@@ -877,6 +877,9 @@ pub struct PreparedRenderJob {
     metadata_cursor: usize,
     items_per_step: usize,
     receiver: PreparedRenderReceiver,
+    terminal_identity: Option<[u8; 16]>,
+    terminal_state: Option<semio_framework_job::RetainedJobPayload>,
+    closing: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -922,6 +925,9 @@ impl PreparedRenderJob {
             metadata_cursor: 0,
             items_per_step: items_per_step.max(1),
             receiver: PreparedRenderReceiver::default(),
+            terminal_identity: None,
+            terminal_state: None,
+            closing: false,
         }
     }
 
@@ -1184,30 +1190,39 @@ impl PreparedRenderJob {
         }
     }
 
-    fn complete(&mut self) -> StepOutcome {
-        let input = self.input.take().expect("prepared render input");
-        let revision = input.scene_revision;
-        let generation = input.preview_generation;
-        let packet = PreparedRenderPacket {
-            scene_revision: revision,
-            preview_generation: generation,
-            damage: input.damage,
-            clips: input.clips,
-            directives: input.directives,
-            uploads: input.uploads,
-            evictions: input.evictions,
-            draw: input.draw,
-            overlay: input.overlay,
-            time_seconds: input.time_seconds,
-            usage: self.usage,
-            limits: input.limits,
-            retirement_phase: 0,
-        };
-        self.receiver.publish(packet);
-        let mut output = Vec::with_capacity(16);
-        output.extend_from_slice(&revision.to_le_bytes());
-        output.extend_from_slice(&generation.to_le_bytes());
-        StepOutcome::Complete(CommitCandidate { state: output.clone(), output })
+    fn complete(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if self.terminal_identity.is_none() {
+            let input = self.input.take().expect("prepared render input");
+            let revision = input.scene_revision;
+            let generation = input.preview_generation;
+            let packet = PreparedRenderPacket {
+                scene_revision: revision,
+                preview_generation: generation,
+                damage: input.damage,
+                clips: input.clips,
+                directives: input.directives,
+                uploads: input.uploads,
+                evictions: input.evictions,
+                draw: input.draw,
+                overlay: input.overlay,
+                time_seconds: input.time_seconds,
+                usage: self.usage,
+                limits: input.limits,
+                retirement_phase: 0,
+            };
+            self.receiver.publish(packet);
+            let mut identity = [0; 16];
+            identity[..8].copy_from_slice(&revision.to_le_bytes());
+            identity[8..].copy_from_slice(&generation.to_le_bytes());
+            self.terminal_identity = Some(identity);
+        }
+        let identity = self.terminal_identity.as_ref().expect("prepared render terminal identity");
+        if self.terminal_state.is_none() {
+            self.terminal_state = Some(cx.payload_from_bytes(semio_framework_job::JobPayloadStream::CommitState, identity).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState)));
+            return StepOutcome::Yield;
+        }
+        let output = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::CommitOutput, identity).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput));
+        StepOutcome::Complete(CommitCandidate { state: self.terminal_state.take().expect("prepared render retained state"), output })
     }
 }
 
@@ -1216,8 +1231,12 @@ impl InteractiveJob for PreparedRenderJob {
         if cx.is_cancelled() {
             return StepOutcome::Cancelled;
         }
+        if self.terminal_identity.is_some() {
+            return self.complete(cx);
+        }
         if self.input().preview_generation != cx.generation().0 {
-            return StepOutcome::Fault(JobFault { detail: b"prepared render generation is stale".to_vec() });
+            let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"prepared render generation is stale").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            return StepOutcome::Fault(JobFault { detail });
         }
         if let Some(producer) = self.input.as_mut().expect("prepared render input").raster_producers.front_mut() {
             if cx.should_yield() {
@@ -1233,7 +1252,10 @@ impl InteractiveJob for PreparedRenderJob {
                     input.uploads.push(upload);
                     StepOutcome::Yield
                 }
-                PreparedRasterProducerStep::Fault(fault) => StepOutcome::Fault(JobFault { detail: fault.as_bytes().to_vec() }),
+                PreparedRasterProducerStep::Fault(fault) => {
+                    let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, fault.as_bytes()).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                    StepOutcome::Fault(JobFault { detail })
+                }
             };
             if cx.is_cancelled() {
                 return StepOutcome::Cancelled;
@@ -1243,16 +1265,53 @@ impl InteractiveJob for PreparedRenderJob {
         let mut processed = 0usize;
         while processed < self.items_per_step && !cx.should_yield() {
             let Some(usage) = self.measure_next() else {
-                return self.complete();
+                return self.complete(cx);
             };
             self.include_usage(usage);
             if !self.usage.fits(self.input().limits) {
-                return StepOutcome::Fault(JobFault { detail: b"prepared render credits exceeded".to_vec() });
+                let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"prepared render credits exceeded").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                return StepOutcome::Fault(JobFault { detail });
             }
             processed += 1;
             cx.consume_fuel(1);
         }
         StepOutcome::Yield
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if let Some(state) = self.terminal_state.as_mut() {
+            if !state.terminal_is_empty() {
+                return match state.close_step(maximum_items, maximum_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                };
+            }
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.terminal_state = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.terminal_identity.is_some() {
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.terminal_identity = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if PreparedRenderJob::close_step(self) {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.terminal_state.is_none() && self.terminal_identity.is_none() && PreparedRenderJob::terminal_is_empty(self)
     }
 }
 //#endregion ⚙️PreparationJob

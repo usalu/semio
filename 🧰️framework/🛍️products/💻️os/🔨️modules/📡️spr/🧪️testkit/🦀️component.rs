@@ -588,6 +588,20 @@ async fn fisher_yates_shuffle(rng: &mut SplitMix64, items: &mut [usize]) {
     }
 }
 
+/// 🧺️ Drains every applied envelope out of `dag` via [`crate::os_spr::MutationDag::take_next_applied`],
+/// mirroring the one-at-a-time cursor contract (`Envelope` collects, `SeededIdentity` is a no-op,
+/// `Complete` ends the loop).
+fn take_all_applied(dag: &mut crate::os_spr::MutationDag) -> Vec<crate::os_spr::MutationEnvelope> {
+    let mut envelopes = Vec::new();
+    loop {
+        match dag.take_next_applied() {
+            crate::os_spr::MutationDagAppliedStep::Envelope(envelope) => envelopes.push(envelope),
+            crate::os_spr::MutationDagAppliedStep::SeededIdentity => {}
+            crate::os_spr::MutationDagAppliedStep::Complete => return envelopes,
+        }
+    }
+}
+
 /// ✅️ LAW: `MutationDag` converges to the same fully-applied set regardless of insertion order, for
 /// `permutation_count` random shuffles of `envelopes` (which must form a closed dependency set —
 /// see `OpDagGen::generate`).
@@ -602,7 +616,7 @@ pub async fn assert_op_dag_convergence(envelopes: &[crate::os_spr::MutationEnvel
         for index in order {
             dag.insert(envelopes[index].clone()).expect("a closed dependency set inserted with unique ids must never duplicate");
         }
-        let applied: std::collections::BTreeSet<String> = dag.drain_applied_envelopes().iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
+        let applied: std::collections::BTreeSet<String> = take_all_applied(&mut dag).iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
         assert_eq!(applied, expected, "MutationDag must converge to the same fully-applied set regardless of insertion order");
     }
 }
@@ -741,7 +755,7 @@ pub async fn assert_policy_matrix(rejects: impl AsyncFn(crate::os_spr::MergePoli
 /// shuffled order) into a fresh [`crate::os_spr::MutationDag`] and then fold the drained batch
 /// through `fold` converge on the same state — `fold` is responsible for its own canonicalization
 /// (typically an HLC sort, mirroring `ingest_remote`'s own §C6 step 3) since
-/// `drain_applied_envelopes`'s own order is only causally valid, not canonical.
+/// `take_next_applied`'s own order is only causally valid, not canonical.
 pub async fn assert_merge_convergence<P: PartialEq + std::fmt::Debug>(seed: u64, peer_count: usize, envelopes: &[crate::os_spr::MutationEnvelope], fold: impl Fn(&[crate::os_spr::MutationEnvelope]) -> P) {
     let mut rng = SplitMix64(seed);
     let mut expected: Option<P> = None;
@@ -752,7 +766,7 @@ pub async fn assert_merge_convergence<P: PartialEq + std::fmt::Debug>(seed: u64,
         for index in order {
             dag.insert(envelopes[index].clone()).expect("assert_merge_convergence requires a closed dependency set with unique ids");
         }
-        let batch = dag.drain_applied_envelopes();
+        let batch = take_all_applied(&mut dag);
         let state = fold(&batch);
         match &expected {
             None => expected = Some(state),

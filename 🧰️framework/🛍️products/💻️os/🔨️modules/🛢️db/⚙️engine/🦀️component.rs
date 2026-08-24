@@ -1298,11 +1298,11 @@ pub enum DatabaseCatalogReadCloseStep {
 pub struct DatabaseCatalogReadResult {
     storage: Arc<db_storage::DbBackend>,
     key: DatabaseCatalogRootKey,
-    root: Result<Option<(Vec<u8>, EpochFence)>, DbError>,
+    root: Result<Option<(db_storage::DbIoPages, EpochFence)>, DbError>,
 }
 
 impl DatabaseCatalogReadResult {
-    pub fn into_parts(self) -> (Arc<db_storage::DbBackend>, DatabaseCatalogRootKey, Result<Option<(Vec<u8>, EpochFence)>, DbError>) {
+    pub fn into_parts(self) -> (Arc<db_storage::DbBackend>, DatabaseCatalogRootKey, Result<Option<(db_storage::DbIoPages, EpochFence)>, DbError>) {
         (self.storage, self.key, self.root)
     }
 }
@@ -3455,10 +3455,13 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         };
         let (storage, _catalog_key, catalog_root) = catalog_probe.await?.into_parts();
         let (epoch, entries) = match catalog_root? {
-            Some((bytes, epoch)) => (epoch, decode_catalog(&bytes).await?),
+            Some((bytes, epoch)) => {
+                let prepared = db_storage::db_io_prepare_platform(&bytes)?.await?;
+                (epoch, decode_catalog(prepared.as_slice()).await?)
+            }
             None => {
                 let empty = encode_catalog(&[]).await?;
-                let pages = db_storage::DbIoPages::try_new(empty).map_err(|_| DbError::LimitExceeded("catalog bootstrap pages"))?;
+                let pages = db_storage::db_io_copy_pages(&empty)?.await?;
                 let epoch = db_actor::block_on(async { storage.catalog().await.cas_root(EpochFence::INITIAL, pages).await })?;
                 (epoch, Vec::new())
             }
@@ -3549,7 +3552,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             let commit = async {
                 entries.push(CatalogEntry { document: document.clone(), created_at_ms: now_ms().await });
                 let bytes = encode_catalog(&entries).await?;
-                let pages = db_storage::DbIoPages::try_new(bytes).map_err(|_| DbError::LimitExceeded("catalog persist pages"))?;
+                let pages = db_storage::db_io_copy_pages(&bytes)?.await?;
                 self.storage.catalog().await.cas_root(epoch, pages).await
             };
             #[cfg(not(target_arch = "wasm32"))]
@@ -6165,7 +6168,11 @@ mod tests {
     async fn storage_accessor_reaches_the_same_backend_payload_store() {
         let root = tempdir("storage-accessor").await;
         let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
-        let hash = db_actor::block_on(async { database.storage().await.payload().await.put(db_storage::DbIoPages::try_new(b"hello storage accessor".to_vec()).ok().unwrap()).await }).unwrap();
+        let hash = db_actor::block_on(async {
+            let pages = db_storage::db_io_copy_pages(b"hello storage accessor").unwrap().await.unwrap();
+            database.storage().await.payload().await.put(pages).await
+        })
+        .unwrap();
         assert_eq!(db_actor::block_on(async { database.storage().await.payload().await.get(&hash).await }).unwrap(), b"hello storage accessor");
     }
     //#endregion 🔖️Compact + Sync

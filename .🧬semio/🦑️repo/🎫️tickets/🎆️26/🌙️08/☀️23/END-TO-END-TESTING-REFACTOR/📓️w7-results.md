@@ -7,21 +7,21 @@ full decode/re-encode identity scenario that forbids byte pass-through.
 
 ## Verified totals
 
-Every stdio artifact is covered: **38 mutation subsets**, one per standard-and-subset that declares a
-vocabulary. Full sweep, run after the last agent landed:
+Every stdio artifact, glTF, and all eight semio Pattern-B subsets are covered. Final sweep:
 
 ```
 $ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio          # exit 0
-[test] not-exercised …/💾️binary/🧪️tests/mutate-binary-raw (recorded no-oracle decision …)
-[test] not-exercised …/📄txt/🧪️tests/mutate-txt-utf-8 (recorded no-oracle decision …)
-[test] level=exhaustive cases=47 executed=764 passed=764 failed=0 errored=0 parity=0/0 not-exercised=2
+[test] level=exhaustive cases=55 executed=779 passed=779 failed=0 errored=0 parity=0/0 not-exercised=9
 
 $ bun ./📜️script.ts contract                                    # exit 0
 0 high-priority breach(es) across 0 rule(s)
 
 $ cargo test --features oracles --lib                           # oracle crate
-test result: ok. 131 passed; 0 failed; 1 ignored
+test result: ok. 138 passed; 0 failed; 1 ignored
 ```
+
+The 9 not-exercised are the recorded no-oracle cases (💾️binary, 📄txt and the semio subsets), which
+by definition have no oracle to run and whose evidence is discharged by the subject phase.
 
 `parity=0/0` is not a pass — it is the honest record that no subject ran. See "Honest limits".
 
@@ -299,6 +299,151 @@ blocked by the os-kernel refactor, so they still cannot run. In their place the 
 directly from this ticket folder: **all 30 catalogs match their `KINDS` const exactly and are
 complete against their enum's variant count.** That audit is coordinator tooling and deliberately
 not part of the framework, which must never parse implementation source.
+
+## Fixes landed against the defects this effort found
+
+| Defect | Fix | Verified? |
+|---|---|---|
+| `encode_tiff` single-IFD only | real multi-IFD chain, offsets patched, stale `EncodeScopeNote`s corrected | oracle 17/17 green; no compiler check — os-kernel blocks the crate |
+| `decode_avi` rejects real ffmpeg output | all three `strh` widths handled; re-serializes at the width it read | oracle 27/27, contract 0 breaches; no compiler check |
+| `AviSnapshot` drops nested `vprp`/`JUNK` | `hdrl_extra`/`strl_extra` retained verbatim; vocabulary deliberately unchanged | as above |
+| `xml_escape_attr` loses `\t`/`\n`/`\r` | attribute values escape all three as character references; text escapes only `\r` | oracle 17/17 + 23/23; the fix itself is only exercised by the blocked subject phase |
+| `js-sys` inherited but never declared | declared directly in `✒️writer`, matching every peer crate | `cargo metadata` exits 0 — workspace loads again |
+| os-kernel `semio_framework::` cycle | paged-command region moved into `📡️spr/🧵️channel`, re-exported from `🎠️kernel` | **117 → 64 errors**; `channel`/`kernel` clean |
+
+### A correction the AVI fix produced
+
+This ticket's own earlier report — and the brief written from it — stated that ffmpeg's 56-byte `strh`
+simply omits `rcFrame`. That is wrong. Bytes 48–56 of the real fixture are `00000000 e001b001`, which
+decode as four 16-bit SHORTs: `(0, 0, 480, 432)`, the video's real frame rectangle. It is the
+pre-Win32 VFW `AVISTREAMHEADER` form, where `rcFrame` is SHORTs rather than LONGs.
+
+Implementing the brief as written would have discarded real data while appearing to fix a bug. The
+agent checked the bytes instead of trusting the prose, which is the only reason it was caught.
+
+## Coverage beyond the 38 enum-based subsets
+
+**glTF** declared a catalog of **7 kinds, not 120** — deliberately. All 120 leaves exist on disk with
+complete mutation/diff/inverse files and no `todo!`s, but only 7 are mounted in the crate; wiring the
+other 113 requires editing `📦️glue.rs`, which belongs to the migration ticket that owns it. An
+inflated catalog would fail the completeness gate. An honest one passes and records the real
+position. It also declined to register the `gltf` crate despite proving it independent of our codec,
+because linking it needed a `Cargo.toml` edit outside its authority, and correctly ruled out
+`serde_json` because this subset's own codec depends on it.
+
+**semio Pattern-B** subsets gained the `apply_semio_<subset>_mutation` entry points they lacked —
+seven of the eight had none, so their mutations could be diffed and inverted but never applied. All
+seven were confirmed to be real implementations with handcrafted diff/inverse pairs and committed
+per-leaf fixtures, not stubs. Cases follow, each on a recorded no-oracle decision, since no third
+party reads `.dsl.semio`/`.pack.semio`.
+
+## A misattribution I reported as fact
+
+I told the user, twice, that a peer session was actively refactoring `🏪️store/🦀️component.rs` and
+that the os-kernel error count was swinging 117 → 64 → 114 as their work landed. That was wrong.
+
+The 01:25 mtime I read as peer activity was **my own assessment agent's edits** — it had made 20
+attempted fixes, pushing the count 63 → 113, and I measured the tree mid-attempt. It reverted
+cleanly; `git status` on that file is empty and the count is back to its real baseline.
+
+I inferred a peer's live state from a file's mtime. The correct instrument is `git log` and
+`git status`: commits and working-tree state, not filesystem metadata written by whoever happened to
+touch the file last — which, here, was us. Settled properly, `🏪️store` has no uncommitted work, its
+last commit is stable, and the only modified file in that area is our own paged-command move.
+
+The practical consequence is good news: the blocker is not a moving target. It is a migration the
+peer **designed, tested and did not finish propagating** — `drain_applied_envelopes()` is gone, its
+replacement `take_next_applied()` and `MutationDagAppliedStep` already exist and are tested, and five
+call sites were never migrated. 62 of the 63 errors are mechanical with a rustc-confirmed fix each;
+exactly one is a real design question (`ArtifactEnvelope: Clone`) that belongs to the peer.
+
+## A coordination lesson worth keeping
+
+A framework helper (`Context::fixture_json`) was added mid-wave and pushed to five agents already in
+flight, to spare them hand-transcribing committed JSON vectors into Rust literals. One of them
+correctly refused: the instruction arrived mid-task, contradicted its explicit brief, and it had no
+way to verify the API existed. It documented the discrepancy instead of silently complying.
+
+That is the right instinct, and the fault was mine. Framework changes must land BEFORE agents are
+dispatched, not during — an in-flight API change is indistinguishable, from the agent's side, from
+an instruction it should not trust.
+
+A sibling on the `table` subset handled the same message better still: it independently read the
+helper's source, confirmed the fixture-URI mechanism worked, and only then rewrote its adapter to
+read the vectors at runtime. Verify-then-act beats both blind compliance and blind refusal.
+
+**Outstanding inconsistency to reconcile:** the Pattern-B subsets now differ in how their subject
+role reaches its specification vectors — `mesh` (and the earlier `text`, `graph`, `brep`) transcribe
+them into Rust literals, `table` reads the committed fixtures through `ctx.fixture_json`. Both are
+verified and correct; they should not stay different. Reading the fixture is the better shape,
+because a literal can silently drift from the vector it claims to mirror and nothing would catch it.
+
+## A systemic finding: the composite subsets are not reachable from their own tests
+
+Four semio subsets independently hit the same wall, which makes it structural rather than incidental.
+
+`kit`, `object`, `text` and `table` embed types — `store::ArtifactChild`, `ArtifactLink`, `LinkPin`,
+`store::os_io::ArtifactRef`, `protocol::Mutation` — that live behind **private, non-`pub`
+extern-crate aliases**. Nothing re-exports them. A test adapter compiled as an external crate
+therefore cannot name the types its own subset's public API traffics in.
+
+The consequence is not cosmetic. It means these subsets cannot be exercised end to end from outside
+the crate at all, which is exactly what an owner-root test is. `kit` solved it properly by adding
+four thin wrappers in its own production code whose signatures name only reachable types; `object`
+could not, and ships real handlers for its 3 reachable kinds with self-documenting `Err` handlers for
+the other 6 — an honest partial rather than a faked whole.
+
+This is worth a deliberate decision by the repository owner, because the same reasoning that forbids
+exporting API requiring an external type also argues that a subset's own vocabulary should be
+reachable by anything that legitimately drives it. The options are: re-export the aliases publicly,
+add wrappers per subset as `kit` did, or accept that composite subsets are only testable from inside
+the crate.
+
+## Known latent failures, recorded before they surprise anyone
+
+The `kit` subset found that its snapshot and mutation types embed `store::ArtifactChild`,
+`ArtifactLink`, `LinkPin` and `ArtifactRef`, while `store` and `protocol` are PRIVATE, non-`pub`
+extern-crate aliases — unreachable from the generated test-host crate. Its fix was four thin wrapper
+functions in kit's own production code whose signatures name only reachable types, so the adapter
+deserializes real committed fixtures into the real production types with no transcription at all.
+
+While doing that it noticed the same reachability gap latently affects the **`text` and `table`**
+cases, which already carry `use protocol::Mutation;`. Both currently report green because the build
+is blocked and their adapters are never compiled. **They will fail to compile the moment the subject
+phase works.** That is not a regression introduced later; it is a defect present now and hidden by an
+unrelated blocker.
+
+This is the same lesson as the in-crate unit tests that had never compiled: a green result from a
+phase that never executed the code is not evidence. Both cases need kit's wrapper treatment before
+their subject halves can run.
+
+## The subject-phase blocker, cleared to its true boundary
+
+`cargo check -p semio-framework-os-kernel --lib` went **117 → 6 errors** across this effort:
+
+| Stage | Errors | What it was |
+|---|---|---|
+| start | 117 | workspace would not even load (`js-sys` inherited, never declared) |
+| after manifest fix | 117 | real compile errors reachable for the first time |
+| after paged-command move | 64 | `semio_framework::` cycle resolved; `channel`/`kernel` clean |
+| after mechanical pass | 6 | 62 mechanical fixes + the `drain_applied_envelopes` → `take_next_applied()` migration |
+
+**All 6 remaining belong to other work, verified with git rather than file timestamps:**
+- 1 × `ArtifactEnvelope<P, Mutation>: Clone` — the design question, left for the peer who owns it.
+- 5 × `RetainedJobPayload` type mismatches — fallout from a separate, genuinely live
+  `INTERACTIVE-JOB-RUNTIME-REFACTOR` in `🧰️framework/🔨️modules/🧵️job/🦀️component.rs`, which carries
+  uncommitted changes and grew from 8 to 1500+ lines while our pass ran. `RetainedJobPayload` is a
+  page-pool-backed type with no simple conversion; constructing one needs a `JobPayloadStream` whose
+  choice belongs to that refactor, not to us.
+
+The agent doing this also disproved one of its own instructions empirically: told by the assessment
+to add `Sync` to the shared `ArtifactStore` impl header, it tried, measured 42 → 54 errors, and
+reverted to method-scoped bounds. Testing the advice rather than trusting it is what kept the count
+falling.
+
+**Consequence:** the subject and parity phases remain unreachable, and every artifact fix in the
+table above remains compiler-unverified. That is now a two-item wait on other sessions, not an open
+problem in this work.
 
 ## Honest limits
 
