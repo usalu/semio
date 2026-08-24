@@ -1,8 +1,7 @@
 //! 📄️ Architect report window — the last generated `ProgramReport`, rendered as a section tree.
 
-use crate::editor::architect::chrome::{tree_item, tree_node, tree_section};
 use crate::editor::architect::config::{parse_active_report, ArchitectConfig};
-use semio_framework_plugin::{ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, UiTreeSectionNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{tree_item_desc, ui_text, Label, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub(crate) const ARCHITECT_WINDOW_REPORT: &str = "architect-report";
@@ -38,28 +37,28 @@ pub(crate) async fn render(cfg: &ArchitectConfig) -> semio_framework_plugin::UiA
     let Some(report) = parse_active_report(cfg) else {
         return ui_text(Label::data("Run validation, analysis, or report to populate this panel."));
     };
-    let report = &report;
-    let sections: Vec<UiTreeSectionNode> = report
-        .sections
-        .iter()?
-        .enumerate()
-        .map(|(index, section)| {
-            let mut items = Vec::new();
-            if !section.body.is_empty() {
-                items.push(tree_item(format!("architect-report.section.{index}.body"), &section.body)?);
-            }
-            for (bullet_index, bullet) in section.bullets.iter().enumerate() {
-                items.push(tree_item(format!("architect-report.section.{index}.bullet.{bullet_index}"), format!("• {bullet}"))?);
-            }
-            tree_section(format!("architect-report.section.{index}"), Some(section.heading.clone())?, items)
-        })
-        .collect();
-    tree_node(
-        vec![tree_section("architect-report.meta", Some(report.title.clone()), vec![tree_item("architect-report.kind", format!("Kind: {:?}", report.kind))?, tree_item("architect-report.generated", format!("Generated: {}", report.generated_at))?(&str, &str, &str)(&str, &str)])(&str, &str, &str)(&str, &str)]
-            .into_iter()
-            .chain(sections)
-            .collect(),
-    )
+    let mut tree = PanelTreeBuilder::new("architect-report")?;
+    let mut meta = UiFixedList::default();
+    for item in [
+        tree_item_desc("architect-report.kind", Label::data(format!("Kind: {:?}", report.kind)), None)?,
+        tree_item_desc("architect-report.generated", Label::data(format!("Generated: {}", report.generated_at)), None)?,
+    ] {
+        meta.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect report metadata admission failed"))?;
+    }
+    tree = tree.section("architect-report.meta", Some(Label::data(report.title.clone())), true, meta)?;
+    for (index, section) in report.sections.iter()?.enumerate() {
+        let mut items = UiFixedList::default();
+        if !section.body.is_empty() {
+            let item = tree_item_desc(format!("architect-report.section.{index}.body"), Label::data(&section.body), None)?;
+            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect report body admission failed"))?;
+        }
+        for (bullet_index, bullet) in section.bullets.iter().enumerate() {
+            let item = tree_item_desc(format!("architect-report.section.{index}.bullet.{bullet_index}"), Label::data(format!("• {bullet}")), None)?;
+            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect report bullet admission failed"))?;
+        }
+        tree = tree.section(format!("architect-report.section.{index}"), Some(Label::data(section.heading.clone())), true, items)?;
+    }
+    tree.build()
 }
 //#endregion 🔖️Render
 

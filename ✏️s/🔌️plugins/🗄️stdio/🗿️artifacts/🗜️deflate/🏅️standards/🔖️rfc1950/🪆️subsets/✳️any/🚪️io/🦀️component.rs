@@ -547,6 +547,49 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
             }
         }
     }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.input, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.writer.out, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.head, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        if let Some((released_items, released_bytes)) = retire_deflate_vec_step(&mut self.previous, maximum_items, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        self.pending = None;
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.input.capacity() == 0 && self.writer.out.capacity() == 0 && self.head.capacity() == 0 && self.previous.capacity() == 0 && self.pending.is_none()
+    }
+}
+
+fn retire_deflate_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
+    let item_bytes = std::mem::size_of::<T>();
+    if !values.is_empty() {
+        if maximum_items == 0 || maximum_bytes < item_bytes {
+            return Some((0, 0));
+        }
+        drop(values.pop());
+        return Some((1, item_bytes));
+    }
+    if values.capacity() == 0 {
+        return None;
+    }
+    let backing_bytes = values.capacity().saturating_mul(item_bytes);
+    if maximum_items == 0 || maximum_bytes < backing_bytes {
+        return Some((0, 0));
+    }
+    drop(std::mem::take(values));
+    Some((1, backing_bytes))
 }
 
 fn write_usize(bytes: &mut Vec<u8>, value: usize) {
@@ -715,6 +758,21 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
                 return StepOutcome::Yield;
             }
         }
+    }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        let (complete, released_items, released_bytes) = self.engine.close_step(maximum_items, maximum_bytes);
+        if complete {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.engine.terminal_is_empty()
     }
 }
 //#endregion 🧵️TunedEncode
@@ -1023,6 +1081,27 @@ pub fn decode_deflate_snapshot(data: &[u8]) -> Result<DeflateSnapshot, String> {
 #[cfg(test)]
 mod codec_tests {
     use super::*;
+
+    #[test]
+    fn deflate_job_zero_grant_preserves_input_and_one_opportunity_close_is_exact() {
+        let mut job = DeflateEncodeJob::new(vec![1, 2, 3], 1);
+        let pointer = job.input.as_ptr();
+        semio_framework_job::InteractiveJob::begin_close(&mut job);
+        assert_eq!(
+            semio_framework_job::InteractiveJob::close_step(&mut job, 0, usize::MAX),
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }
+        );
+        assert_eq!(job.input.as_ptr(), pointer);
+        let mut opportunities = 0usize;
+        while !semio_framework_job::InteractiveJob::terminal_is_empty(&job) {
+            let step = semio_framework_job::InteractiveJob::close_step(&mut job, 1, usize::MAX);
+            if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } = step {
+                assert!(released_items <= 1);
+            }
+            opportunities += 1;
+            assert!(opportunities < HASH_SIZE + WINDOW + 64);
+        }
+    }
 
     fn raw_zip_member<'a>(archive: &'a [u8], wanted: &str) -> Option<&'a [u8]> {
         let mut offset = 0usize;

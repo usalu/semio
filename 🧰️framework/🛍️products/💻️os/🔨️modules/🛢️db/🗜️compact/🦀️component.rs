@@ -248,6 +248,180 @@ pub async fn compact_all_indexes(storage: &impl db_storage::IndexStorage, docume
 //#endregion 🔖️IndexCompaction
 
 //#region 🔖️SnapshotConsolidation
+const COMPACTION_RETAINED_PAGE_OWNERS: usize = 64;
+const COMPACTION_RETIREMENT_SLOTS: usize = 64;
+
+/// @emoji 🧱️ Fixed, page-credit-witnessed snapshot consolidation owner set.
+struct CompactionRetainedPages {
+    pages: [Option<db_state::Page>; COMPACTION_RETAINED_PAGE_OWNERS],
+    credits: [u8; COMPACTION_RETAINED_PAGE_OWNERS],
+    len: u8,
+}
+
+impl CompactionRetainedPages {
+    fn new() -> Self {
+        Self { pages: std::array::from_fn(|_| None), credits: [0; COMPACTION_RETAINED_PAGE_OWNERS], len: 0 }
+    }
+
+    fn contains(&self, hash: pack::ContentHash) -> bool {
+        self.pages[..self.len()].iter().flatten().any(|page| page.hash == hash)
+    }
+
+    fn try_push(&mut self, page: db_state::Page) -> Result<(), db_state::Page> {
+        let index = self.len();
+        let Some(slot) = self.pages.get_mut(index) else { return Err(page) };
+        self.credits[index] = page.pages().page_count();
+        *slot = Some(page);
+        self.len += 1;
+        Ok(())
+    }
+
+    fn len(&self) -> usize {
+        self.len as usize
+    }
+
+    fn slots(&self) -> &[Option<db_state::Page>] {
+        &self.pages
+    }
+
+    fn close_step(&mut self) -> Result<bool, DbError> {
+        if self.len == 0 {
+            return Ok(false);
+        }
+        let index = self.len() - 1;
+        let page = self.pages[index].as_mut().ok_or_else(|| DbError::Internal("compaction close lost retained page".to_string()))?;
+        if page.close_step()?.is_some() {
+            self.credits[index] = self.credits[index].checked_sub(1).ok_or_else(|| DbError::Internal("compaction page credit returned twice".to_string()))?;
+            return Ok(true);
+        }
+        if self.credits[index] != 0 || !page.terminal_is_empty() {
+            return Err(DbError::Internal("compaction page reached a false empty witness".to_string()));
+        }
+        self.pages[index] = None;
+        self.len -= 1;
+        Ok(true)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.credits.iter().all(|credit| *credit == 0) && self.pages.iter().all(Option::is_none)
+    }
+}
+
+static COMPACTION_PAGE_RETIREMENT: std::sync::Mutex<[Option<CompactionRetainedPages>; COMPACTION_RETIREMENT_SLOTS]> = std::sync::Mutex::new([const { None }; COMPACTION_RETIREMENT_SLOTS]);
+static COMPACTION_PAGE_RETIREMENT_OVERFLOW: std::sync::Mutex<[Option<CompactionRetainedPages>; COMPACTION_RETIREMENT_SLOTS]> = std::sync::Mutex::new([const { None }; COMPACTION_RETIREMENT_SLOTS]);
+static COMPACTION_PAGE_RETIREMENT_QUARANTINE: std::sync::Mutex<[Option<CompactionRetainedPages>; COMPACTION_RETIREMENT_SLOTS]> = std::sync::Mutex::new([const { None }; COMPACTION_RETIREMENT_SLOTS]);
+static COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn retire_compaction_pages(owner: CompactionRetainedPages) -> Result<(), CompactionRetainedPages> {
+    let mut retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some(slot) = retired.iter_mut().find(|slot| slot.is_none()) {
+        *slot = Some(owner);
+        Ok(())
+    } else {
+        drop(retired);
+        COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
+        let mut overflow = COMPACTION_PAGE_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(slot) = overflow.iter_mut().find(|slot| slot.is_none()) {
+            *slot = Some(owner);
+            return Ok(());
+        }
+        drop(overflow);
+        let mut quarantine = COMPACTION_PAGE_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(slot) = quarantine.iter_mut().find(|slot| slot.is_none()) else { return Err(owner) };
+        *slot = Some(owner);
+        Ok(())
+    }
+}
+
+fn retire_compaction_pages_or_recover(owner: CompactionRetainedPages) {
+    if let Err(mut owner) = retire_compaction_pages(owner) {
+        let pages = std::mem::replace(&mut owner.pages, std::array::from_fn(|_| None));
+        owner.credits = [0; COMPACTION_RETAINED_PAGE_OWNERS];
+        owner.len = 0;
+        drop(owner);
+        drop(pages);
+    }
+}
+
+pub fn compaction_page_maintenance_step() -> Result<bool, DbError> {
+    let mut retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(slot) = retired.iter_mut().find(|slot| slot.is_some()) else {
+        drop(retired);
+        let mut overflow = COMPACTION_PAGE_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(index) = overflow.iter().position(Option::is_some) else {
+            drop(overflow);
+            let mut quarantine = COMPACTION_PAGE_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
+            let owner = quarantine[index].take().ok_or_else(|| DbError::Internal("compaction quarantine retirement changed page owner".to_string()))?;
+            drop(quarantine);
+            let mut retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let slot = retired.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("compaction retirement primary refilled before quarantine recovery".to_string()))?;
+            *slot = Some(owner);
+            return Ok(true);
+        };
+        let owner = overflow[index].take().ok_or_else(|| DbError::Internal("compaction overflow retirement changed page owner".to_string()))?;
+        drop(overflow);
+        let mut retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = retired.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("compaction primary retirement refilled before overflow recovery".to_string()))?;
+        *slot = Some(owner);
+        return Ok(true);
+    };
+    let owner = slot.as_mut().ok_or_else(|| DbError::Internal("compaction retirement changed owner".to_string()))?;
+    if owner.close_step()? {
+        return Ok(true);
+    }
+    *slot = None;
+    Ok(true)
+}
+
+impl Drop for CompactionRetainedPages {
+    fn drop(&mut self) {
+        if !self.terminal_is_empty() {
+            retire_compaction_pages_or_recover(std::mem::replace(self, Self::new()));
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CompactionCloseExit {
+    Running,
+    Closed,
+    Fault,
+}
+
+/// @emoji 🛰️ Mounted close state that advances one retained page opportunity per poll.
+struct MountedCompactionPageClose<'owner> {
+    owner: &'owner mut CompactionRetainedPages,
+    exit: CompactionCloseExit,
+}
+
+impl<'owner> MountedCompactionPageClose<'owner> {
+    fn new(owner: &'owner mut CompactionRetainedPages) -> Self {
+        Self { owner, exit: CompactionCloseExit::Running }
+    }
+}
+
+impl std::future::Future for MountedCompactionPageClose<'_> {
+    type Output = Result<CompactionCloseExit, DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        match self.owner.close_step() {
+            Ok(true) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(false) => {
+                self.exit = CompactionCloseExit::Closed;
+                std::task::Poll::Ready(Ok(self.exit))
+            }
+            Err(error) => {
+                self.exit = CompactionCloseExit::Fault;
+                std::task::Poll::Ready(Err(error))
+            }
+        }
+    }
+}
+
 /// @emoji 🌳️ Walks the snapshot chain from `through_generation` back to its full-baseline root,
 /// returning the latest generation's own descriptor plus every page introduced anywhere in the
 /// chain, deduplicated by content hash — `SnapshotConsolidator::consolidate`'s input.
@@ -256,22 +430,27 @@ async fn collect_chain_pages<S: db_storage::SnapshotStorage>(
     document: &ArtifactId,
     through_generation: u64,
     budget: &CompactionBudget,
-) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
+) -> Result<(db_snapshot::SnapshotDescriptor, CompactionRetainedPages), DbError> {
     let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let control = db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
     let mut cursor = manager.chain_cursor(document, through_generation, control);
     let latest_descriptor = cursor.latest_descriptor().await?;
     let mut descriptor = latest_descriptor.clone();
-    let mut seen = std::collections::HashSet::new();
-    let mut pages = Vec::new();
+    let mut pages = CompactionRetainedPages::new();
     let mut generations_walked = 0u64;
     loop {
         generations_walked += 1;
         check_len(generations_walked, budget.max_snapshot_generations, "db_compact::snapshot_chain_depth")?;
-        for hash in descriptor.new_pages.clone() {
-            if seen.insert(hash) {
+        for hash in descriptor.new_pages.iter().copied() {
+            if !pages.contains(hash) {
                 let bytes = cursor.read_page(hash).await?;
-                pages.push(db_state::Page::try_from_pages(bytes).await?);
+                let page = db_state::Page::try_from_pages(bytes).await?;
+                if let Err(page) = pages.try_push(page) {
+                    let mut rejected = CompactionRetainedPages::new();
+                    let _ = rejected.try_push(page);
+                    retire_compaction_pages_or_recover(rejected);
+                    return Err(DbError::LimitExceeded("db_compact fixed retained snapshot pages"));
+                }
             }
         }
         match descriptor.parent_generation {
@@ -279,7 +458,7 @@ async fn collect_chain_pages<S: db_storage::SnapshotStorage>(
             None => break,
         }
     }
-    while cursor.close_step()? {}
+    let _ = cursor.close_step()?;
     Ok((latest_descriptor, pages))
 }
 
@@ -308,7 +487,7 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
     /// (see module doc's "diff collapse" scope note for the same underlying constraint) and is left
     /// as this crate's deliberate extension seam.
     pub async fn consolidate(&self, document: &ArtifactId, through_generation: u64, budget: &CompactionBudget) -> Result<u64, DbError> {
-        let (latest, pages) = collect_chain_pages(&self.manager, document, through_generation, budget).await?;
+        let (latest, mut pages) = collect_chain_pages(&self.manager, document, through_generation, budget).await?;
         let body = db_snapshot::SnapshotBody {
             head_seq: latest.head_seq,
             commit_seq: latest.commit_seq,
@@ -320,7 +499,13 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
             roots: latest.roots,
             created_at_ms: latest.created_at_ms,
         };
-        self.manager.publish(document, db_snapshot::SnapshotOrigin::FullBaseline, &pages, body).await
+        let publication = self.manager.publish_retained(document, db_snapshot::SnapshotOrigin::FullBaseline, pages.slots(), pages.len(), body).await;
+        let close = MountedCompactionPageClose::new(&mut pages).await;
+        match (publication, close) {
+            (Ok(generation), Ok(CompactionCloseExit::Closed)) => Ok(generation),
+            (Err(error), _) | (_, Err(error)) => Err(error),
+            _ => Err(DbError::Internal("compaction close produced a false exit witness".to_string())),
+        }
     }
 
     /// @emoji 🗑️ Forwards to `db_snapshot::SnapshotManager::retain_from` — `floor_generation` must
@@ -347,7 +532,7 @@ pub async fn build_cold_archive(storage: &impl db_storage::SnapshotStorage, docu
     let control = db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
     let mut cursor = manager.chain_cursor(document, through_generation, control);
     let pages = cursor.materialize_pages().await?;
-    while cursor.close_step()? {}
+    let _ = cursor.close_step()?;
     Ok(pages)
 }
 //#endregion 🔖️ColdArchive
@@ -411,7 +596,12 @@ impl<'storage> Compactor<'storage> {
         let mut replay = db_wal::replay_document(&wal, document, control).await?;
         let mut horizons = Vec::new();
         let mut current: Option<SegmentHorizon> = None;
-        while let Some(mut record) = replay.next().await? {
+        loop {
+            let mut record = match replay.next_step().await? {
+                db_wal::WalReplayStep::Record(record) => record,
+                db_wal::WalReplayStep::Yield => continue,
+                db_wal::WalReplayStep::Done => break,
+            };
             match &record {
                 db_wal::WalRecord::SegmentHeader { segment_index, .. } => {
                     if let Some(horizon) = current.replace(SegmentHorizon { segment_index: *segment_index, max_head_seq: None }) {
@@ -425,12 +615,14 @@ impl<'storage> Compactor<'storage> {
                 }
                 _ => {}
             }
-            while record.close_step()? {}
+            let _ = record.close_step()?;
+            drop(record);
         }
         if let Some(horizon) = current {
             horizons.push(horizon);
         }
-        while replay.close_step().await? {}
+        let _ = replay.close_step().await?;
+        drop(replay);
         let selected = plan_wal_retention(&horizons, wal_floor_head_seq, budget);
 
         let deleted: std::collections::HashSet<u64> = selected.iter().copied().collect();
@@ -439,7 +631,12 @@ impl<'storage> Compactor<'storage> {
         let mut segment = 0u64;
         let mut candidates = std::collections::HashSet::new();
         let mut live = std::collections::HashSet::new();
-        while let Some(mut record) = replay.next().await? {
+        loop {
+            let mut record = match replay.next_step().await? {
+                db_wal::WalReplayStep::Record(record) => record,
+                db_wal::WalReplayStep::Yield => continue,
+                db_wal::WalReplayStep::Done => break,
+            };
             match &record {
                 db_wal::WalRecord::SegmentHeader { segment_index, .. } => segment = *segment_index,
                 db_wal::WalRecord::Payload(db_wal::WalPayloadRef::CasRef(hash)) => {
@@ -451,9 +648,11 @@ impl<'storage> Compactor<'storage> {
                 }
                 _ => {}
             }
-            while record.close_step()? {}
+            let _ = record.close_step()?;
+            drop(record);
         }
-        while replay.close_step().await? {}
+        let _ = replay.close_step().await?;
+        drop(replay);
         report.wal_segments_deleted = apply_wal_retention(&wal, document, &selected).await?;
         let payloads = self.storage.payload().await;
         for hash in candidates.difference(&live).take(budget.max_payloads as usize) {
@@ -547,6 +746,53 @@ mod tests {
         assert_eq!(unlimited.max_wal_segments, u64::MAX);
         assert_eq!(unlimited.max_snapshot_generations, u64::MAX);
         assert_eq!(unlimited.max_payloads, u64::MAX);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit() {
+        while compaction_page_maintenance_step().unwrap() {}
+        let mut retained = CompactionRetainedPages::new();
+        for index in 0..COMPACTION_RETAINED_PAGE_OWNERS {
+            assert!(retained.try_push(state_page(&[index as u8]).await).is_ok());
+        }
+        let rejected = retained.try_push(state_page(b"max-plus-one").await).unwrap_err();
+        assert_eq!(retained.len(), COMPACTION_RETAINED_PAGE_OWNERS);
+        let mut refusal = CompactionRetainedPages::new();
+        assert!(refusal.try_push(rejected).is_ok());
+        let exact_operation = refusal.slots()[0].as_ref().expect("exact refused compaction page").operation();
+        let mut second_refusal = CompactionRetainedPages::new();
+        assert!(second_refusal.try_push(state_page(b"max-plus-two").await).is_ok());
+        let second_operation = second_refusal.slots()[0].as_ref().expect("second exact refused compaction page").operation();
+        {
+            let mut retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in retired.iter_mut() {
+                *slot = Some(CompactionRetainedPages::new());
+            }
+        }
+        COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT.store(false, std::sync::atomic::Ordering::Release);
+        assert!(retire_compaction_pages(refusal).is_ok());
+        assert!(retire_compaction_pages(second_refusal).is_ok());
+        assert!(COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT.load(std::sync::atomic::Ordering::Acquire));
+        {
+            let overflow = COMPACTION_PAGE_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert_eq!(overflow.iter().flatten().find_map(|owner| owner.slots()[0].as_ref().map(db_state::Page::operation)), Some(exact_operation));
+            assert!(overflow.iter().flatten().any(|owner| owner.slots()[0].as_ref().map(db_state::Page::operation) == Some(second_operation)));
+        }
+        {
+            let mut retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in retired.iter_mut() {
+                *slot = None;
+            }
+        }
+        assert!(compaction_page_maintenance_step().unwrap());
+        {
+            let retired = COMPACTION_PAGE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert_eq!(retired.iter().flatten().find_map(|owner| owner.slots()[0].as_ref().map(db_state::Page::operation)), Some(exact_operation));
+        }
+        let exit = MountedCompactionPageClose::new(&mut retained).await.unwrap();
+        assert_eq!(exit, CompactionCloseExit::Closed);
+        assert!(retained.terminal_is_empty());
+        while compaction_page_maintenance_step().unwrap() {}
     }
     //#endregion 🔖️Budget
 

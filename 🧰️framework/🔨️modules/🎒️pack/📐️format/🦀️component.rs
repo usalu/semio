@@ -856,6 +856,53 @@ pub struct PackFile<S: PackSource> {
     chunk_table: Vec<ChunkTableEntry>,
 }
 
+/// @emoji 🧩️ Retained identity-chunk reader that advances by one caller-owned fragment.
+pub struct PackIdentityChunkCursor<'file, S: PackSource> {
+    source: &'file S,
+    entry: ChunkTableEntry,
+    verification: VerificationLevel,
+    offset: u64,
+    crc: crate::codec::Crc32cCursor,
+    hash: blake3::Hasher,
+    terminal: bool,
+}
+
+impl<'file, S: PackSource> PackIdentityChunkCursor<'file, S> {
+    pub fn len(&self) -> u64 {
+        self.entry.raw_len
+    }
+
+    pub fn remaining(&self) -> u64 {
+        self.entry.raw_len.saturating_sub(self.offset)
+    }
+
+    pub async fn read_fragment(&mut self, target: &mut [u8]) -> Result<usize, PackError> {
+        if self.terminal {
+            return Ok(0);
+        }
+        let count = usize::try_from(self.remaining().min(target.len() as u64)).map_err(|_| PackError::LimitExceeded("identity chunk fragment length"))?;
+        if count == 0 {
+            if self.verification.checks_crc() && self.crc.finish() != self.entry.crc32 {
+                return Err(PackError::ChecksumMismatch { segment: "chunk", offset: self.entry.offset });
+            }
+            if self.verification.checks_content_hash() && self.hash.finalize().as_bytes() != &self.entry.blake3 {
+                return Err(PackError::ContentHashMismatch);
+            }
+            self.terminal = true;
+            return Ok(0);
+        }
+        self.source.read_exact_at(self.entry.offset + self.offset, &mut target[..count]).await?;
+        self.crc.update_page(&target[..count]);
+        self.hash.update(&target[..count]);
+        self.offset += count as u64;
+        Ok(count)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.terminal
+    }
+}
+
 impl<S: PackSource> PackFile<S> {
     /// @emoji 1⃣ Level 1: parses and CRC-validates the header and footer only, and cross-checks
     /// the footer's `file_len` against the actual source length.
@@ -935,6 +982,18 @@ impl<S: PackSource> PackFile<S> {
     /// payload bytes — suitable for a range-fetch (see `pack_http`) without decoding.
     pub fn chunk_range(&self, id: ChunkId) -> Result<ByteRange, PackError> {
         self.chunk_table.get(id.0 as usize).map(|entry| ByteRange { offset: entry.offset, len: entry.stored_len }).ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })
+    }
+
+    /// @emoji 🧩️ Opens an identity chunk without allocating or materializing its payload.
+    pub fn identity_chunk_cursor(&self, id: ChunkId, verification: VerificationLevel) -> Result<PackIdentityChunkCursor<'_, S>, PackError> {
+        let entry = self.chunk_table.get(id.0 as usize).cloned().ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })?;
+        if entry.stored_len != entry.raw_len {
+            return Err(PackError::Malformed { what: "chunk", offset: entry.offset, detail: "retained fragment cursor requires an identity chunk".to_string() });
+        }
+        if entry.raw_len > self.limits.max_segment_len {
+            return Err(PackError::LimitExceeded("chunk length exceeds max_segment_len"));
+        }
+        Ok(PackIdentityChunkCursor { source: &self.source, entry, verification, offset: 0, crc: crate::codec::Crc32cCursor::new(), hash: blake3::Hasher::new(), terminal: false })
     }
 
     /// @emoji 3⃣ Level 3: reads, optionally CRC-verifies (`Standard`+) and decompresses one
@@ -1378,6 +1437,24 @@ mod tests {
         assert_eq!(body, b"the quick brown fox jumps over the lazy dog, repeatedly, for compressibility");
 
         assert_eq!(file.content_hash(), file.superblock().footer.content_hash);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn identity_chunk_cursor_retains_fragment_progress_and_terminal_verification() {
+        let (bytes, chunk_id, expected) = build_sample_pack(CodecId(0)).await;
+        let file = PackFile::open_manifest(bytes.as_slice(), &PackLimits::default(), VerificationLevel::Full).await.unwrap();
+        let mut cursor = file.identity_chunk_cursor(chunk_id, VerificationLevel::Full).unwrap();
+        let mut fragment = [0u8; 3];
+        let mut actual = Vec::new();
+        loop {
+            let read = cursor.read_fragment(&mut fragment).await.unwrap();
+            if read == 0 {
+                break;
+            }
+            actual.extend_from_slice(&fragment[..read]);
+        }
+        assert_eq!(actual, expected);
+        assert!(cursor.terminal_is_empty());
     }
 
     #[semio_framework_async_macros::async_test]

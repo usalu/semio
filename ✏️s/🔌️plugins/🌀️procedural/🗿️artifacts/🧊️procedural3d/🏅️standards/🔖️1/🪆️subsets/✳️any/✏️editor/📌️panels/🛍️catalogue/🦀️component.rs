@@ -4,7 +4,6 @@ use crate::editor::procedural3d::terminology::Procedural3dLabels;
 use crate::editor::procedural3d::PROCEDURAL_3D_PLAY_APP_ID;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::{tree_item_with_action, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const PROCEDURAL_3D_PLAY_BODY_CATALOGUE: &str = "procedural.play.catalogue";
@@ -25,25 +24,24 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub fn render(labels: &Procedural3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let sections = flow::flow_palette_catalogue_sections();
-    let items: Vec<BuiltNode> = sections
-        .iter()
-        .flat_map(|section| {
-            section.items.iter().map(|item| {
-                let action_kind = if item.kind == "neuron" { format!("neuron|{}", item.neuron_kind.as_deref().unwrap_or("math.add")) } else { item.kind.clone() };
-                let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
-                let mut node = tree_item_with_action(
-                    format!("procedural-play-catalogue.{}", item.neuron_kind.as_deref().unwrap_or(&item.kind)),
-                    item.name.clone(),
-                    None,
-                    ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("addWidget", Some(json!({ "kind": action_kind })))?,
-                )?;
-                if let Component::TreeItem(props) = &mut node.component {
-                    props.icon = Some(icon.into());
-                }
-                node
-            })
-        })
-        .collect();
+    let mut items = semio_framework_plugin::UiFixedList::default();
+    for section in sections {
+        for item in section.items {
+            let action_kind = if item.kind == "neuron" { format!("neuron|{}", item.neuron_kind.as_deref().unwrap_or("math.add")) } else { item.kind.clone() };
+            let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
+            let args = crate::ui_value_map([("kind", crate::ui_value_text(&action_kind)?)])?;
+            let mut node = tree_item_with_action(
+                format!("procedural-play-catalogue.{}", item.neuron_kind.as_deref().unwrap_or(&item.kind)),
+                item.name.clone(),
+                None,
+                ActionFactory::new(PROCEDURAL_3D_PLAY_APP_ID).action("addWidget", Some(args))?,
+            )?;
+            if let Component::TreeItem(props) = &mut node.component {
+                props.icon = Some(icon.into());
+            }
+            items.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed UI catalogue admission failed"))?;
+        }
+    }
     PanelTreeBuilder::new("procedural-play-catalogue")?.section("procedural-play-catalogue.widgets", Some(labels.widgets.as_str().into()), true, items)?.build()
 }
 //#endregion 🔖️Render

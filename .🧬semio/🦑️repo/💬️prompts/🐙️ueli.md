@@ -64,7 +64,13 @@ Everything end to end.
 
 ---
 
-The codebasse
+The current artifact importers and exporters are extermly adhoc.
+There must be a complete mesh of handcrafted subset to subset importers and exporters.
+Every artifact standard subset is completly independant.
+If there is code that is shared than it must use modules to share code at the lowest level where it makes sense.
+violations are e.g. 
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️
+raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs where all the serializers and exporters are not 
 
 ---
 
@@ -451,6 +457,10 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+
 
 ---
 

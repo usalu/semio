@@ -180,7 +180,7 @@ pub const MAINTENANCE_LANE_FUEL: u64 = 80_000_000;
 
 //#region 📄️RetainedPayload
 pub const JOB_PAYLOAD_PAGE_BYTES: usize = 16 * 1024;
-pub const JOB_PAYLOAD_OPERATION_PAGES: usize = 64;
+pub const JOB_PAYLOAD_OPERATION_PAGES: usize = 256;
 pub const JOB_PAYLOAD_OPERATION_BYTES: usize = JOB_PAYLOAD_PAGE_BYTES * JOB_PAYLOAD_OPERATION_PAGES;
 pub const JOB_PAYLOAD_PROCESS_BYTES: usize = 64 * 1024 * 1024;
 
@@ -458,18 +458,19 @@ pub enum JobPayloadCloseStep {
 pub struct RetainedJobPayloadWriter {
     payload: ManuallyDrop<Option<RetainedJobPayload>>,
     rejected: ManuallyDrop<Option<JobPayloadPageSource>>,
+    staged: ManuallyDrop<Option<(Arc<JobPayloadOperationLedger>, JobPayloadPageSource, usize)>>,
     sealed: bool,
 }
 
 impl std::fmt::Debug for RetainedJobPayloadWriter {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.debug_struct("RetainedJobPayloadWriter").field("payload", &self.payload).field("rejected", &self.rejected).field("sealed", &self.sealed).finish()
+        formatter.debug_struct("RetainedJobPayloadWriter").field("payload", &self.payload).field("rejected", &self.rejected).field("staged", &self.staged.as_ref().map(|(_, _, length)| length)).field("sealed", &self.sealed).finish()
     }
 }
 
 impl RetainedJobPayloadWriter {
     pub fn new(stream: JobPayloadStream) -> Self {
-        Self { payload: ManuallyDrop::new(Some(RetainedJobPayload::empty(stream))), rejected: ManuallyDrop::new(None), sealed: false }
+        Self { payload: ManuallyDrop::new(Some(RetainedJobPayload::empty(stream))), rejected: ManuallyDrop::new(None), staged: ManuallyDrop::new(None), sealed: false }
     }
 
     pub fn take_rejected_source(&mut self) -> Option<JobPayloadPageSource> {
@@ -493,7 +494,7 @@ impl RetainedJobPayloadWriter {
     }
 
     pub fn finish(mut self) -> Result<RetainedJobPayload, Self> {
-        if self.rejected.is_some() {
+        if self.rejected.is_some() || self.staged.is_some() {
             return Err(self);
         }
         self.sealed = true;
@@ -506,6 +507,16 @@ impl RetainedJobPayloadWriter {
 
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> JobPayloadCloseStep {
         self.sealed = true;
+        if let Some((ledger, _, length)) = self.staged.as_ref() {
+            if maximum_items == 0 || maximum_bytes < *length {
+                return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let stream = self.payload.as_ref().expect("retained payload writer owns payload while staged page exists").stream;
+            ledger.release(stream);
+            let (_, source, released_bytes) = self.staged.take().expect("staged page remains owned until exact close");
+            drop(source);
+            return JobPayloadCloseStep::Pending { released_items: 1, released_bytes };
+        }
         if self.rejected.is_some() {
             if maximum_items == 0 {
                 return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -525,7 +536,44 @@ impl RetainedJobPayloadWriter {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.sealed && self.rejected.is_none() && self.payload.is_none()
+        self.sealed && self.rejected.is_none() && self.staged.is_none() && self.payload.is_none()
+    }
+
+    pub fn begin_staged_page(&mut self, cx: &mut StepContext<'_>) -> Result<(), JobPayloadAdmissionFault> {
+        if self.staged.is_some() {
+            return Ok(());
+        }
+        self.admit_page(cx)?.stage();
+        Ok(())
+    }
+
+    pub fn staged_page_remaining(&self) -> usize {
+        self.staged.as_ref().map_or(0, |(_, _, length)| JOB_PAYLOAD_PAGE_BYTES - length)
+    }
+
+    pub fn staged_page_len(&self) -> Option<usize> {
+        self.staged.as_ref().map(|(_, _, length)| *length)
+    }
+
+    pub fn write_staged(&mut self, bytes: &[u8]) -> Result<(), JobPayloadAdmissionFault> {
+        let (_, source, length) = self.staged.as_mut().ok_or(JobPayloadAdmissionFault::OpportunityExhausted)?;
+        if bytes.len() > JOB_PAYLOAD_PAGE_BYTES - *length {
+            return Err(JobPayloadAdmissionFault::StreamBytes);
+        }
+        unsafe { std::ptr::copy_nonoverlapping(bytes.as_ptr(), source.storage.as_mut_ptr().cast::<u8>().add(*length), bytes.len()) };
+        *length += bytes.len();
+        Ok(())
+    }
+
+    pub fn commit_staged_page(&mut self) -> Result<(), JobPayloadAdmissionFault> {
+        let (ledger, source, length) = self.staged.take().ok_or(JobPayloadAdmissionFault::OpportunityExhausted)?;
+        let payload = self.payload.as_mut().ok_or(JobPayloadAdmissionFault::WriterSealed)?;
+        let index = payload.pages.iter().position(Option::is_none).ok_or(JobPayloadAdmissionFault::WriterFull)?;
+        payload.pages[index] = Some(JobPayloadPage { source, length });
+        payload.page_count += 1;
+        payload.length += length;
+        payload.ledger = Some(ledger);
+        Ok(())
     }
 
     pub fn write_slice_page(&mut self, cx: &mut StepContext<'_>, bytes: &[u8], cursor: &mut usize) -> Result<bool, JobPayloadAdmissionFault> {
@@ -574,10 +622,11 @@ impl RetainedJobPayloadWriter {
 
 impl Drop for RetainedJobPayloadWriter {
     fn drop(&mut self) {
-        if self.payload.is_none() && self.rejected.is_none() {
+        if self.payload.is_none() && self.rejected.is_none() && self.staged.is_none() {
             unsafe {
                 ManuallyDrop::drop(&mut self.payload);
                 ManuallyDrop::drop(&mut self.rejected);
+                ManuallyDrop::drop(&mut self.staged);
             }
         } else {
             debug_assert!(false, "retained job payload writer requires exact finish or incremental close");
@@ -634,6 +683,13 @@ impl JobPayloadPageGrant<'_> {
         payload.page_count += 1;
         payload.length += self.length;
         payload.ledger = self.ledger.take();
+        self.committed = true;
+    }
+
+    pub fn stage(mut self) {
+        let ledger = self.ledger.take().expect("admitted staged page owns ledger credit");
+        let source = self.source.take().expect("admitted staged page owns backing");
+        self.writer.staged = Some((ledger, source, self.length));
         self.committed = true;
     }
 }

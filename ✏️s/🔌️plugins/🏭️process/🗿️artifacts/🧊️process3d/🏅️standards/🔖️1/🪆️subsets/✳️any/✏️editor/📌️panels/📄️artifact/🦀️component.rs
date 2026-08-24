@@ -5,9 +5,8 @@ use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::{process3d_measure_icon, Process3dLabels};
 use crate::editor::process3d::PROCESS3D_INTERACTION_DOMAIN;
 use semio_framework_plugin::{
-    Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    tree_item, ActionBinding, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_DOCUMENT: &str = "process.play.document";
@@ -37,32 +36,58 @@ pub async fn definition() -> PanelTabDefinition {
 /// itself; the framework's post-render pass overwrites item presence from live selection/hover, and
 /// clicks translate into `interactionSelect` generically (mirrors `🧱️block`'s `📌️panels/📄️artifact`).
 pub async fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let stock_item = UiTreeItemNode { icon_id: Some("box".into()), menu: None, ..UiTreeItemNode::base(fixture.stock_id.clone(), Label::data(fixture.stock_label.clone())) };
+    let mut stock_item = tree_item(&fixture.stock_id, Label::data(fixture.stock_label.clone()))?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut stock_item.component {
+        props.icon = Some(semio_framework_plugin::UiText::try_from_str("box").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.icon", "fixed document icon admission failed"))?);
+    }
     let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
     let cursor = fixture.resolved_up_to.unwrap_or(scene.steps.len());
-    let step_items: Vec<UiTreeItemNode> = scene
-        .steps
-        .iter()
-        .enumerate()
-        .map(|(index, step)| UiTreeItemNode {
-            description: if index >= cursor { Some("pending".into()) } else { None },
-            icon_id: Some(process3d_measure_icon(&step.measure).into()),
-            actions: Some(vec![
-                UiTreeItemAction {
-                    icon_id: if step.enabled { "eye".into() } else { "eye-off".into() },
-                    label: Some(labels.enabled.into()),
-                    action: process3d_action("setStepEnabled", Some(json!({ "id": step.id, "enabled": !step.enabled }))),
-                    placement: Some(UiTreeActionPlacement::Row),
-                },
-                UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: process3d_action("removeStep", Some(json!({ "id": step.id }))), placement: Some(UiTreeActionPlacement::Menu) },
-            ]),
-            dimmed: Some(!step.enabled),
-            menu: None,
-            ..UiTreeItemNode::base(step.id.clone(), Label::data(step.label.clone()))
-        })
-        .collect();
+    let mut step_items = semio_framework_plugin::UiFixedList::default();
+    for (index, step) in scene.steps.iter().enumerate() {
+        let mut item = tree_item(&step.id, Label::data(step.label.clone()))?;
+        let icon = semio_framework_plugin::UiText::try_from_str(process3d_measure_icon(&step.measure))
+            .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.icon", "fixed document icon admission failed"))?;
+        let enabled_args = crate::editor::process3d::ui_value_map([
+            ("enabled", crate::editor::process3d::ui_value_bool(!step.enabled)),
+            ("id", crate::editor::process3d::ui_value_text(&step.id)?),
+        ])?;
+        let (enabled_action, enabled_args) = process3d_action("setStepEnabled", Some(enabled_args))?;
+        let remove_args = crate::editor::process3d::ui_value_map([("id", crate::editor::process3d::ui_value_text(&step.id)?)])?;
+        let (remove_action, remove_args) = process3d_action("removeStep", Some(remove_args))?;
+        let mut row_actions = semio_framework_plugin::UiFixedList::default();
+        row_actions
+            .try_push(RowAction {
+                icon: semio_framework_plugin::UiText::try_from_str(if step.enabled { "eye" } else { "eye-off" })
+                    .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.action-icon", "fixed row action icon admission failed"))?,
+                label: Some(labels.enabled.into()),
+                action: ActionBinding { trigger: Trigger::Activate, action: enabled_action, args: enabled_args, capability: None },
+                placement: RowActionPlacement::Row,
+            })
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.row-actions", "fixed row action admission failed"))?;
+        row_actions
+            .try_push(RowAction {
+                icon: semio_framework_plugin::UiText::try_from_str("trash")
+                    .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.action-icon", "fixed row action icon admission failed"))?,
+                label: Some(labels.remove.into()),
+                action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None },
+                placement: RowActionPlacement::Menu,
+            })
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.row-actions", "fixed row action admission failed"))?;
+        if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+            props.description = if index >= cursor {
+                Some(semio_framework_plugin::UiText::try_from_str("pending").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.description", "fixed document description admission failed"))?)
+            } else {
+                None
+            };
+            props.icon = Some(icon);
+            props.dimmed = Some(!step.enabled);
+            props.row_actions = row_actions;
+        }
+        step_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.steps", "fixed step list admission failed"))?;
+    }
+    let stock_items = crate::editor::process3d::ui_node_list([Ok(stock_item)])?;
     PanelTreeBuilder::new("process3d-play-document")?
-        .section("process3d-play-document.stock", Some(labels.stock.into()), true, vec![stock_item])?
+        .section("process3d-play-document.stock", Some(labels.stock.into()), true, stock_items)?
         .section("process3d-play-document.steps", Some(labels.steps.into()), true, step_items)?
         .interaction_domain(PROCESS3D_INTERACTION_DOMAIN)?
         .build()

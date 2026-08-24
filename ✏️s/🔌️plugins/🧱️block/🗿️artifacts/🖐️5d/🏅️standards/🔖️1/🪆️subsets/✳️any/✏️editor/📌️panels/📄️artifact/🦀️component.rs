@@ -2,8 +2,8 @@
 
 use crate::artifacts::block5d::Block5dSnapshot;
 use crate::editor::block5d::terminology::Block5dLabels;
-use crate::editor::block5d::BLOCK5D_INTERACTION_GRIP;
-use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use crate::editor::block5d::{ui_node_list, BLOCK5D_INTERACTION_GRIP};
+use semio_framework_plugin::{tree_item_desc, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const BLOCK5D_BODY_DOCUMENT: &str = "block5d.play.document";
@@ -22,16 +22,22 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
+fn icon_item(id: String, label: Label, description: Option<String>, icon: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let mut node = tree_item_desc(id, label, description)?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+        props.icon = Some(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "block5d tree icon admission failed"))?);
+    }
+    Ok(node)
+}
+
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: item ids are the SAME canonical
 /// `gripKind:{id}`/`grip:{id}` targets `Block5dPlayApp::interaction_topology` declares for the `grip`
 /// domain — the framework stamps this tree's selection/hover presence from that domain
 /// (`.interaction_domain`) and prunes stale ids through that same topology.
 pub async fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let builder = PanelTreeBuilder::new("block5d-play-document")?;
-    let grip_kind_items: Vec<UiTreeItemNode> =
-        definition.grip_kinds.iter().map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), menu: None, ..tree_item_desc(format!("gripKind:{}", kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()))? }).collect();
-    let grip_items: Vec<UiTreeItemNode> =
-        definition.grips.iter().map(|grip| UiTreeItemNode { icon_id: Some("circle-dot".into()), menu: None, ..tree_item_desc(format!("grip:{}", grip.id), Label::data(grip.grip_kind.clone()), Some(format!("{:.2}", grip.angle)))? }).collect();
+    let grip_kind_items = ui_node_list(definition.grip_kinds.iter().map(|kind| icon_item(format!("gripKind:{}", kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()), "circle")))?;
+    let grip_items = ui_node_list(definition.grips.iter().map(|grip| icon_item(format!("grip:{}", grip.id), Label::data(grip.grip_kind.clone()), Some(format!("{:.2}", grip.angle)), "circle-dot")))?;
     builder
         .section_or_placeholder("block5d-play-document.grip-kinds", Some(labels.grip_kinds.into()), true, grip_kind_items, labels.no_grip_kinds)?
         .section_or_placeholder("block5d-play-document.grips", Some(labels.grips.into()), true, grip_items, labels.no_grips)?

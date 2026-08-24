@@ -45,33 +45,42 @@ pub fn step_fill_job(ctx: &mut Puzzle2dActionCtx<'_>, expected_generation: Optio
         semio_framework_job::Generation(ctx.scene.runtime.fill_job_generation),
         ctx.scene.runtime.fill_job_seed,
     );
-    let Ok(mut job) = infinite_canvas::BoardFillJob::restore(&checkpoint, operation) else {
+    let Ok(job) = infinite_canvas::BoardFillJob::restore(&checkpoint, operation) else {
         ctx.scene.runtime.fill_job_checkpoint = None;
         return;
     };
     let operation = job.operation();
-    let mut sequence = operation.preview_sequence;
-    let now = semio_framework_job::default_now_ms();
-    let outcome = semio_framework_job::drive_step(
-        &mut job,
-        "puzzle2d.fill",
-        operation.operation,
-        operation.generation,
-        semio_framework_job::InteractiveStage::InteractiveStep,
-        semio_framework_job::StepBudget::new(1, now.saturating_add(7)),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_ms,
-        &mut sequence,
-    );
+    let params = semio_framework_job::BatchJobParams {
+        operation: operation.operation,
+        generation: operation.generation,
+        cancel: semio_framework_job::root_cancel_token(),
+        config: semio_framework_job::BatchDriveConfig { site: "puzzle2d.fill", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: 7 },
+        now_ms: semio_framework_job::default_now_ms,
+    };
+    let Ok(mut session) = semio_framework_job::BatchJobSession::try_new(job, params) else {
+        ctx.scene.runtime.fill_job_checkpoint = None;
+        return;
+    };
+    if session.step().is_err() {
+        session.begin_close();
+        return;
+    }
+    let Some(job) = session.checked_out_job_mut() else {
+        session.begin_close();
+        return;
+    };
+    let applied = ctx.scene.runtime.fill_job_applied_count.min(job.placements().len());
+    apply_fill_placements(ctx, &job.placements()[applied..]);
+    ctx.scene.runtime.fill_job_applied_count = job.placements().len();
+    let next_checkpoint = job.checkpoint_bytes();
+    let Some(mut outcome) = session.take_outcome() else {
+        session.begin_close();
+        return;
+    };
     if let semio_framework_job::StepOutcome::PreviewReady(bytes) = &outcome {
         ctx.scene.runtime.fill_job_preview = serde_json::from_slice(bytes).ok();
     }
-    if !matches!(&outcome, semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_)) {
-        let applied = ctx.scene.runtime.fill_job_applied_count.min(job.placements().len());
-        apply_fill_placements(ctx, &job.placements()[applied..]);
-        ctx.scene.runtime.fill_job_applied_count = job.placements().len();
-    }
-    match outcome {
+    match &outcome {
         semio_framework_job::StepOutcome::Complete(_) => {
             ctx.scene.runtime.fill_job_checkpoint = None;
             ctx.scene.runtime.fill_job_preview = None;
@@ -82,14 +91,18 @@ pub fn step_fill_job(ctx: &mut Puzzle2dActionCtx<'_>, expected_generation: Optio
             ctx.scene.runtime.fill_count = 0;
         }
         semio_framework_job::StepOutcome::CheckpointReady(checkpoint) => {
-            ctx.scene.runtime.fill_job_checkpoint = Some(checkpoint.state);
+            ctx.scene.runtime.fill_job_checkpoint = Some(checkpoint.state.to_vec());
             queue_next_step(ctx);
         }
         _ => {
-            ctx.scene.runtime.fill_job_checkpoint = Some(job.checkpoint_bytes());
+            ctx.scene.runtime.fill_job_checkpoint = Some(next_checkpoint);
             queue_next_step(ctx);
         }
     }
+    while !outcome.terminal_is_empty() {
+        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+    session.begin_close();
 }
 
 /// 🪣️ Activates fill and starts one persistent, generation-tagged job session.

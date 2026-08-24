@@ -155,6 +155,7 @@ pub struct EnergyJob {
     encode_record_cursor: usize,
     encode_sample_cursor: usize,
     started: Instant,
+    closing: bool,
 }
 
 impl EnergyJob {
@@ -199,6 +200,7 @@ impl EnergyJob {
             encode_record_cursor: 0,
             encode_sample_cursor: 0,
             started: Instant::now(),
+            closing: false,
         }
     }
 
@@ -753,6 +755,86 @@ impl InteractiveJob for EnergyJob {
             }
             EnergyJobStage::Complete => StepOutcome::Complete(CommitCandidate { state: self.encode_state(true), output: std::mem::take(&mut self.commit_output) }),
         }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.closing = true;
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if !self.commit_output.is_empty() {
+            if maximum_bytes == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.commit_output.pop();
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 1 };
+        }
+        macro_rules! pop_owner {
+            ($owners:expr) => {
+                if $owners.pop().is_some() {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+            };
+        }
+        pop_owner!(self.weather);
+        pop_owner!(self.time_series_order);
+        pop_owner!(self.meter_order);
+        pop_owner!(self.zone_temperature_history);
+        let temperature = {
+            let mut entries = self.previous_temperatures.extract_if(|_, _| true);
+            entries.next()
+        };
+        if temperature.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let load = {
+            let mut entries = self.previous_loads.extract_if(|_, _| true);
+            entries.next()
+        };
+        if load.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.precompute.take().is_some()
+            || self.pre.take().is_some()
+            || self.state.take().is_some()
+            || self.run_hours.take().is_some()
+            || self.timestep_work.take().is_some()
+            || self.last_preview.take().is_some()
+            || self.result.take().is_some()
+            || self.sizing_builder.take().is_some()
+            || self.final_sizing.take().is_some()
+            || self.final_environmental.take().is_some()
+            || self.final_resilience.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.commit_output.is_empty()
+            && self.weather.is_empty()
+            && self.time_series_order.is_empty()
+            && self.meter_order.is_empty()
+            && self.zone_temperature_history.is_empty()
+            && self.previous_temperatures.is_empty()
+            && self.previous_loads.is_empty()
+            && self.precompute.is_none()
+            && self.pre.is_none()
+            && self.state.is_none()
+            && self.run_hours.is_none()
+            && self.timestep_work.is_none()
+            && self.last_preview.is_none()
+            && self.result.is_none()
+            && self.sizing_builder.is_none()
+            && self.final_sizing.is_none()
+            && self.final_environmental.is_none()
+            && self.final_resilience.is_none()
     }
 }
 

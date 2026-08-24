@@ -6,41 +6,10 @@
 
 use crate::artifacts::program::registers::AdjacencyKind;
 use crate::artifacts::program::{EntityId, ProgramSnapshot};
-use crate::editor::architect::architect_action;
 use crate::editor::architect::ARCHITECT_APP_ID;
-use semio_framework_plugin::{
-    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ActionDescriptor, Label, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiStackNode, UiToggleNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-};
+use semio_framework_plugin::{SurfaceKind, UiComponentSceneNode, UiPresence};
 use serde::Serialize;
-use serde_json::{json, Value};
-
-//#region 🔖️Tree
-pub async fn tree_item(id: impl Into<String>, label: impl Into<String>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    UiTreeItemNode::base(id, Label::data(label.into()))
-}
-
-pub async fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    UiTreeItemNode { description, action: Some(action), menu: None, ..UiTreeItemNode::base(id, Label::data(label.into())) }
-}
-
-pub async fn tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
-    UiTreeSectionNode { id: id.into(), label: label.map(Label::data), default_open: Some(true), presence: UiPresence::default(), items }
-}
-
-/// 🌳️ A plain, non-selectable tree — every remaining caller (catalogue/report/adjacency/trace) has
-/// no interaction domain to bind (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); the
-/// one tree that IS selectable (the document panel's element list) is built directly via the SDK's
-/// `PanelTreeBuilder` instead, so this helper no longer takes a `selected_ids` param.
-pub async fn tree_node(sections: Vec<UiTreeSectionNode>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), interaction_domain: None, drop_action: None, menu: None })
-}
-
-/// 🧱️ A horizontal stack — the adjacency matrix's glyph-strip + pair-tree pairing.
-pub async fn stack_row(id: impl Into<String>, children: Vec<UiNode>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    UiNode::Stack(UiStackNode { direction: "row".into(), gap: Some("0.5rem".into()), padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
-}
-//#endregion 🔖️Tree
+use serde_json::Value;
 
 //#region 🔖️Labels
 pub async fn element_label(program: &ProgramSnapshot, id: &EntityId) -> String {
@@ -68,86 +37,6 @@ pub async fn entity_name_from_json(value: &Value) -> String {
     value.get("name").and_then(|name| name.as_str()).map(str::to_string).or_else(|| value.get("header").and_then(|header| header.get("name")).and_then(|name| name.as_str()).map(str::to_string)).unwrap_or_else(|| "Untitled".into())
 }
 //#endregion 🔖️Labels
-
-//#region 🔖️Inspector
-pub async fn inspector_patch_action(register_id: &str, entity_id: &str, patch: &Value) -> ActionDescriptor {
-    architect_action("patchRegisterItem", Some(json!({ "registerId": register_id, "entityId": entity_id, "patch": patch })))
-}
-
-pub async fn inspector_text_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[String], key: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mixed = ui_inspector_mixed_text(values);
-    let patch_value = mixed.value.clone();
-    UiNode::Field(UiFieldNode {
-        id: field_id.into(),
-        label: Label::data(label),
-        child: Box::new(UiNode::Input(UiInputNode {
-            id: format!("{field_id}.input"),
-            input_kind: "text".into(),
-            value: mixed.value,
-            placeholder: mixed.placeholder.map(Label::data),
-            commit: Some("blur".into()),
-            on_change: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            presence: UiPresence::default(),
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-        presence: UiPresence::default(),
-        menu: None,
-    })
-}
-
-pub async fn inspector_number_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[f64], key: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mixed = ui_inspector_mixed_number(values);
-    let patch_value = mixed.value;
-    UiNode::Field(UiFieldNode {
-        id: field_id.into(),
-        label: Label::data(label),
-        child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
-            id: format!("{field_id}.stepper"),
-            value: mixed.value,
-            step: 0.1,
-            uniform: mixed.uniform,
-            on_absolute: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
-            on_delta: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
-            presence: UiPresence::default(),
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-        presence: UiPresence::default(),
-        menu: None,
-    })
-}
-
-pub async fn inspector_toggle_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[bool], key: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mixed = ui_inspector_mixed_toggle(values);
-    let patch_value = mixed.pressed;
-    UiNode::Field(UiFieldNode {
-        id: field_id.into(),
-        label: Label::data(label),
-        child: Box::new(UiNode::Toggle(UiToggleNode {
-            id: format!("{field_id}.toggle"),
-            icon_id: "check".into(),
-            text: Some(Label::data(if mixed.pressed { "Yes" } else { "No" })),
-            on_change: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
-            presence: UiPresence::selected(mixed.pressed),
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-        presence: UiPresence::default(),
-        menu: None,
-    })
-}
-//#endregion 🔖️Inspector
 
 //#region 🔖️Scene
 pub async fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {

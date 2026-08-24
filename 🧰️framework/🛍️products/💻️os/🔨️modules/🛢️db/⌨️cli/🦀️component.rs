@@ -310,6 +310,212 @@ async fn cmd_doc(rest: &[String]) -> i32 {
 }
 //#endregion 🔖️Doc
 
+//#region 🔖️CommandClose
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CliCommandCloseExit {
+    Closed,
+    Fault,
+    Interrupted,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct CliCommandCloseWitness {
+    exit: CliCommandCloseExit,
+    opportunities: u64,
+}
+
+static CLI_COMMAND_CLOSE_INTERRUPTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+static CLI_COMMAND_CLOSE_FAULTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+fn cli_command_close_witness(exit: CliCommandCloseExit, opportunities: u64) -> CliCommandCloseWitness {
+    CliCommandCloseWitness { exit, opportunities }
+}
+
+/// @emoji 🧹️ Mounted WAL-record close state; one poll owns one close opportunity.
+struct MountedWalRecordCommandClose {
+    owner: Option<db::wal::WalRecord>,
+    opportunities: u64,
+}
+
+impl MountedWalRecordCommandClose {
+    fn new(owner: db::wal::WalRecord) -> Self {
+        Self { owner: Some(owner), opportunities: 0 }
+    }
+}
+
+impl std::future::Future for MountedWalRecordCommandClose {
+    type Output = Result<CliCommandCloseWitness, db::DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        self.opportunities += 1;
+        let owner = self.owner.as_mut().expect("mounted WAL record owner");
+        match owner.close_step() {
+            Ok(true) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(false) => {
+                self.owner = None;
+                std::task::Poll::Ready(Ok(cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities)))
+            }
+            Err(error) => {
+                self.owner = None;
+                let _ = cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities);
+                CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                std::task::Poll::Ready(Err(error))
+            }
+        }
+    }
+}
+
+impl Drop for MountedWalRecordCommandClose {
+    fn drop(&mut self) {
+        if self.owner.take().is_some() {
+            let _ = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            CLI_COMMAND_CLOSE_INTERRUPTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+}
+
+/// @emoji 🧰️ Mounted WAL-batch close state; the batch cursor retires one record owner per poll.
+struct MountedWalBatchCommandClose {
+    owner: Option<db::wal::WalRecordBatch>,
+    opportunities: u64,
+}
+
+impl MountedWalBatchCommandClose {
+    fn new(owner: db::wal::WalRecordBatch) -> Self {
+        Self { owner: Some(owner), opportunities: 0 }
+    }
+}
+
+impl std::future::Future for MountedWalBatchCommandClose {
+    type Output = Result<CliCommandCloseWitness, db::DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        self.opportunities += 1;
+        let owner = self.owner.as_mut().expect("mounted WAL batch owner");
+        match owner.close_step() {
+            Ok(true) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(false) => {
+                self.owner = None;
+                std::task::Poll::Ready(Ok(cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities)))
+            }
+            Err(error) => {
+                self.owner = None;
+                let _ = cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities);
+                CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                std::task::Poll::Ready(Err(error))
+            }
+        }
+    }
+}
+
+impl Drop for MountedWalBatchCommandClose {
+    fn drop(&mut self) {
+        if self.owner.take().is_some() {
+            let _ = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            CLI_COMMAND_CLOSE_INTERRUPTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+}
+
+/// @emoji 📼️ Mounted replay-cursor close state with one synchronous owner step per poll.
+struct MountedWalReplayCommandClose<'storage> {
+    owner: Option<db::wal::WalReplayCursor<'storage, db::storage::FsStorage>>,
+    opportunities: u64,
+}
+
+impl<'storage> MountedWalReplayCommandClose<'storage> {
+    fn new(owner: db::wal::WalReplayCursor<'storage, db::storage::FsStorage>) -> Self {
+        Self { owner: Some(owner), opportunities: 0 }
+    }
+}
+
+impl std::future::Future for MountedWalReplayCommandClose<'_> {
+    type Output = Result<CliCommandCloseWitness, db::DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        self.opportunities += 1;
+        let owner = self.owner.as_mut().expect("mounted WAL replay owner");
+        match owner.close_owner_step() {
+            Ok(true) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(false) => {
+                self.owner = None;
+                std::task::Poll::Ready(Ok(cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities)))
+            }
+            Err(error) => {
+                self.owner = None;
+                let _ = cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities);
+                CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                std::task::Poll::Ready(Err(error))
+            }
+        }
+    }
+}
+
+impl Drop for MountedWalReplayCommandClose<'_> {
+    fn drop(&mut self) {
+        if self.owner.take().is_some() {
+            let _ = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            CLI_COMMAND_CLOSE_INTERRUPTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+}
+
+/// @emoji 📸️ Mounted snapshot-cursor close state with an exact terminal exit witness.
+struct MountedSnapshotCommandClose<'manager, 'storage> {
+    owner: Option<db::snapshot::SnapshotChainCursor<'manager, 'storage, db::storage::FsStorage>>,
+    opportunities: u64,
+}
+
+impl<'manager, 'storage> MountedSnapshotCommandClose<'manager, 'storage> {
+    fn new(owner: db::snapshot::SnapshotChainCursor<'manager, 'storage, db::storage::FsStorage>) -> Self {
+        Self { owner: Some(owner), opportunities: 0 }
+    }
+}
+
+impl std::future::Future for MountedSnapshotCommandClose<'_, '_> {
+    type Output = Result<CliCommandCloseWitness, db::DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        self.opportunities += 1;
+        let owner = self.owner.as_mut().expect("mounted snapshot cursor owner");
+        match owner.close_step() {
+            Ok(true) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(false) => {
+                self.owner = None;
+                std::task::Poll::Ready(Ok(cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities)))
+            }
+            Err(error) => {
+                self.owner = None;
+                let _ = cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities);
+                CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                std::task::Poll::Ready(Err(error))
+            }
+        }
+    }
+}
+
+impl Drop for MountedSnapshotCommandClose<'_, '_> {
+    fn drop(&mut self) {
+        if self.owner.take().is_some() {
+            let _ = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            CLI_COMMAND_CLOSE_INTERRUPTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+}
+//#endregion 🔖️CommandClose
+
 //#region 🔖️WalInspect
 fn wal_cursor_control() -> Result<db::wal::WalCursorControl, db::DbError> {
     db::wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)
@@ -319,9 +525,8 @@ async fn admit_cli_wal_bytes(source: Vec<u8>, maximum: u64, control: &mut db::wa
     match db::wal::WalBytes::try_admit(source, maximum, control).await {
         Ok(bytes) => Ok(bytes),
         Err(mut rejected) => {
-            while rejected.close_step()? {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = rejected.close_step()?;
             Err(rejected.into_error())
         }
     }
@@ -409,7 +614,8 @@ async fn cmd_wal_inspect(rest: &[String]) -> i32 {
             Err(err) => println!("  segment {index}: <error reading length: {err}>"),
         }
     }
-    while segments.close_step() {}
+    let _ = segments.close_step();
+    drop(segments);
 
     let control = match wal_cursor_control() {
         Ok(control) => control,
@@ -421,31 +627,28 @@ async fn cmd_wal_inspect(rest: &[String]) -> i32 {
             let mut count = 0usize;
             let mut shown = 0usize;
             loop {
-                match records.next().await {
-                    Ok(Some(mut record)) => {
+                match records.next_step().await {
+                    Ok(db::wal::WalReplayStep::Record(record)) => {
                         if limit.is_none_or(|limit| shown < limit) {
                             println!("  [{count}] {}", describe_wal_record(&record));
                             shown += 1;
                         }
                         count += 1;
-                        loop {
-                            match record.close_step() {
-                                Ok(true) => {}
-                                Ok(false) => break,
-                                Err(err) => return fail("record close", err).await,
-                            }
+                        if let Err(err) = MountedWalRecordCommandClose::new(record).await {
+                            let _ = MountedWalReplayCommandClose::new(records).await;
+                            return fail("record close", err).await;
                         }
                     }
-                    Ok(None) => break,
-                    Err(err) => return fail("replay", err).await,
+                    Ok(db::wal::WalReplayStep::Yield) => continue,
+                    Ok(db::wal::WalReplayStep::Done) => break,
+                    Err(err) => {
+                        let _ = MountedWalReplayCommandClose::new(records).await;
+                        return fail("replay", err).await;
+                    }
                 }
             }
-            loop {
-                match records.close_step().await {
-                    Ok(true) => {}
-                    Ok(false) => break,
-                    Err(err) => return fail("replay close", err).await,
-                }
+            if let Err(err) = MountedWalReplayCommandClose::new(records).await {
+                return fail("replay close", err).await;
             }
             if shown < count {
                 println!("  ... {} more (pass --limit to see more)", count - shown);
@@ -491,7 +694,8 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
         println!("  - {generation}");
     }
     let latest = generations.last().copied();
-    while generations.close_step() {}
+    let _ = generations.close_step();
+    drop(generations);
     let Some(latest) = latest else {
         return 0;
     };
@@ -511,7 +715,10 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     let mut cursor = manager.chain_cursor(&document, generation, control);
     let descriptor = match db::actor::block_on(cursor.latest_descriptor()) {
         Ok(descriptor) => descriptor,
-        Err(err) => return fail("snapshot_cursor", err).await,
+        Err(err) => {
+            let _ = MountedSnapshotCommandClose::new(cursor).await;
+            return fail("snapshot_cursor", err).await;
+        }
     };
     println!("== generation {generation} descriptor ==");
     println!("  parent_generation: {}", descriptor.parent_generation.map_or_else(|| "-".to_string(), |generation| generation.to_string()));
@@ -525,12 +732,8 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     println!("  roots: {}", descriptor.roots.len());
     println!("  new_pages: {}", descriptor.new_pages.len());
     println!("  created_at_ms: {}", descriptor.created_at_ms);
-    loop {
-        match cursor.close_step() {
-            Ok(true) => {}
-            Ok(false) => break,
-            Err(err) => return fail("snapshot cursor close", err).await,
-        }
+    if let Err(err) = MountedSnapshotCommandClose::new(cursor).await {
+        return fail("snapshot cursor close", err).await;
     }
 
     if verify {
@@ -553,11 +756,16 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
 async fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids::ArtifactId) -> Result<String, db::DbError> {
     let mut records = db::wal::replay_document(storage, document, wal_cursor_control()?).await?;
     let mut record_count = 0usize;
-    while let Some(mut record) = records.next().await? {
+    loop {
+        let record = match records.next_step().await? {
+            db::wal::WalReplayStep::Record(record) => record,
+            db::wal::WalReplayStep::Yield => continue,
+            db::wal::WalReplayStep::Done => break,
+        };
         record_count += 1;
-        while record.close_step()? {}
+        MountedWalRecordCommandClose::new(record).await?;
     }
-    while records.close_step().await? {}
+    MountedWalReplayCommandClose::new(records).await?;
     let manager = db::snapshot::SnapshotManager::new(storage).await;
     match db::actor::block_on(manager.load_latest(document))? {
         Some((generation, _descriptor)) => {
@@ -662,7 +870,7 @@ async fn cmd_query(rest: &[String]) -> i32 {
                 }
             }
             match (|| -> Result<(), db::DbError> {
-                while stream.close_step()? {}
+                let _ = stream.close_step()?;
                 Ok(())
             })() {
                 Ok(()) => 0,
@@ -709,30 +917,27 @@ async fn cmd_replay(rest: &[String]) -> i32 {
     let mut last_frontier: Option<db::db_durability::Frontier> = None;
     let mut record_count = 0usize;
     loop {
-        let mut record = match records.next().await {
-            Ok(Some(record)) => record,
-            Ok(None) => break,
-            Err(err) => return fail("replay", err).await,
+        let record = match records.next_step().await {
+            Ok(db::wal::WalReplayStep::Record(record)) => record,
+            Ok(db::wal::WalReplayStep::Yield) => continue,
+            Ok(db::wal::WalReplayStep::Done) => break,
+            Err(err) => {
+                let _ = MountedWalReplayCommandClose::new(records).await;
+                return fail("replay", err).await;
+            }
         };
         record_count += 1;
         *kind_counts.entry(wal_record_kind_name(&record)).or_insert(0) += 1;
         if let db::wal::WalRecord::Frontier(frontier) = &record {
             last_frontier = Some(frontier.clone());
         }
-        loop {
-            match record.close_step() {
-                Ok(true) => {}
-                Ok(false) => break,
-                Err(err) => return fail("record close", err).await,
-            }
+        if let Err(err) = MountedWalRecordCommandClose::new(record).await {
+            let _ = MountedWalReplayCommandClose::new(records).await;
+            return fail("record close", err).await;
         }
     }
-    loop {
-        match records.close_step().await {
-            Ok(true) => {}
-            Ok(false) => break,
-            Err(err) => return fail("replay close", err).await,
-        }
+    if let Err(err) = MountedWalReplayCommandClose::new(records).await {
+        return fail("replay close", err).await;
     }
 
     println!("== replay: {id} ==");
@@ -988,18 +1193,15 @@ async fn cmd_migrate(rest: &[String]) -> i32 {
         Err(err) => return fail("wal migration admission", err).await,
     };
     let mut records = db::wal::WalRecordBatch::new();
-    if records.push(db::wal::WalRecord::Migration(bytes)).is_err() {
+    if let Err(record) = records.push(db::wal::WalRecord::Migration(bytes)) {
+        let _ = MountedWalRecordCommandClose::new(record).await;
+        let _ = MountedWalBatchCommandClose::new(records).await;
         return fail("wal migration", db::DbError::LimitExceeded("cli wal record batch")).await;
     }
-    match wal.submit(&storage, &records, db::DurabilityClass::Fsync, now).await {
-        Ok(receipt) => {
-            loop {
-                match records.close_step() {
-                    Ok(true) => {}
-                    Ok(false) => break,
-                    Err(err) => return fail("wal migration close", err).await,
-                }
-            }
+    let submission = wal.submit(&storage, &records, db::DurabilityClass::Fsync, now).await;
+    let close = MountedWalBatchCommandClose::new(records).await;
+    match (submission, close) {
+        (Ok(receipt), Ok(_)) => {
             if let Err(err) = db::actor::block_on(wal.force_flush(&storage)) {
                 return fail("flush", err).await;
             }
@@ -1010,7 +1212,8 @@ async fn cmd_migrate(rest: &[String]) -> i32 {
             println!("  committed: {}", receipt.committed);
             0
         }
-        Err(err) => fail("migrate", err).await,
+        (Err(err), _) => fail("migrate", err).await,
+        (_, Err(err)) => fail("wal migration close", err).await,
     }
 }
 //#endregion 🔖️Migrate
@@ -1332,6 +1535,37 @@ mod tests {
         assert_eq!(main_impl(&[String::from("help")]).await, 0);
         assert_eq!(main_impl(&[String::from("--help")]).await, 0);
         assert_eq!(main_impl(&[String::from("bogus-subcommand")]).await, 2);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses() {
+        let waker = std::task::Waker::noop();
+        let context = &mut std::task::Context::from_waker(waker);
+        let mut record = MountedWalRecordCommandClose::new(db::wal::WalRecord::VcsRef(db::storage::DbIoText::try_from_str("retained-cli-record").unwrap()));
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Pending));
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 2 }))));
+        drop(record);
+        let mut batch = db::wal::WalRecordBatch::new();
+        assert!(batch.push(db::wal::WalRecord::TxBegin { tx_id: 2 }).is_ok());
+        assert!(batch.push(db::wal::WalRecord::TxCommit { tx_id: 2, record_count: 0 }).is_ok());
+        let mut batch_close = MountedWalBatchCommandClose::new(batch);
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Pending));
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Pending));
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 3 }))));
+        drop(batch_close);
+        let interrupted = CLI_COMMAND_CLOSE_INTERRUPTED.load(std::sync::atomic::Ordering::Acquire);
+        let owner = MountedWalRecordCommandClose::new(db::wal::WalRecord::TxAbort { tx_id: 3 });
+        drop(owner);
+        assert_eq!(CLI_COMMAND_CLOSE_INTERRUPTED.load(std::sync::atomic::Ordering::Acquire), interrupted + 1);
+        let mut full = db::wal::WalRecordBatch::new();
+        for tx_id in 0..64 {
+            assert!(full.push(db::wal::WalRecord::TxBegin { tx_id }).is_ok());
+        }
+        let refusal = full.push(db::wal::WalRecord::TxAbort { tx_id: 65 }).unwrap_err();
+        assert_eq!(MountedWalRecordCommandClose::new(refusal).await.unwrap().exit, CliCommandCloseExit::Closed);
+        assert_eq!(MountedWalBatchCommandClose::new(full).await.unwrap().opportunities, 65);
+        assert_eq!(cli_command_close_witness(CliCommandCloseExit::Fault, 1).exit, CliCommandCloseExit::Fault);
+        assert_eq!(db::wal::WalRecordBatch::new().len(), 0);
     }
     //#endregion 🔖️Cli
 }

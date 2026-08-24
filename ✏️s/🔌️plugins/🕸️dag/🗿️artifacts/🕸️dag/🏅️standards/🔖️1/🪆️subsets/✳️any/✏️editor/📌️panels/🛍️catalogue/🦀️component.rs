@@ -1,9 +1,8 @@
 //! 🛍️ DAG play app panel — the node-kind catalogue (drag/click-to-add palette).
 
-use crate::editor::dag::dag_action;
+use crate::editor::dag::{dag_action, ui_value_map, ui_value_text};
 use crate::editor::dag::terminology::DagPlayLabels;
-use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
-use serde_json::json;
+use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_CATALOGUE: &str = "dag.play.catalogue";
@@ -24,22 +23,15 @@ pub async fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub async fn render(labels: &DagPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let kinds = [("computation", labels.kind_computation), ("slider", labels.kind_slider), ("select", labels.kind_select), ("screen", labels.kind_screen), ("note", labels.kind_note), ("preview", labels.kind_preview)];
-    UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "dag-play-catalogue.node-kinds".into(),
-            label: Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)),
-            default_open: Some(true),
-            presence: UiPresence::default(),
-            items: kinds.iter().map(|(kind, label)| tree_item_with_action(format!("dag-play-catalogue.kind.{kind}"), *label, Some((*kind).into()), dag_action("addNode", Some(json!({ "kind": kind }))))?).collect(),
-        }],
-        presence: UiPresence::default(),
-        // 🕹️ A palette, not entity selection — declares no interaction domain (ticket
-        // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); rows keep their plain per-item
-        // `addNode` action above.
-        interaction_domain: None,
-        drop_action: None,
-        menu: None,
-    })
+    let mut items = UiFixedList::default();
+    for (kind, label) in kinds {
+        let args = ui_value_map([("kind", ui_value_text(kind)?)])?;
+        let item = tree_item_with_action(format!("dag-play-catalogue.kind.{kind}"), label, Some(kind.into()), dag_action("addNode", Some(args))?)?;
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "dag catalogue item admission failed"))?;
+    }
+    PanelTreeBuilder::new("dag-play-catalogue")?
+        .section("dag-play-catalogue.node-kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)?
+        .build()
 }
 //#endregion 🔖️Render
 

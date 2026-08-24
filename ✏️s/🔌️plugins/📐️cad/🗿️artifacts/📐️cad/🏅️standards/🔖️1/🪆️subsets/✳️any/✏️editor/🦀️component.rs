@@ -33,8 +33,8 @@ use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
 use base64::Engine as _;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{
-    tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, Emit,
-    Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, WorldSunConfig,
+    tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, Emit,
+    Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiNode, UiText, UiValue, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure, WorldSunConfig,
     SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
@@ -302,6 +302,47 @@ pub fn cad_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -
     semio_framework_plugin::ActionFactory::new(CAD_PLAY_CONTROLLER_ID).action(action, args)
 }
 
+/// 🧱️ Admits one fixed CAD UI text value.
+pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+    UiText::try_from_str(value.as_ref())
+        .map(UiValue::Text)
+        .ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI text admission failed"))
+}
+
+/// 🔘️ Admits one CAD boolean action value.
+pub fn ui_value_bool(value: bool) -> UiValue {
+    UiValue::Bool(value)
+}
+
+/// 📚️ Admits one fixed CAD UI list value.
+pub fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI list admission failed"))?;
+    for value in values {
+        builder.push(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI list item admission failed"))?;
+    }
+    Ok(UiValue::List(builder.finish()))
+}
+
+/// 🗺️ Admits one fixed CAD UI map value.
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI map admission failed"))?;
+    for (key, value) in values {
+        builder.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI map entry admission failed"))?;
+    }
+    Ok(UiValue::Map(builder.finish()))
+}
+
+/// 🌳️ Admits fallibly assembled CAD nodes into fixed storage.
+pub fn ui_node_list(
+    values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI node admission failed"))?;
+    }
+    Ok(nodes)
+}
+
 pub async fn camera_json(camera: &CadCamera) -> String {
     world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(camera))
 }
@@ -332,11 +373,20 @@ pub async fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
 /// 🌳️ Cad's tree items carry an icon rather than the SDK `tree_item_with_action`'s description slot, so
 /// this stays a thin app-specific wrapper — built on the SDK's bare `tree_item` rather than hand-rolling
 /// the full `UiTreeItemNode` struct literal.
-pub async fn cad_tree_item(id: impl Into<String>, label: impl Into<Label>, icon_id: Option<&str>, action: ActionDescriptor) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut item = tree_item(id, label)?;
-    item.icon_id = icon_id.and_then(IconName::from_str);
-    item.action = Some(action);
-    item
+pub async fn cad_tree_item(
+    id: impl Into<String>,
+    label: impl TryInto<Label>,
+    icon_id: Option<&str>,
+    action: (semio_framework_plugin::ActionId, Option<UiValue>),
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut item = tree_item_with_action(id, label, None, action)?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+        props.icon = match icon_id {
+            Some(value) => Some(UiText::try_from_str(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad tree icon admission failed"))?),
+            None => None,
+        };
+    }
+    Ok(item)
 }
 
 /// 🪟️ Maps a pane to the window-KIND id whose Dislocate options it owns — the typed-command

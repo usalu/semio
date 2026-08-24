@@ -104,7 +104,7 @@ impl MountedProcessOwnerCatalog {
                 MountedOwnerClaim { class: MountedOwnerClass::MeshTriangulationVectors, roots: 3, items: SESSION_MAXIMUM_MESH_POINTS + 2 * (4 * SESSION_MAXIMUM_MESH_TRIANGLES + 1) },
                 MountedOwnerClaim { class: MountedOwnerClass::MeshTriangulationWorkspaceVectors, roots: 3, items: 3 * (12 * SESSION_MAXIMUM_MESH_TRIANGLES + 3) },
                 MountedOwnerClaim { class: MountedOwnerClass::MeshConstraintVector, roots: 1, items: 3 * SESSION_MAXIMUM_MESH_TRIANGLES },
-                MountedOwnerClaim { class: MountedOwnerClass::MeshEdgeIndexVectors, roots: 2, items: 3 * SESSION_MAXIMUM_MESH_TRIANGLES + 12 * SESSION_MAXIMUM_MESH_TRIANGLES + 3 },
+                MountedOwnerClaim { class: MountedOwnerClass::MeshEdgeIndexVectors, roots: 3, items: 3 * SESSION_MAXIMUM_MESH_TRIANGLES + 2 * (12 * SESSION_MAXIMUM_MESH_TRIANGLES + 3) },
                 MountedOwnerClaim { class: MountedOwnerClass::MeshOutputVectors, roots: 3, items: 2 * SESSION_MAXIMUM_MESH_POINTS + SESSION_MAXIMUM_MESH_TRIANGLES },
                 MountedOwnerClaim { class: MountedOwnerClass::AssemblyDofOrderVector, roots: 1, items: 3 * (SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS) },
                 MountedOwnerClaim { class: MountedOwnerClass::AssemblyDofStrings, roots: 3 * (SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS), items: 0 },

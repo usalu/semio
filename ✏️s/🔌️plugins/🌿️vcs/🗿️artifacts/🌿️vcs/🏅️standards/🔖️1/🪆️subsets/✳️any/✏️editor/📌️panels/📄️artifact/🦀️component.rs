@@ -1,9 +1,8 @@
 //! 📄️ VCS play app panel — the document tree: checkpoints and alternatives of the seeded history.
 
 use crate::editor::vcs::terminology::VcsPlayLabels;
-use crate::editor::vcs::{vcs_action, VCS_INTERACTION_HISTORY};
-use semio_framework_plugin::{tree_item_with_action, HistoryView, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
-use serde_json::json;
+use crate::editor::vcs::{ui_node_list, ui_value_map, ui_value_text, vcs_action, VCS_INTERACTION_HISTORY};
+use semio_framework_plugin::{tree_item_with_action, BuiltNode, HistoryView, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const VCS_PLAY_BODY_DOCUMENT: &str = "vcs.play.document";
@@ -34,45 +33,42 @@ pub async fn definition() -> PanelTabDefinition {
 /// Per-row `checkoutCheckpoint`/`switchAlternative` clicks stay app actions (navigation, not selection).
 pub async fn render(history: &HistoryView, labels: &VcsPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let builder = PanelTreeBuilder::new("vcs-play-document")?;
-    let checkpoint_items: Vec<UiTreeItemNode> = history
-        .columns
-        .iter()
-        .rev()
-        .map(|column| UiTreeItemNode {
-            icon_id: Some("git-commit".into()),
-            menu: None,
-            ..tree_item_with_action(
+    let checkpoint_items = ui_node_list(history.columns.iter().rev().map(|column| {
+        let action_args = ui_value_map([("checkpointId", ui_value_text(&column.checkpoint_id)?)])?;
+        let mut node = tree_item_with_action(
                 builder.item_id("checkpoint", &column.checkpoint_id)?,
                 Label::data(column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone())),
                 Some(column.timestamp.clone()),
-                vcs_action("checkoutCheckpoint", Some(json!({ "checkpointId": column.checkpoint_id }))),
-            )?
-        })
-        .collect();
-    let mut alternative_ids: Vec<String> = Vec::new();
+                vcs_action("checkoutCheckpoint", Some(action_args))?,
+            )?;
+        if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+            props.icon = Some(UiText::try_from_str("git-commit").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "vcs checkpoint icon admission failed"))?);
+        }
+        Ok(node)
+    }))?;
+    let mut alternative_ids = UiFixedList::<UiText>::default();
     for column in &history.columns {
         for alternative_id in &column.alternative_ids {
-            if !alternative_ids.contains(alternative_id) {
-                alternative_ids.push(alternative_id.clone());
+            if !alternative_ids.iter().any(|candidate| candidate.as_str() == alternative_id) {
+                let id = UiText::try_from_str(alternative_id).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "vcs alternative id admission failed"))?;
+                alternative_ids.try_push(id).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "vcs alternative index admission failed"))?;
             }
         }
     }
-    let alternative_items: Vec<UiTreeItemNode> = alternative_ids
-        .iter()
-        .map(|alternative_id| {
-            let count = history.columns.iter().filter(|column| column.alternative_ids.contains(alternative_id)).count();
-            UiTreeItemNode {
-                icon_id: Some("git-branch".into()),
-                menu: None,
-                ..tree_item_with_action(
-                    builder.item_id("alternative", alternative_id)?,
-                    Label::data(alternative_id.clone()),
+    let alternative_items = ui_node_list(alternative_ids.iter().map(|alternative_id| {
+            let count = history.columns.iter().filter(|column| column.alternative_ids.iter().any(|candidate| candidate == alternative_id.as_str())).count();
+            let action_args = ui_value_map([("alternativeId", ui_value_text(alternative_id.as_str())?)])?;
+            let mut node = tree_item_with_action(
+                    builder.item_id("alternative", alternative_id.as_str())?,
+                    Label::data(alternative_id.as_str()),
                     Some(format!("{count} {}", labels.checkpoints.as_str())),
-                    vcs_action("switchAlternative", Some(json!({ "alternativeId": alternative_id }))),
-                )?
+                    vcs_action("switchAlternative", Some(action_args))?,
+                )?;
+            if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+                props.icon = Some(UiText::try_from_str("git-branch").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "vcs alternative icon admission failed"))?);
             }
-        })
-        .collect();
+            Ok(node)
+        }))?;
     builder
         .section_or_placeholder("vcs-play-document.checkpoints", Some(labels.document.into()), true, checkpoint_items, labels.no_checkpoints)?
         .section("vcs-play-document.alternatives", Some(labels.alternatives.into()), true, alternative_items)?

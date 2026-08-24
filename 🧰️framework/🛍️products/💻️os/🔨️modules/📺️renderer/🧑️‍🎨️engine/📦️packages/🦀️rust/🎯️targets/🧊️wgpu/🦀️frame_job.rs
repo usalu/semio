@@ -649,22 +649,20 @@ mod tests {
     }
 
     fn compute(inputs: FrameBuildInputs) -> FrameDirectives {
-        let mut job = FrameBuildJob::new(inputs);
         let params = batch_params(OperationId(1), Generation(1), root_cancel_token());
-        let mut preview_sequence = 0;
-        let outcome = semio_framework_job::drive_step(
-            &mut job,
-            params.config.site,
-            params.operation,
-            params.generation,
-            params.config.stage,
-            semio_framework_job::StepBudget::new(params.config.fuel_per_step, u64::MAX),
-            params.cancel,
-            params.now_ms,
-            &mut preview_sequence,
-        );
+        let mut session = BatchJobSession::try_new(FrameBuildJob::new(inputs), params).unwrap_or_else(|_| panic!("frame compute session admission"));
+        assert!(matches!(session.step(), Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)));
+        let directives = session.checked_out_job_mut().and_then(FrameBuildJob::take_directives).unwrap_or_else(|| panic!("completed directives"));
+        let mut outcome = session.take_outcome().unwrap_or_else(|| panic!("frame compute retained outcome"));
         assert!(matches!(outcome, StepOutcome::Complete(_)));
-        job.take_directives().expect("completed directives")
+        while !outcome.terminal_is_empty() {
+            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        session.begin_close();
+        while !session.terminal_is_empty() {
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        directives
     }
 
     #[test]

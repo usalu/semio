@@ -2,8 +2,7 @@
 
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::audit_trail;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::editor::architect::chrome::{tree_item, tree_node, tree_section};
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiNode, UiTreeItemNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_TRACE: &str = "architect-trace";
@@ -43,8 +42,18 @@ pub async fn definition() -> WindowKindDefinition {
 /// instead of one scoped to a selection.
 pub async fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let trail = audit_trail(program, None);
-    let audit_items: Vec<UiTreeItemNode> = trail.events.iter().take(12).enumerate().map(|(index, event)| tree_item(format!("architect-trace.audit.{index}"), format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name))?).collect();
-    tree_node(vec![tree_section("architect-trace.audit", Some(format!("Audit Trail ({})", trail.events.len())), if audit_items.is_empty() { vec![tree_item("architect-trace.audit.empty", "(no events)")?] } else { audit_items })])
+    let mut items = UiFixedList::default();
+    for (index, event) in trail.events.iter().take(12).enumerate() {
+        let item = tree_item_desc(format!("architect-trace.audit.{index}"), Label::data(format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name)), None)?;
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect trace event admission failed"))?;
+    }
+    if items.is_empty() {
+        let item = tree_item_desc("architect-trace.audit.empty", Label::data("(no events)"), None)?;
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect trace empty row admission failed"))?;
+    }
+    PanelTreeBuilder::new("architect-trace")?
+        .section("architect-trace.audit", Some(Label::data(format!("Audit Trail ({})", trail.events.len()))), true, items)?
+        .build()
 }
 //#endregion 🔖️Render
 

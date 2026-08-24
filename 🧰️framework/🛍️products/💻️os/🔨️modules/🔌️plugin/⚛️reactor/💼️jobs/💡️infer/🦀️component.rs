@@ -36,7 +36,7 @@ struct InferenceBridgeItem {
     payload: Vec<u8>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 enum LosslessInferenceItem {
     Checkpoint(semio_framework_job::Checkpoint),
     Commit(CommitCandidate),
@@ -211,7 +211,20 @@ async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifac
     };
     let cores = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
     let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
-    let session = semio_framework_job::WorkerJobSession::new(dispatch.job, params);
+    let mut session = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
+        Ok(session) => session,
+        Err(mut rejected) => {
+            loop {
+                ctx.tick().await;
+                match rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { .. } | semio_framework_job::InteractiveJobCloseStep::Blocked => {}
+                    semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => break,
+                    semio_framework_job::InteractiveJobCloseStep::Complete => return Err(super::fault("job.infer.admission-false-terminal", "interactive inference admission rejection did not reach terminal-empty authority")),
+                }
+            }
+            return Err(super::fault("job.infer.admission", "interactive inference worker session capacity is exhausted"));
+        }
+    };
 
     loop {
         if crate::app::inference_cancelled(&request.cancellation_id).map_err(|error| super::fault(error.code, error.message))? {
@@ -220,38 +233,77 @@ async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifac
         ctx.tick().await;
         let scheduled = bridge.scheduled();
         ctx.progress(encode_bridge_item(&scheduled)).await;
-        let outcome = session.step(&pool, semio_framework_async::Lane::UserVisible).await.map_err(|_| super::fault("job.infer.worker-closed", "interactive inference worker result channel closed"))?;
-        match outcome {
-            StepOutcome::Yield => {}
-            StepOutcome::PreviewReady(bytes) => {
+        let poll = session.pump_one(&pool, semio_framework_async::Lane::UserVisible).map_err(|_| super::fault("job.infer.worker-pump", "interactive inference mounted worker transition was rejected"))?;
+        if !matches!(poll, semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) {
+            continue;
+        }
+        let mut outcome = session.take_checked_out_outcome().ok_or_else(|| super::fault("job.infer.outcome-missing", "interactive inference mounted worker checkout lost its exact outcome"))?;
+        let terminal = outcome.is_terminal();
+        let result = match &outcome {
+            StepOutcome::Yield => None,
+            StepOutcome::PreviewReady(payload) => {
+                let bytes = copy_retained_payload(payload, PREVIEW_MAX_BYTES)?;
                 bridge.publish_preview(bytes).map_err(bridge_fault)?;
                 if let Some(item) = bridge.take_preview() {
                     ctx.progress(encode_bridge_item(&item)).await;
                 }
+                None
             }
             StepOutcome::CheckpointReady(checkpoint) => {
-                bridge.publish_lossless(LosslessInferenceItem::Checkpoint(checkpoint)).map_err(bridge_fault)?;
-                if let Some(LosslessInferenceItem::Checkpoint(checkpoint)) = bridge.take_lossless() {
-                    ctx.checkpoint(checkpoint.state).await;
-                }
+                ctx.checkpoint(copy_retained_payload(&checkpoint.state, LOSSLESS_MAX_BYTES)?).await;
+                None
             }
             StepOutcome::Complete(candidate) => {
-                bridge.publish_lossless(LosslessInferenceItem::Commit(candidate)).map_err(bridge_fault)?;
-                let Some(LosslessInferenceItem::Commit(candidate)) = bridge.take_lossless() else {
-                    return Err(super::fault("job.infer.bridge", "commit channel returned a non-commit item"));
-                };
-                return encode_result(request, candidate.output);
+                let output = copy_retained_payload(&candidate.output, LOSSLESS_MAX_BYTES)?;
+                Some(encode_result(request.clone(), output))
             }
-            StepOutcome::Cancelled => return Err(super::fault("job.infer.cancelled", "interactive inference was cancelled")),
+            StepOutcome::Cancelled => Some(Err(super::fault("job.infer.cancelled", "interactive inference was cancelled"))),
             StepOutcome::Fault(fault) => {
-                bridge.publish_diagnostic(fault.detail.clone());
+                bridge.publish_diagnostic(copy_retained_payload(&fault.detail, DIAGNOSTIC_MAX_BYTES)?);
                 if let Some(item) = bridge.latest_diagnostic() {
                     ctx.progress(encode_bridge_item(item)).await;
                 }
-                return Err(super::fault("job.infer.interactive", String::from_utf8_lossy(&fault.detail).into_owned()));
+                let detail = bridge.latest_diagnostic().map(|item| String::from_utf8_lossy(&item.payload).into_owned()).unwrap_or_else(|| "interactive inference failed without retained diagnostic bytes".to_string());
+                Some(Err(super::fault("job.infer.interactive", detail)))
+            }
+        };
+        loop {
+            ctx.tick().await;
+            match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                semio_framework_job::JobPayloadCloseStep::Pending { .. } => {}
+                semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => break,
+                semio_framework_job::JobPayloadCloseStep::Complete => return Err(super::fault("job.infer.outcome-false-terminal", "interactive inference outcome did not reach terminal-empty payload authority")),
             }
         }
+        if terminal {
+            session.begin_close();
+            loop {
+                ctx.tick().await;
+                match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                    semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Blocked => {}
+                    semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => break,
+                    semio_framework_job::WorkerJobCloseStep::Complete => return Err(super::fault("job.infer.session-false-terminal", "interactive inference session did not reach terminal-empty authority")),
+                }
+            }
+            return result.unwrap_or_else(|| Err(super::fault("job.infer.terminal-result", "terminal interactive inference produced no result")));
+        }
+        session.resume().map_err(|_| super::fault("job.infer.resume", "interactive inference outcome lost its exact resume authority"))?;
     }
+}
+
+fn copy_retained_payload(payload: &semio_framework_job::RetainedJobPayload, maximum_bytes: usize) -> Result<Vec<u8>, semio_framework::Fault> {
+    if payload.len() > maximum_bytes {
+        return Err(super::fault("job.infer.payload-limit", format!("interactive inference retained payload has {} bytes, above {maximum_bytes}", payload.len())));
+    }
+    let mut bytes = Vec::with_capacity(payload.len());
+    let mut reader = payload.reader();
+    while let Some(page) = reader.read_page(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+        bytes.extend_from_slice(page);
+    }
+    if !reader.terminal_is_empty() {
+        return Err(super::fault("job.infer.payload-page", "interactive inference retained payload page exceeded the fixed codec grant"));
+    }
+    Ok(bytes)
 }
 
 fn bridge_fault(error: InferenceBridgeError) -> semio_framework::Fault {

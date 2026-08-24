@@ -5,8 +5,7 @@
 
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
-use semio_framework_plugin::{tree_item, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode};
-use serde_json::json;
+use semio_framework_plugin::{tree_item, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder};
 
 pub const SPACE_INDEX_BODY_MEMBERS: &str = "s.space.members";
 pub const SPACE_INDEX_PANEL_MEMBERS: &str = "s-space-members";
@@ -18,15 +17,25 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn action_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args: serde_json::Value) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(id, label, None, space_index_action(action, Some(args)))? }
+fn action_button(id: &str, label: impl TryInto<Label>, icon: &str, action: &str, args: semio_framework_plugin::UiValue) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut item = tree_item_with_action(id, label, None, space_index_action(action, Some(args))?)?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+        props.icon = Some(semio_framework_plugin::UiText::try_from_str(icon).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.member.icon", "fixed member-row icon admission failed"))?);
+    }
+    Ok(item)
 }
 
-async fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::config::SpaceIndexMember) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::config::SpaceIndexMember) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let row_id = format!("member:{}", member.user_id);
     let label = if member.display_name.is_empty() { member.email.clone() } else { format!("{} ({})", member.display_name, member.email) };
     let _ = config;
-    UiTreeItemNode { description: Some(member.role.clone()), icon_id: Some("user".into()), menu: None, ..tree_item_with_action(row_id, Label::data(label), None, space_index_action("removeMember", Some(json!({ "userId": member.user_id }))))? }
+    let args = crate::editor::space_index::ui_value_map([("userId", crate::editor::space_index::ui_value_text(&member.user_id)?)])?;
+    let mut item = tree_item_with_action(row_id, Label::data(label), None, space_index_action("removeMember", Some(args))?)?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+        props.description = Some(semio_framework_plugin::UiText::try_from_str(&member.role).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.member.role", "fixed member role admission failed"))?);
+        props.icon = Some(semio_framework_plugin::UiText::try_from_str("user").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.member.icon", "fixed member-row icon admission failed"))?);
+    }
+    Ok(item)
 }
 
 /// 👥️ `#s-space-share` (contract §C0 id grammar) is the copy-invite-link action's element id; every
@@ -44,21 +53,38 @@ async fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_ind
 /// string (panel tab, dialogs, action labels) is already en+de.
 pub async fn render(config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let visibility_action = if config.visibility == "public" {
-        action_button("s-space-visibility", Label::data("Make Private"), "lock", "setVisibility", json!({ "visibility": "private" }))
+        action_button("s-space-visibility", Label::data("Make Private"), "lock", "setVisibility", crate::editor::space_index::ui_value_map([("visibility", crate::editor::space_index::ui_value_text("private")?)])?)
     } else {
-        action_button("s-space-visibility", Label::data("Make Public"), "globe", "setVisibility", json!({ "visibility": "public" }))
+        action_button("s-space-visibility", Label::data("Make Public"), "globe", "setVisibility", crate::editor::space_index::ui_value_map([("visibility", crate::editor::space_index::ui_value_text("public")?)])?)
     };
-    let action_items = vec![
-        action_button("s-space-invite", Label::data("Invite Member"), "user-plus", "requestInviteMember", json!({})),
-        action_button("s-space-share", Label::data("Copy Invite Link"), "link", "copyInviteLink", json!({ "role": "spectator", "ttlSecs": 604800u64 })),
+    let action_items = crate::editor::space_index::ui_node_list([
+        action_button("s-space-invite", Label::data("Invite Member"), "user-plus", "requestInviteMember", semio_framework_plugin::UiValue::Map(Default::default())),
+        action_button(
+            "s-space-share",
+            Label::data("Copy Invite Link"),
+            "link",
+            "copyInviteLink",
+            crate::editor::space_index::ui_value_map([
+                ("role", crate::editor::space_index::ui_value_text("spectator")?),
+                ("ttlSecs", crate::editor::space_index::ui_value_number(604800.0)),
+            ])?,
+        ),
         visibility_action,
-    ];
+    ])?;
     let member_items = if config.members.is_empty() {
-        vec![UiTreeItemNode { icon_id: Some("users".into()), menu: None, ..tree_item("s-space-members-empty", Label::data("No members yet"))? }]
+        let mut empty = tree_item("s-space-members-empty", Label::data("No members yet"))?;
+        if let semio_framework_plugin::Component::TreeItem(props) = &mut empty.component {
+            props.icon = Some(semio_framework_plugin::UiText::try_from_str("users").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.member.icon", "fixed member-row icon admission failed"))?);
+        }
+        crate::editor::space_index::ui_node_list([Ok(empty)])?
     } else {
-        config.members.iter().map(|member| member_row(config, member)).collect()
+        crate::editor::space_index::ui_node_list(config.members.iter().map(|member| member_row(config, member)))?
     };
-    PanelTreeBuilder::new(SPACE_INDEX_PANEL_MEMBERS)?.section(SPACE_INDEX_PANEL_MEMBERS, Some(Label::data("Members")), true, action_items.into_iter().chain(member_items).collect())?.build()
+    let mut items = semio_framework_plugin::UiFixedList::default();
+    for item in action_items.into_iter().chain(member_items) {
+        items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.member.items", "fixed member panel admission failed"))?;
+    }
+    PanelTreeBuilder::new(SPACE_INDEX_PANEL_MEMBERS)?.section(SPACE_INDEX_PANEL_MEMBERS, Some(Label::data("Members")), true, items)?.build()
 }
 //#endregion 🔖️Render
 

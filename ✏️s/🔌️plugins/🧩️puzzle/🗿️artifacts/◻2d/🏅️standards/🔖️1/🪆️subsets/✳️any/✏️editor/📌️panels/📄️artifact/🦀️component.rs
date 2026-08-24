@@ -4,8 +4,8 @@
 //! presence after render.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle2d_interaction_select, Puzzle2dScene, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN};
-use semio_framework_plugin::{tree_item_with_action, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, Puzzle2dScene, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN};
+use semio_framework_plugin::{tree_item_with_action, ActionFactory, BuiltNode, InteractionTarget, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use serde_json::Value;
 
 //#region 🔖️Constants
@@ -37,23 +37,53 @@ fn edge_label(edge: &Value, fixture: &Value) -> String {
     format!("{source_label} → {target_label}")
 }
 
+fn ui_text(value: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+    UiText::try_from_str(value)
+        .map(UiValue::Text)
+        .ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d document action text admission failed"))
+}
+
+fn selection_args(id: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+    let targets = serde_json::to_string(&[InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: id.into() }])
+        .map_err(|error| PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
+    let mut args = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d document action map admission failed"))?;
+    for (key, value) in [
+        ("domainId", ui_text(PUZZLE2D_INTERACTION_DOMAIN)?),
+        ("merge", ui_text("replace")?),
+        ("method", ui_text("pick")?),
+        ("targets", ui_text(&targets)?),
+    ] {
+        args.push(key.into(), value)
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d document action entry admission failed"))?;
+    }
+    Ok(UiValue::Map(args.finish()))
+}
+
 pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let fixture = &envelope.fixture;
     let actions = ActionFactory::new(crate::editor::puzzle2d::PUZZLE2D_PLAY_CONTROLLER_ID);
-    let node_items: Vec<BuiltNode> = fixture_nodes(fixture)
-        .iter()
-        .filter_map(|node| {
-            let id = node.get("id")?.as_str()?;
-            Some(tree_item_with_action(id.to_string(), node_label(node), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(serde_json::json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: id.into() }]).unwrap_or_default(), "merge": "replace", "method": "pick" }))))?)
-        })
-        .collect();
-    let edge_items: Vec<BuiltNode> = fixture_edges(fixture)
-        .iter()
-        .filter_map(|edge| {
-            let id = edge.get("id")?.as_str()?;
-            Some(tree_item_with_action(id.to_string(), edge_label(edge, fixture), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(serde_json::json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: id.into() }]).unwrap_or_default(), "merge": "replace", "method": "pick" }))))?)
-        })
-        .collect();
+    let mut node_items = UiFixedList::<BuiltNode>::default();
+    for node in fixture_nodes(fixture) {
+        let id = node.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d node id is required"))?;
+        let item = tree_item_with_action(
+            id.to_string(),
+            node_label(node),
+            node.get("nodeKind").and_then(Value::as_str).map(str::to_string),
+            actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(selection_args(id)?))?,
+        )?;
+        node_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d document node admission failed"))?;
+    }
+    let mut edge_items = UiFixedList::<BuiltNode>::default();
+    for edge in fixture_edges(fixture) {
+        let id = edge.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d edge id is required"))?;
+        let item = tree_item_with_action(
+            id.to_string(),
+            edge_label(edge, fixture),
+            edge.get("edgeKind").and_then(Value::as_str).map(str::to_string),
+            actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(selection_args(id)?))?,
+        )?;
+        edge_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d document edge admission failed"))?;
+    }
     PanelTreeBuilder::new("puzzle2d-play-document")?
         .section_or_placeholder("puzzle2d-play-document.nodes", Some(labels.nodes.as_str().into()), true, node_items, labels.none.as_str())?
         .section_or_placeholder("puzzle2d-play-document.edges", Some(labels.edges.as_str().into()), false, edge_items, labels.none.as_str())?

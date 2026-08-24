@@ -111,8 +111,20 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// 🌳️ Layers an `icon_id` onto the SDK's `tree_item_with_action` skeleton — the SDK primitive's third
 /// parameter is `description`, not an icon, so the shooting-specific icon assignment stays local. Shared
 /// by the document and catalogue panels (two consumers)?.
-pub async fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..tree_item_with_action(id, label, None, action)? }
+pub fn tree_item_with_icon(
+    id: impl AsRef<str>,
+    label: impl TryInto<Label>,
+    icon_id: &str,
+    action: semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut node = tree_item_with_action(id, label, None, action?)?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+        props.icon = Some(
+            semio_framework_plugin::UiText::try_from_str(icon_id)
+                .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.tree-item.icon", "fixed tree-item icon admission failed"))?,
+        );
+    }
+    Ok(node)
 }
 //#endregion 🔖️Utilities
 

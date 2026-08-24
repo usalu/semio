@@ -3,11 +3,10 @@
 
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
 use crate::artifacts::program::ProgramSnapshot;
-use crate::editor::architect::architect_action;
-use crate::editor::architect::chrome::{adjacency_kind_label, element_label, stack_row, tree_item, tree_item_with_action, tree_node, tree_section};
+use crate::editor::architect::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
+use crate::editor::architect::chrome::{adjacency_kind_label, element_label};
 use crate::editor::architect::config::ArchitectConfig;
-use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
-use serde_json::json;
+use semio_framework_plugin::{tree_item_desc, tree_item_with_action, ui_text, Label, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_ADJACENCY: &str = "architect-adjacency";
@@ -49,18 +48,20 @@ pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_f
         return ui_text(Label::data("Add program elements to edit adjacencies."));
     }
 
-    let mut glyph_rows = Vec::new();
-    let mut pair_sections = Vec::new();
-
-    glyph_rows.push(ui_text(Label::data(" ")));
-    pair_sections.push(tree_section("architect-adjacency.headers", Some("Columns".into()), matrix.element_ids.iter().enumerate().map(|(index, id)| tree_item(format!("architect-adjacency.col.{index}"), element_label(program, id))?).collect()));
+    let mut tree = PanelTreeBuilder::new("architect-adjacency")?;
+    let mut headers = UiFixedList::default();
+    for (index, id) in matrix.element_ids.iter().enumerate() {
+        let item = tree_item_desc(format!("architect-adjacency.col.{index}"), Label::data(element_label(program, id)), None)?;
+        headers.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect adjacency header admission failed"))?;
+    }
+    tree = tree.section("architect-adjacency.headers", Some(Label::data("Columns")), true, headers)?;
 
     for row in 1..n {
         let row_id = &matrix.element_ids[row];
         let glyph = "▲️".repeat(row);
-        glyph_rows.push(ui_text(Label::data(glyph)));
-
-        let mut items = Vec::new();
+        let mut items = UiFixedList::default();
+        let glyph = tree_item_desc(format!("architect-adjacency.row.{row}.glyph"), Label::data(glyph), None)?;
+        items.try_push(glyph).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect adjacency glyph admission failed"))?;
         for col in 0..row {
             let col_id = &matrix.element_ids[col];
             let cell = &matrix.cells[row][col];
@@ -73,34 +74,32 @@ pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_f
             }
             let kind_label = cell.as_ref().map_or_else(|| "—".into(), |existing| adjacency_kind_label(&existing.kind).to_string());
             let label = format!("{} ↔ {} [{kind_label}]", element_label(program, col_id), element_label(program, row_id));
-            items.push(tree_item_with_action(
+            let args = ui_value_map([
+                ("elementAId", ui_value_text(col_id.to_string())?),
+                ("elementBId", ui_value_text(row_id.to_string())?),
+                ("cycle", ui_value_bool(true)),
+            ])?;
+            let item = tree_item_with_action(
                 format!("architect-adjacency.pair.{col_id}-{row_id}"),
-                label,
+                Label::data(label),
                 None,
-                architect_action(
-                    "setAdjacencyKind",
-                    Some(json!({
-                        "elementAId": col_id,
-                        "elementBId": row_id,
-                        "cycle": true
-                    })),
-                ),
-            )?);
+                architect_action("setAdjacencyKind", Some(args))?,
+            )?;
+            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect adjacency pair admission failed"))?;
         }
-
-        pair_sections.push(tree_section(format!("architect-adjacency.row.{row}"), Some(element_label(program, row_id)), items));
+        tree = tree.section(format!("architect-adjacency.row.{row}"), Some(Label::data(element_label(program, row_id))), true, items)?;
     }
 
     let conflicts = detect_adjacency_conflicts(program);
     if !conflicts.is_empty() {
-        pair_sections.push(tree_section(
-            "architect-adjacency.conflicts",
-            Some(format!("Conflicts ({})", conflicts.len())),
-            conflicts.iter().map(|conflict| tree_item(format!("architect-adjacency.conflict.{}", conflict.adjacency_a_id), &conflict.message)?).collect(),
-        ));
+        let mut items = UiFixedList::default();
+        for conflict in &conflicts {
+            let item = tree_item_desc(format!("architect-adjacency.conflict.{}", conflict.adjacency_a_id), Label::data(&conflict.message), None)?;
+            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect adjacency conflict admission failed"))?;
+        }
+        tree = tree.section("architect-adjacency.conflicts", Some(Label::data(format!("Conflicts ({})", conflicts.len()))), true, items)?;
     }
-
-    stack_row("architect-adjacency.matrix", vec![ui_stack_vertical(glyph_rows), tree_node(pair_sections)])
+    tree.build()
 }
 //#endregion 🔖️Render
 

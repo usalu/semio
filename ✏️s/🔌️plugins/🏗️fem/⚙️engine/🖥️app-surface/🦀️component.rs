@@ -22,12 +22,26 @@ pub const MODE_SHAPE_AMPLITUDE_RATIO: f64 = 0.1;
 //#region 🔖️Shared
 /// 🎬️ Encodes one Canvas2d scene into the semantic UI contract.
 pub fn canvas_2d_surface(id: impl Into<String>, scene: semio_framework_ui_scene::Canvas2dScene) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_ui_contract::surface(semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)).id(id).build()
+    let id = id.into();
+    let props = semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "Canvas2d scene admission failed"))?;
+    semio_framework_ui_contract::surface(props)
+        .try_id(&id)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.id", "Canvas2d surface id admission failed"))?
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.build", "Canvas2d surface admission failed"))
 }
 
 /// 🌍️ Encodes one World3d scene into the semantic UI contract.
 pub fn world_3d_surface(id: impl Into<String>, scene: semio_framework_ui_scene::World3dScene) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_ui_contract::surface(semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::World3d, &scene)).id(id).build()
+    let id = id.into();
+    let props = semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::World3d, &scene)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "World3d scene admission failed"))?;
+    semio_framework_ui_contract::surface(props)
+        .try_id(&id)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.id", "World3d surface id admission failed"))?
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.build", "World3d surface admission failed"))
 }
 
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.

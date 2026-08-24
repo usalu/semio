@@ -96,6 +96,10 @@ pub trait Element {
     }
     fn dofs_per_node(&self) -> &[Dof];
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD;
+    /// 🧮 Returns one fixed-schema mounted stiffness cell without allocating a matrix owner.
+    fn mounted_stiffness_cell(&self, _ctx: &ElementContext, _row: usize, _column: usize) -> Option<f64> {
+        None
+    }
     /// 🌬️ Fixed-end nodal loads equivalent to a per-unit-length `MemberUdl` in GLOBAL coordinates.
     /// `None` (the default) means this element doesn't support member UDLs — meaningful for 2-node
     /// line members (`Bar2`/`Bar3`/`BeamEb2`/`Frame3`); continuum/plate/shell elements have no per-unit-

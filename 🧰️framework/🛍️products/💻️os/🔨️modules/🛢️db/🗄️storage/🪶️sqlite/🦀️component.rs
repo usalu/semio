@@ -6,8 +6,8 @@ mod sqlite_storage {
     use crate::db_durability::{DurabilityClass, EpochFence};
     use crate::db_ids::{check_len, ArtifactId, DbError};
     use crate::db_storage::{
-        close_db_io_backend, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoBackendControl, DbIoBackendKind, DbIoExecutionStep, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult,
-        DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
+        close_db_io_backend, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoExecutionStep, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected,
+        DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
     };
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
@@ -178,6 +178,13 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     impl DbIoTaskExecutor for SqliteDbIoExecutor {
         fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
             self
+        }
+
+        fn drive_async(self: Box<Self>, _operation: u64, task: DbIoTask) -> DbIoAsyncDriverFuture {
+            Box::pin(async move {
+                let executor: Box<dyn DbIoTaskExecutor> = self;
+                (executor, task, Err(DbError::Internal("SQLite backend has no async-native driver".to_string())))
+            })
         }
 
         fn execute_step(&self, operation: u64, task: &mut DbIoTask) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {
@@ -504,7 +511,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             Ok(true)
         }
 
-        fn close_backend_step(&mut self) -> Result<bool, DbError> {
+        fn close_backend_step(&mut self, _context: &mut std::task::Context<'_>) -> Result<bool, DbError> {
             let cursor = self.backend_close_cursor.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
             if cursor < self.payload_hashes.len() {
                 self.payload_hashes[cursor].lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
@@ -581,7 +588,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     impl SqliteStorage {
         async fn open_owned(pool: Arc<WorkerPool>, path: DbIoText, in_memory: bool) -> Result<Self, DbError> {
             let executor = Box::new(SqliteDbIoExecutor::new(path.clone(), in_memory));
-            let control = register_db_io_backend(DbIoBackendKind::Sqlite, executor)?;
+            let control = register_db_io_backend(DbIoBackendKind::Sqlite, executor, pool.clone())?;
             if let Err(error) = execute(pool.as_ref(), DbIoTask::BackendOpen { backend: control, path }).await {
                 let _ = execute(pool.as_ref(), DbIoTask::BackendClose { backend: control }).await;
                 return Err(error);
@@ -769,7 +776,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
         async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
             match execute(self.pool.as_ref(), DbIoTask::LeaseGet { backend: self.control, document: DbIoText::try_from_str(resource)?, now_ms }).await? {
-                DbIoResult::OptionalLease(value) => Ok(value.map(|lease| LeaseInfo { resource: lease.resource.as_str().to_string(), holder: lease.holder.as_str().to_string(), fence: lease.fence, expires_at_ms: lease.expires_at_ms })),
+                DbIoResult::OptionalLease(value) => Ok(value),
                 _ => Err(result_fault("optional lease")),
             }
         }

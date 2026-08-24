@@ -24,8 +24,8 @@ use crate::editor::home::terminology::SHomeLabels;
 use crate::editor::home::S_HOME_CONTROLLER_ID;
 use crate::HomeTableLabels;
 use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{ui_control_to_node, ui_stack_vertical};
-use semio_framework_plugin::{ActionDescriptor, ActionFactory, IconName, LocalizedLabel, UiButtonNode, UiControlNode, UiNode, UiSeparatorNode, WindowKindDefinition};
+use semio_framework_plugin::{ActionFactory, IconName, LocalizedLabel, WindowKindDefinition};
+use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
 
 //#region 🔖️Constants
 pub const S_HOME_WINDOW: &str = "s-home-main";
@@ -47,15 +47,34 @@ pub async fn definition() -> WindowKindDefinition {
 /// — each dispatched with an empty/absent secondary arg (name/email/confirmed), which their own
 /// `handle()` already treats as "open the confirm/staged-form dialog first" (see `🎮️commands/🏷️rename-
 /// space`, `🔗️share-space`, `🗑️delete-space`), so a row button never bypasses those dialogs.
-async fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> Vec<TableRowAction> {
-    let action = |action_id: &str| -> ActionDescriptor { ActionFactory::new(S_HOME_CONTROLLER_ID).action(action_id, Some(serde_json::json!({ "spaceId": row.id })))? };
-    let mut actions = vec![TableRowAction { icon_id: IconName::FolderOpen, label: Some(labels.action_open.into()), action: action("openSpace") }];
-    if row.origin == "hub" {
-        actions.push(TableRowAction { icon_id: IconName::Pencil, label: Some(labels.action_rename.into()), action: action("renameSpace") });
-        actions.push(TableRowAction { icon_id: IconName::Link, label: Some(labels.action_share.into()), action: action("shareSpace") });
-        actions.push(TableRowAction { icon_id: IconName::Trash2, label: Some(labels.action_delete.into()), action: action("deleteSpace") });
-    }
+fn fixed_text(value: &str, code: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiText> {
+    semio_framework_plugin::UiText::try_from_str(value).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new(code, "fixed table text admission failed"))
+}
+
+fn home_row_action(icon: IconName, label: semio_framework_plugin::LabelText, action_id: &str, space_id: &str) -> semio_framework_plugin::UiAssemblyResult<TableRowAction> {
+    let mut args = semio_framework_plugin::UiMapBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.action-args", "fixed table action argument admission failed"))?;
+    args.push("spaceId".to_owned(), semio_framework_plugin::UiValue::Text(fixed_text(space_id, "ui.table.space-id")?))
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.action-args.space-id", "fixed table action argument admission failed"))?;
+    let action = ActionFactory::new(S_HOME_CONTROLLER_ID).action(action_id, Some(semio_framework_plugin::UiValue::Map(args.finish())))?;
+    Ok(TableRowAction::new(fixed_text(icon.as_str(), "ui.table.action-icon")?, label.into(), action))
+}
+
+fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<TableRowAction>> {
+    let mut actions = semio_framework_plugin::UiFixedList::default();
     actions
+        .try_push(home_row_action(IconName::FolderOpen, labels.action_open, "openSpace", &row.id)?)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
+    if row.origin == "hub" {
+        for action in [
+            home_row_action(IconName::Pencil, labels.action_rename, "renameSpace", &row.id)?,
+            home_row_action(IconName::Link, labels.action_share, "shareSpace", &row.id)?,
+            home_row_action(IconName::Trash2, labels.action_delete, "deleteSpace", &row.id)?,
+        ] {
+            actions.try_push(action).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
+        }
+    }
+    Ok(actions)
 }
 
 /// 🧪️ The pure per-row-list core, split out from `render` so the empty-state branch is unit-testable
@@ -66,23 +85,28 @@ async fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, acti
     if rows.is_empty() {
         return semio_framework_plugin::ui_text(semio_framework_plugin::Label::data(table.empty_message.as_str().to_string()));
     }
-    let columns = vec![
-        table.column_name.as_str().to_string(),
-        table.column_kind.as_str().to_string(),
-        table.column_visibility.as_str().to_string(),
-        table.column_members.as_str().to_string(),
-        table.column_updated.as_str().to_string(),
-        table.column_origin.as_str().to_string(),
-    ];
-    let table_rows: Vec<TableRow> = rows
-        .iter()
-        .map(|row| TableRow {
-            id: format!("space:{}", row.id),
-            cells: vec![row.name.clone(), row.kind.clone(), row.visibility.clone(), row.members.clone(), row.updated.clone(), (if row.origin == "hub" { table.origin_hub.as_str() } else { table.origin_local.as_str() }).to_string()],
-            actions: row_actions(actions, row),
-        })
-        .collect();
-    TableWindowKit::render_rows(&TableRowsView { columns, rows: table_rows, actions_label: table.column_actions.as_str().to_string() })
+    let mut view = TableRowsView::new(fixed_text(table.column_actions.as_str(), "ui.table.actions-label")?);
+    for column in [table.column_name, table.column_kind, table.column_visibility, table.column_members, table.column_updated, table.column_origin] {
+        let column = fixed_text(column.as_str(), "ui.table.column")?;
+        view.try_push_column(column).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.columns", "fixed table column admission failed"))?;
+    }
+    for row in rows {
+        let row_id = semio_framework_plugin::UiText::try_format(format_args!("space:{}", row.id))
+            .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-id", "fixed table row id admission failed"))?;
+        let mut table_row = TableRow::new(row_id);
+        for cell in [&row.name, &row.kind, &row.visibility, &row.members, &row.updated] {
+            let cell = fixed_text(cell, "ui.table.cell")?;
+            table_row.try_push_cell(cell).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cells", "fixed table cell admission failed"))?;
+        }
+        let origin = if row.origin == "hub" { table.origin_hub.as_str() } else { table.origin_local.as_str() };
+        let origin = fixed_text(origin, "ui.table.origin")?;
+        table_row.try_push_cell(origin).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cells", "fixed table cell admission failed"))?;
+        for action in row_actions(actions, row)? {
+            table_row.try_push_action(action).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
+        }
+        view.try_push_row(table_row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.rows", "fixed table row admission failed"))?;
+    }
+    TableWindowKit::render_rows(view)
 }
 
 /// 🆕️ ticket §C0 lane 4-F — the `#s-home-create-space` toolbar button, always rendered above the
@@ -105,26 +129,39 @@ async fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, acti
 /// `gap-double`) reliably clear the dead-line with margin; confirmed live via Playwright-style
 /// `elementFromPoint` hit-testing at the button's own center before/after.
 async fn window_content_dead_line_spacer() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    UiNode::Separator(UiSeparatorNode { presence: Default::default(), menu: None })
+    semio_framework_ui_contract::separator()
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.spacer", "window spacer admission failed"))
 }
 
 async fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    ui_control_to_node(UiControlNode::Button(UiButtonNode {
-        id: Some("s-home-create-space".into()),
-        icon_id: IconName::Plus,
-        label: actions.action_create.into(),
-        action: ActionFactory::new(S_HOME_CONTROLLER_ID).action("createSpace", None)?,
-        style: None,
-        presence: Default::default(),
-        menu: None,
-    }))
+    let icon = fixed_text(IconName::Plus.as_str(), "ui.window.create-icon")?;
+    let action = ActionFactory::new(S_HOME_CONTROLLER_ID).action("createSpace", None)?;
+    let builder = semio_framework_ui_contract::button(actions.action_create.into())
+        .icon(icon)
+        .try_id("s-home-create-space")
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create-id", "create button id admission failed"))?;
+    let builder = match action.1 {
+        Some(args) => builder.try_on_with(semio_framework_plugin::Trigger::Activate, action.0, args),
+        None => builder.try_on(semio_framework_plugin::Trigger::Activate, action.0),
+    }
+    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create-action", "create button action admission failed"))?;
+    builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create", "create button admission failed"))
 }
 
 pub async fn render(cfg: &HomeConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table = semio_framework_plugin::resolve_labels_for_locale::<HomeTableLabels>(&cfg.locale);
     let actions = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.locale);
-    let table_node = render_rows(&crate::home_space_rows(&cfg.directory()), table, actions);
-    ui_stack_vertical(vec![window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_space_button(actions), table_node])
+    let table_node = render_rows(&crate::home_space_rows(&cfg.directory()), table, actions).await?;
+    let mut children = semio_framework_plugin::UiFixedList::default();
+    for child in [window_content_dead_line_spacer().await?, window_content_dead_line_spacer().await?, create_space_button(actions).await?, table_node] {
+        children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
+    }
+    semio_framework_ui_contract::column()
+        .try_children(children)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.build", "window admission failed"))
 }
 //#endregion 🔖️Render
 

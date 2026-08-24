@@ -1721,6 +1721,30 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
         self.cancel_requested = true;
     }
 
+    fn begin_close(&mut self) {
+        self.cancel_requested = true;
+        if !matches!(self.phase, JackStoreInitializationPhase::Cancelled | JackStoreInitializationPhase::Fault) {
+            self.phase = JackStoreInitializationPhase::RetireCancelled;
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework::Fault> {
+        self.begin_close();
+        if maximum_items == 0 || maximum_bytes < JACK_OWNED_FIELD_BYTES {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        match self.pump_terminal_retirement() {
+            Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+            Ok(true) => {
+                drop(self.initial_digest.take());
+                drop(self.edit_digest.take());
+                self.terminal_handoff = true;
+                Ok(semio_framework_plugin::PluginCloseStep::Complete)
+            }
+            Err(error) => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("artifact-store.initializer-close"), format!("Jack initializer close failed: {error}"))),
+        }
+    }
+
     fn take_candidate(&mut self) -> Option<store::ArtifactStore<JackSnapshot, TrinityGraphMutation>> {
         if self.phase != JackStoreInitializationPhase::Complete || self.terminal_handoff {
             return None;

@@ -4,9 +4,11 @@
 use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::S_PLAY_CATALOGUE_BODY_KEY;
 use semio_framework_os::{os_app_primary_output_kind, os_app_registration, workflow_palette};
-use semio_framework_plugin::{tree_item_desc, IconName, Label, Locale, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, Terminology, UiNode, UiTreeItemNode};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren};
+use semio_framework_plugin::{Label, Locale, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Terminology, UiFixedList, UiFixedMap, UiText};
+use semio_framework_ui_contract as ui;
 use serde_json::json;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
@@ -40,30 +42,33 @@ struct CatalogueAppEntry {
 
 /// 🌳️ Builds a catalogue tree item on top of the SDK's `tree_item_desc` skeleton — only the per-app
 /// drag-data/icon/children extensions are this app's own concern.
-async fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let id_path = path.join(".");
-    let children = node
-        .children
-        .into_iter()
-        .map(|(segment, child)| {
-            let mut child_path = path.to_vec();
-            child_path.push(segment.clone());
-            app_catalogue_item(&child_path, &segment, child)
-        })
-        .collect::<Vec<_>>();
-    let app = node.app;
-    let description = app.as_ref().and_then(|entry| (!entry.yields.is_empty()).then(|| entry.yields.clone()));
-    let mut item = tree_item_desc(format!("s-play-catalogue.document.{id_path}"), Label::data(label), description)?;
-    item.icon_id = app.as_ref().and_then(|entry| IconName::from_str(&entry.app_id));
-    item.default_open = (!children.is_empty()).then_some(true);
-    if let Some(app) = &app {
-        let mut drag_data = HashMap::new();
-        drag_data.insert(crate::engine::space::S_PLAY_CATALOGUE_DRAG_MIME.into(), json!({ "pluginId": app.plugin_id, "appId": app.app_id, "label": app.label }).to_string());
-        item.draggable = Some(true);
-        item.drag_data = Some(drag_data);
+fn app_catalogue_item(id_path: &str, label: &str, node: AppCatalogueNode) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let mut children = UiFixedList::<BuiltNode>::default();
+    for (segment, child) in node.children {
+        let child_path = format!("{id_path}.{segment}");
+        let child = app_catalogue_item(&child_path, &segment, child)?;
+        children.try_push(child).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue child admission failed"))?;
     }
-    item.items = (!children.is_empty()).then_some(children);
-    item
+    let app = node.app;
+    let mut item = ui::tree_item(Label::data(label))
+        .try_id(format!("s-play-catalogue.document.{id_path}"))
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue row id admission failed"))?
+        .default_open(!children.is_empty())
+        .try_children(children)
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue children admission failed"))?;
+    if let Some(app) = &app {
+        item = item.icon(UiText::try_from_str(&app.app_id).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue icon admission failed"))?);
+        if !app.yields.is_empty() {
+            item = item.description(UiText::try_from_str(&app.yields).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue description admission failed"))?);
+        }
+        let mut drag_data = UiFixedMap::default();
+        let key = UiText::try_from_str(crate::engine::space::S_PLAY_CATALOGUE_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag mime admission failed"))?;
+        let value = UiText::try_from_string(json!({ "pluginId": app.plugin_id, "appId": app.app_id, "label": app.label }).to_string())
+            .ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag payload admission failed"))?;
+        drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag map admission failed"))?;
+        item = item.draggable(true).drag_data(drag_data);
+    }
+    item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue row admission failed"))
 }
 
 /// 🎨️ Builds the app catalogue tree straight from the production registry — `workflow_palette()`
@@ -88,7 +93,11 @@ pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> sem
         let label = entry.label.resolve(Terminology::Native, locale).to_string();
         node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label, yields });
     }
-    let mut items: Vec<UiTreeItemNode> = document.children.into_iter().map(|(segment, node)| app_catalogue_item(std::slice::from_ref(&segment), &segment, node)).collect();
+    let mut items = UiFixedList::<BuiltNode>::default();
+    for (segment, node) in document.children {
+        let item = app_catalogue_item(&segment, &segment, node)?;
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue root admission failed"))?;
+    }
     // 🪹️ An app with an empty `breadcrumb` (`registration.breadcrumb == []`) has nowhere to
     // descend to in the loop above, so its `.app` lands on the ROOT `document` node itself rather than
     // inside `.children` — without this, it's silently dropped from the catalogue entirely. Surface it
@@ -97,7 +106,8 @@ pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> sem
     if let Some(app) = document.app {
         let id = app.app_id.clone();
         let label = app.label.clone();
-        items.push(app_catalogue_item(&[id], &label, AppCatalogueNode { children: BTreeMap::new(), app: Some(app) }));
+        let item = app_catalogue_item(&id, &label, AppCatalogueNode { children: BTreeMap::new(), app: Some(app) })?;
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue ungrouped app admission failed"))?;
     }
     PanelTreeBuilder::new(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID)?.section(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID, Some(labels.apps_section.into()), true, items)?.build()
 }

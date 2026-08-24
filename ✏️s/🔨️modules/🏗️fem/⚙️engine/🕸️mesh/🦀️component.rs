@@ -656,6 +656,35 @@ enum MeshJobStage {
     Complete,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+enum ConstraintRecoveryStage {
+    ReserveConstraintWorkspace,
+    IndexTriangleEdge,
+    SearchConstraintEdge,
+    ClassifyIntersection,
+    SelectDeterministicFlip,
+    ValidateFlip,
+    ApplyFlip,
+    RetireFormerEdge,
+    PublishConstraintProgress,
+    ConstraintComplete,
+}
+
+#[derive(Clone, Copy)]
+struct IndexedConstraintEdge {
+    edge: Edge,
+    adjacent: [Option<usize>; 2],
+    active: bool,
+    fixed: bool,
+}
+
+#[derive(Clone, Copy)]
+struct ConstraintFlipCandidate {
+    edge: Edge,
+    adjacent: [usize; 2],
+    replacement: [[usize; 3]; 2],
+}
+
 const MESH_JOB_UNIT_BATCH: usize = 1;
 const MESH_JOB_INSERT_BATCH: usize = 1;
 
@@ -672,10 +701,25 @@ pub struct MeshJob {
     constraints: Vec<Edge>,
     fixed_constraints: Vec<Edge>,
     indexed_edges: Vec<Edge>,
+    indexed_constraint_edges: Vec<IndexedConstraintEdge>,
     edge_index_cursor: usize,
+    edge_index_local_cursor: usize,
+    edge_index_lookup_cursor: usize,
+    edge_index_vacancy: Option<usize>,
+    edge_index_candidate: Option<(Edge, usize)>,
     edge_index_valid: bool,
     stage: MeshJobStage,
     constraint_cursor: usize,
+    constraint_stage: ConstraintRecoveryStage,
+    constraint_search_cursor: usize,
+    constraint_adjacency_cursor: usize,
+    constraint_candidate: Option<(Edge, usize)>,
+    constraint_flip: Option<ConstraintFlipCandidate>,
+    constraint_flip_count: usize,
+    constraint_flip_limit: usize,
+    constraint_apply_cursor: usize,
+    constraint_retire_cursor: usize,
+    constraint_reindex_cursor: usize,
     face_cursor: usize,
     preview_tier: MeshQualityTier,
     mesh: TriMesh2,
@@ -700,10 +744,25 @@ impl MeshJob {
             constraints: Vec::new(),
             fixed_constraints: Vec::new(),
             indexed_edges: Vec::new(),
+            indexed_constraint_edges: Vec::new(),
             edge_index_cursor: 0,
+            edge_index_local_cursor: 0,
+            edge_index_lookup_cursor: 0,
+            edge_index_vacancy: None,
+            edge_index_candidate: None,
             edge_index_valid: false,
             stage: MeshJobStage::Validate,
             constraint_cursor: 0,
+            constraint_stage: ConstraintRecoveryStage::ReserveConstraintWorkspace,
+            constraint_search_cursor: 0,
+            constraint_adjacency_cursor: 0,
+            constraint_candidate: None,
+            constraint_flip: None,
+            constraint_flip_count: 0,
+            constraint_flip_limit: 0,
+            constraint_apply_cursor: 0,
+            constraint_retire_cursor: 0,
+            constraint_reindex_cursor: 0,
             face_cursor: 0,
             preview_tier: MeshQualityTier::Coarse,
             mesh: TriMesh2 { points: Vec::new(), tris: Vec::new() },
@@ -892,6 +951,14 @@ impl MeshJob {
                         continue;
                     }
                 },
+                11 => match close_vec_owner_step(&mut self.indexed_constraint_edges, maximum_bytes) {
+                    Ok(Some(step)) => step,
+                    Err(()) => return (false, 0, 0),
+                    Ok(None) => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
                 _ => return (true, 0, 0),
             };
             return (false, released.0, released.1);
@@ -979,6 +1046,179 @@ impl MeshJob {
     fn fail(message: impl Into<Vec<u8>>) -> StepOutcome {
         StepOutcome::Fault(JobFault { detail: message.into() })
     }
+
+    fn begin_edge_index_candidate(&mut self, triangle: usize, local: usize) -> bool {
+        let Some(indices) = self.triangulation.as_ref().and_then(|triangulation| triangulation.triangles.get(triangle)).copied() else {
+            return false;
+        };
+        let edge = match local {
+            0 => Edge::new(indices[0], indices[1]),
+            1 => Edge::new(indices[1], indices[2]),
+            _ => Edge::new(indices[2], indices[0]),
+        };
+        self.edge_index_candidate = Some((edge, triangle));
+        self.edge_index_lookup_cursor = 0;
+        self.edge_index_vacancy = None;
+        true
+    }
+
+    fn advance_edge_index_candidate(&mut self) -> Result<bool, ()> {
+        let Some((edge, triangle)) = self.edge_index_candidate else {
+            return Ok(true);
+        };
+        if self.edge_index_lookup_cursor < self.indexed_constraint_edges.len() {
+            let index = self.edge_index_lookup_cursor;
+            let slot = &mut self.indexed_constraint_edges[index];
+            self.edge_index_lookup_cursor += 1;
+            if !slot.active {
+                self.edge_index_vacancy.get_or_insert(index);
+            } else if slot.edge == edge {
+                if slot.adjacent[0] != Some(triangle) && slot.adjacent[1] != Some(triangle) {
+                    if slot.adjacent[0].is_none() {
+                        slot.adjacent[0] = Some(triangle);
+                    } else if slot.adjacent[1].is_none() {
+                        slot.adjacent[1] = Some(triangle);
+                    } else {
+                        return Err(());
+                    }
+                }
+                self.edge_index_candidate = None;
+                return Ok(true);
+            }
+            return Ok(false);
+        }
+        let entry = IndexedConstraintEdge { edge, adjacent: [Some(triangle), None], active: true, fixed: false };
+        if let Some(index) = self.edge_index_vacancy {
+            self.indexed_constraint_edges[index] = entry;
+        } else if self.indexed_constraint_edges.len() < self.indexed_constraint_edges.capacity() {
+            self.indexed_constraint_edges.push(entry);
+        } else {
+            return Err(());
+        }
+        self.edge_index_candidate = None;
+        Ok(true)
+    }
+
+    fn advance_constraint_recovery(&mut self) -> Result<bool, MeshError> {
+        let constraint = self.constraints[self.constraint_cursor];
+        match self.constraint_stage {
+            ConstraintRecoveryStage::ReserveConstraintWorkspace => {
+                self.constraint_flip_limit = self.triangulation.as_ref().map_or(0, |triangulation| triangulation.triangles.len().saturating_mul(triangulation.triangles.len()).max(1));
+                self.constraint_flip_count = 0;
+                self.constraint_search_cursor = 0;
+                self.constraint_stage = ConstraintRecoveryStage::SearchConstraintEdge;
+            }
+            ConstraintRecoveryStage::IndexTriangleEdge => {
+                let adjacent = self.constraint_flip.map(|candidate| candidate.adjacent).ok_or_else(|| MeshError::TriangulationFailed("missing retained flip owner".into()))?;
+                if self.edge_index_candidate.is_none() {
+                    if self.constraint_reindex_cursor == 6 {
+                        self.constraint_search_cursor = 0;
+                        self.constraint_stage = ConstraintRecoveryStage::PublishConstraintProgress;
+                        return Ok(false);
+                    }
+                    let triangle = adjacent[self.constraint_reindex_cursor / 3];
+                    let local = self.constraint_reindex_cursor % 3;
+                    if !self.begin_edge_index_candidate(triangle, local) {
+                        return Err(MeshError::TriangulationFailed("missing flipped triangle".into()));
+                    }
+                } else if self.advance_edge_index_candidate().map_err(|_| MeshError::TriangulationFailed("constraint edge index capacity".into()))? {
+                    self.constraint_reindex_cursor += 1;
+                }
+            }
+            ConstraintRecoveryStage::SearchConstraintEdge => {
+                if self.constraint_search_cursor >= self.indexed_constraint_edges.len() {
+                    return Err(MeshError::TriangulationFailed(format!("could not recover boundary edge {}-{}", constraint.0, constraint.1)));
+                }
+                let index = self.constraint_search_cursor;
+                let slot = self.indexed_constraint_edges[index];
+                self.constraint_search_cursor += 1;
+                if slot.active && slot.edge == constraint {
+                    self.indexed_constraint_edges[index].fixed = true;
+                    self.constraint_stage = ConstraintRecoveryStage::ConstraintComplete;
+                } else if slot.active && slot.adjacent[1].is_some() && !slot.fixed && slot.edge.0 != constraint.0 && slot.edge.0 != constraint.1 && slot.edge.1 != constraint.0 && slot.edge.1 != constraint.1 {
+                    self.constraint_candidate = Some((slot.edge, self.constraint_search_cursor - 1));
+                    self.constraint_adjacency_cursor = 0;
+                    self.constraint_stage = ConstraintRecoveryStage::ClassifyIntersection;
+                }
+            }
+            ConstraintRecoveryStage::ClassifyIntersection => {
+                let (edge, index) = self.constraint_candidate.ok_or_else(|| MeshError::TriangulationFailed("missing constraint candidate".into()))?;
+                let points = &self.triangulation.as_ref().ok_or_else(|| MeshError::TriangulationFailed("missing triangulation".into()))?.points;
+                if segments_cross(points[constraint.0], points[constraint.1], points[edge.0], points[edge.1]) {
+                    self.constraint_adjacency_cursor = index;
+                    self.constraint_stage = ConstraintRecoveryStage::SelectDeterministicFlip;
+                } else {
+                    self.constraint_candidate = None;
+                    self.constraint_stage = ConstraintRecoveryStage::SearchConstraintEdge;
+                }
+            }
+            ConstraintRecoveryStage::SelectDeterministicFlip => {
+                let (edge, index) = self.constraint_candidate.ok_or_else(|| MeshError::TriangulationFailed("missing selected constraint edge".into()))?;
+                let slot = self.indexed_constraint_edges[index];
+                let adjacent = match slot.adjacent {
+                    [Some(first), Some(second)] => [first, second],
+                    _ => return Err(MeshError::TriangulationFailed("constraint edge adjacency".into())),
+                };
+                self.constraint_flip = Some(ConstraintFlipCandidate { edge, adjacent, replacement: [[0; 3]; 2] });
+                self.constraint_stage = ConstraintRecoveryStage::ValidateFlip;
+            }
+            ConstraintRecoveryStage::ValidateFlip => {
+                let mut candidate = self.constraint_flip.ok_or_else(|| MeshError::TriangulationFailed("missing flip candidate".into()))?;
+                let triangulation = self.triangulation.as_ref().ok_or_else(|| MeshError::TriangulationFailed("missing triangulation".into()))?;
+                let [a, b] = [candidate.edge.0, candidate.edge.1];
+                let first = triangulation.triangles[candidate.adjacent[0]];
+                let second = triangulation.triangles[candidate.adjacent[1]];
+                let c = first.into_iter().find(|index| *index != a && *index != b).ok_or_else(|| MeshError::TriangulationFailed("first opposite vertex".into()))?;
+                let d = second.into_iter().find(|index| *index != a && *index != b).ok_or_else(|| MeshError::TriangulationFailed("second opposite vertex".into()))?;
+                if !segments_cross(triangulation.points[a], triangulation.points[b], triangulation.points[c], triangulation.points[d]) {
+                    return Err(MeshError::TriangulationFailed("unflippable constraint".into()));
+                }
+                candidate.replacement[0] = ccw_triangle(&triangulation.points, [c, d, a]).ok_or_else(|| MeshError::TriangulationFailed("invalid first flip".into()))?;
+                candidate.replacement[1] = ccw_triangle(&triangulation.points, [d, c, b]).ok_or_else(|| MeshError::TriangulationFailed("invalid second flip".into()))?;
+                self.constraint_flip = Some(candidate);
+                self.constraint_apply_cursor = 0;
+                self.constraint_stage = ConstraintRecoveryStage::ApplyFlip;
+            }
+            ConstraintRecoveryStage::ApplyFlip => {
+                let candidate = self.constraint_flip.ok_or_else(|| MeshError::TriangulationFailed("missing validated flip".into()))?;
+                let index = candidate.adjacent[self.constraint_apply_cursor];
+                self.triangulation.as_mut().ok_or_else(|| MeshError::TriangulationFailed("missing triangulation".into()))?.triangles[index] = candidate.replacement[self.constraint_apply_cursor];
+                self.constraint_apply_cursor += 1;
+                if self.constraint_apply_cursor == 2 {
+                    self.constraint_flip_count += 1;
+                    if self.constraint_flip_count > self.constraint_flip_limit {
+                        return Err(MeshError::TriangulationFailed("constraint flip limit".into()));
+                    }
+                    self.constraint_retire_cursor = 0;
+                    self.constraint_stage = ConstraintRecoveryStage::RetireFormerEdge;
+                }
+            }
+            ConstraintRecoveryStage::RetireFormerEdge => {
+                if self.constraint_retire_cursor < self.indexed_constraint_edges.len() {
+                    let adjacent = self.constraint_flip.map(|candidate| candidate.adjacent).ok_or_else(|| MeshError::TriangulationFailed("missing retire authority".into()))?;
+                    let slot = &mut self.indexed_constraint_edges[self.constraint_retire_cursor];
+                    for owner in &mut slot.adjacent {
+                        if owner.is_some_and(|triangle| adjacent.contains(&triangle)) {
+                            *owner = None;
+                        }
+                    }
+                    slot.active = slot.adjacent.iter().any(Option::is_some);
+                    self.constraint_retire_cursor += 1;
+                } else {
+                    self.constraint_reindex_cursor = 0;
+                    self.edge_index_candidate = None;
+                    self.constraint_stage = ConstraintRecoveryStage::IndexTriangleEdge;
+                }
+            }
+            ConstraintRecoveryStage::PublishConstraintProgress => {
+                self.constraint_candidate = None;
+                self.constraint_search_cursor = 0;
+                self.constraint_stage = ConstraintRecoveryStage::SearchConstraintEdge;
+            }
+            ConstraintRecoveryStage::ConstraintComplete => return Ok(true),
+        }
+        Ok(false)
+    }
 }
 
 impl InteractiveJob for MeshJob {
@@ -997,7 +1237,18 @@ impl InteractiveJob for MeshJob {
             MeshJobStage::ReserveEdgeAuthorities => "reserve-edge-authorities",
             MeshJobStage::InsertBoundary => "insert-boundary",
             MeshJobStage::IndexEdges => "index-edges",
-            MeshJobStage::ConstrainBoundary => "constrain-boundary",
+            MeshJobStage::ConstrainBoundary => match self.constraint_stage {
+                ConstraintRecoveryStage::ReserveConstraintWorkspace => "reserve-constraint-workspace",
+                ConstraintRecoveryStage::IndexTriangleEdge => "index-triangle-edge",
+                ConstraintRecoveryStage::SearchConstraintEdge => "search-constraint-edge",
+                ConstraintRecoveryStage::ClassifyIntersection => "classify-intersection",
+                ConstraintRecoveryStage::SelectDeterministicFlip => "select-deterministic-flip",
+                ConstraintRecoveryStage::ValidateFlip => "validate-flip",
+                ConstraintRecoveryStage::ApplyFlip => "apply-flip",
+                ConstraintRecoveryStage::RetireFormerEdge => "retire-former-edge",
+                ConstraintRecoveryStage::PublishConstraintProgress => "publish-constraint-progress",
+                ConstraintRecoveryStage::ConstraintComplete => "constraint-complete",
+            },
             MeshJobStage::ReservePointIndex => "reserve-point-index",
             MeshJobStage::ReserveMeshPoints => "reserve-mesh-points",
             MeshJobStage::ReserveMeshTriangles => "reserve-mesh-triangles",
@@ -1108,8 +1359,10 @@ impl InteractiveJob for MeshJob {
                 let edge_capacity = self.maximum_triangles.saturating_mul(12).saturating_add(3);
                 if self.fixed_constraints.try_reserve_exact(self.maximum_triangles.saturating_mul(3)).is_err()
                     || self.indexed_edges.try_reserve_exact(edge_capacity).is_err()
+                    || self.indexed_constraint_edges.try_reserve_exact(edge_capacity).is_err()
                     || self.fixed_constraints.capacity().checked_mul(std::mem::size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
                     || self.indexed_edges.capacity().checked_mul(std::mem::size_of::<Edge>()).is_none_or(|bytes| bytes > 4_096)
+                    || self.indexed_constraint_edges.capacity().checked_mul(std::mem::size_of::<IndexedConstraintEdge>()).is_none_or(|bytes| bytes > 16_384)
                 {
                     return Self::fail(b"mesh-fixed-edge-authority-backing".to_vec());
                 }
@@ -1140,43 +1393,51 @@ impl InteractiveJob for MeshJob {
                 StepOutcome::Yield
             }
             MeshJobStage::IndexEdges => {
-                let triangulation = self.triangulation.as_ref().expect("inserted triangulation");
-                for triangle in triangulation.triangles.iter().skip(self.edge_index_cursor).take(MESH_JOB_UNIT_BATCH) {
-                    for edge in [Edge::new(triangle[0], triangle[1]), Edge::new(triangle[1], triangle[2]), Edge::new(triangle[2], triangle[0])] {
-                        if let Err(index) = self.indexed_edges.binary_search(&edge) {
-                            self.indexed_edges.insert(index, edge);
+                let face_count = self.triangulation.as_ref().map_or(0, |triangulation| triangulation.triangles.len());
+                if context.should_yield() {
+                    return StepOutcome::Yield;
+                }
+                context.consume_fuel(1);
+                if self.edge_index_candidate.is_none() {
+                    if self.edge_index_cursor < face_count {
+                        if !self.begin_edge_index_candidate(self.edge_index_cursor, self.edge_index_local_cursor) {
+                            return Self::fail(b"mesh-edge-index-triangle".to_vec());
                         }
                     }
-                    self.edge_index_cursor += 1;
-                    context.consume_fuel(1);
-                    if context.should_yield() || context.is_cancelled() {
-                        break;
+                } else {
+                    match self.advance_edge_index_candidate() {
+                        Ok(true) => {
+                            self.edge_index_local_cursor += 1;
+                            if self.edge_index_local_cursor == 3 {
+                                self.edge_index_local_cursor = 0;
+                                self.edge_index_cursor += 1;
+                            }
+                        }
+                        Ok(false) => {}
+                        Err(()) => return Self::fail(b"mesh-edge-index-capacity".to_vec()),
                     }
                 }
-                if context.is_cancelled() {
-                    return StepOutcome::Cancelled;
-                }
-                if self.edge_index_cursor == triangulation.triangles.len() {
+                if self.edge_index_cursor == face_count {
                     self.edge_index_valid = true;
+                    self.constraint_stage = ConstraintRecoveryStage::ReserveConstraintWorkspace;
                     self.stage = MeshJobStage::ConstrainBoundary;
                 }
                 StepOutcome::Yield
             }
             MeshJobStage::ConstrainBoundary => {
-                if self.constraint_cursor < self.constraints.len() && !context.should_yield() {
-                    let constraint = self.constraints[self.constraint_cursor];
-                    if !self.edge_index_valid || self.indexed_edges.binary_search(&constraint).is_err() {
-                        if let Err(error) = self.triangulation.as_mut().expect("inserted triangulation").recover_constraint(constraint, &self.fixed_constraints) {
-                            return Self::fail(error.to_string().into_bytes());
-                        }
-                        self.edge_index_valid = false;
-                        self.indexed_edges.clear();
+                if self.constraint_cursor < self.constraints.len() {
+                    if context.should_yield() {
+                        return StepOutcome::Yield;
                     }
-                    if let Err(index) = self.fixed_constraints.binary_search(&constraint) {
-                        self.fixed_constraints.insert(index, constraint);
-                    }
-                    self.constraint_cursor += 1;
                     context.consume_fuel(1);
+                    match self.advance_constraint_recovery() {
+                        Ok(true) => {
+                            self.constraint_cursor += 1;
+                            self.constraint_stage = ConstraintRecoveryStage::ReserveConstraintWorkspace;
+                        }
+                        Ok(false) => {}
+                        Err(error) => return Self::fail(error.to_string().into_bytes()),
+                    }
                 }
                 if self.constraint_cursor == self.constraints.len() {
                     if self.maximum_points == usize::MAX {
@@ -1259,7 +1520,7 @@ impl InteractiveJob for MeshJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.close_lane > 10
+        self.close_lane > 11
     }
 }
 // #endregion 🧵️IncrementalMeshJob
@@ -2055,6 +2316,75 @@ mod tests {
         job.close_lane = 7;
         assert!(!job.close_step(4_096).0, "one grant retires one exact indexed edge");
         assert_eq!(job.indexed_edges.len(), edge_capacity - 1);
+    }
+
+    #[test]
+    fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affected_adjacencies() {
+        let operation = mesh_operation();
+        let points = vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
+        let triangulation = OwnedTriangulation { points: points.clone(), triangles: vec![[0, 1, 2], [0, 2, 3]], input_len: 4, insert_cursor: 4, insertion_order: vec![0, 1, 2, 3], insertion: None, maximum_triangles: 4, allocation_fault: false };
+        let mut job = MeshJob::new_bounded(PlanarDomain { outer: points, holes: Vec::new() }, no_refine(), operation, 4, 4);
+        job.triangulation = Some(triangulation);
+        job.constraints = vec![Edge::new(1, 3)];
+        job.stage = MeshJobStage::ConstrainBoundary;
+        job.indexed_constraint_edges.try_reserve_exact(12).expect("fixed edge authority");
+        for triangle in 0..2 {
+            for local in 0..3 {
+                assert!(job.begin_edge_index_candidate(triangle, local));
+                while !job.advance_edge_index_candidate().expect("index edge") {}
+            }
+        }
+        let mut seen = HashSet::new();
+        for _ in 0..256 {
+            seen.insert(job.constraint_stage);
+            if job.advance_constraint_recovery().expect("recover diagonal") {
+                break;
+            }
+        }
+        for stage in [
+            ConstraintRecoveryStage::ReserveConstraintWorkspace,
+            ConstraintRecoveryStage::IndexTriangleEdge,
+            ConstraintRecoveryStage::SearchConstraintEdge,
+            ConstraintRecoveryStage::ClassifyIntersection,
+            ConstraintRecoveryStage::SelectDeterministicFlip,
+            ConstraintRecoveryStage::ValidateFlip,
+            ConstraintRecoveryStage::ApplyFlip,
+            ConstraintRecoveryStage::RetireFormerEdge,
+            ConstraintRecoveryStage::PublishConstraintProgress,
+            ConstraintRecoveryStage::ConstraintComplete,
+        ] {
+            assert!(seen.contains(&stage), "missing interrupted phase {stage:?}");
+        }
+        assert!(job.indexed_constraint_edges.iter().any(|slot| slot.active && slot.edge == Edge::new(1, 3)));
+        assert!(!job.indexed_constraint_edges.iter().any(|slot| slot.active && slot.edge == Edge::new(0, 2)));
+
+        let before = job.triangulation.as_ref().expect("triangulation retained").triangles.clone();
+        let mut sequence = 0;
+        let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), root_cancel_token(), || 0, &mut sequence);
+        assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
+        assert_eq!(job.triangulation.as_ref().expect("triangulation retained").triangles, before);
+
+        let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+        assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
+        assert_eq!(job.triangulation.as_ref().expect("triangulation retained").triangles, before);
+
+        let token = root_cancel_token();
+        semio_framework_async::block_on(token.cancel());
+        let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+        assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+        assert_eq!(job.triangulation.as_ref().expect("triangulation retained").triangles, before);
+
+        let mut close_turns = 0;
+        loop {
+            close_turns += 1;
+            let (terminal, released_items, _) = job.close_step(usize::MAX);
+            assert!(released_items <= 1);
+            if terminal {
+                break;
+            }
+            assert!(close_turns < 20_000);
+        }
+        assert!(job.close_lane > 11);
     }
 }
 // #endregion 🔖️Tests

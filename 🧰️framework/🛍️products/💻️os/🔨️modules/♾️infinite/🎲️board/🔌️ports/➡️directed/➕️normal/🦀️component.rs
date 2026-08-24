@@ -486,6 +486,11 @@ pub mod board_host {
         operation: semio_framework_job::Operation,
         state: BoardFillJobState,
         snapshot_checkpoint: Vec<u8>,
+        closing: bool,
+    }
+
+    fn board_fill_vec_backing_bytes<T>(owners: &Vec<T>) -> usize {
+        owners.capacity().saturating_mul(std::mem::size_of::<T>())
     }
 
     #[derive(Clone, Debug)]
@@ -4500,6 +4505,7 @@ pub mod board_host {
                     preview_sequence: 0,
                 },
                 snapshot_checkpoint,
+                closing: false,
             }
         }
 
@@ -4518,7 +4524,7 @@ pub mod board_host {
             state.snapshot = snapshot;
             let mut operation = operation;
             operation.preview_sequence = state.preview_sequence;
-            Ok(Self { operation, state, snapshot_checkpoint })
+            Ok(Self { operation, state, snapshot_checkpoint, closing: false })
         }
 
         pub fn operation(&self) -> semio_framework_job::Operation {
@@ -4958,6 +4964,116 @@ pub mod board_host {
                 }
                 Some(outcome) => outcome,
             }
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.closing = true;
+            if maximum_items == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if !self.snapshot_checkpoint.is_empty() {
+                if maximum_bytes == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                self.snapshot_checkpoint.pop();
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 1 };
+            }
+            macro_rules! pop_owner {
+                ($owners:expr) => {
+                    if $owners.pop().is_some() {
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                };
+            }
+            pop_owner!(self.state.placements);
+            pop_owner!(self.state.virtual_handles);
+            pop_owner!(self.state.virtual_nodes);
+            pop_owner!(self.state.candidates);
+            pop_owner!(self.state.sources);
+            pop_owner!(self.state.snapshot.nodes);
+            pop_owner!(self.state.snapshot.handles);
+            if let Some(kind) = self.state.snapshot.kinds.last_mut() {
+                if kind.handles.pop().is_some() {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                if kind.handles.capacity() != 0 {
+                    let bytes = board_fill_vec_backing_bytes(&kind.handles);
+                    if bytes > maximum_bytes {
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    kind.handles.shrink_to_fit();
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                }
+            }
+            pop_owner!(self.state.snapshot.kinds);
+            if self.state.rejected_targets.pop_first().is_some()
+                || self.state.rejected_candidates.pop_first().is_some()
+                || self.state.connected.pop_first().is_some()
+                || self.state.snapshot.compatibility.pop_first().is_some()
+                || self.state.snapshot.node_weights.pop_first().is_some()
+                || self.state.snapshot.handle_weights.pop_first().is_some()
+            {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.state.rejection.take().is_some() || self.state.current_preview.take().is_some() {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            macro_rules! retire_backing {
+                ($owners:expr) => {
+                    if $owners.capacity() != 0 {
+                        let bytes = board_fill_vec_backing_bytes(&$owners);
+                        if bytes > maximum_bytes {
+                            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                        }
+                        $owners.shrink_to_fit();
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                    }
+                };
+            }
+            retire_backing!(self.snapshot_checkpoint);
+            retire_backing!(self.state.placements);
+            retire_backing!(self.state.virtual_handles);
+            retire_backing!(self.state.virtual_nodes);
+            retire_backing!(self.state.candidates);
+            retire_backing!(self.state.sources);
+            retire_backing!(self.state.snapshot.nodes);
+            retire_backing!(self.state.snapshot.handles);
+            retire_backing!(self.state.snapshot.kinds);
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing
+                && self.snapshot_checkpoint.is_empty()
+                && self.snapshot_checkpoint.capacity() == 0
+                && self.state.placements.is_empty()
+                && self.state.placements.capacity() == 0
+                && self.state.virtual_handles.is_empty()
+                && self.state.virtual_handles.capacity() == 0
+                && self.state.virtual_nodes.is_empty()
+                && self.state.virtual_nodes.capacity() == 0
+                && self.state.candidates.is_empty()
+                && self.state.candidates.capacity() == 0
+                && self.state.sources.is_empty()
+                && self.state.sources.capacity() == 0
+                && self.state.snapshot.nodes.is_empty()
+                && self.state.snapshot.nodes.capacity() == 0
+                && self.state.snapshot.handles.is_empty()
+                && self.state.snapshot.handles.capacity() == 0
+                && self.state.snapshot.kinds.is_empty()
+                && self.state.snapshot.kinds.capacity() == 0
+                && self.state.rejected_targets.is_empty()
+                && self.state.rejected_candidates.is_empty()
+                && self.state.connected.is_empty()
+                && self.state.snapshot.compatibility.is_empty()
+                && self.state.snapshot.node_weights.is_empty()
+                && self.state.snapshot.handle_weights.is_empty()
+                && self.state.rejection.is_none()
+                && self.state.current_preview.is_none()
         }
     }
 

@@ -34,6 +34,14 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
+fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "imperative step admission failed"))?;
+    }
+    Ok(nodes)
+}
+
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: item ids are the SAME canonical
 /// `step_row_id` targets `ImperativePlayApp::interaction_topology` declares for the `steps` domain —
 /// the framework stamps this tree's selection/hover presence from that domain (`.interaction_domain`)
@@ -41,7 +49,7 @@ pub fn definition() -> PanelTabDefinition {
 /// anymore (clicks are translated into `interactionSelect` generically)?.
 pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
-    let step_items: Vec<BuiltNode> = path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()))?).collect();
+    let step_items = ui_node_list(path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()))))?;
     PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)?
         .section_or_placeholder("imperative-play-document.steps", Some(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL.into()), true, step_items, labels.document_empty.as_str())?
         .interaction_domain(IMPERATIVE_INTERACTION_STEPS)?

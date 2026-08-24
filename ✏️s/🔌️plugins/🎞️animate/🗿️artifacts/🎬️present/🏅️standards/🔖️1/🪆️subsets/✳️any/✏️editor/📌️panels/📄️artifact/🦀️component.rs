@@ -23,12 +23,20 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
+fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "animate present tile admission failed"))?;
+    }
+    Ok(nodes)
+}
+
 /// 🕹️ No per-row selection `action`: the tree is bound to the `tiles` interaction domain via
 /// `.interaction_domain(...)?` below, so the framework auto-injects `interactionSelect` for row
 /// clicks — never declare that yourself (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
-    let items: Vec<BuiltNode> = tiles.iter().map(|tile| tree_item_desc(tile.id.clone(), Label::from(tile.name.clone()), Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))?).collect();
+    let items = ui_node_list(tiles.iter().map(|tile| tree_item_desc(tile.id.clone(), Label::from(tile.name.clone()), Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))))?;
     PanelTreeBuilder::new("animate-present-play")?
         .section_or_placeholder("animate-present-play.tiles", Some(Label::from(labels.tiles_section.as_str())), true, items, Label::from(labels.no_tiles.as_str()))?
         .interaction_domain(PRESENT_INTERACTION_DOMAIN)?

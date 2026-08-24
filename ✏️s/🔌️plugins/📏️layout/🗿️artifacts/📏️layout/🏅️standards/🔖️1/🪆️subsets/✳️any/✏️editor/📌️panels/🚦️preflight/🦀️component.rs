@@ -5,9 +5,9 @@
 //! depend on apps.
 
 use crate::artifacts::layout::{Frame, LayoutSnapshot};
-use crate::editor::layout::layout_action;
+use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
 use crate::editor::layout::terminology::{layout_labels, preflight_msg, LayoutLabels};
-use semio_framework_plugin::{tree_item_desc, tree_item_with_action, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode};
+use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -176,34 +176,59 @@ pub async fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -
 //#endregion 🔖️Preflight
 
 //#region 🔖️Render
-async fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<semio_framework_plugin::ActionDescriptor>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn layout_tree_item(
+    id: impl Into<String>,
+    label: impl TryInto<Label>,
+    description: Option<String>,
+    icon_id: Option<String>,
+    action: Option<(semio_framework_plugin::ActionId, Option<UiValue>)>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut item = match action {
-        Some(action) => tree_item_with_action(id, label, description, action)?,
-        None => tree_item_desc(id, label, description)?,
+        Some(action) => tree_item_with_action(id, label, description.clone(), action)?,
+        None => tree_item_desc(id, label, description.clone())?,
     };
-    item.icon_id = icon_id.and_then(|id| IconName::from_str(&id));
-    item
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+        if props.description.is_none() {
+            props.description = match description {
+                Some(value) => Some(UiText::try_from_string(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight description admission failed"))?),
+                None => None,
+            };
+        }
+        props.icon = match icon_id {
+            Some(value) => Some(UiText::try_from_string(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight icon admission failed"))?),
+            None => None,
+        };
+    }
+    Ok(item)
 }
 
 pub async fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::LayoutConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let labels = layout_labels(cfg);
     let issues = run_layout_preflight(doc, labels);
-    let items: Vec<UiTreeItemNode> = if issues.is_empty() {
-        vec![layout_tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)?]
+    let mut items = UiFixedList::default();
+    if issues.is_empty() {
+        let item = layout_tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)?;
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight empty row admission failed"))?;
     } else {
-        issues
-            .iter()
-            .map(|issue| {
-                layout_tree_item(
-                    format!("layout-preflight.{}.{}", issue.code, issue.object_id.clone().unwrap_or_else(|| issue.message.clone())),
-                    Label::data(issue.message.clone()),
-                    Some(format!("{} · {}", issue.severity, issue.code)),
-                    Some(if issue.severity == "error" { "alert-circle" } else { "alert-triangle" }.into()),
-                    Some(layout_action("focusPreflightIssue", Some(json!({ "issue": issue })))),
-                )?
-            })
-            .collect()
-    };
+        for issue in &issues {
+            let issue_value = ui_value_map([
+                ("severity", ui_value_text(&issue.severity)?),
+                ("code", ui_value_text(&issue.code)?),
+                ("message", ui_value_text(&issue.message)?),
+                ("objectId", match &issue.object_id { Some(value) => ui_value_text(value)?, None => UiValue::Null }),
+                ("pageId", match &issue.page_id { Some(value) => ui_value_text(value)?, None => UiValue::Null }),
+            ])?;
+            let args = ui_value_map([("issue", issue_value)])?;
+            let item = layout_tree_item(
+                format!("layout-preflight.{}.{}", issue.code, issue.object_id.clone().unwrap_or_else(|| issue.message.clone())),
+                Label::data(issue.message.clone()),
+                Some(format!("{} · {}", issue.severity, issue.code)),
+                Some(if issue.severity == "error" { "alert-circle" } else { "alert-triangle" }.into()),
+                Some(layout_action("focusPreflightIssue", Some(args))?),
+            )?;
+            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight issue admission failed"))?;
+        }
+    }
     PanelTreeBuilder::new("layout-preflight")?.section("layout-preflight.issues", Some(labels.preflight.into()), true, items)?.build()
 }
 //#endregion 🔖️Render

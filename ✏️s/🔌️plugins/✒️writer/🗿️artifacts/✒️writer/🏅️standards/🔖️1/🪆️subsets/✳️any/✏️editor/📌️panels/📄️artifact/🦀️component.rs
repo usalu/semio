@@ -1,14 +1,13 @@
 //! 📄️ Writer play app panel — the document AST outline tree (nested Content/Outline sub-tabs sharing
 //! one render).
 
-use crate::artifacts::writer::schema::{jack_ast_tree_icon, parse_jack_ast, JackAstNode};
+use crate::artifacts::writer::schema::{parse_jack_ast, JackAstNode};
 use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
-use semio_framework_plugin::{
-    tree_item, ui_declarative_sections_to_tree, ui_text, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
+use semio_framework_plugin::{tree_item, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_BODY_ARTIFACT: &str = "writer.play.document";
@@ -50,45 +49,31 @@ pub async fn definition() -> PanelTabDefinition {
 /// `.interaction_domain("ast")?` below, so the framework auto-injects `interactionSelect`/
 /// `interactionHover` for every row (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM —
 /// never declare those actions yourself).
-async fn jack_ast_to_tree_item(node: &JackAstNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let children: Vec<UiTreeItemNode> = node.children.iter().map(jack_ast_to_tree_item).collect()?;
-    UiTreeItemNode {
-        id: node.id.clone(),
-        label: Label::data(node.label.clone()),
-        description: Some(node.kind.clone()),
+fn jack_ast_to_tree_item(node: &JackAstNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let children = crate::editor::writer::ui_node_list(node.children.iter().map(jack_ast_to_tree_item))?;
+    ui::tree_item(Label::data(node.label.clone()))
+        .try_id(&node.id)
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "writer AST id admission failed"))?
+        .description(UiText::try_from_str(&node.kind).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "writer AST kind admission failed"))?)
         // 🛟️ `and_then(IconName::from_str)` (not the panicking `IconName::from`) so a jack AST kind
         // whose icon string isn't (yet) in the shared icon catalog just renders with no icon.
-        icon_id: jack_ast_tree_icon(&node.kind).and_then(IconName::from_str),
-        presence: UiPresence::default(),
-        default_open: Some(matches!(node.kind.as_str(), "query" | "match" | "pattern" | "return")),
-        action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: if children.is_empty() { None } else { Some(children) },
-        control: None,
-        dimmed: None,
-        menu: None,
-    }
+        .default_open(matches!(node.kind.as_str(), "query" | "match" | "pattern" | "return"))
+        .try_children(children)
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "writer AST child admission failed"))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "writer AST row admission failed"))
 }
 
 pub async fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if document.language_id != "jack" {
-        return ui_declarative_sections_to_tree(&[UiSectionNode {
-            id: "writer-document".into(),
-            label: Some(labels.document.into()),
-            default_open: Some(true),
-            children: vec![ui_text(Label::data(document.id.clone())), ui_text(Label::data(document.language_id.clone()))],
-            presence: UiPresence::default(),
-            menu: None,
-        }]);
+        let items = crate::editor::writer::ui_node_list([
+            tree_item("writer-document.id", Label::data(document.id.clone())),
+            tree_item("writer-document.language", Label::data(document.language_id.clone())),
+        ])?;
+        return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(labels.document.into()), true, items)?.build();
     }
     let root = parse_jack_ast(&writer_text(document));
-    let items = if root.kind == "error" {
-        vec![UiTreeItemNode { description: Some(root.kind.clone()), icon_id: jack_ast_tree_icon(&root.kind).and_then(IconName::from_str), ..tree_item(root.id.as_str(), Label::data(root.label.as_str()))? }]
-    } else {
-        vec![jack_ast_to_tree_item(&root)?]
-    };
+    let items = crate::editor::writer::ui_node_list([jack_ast_to_tree_item(&root)])?;
     PanelTreeBuilder::new("writer-play-document")?.section_or_placeholder("writer-play-document.ast", Some(labels.document.into()), true, items, labels.empty_query)?.interaction_domain("ast")?.build()
 }
 //#endregion 🔖️Render

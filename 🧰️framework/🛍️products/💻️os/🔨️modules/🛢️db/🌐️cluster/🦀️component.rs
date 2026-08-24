@@ -170,7 +170,11 @@ pub enum OwnershipStatus {
 /// @emoji 👀️ Reads `shard`'s current ownership from `storage` as of `now_ms`.
 pub async fn ownership_status(storage: &impl db_storage::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, DbError> {
     Ok(match storage.current(shard, now_ms).await? {
-        Some(info) => OwnershipStatus::Held { holder: NodeId(info.holder), fence: info.fence, expires_at_ms: info.expires_at_ms },
+        Some(mut info) => {
+            let status = OwnershipStatus::Held { holder: NodeId(info.holder.as_str().to_string()), fence: info.fence, expires_at_ms: info.expires_at_ms };
+            info.close_step();
+            status
+        }
         None => OwnershipStatus::Vacant,
     })
 }

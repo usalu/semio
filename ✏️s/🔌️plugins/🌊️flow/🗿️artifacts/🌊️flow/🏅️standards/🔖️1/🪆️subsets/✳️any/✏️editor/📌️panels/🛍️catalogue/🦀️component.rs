@@ -3,13 +3,12 @@
 use crate::artifacts::flow::FlowSnapshot;
 use crate::editor::flow::commands::run_extension_action::FLOW_AUTOMATIONS;
 use crate::editor::flow::config::FlowConfig;
-use crate::editor::flow::flow_action;
+use crate::editor::flow::{flow_action, ui_node_list, ui_value_bool, ui_value_map, ui_value_text};
 use crate::editor::flow::host_from_snapshot;
 use crate::editor::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{
-    tree_item_with_action, tree_item_with_action_draggable, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    tree_item_with_action, tree_item_with_action_draggable, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 use serde_json::{json, Value};
 
@@ -21,7 +20,7 @@ pub const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 //#endregion 🔖️Constants
 
 //#region 🔖️WidgetDescriptors
-pub async fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
+pub fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
     if kind == "neuron" {
         json!({ "kind": "neuron", "neuronKind": neuron_kind.unwrap_or(kind) })
     } else {
@@ -31,7 +30,7 @@ pub async fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Va
 
 /// 🪢️ Wraps a widget descriptor into the `{mime: payload}` JSON shape `tree_item_with_action_draggable`
 /// expects for its drag-data map.
-pub async fn flow_widget_drag_json(descriptor: &Value) -> Value {
+pub fn flow_widget_drag_json(descriptor: &Value) -> Value {
     json!({ FLOW_WIDGET_DRAG_MIME: descriptor.to_string() })
 }
 //#endregion 🔖️WidgetDescriptors
@@ -51,115 +50,67 @@ pub async fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub async fn render(fixture: &FlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let host = host_from_snapshot(fixture, config, session);
-    let sections: Vec<Value> = host.catalogue_json().ok().and_then(|raw| serde_json::from_str(&raw).ok()).unwrap_or_default();
-    let tree_sections: Vec<UiTreeSectionNode> = sections
-        .iter()
-        .filter_map(|section| {
-            let id = section.get("id")?.as_str()?.to_string();
-            let title = section.get("title").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
-            let items: Vec<UiTreeItemNode> = section
-                .get("items")
-                .and_then(|value| value.as_array())
-                .map(|entries| {
-                    entries
-                        .iter()
-                        .filter_map(|entry| {
-                            let kind = entry.get("kind")?.as_str()?;
-                            let label = entry.get("name").or_else(|| entry.get("abbreviation")).and_then(|value| value.as_str()).unwrap_or(kind);
-                            let descriptor = if kind == "neuron" { flow_widget_descriptor("neuron", entry.get("neuronKind").and_then(|value| value.as_str())) } else { flow_widget_descriptor(kind, None) };
-                            let action = flow_action("addWidget", Some(descriptor.clone()));
-                            Some(tree_item_with_action_draggable(format!("flow-play-catalogue.{id}.{kind}.{label}"), Label::data(label), Some(kind.to_string()), action, &flow_widget_drag_json(&descriptor))?)
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
-            Some(UiTreeSectionNode { presence: UiPresence::default(), id: format!("flow-play-catalogue.{id}"), label: Some(Label::data(title)), default_open: Some(true), items })
-        })
-        .collect();
-    let tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
-    let mut builder = PanelTreeBuilder::new("flow-play-catalogue")?;
-    for section in tree_sections.into_iter().chain(flow_extensions_tree_sections(config, labels)) {
-        builder = builder.section(section.id, section.label, section.default_open.unwrap_or(false), section.items)?;
+    let raw = host.catalogue_json().map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
+    let catalogue: Value = serde_json::from_str(&raw).map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
+    let sections = catalogue.as_array().ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue root must be an array"))?;
+    if sections.is_empty() {
+        return Err(PluginAssemblyError::new("ui.catalogue", "flow catalogue must contain at least one section"));
     }
-    builder.selected(vec![])?.build()
+    let mut builder = PanelTreeBuilder::new("flow-play-catalogue")?;
+    for section in sections {
+        let id = section.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue section id is required"))?;
+        let title = section.get("title").and_then(Value::as_str).unwrap_or(id);
+        let entries = section.get("items").and_then(Value::as_array).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue section items are required"))?;
+        let items = ui_node_list(entries.iter().map(|entry| {
+            let kind = entry.get("kind").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue item kind is required"))?;
+            let label = entry.get("name").or_else(|| entry.get("abbreviation")).and_then(Value::as_str).unwrap_or(kind);
+            let neuron_kind = (kind == "neuron").then(|| entry.get("neuronKind").and_then(Value::as_str)).flatten();
+            let descriptor = flow_widget_descriptor(kind, neuron_kind);
+            let action_args = match neuron_kind {
+                Some(neuron_kind) => ui_value_map([("kind", ui_value_text("neuron")?), ("neuronKind", ui_value_text(neuron_kind)?)])?,
+                None => ui_value_map([("kind", ui_value_text(kind)?)])?,
+            };
+            tree_item_with_action_draggable(
+                format!("flow-play-catalogue.{id}.{kind}.{label}"),
+                Label::data(label),
+                Some(kind.to_string()),
+                flow_action("addWidget", Some(action_args))?,
+                &flow_widget_drag_json(&descriptor),
+            )
+        }))?;
+        builder = builder.section(format!("flow-play-catalogue.{id}"), Some(Label::data(title)), true, items)?;
+    }
+    append_extension_sections(builder, config, labels)?.build()
 }
 
 /// 🧩️ Installed/enabled extension palette plus actions surfaced by active extensions.
-async fn flow_extensions_tree_sections(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
+fn append_extension_sections(mut builder: PanelTreeBuilder, config: &FlowConfig, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<PanelTreeBuilder> {
     let extension_enabled = config.automation_enabled();
-    let installed: Vec<UiTreeItemNode> = FLOW_AUTOMATIONS
-        .iter()
-        .map(|(id, name, _, _, _)| {
+    let installed = ui_node_list(FLOW_AUTOMATIONS.iter().map(|(id, name, _, _, _)| {
             let enabled = extension_enabled.get(*id).copied().unwrap_or(false);
+            let args = ui_value_map([("enabled", ui_value_bool(!enabled)), ("id", ui_value_text(id)?)])?;
             tree_item_with_action(
                 format!("flow-play-extensions.{id}"),
                 flow_extension_label(id, name, labels),
                 Some(if enabled { "enabled".into() } else { "disabled".into() }),
-                flow_action("toggleExtension", Some(json!({ "id": id, "enabled": !enabled }))),
-            )?
-        })
-        .collect();
-    let actions: Vec<UiTreeItemNode> = FLOW_AUTOMATIONS
+                flow_action("toggleExtension", Some(args))?,
+            )
+        }))?;
+    let actions = ui_node_list(FLOW_AUTOMATIONS
         .iter()
         .filter(|(id, ..)| extension_enabled.get(*id).copied().unwrap_or(false))
         .map(|(_, _, action_id, title, _)| {
-            tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels), Some((*action_id).into()), flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))))?
-        })
-        .collect();
-    let mut sections = vec![UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed }];
+            let args = ui_value_map([("actionId", ui_value_text(action_id)?)])?;
+            tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels), Some((*action_id).into()), flow_action("runExtensionAction", Some(args))?)
+        }))?;
+    builder = builder.section("flow-play-extensions.installed", Some(labels.extensions.into()), false, installed)?;
     if !actions.is_empty() {
-        sections.push(UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions });
+        builder = builder.section("flow-play-extensions.actions", Some(labels.extension_actions.into()), false, actions)?;
     }
-    sections
+    Ok(builder)
 }
 
 /// 🛟️ Used when the host catalogue is empty (a fresh/offline session) — a minimal hand-authored palette.
-async fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
-    let sources = [("inputSlider", labels.catalogue_slider), ("inputNote", labels.catalogue_note)];
-    let components = [("math.add", labels.catalogue_add), ("logic.and", labels.catalogue_and), ("text.concat", labels.catalogue_concat)];
-    let sinks = [("outputPreview", labels.catalogue_preview), ("outputExport", labels.catalogue_export)];
-    vec![
-        UiTreeSectionNode {
-            presence: UiPresence::default(),
-            id: "flow-play-catalogue.sources".into(),
-            label: Some(labels.sources.into()),
-            default_open: Some(true),
-            items: sources
-                .iter()
-                .map(|(kind, label)| {
-                    let descriptor = flow_widget_descriptor(kind, None);
-                    tree_item_with_action_draggable(format!("flow-play-catalogue.source.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))?
-                })
-                .collect(),
-        },
-        UiTreeSectionNode {
-            presence: UiPresence::default(),
-            id: "flow-play-catalogue.components".into(),
-            label: Some(labels.components.into()),
-            default_open: Some(true),
-            items: components
-                .iter()
-                .map(|(kind, label)| {
-                    let descriptor = flow_widget_descriptor("neuron", Some(kind));
-                    tree_item_with_action_draggable(format!("flow-play-catalogue.component.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))?
-                })
-                .collect(),
-        },
-        UiTreeSectionNode {
-            presence: UiPresence::default(),
-            id: "flow-play-catalogue.sinks".into(),
-            label: Some(labels.sinks.into()),
-            default_open: Some(false),
-            items: sinks
-                .iter()
-                .map(|(kind, label)| {
-                    let descriptor = flow_widget_descriptor(kind, None);
-                    tree_item_with_action_draggable(format!("flow-play-catalogue.sink.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))?
-                })
-                .collect(),
-        },
-    ]
-}
 //#endregion 🔖️Render
 
 //#region 🧪️Tests

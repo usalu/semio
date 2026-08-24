@@ -113,9 +113,25 @@ pub async fn selection_from_interaction(active_object_id: &str, interaction: &In
 /// `UiTreeItemNode.hoverAction`/`.unhoverAction` are DELETED (per `📋️master.md`'s UI section) — a
 /// domain-bound tree's hover is translated generically by the renderer now, like its selection click
 /// modifiers, never by an app-built per-row action.
-pub async fn mesh_select_action(granularity: &str, target_id: &str, merge: &str) -> semio_framework_plugin::ActionDescriptor {
-    let targets = serde_json::to_string(&Value::Array(vec![serde_json::json!({ "granularity": granularity, "id": target_id })])).unwrap_or_default();
-    crate::editor::lowpoly::lowpoly_action("interactionSelect", Some(serde_json::json!({ "domainId": MESH_INTERACTION_DOMAIN, "targets": targets, "merge": merge })))
+pub fn mesh_select_action(
+    granularity: &str,
+    target_id: &str,
+    merge: &str,
+) -> semio_framework_plugin::UiAssemblyResult<(
+    semio_framework_plugin::ActionId,
+    Option<semio_framework_plugin::UiValue>,
+)> {
+    let targets = serde_json::to_string(&[semio_framework_plugin::InteractionTarget {
+        granularity: granularity.into(),
+        id: target_id.into(),
+    }])
+    .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
+    let args = crate::editor::lowpoly::ui_value_map([
+        ("domainId", crate::editor::lowpoly::ui_value_text(MESH_INTERACTION_DOMAIN)?),
+        ("targets", crate::editor::lowpoly::ui_value_text(targets)?),
+        ("merge", crate::editor::lowpoly::ui_value_text(merge)?),
+    ])?;
+    crate::editor::lowpoly::lowpoly_action("interactionSelect", Some(args))
 }
 //#endregion 🔖️MeshDomain
 

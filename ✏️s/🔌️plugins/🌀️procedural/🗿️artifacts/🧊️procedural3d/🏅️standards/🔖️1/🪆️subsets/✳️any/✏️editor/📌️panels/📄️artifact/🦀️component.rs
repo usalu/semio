@@ -38,7 +38,7 @@ fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id:
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). Clicks/selection are the framework's now — no
 /// per-item action needed.
 pub fn render(fixture: &FlowFixture, labels: &Procedural3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let items: Vec<BuiltNode> = fixture.widgets.iter().map(|widget| tree_item_with_icon(widget_id(widget).to_string(), widget_id(widget).to_string(), Some("cpu"))?).collect();
+    let items = crate::ui_node_list(fixture.widgets.iter().map(|widget| tree_item_with_icon(widget_id(widget).to_string(), widget_id(widget).to_string(), Some("cpu"))))?;
     PanelTreeBuilder::new("procedural-play-document")?.section("procedural-play-document.widgets", Some(labels.widgets.as_str().into()), true, items)?.interaction_domain("graph")?.build()
 }
 //#endregion 🔖️Render

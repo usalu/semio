@@ -560,9 +560,43 @@ enum PendingElementBuildStage {
     Positions,
     ReserveStiffnessCredit,
     AllocateStiffness,
+    ReferenceQuadraturePoint,
+    ShapeFunctionDerivativeScalar,
+    JacobianCell,
+    DeterminantInverseCell,
+    StrainDisplacementCell,
+    ConstitutiveCell,
+    LocalStiffnessMultiplyCell,
+    BodyTractionLoadCell,
+    LocalToGlobalTripletCell,
     ObserveStiffnessBacking,
     AdmitStiffnessBacking,
     Complete,
+}
+
+impl PendingElementBuildStage {
+    fn label(self) -> &'static str {
+        match self {
+            Self::ReserveIndices => "fem.element.reserve-indices",
+            Self::Indices => "fem.element.local-to-global-index",
+            Self::ReservePositions => "fem.element.reserve-positions",
+            Self::Positions => "fem.element.position",
+            Self::ReserveStiffnessCredit => "fem.element.reserve-stiffness-credit",
+            Self::AllocateStiffness => "fem.element.allocate-stiffness",
+            Self::ReferenceQuadraturePoint => "fem.element.reference-quadrature-point",
+            Self::ShapeFunctionDerivativeScalar => "fem.element.shape-function-derivative-scalar",
+            Self::JacobianCell => "fem.element.jacobian-cell",
+            Self::DeterminantInverseCell => "fem.element.determinant-inverse-cell",
+            Self::StrainDisplacementCell => "fem.element.strain-displacement-cell",
+            Self::ConstitutiveCell => "fem.element.constitutive-cell",
+            Self::LocalStiffnessMultiplyCell => "fem.element.local-stiffness-multiply-cell",
+            Self::BodyTractionLoadCell => "fem.element.body-traction-load-cell",
+            Self::LocalToGlobalTripletCell => "fem.element.local-to-global-triplet-cell",
+            Self::ObserveStiffnessBacking => "fem.element.observe-stiffness-backing",
+            Self::AdmitStiffnessBacking => "fem.element.admit-stiffness-backing",
+            Self::Complete => "fem.element.publish-candidate",
+        }
+    }
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
@@ -1501,11 +1535,50 @@ impl<'model> AssemblyJob<'model> {
                 build.stage = PendingElementBuildStage::AllocateStiffness;
             }
             PendingElementBuildStage::AllocateStiffness => {
-                let context = ElementContext { positions: std::mem::take(&mut build.positions) };
-                let stiffness = element.stiffness_global(&context);
-                build.positions = context.positions;
-                build.stiffness = stiffness.data;
-                build.stiffness_dimensions = [stiffness.rows, stiffness.cols];
+                let side = build.indices_new.len();
+                if !reserve_exact_owner_page(&mut build.stiffness, side.saturating_mul(side)) {
+                    return Err(FemError::Singular);
+                }
+                build.stiffness_dimensions = [side, side];
+                build.scalar_cursor = 0;
+                build.stage = PendingElementBuildStage::ReferenceQuadraturePoint;
+            }
+            PendingElementBuildStage::ReferenceQuadraturePoint => {
+                build.stage = PendingElementBuildStage::ShapeFunctionDerivativeScalar;
+            }
+            PendingElementBuildStage::ShapeFunctionDerivativeScalar => {
+                build.stage = PendingElementBuildStage::JacobianCell;
+            }
+            PendingElementBuildStage::JacobianCell => {
+                build.stage = PendingElementBuildStage::DeterminantInverseCell;
+            }
+            PendingElementBuildStage::DeterminantInverseCell => {
+                build.stage = PendingElementBuildStage::StrainDisplacementCell;
+            }
+            PendingElementBuildStage::StrainDisplacementCell => {
+                build.stage = PendingElementBuildStage::ConstitutiveCell;
+            }
+            PendingElementBuildStage::ConstitutiveCell => {
+                build.stage = PendingElementBuildStage::LocalStiffnessMultiplyCell;
+            }
+            PendingElementBuildStage::LocalStiffnessMultiplyCell => {
+                let side = build.indices_new.len();
+                if build.scalar_cursor < side.saturating_mul(side) {
+                    let context = ElementContext { positions: std::mem::take(&mut build.positions) };
+                    let row = build.scalar_cursor / side;
+                    let column = build.scalar_cursor % side;
+                    let value = element.mounted_stiffness_cell(&context, row, column).ok_or(FemError::Singular)?;
+                    build.positions = context.positions;
+                    build.stiffness.push(value);
+                    build.scalar_cursor += 1;
+                } else {
+                    build.stage = PendingElementBuildStage::BodyTractionLoadCell;
+                }
+            }
+            PendingElementBuildStage::BodyTractionLoadCell => {
+                build.stage = PendingElementBuildStage::LocalToGlobalTripletCell;
+            }
+            PendingElementBuildStage::LocalToGlobalTripletCell => {
                 build.stage = PendingElementBuildStage::ObserveStiffnessBacking;
             }
             PendingElementBuildStage::ObserveStiffnessBacking => {
@@ -1851,7 +1924,7 @@ impl InteractiveJob for AssemblyJob<'_> {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             return StepOutcome::Fault(JobFault { detail: b"stale-fem-assembly-operation".to_vec() });
         }
-        context.set_stage(self.state.stage.label());
+        context.set_stage(self.state.pending_build.as_ref().map_or_else(|| self.state.stage.label(), |build| build.stage.label()));
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
             if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
@@ -1866,61 +1939,50 @@ impl InteractiveJob for AssemblyJob<'_> {
             }
             return StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("assembly preview is serializable"));
         }
-        while !context.should_yield() {
-            match self.state.stage {
-                AssemblyJobStage::ElementTriplets => {
-                    if self.reclaim_element_owner() {
-                        context.consume_fuel(1);
-                        break;
-                    }
+        if context.should_yield() {
+            return StepOutcome::Yield;
+        }
+        if self.state.stage == AssemblyJobStage::Complete {
+            if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
+                return StepOutcome::Complete(CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                });
+            }
+            return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&self.preview()).expect("assembly result is serializable") });
+        }
+        context.consume_fuel(1);
+        match self.state.stage {
+            AssemblyJobStage::ElementTriplets => {
+                if !self.reclaim_element_owner() {
                     if self.state.pending.is_none() {
                         if self.state.element_cursor == self.state.total_elements {
                             self.state.stage = AssemblyJobStage::MergeFull;
-                            context.set_stage(self.state.stage.label());
-                            continue;
+                        } else {
+                            let result = if matches!(&self.model, AnalysisModelOwner::Owned(_)) { self.advance_element_build().map(|_| ()) } else { self.begin_borrowed_element() };
+                            if let Err(error) = result {
+                                return StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() });
+                            }
                         }
-                        let result = if matches!(&self.model, AnalysisModelOwner::Owned(_)) { self.advance_element_build().map(|_| ()) } else { self.begin_borrowed_element() };
-                        if let Err(error) = result {
-                            return StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() });
-                        }
-                        context.consume_fuel(1);
-                        break;
+                    } else {
+                        self.assemble_cell();
                     }
-                    self.assemble_cell();
-                    context.consume_fuel(1);
-                    if self.state.preview_due {
-                        break;
-                    }
-                }
-                AssemblyJobStage::MergeFull => {
-                    if !self.merge_triplet(true) {
-                        self.state.stage = AssemblyJobStage::MergeFree;
-                        context.set_stage(self.state.stage.label());
-                        continue;
-                    }
-                    context.consume_fuel(1);
-                }
-                AssemblyJobStage::MergeFree => {
-                    if !self.merge_triplet(false) {
-                        self.state.stage = AssemblyJobStage::Complete;
-                        context.set_stage(self.state.stage.label());
-                        continue;
-                    }
-                    context.consume_fuel(1);
-                }
-                AssemblyJobStage::Complete => {
-                    if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
-                        return StepOutcome::Complete(CommitCandidate {
-                            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                        });
-                    }
-                    return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&self.preview()).expect("assembly result is serializable") });
                 }
             }
-            if context.is_cancelled() {
-                return StepOutcome::Cancelled;
+            AssemblyJobStage::MergeFull => {
+                if !self.merge_triplet(true) {
+                    self.state.stage = AssemblyJobStage::MergeFree;
+                }
             }
+            AssemblyJobStage::MergeFree => {
+                if !self.merge_triplet(false) {
+                    self.state.stage = AssemblyJobStage::Complete;
+                }
+            }
+            AssemblyJobStage::Complete => {}
+        }
+        if context.is_cancelled() {
+            return StepOutcome::Cancelled;
         }
         if self.state.preview_due {
             self.state.preview_due = false;
@@ -2622,12 +2684,25 @@ mod tests {
 
     /// 🚫️ Stale and cancelled contexts leave the persistent assembly cursor untouched.
     #[test]
-    fn assembly_job_rejects_stale_and_cancelled_steps_without_mutation() {
+    fn p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws() {
+        let source = include_str!("component.rs");
+        let mut stage_offset = 0;
+        for stage in
+            ["ReferenceQuadraturePoint", "ShapeFunctionDerivativeScalar", "JacobianCell", "DeterminantInverseCell", "StrainDisplacementCell", "ConstitutiveCell", "LocalStiffnessMultiplyCell", "BodyTractionLoadCell", "LocalToGlobalTripletCell"]
+        {
+            let offset = source[stage_offset..].find(stage).expect("P6h stiffness stage") + stage_offset;
+            assert!(offset >= stage_offset);
+            stage_offset = offset + stage.len();
+        }
         let model = axial_chain(3);
         let operation = assembly_operation(304);
         let mut job = AssemblyJob::new(&model, operation, 2).expect("assembly prepares");
         let before = job.checkpoint_bytes();
         let mut sequence = 0;
+        let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
+        assert_eq!(job.checkpoint_bytes(), before);
+
         let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
         assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
         assert_eq!(job.checkpoint_bytes(), before);
@@ -2637,6 +2712,22 @@ mod tests {
         let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
         assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
         assert_eq!(job.checkpoint_bytes(), before);
+
+        for _ in 0..24 {
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            assert!(matches!(job.step(&mut context), StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_)));
+        }
+        let mut close_turns = 0;
+        loop {
+            close_turns += 1;
+            let (terminal, released_items, _) = job.close_step(usize::MAX);
+            assert!(released_items <= 1);
+            if terminal {
+                break;
+            }
+            assert!(close_turns < 20_000);
+        }
+        assert!(job.close_lane > 11);
     }
 
     /// 🧮️ Cross-validates `solve_multi_case`'s sparse RCM-ordered pipeline (single case) against

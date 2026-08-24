@@ -2,7 +2,6 @@
 
 use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_BODY_CATALOGUE: &str = "shooting.play.catalogue";
@@ -21,18 +20,28 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn catalog_shot_item(id: &str, label: impl Into<Label>, format: &str, shape: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::editor::shooting::tree_item_with_icon(format!("shooting-play-catalogue.{id}"), label, "camera", crate::editor::shooting::shooting_action("addShot", Some(json!({ "format": format, "shape": shape }))))?
+fn catalog_shot_item(id: &str, label: impl TryInto<Label>, format: &str, shape: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let args = crate::editor::shooting::ui_value_map([
+        ("format", crate::editor::shooting::ui_value_text(format)?),
+        ("shape", crate::editor::shooting::ui_value_text(shape)?),
+    ])?;
+    crate::editor::shooting::tree_item_with_icon(format!("shooting-play-catalogue.{id}"), label, "camera", crate::editor::shooting::shooting_action("addShot", Some(args)))
 }
 
 pub async fn render(labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let shot_items = vec![
+    let shot_items = crate::editor::shooting::ui_node_list([
         catalog_shot_item("svg-rect", labels.svg_rectangle, "svg", "rectangle"),
         catalog_shot_item("png-rect", labels.png_rectangle, "png", "rectangle"),
         catalog_shot_item("svg-ellipse", labels.svg_ellipse, "svg", "ellipse"),
         catalog_shot_item("png-ellipse", labels.png_ellipse, "png", "ellipse"),
-    ];
-    let asset_items = vec![crate::editor::shooting::tree_item_with_icon("shooting-play-catalogue.asset.glb", labels.glb_asset, "box", crate::editor::shooting::shooting_action("addAsset", Some(json!({ "format": "glb" }))))?];
+    ])?;
+    let asset_args = crate::editor::shooting::ui_value_map([("format", crate::editor::shooting::ui_value_text("glb")?)])?;
+    let asset_items = crate::editor::shooting::ui_node_list([crate::editor::shooting::tree_item_with_icon(
+        "shooting-play-catalogue.asset.glb",
+        labels.glb_asset,
+        "box",
+        crate::editor::shooting::shooting_action("addAsset", Some(asset_args)),
+    )])?;
     PanelTreeBuilder::new("shooting-play-catalogue")?.section("shooting-play-catalogue.shots", Some(labels.add_shot.into()), true, shot_items)?.section("shooting-play-catalogue.assets", Some(labels.add_asset.into()), true, asset_items)?.build()
 }
 //#endregion 🔖️Render

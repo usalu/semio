@@ -699,7 +699,6 @@ mod tests {
     }
 
     fn run(request: NativeIoRequest) -> Result<NativeIoValue, String> {
-        let mut job = NativeIoJob::new(request);
         let params = semio_framework_job::BatchJobParams {
             operation: semio_framework_job::allocate_operation_id(),
             generation: semio_framework_job::Generation(1),
@@ -712,24 +711,32 @@ mod tests {
             },
             now_ms: semio_framework_job::default_now_ms,
         };
-        let mut preview_sequence = 0;
+        let mut session = semio_framework_job::BatchJobSession::try_new(NativeIoJob::new(request), params).unwrap_or_else(|_| panic!("native I/O test session admission"));
+        let result;
         loop {
-            let outcome = semio_framework_job::drive_step(
-                &mut job,
-                params.config.site,
-                params.operation,
-                params.generation,
-                params.config.stage,
-                semio_framework_job::StepBudget::new(params.config.fuel_per_step, u64::MAX),
-                params.cancel.clone(),
-                params.now_ms,
-                &mut preview_sequence,
-            );
-            if outcome.is_terminal() {
+            if session.step().is_err() {
+                panic!("native I/O test session contention");
+            }
+            let Some(job) = session.checked_out_job_mut() else { panic!("native I/O checked-out job") };
+            let terminal_result = job.take_result();
+            let Some(mut outcome) = session.take_outcome() else { panic!("native I/O retained outcome") };
+            let terminal = outcome.is_terminal();
+            while !outcome.terminal_is_empty() {
+                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            }
+            if terminal {
+                result = terminal_result.unwrap_or_else(|| panic!("native I/O terminal result"));
                 break;
             }
+            if session.resume().is_err() {
+                panic!("native I/O test session resume");
+            }
         }
-        job.take_result().expect("native I/O terminal result")
+        session.begin_close();
+        while !session.terminal_is_empty() {
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        result
     }
 
     #[test]

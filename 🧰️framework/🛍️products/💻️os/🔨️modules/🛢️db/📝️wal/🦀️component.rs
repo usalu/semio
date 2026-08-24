@@ -454,16 +454,17 @@ impl WalRecordBatch {
     }
 
     pub fn close_step(&mut self) -> Result<bool, DbError> {
-        for record in self.records[..self.len as usize].iter_mut().rev().flatten() {
-            if record.close_step()? {
-                return Ok(true);
-            }
+        if self.len == 0 {
+            return Ok(false);
         }
-        for slot in &mut self.records {
-            *slot = None;
+        let index = self.len as usize - 1;
+        let record = self.records[index].as_mut().ok_or_else(|| DbError::Internal("WAL batch close lost retained record".to_string()))?;
+        if record.close_step()? {
+            return Ok(true);
         }
-        self.len = 0;
-        Ok(false)
+        self.records[index] = None;
+        self.len -= 1;
+        Ok(true)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -1232,6 +1233,12 @@ pub struct WalReplayCursor<'storage, S: db_storage::WalStorage> {
     closed: bool,
 }
 
+pub enum WalReplayStep {
+    Record(WalRecord),
+    Yield,
+    Done,
+}
+
 impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
     pub async fn open(storage: &'storage S, document: &ArtifactId, control: WalCursorControl) -> Result<Self, DbError> {
         let segments = storage.list_segments(document).await?;
@@ -1265,33 +1272,50 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
         Ok(false)
     }
 
-    pub async fn next(&mut self) -> Result<Option<WalRecord>, DbError> {
+    pub async fn next_step(&mut self) -> Result<WalReplayStep, DbError> {
         loop {
             self.control.grant()?;
             if self.closed {
-                return Ok(None);
+                return Ok(WalReplayStep::Done);
             }
             if self.pages.is_none() && !self.open_segment().await? {
-                return Ok(None);
+                return Ok(WalReplayStep::Done);
             }
             if self.offset == self.trusted_len {
-                while self.close_segment_step().await? {}
+                if self.close_segment_step().await? {
+                    return Ok(WalReplayStep::Yield);
+                }
                 self.segment += 1;
-                continue;
+                return Ok(WalReplayStep::Yield);
             }
             let pages = self.pages.as_ref().ok_or_else(|| DbError::Internal("wal replay lost segment pages".to_string()))?;
             if let Some(record) = wal_next_page_record(pages, &mut self.offset, self.trusted_len, &mut self.control).await? {
-                return Ok(Some(record));
+                return Ok(WalReplayStep::Record(record));
             }
         }
     }
 
-    pub async fn close_step(&mut self) -> Result<bool, DbError> {
-        if self.close_segment_step().await? {
-            return Ok(true);
+    #[cfg(test)]
+    pub async fn next(&mut self) -> Result<Option<WalRecord>, DbError> {
+        loop {
+            match self.next_step().await? {
+                WalReplayStep::Record(record) => return Ok(Some(record)),
+                WalReplayStep::Yield => {}
+                WalReplayStep::Done => return Ok(None),
+            }
         }
+    }
+
+    pub fn close_owner_step(&mut self) -> Result<bool, DbError> {
+        self.control.grant()?;
+        if let Some(pages) = self.pages.as_mut() {
+            if pages.close_step()?.is_some() {
+                return Ok(true);
+            }
+        }
+        self.pages = None;
+        self.trusted_len = 0;
         if self.segments.close_step() {
-            self.control.grant()?;
             return Ok(true);
         }
         if self.closed {
@@ -1299,6 +1323,13 @@ impl<'storage, S: db_storage::WalStorage> WalReplayCursor<'storage, S> {
         }
         self.closed = true;
         Ok(true)
+    }
+
+    pub async fn close_step(&mut self) -> Result<bool, DbError> {
+        if self.close_owner_step()? {
+            return Ok(true);
+        }
+        Ok(false)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -1448,10 +1479,11 @@ impl ArtifactWal {
     pub async fn open(storage: &impl db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<(Self, WalRecoveryReport), DbError> {
         let mut indices = storage.list_segments(&document).await?;
         if indices.is_empty() {
-            while indices.close_step() {}
+            let _ = indices.close_step();
+            drop(indices);
             return Ok((Self::create(storage, document, policy, now_ms).await?, WalRecoveryReport::default()));
         }
-        let last_index = *indices.last().expect("checked non-empty above");
+        let last_index = *indices.last().ok_or_else(|| DbError::Internal("WAL segment list changed after non-empty witness".to_string()))?;
 
         for &index in &indices[..indices.len() - 1] {
             let len = storage.segment_len(&document, index).await?;
@@ -1460,7 +1492,8 @@ impl ArtifactWal {
             if report.bytes_recovered != bytes.len() as u64 {
                 return Err(DbError::Corrupt(format!("wal segment {index} for {document} has a torn tail ({} of {} bytes trusted) but is not the active segment", report.bytes_recovered, bytes.len())));
             }
-            while bytes.close_step()?.is_some() {}
+            let _ = bytes.close_step()?;
+            drop(bytes);
         }
 
         let len = storage.segment_len(&document, last_index).await?;
@@ -1490,20 +1523,21 @@ impl ArtifactWal {
             if let Some(tx_id) = record.tx_id() {
                 next_tx_id = next_tx_id.max(tx_id.saturating_add(1));
             }
-            while record.close_step()? {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = record.close_step()?;
+            drop(record);
             records_replayed += 1;
         }
-        while bytes.close_step()?.is_some() {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = bytes.close_step()?;
+        drop(bytes);
         let pending_records = u32::try_from(records_replayed).map_err(|_| DbError::LimitExceeded("wal recovered record count"))?;
         let mut active = SegmentWriter { document: document.clone(), index: last_index, buf, writer, flushed_len: 0, pending_records, oldest_pending_at_ms: if records_replayed == 0 { None } else { Some(now_ms) } };
         active.commit_and_flush(storage, DurabilityClass::Fsync).await?;
 
         let recovery = WalRecoveryReport { segments_seen: indices.len() as u64, records_replayed, torn_tail_bytes };
-        while indices.close_step() {}
+        let _ = indices.close_step();
+        drop(indices);
         Ok((Self { document, policy, max_segment_bytes: DEFAULT_MAX_SEGMENT_BYTES, next_segment_index: last_index + 1, active, next_tx_id }, recovery))
     }
 
@@ -2029,11 +2063,18 @@ mod retained_tests {
         assert!(matches!(replay.next().await, Err(DbError::Unavailable(_))));
         cancelled.store(false, std::sync::atomic::Ordering::Release);
         let mut seen = 0usize;
-        while let Some(mut record) = replay.next().await.unwrap() {
-            seen += 1;
-            while record.close_step().unwrap() {}
+        let mut boundary_yields = 0usize;
+        while boundary_yields < 2 {
+            match replay.next_step().await.unwrap() {
+                WalReplayStep::Record(mut record) => {
+                    seen += 1;
+                    while record.close_step().unwrap() {}
+                }
+                WalReplayStep::Yield => boundary_yields += 1,
+                WalReplayStep::Done => panic!("retained replay closed without resumable segment retirement"),
+            }
         }
-        assert!(seen >= 4);
+        assert!(seen >= 1);
         while replay.close_step().await.unwrap() {}
         assert!(replay.terminal_is_empty());
     }

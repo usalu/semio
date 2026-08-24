@@ -82,6 +82,19 @@ impl Element for Bar2 {
         m
     }
 
+    fn mounted_stiffness_cell(&self, ctx: &ElementContext, row: usize, column: usize) -> Option<f64> {
+        if row >= 4 || column >= 4 || ctx.positions.len() != 2 {
+            return None;
+        }
+        let (length, cosine, sine) = segment_geometry(ctx);
+        if !length.is_finite() || length <= 0.0 {
+            return None;
+        }
+        let direction = [cosine, sine];
+        let sign = if row / 2 == column / 2 { 1.0 } else { -1.0 };
+        Some(self.e * self.area / length * sign * direction[row % 2] * direction[column % 2])
+    }
+
     fn recover(&self, ctx: &ElementContext, u_local: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
         let (l, cx, cy) = segment_geometry(ctx);
         let k = self.e * self.area / l;
@@ -190,6 +203,35 @@ fn beam_local_stiffness(l: f64, axial_k: f64, bend_k: f64) -> MatD {
     k
 }
 
+fn beam_local_stiffness_cell(length: f64, axial: f64, bending: f64, row: usize, column: usize) -> f64 {
+    let length_squared = length * length;
+    match (row, column) {
+        (0, 0) | (3, 3) => axial,
+        (0, 3) | (3, 0) => -axial,
+        (1, 1) | (4, 4) => 12.0 * bending / length_squared,
+        (1, 2) | (1, 5) | (2, 1) | (5, 1) => 6.0 * bending / length,
+        (1, 4) | (4, 1) => -12.0 * bending / length_squared,
+        (2, 2) | (5, 5) => 4.0 * bending,
+        (2, 4) | (4, 2) | (4, 5) | (5, 4) => -6.0 * bending / length,
+        (2, 5) | (5, 2) => 2.0 * bending,
+        _ => 0.0,
+    }
+}
+
+fn beam_transform_cell(cosine: f64, sine: f64, row: usize, column: usize) -> f64 {
+    let block = row / 3;
+    if column / 3 != block {
+        return 0.0;
+    }
+    match (row % 3, column % 3) {
+        (0, 0) | (1, 1) => cosine,
+        (2, 2) => 1.0,
+        (0, 1) => sine,
+        (1, 0) => -sine,
+        _ => 0.0,
+    }
+}
+
 /// 🌬️ Local fixed-end load vector `[u1,v1,θ1,u2,v2,θ2]` for a local-frame UDL `(wx_local, wy_local)`.
 fn beam_local_udl(l: f64, wx_local: f64, wy_local: f64) -> VecD {
     VecD::from_vec(vec![wx_local * l / 2.0, wy_local * l / 2.0, wy_local * l * l / 12.0, wx_local * l / 2.0, wy_local * l / 2.0, -wy_local * l * l / 12.0])
@@ -294,6 +336,32 @@ impl Element for BeamEb2 {
         let k_local = beam_local_stiffness(l, axial_k, bend_k);
         let t = beam_transform(c, s);
         t.transpose().matmul(&k_local).matmul(&t)
+    }
+
+    fn mounted_stiffness_cell(&self, ctx: &ElementContext, row: usize, column: usize) -> Option<f64> {
+        if row >= 6 || column >= 6 || ctx.positions.len() != 2 {
+            return None;
+        }
+        let (length, cosine, sine) = segment_geometry(ctx);
+        if !length.is_finite() || length <= 0.0 {
+            return None;
+        }
+        let axial = self.e * self.area / length;
+        let bending = self.e * self.iy / length;
+        let mut value = 0.0;
+        for local_row in 0..6 {
+            let left = beam_transform_cell(cosine, sine, local_row, row);
+            if left == 0.0 {
+                continue;
+            }
+            for local_column in 0..6 {
+                let right = beam_transform_cell(cosine, sine, local_column, column);
+                if right != 0.0 {
+                    value += left * beam_local_stiffness_cell(length, axial, bending, local_row, local_column) * right;
+                }
+            }
+        }
+        Some(value)
     }
 
     fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
@@ -538,6 +606,63 @@ impl Element for Tri3Cst {
         let coords = plane_coords(ctx);
         let d = self.kind.d_matrix(self.e, self.nu);
         plane_stiffness(&coords, &self.rule(), Self::shape, &d, self.thickness, 6)
+    }
+
+    fn mounted_stiffness_cell(&self, ctx: &ElementContext, row: usize, column: usize) -> Option<f64> {
+        if row >= 6 || column >= 6 || ctx.positions.len() != 3 {
+            return None;
+        }
+        let coordinates = [[ctx.positions[0][0], ctx.positions[0][1]], [ctx.positions[1][0], ctx.positions[1][1]], [ctx.positions[2][0], ctx.positions[2][1]]];
+        let dx_dxi = coordinates[1][0] - coordinates[0][0];
+        let dx_deta = coordinates[2][0] - coordinates[0][0];
+        let dy_dxi = coordinates[1][1] - coordinates[0][1];
+        let dy_deta = coordinates[2][1] - coordinates[0][1];
+        let determinant = dx_dxi * dy_deta - dx_deta * dy_dxi;
+        if !determinant.is_finite() || determinant.abs() <= f64::EPSILON {
+            return None;
+        }
+        let parametric = [[-1.0, -1.0], [1.0, 0.0], [0.0, 1.0]];
+        let derivatives = std::array::from_fn::<_, 3, _>(|index| {
+            let derivative = parametric[index];
+            [(dy_deta * derivative[0] - dy_dxi * derivative[1]) / determinant, (-dx_deta * derivative[0] + dx_dxi * derivative[1]) / determinant]
+        });
+        let b = |strain: usize, dof: usize| {
+            let derivative = derivatives[dof / 2];
+            match (strain, dof % 2) {
+                (0, 0) => derivative[0],
+                (1, 1) => derivative[1],
+                (2, 0) => derivative[1],
+                (2, 1) => derivative[0],
+                _ => 0.0,
+            }
+        };
+        let constitutive = |left: usize, right: usize| match self.kind {
+            PlaneKind::Stress => {
+                let factor = self.e / (1.0 - self.nu * self.nu);
+                match (left, right) {
+                    (0, 0) | (1, 1) => factor,
+                    (0, 1) | (1, 0) => factor * self.nu,
+                    (2, 2) => factor * (1.0 - self.nu) / 2.0,
+                    _ => 0.0,
+                }
+            }
+            PlaneKind::Strain => {
+                let factor = self.e / ((1.0 + self.nu) * (1.0 - 2.0 * self.nu));
+                match (left, right) {
+                    (0, 0) | (1, 1) => factor * (1.0 - self.nu),
+                    (0, 1) | (1, 0) => factor * self.nu,
+                    (2, 2) => factor * (1.0 - 2.0 * self.nu) / 2.0,
+                    _ => 0.0,
+                }
+            }
+        };
+        let mut value = 0.0;
+        for left in 0..3 {
+            for right in 0..3 {
+                value += b(left, row) * constitutive(left, right) * b(right, column);
+            }
+        }
+        Some(value * 0.5 * determinant * self.thickness)
     }
 
     fn recover(&self, ctx: &ElementContext, u_local: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
@@ -993,6 +1118,34 @@ impl Element for PlateDkt {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn assert_mounted_stiffness_cells_match_batch(element: &dyn Element, context: &ElementContext, tolerance: f64) {
+        let batch = element.stiffness_global(context);
+        for row in 0..batch.rows {
+            for column in 0..batch.cols {
+                let mounted = element.mounted_stiffness_cell(context, row, column).expect("mounted fixed-schema cell");
+                let scale = batch.get(row, column).abs().max(1.0);
+                assert!((mounted - batch.get(row, column)).abs() <= tolerance * scale, "cell ({row},{column}) mounted={mounted} batch={}", batch.get(row, column));
+            }
+        }
+    }
+
+    #[test]
+    fn p6h_mounted_element_fixed_schema_cells_match_batch_and_reject_maximum_plus_one() {
+        let line = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 1.0, 0.0]] };
+        let bar = Bar2 { id: "bar".into(), start: "a".into(), end: "b".into(), e: 210e9, area: 0.01, density: 0.0 };
+        assert_mounted_stiffness_cells_match_batch(&bar, &line, 1e-12);
+        assert_eq!(bar.mounted_stiffness_cell(&line, 4, 0), None);
+
+        let beam = BeamEb2 { id: "beam".into(), start: "a".into(), end: "b".into(), e: 210e9, area: 0.01, iy: 8.0e-6, density: 0.0 };
+        assert_mounted_stiffness_cells_match_batch(&beam, &line, 1e-12);
+        assert_eq!(beam.mounted_stiffness_cell(&line, 6, 0), None);
+
+        let triangle_context = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.25, 1.5, 0.0]] };
+        let triangle = Tri3Cst { id: "triangle".into(), nodes: ["a".into(), "b".into(), "c".into()], e: 30e9, nu: 0.2, thickness: 0.3, kind: PlaneKind::Stress, density: 0.0 };
+        assert_mounted_stiffness_cells_match_batch(&triangle, &triangle_context, 1e-12);
+        assert_eq!(triangle.mounted_stiffness_cell(&triangle_context, 6, 0), None);
+    }
     use crate::model::{solve_linear_static, Model, NodalLoad, Node, Support};
 
     /// 🪢️ Headless (no document layer) axial elongation check: δ = FL/EA, N = F.

@@ -131,7 +131,12 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
     let mut command_digests: Vec<[u8; 32]> = Vec::new();
     let mut commit_seq = 0u64;
     let mut floor_head_seq = 0u64;
-    while let Some(mut record) = records.next().await? {
+    loop {
+        let mut record = match records.next_step().await? {
+            db_wal::WalReplayStep::Record(record) => record,
+            db_wal::WalReplayStep::Yield => continue,
+            db_wal::WalReplayStep::Done => break,
+        };
         match &mut record {
             db_wal::WalRecord::Command(bytes) => {
                 commands.push(decode_retained_command_envelope(bytes, &mut decode_control)?);
@@ -143,9 +148,11 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
             db_wal::WalRecord::SnapshotPub { frontier, .. } => floor_head_seq = frontier.head_seq,
             _ => {}
         }
-        while record.close_step()? {}
+        let _ = record.close_step()?;
+        drop(record);
     }
-    while records.close_step().await? {}
+    let _ = records.close_step().await?;
+    drop(records);
     let head_seq = commands.len() as u64;
     let chain_hash = fold_content_chain(&command_digests);
     let frontier = Frontier { document, head_seq, commit_seq, chain_hash, epoch: 0 };

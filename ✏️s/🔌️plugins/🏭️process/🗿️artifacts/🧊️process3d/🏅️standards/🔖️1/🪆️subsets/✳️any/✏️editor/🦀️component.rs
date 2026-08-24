@@ -158,8 +158,20 @@ pub fn set_active_utility_effect(utility: &str) -> Effect {
 
 /// 🎨️ `tree_item_with_action` (SDK)? carries no icon slot, so this app-wide wrapper layers `icon_id` on
 /// top via struct-update syntax — shared by the `🛍️catalogue` and `🛠️workshop` panels.
-pub fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..semio_framework_plugin::tree_item_with_action(id, label, None, action)? }
+pub fn iconed_tree_item_with_action(
+    id: impl AsRef<str>,
+    label: impl TryInto<Label>,
+    icon_id: &str,
+    action: semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut node = semio_framework_plugin::tree_item_with_action(id, label, None, action?)?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+        props.icon = Some(
+            semio_framework_plugin::UiText::try_from_str(icon_id)
+                .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.tree-item.icon", "fixed tree-item icon admission failed"))?,
+        );
+    }
+    Ok(node)
 }
 
 /// 🔁️ Builds a `Effect::LoadDocument` for `document` — the sanctioned non-history "replace the

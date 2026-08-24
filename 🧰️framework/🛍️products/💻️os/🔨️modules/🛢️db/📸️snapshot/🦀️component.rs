@@ -587,17 +587,48 @@ impl SnapshotPageSink {
     }
 }
 
+trait SnapshotPageSource {
+    fn len(&self) -> usize;
+    fn page(&self, index: usize) -> Option<&Page>;
+}
+
+impl SnapshotPageSource for [Page] {
+    fn len(&self) -> usize {
+        <[Page]>::len(self)
+    }
+
+    fn page(&self, index: usize) -> Option<&Page> {
+        self.get(index)
+    }
+}
+
+struct OptionalSnapshotPages<'pages> {
+    slots: &'pages [Option<Page>],
+    len: usize,
+}
+
+impl SnapshotPageSource for OptionalSnapshotPages<'_> {
+    fn len(&self) -> usize {
+        self.len
+    }
+
+    fn page(&self, index: usize) -> Option<&Page> {
+        self.slots.get(index).and_then(Option::as_ref)
+    }
+}
+
 /// @emoji 🏗️ Builds one generation's complete, self-contained `.spk` pack bytes: the descriptor
 /// as the first (`KIND_SNAPSHOT`) segment, `new_pages` as `KIND_CHUNK` segments in order (so
 /// `descriptor.new_pages[i]` is `pack::ChunkId(i)`), then the standard `pack::PackWriter::finish`
 /// trailer. If `parent_footer_position` is `Some`, the trailing footer's `prev_footer_offset` is
 /// patched in place afterward (see module doc) and `REQUIRED_FOOTER_CHAIN` is set in both the
 /// header and the footer's `required_flags`.
-pub async fn build_generation_pages(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>, control: &mut SnapshotCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+async fn build_generation_page_source<P: SnapshotPageSource + ?Sized>(descriptor: &SnapshotDescriptor, new_pages: &P, parent_footer_position: Option<u64>, control: &mut SnapshotCursorControl) -> Result<db_storage::DbIoPages, DbError> {
     if new_pages.len() != descriptor.new_pages.len() {
         return Err(DbError::InvalidArgument("new_pages count does not match descriptor.new_pages".to_string()));
     }
-    for (page, hash) in new_pages.iter().zip(descriptor.new_pages.iter()) {
+    for (index, hash) in descriptor.new_pages.iter().enumerate() {
+        let page = new_pages.page(index).ok_or_else(|| DbError::Internal("snapshot retained page source lost an owner".to_string()))?;
         if page.hash != *hash {
             return Err(DbError::InvalidArgument("new_pages order/hash does not match descriptor.new_pages".to_string()));
         }
@@ -616,7 +647,8 @@ pub async fn build_generation_pages(descriptor: &SnapshotDescriptor, new_pages: 
     let mut descriptor_segment = writer.begin_identity_segment(pack::KIND_SNAPSHOT, descriptor.retained_len()?).await?;
     descriptor.write_retained(&mut descriptor_segment).await?;
     descriptor_segment.finish().await?;
-    for page in new_pages {
+    for index in 0..new_pages.len() {
+        let page = new_pages.page(index).ok_or_else(|| DbError::Internal("snapshot retained page source lost an owner".to_string()))?;
         control.grant()?;
         let mut chunk = writer.begin_identity_chunk(page.len()).await?;
         for fragment in page.fragments() {
@@ -653,14 +685,20 @@ pub async fn build_generation_pages(descriptor: &SnapshotDescriptor, new_pages: 
     sink.into_pages().await
 }
 
+pub async fn build_generation_pages(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>, control: &mut SnapshotCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+    build_generation_page_source(descriptor, new_pages, parent_footer_position, control).await
+}
+
 #[cfg(test)]
 async fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>) -> Result<Vec<u8>, DbError> {
     let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
     let mut pages = build_generation_pages(descriptor, new_pages, parent_footer_position, &mut control).await?;
     let mut prepared = db_storage::db_io_prepare_platform(&pages)?.await?;
     let output = prepared.as_slice().to_vec();
-    while prepared.close_step()? {}
-    while pages.close_step()?.is_some() {}
+    let _ = prepared.close_step()?;
+    drop(prepared);
+    let _ = pages.close_step()?;
+    drop(pages);
     Ok(output)
 }
 
@@ -898,9 +936,7 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
         let len = pages.len();
         self.control.grant()?;
         let descriptor = open_latest_pages(&pages, &mut self.control).await?.descriptor;
-        while pages.close_step()?.is_some() {
-            self.control.grant()?;
-        }
+        drop(pages);
         Ok((descriptor, len))
     }
 
@@ -923,27 +959,27 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
             if let Some(index) = handle.descriptor.new_pages.iter().position(|candidate| *candidate == hash) {
                 let sub = PageSubSource { inner: &source, base: handle.base, len: handle.len };
                 let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Standard).await?;
-                let mut reservation = db_storage::DbIoDriverReservation::try_reserve(source.operation(), db_storage::DB_IO_OPERATION_PAGES * db_storage::DB_IO_PAGE_BYTES)?;
-                self.control.grant()?;
-                let bytes = file.read_chunk(pack::ChunkId(index as u32), pack::os_pack::VerificationLevel::Standard).await?;
-                reservation.observe_capacity(bytes.capacity())?;
-                let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(source.operation(), bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
-                let mut offset = 0;
-                while offset < bytes.len() {
+                let mut cursor = file.identity_chunk_cursor(pack::ChunkId(index as u32), pack::os_pack::VerificationLevel::Standard)?;
+                let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(source.operation(), usize::try_from(cursor.len()).map_err(|_| DbError::LimitExceeded("snapshot identity chunk length"))?.div_ceil(db_storage::DB_IO_PAGE_BYTES))
+                    .map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+                let mut fragment = [0u8; db_storage::DB_IO_PAGE_BYTES];
+                loop {
                     self.control.grant()?;
-                    offset += writer.write_fragment(&bytes[offset..])?;
+                    let read = cursor.read_fragment(&mut fragment).await?;
+                    if read == 0 {
+                        break;
+                    }
+                    if writer.write_fragment(&fragment[..read])? != read {
+                        return Err(DbError::Internal("snapshot identity cursor made partial writer progress".to_string()));
+                    }
                 }
-                drop(bytes);
-                reservation.close_step()?;
-                while source.close_step()?.is_some() {
-                    self.control.grant()?;
-                }
+                drop(cursor);
+                drop(file);
+                drop(source);
                 return writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error);
             }
             generation = handle.descriptor.parent_generation;
-            while source.close_step()?.is_some() {
-                self.control.grant()?;
-            }
+            drop(source);
         }
         Err(DbError::NotFound(format!("page {hash} not found anywhere in the snapshot chain")))
     }
@@ -981,9 +1017,7 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
                     offset += writer.write_fragment(&fragment[offset..])?;
                 }
             }
-            while source.close_step()?.is_some() {
-                self.control.grant()?;
-            }
+            drop(source);
         }
         writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
     }
@@ -1025,6 +1059,19 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// the document's current `latest_generation` (`DbError::InvalidArgument` if there is none
     /// yet); `origin == FullBaseline` starts (or restarts) a self-sufficient lineage.
     pub async fn publish(&self, document: &ArtifactId, origin: SnapshotOrigin, new_pages: &[Page], body: SnapshotBody) -> Result<u64, DbError> {
+        self.publish_page_source(document, origin, new_pages, body).await
+    }
+
+    /// @emoji 🧵️ Publishes from a fixed optional page owner array without constructing a
+    /// dynamic retained page graph.
+    pub async fn publish_retained(&self, document: &ArtifactId, origin: SnapshotOrigin, new_pages: &[Option<Page>], retained_len: usize, body: SnapshotBody) -> Result<u64, DbError> {
+        if retained_len > new_pages.len() || new_pages[..retained_len].iter().any(Option::is_none) {
+            return Err(DbError::InvalidArgument("snapshot retained page source is not contiguous".to_string()));
+        }
+        self.publish_page_source(document, origin, &OptionalSnapshotPages { slots: new_pages, len: retained_len }, body).await
+    }
+
+    async fn publish_page_source<P: SnapshotPageSource + ?Sized>(&self, document: &ArtifactId, origin: SnapshotOrigin, new_pages: &P, body: SnapshotBody) -> Result<u64, DbError> {
         let latest = self.storage.latest_generation(document).await?;
         let (generation, parent_generation, parent_footer_position) = match origin {
             SnapshotOrigin::FullBaseline => (latest.map_or(0, |g| g + 1), None, None),
@@ -1035,14 +1082,17 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
                 let mut cursor = self.chain_cursor(document, parent_generation, control);
                 let mut combined = cursor.materialize_pages().await?;
                 let parent_footer_position = combined.len() as u64 - pack::FOOTER_SIZE as u64;
-                while combined.close_step()?.is_some() {
-                    cursor.control.grant()?;
-                }
-                while cursor.close_step()? {}
+                let _ = combined.close_step()?;
+                drop(combined);
+                let _ = cursor.close_step()?;
                 (parent_generation + 1, Some(parent_generation), Some(parent_footer_position))
             }
         };
 
+        let mut hashes = Vec::with_capacity(new_pages.len());
+        for index in 0..new_pages.len() {
+            hashes.push(new_pages.page(index).ok_or_else(|| DbError::Internal("snapshot retained page source lost an owner".to_string()))?.hash);
+        }
         let descriptor = SnapshotDescriptor {
             document: document.clone(),
             generation,
@@ -1055,11 +1105,11 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             vcs_head: body.vcs_head,
             base_pack_hash: body.base_pack_hash,
             roots: body.roots,
-            new_pages: new_pages.iter().map(|page| page.hash).collect(),
+            new_pages: hashes,
             created_at_ms: body.created_at_ms,
         };
         let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
-        let pages = build_generation_pages(&descriptor, new_pages, parent_footer_position, &mut control).await?;
+        let pages = build_generation_page_source(&descriptor, new_pages, parent_footer_position, &mut control).await?;
         self.storage.write_generation(document, generation, pages).await?;
         Ok(generation)
     }
@@ -1074,7 +1124,8 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
                 let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
                 let handle = open_latest_pages(&bytes, &mut control).await?;
                 let descriptor = handle.descriptor;
-                while bytes.close_step()?.is_some() {}
+                let _ = bytes.close_step()?;
+                drop(bytes);
                 Ok(Some((generation, descriptor)))
             }
         }
@@ -1096,9 +1147,11 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
                     best = Some((*generation, handle.descriptor.head_seq));
                 }
             }
-            while bytes.close_step()?.is_some() {}
+            let _ = bytes.close_step()?;
+            drop(bytes);
         }
-        while generations.close_step() {}
+        let _ = generations.close_step();
+        drop(generations);
         Ok(best.map(|(generation, _)| generation))
     }
 
@@ -1110,7 +1163,8 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
         let floor_handle = open_latest_pages(&floor_bytes, &mut control).await?;
         let incremental = floor_handle.descriptor.parent_generation.is_some();
-        while floor_bytes.close_step()?.is_some() {}
+        let _ = floor_bytes.close_step()?;
+        drop(floor_bytes);
         if incremental {
             return Err(DbError::InvalidArgument("retention floor must be a full-baseline generation (no parent)".to_string()));
         }
@@ -1120,7 +1174,8 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
                 self.storage.delete_generation(document, *generation).await?;
             }
         }
-        while generations.close_step() {}
+        let _ = generations.close_step();
+        drop(generations);
         Ok(())
     }
 
@@ -1137,9 +1192,14 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         let sub = PageSubSource { inner: &bytes, base: 0, len: bytes.len() as u64 };
         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), level).await?;
         for index in 0..handle.descriptor.new_pages.len() {
-            file.read_chunk(pack::ChunkId(index as u32), level).await?;
+            let mut cursor = file.identity_chunk_cursor(pack::ChunkId(index as u32), level)?;
+            let mut fragment = [0u8; db_storage::DB_IO_PAGE_BYTES];
+            while cursor.read_fragment(&mut fragment).await? != 0 {
+                control.grant()?;
+            }
         }
-        while bytes.close_step()?.is_some() {}
+        drop(file);
+        drop(bytes);
         Ok(())
     }
 }

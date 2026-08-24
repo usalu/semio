@@ -2,13 +2,11 @@
 
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::status_summary;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::editor::architect::architect_action;
+use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
 use crate::editor::architect::catalog::register_len;
-use crate::editor::architect::chrome::{tree_item, tree_item_with_action};
 use crate::editor::architect::config::{active_register, ArchitectConfig};
 use crate::editor::architect::ARCHITECT_INTERACTION_PROGRAM;
-use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
-use serde_json::json;
+use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_DOCUMENT: &str = "architect.document";
@@ -38,22 +36,40 @@ pub async fn definition() -> PanelTabDefinition {
 /// `.interaction_domain(...)?`).
 pub async fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let summary = status_summary(program);
-    let element_items: Vec<UiTreeItemNode> = program.elements.iter().map(|element| tree_item_desc(element.header.id.to_string(), Label::data(format!("{} ({:?})", element.header.name, element.kind)), Some(element.header.id.to_string()))?).collect();
-    let register_items: Vec<UiTreeItemNode> = summary
-        .by_register
-        .iter()
-        .map(|row| tree_item_with_action(format!("architect-document.register.{}", row.register), format!("{} ({})", row.register, row.count), None, architect_action("selectRegister", Some(json!({ "registerId": row.register }))))?)
-        .collect();
+    let mut element_items = UiFixedList::default();
+    for element in &program.elements {
+        let item = tree_item_desc(element.header.id.to_string(), Label::data(format!("{} ({:?})", element.header.name, element.kind)), Some(element.header.id.to_string()))?;
+        element_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect element row admission failed"))?;
+    }
+    let mut register_items = UiFixedList::default();
+    for row in &summary.by_register {
+        let args = ui_value_map([("registerId", ui_value_text(&row.register)?)])?;
+        let item = tree_item_with_action(
+            format!("architect-document.register.{}", row.register),
+            Label::data(format!("{} ({})", row.register, row.count)),
+            None,
+            architect_action("selectRegister", Some(args))?,
+        )?;
+        register_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect register row admission failed"))?;
+    }
+    let mut meta = UiFixedList::default();
+    for item in [
+        tree_item_desc("architect-document.meta.title", Label::data(format!("Title: {}", program.meta.title)), None)?,
+        tree_item_desc("architect-document.meta.project", Label::data(format!("Project: {} ({})", program.project.client_name, program.project.code)), None)?,
+        tree_item_desc(
+            "architect-document.meta.entities",
+            Label::data(format!("Entities tracked: {} (active register: {} / {})", summary.total_entities, active_register(cfg), register_len(program, active_register(cfg)))),
+            None,
+        )?,
+    ] {
+        meta.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect metadata row admission failed"))?;
+    }
     PanelTreeBuilder::new("architect-document")?
         .section(
             "architect-document.meta",
             Some(Label::data("ProgramSnapshot")),
             true,
-            vec![
-                tree_item("architect-document.meta.title", format!("Title: {}", program.meta.title))?,
-                tree_item("architect-document.meta.project", format!("Project: {} ({})", program.project.client_name, program.project.code))?,
-                tree_item("architect-document.meta.entities", format!("Entities tracked: {} (active register: {} / {})", summary.total_entities, active_register(cfg), register_len(program, active_register(cfg))))?,
-            ],
+            meta,
         )?
         .section("architect-document.registers", Some(Label::data("Registers")), true, register_items)?
         .section_or_placeholder("architect-document.elements", Some(Label::data("Elements")), true, element_items, Label::data("(none)"))?

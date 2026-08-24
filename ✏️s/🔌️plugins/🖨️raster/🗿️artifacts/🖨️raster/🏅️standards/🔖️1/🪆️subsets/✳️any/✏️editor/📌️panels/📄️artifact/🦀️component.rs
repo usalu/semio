@@ -5,9 +5,8 @@ use crate::artifacts::raster::schema::layer_visible;
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
-use crate::editor::raster::{layer_row_id, raster_action, RASTER_TREE_PREFIX};
-use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
-use serde_json::json;
+use crate::editor::raster::{layer_row_id, raster_action, ui_node_list, ui_value_map, ui_value_text, RASTER_TREE_PREFIX};
+use semio_framework_plugin::{tree_item_desc, tree_item_with_action, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_BODY_LAYERS: &str = "raster.play.layers";
@@ -26,16 +25,10 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn layer_tree_item(layer: &RasterLayerNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn layer_tree_item(layer: &RasterLayerNode) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let nested = match layer {
-        RasterLayerNode::Group { children, .. } => {
-            if children.is_empty() {
-                None
-            } else {
-                Some(children.iter().map(layer_tree_item).collect()?)
-            }
-        }
-        _ => None,
+        RasterLayerNode::Group { children, .. } => ui_node_list(children.iter().map(layer_tree_item))?,
+        _ => UiFixedList::default(),
     };
     let description = match layer {
         RasterLayerNode::Pixel { .. } => "pixel",
@@ -47,14 +40,15 @@ async fn layer_tree_item(layer: &RasterLayerNode) -> semio_framework_plugin::UiA
         RasterLayerNode::Group { .. } => "folder",
         RasterLayerNode::Adjustment { .. } => "sliders-horizontal",
     };
-    UiTreeItemNode {
-        icon_id: Some(icon_id.into()),
-        default_open: Some(matches!(layer, RasterLayerNode::Group { .. })),
-        draggable: Some(true),
-        items: nested,
-        dimmed: if layer_visible(layer) { None } else { Some(true) },
-        ..tree_item_desc(layer_row_id(layer), Label::data(layer_name(layer)), Some(description.into()))?
+    let mut node = tree_item_desc(layer_row_id(layer), Label::data(layer_name(layer)), Some(description.into()))?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+        props.icon = Some(UiText::try_from_str(icon_id).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "raster layer icon admission failed"))?);
+        props.default_open = Some(matches!(layer, RasterLayerNode::Group { .. }));
+        props.draggable = Some(true);
+        props.dimmed = Some(!layer_visible(layer));
     }
+    node.base.children = nested;
+    Ok(node)
 }
 
 /// 🕹️ `runtime` is unused now — layer selection/hover moved into the framework-owned `"layers"`
@@ -64,11 +58,19 @@ async fn layer_tree_item(layer: &RasterLayerNode) -> semio_framework_plugin::UiA
 /// deleted `.selected()?`/`.highlighted()?`/`.selection_change()` calls (row ids ARE the domain's ids —
 /// this tree is the sole consumer of the `"layers"` domain today).
 pub async fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let action_rows = vec![
-        UiTreeItemNode { icon_id: Some("image".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.pixel"), labels.add_pixel, None, raster_action("addLayer", Some(json!({ "kind": "pixel" }))))? },
-        UiTreeItemNode { icon_id: Some("folder-plus".into()), ..tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.group"), labels.add_group, None, raster_action("addLayer", Some(json!({ "kind": "group" }))))? },
-    ];
-    let layer_items: Vec<UiTreeItemNode> = document.layers.iter().map(layer_tree_item).collect()?;
-    PanelTreeBuilder::new(RASTER_TREE_PREFIX)?.section(RASTER_TREE_PREFIX, Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, [action_rows, layer_items].concat())?.interaction_domain("layers")?.build()
+    let mut items = UiFixedList::default();
+    for (kind, label, icon) in [("pixel", labels.add_pixel, "image"), ("group", labels.add_group, "folder-plus")] {
+        let args = ui_value_map([("kind", ui_value_text(kind)?)])?;
+        let mut item = tree_item_with_action(format!("{RASTER_TREE_PREFIX}.add.{kind}"), label, None, raster_action("addLayer", Some(args))?)?;
+        if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+            props.icon = Some(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "raster add-layer icon admission failed"))?);
+        }
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "raster action row admission failed"))?;
+    }
+    for layer in &document.layers {
+        let item = layer_tree_item(layer)?;
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "raster layer list admission failed"))?;
+    }
+    PanelTreeBuilder::new(RASTER_TREE_PREFIX)?.section(RASTER_TREE_PREFIX, Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, items)?.interaction_domain("layers")?.build()
 }
 //#endregion 🔖️Render

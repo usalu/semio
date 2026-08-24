@@ -6,8 +6,7 @@ use crate::editor::process3d::iconed_tree_item_with_action;
 use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::Process3dLabels;
-use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
-use serde_json::json;
+use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_CATALOGUE: &str = "process.play.catalogue";
@@ -29,8 +28,37 @@ pub async fn definition() -> PanelTabDefinition {
 /// 🏷️ Display label for a catalog id, resolved against `installed_catalogs()` — falls back to the raw
 /// id if the catalog that seeded a workshop machine was since uninstalled (never resolved back, per
 /// `WorkshopMachine::catalog_id`'s informational-only contract).
-async fn catalog_label(contributions_json: &str, catalog_id: &str) -> String {
+fn catalog_label(contributions_json: &str, catalog_id: &str) -> String {
     installed_catalogs(contributions_json).into_iter().find(|catalog| catalog.catalog_id() == catalog_id).map_or_else(|| catalog_id.to_string(), |catalog| catalog.label().to_string())
+}
+
+fn capability_items<'a>(machines: impl IntoIterator<Item = &'a WorkshopMachine>, ctx: &ValidationContext) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut items = semio_framework_plugin::UiFixedList::default();
+    for machine in machines {
+        for capability in &machine.capabilities {
+            let failures = validate_capability(capability, ctx);
+            let id = format!("process3d-catalogue.{}.{}", machine.id, capability.id);
+            let label = Label::data(format!("{} — {}", machine.label, capability.label));
+            let item = if failures.is_empty() {
+                let args = crate::editor::process3d::ui_value_map([
+                    ("capabilityId", crate::editor::process3d::ui_value_text(&capability.id)?),
+                    ("machineId", crate::editor::process3d::ui_value_text(&machine.id)?),
+                ])?;
+                iconed_tree_item_with_action(id, label, &capability.icon_id, process3d_action("addStep", Some(args)))?
+            } else {
+                let mut item = tree_item_desc(id, label, Some(validation_reason(&failures)))?;
+                if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
+                    props.icon = Some(
+                        semio_framework_plugin::UiText::try_from_str(&capability.icon_id)
+                            .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.icon", "fixed capability icon admission failed"))?,
+                    );
+                }
+                item
+            };
+            items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed capability catalogue admission failed"))?;
+        }
+    }
+    Ok(items)
 }
 
 /// 🏭️ Builds one catalogue tree item per workshop machine capability, grouped by the machine's source
@@ -44,41 +72,40 @@ pub async fn render(fixture: &Process3dSnapshot, contributions_json: &str, label
     // extents, matching the same documented gap `add_step::handle` accepted for this reason.
     let ctx = ValidationContext { stock_width: f64::MAX, stock_depth: f64::MAX, stock_height: f64::MAX };
     let mut builder = PanelTreeBuilder::new("process3d-play-catalogue")?;
-    let mut sections: Vec<(Option<&str>, Vec<&WorkshopMachine>)> = Vec::new();
+    let mut workshop_machines = semio_framework_plugin::UiFixedList::default();
+    let mut catalog_sections: semio_framework_plugin::UiFixedList<(semio_framework_plugin::UiText, semio_framework_plugin::UiFixedList<&WorkshopMachine>)> = semio_framework_plugin::UiFixedList::default();
     for machine in &fixture.workshop.machines {
-        let key = machine.catalog_id.as_deref();
-        match sections.iter_mut().find(|(existing, _)| *existing == key) {
-            Some(section) => section.1.push(machine),
-            None => sections.push((key, vec![machine])),
+        let Some(catalog_id) = machine.catalog_id.as_deref() else {
+            workshop_machines.try_push(machine).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.workshop", "fixed workshop catalogue admission failed"))?;
+            continue;
+        };
+        if let Some(index) = catalog_sections.iter().position(|(existing, _)| existing.as_str() == catalog_id) {
+            let Some((_, machines)) = catalog_sections.get_mut(index) else {
+                return Err(semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.section", "catalogue section owner was not retained"));
+            };
+            machines.try_push(machine).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.section-machines", "fixed catalogue machine admission failed"))?;
+        } else {
+            let key = semio_framework_plugin::UiText::try_from_str(catalog_id)
+                .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.section-id", "fixed catalogue section id admission failed"))?;
+            let mut machines = semio_framework_plugin::UiFixedList::default();
+            machines.try_push(machine).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.section-machines", "fixed catalogue machine admission failed"))?;
+            catalog_sections.try_push((key, machines)).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.sections", "fixed catalogue section admission failed"))?;
         }
     }
-    sections.sort_by_key(|(key, _)| key.is_some());
-    for (catalog_id, machines) in sections {
-        let items: Vec<UiTreeItemNode> = machines
-            .iter()
-            .flat_map(|machine| {
-                machine.capabilities.iter().map(move |capability| {
-                    let failures = validate_capability(capability, &ctx);
-                    let id = format!("process3d-catalogue.{}.{}", machine.id, capability.id);
-                    let label = Label::data(format!("{} — {}", machine.label, capability.label));
-                    if failures.is_empty() {
-                        iconed_tree_item_with_action(id, label, &capability.icon_id, process3d_action("addStep", Some(json!({ "machineId": machine.id, "capabilityId": capability.id }))))?
-                    } else {
-                        UiTreeItemNode { icon_id: Some(capability.icon_id.as_str().into()), menu: None, ..tree_item_desc(id, label, Some(validation_reason(&failures)))? }
-                    }
-                })
-            })
-            .collect();
-        let section_id = format!("process3d-play-catalogue.{}", catalog_id.unwrap_or("workshop"));
-        let section_label = catalog_id.map_or_else(|| labels.workshop.into(), |id| Label::data(catalog_label(contributions_json, id)));
-        builder = builder.section(section_id, Some(section_label), catalog_id.is_none(), items)?;
+    if !workshop_machines.is_empty() {
+        builder = builder.section("process3d-play-catalogue.workshop", Some(labels.workshop.into()), true, capability_items(workshop_machines.iter().copied(), &ctx)?)?;
     }
-    let stock_items = vec![
-        iconed_tree_item_with_action("process3d-catalogue.stock-box", labels.stock_kind_box, "box", process3d_action("setStock", Some(json!({ "kind": "box" }))))?,
-        iconed_tree_item_with_action("process3d-catalogue.stock-cylinder", labels.stock_kind_cylinder, "cylinder", process3d_action("setStock", Some(json!({ "kind": "cylinder" }))))?,
-        iconed_tree_item_with_action("process3d-catalogue.stock-sphere", labels.stock_kind_sphere, "circle", process3d_action("setStock", Some(json!({ "kind": "sphere" }))))?,
-        iconed_tree_item_with_action("process3d-catalogue.stock-import", labels.import_model, "folder-open", process3d_action("loadModelRequest", None))?,
-    ];
+    for (catalog_id, machines) in catalog_sections.iter() {
+        let section_id = format!("process3d-play-catalogue.{catalog_id}");
+        let section_label = Label::data(catalog_label(contributions_json, catalog_id.as_str()));
+        builder = builder.section(section_id, Some(section_label), false, capability_items(machines.iter().copied(), &ctx)?)?;
+    }
+    let stock_items = crate::editor::process3d::ui_node_list([
+        iconed_tree_item_with_action("process3d-catalogue.stock-box", labels.stock_kind_box, "box", process3d_action("setStock", Some(crate::editor::process3d::ui_value_map([("kind", crate::editor::process3d::ui_value_text("box")?)])?))),
+        iconed_tree_item_with_action("process3d-catalogue.stock-cylinder", labels.stock_kind_cylinder, "cylinder", process3d_action("setStock", Some(crate::editor::process3d::ui_value_map([("kind", crate::editor::process3d::ui_value_text("cylinder")?)])?))),
+        iconed_tree_item_with_action("process3d-catalogue.stock-sphere", labels.stock_kind_sphere, "circle", process3d_action("setStock", Some(crate::editor::process3d::ui_value_map([("kind", crate::editor::process3d::ui_value_text("sphere")?)])?))),
+        iconed_tree_item_with_action("process3d-catalogue.stock-import", labels.import_model, "folder-open", process3d_action("loadModelRequest", None)),
+    ])?;
     builder.section("process3d-play-catalogue.stock", Some(labels.stock.into()), false, stock_items)?.build()
 }
 //#endregion 🔖️Render

@@ -179,16 +179,65 @@ component. Mounted external callers remain exactly as enumerated above.
 No Cargo, Nx, Wasm, browser, runtime, network, or broad build/test command was run. Type or runtime
 success is not claimed.
 
-## Required Continuation
+## 2026-08-24 Universal Session And Close-Law Continuation
 
-1. Add the mandatory job-owned retained close cursor and migrate every non-Puzzle `InteractiveJob`
-   producer before relying on non-Clone universal outcomes.
-2. Add mounted renderer/plugin/native/Wasm registries that own one session generation through
-   take/resume/terminal/close/terminal-empty and advance only one opportunity per host turn.
-3. Migrate all payload consumers to page-wise adoption; remove indirect whole-vector expectations.
-4. After P4e and P1q quiesce, migrate their deferred callers without overwriting accepted peer work.
-5. Add the complete hostile cap/+1/zero-fuel/cancel/panic/stale/ABA/drop/lost-wake suite and faithful
-   verifier mutations, then run only the explicitly allowed scoped gates.
+The live census was repeated before editing. Production legacy construction/direct async drain is
+now zero: the sole remaining `WorkerJobSession::new` plus `.step(...Lane...)` pair is inside the
+Assembly test module. The framework plugin typed command, media export, envelope decode, store
+replacement, reserved-route runner, and inference runner now use retained mounted sessions,
+generation-qualified checkout, page-wise outcome close, exact nonterminal resume, incremental
+terminal session close, and incremental rejected-admission close. Reserved-route output equality is
+checked through a retained-page reader rather than materializing a permit-side whole `Vec`.
+
+Mandatory close vocabulary was added to the six FEM jobs, the framework reserved wrapper and
+reserved-route macro family, configuration-binary job, artifact-store initializer wrapper, the five
+concrete Writer/Jack/GIS/Raster/Draw initializer authorities, all four Puzzle5D reserved jobs, and
+both Deflate encoders. Puzzle5D copy/cut now retire nested part/grip/fastener owners, selections,
+wire/text backings, snapshot and completion controls before a true terminal witness. Paste/import
+use a fixed 4 KiB recursive JSON key cursor, one recursive owner transition per opportunity,
+typed mutation/catalog item byte preflight, exact map extraction, empty vector/map backing
+retirement, mounted snapshot/completion handback, and populated fail-closure when either external
+authority is absent. Deflate close accounts
+each scalar vector item and backing allocation before
+release; the store initializer wrapper transfers cancellation into the domain authority and does
+not release its erased box until the domain terminal witness is true.
+Puzzle5D hostile fixtures preserve the exact recursive JSON owner under zero-byte and key-cap-plus-one
+rejection, and prove empty-vector backing max-minus-one preservation followed by one exact credited
+retirement.
+
+The exact textual missing-close census fell from 28 to 7. Six are test-only (Assembly competing
+jobs two, actor two, plugin terminal one, ticket frame fixture one). The sole production residual is
+the P1q-owned Store `ArtifactEnvelopeDecodeAuthority`; its ownership boundary was preserved and is
+deferred to the P1 owner. P2-owned production missing-close is zero. Energy, Puzzle3D FillBuilder,
+WFC restore/job, and Board fill now expose mandatory cancellation close with zero-grant preservation,
+one-opportunity retirement, and terminal witnesses; FillBuilder reuses its comprehensive fixed-owner
+retirement vocabulary in-place. Bounded-first-step closes each retained root control owner
+individually. Plugin runtime live/close cleanup owns persistent fixed `BatchJobSession`, rejection,
+retained outcome, and terminal-close slots; both callback-local direct-drive sites are gone. The
+renderer and Native I/O retained test oracles were also migrated to persistent batch sessions, so
+the only raw direct-drive hits are two Puzzle2D `#[cfg(test)]` oracle sites. Production direct-drive
+and production direct `WorkerJobSession::new` are both zero; the sole constructor hit is Assembly
+`#[cfg(test)]`.
+
+Scoped evidence after this continuation:
+
+- `bun ./📜️script.ts verify interactivity tool-jobs --self-test`: `self-tests=365 clean`.
+- `bun ./📜️script.ts verify interactivity p2a1 --self-test`: all P2 mutation self-tests complete;
+  the broad audit remains RED only on six peer-owned DB/UI findings.
+- Scoped `rustfmt --edition 2021 --check` parsed the edited plugin/infer, initializer authority,
+  Deflate, dynamic Deflate, Puzzle5D, Puzzle2D, Board, FillBuilder, Energy, WFC, renderer frame,
+  and Native I/O files without syntax errors.
+- Scoped `git diff --check` is clean for the P2-owned file set.
+- No Cargo, Nx, Wasm, browser, runtime, network, or broad build/test command was run. Type or runtime
+  success is not claimed.
+
+## Deferred Ownership Boundary
+
+P2a1 is source-audit-ready for its owned census. The only production mandatory-close residual is
+the explicitly deferred P1q Store decoder. The broad interactivity gate remains RED on six DB/UI
+findings outside this packet; P2 mutation self-tests and the 365-case tool-job suite are clean.
+Cargo/Nx/Wasm/browser validation remains intentionally deferred until the overlapping Rust packets
+quiesce.
 
 ## 2026-08-24 File-Disjoint Layout And Cold-Relay Continuation
 

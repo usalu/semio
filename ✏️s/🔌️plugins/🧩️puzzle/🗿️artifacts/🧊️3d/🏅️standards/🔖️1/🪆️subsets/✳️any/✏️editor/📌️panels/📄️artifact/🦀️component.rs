@@ -9,9 +9,8 @@ use crate::editor::puzzle3d::{
     PUZZLE3D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, HasChildren, Label, RowAction, RowActionPlacement, Trigger};
-use semio_framework_plugin::{ActionFactory, InteractionTarget, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::{ActionFactory, InteractionTarget, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID};
 use semio_framework_ui_contract as ui;
-use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.document";
@@ -30,7 +29,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-fn action(action: &str, args: Option<Value>) -> (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>) {
+fn action(action: &str, args: Option<UiValue>) -> UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<UiValue>)> {
     ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
@@ -90,97 +89,120 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 }
 
 
-fn select_action(granularity: &str, id: &str) -> (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>) {
-    let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-    action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
+fn select_action(granularity: &str, id: &str) -> UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<UiValue>)> {
+    let targets = serde_json::to_string(&[InteractionTarget { granularity: granularity.into(), id: id.into() }])
+        .map_err(|error| PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
+    let args = ui_value_map([
+        ("domainId", ui_value_text(PUZZLE3D_INTERACTION_DOMAIN)?),
+        ("merge", ui_value_text("replace")?),
+        ("method", ui_value_text("pick")?),
+        ("targets", ui_value_text(targets)?),
+    ])?;
+    action(INTERACTION_SELECT_ACTION_ID, Some(args))
 }
 
-fn binding((action, args): (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)) -> ActionBinding {
-    ActionBinding { trigger: Trigger::Activate, action, args, capability: None }
+fn binding(action: UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<UiValue>)>) -> UiAssemblyResult<ActionBinding> {
+    let (action, args) = action?;
+    Ok(ActionBinding { trigger: Trigger::Activate, action, args, capability: None })
 }
 
-fn selectable_item(id: impl Into<String>, label: impl Into<Label>, icon: &str, action: (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)) -> semio_framework_ui_contract::TreeItemBuilder {
-    let (action_id, args) = action;
-    let builder = ui::tree_item(label)?.id(id).icon(icon);
+fn selectable_item<L: TryInto<Label>>(id: impl AsRef<str>, label: L, icon: &str, action: UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<UiValue>)>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
+    let (action_id, args) = action?;
+    let label = label.try_into().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document label admission failed"))?;
+    let builder = ui::tree_item(label)
+        .try_id(id.as_ref())
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document id admission failed"))?
+        .icon(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document icon admission failed"))?);
     match args {
-        Some(args) => builder.on_with(Trigger::Activate, action_id, args),
-        None => builder.on(Trigger::Activate, action_id),
+        Some(args) => builder.try_on_with(Trigger::Activate, action_id, args),
+        None => builder.try_on(Trigger::Activate, action_id),
     }
+    .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d document action admission failed"))
 }
 
-fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, flag_args: impl Fn(&str) -> Value) -> Vec<RowAction> {
-    vec![
+fn flag_args(entity: &str, id: &str, flag: &str) -> UiAssemblyResult<UiValue> {
+    ui_value_map([
+        ("entity", ui_value_text(entity)?),
+        ("flag", ui_value_text(flag)?),
+        ("ids", ui_value_list([ui_value_text(id)?])?),
+        ("value", ui_value_bool(true)),
+    ])
+}
+
+fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity: &str, id: &str) -> UiAssemblyResult<[RowAction; 2]> {
+    Ok([
         RowAction {
-            icon: if hidden { "eye-off".into() } else { "eye".into() },
+            icon: UiText::try_from_str(if hidden { "eye-off" } else { "eye" }).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d visibility icon admission failed"))?,
             label: Some(if hidden { labels.show.as_str().into() } else { labels.hide.as_str().into() }),
-            action: binding(action("setSelectionFlag", Some(flag_args("hidden")))),
+            action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "hidden")?)))?,
             placement: RowActionPlacement::Row,
         },
         RowAction {
-            icon: if locked { "lock".into() } else { "lock-open".into() },
+            icon: UiText::try_from_str(if locked { "lock" } else { "lock-open" }).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d lock icon admission failed"))?,
             label: Some(if locked { labels.unlock.as_str().into() } else { labels.lock.as_str().into() }),
-            action: binding(action("setSelectionFlag", Some(flag_args("locked")))),
+            action: binding(action("setSelectionFlag", Some(flag_args(entity, id, "locked")?)))?,
             placement: RowActionPlacement::Row,
         },
-    ]
+    ])
 }
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
 /// 🌳️ The four document sections, memoized by the app against the fixture's geometry fingerprint.
 pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let object_items: Vec<BuiltNode> = fixture
-        .objects
-        .iter()
-        .map(|object| {
-            let vortex_items: Vec<BuiltNode> = object
-                .vortices
-                .iter()
-                .map(|vortex| {
-                    let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-                    selectable_item(full_id.clone(), vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()), "circle-dot", select_action(PUZZLE3D_GRANULARITY_VORTEX, &full_id)).build()
-                })
-                .collect();
-            let flag_args = {
-                let id = object.id.clone();
-                move |flag: &str| json!({ "flag": flag, "value": true, "entity": "object", "ids": [id.clone()] })
-            };
-            selectable_item(object.id.clone(), object.object_kind.clone().unwrap_or_else(|| object.id.clone()), "box", select_action(PUZZLE3D_GRANULARITY_OBJECT, &object.id))
-                .default_open(false)
-                .row_actions(hide_lock_actions(object.hidden, object.locked, labels, flag_args))
-                .dimmed(object.hidden)
-                .children(vortex_items)
-                .build()
-        })
-        .collect();
-    let reference_items: Vec<BuiltNode> = fixture
-        .references
-        .iter()
-        .map(|reference| {
-            let flag_args = {
-                let id = reference.id.clone();
-                move |flag: &str| json!({ "flag": flag, "value": true, "entity": "reference", "ids": [id.clone()] })
-            };
-            selectable_item(reference.id.clone(), reference.id.clone(), "globe", select_action(PUZZLE3D_GRANULARITY_REFERENCE, &reference.id))
-                .description(reference.source.url.clone())
-                .row_actions(hide_lock_actions(reference.hidden, reference.locked, labels, flag_args))
-                .dimmed(reference.hidden)
-                .build()
-        })
-        .collect();
-    let target_volume_items: Vec<BuiltNode> = fixture
-        .target_volumes
-        .iter()
-        .map(|volume| {
-            let flag_args = {
-                let id = volume.id.clone();
-                move |flag: &str| json!({ "flag": flag, "value": true, "entity": "targetVolume", "ids": [id.clone()] })
-            };
-            selectable_item(volume.id.clone(), volume.id.clone(), "cylinder", select_action(PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume.id)).row_actions(hide_lock_actions(volume.hidden, volume.locked, labels, flag_args)).dimmed(volume.hidden).build()
-        })
-        .collect();
-    let attraction_items: Vec<BuiltNode> =
-        fixture.attractions.iter().map(|attraction| selectable_item(attraction.id.clone(), format!("{} → {}", attraction.attracting, attraction.attracted), "link", select_action(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id)).build()).collect();
+    let mut object_items = UiFixedList::<BuiltNode>::default();
+    for object in &fixture.objects {
+        let mut vortex_items = UiFixedList::<BuiltNode>::default();
+        for vortex in &object.vortices {
+            let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+            let item = selectable_item(&full_id, vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()), "circle-dot", select_action(PUZZLE3D_GRANULARITY_VORTEX, &full_id))?
+                .try_build()
+                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d vortex row admission failed"))?;
+            vortex_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d vortex list admission failed"))?;
+        }
+        let mut item = selectable_item(&object.id, object.object_kind.clone().unwrap_or_else(|| object.id.clone()), "box", select_action(PUZZLE3D_GRANULARITY_OBJECT, &object.id))?
+            .default_open(false)
+            .dimmed(object.hidden)
+            .try_children(vortex_items)
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object children admission failed"))?;
+        for row_action in hide_lock_actions(object.hidden, object.locked, labels, "object", &object.id)? {
+            item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object row action admission failed"))?;
+        }
+        let item = item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object row admission failed"))?;
+        object_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d object list admission failed"))?;
+    }
+    let mut reference_items = UiFixedList::<BuiltNode>::default();
+    for reference in &fixture.references {
+        let mut item = selectable_item(&reference.id, reference.id.clone(), "globe", select_action(PUZZLE3D_GRANULARITY_REFERENCE, &reference.id))?
+            .description(UiText::try_from_str(&reference.source.url).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference description admission failed"))?)
+            .dimmed(reference.hidden);
+        for row_action in hide_lock_actions(reference.hidden, reference.locked, labels, "reference", &reference.id)? {
+            item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference row action admission failed"))?;
+        }
+        let item = item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference row admission failed"))?;
+        reference_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d reference list admission failed"))?;
+    }
+    let mut target_volume_items = UiFixedList::<BuiltNode>::default();
+    for volume in &fixture.target_volumes {
+        let mut item = selectable_item(&volume.id, volume.id.clone(), "cylinder", select_action(PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume.id))?.dimmed(volume.hidden);
+        for row_action in hide_lock_actions(volume.hidden, volume.locked, labels, "targetVolume", &volume.id)? {
+            item = item.try_row_action(row_action).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume row action admission failed"))?;
+        }
+        let item = item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume row admission failed"))?;
+        target_volume_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d target-volume list admission failed"))?;
+    }
+    let mut attraction_items = UiFixedList::<BuiltNode>::default();
+    for attraction in &fixture.attractions {
+        let item = selectable_item(
+            &attraction.id,
+            format!("{} → {}", attraction.attracting, attraction.attracted),
+            "link",
+            select_action(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id),
+        )?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d attraction row admission failed"))?;
+        attraction_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d attraction list admission failed"))?;
+    }
     PanelTreeBuilder::new("puzzle3d-play-document")?
         .section("puzzle3d-play-document.objects", Some(labels.objects.as_str().into()), true, object_items)?
         .section("puzzle3d-play-document.references", Some(labels.references.as_str().into()), false, reference_items)?

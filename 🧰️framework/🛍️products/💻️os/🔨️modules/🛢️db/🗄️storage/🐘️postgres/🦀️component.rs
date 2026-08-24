@@ -81,9 +81,19 @@ use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
     close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_transfer_list, db_io_write_observed_bytes, register_db_io_backend, retire_db_io_backend, submit_db_io_task, CatalogStorage,
-    DbIoBackendControl, DbIoBackendKind, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage,
-    LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
+    DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor,
+    DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage, DB_IO_PAGE_BYTES,
 };
+
+macro_rules! with_admitted_artifact {
+    ($operation:expr, $document:expr, $artifact:ident, $call:expr) => {{
+        let mut owner = DbIoArtifactId::try_from_text($operation, $document)?;
+        let $artifact = owner.as_artifact();
+        let terminal = $call.await;
+        owner.close_step()?;
+        terminal
+    }};
+}
 use pack::{ByteRange, ContentHash};
 use semio_framework_async::WorkerPool;
 use sqlx::postgres::{PgPool, PgPoolOptions};
@@ -609,7 +619,7 @@ impl LeaseStorage for PostgresDbIoExecutor {
 
     async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
         let existing = read_existing_lease(self.active_operation, &self.pool, resource).await?;
-        Ok(existing.and_then(|info| if now_ms < info.expires_at_ms { Some(LeaseInfo { resource: resource.to_string(), holder: info.holder.as_str().to_string(), fence: info.fence, expires_at_ms: info.expires_at_ms }) } else { None }))
+        existing.filter(|info| now_ms < info.expires_at_ms).map(|info| Ok(DbIoLeaseResult::new(DbIoText::try_from_str(resource)?, info.holder, info.fence, info.expires_at_ms))).transpose()
     }
 }
 //#endregion 🔖️LeaseStorage
@@ -676,48 +686,48 @@ impl PostgresDbIoExecutor {
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::WalCreate { document, index, .. } => {
-                <Self as WalStorage>::create_segment(self, &ArtifactId(document.as_str().to_string()), *index).await?;
+                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::create_segment(self, artifact, *index))?;
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::WalAppend { document, index, input, .. } => {
                 let input = input.take_for_async_driver();
-                Ok(DbIoResult::Length(<Self as WalStorage>::append(self, &ArtifactId(document.as_str().to_string()), *index, input).await?))
+                Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::append(self, artifact, *index, input))?))
             }
             DbIoTask::WalSync { document, index, class, .. } => {
-                <Self as WalStorage>::sync(self, &ArtifactId(document.as_str().to_string()), *index, *class).await?;
+                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::sync(self, artifact, *index, *class))?;
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::WalSeal { document, index, .. } => {
-                <Self as WalStorage>::seal(self, &ArtifactId(document.as_str().to_string()), *index).await?;
+                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::seal(self, artifact, *index))?;
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::WalRead { document, index, range, output, .. } => Ok(DbIoResult::Pages(self.wal_read_into(document.as_str(), *index, *range, output).await?)),
-            DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(<Self as WalStorage>::segment_len(self, &ArtifactId(document.as_str().to_string()), *index).await?)),
+            DbIoTask::WalLength { document, index, .. } => Ok(DbIoResult::Length(with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::segment_len(self, artifact, *index))?)),
             DbIoTask::WalList { document, output, .. } => {
-                let list = <Self as WalStorage>::list_segments(self, &ArtifactId(document.as_str().to_string())).await?;
+                let list = with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::list_segments(self, artifact))?;
                 Ok(DbIoResult::List(db_io_transfer_list(list, output).await?))
             }
             DbIoTask::WalTruncate { document, index, new_len, .. } => {
-                <Self as WalStorage>::truncate_tail(self, &ArtifactId(document.as_str().to_string()), *index, *new_len).await?;
+                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::truncate_tail(self, artifact, *index, *new_len))?;
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::WalDelete { document, index, .. } => {
-                <Self as WalStorage>::delete_segment(self, &ArtifactId(document.as_str().to_string()), *index).await?;
+                with_admitted_artifact!(operation, document, artifact, <Self as WalStorage>::delete_segment(self, artifact, *index))?;
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::SnapshotWrite { document, generation, input, .. } => {
                 let input = input.take_for_async_driver();
-                <Self as SnapshotStorage>::write_generation(self, &ArtifactId(document.as_str().to_string()), *generation, input).await?;
+                with_admitted_artifact!(operation, document, artifact, <Self as SnapshotStorage>::write_generation(self, artifact, *generation, input))?;
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::SnapshotRead { document, generation, output, .. } => Ok(DbIoResult::Pages(self.named_blob_read_into("snapshot", document.as_str(), *generation, output).await?)),
-            DbIoTask::SnapshotLatest { document, .. } => Ok(DbIoResult::OptionalLength(<Self as SnapshotStorage>::latest_generation(self, &ArtifactId(document.as_str().to_string())).await?)),
+            DbIoTask::SnapshotLatest { document, .. } => Ok(DbIoResult::OptionalLength(with_admitted_artifact!(operation, document, artifact, <Self as SnapshotStorage>::latest_generation(self, artifact))?)),
             DbIoTask::SnapshotList { document, output, .. } => {
-                let list = <Self as SnapshotStorage>::list_generations(self, &ArtifactId(document.as_str().to_string())).await?;
+                let list = with_admitted_artifact!(operation, document, artifact, <Self as SnapshotStorage>::list_generations(self, artifact))?;
                 Ok(DbIoResult::List(db_io_transfer_list(list, output).await?))
             }
             DbIoTask::SnapshotDelete { document, generation, .. } => {
-                <Self as SnapshotStorage>::delete_generation(self, &ArtifactId(document.as_str().to_string()), *generation).await?;
+                with_admitted_artifact!(operation, document, artifact, <Self as SnapshotStorage>::delete_generation(self, artifact, *generation))?;
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::PayloadPut { input, .. } => {
@@ -738,16 +748,16 @@ impl PostgresDbIoExecutor {
             }
             DbIoTask::IndexWrite { document, run_id, input, .. } => {
                 let input = input.take_for_async_driver();
-                <Self as IndexStorage>::write_run(self, &ArtifactId(document.as_str().to_string()), *run_id, input).await?;
+                with_admitted_artifact!(operation, document, artifact, <Self as IndexStorage>::write_run(self, artifact, *run_id, input))?;
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::IndexRead { document, run_id, output, .. } => Ok(DbIoResult::Pages(self.named_blob_read_into("index", document.as_str(), *run_id, output).await?)),
             DbIoTask::IndexList { document, output, .. } => {
-                let list = <Self as IndexStorage>::list_runs(self, &ArtifactId(document.as_str().to_string())).await?;
+                let list = with_admitted_artifact!(operation, document, artifact, <Self as IndexStorage>::list_runs(self, artifact))?;
                 Ok(DbIoResult::List(db_io_transfer_list(list, output).await?))
             }
             DbIoTask::IndexDelete { document, run_id, .. } => {
-                <Self as IndexStorage>::delete_run(self, &ArtifactId(document.as_str().to_string()), *run_id).await?;
+                with_admitted_artifact!(operation, document, artifact, <Self as IndexStorage>::delete_run(self, artifact, *run_id))?;
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::LeaseAcquire { document, holder, ttl_ms, now_ms, .. } => Ok(DbIoResult::Fence(<Self as LeaseStorage>::acquire(self, document.as_str(), holder.as_str(), *ttl_ms, *now_ms).await?)),
@@ -760,10 +770,7 @@ impl PostgresDbIoExecutor {
                 Ok(DbIoResult::Unit)
             }
             DbIoTask::LeaseGet { document, now_ms, .. } => {
-                let lease = <Self as LeaseStorage>::current(self, document.as_str(), *now_ms)
-                    .await?
-                    .map(|lease| Ok::<DbIoLeaseResult, DbError>(DbIoLeaseResult::new(DbIoText::try_from_str(&lease.resource)?, DbIoText::try_from_str(&lease.holder)?, lease.fence, lease.expires_at_ms)))
-                    .transpose()?;
+                let lease = <Self as LeaseStorage>::current(self, document.as_str(), *now_ms).await?;
                 Ok(DbIoResult::OptionalLease(lease))
             }
             DbIoTask::BackendClose { .. } => {
@@ -787,11 +794,20 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
         Err(DbError::Internal("PostgreSQL async-native task entered the blocking executor".to_string()))
     }
 
+    fn drive_async(self: Box<Self>, operation: u64, task: DbIoTask) -> DbIoAsyncDriverFuture {
+        Box::pin(async move {
+            let mut executor = self;
+            let mut task = task;
+            let terminal = executor.drive_task(operation, &mut task).await;
+            (executor, task, terminal)
+        })
+    }
+
     fn close_operation_step(&self, _operation: u64, _task: &DbIoTask) -> Result<bool, DbError> {
         Ok(true)
     }
 
-    fn close_backend_step(&mut self) -> Result<bool, DbError> {
+    fn close_backend_step(&mut self, context: &mut std::task::Context<'_>) -> Result<bool, DbError> {
         if self.pool.is_closed() {
             self.close_future.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             self.backend_terminal.store(true, std::sync::atomic::Ordering::Release);
@@ -803,7 +819,6 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
             *close = Some(Box::pin(async move { pool.close().await }));
             return Ok(false);
         }
-        let context = &mut std::task::Context::from_waker(std::task::Waker::noop());
         let terminal = match close.as_mut() {
             Some(future) => std::future::Future::poll(future.as_mut(), context).is_ready(),
             None => false,
@@ -831,7 +846,7 @@ impl PostgresStorage {
     pub async fn connect(worker_pool: Arc<WorkerPool>, database_url: &str) -> Result<Self, DbError> {
         let database_url = DbIoText::try_from_str(database_url)?;
         let executor = Box::new(PostgresDbIoExecutor::new(database_url.clone())?);
-        let control = register_db_io_backend(DbIoBackendKind::Postgres, executor)?;
+        let control = register_db_io_backend(DbIoBackendKind::Postgres, executor, worker_pool.clone())?;
         let storage = Self { control, worker_pool, closed: std::sync::atomic::AtomicBool::new(false) };
         if let Err(error) = storage.execute(DbIoTask::BackendOpen { backend: control, path: database_url }).await {
             let _ = storage.execute(DbIoTask::BackendClose { backend: control }).await;
@@ -842,15 +857,7 @@ impl PostgresStorage {
 
     async fn execute(&self, task: DbIoTask) -> Result<DbIoResult, DbError> {
         let mut operation = submit_db_io_task(self.worker_pool.as_ref(), task).map_err(|(error, _)| error)?;
-        let mut driver = operation.take_async_native().await?;
-        let aggregate_operation = driver.operation();
-        driver.enter_lane_io_driver_turn()?;
-        let terminal = {
-            let (executor, task) = driver.parts_mut::<PostgresDbIoExecutor>()?;
-            executor.drive_task(aggregate_operation, task).await
-        };
-        driver.leave_lane_io_driver_turn()?;
-        driver.complete(terminal)?;
+        operation.start_async_native_on_lane_io().await?;
         operation.await.map_err(crate::db_storage::DbIoFault::into_db_error)?.into_result()
     }
 
@@ -1031,8 +1038,7 @@ impl LeaseStorage for PostgresStorage {
     }
     async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
         match self.execute(DbIoTask::LeaseGet { backend: self.control, document: DbIoText::try_from_str(resource)?, now_ms }).await? {
-            DbIoResult::OptionalLease(Some(lease)) => Ok(Some(LeaseInfo { resource: lease.resource.as_str().to_string(), holder: lease.holder.as_str().to_string(), fence: lease.fence, expires_at_ms: lease.expires_at_ms })),
-            DbIoResult::OptionalLease(None) => Ok(None),
+            DbIoResult::OptionalLease(lease) => Ok(lease),
             _ => Err(DbError::Internal("PostgreSQL executor returned a non-lease result".to_string())),
         }
     }
@@ -1064,8 +1070,8 @@ mod tests {
         let url = DbIoText::try_from_str("postgres://localhost/p1q-lost-facade").unwrap();
         let executor = PostgresDbIoExecutor::new(url).unwrap();
         let driver_pool = executor.pool.clone();
-        let control = register_db_io_backend(DbIoBackendKind::Postgres, Box::new(executor)).unwrap();
         let worker_pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let control = register_db_io_backend(DbIoBackendKind::Postgres, Box::new(executor), worker_pool.clone()).unwrap();
         let facade = PostgresStorage { control, worker_pool: worker_pool.clone(), closed: std::sync::atomic::AtomicBool::new(false) };
         drop(facade);
         close_db_io_backend(control).await.unwrap();

@@ -4,10 +4,10 @@
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 use serde_json::{json, Value};
-use std::collections::HashMap;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.kinds";
@@ -39,7 +39,7 @@ fn catalog_kind_label(entry: &Value) -> String {
         .into()
 }
 
-fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> HashMap<String, String> {
+fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> Value {
     let mut payload = json!({ "kindId": kind_id, "catalogSlice": "nodes" });
     if let Some(object) = payload.as_object_mut() {
         for key in ["shape", "radius", "width", "height", "iconKind"] {
@@ -48,28 +48,40 @@ fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> HashMap<Stri
             }
         }
     }
-    HashMap::from([(PUZZLE5D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
+    json!({ (PUZZLE5D_CATALOGUE_DRAG_MIME): payload.to_string() })
+}
+
+fn add_part_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
+    let kind = UiText::try_from_str(kind_id)
+        .map(UiValue::Text)
+        .ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue kind admission failed"))?;
+    let mut args = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue action map admission failed"))?;
+    args.push("partKind".into(), kind)
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue action entry admission failed"))?;
+    Ok(UiValue::Map(args.finish()))
 }
 
 fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     let actions = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID);
-    entries
-        .iter()
-        .enumerate()
-        .map(|(index, entry)| {
-            let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind");
-            match add_action {
-                Some(action) => tree_item_with_action_draggable(
+    let mut items = UiFixedList::<BuiltNode>::default();
+    for (index, entry) in entries.iter().enumerate() {
+        let kind_id = entry.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "puzzle5d catalogue kind id is required"))?;
+        let item = match add_action {
+            Some(action) => {
+                let drag_data = puzzle5d_catalog_item_drag_data(kind_id, entry);
+                tree_item_with_action_draggable(
                     format!("{section_id}.{index}.{kind_id}"),
                     catalog_kind_label(entry),
                     Some(kind_id.into()),
-                    actions.action(action, Some(json!({ "partKind": kind_id }))),
-                    &json!(puzzle5d_catalog_item_drag_data(kind_id, entry)),
-                )?,
-                None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), catalog_kind_label(entry), Some(kind_id.into()))?,
+                    actions.action(action, Some(add_part_args(kind_id)?))?,
+                    &drag_data,
+                )?
             }
-        })
-        .collect()
+            None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), catalog_kind_label(entry), Some(kind_id.into()))?,
+        };
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue item admission failed"))?;
+    }
+    Ok(items)
 }
 //#endregion 🔖️Rows
 
@@ -88,10 +100,10 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framew
     let fasteners = slice("fasteners");
     let ropes = slice("ropes");
     PanelTreeBuilder::new("puzzle5d-play-kinds")?
-        .section_or_placeholder("puzzle5d-play-kinds.parts", Some(labels.parts.as_str().into()), !part_entries.is_empty(), kind_catalog_items("puzzle5d-play-kinds.parts", &part_entries, Some("addPartKind")), labels.none.as_str())?
-        .section_or_placeholder("puzzle5d-play-kinds.grips", Some(labels.grips.as_str().into()), !grips.is_empty(), kind_catalog_items("puzzle5d-play-kinds.grips", &grips, None), labels.none.as_str())?
-        .section_or_placeholder("puzzle5d-play-kinds.fasteners", Some(labels.fasteners.as_str().into()), !fasteners.is_empty(), kind_catalog_items("puzzle5d-play-kinds.fasteners", &fasteners, None), labels.none.as_str())?
-        .section_or_placeholder("puzzle5d-play-kinds.ropes", Some(labels.ropes.as_str().into()), !ropes.is_empty(), kind_catalog_items("puzzle5d-play-kinds.ropes", &ropes, None), labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-kinds.parts", Some(labels.parts.as_str().into()), !part_entries.is_empty(), kind_catalog_items("puzzle5d-play-kinds.parts", &part_entries, Some("addPartKind"))?, labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-kinds.grips", Some(labels.grips.as_str().into()), !grips.is_empty(), kind_catalog_items("puzzle5d-play-kinds.grips", &grips, None)?, labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-kinds.fasteners", Some(labels.fasteners.as_str().into()), !fasteners.is_empty(), kind_catalog_items("puzzle5d-play-kinds.fasteners", &fasteners, None)?, labels.none.as_str())?
+        .section_or_placeholder("puzzle5d-play-kinds.ropes", Some(labels.ropes.as_str().into()), !ropes.is_empty(), kind_catalog_items("puzzle5d-play-kinds.ropes", &ropes, None)?, labels.none.as_str())?
         .build()
 }
 //#endregion 🔖️Render

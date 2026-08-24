@@ -29,6 +29,33 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
+fn ui_text_value(value: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    semio_framework_plugin::UiText::try_from_str(value)
+        .map(semio_framework_plugin::UiValue::Text)
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.text", "fixed action text admission failed"))
+}
+
+fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
+        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.map", "fixed action map admission failed"))?;
+    for (key, value) in values {
+        builder
+            .push(key.to_owned(), value)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.map.entry", "fixed action map entry admission failed"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+fn fixed_nodes(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes
+            .try_push(value?)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue admission failed"))?;
+    }
+    Ok(nodes)
+}
+
 fn catalog_entry_label(entry: &Value) -> String {
     entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
@@ -60,7 +87,8 @@ fn object_kind_item(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<s
         .map(str::to_string)
         .or_else(|| entry.get("representations").and_then(Value::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(Value::as_str)).find(|url| !url.is_empty()).map(str::to_string));
     let draggable = mesh_url.is_some();
-    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(json!({ "objectKind": kind_id })))?;
+    let action_args = ui_map_value([("objectKind", ui_text_value(&kind_id)?)])?;
+    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(action_args))?;
     let mut builder = ui::tree_item(catalog_entry_label(entry))?.id(kind_id.clone()).description(kind_id.clone()).icon("box").default_open(false).children(object_kind_vortex_items(entry));
     builder = match args {
         Some(args) => builder.on_with(Trigger::Activate, action, args),
@@ -90,10 +118,10 @@ pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> semio_framew
     let cable_entries = entries("cables");
     let attraction_entries = entries("attractions");
     PanelTreeBuilder::new("puzzle3d-play-kinds")?
-        .section("puzzle3d-play-kinds.objects", Some(labels.objects.as_str().into()), false, object_entries.iter().map(object_kind_item).collect())?
-        .section("puzzle3d-play-kinds.vortices", Some(labels.vortices.as_str().into()), false, vortex_entries.iter().map(|entry| catalog_kind_item(entry, "circle-dot")).collect())?
-        .section("puzzle3d-play-kinds.cables", Some(labels.cables.as_str().into()), false, cable_entries.iter().map(|entry| catalog_kind_item(entry, "plug")).collect())?
-        .section("puzzle3d-play-kinds.attractions", Some(labels.attractions.as_str().into()), false, attraction_entries.iter().map(|entry| catalog_kind_item(entry, "link")).collect())?
+        .section("puzzle3d-play-kinds.objects", Some(labels.objects.as_str().into()), false, fixed_nodes(object_entries.iter().map(object_kind_item))?)?
+        .section("puzzle3d-play-kinds.vortices", Some(labels.vortices.as_str().into()), false, fixed_nodes(vortex_entries.iter().map(|entry| catalog_kind_item(entry, "circle-dot")))?)?
+        .section("puzzle3d-play-kinds.cables", Some(labels.cables.as_str().into()), false, fixed_nodes(cable_entries.iter().map(|entry| catalog_kind_item(entry, "plug")))?)?
+        .section("puzzle3d-play-kinds.attractions", Some(labels.attractions.as_str().into()), false, fixed_nodes(attraction_entries.iter().map(|entry| catalog_kind_item(entry, "link")))?)?
         .interaction_domain(crate::editor::puzzle3d::PUZZLE3D_INTERACTION_DOMAIN)?
         .build()
 }

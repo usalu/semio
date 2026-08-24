@@ -344,9 +344,8 @@ async fn admit_wal_bytes(source: Vec<u8>, maximum: u64, control: &mut db_wal::Wa
     match db_wal::WalBytes::try_admit(source, maximum, control).await {
         Ok(bytes) => Ok(bytes),
         Err(mut rejected) => {
-            while rejected.close_step()? {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = rejected.close_step()?;
             Err(rejected.into_error())
         }
     }
@@ -356,9 +355,9 @@ async fn push_wal_record(records: &mut db_wal::WalRecordBatch, record: db_wal::W
     match records.push(record) {
         Ok(()) => Ok(()),
         Err(mut record) => {
-            while record.close_step()? {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = record.close_step()?;
+            drop(record);
             Err(DbError::LimitExceeded("db_artifact fixed wal record batch"))
         }
     }
@@ -405,6 +404,155 @@ fn decode_protocol_field(cursor: &mut db_wal::WalBytesCursor<'_>, maximum: u64, 
     Ok(output)
 }
 
+//#region 🔖️StateRetirement
+const ARTIFACT_STATE_RETIREMENT_SLOTS: usize = 64;
+
+/// @emoji 🧹️ Persists one rejected staging graph and advances exactly one refusal,
+/// source, slot, page, or text owner for each maintenance grant.
+struct ArtifactStateRetirementCursor {
+    rejected: Option<db_state::StateEntryRejected>,
+    staged: [Option<db_state::StateEntry>; 64],
+    phase: u8,
+    slot: u8,
+}
+
+impl ArtifactStateRetirementCursor {
+    fn rejected(rejected: db_state::StateEntryRejected, staged: [Option<db_state::StateEntry>; 64]) -> Self {
+        Self { rejected: Some(rejected), staged, phase: 0, slot: 0 }
+    }
+
+    fn entry(entry: db_state::StateEntry) -> Self {
+        let mut staged = std::array::from_fn(|_| None);
+        staged[0] = Some(entry);
+        Self { rejected: None, staged, phase: 2, slot: 0 }
+    }
+
+    fn empty() -> Self {
+        Self { rejected: None, staged: std::array::from_fn(|_| None), phase: 3, slot: 64 }
+    }
+
+    fn close_step(&mut self) -> Result<bool, DbError> {
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut control = db_state::StateCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1)?;
+        control.grant()?;
+        match self.phase {
+            0 => {
+                let rejected = self.rejected.as_mut().ok_or_else(|| DbError::Internal("artifact retirement lost refusal owner".to_string()))?;
+                if !rejected.close_step()? {
+                    self.phase = 1;
+                }
+                Ok(true)
+            }
+            1 => {
+                let source = self.rejected.take().and_then(db_state::StateEntryRejected::into_source);
+                drop(source);
+                self.phase = 2;
+                Ok(true)
+            }
+            2 => {
+                let Some(entry) = self.staged.get_mut(self.slot as usize) else {
+                    self.phase = 3;
+                    return Ok(true);
+                };
+                if let Some(entry) = entry.as_mut() {
+                    if entry.close_step()? {
+                        return Ok(true);
+                    }
+                }
+                *entry = None;
+                self.slot += 1;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.phase == 3 && self.rejected.is_none() && self.staged.iter().all(Option::is_none)
+    }
+}
+
+static ARTIFACT_STATE_RETIREMENT: std::sync::Mutex<[Option<ArtifactStateRetirementCursor>; ARTIFACT_STATE_RETIREMENT_SLOTS]> = std::sync::Mutex::new([const { None }; ARTIFACT_STATE_RETIREMENT_SLOTS]);
+static ARTIFACT_STATE_RETIREMENT_OVERFLOW: std::sync::Mutex<[Option<ArtifactStateRetirementCursor>; ARTIFACT_STATE_RETIREMENT_SLOTS]> = std::sync::Mutex::new([const { None }; ARTIFACT_STATE_RETIREMENT_SLOTS]);
+static ARTIFACT_STATE_RETIREMENT_QUARANTINE: std::sync::Mutex<[Option<ArtifactStateRetirementCursor>; ARTIFACT_STATE_RETIREMENT_SLOTS]> = std::sync::Mutex::new([const { None }; ARTIFACT_STATE_RETIREMENT_SLOTS]);
+static ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn retire_artifact_state_owner(owner: ArtifactStateRetirementCursor) -> Result<(), ArtifactStateRetirementCursor> {
+    let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some(slot) = retired.iter_mut().find(|slot| slot.is_none()) {
+        *slot = Some(owner);
+        Ok(())
+    } else {
+        drop(retired);
+        ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
+        let mut overflow = ARTIFACT_STATE_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(slot) = overflow.iter_mut().find(|slot| slot.is_none()) {
+            *slot = Some(owner);
+            return Ok(());
+        }
+        drop(overflow);
+        let mut quarantine = ARTIFACT_STATE_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(slot) = quarantine.iter_mut().find(|slot| slot.is_none()) else { return Err(owner) };
+        *slot = Some(owner);
+        Ok(())
+    }
+}
+
+fn artifact_state_return_to_leaf_authorities(mut owner: ArtifactStateRetirementCursor) {
+    let rejected = owner.rejected.take();
+    let staged = std::mem::replace(&mut owner.staged, std::array::from_fn(|_| None));
+    owner.phase = 3;
+    drop(owner);
+    drop(rejected);
+    drop(staged);
+}
+
+fn retire_artifact_state_owner_or_recover(owner: ArtifactStateRetirementCursor) {
+    if let Err(owner) = retire_artifact_state_owner(owner) {
+        artifact_state_return_to_leaf_authorities(owner);
+    }
+}
+
+pub fn artifact_state_retirement_maintenance_step() -> Result<bool, DbError> {
+    let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(slot) = retired.iter_mut().find(|slot| slot.is_some()) else {
+        drop(retired);
+        let mut overflow = ARTIFACT_STATE_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(index) = overflow.iter().position(Option::is_some) else {
+            drop(overflow);
+            let mut quarantine = ARTIFACT_STATE_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
+            let owner = quarantine[index].take().ok_or_else(|| DbError::Internal("artifact quarantine retirement changed owner".to_string()))?;
+            drop(quarantine);
+            let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let slot = retired.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("artifact retirement primary refilled before quarantine recovery".to_string()))?;
+            *slot = Some(owner);
+            return Ok(true);
+        };
+        let owner = overflow[index].take().ok_or_else(|| DbError::Internal("artifact overflow retirement changed owner".to_string()))?;
+        drop(overflow);
+        let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = retired.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("artifact retirement primary refilled before overflow recovery".to_string()))?;
+        *slot = Some(owner);
+        return Ok(true);
+    };
+    let owner = slot.as_mut().ok_or_else(|| DbError::Internal("artifact retirement changed owner".to_string()))?;
+    if owner.close_step()? {
+        return Ok(true);
+    }
+    *slot = None;
+    Ok(true)
+}
+
+impl Drop for ArtifactStateRetirementCursor {
+    fn drop(&mut self) {
+        if !self.terminal_is_empty() {
+            retire_artifact_state_owner_or_recover(std::mem::replace(self, Self::empty()));
+        }
+    }
+}
+//#endregion 🔖️StateRetirement
+
 /// @emoji 🏗️ A document's materialized state: a flat `db_state::PMap` from path to raw value
 /// bytes, plus a per-path last-writer map for `submit`'s local, path-granular conflict detection
 /// (see `🔖️Conflict`'s doc on why this stays local rather than `db_conflict`-backed). `values` uses
@@ -444,16 +592,11 @@ impl DocumentState {
             let bytes = store::pack_rt::encode_wire_value(dsl_value);
             match db_state::StateEntry::try_admit(path, bytes, MAX_STATE_PAGE_VALUE_BYTES, &mut control).await {
                 Ok(entry) => staged[index] = Some(entry),
-                Err(mut rejected) => {
-                    while rejected.close_step()? {
-                        control.grant()?;
-                    }
-                    for entry in staged.iter_mut().flatten() {
-                        while entry.close_step()? {
-                            control.grant()?;
-                        }
-                    }
-                    return Err(DbError::InvalidArgument(format!("retained state admission failed: {}", rejected.error())));
+                Err(rejected) => {
+                    let error = format!("retained state admission failed: {}", rejected.error());
+                    retire_artifact_state_owner_or_recover(ArtifactStateRetirementCursor::rejected(rejected, staged));
+                    let _ = artifact_state_retirement_maintenance_step()?;
+                    return Err(DbError::InvalidArgument(error));
                 }
             }
         }
@@ -470,24 +613,21 @@ impl DocumentState {
                     let entry = staged[index].take().ok_or_else(|| DbError::Internal("retained state staging lost entry".to_string()))?;
                     let replaced = match self.values.insert(entry) {
                         Ok(replaced) => replaced,
-                        Err(mut rejected) => {
-                            while rejected.close_step()? {
-                                control.grant()?;
-                            }
+                        Err(rejected) => {
+                            retire_artifact_state_owner_or_recover(ArtifactStateRetirementCursor::entry(rejected));
+                            let _ = artifact_state_retirement_maintenance_step()?;
                             return Err(DbError::LimitExceeded("retained state entries"));
                         }
                     };
-                    if let Some(mut replaced) = replaced {
-                        while replaced.close_step()? {
-                            control.grant()?;
-                        }
+                    if let Some(replaced) = replaced {
+                        retire_artifact_state_owner_or_recover(ArtifactStateRetirementCursor::entry(replaced));
+                        let _ = artifact_state_retirement_maintenance_step()?;
                     }
                 }
                 None => {
-                    if let Some(mut removed) = self.values.remove(path) {
-                        while removed.close_step()? {
-                            control.grant()?;
-                        }
+                    if let Some(removed) = self.values.remove(path) {
+                        retire_artifact_state_owner_or_recover(ArtifactStateRetirementCursor::entry(removed));
+                        let _ = artifact_state_retirement_maintenance_step()?;
                     }
                 }
             }
@@ -662,18 +802,21 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                     let replaced = match state.values.insert(entry) {
                         Ok(replaced) => replaced,
                         Err(mut rejected) => {
-                            while rejected.close_step()? {}
+                            let _ = rejected.close_step()?;
                             return Err(DbError::LimitExceeded("retained state entries"));
                         }
                     };
                     if let Some(mut replaced) = replaced {
-                        while replaced.close_step()? {}
+                        let _ = replaced.close_step()?;
+                        drop(replaced);
                     }
                 }
-                while decoder.close_step()? {}
-                while page_bytes.close_step()?.is_some() {}
+                let _ = decoder.close_step()?;
+                drop(decoder);
+                let _ = page_bytes.close_step()?;
+                drop(page_bytes);
             }
-            while snapshot_cursor.close_step()? {}
+            let _ = snapshot_cursor.close_step()?;
             applied_head_seq = descriptor.head_seq;
             vcs_head = descriptor.vcs_head;
         }
@@ -692,7 +835,12 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let mut records = db_wal::replay_document(&wal_facet, &core_id, replay_control).await?;
         let mut batch_ids: HashSet<String> = HashSet::new();
         let mut seen: u64 = 0;
-        while let Some(mut record) = records.next().await? {
+        loop {
+            let mut record = match records.next_step().await? {
+                db_wal::WalReplayStep::Record(record) => record,
+                db_wal::WalReplayStep::Yield => continue,
+                db_wal::WalReplayStep::Done => break,
+            };
             match &mut record {
                 db_wal::WalRecord::TxBegin { .. } => batch_ids.clear(),
                 db_wal::WalRecord::Command(bytes) => {
@@ -715,9 +863,11 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                 db_wal::WalRecord::Frontier(frontier) => engine.frontier = frontier.clone(),
                 _ => {}
             }
-            while record.close_step()? {}
+            let _ = record.close_step()?;
+            drop(record);
         }
-        while records.close_step().await? {}
+        let _ = records.close_step().await?;
+        drop(records);
         drop(wal_facet);
         Ok((engine, report))
     }
@@ -907,9 +1057,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let wal_facet = self.storage.wal().await;
         self.wal.submit(&wal_facet, &records, options.durability, now_ms).await?;
         drop(wal_facet);
-        while records.close_step()? {
-            wal_control.grant()?;
-        }
+        wal_control.grant()?;
+        let _ = records.close_step()?;
+        drop(records);
         self.frontier = new_frontier.clone();
 
         // publish: durable indices
@@ -1152,7 +1302,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                         }
                         let pages = writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)?;
                         Ok(Some(db_query::QueryBytes::from_pages(pages).map_err(|(error, mut pages)| {
-                            while pages.close_step().ok().flatten().is_some() {}
+                            let _ = pages.close_step();
+                            drop(pages);
                             error
                         })?))
                     }
@@ -1287,11 +1438,7 @@ impl<'state> StatePageEncodeCursor<'state> {
         while offset < bytes.len() {
             self.grant.consume()?;
             offset += self.writer.write_fragment(&bytes[offset..])?;
-            std::future::poll_fn(|context| {
-                context.waker().wake_by_ref();
-                std::task::Poll::Ready(())
-            })
-            .await;
+            semio_framework_async::yield_once().await;
         }
         Ok(())
     }
@@ -1397,11 +1544,7 @@ impl<'pages> StatePageDecodeCursor<'pages> {
             }
             self.offset += copied;
             written += copied;
-            std::future::poll_fn(|context| {
-                context.waker().wake_by_ref();
-                std::task::Poll::Ready(())
-            })
-            .await;
+            semio_framework_async::yield_once().await;
         }
         writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
     }
@@ -1432,15 +1575,12 @@ impl<'pages> StatePageDecodeCursor<'pages> {
             _ => return Err(DbError::Corrupt("state page value tag".to_string())),
         };
         let entry = db_state::StateEntry::try_new(path, value).map_err(|(error, mut value)| {
-            while value.close_step().ok().flatten().is_some() {}
+            let _ = value.close_step();
+            drop(value);
             error
         })?;
         self.remaining = Some(remaining - 1);
-        std::future::poll_fn(|context| {
-            context.waker().wake_by_ref();
-            std::task::Poll::Ready(())
-        })
-        .await;
+        semio_framework_async::yield_once().await;
         Ok(Some(entry))
     }
 
@@ -3512,6 +3652,64 @@ mod tests {
     fn history_construction_test_lock() -> std::sync::MutexGuard<'static, ()> {
         static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
         LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless() {
+        while artifact_state_retirement_maintenance_step().unwrap() {}
+        let accepted_cancel = StdArc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut accepted_control = db_state::StateCursorControl::new(accepted_cancel, std::time::Instant::now() + std::time::Duration::from_secs(30), 8).unwrap();
+        let mut accepted = db_state::StateEntry::try_admit("accepted", vec![0x41], 1, &mut accepted_control).await.unwrap();
+        assert!(accepted.close_step().unwrap());
+        assert!(accepted.close_step().unwrap());
+        assert!(accepted.close_step().unwrap());
+        assert!(!accepted.close_step().unwrap());
+        assert!(accepted.terminal_is_empty());
+
+        let cancelled = StdArc::new(std::sync::atomic::AtomicBool::new(true));
+        let mut control = db_state::StateCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 8).unwrap();
+        let rejected = db_state::StateEntry::try_admit("path", vec![0x42], 1, &mut control).await.unwrap_err();
+        assert!(matches!(rejected.error(), DbError::Unavailable(message) if message == "state cursor cancelled"));
+        let source = rejected.source().expect("exact refused source").as_ptr();
+        let mut second_control = db_state::StateCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(true)), std::time::Instant::now() + std::time::Duration::from_secs(30), 8).unwrap();
+        let second_rejected = db_state::StateEntry::try_admit("second-path", vec![0x44], 1, &mut second_control).await.unwrap_err();
+        let second_source = second_rejected.source().expect("second exact refused source").as_ptr();
+        let mut cursor = ArtifactStateRetirementCursor::rejected(rejected, std::array::from_fn(|_| None));
+        assert!(cursor.close_step().unwrap());
+        assert_eq!(cursor.rejected.as_ref().and_then(db_state::StateEntryRejected::source).map(Vec::as_ptr), Some(source));
+        {
+            let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in retired.iter_mut() {
+                *slot = Some(ArtifactStateRetirementCursor::empty());
+            }
+        }
+        ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT.store(false, std::sync::atomic::Ordering::Release);
+        assert!(retire_artifact_state_owner(cursor).is_ok());
+        assert!(retire_artifact_state_owner(ArtifactStateRetirementCursor::rejected(second_rejected, std::array::from_fn(|_| None))).is_ok());
+        assert!(ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT.load(std::sync::atomic::Ordering::Acquire));
+        {
+            let overflow = ARTIFACT_STATE_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert_eq!(overflow.iter().flatten().find_map(|owner| owner.rejected.as_ref()?.source().map(Vec::as_ptr)), Some(source));
+            assert!(overflow.iter().flatten().any(|owner| owner.rejected.as_ref().and_then(db_state::StateEntryRejected::source).map(Vec::as_ptr) == Some(second_source)));
+        }
+        {
+            let mut retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in retired.iter_mut() {
+                *slot = None;
+            }
+        }
+        assert!(artifact_state_retirement_maintenance_step().unwrap());
+        {
+            let retired = ARTIFACT_STATE_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert_eq!(retired.iter().flatten().find_map(|owner| owner.rejected.as_ref()?.source().map(Vec::as_ptr)), Some(source));
+        }
+        while artifact_state_retirement_maintenance_step().unwrap() {}
+
+        let mut deadline_control = db_state::StateCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now(), 1).unwrap();
+        let deadline = db_state::StateEntry::try_admit("deadline", vec![0x43], 1, &mut deadline_control).await.unwrap_err();
+        assert!(matches!(deadline.error(), DbError::Unavailable(message) if message == "state cursor deadline reached"));
+        assert!(retire_artifact_state_owner(ArtifactStateRetirementCursor::rejected(deadline, std::array::from_fn(|_| None))).is_ok());
+        while artifact_state_retirement_maintenance_step().unwrap() {}
     }
 
     struct HistoryReplayTestWake;

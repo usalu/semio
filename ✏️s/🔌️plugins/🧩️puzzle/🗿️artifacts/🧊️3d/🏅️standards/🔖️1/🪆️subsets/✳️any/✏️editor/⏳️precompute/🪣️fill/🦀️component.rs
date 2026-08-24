@@ -344,6 +344,9 @@ pub(crate) struct FillBuilder {
     collection_over_capacity: bool,
     transition_count: u64,
     rejected_count: u64,
+    close_field: u8,
+    close_current: Option<FillRetiredOwner>,
+    closing: bool,
 }
 
 pub(crate) const FILL_BUILDER_OWNER_PAGE_BYTES: usize = 16 * 1024;
@@ -2318,6 +2321,9 @@ impl FillBuilder {
             collection_over_capacity: false,
             transition_count: 0,
             rejected_count: 0,
+            close_field: 0,
+            close_current: None,
+            closing: false,
         }
     }
 
@@ -2332,6 +2338,107 @@ impl FillBuilder {
             sequence: Vec::new(),
             preview: Some(self.preview.clone()),
         }
+    }
+
+    fn retire_one_close_owner(&mut self) -> bool {
+        if let Some(current) = self.close_current.as_mut() {
+            if retire_retained_owner(current) {
+                self.close_current = None;
+            }
+            return false;
+        }
+        let mut current = None;
+        let retired = match self.close_field {
+            0 => take_fixture_owner(&mut self.base, &mut current),
+            1 => false,
+            2 => take_sequence_owner(self, &mut current),
+            3 => take_lookup_owner(self, &mut current),
+            4 => take_catalog_owner(self, &mut current),
+            5 => take_weight_mesh_owner(self, &mut current),
+            6 => take_target_owner(self, &mut current),
+            7 => take_target_weight_owner(self),
+            8 => take_candidate_owner(self, &mut current),
+            9 => take_candidate_order_owner(self, &mut current),
+            10 => match self.broad_phase_query.as_mut() {
+                Some(query) => {
+                    if query.retire_one_owner() {
+                        self.broad_phase_query.take();
+                    }
+                    true
+                }
+                None => false,
+            },
+            11 => self.pending_payload.take().is_some_and(|value| {
+                current = Some(FillRetiredOwner::Payload(value));
+                true
+            }),
+            12 => self.pending_object.take().is_some_and(|value| {
+                current = Some(FillRetiredOwner::FixtureObject(value));
+                true
+            }),
+            13 => self.pending_attraction.take().is_some_and(|value| {
+                current = Some(FillRetiredOwner::Attraction(value));
+                true
+            }),
+            14 => self.current_target.take().is_some_and(|value| {
+                current = Some(FillRetiredOwner::Target(value));
+                true
+            }),
+            15 => self.current_preview.take().is_some_and(|value| {
+                current = Some(FillRetiredOwner::PreviewState(value));
+                true
+            }),
+            16 => self.last_rejection.take().is_some_and(|value| {
+                current = Some(FillRetiredOwner::String(value));
+                true
+            }),
+            17 => self.collision.take().is_some(),
+            18 => !retire_fill_preview(&mut self.preview),
+            19 => match self.fixed_rejection.as_mut() {
+                Some(rejected) => {
+                    if retire_retained_owner(rejected) {
+                        self.fixed_rejection.take();
+                    }
+                    true
+                }
+                None => false,
+            },
+            20 => retire_fixed_collection_backing(self),
+            21 => !self.spatial_index.retire_one_owner(),
+            22 if self.collection_over_capacity => {
+                self.collection_over_capacity = false;
+                true
+            }
+            22 => false,
+            23 => match self.preparation_spatial.as_mut() {
+                Some(mutation) => {
+                    if mutation.retire_one_owner() {
+                        self.preparation_spatial.take();
+                    }
+                    true
+                }
+                None => false,
+            },
+            24 => match self.pending_spatial.as_mut() {
+                Some(mutation) => {
+                    if mutation.retire_one_owner() {
+                        self.pending_spatial.take();
+                    }
+                    true
+                }
+                None => false,
+            },
+            25 if self.preparation_roots.take().is_some() => true,
+            25 => false,
+            26 if self.preparation_capacity_refusal.take().is_some() => true,
+            26 => false,
+            _ => return self.terminal_owners_empty() && self.close_current.is_none(),
+        };
+        self.close_current = current;
+        if !retired {
+            self.close_field = self.close_field.saturating_add(1);
+        }
+        false
     }
 
     fn collision_owner(&self) -> CollisionIndexOwner {
@@ -3355,6 +3462,26 @@ impl InteractiveJob for FillBuilder {
             return StepOutcome::Yield;
         }
         outcome.unwrap_or_else(|| self.publish_preview(context))
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.closing = true;
+        if maximum_items == 0 || maximum_bytes < FILL_BUILDER_OWNER_PAGE_BYTES {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.retire_one_close_owner() {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: FILL_BUILDER_OWNER_PAGE_BYTES }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.close_current.is_none() && self.terminal_owners_empty()
     }
 }
 //#endregion 🧵️InteractiveFillJob

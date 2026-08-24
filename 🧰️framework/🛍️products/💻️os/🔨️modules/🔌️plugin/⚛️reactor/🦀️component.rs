@@ -1058,6 +1058,8 @@ mod wit_bridge {
         let _ = ui_contract::close_ui_patch_owner_one();
         let _ = ui_contract::close_ui_value_page_one();
         let _ = semio_framework::kernel::close_ui_turn_patch_owner_one();
+        let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
+        let _ = crate::app::close_table_rows_view_one();
         PENDING_PATCHES.with(|pending| {
             pending.borrow_mut().close_step();
         });

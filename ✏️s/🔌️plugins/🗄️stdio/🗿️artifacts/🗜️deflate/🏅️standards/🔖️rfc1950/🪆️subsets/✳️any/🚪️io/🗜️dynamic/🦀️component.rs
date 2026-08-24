@@ -639,6 +639,68 @@ impl Job {
             Self::Miniz(state) => &state.writer.out,
         }
     }
+
+    pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> (bool, usize, usize) {
+        let step = match self {
+            Self::Classic(state) => retire_encoder_step(state, maximum_items, maximum_bytes),
+            Self::Miniz(state) => retire_miniz_step(state, maximum_items, maximum_bytes),
+        };
+        match step {
+            Some((released_items, released_bytes)) => (false, released_items, released_bytes),
+            None => (true, 0, 0),
+        }
+    }
+
+    pub(super) fn terminal_is_empty(&self) -> bool {
+        match self {
+            Self::Classic(state) => encoder_terminal_is_empty(state),
+            Self::Miniz(state) => miniz_terminal_is_empty(state),
+        }
+    }
+}
+
+fn retire_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
+    let item_bytes = std::mem::size_of::<T>();
+    if !values.is_empty() {
+        if maximum_items == 0 || maximum_bytes < item_bytes {
+            return Some((0, 0));
+        }
+        drop(values.pop());
+        return Some((1, item_bytes));
+    }
+    if values.capacity() == 0 {
+        return None;
+    }
+    let backing_bytes = values.capacity().saturating_mul(item_bytes);
+    if maximum_items == 0 || maximum_bytes < backing_bytes {
+        return Some((0, 0));
+    }
+    drop(std::mem::take(values));
+    Some((1, backing_bytes))
+}
+
+fn retire_encoder_step(state: &mut Encoder, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
+    retire_vec_step(&mut state.input, maximum_items, maximum_bytes)
+        .or_else(|| retire_vec_step(&mut state.writer.out, maximum_items, maximum_bytes))
+        .or_else(|| retire_vec_step(&mut state.head, maximum_items, maximum_bytes))
+        .or_else(|| retire_vec_step(&mut state.previous, maximum_items, maximum_bytes))
+        .or_else(|| retire_vec_step(&mut state.tokens, maximum_items, maximum_bytes))
+}
+
+fn retire_miniz_step(state: &mut MinizEncoder, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
+    retire_vec_step(&mut state.input, maximum_items, maximum_bytes)
+        .or_else(|| retire_vec_step(&mut state.writer.out, maximum_items, maximum_bytes))
+        .or_else(|| retire_vec_step(&mut state.head, maximum_items, maximum_bytes))
+        .or_else(|| retire_vec_step(&mut state.previous, maximum_items, maximum_bytes))
+        .or_else(|| retire_vec_step(&mut state.tokens, maximum_items, maximum_bytes))
+}
+
+fn encoder_terminal_is_empty(state: &Encoder) -> bool {
+    state.input.capacity() == 0 && state.writer.out.capacity() == 0 && state.head.capacity() == 0 && state.previous.capacity() == 0 && state.tokens.capacity() == 0
+}
+
+fn miniz_terminal_is_empty(state: &MinizEncoder) -> bool {
+    state.input.capacity() == 0 && state.writer.out.capacity() == 0 && state.head.capacity() == 0 && state.previous.capacity() == 0 && state.tokens.capacity() == 0
 }
 
 fn miniz_hash(input: &[u8], position: usize) -> usize {

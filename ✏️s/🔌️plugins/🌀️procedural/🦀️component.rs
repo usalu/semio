@@ -18,9 +18,49 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 //#endregion 🗃️Apps
 
 //#region 🖼️SemanticUi
+fn ui_assembly_error(code: &'static str) -> semio_framework_plugin::PluginAssemblyError {
+    semio_framework_plugin::PluginAssemblyError::new(code, "fixed UI admission failed")
+}
+
+pub(crate) fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref())
+        .map(semio_framework_plugin::UiValue::Text)
+        .ok_or_else(|| ui_assembly_error("ui.value.text"))
+}
+
+pub(crate) fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.list"))?;
+    for value in values {
+        builder.push(value).map_err(|_| ui_assembly_error("ui.value.list.item"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+}
+
+pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.map"))?;
+    for (key, value) in values {
+        builder.push(key.to_owned(), value).map_err(|_| ui_assembly_error("ui.value.map.entry"))?;
+    }
+    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+pub(crate) fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| ui_assembly_error("ui.node-list.item"))?;
+    }
+    Ok(nodes)
+}
+
 /// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
 pub(crate) fn scene_surface<T: ui_wgpu::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    surface(ui_wgpu::wgpu::encode_surface_doc(kind, scene)).id(id).build()
+    let id = id.into();
+    let props = semio_framework_ui_scene::encode(kind, scene).map_err(|_| ui_assembly_error("ui.scene.encode"))?;
+    semio_framework_ui_contract::surface(props)
+        .try_id(&id)
+        .map_err(|_| ui_assembly_error("ui.scene.id"))?
+        .try_build()
+        .map_err(|_| ui_assembly_error("ui.scene.build"))
 }
 
 /// 📖 Renders the shared generation list without routing through Flow's legacy renderer node.
@@ -45,24 +85,30 @@ pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str,
         .to_string()
     };
     let factory = ActionFactory::new(controller_id);
-    let mut items = Vec::with_capacity(generation.generations.len());
+    let mut items = semio_framework_plugin::UiFixedList::default();
     for entry in &generation.generations {
-        let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(serde_json::json!({ "id": entry.id }))))?;
+        let args = ui_value_map([("id", ui_value_text(&entry.id)? )])?;
+        let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(args))?)?;
         if let Component::TreeItem(props) = &mut item.component {
             props.icon = Some("layers".into());
-            props.row_actions = [("pencil", label("rename"), "renameGeneration", serde_json::json!({ "id": entry.id, "name": format!("{} copy", entry.name) })), ("trash-2", label("remove"), "removeGeneration", serde_json::json!({ "id": entry.id }))]
-                .into_iter()
-                .map(|(icon, label, action, args)| {
-                    let (action, args) = factory.action(action, Some(args));
-                    RowAction { icon: icon.into(), label: Some(label.into()), action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None }, placement: RowActionPlacement::Menu }
-                })
-                .collect();
+            let mut row_actions = semio_framework_plugin::UiFixedList::default();
+            let rename_args = ui_value_map([("id", ui_value_text(&entry.id)?), ("name", ui_value_text(format!("{} copy", entry.name))?)])?;
+            let (rename_action, rename_args) = factory.action("renameGeneration", Some(rename_args))?;
+            row_actions
+                .try_push(RowAction { icon: "pencil".into(), label: Some(label("rename").into()), action: ActionBinding { trigger: Trigger::Activate, action: rename_action, args: rename_args, capability: None }, placement: RowActionPlacement::Menu })
+                .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
+            let remove_args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
+            let (remove_action, remove_args) = factory.action("removeGeneration", Some(remove_args))?;
+            row_actions
+                .try_push(RowAction { icon: "trash-2".into(), label: Some(label("remove").into()), action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None }, placement: RowActionPlacement::Menu })
+                .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
+            props.row_actions = row_actions;
         }
-        items.push(item);
+        items.try_push(item).map_err(|_| ui_assembly_error("ui.generation.items"))?;
     }
     PanelTreeBuilder::new(surface_prefix)?
         .section_or_placeholder(format!("{surface_prefix}.generations"), Some(label("generations").into()), true, items, label("empty"))?
-        .section(format!("{surface_prefix}.actions"), Some(label("actions").into()), true, vec![tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None))?])?
+        .section(format!("{surface_prefix}.actions"), Some(label("actions").into()), true, ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
         .build()
 }
 

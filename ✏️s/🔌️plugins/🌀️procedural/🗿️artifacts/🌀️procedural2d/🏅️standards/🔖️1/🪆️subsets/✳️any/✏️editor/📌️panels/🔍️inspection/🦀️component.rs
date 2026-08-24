@@ -26,11 +26,11 @@ pub fn definition() -> PanelTabDefinition {
 /// selected-widget-details view degrades to its "no selection" default until a future wave threads
 /// interaction into render. Flagged as a discovered framework gap, not worked around here.
 pub fn render(document: &Procedural2dSnapshot, config: &Procedural2dConfig, labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let items = vec![
-        tree_item("procedural2d-play-inspector.schema", format!("{} flow.fixture", labels.schema_prefix.as_str()))?,
-        tree_item("procedural2d-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), document.fixture.widgets.len()))?,
-        tree_item("procedural2d-play-inspector.show-mode", format!("{} {}", labels.show_mode_prefix.as_str(), config.show_mode))?,
-    ];
+    let items = crate::ui_node_list([
+        tree_item("procedural2d-play-inspector.schema", format!("{} flow.fixture", labels.schema_prefix.as_str())),
+        tree_item("procedural2d-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), document.fixture.widgets.len())),
+        tree_item("procedural2d-play-inspector.show-mode", format!("{} {}", labels.show_mode_prefix.as_str(), config.show_mode)),
+    ])?;
     PanelTreeBuilder::new("procedural2d-play-inspector")?.section("procedural2d-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, items)?.build()
 }
 //#endregion 🔖️Render

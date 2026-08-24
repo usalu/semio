@@ -9,8 +9,8 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{spa
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
 use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{ui_control_to_node, ui_stack_vertical};
-use semio_framework_plugin::{IconName, Label, UiButtonNode, UiControlNode, UiNode, UiSeparatorNode, WindowKindDefinition};
+use semio_framework_plugin::{IconName, Label, WindowKindDefinition};
+use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -42,11 +42,20 @@ pub async fn definition() -> WindowKindDefinition {
 /// sharedFileRequest. Labels are `Label::data` (English-only), the SAME documented, deferred limitation
 /// this app's own `📌️panels/👥️members` render already carries (no `locale` field on `SpaceIndexConfig`
 /// yet) — not a new gap.
-async fn row_actions(row: &SpaceArtifactRow) -> Vec<TableRowAction> {
-    vec![
-        TableRowAction { icon_id: IconName::FolderOpen, label: Some(Label::data("Open")), action: space_index_action("openArtifact", Some(serde_json::json!({ "id": row.id }))) },
-        TableRowAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: space_index_action("requestDeleteArtifact", Some(serde_json::json!({ "id": row.id }))) },
-    ]
+fn fixed_text(value: &str, code: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiText> {
+    semio_framework_plugin::UiText::try_from_str(value).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new(code, "fixed table text admission failed"))
+}
+
+fn artifact_row_action(icon: IconName, label: &'static str, action: &'static str, row: &SpaceArtifactRow) -> semio_framework_plugin::UiAssemblyResult<TableRowAction> {
+    let args = crate::editor::space_index::ui_value_map([("id", crate::editor::space_index::ui_value_text(&row.id)?)])?;
+    Ok(TableRowAction::new(fixed_text(icon.as_str(), "ui.table.action-icon")?, Label::data(label), space_index_action(action, Some(args))?))
+}
+
+fn row_actions(row: &SpaceArtifactRow) -> semio_framework_plugin::UiAssemblyResult<[TableRowAction; 2]> {
+    Ok([
+        artifact_row_action(IconName::FolderOpen, "Open", "openArtifact", row)?,
+        artifact_row_action(IconName::Trash2, "Delete", "requestDeleteArtifact", row)?,
+    ])
 }
 
 /// 📊️ `config` supplies the live presence fold (`presence-heartbeat`/`fold-directory-events`); the ID
@@ -54,10 +63,27 @@ async fn row_actions(row: &SpaceArtifactRow) -> Vec<TableRowAction> {
 /// separately carries the `artifact:<id>` grammar contract §C0 needs. Split out from `render` (lane
 /// 4-F) so the pure table structure stays unit-testable in isolation, same rationale as Home's own
 /// `render_rows`/`render` split.
-async fn render_table(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> UiNode {
-    let columns = SPACE_INDEX_TABLE_COLUMNS.iter().map(|s| s.to_string()).collect();
-    let rows = document.artifacts.iter().map(|row| TableRow { id: format!("artifact:{}", row.id), cells: space_index_table_row(row, &config.presence_for(&row.id).join(", ")), actions: row_actions(row) }).collect();
-    TableWindowKit::render_rows(&TableRowsView { columns, rows, actions_label: "Actions".into() })
+async fn render_table(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut view = TableRowsView::new(fixed_text("Actions", "ui.table.actions-label")?);
+    for column in SPACE_INDEX_TABLE_COLUMNS {
+        let column = fixed_text(column, "ui.table.column")?;
+        view.try_push_column(column).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.columns", "fixed table column admission failed"))?;
+    }
+    for row in &document.artifacts {
+        let row_id = semio_framework_plugin::UiText::try_format(format_args!("artifact:{}", row.id))
+            .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-id", "fixed table row id admission failed"))?;
+        let mut table_row = TableRow::new(row_id);
+        for cell in space_index_table_row(row, &config.presence_for(&row.id).join(", ")) {
+            let cell = semio_framework_plugin::UiText::try_from_string(cell)
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cell", "fixed table cell admission failed"))?;
+            table_row.try_push_cell(cell).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.cells", "fixed table cell admission failed"))?;
+        }
+        for action in row_actions(row)? {
+            table_row.try_push_action(action).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.row-actions", "fixed row action admission failed"))?;
+        }
+        view.try_push_row(table_row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.rows", "fixed table row admission failed"))?;
+    }
+    TableWindowKit::render_rows(view)
 }
 
 /// 🩹️ **Known framework gap, worked around here** (lane 4-F, out-of-lease root cause — same one
@@ -68,8 +94,10 @@ async fn render_table(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> U
 /// clears `--window-content-dead-line` (26px) — the same clearance `TableHost` already gets for free.
 /// Two empty separators reliably clear it (measured live). Real fix belongs in the interpreter's
 /// `UiStackHost` (framework-owned, outside this lane's lease).
-async fn window_content_dead_line_spacer() -> UiNode {
-    UiNode::Separator(UiSeparatorNode { presence: Default::default(), menu: None })
+async fn window_content_dead_line_spacer() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    semio_framework_ui_contract::separator()
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.spacer", "window spacer admission failed"))
 }
 
 /// 🆕️ ticket §C0 lane 4-F — the `#s-space-create-artifact` toolbar button, always rendered above the
@@ -77,20 +105,31 @@ async fn window_content_dead_line_spacer() -> UiNode {
 /// own handler now mirrors Home's `createSpace` "empty args open the dialog" branch (this lane's own
 /// addition), so no new dispatch machinery is needed here either — only a real DOM element with the
 /// frozen id, reachable directly instead of hunting the command palette.
-async fn create_artifact_button() -> UiNode {
-    ui_control_to_node(UiControlNode::Button(UiButtonNode {
-        id: Some("s-space-create-artifact".into()),
-        icon_id: IconName::Plus,
-        label: Label::data("Create Artifact"),
-        action: space_index_action("createArtifact", None),
-        style: None,
-        presence: Default::default(),
-        menu: None,
-    }))
+async fn create_artifact_button() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let icon = fixed_text(IconName::Plus.as_str(), "ui.window.create-icon")?;
+    let action = space_index_action("createArtifact", None)?;
+    let builder = semio_framework_ui_contract::button(Label::data("Create Artifact"))
+        .icon(icon)
+        .try_id("s-space-create-artifact")
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create-id", "create button id admission failed"))?;
+    let builder = match action.1 {
+        Some(args) => builder.try_on_with(semio_framework_plugin::Trigger::Activate, action.0, args),
+        None => builder.try_on(semio_framework_plugin::Trigger::Activate, action.0),
+    }
+    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create-action", "create button action admission failed"))?;
+    builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create", "create button admission failed"))
 }
 
-pub async fn render(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> UiNode {
-    ui_stack_vertical(vec![window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_artifact_button(), render_table(document, config)])
+pub async fn render(document: &SSpaceSnapshot, config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut children = semio_framework_plugin::UiFixedList::default();
+    for child in [window_content_dead_line_spacer().await?, window_content_dead_line_spacer().await?, create_artifact_button().await?, render_table(document, config).await?] {
+        children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
+    }
+    semio_framework_ui_contract::column()
+        .try_children(children)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.build", "window admission failed"))
 }
 //#endregion 🔖️Render
 

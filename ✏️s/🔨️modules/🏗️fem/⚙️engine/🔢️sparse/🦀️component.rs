@@ -6,7 +6,7 @@
 //! projected problems and as the correctness oracle in this module's tests.
 
 use crate::algebra::{MatD, VecD};
-use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepBudget, StepContext, StepOutcome};
+use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepBudget, StepContext, StepOutcome};
 use std::collections::{BTreeMap, VecDeque};
 
 fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
@@ -22,22 +22,6 @@ fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<O
     }
     *owner = Vec::new();
     Ok(Some((1, bytes)))
-}
-
-fn close_map_owner_step<K: Ord, V>(owner: &mut Vec<BTreeMap<K, V>>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
-    if let Some(map) = owner.last_mut() {
-        if !map.is_empty() {
-            let bytes = std::mem::size_of::<(K, V)>();
-            if bytes > maximum_bytes {
-                return Err(());
-            }
-            map.pop_last();
-            return Ok(Some((1, bytes)));
-        }
-        owner.pop();
-        return Ok(Some((1, 0)));
-    }
-    close_vec_owner_step(owner, maximum_bytes)
 }
 
 fn close_nested_vec_owner_step<T>(owner: &mut Vec<Vec<T>>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
@@ -279,7 +263,7 @@ pub enum SparseError {
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct LdltFactor {
     n: usize,
-    l_cols: Vec<BTreeMap<u32, f64>>,
+    l_cols: Vec<Vec<(u32, f64)>>,
     d: Vec<f64>,
 }
 
@@ -327,14 +311,15 @@ fn ldlt_column(a: &CscSym, l_cols: &mut [BTreeMap<u32, f64>], d: &mut [f64], row
 /// in one pass, per Davis's "Direct Methods for Sparse Linear Systems".
 pub fn ldlt_factor(a: &CscSym) -> Result<LdltFactor, SparseError> {
     let n = a.n;
-    let mut l_cols: Vec<BTreeMap<u32, f64>> = vec![BTreeMap::new(); n];
+    let mut map_cols: Vec<BTreeMap<u32, f64>> = vec![BTreeMap::new(); n];
     let mut d = vec![0.0; n];
     let mut row_lists: Vec<Vec<usize>> = vec![Vec::new(); n];
 
     for j in 0..n {
-        ldlt_column(a, &mut l_cols, &mut d, &mut row_lists, j)?;
+        ldlt_column(a, &mut map_cols, &mut d, &mut row_lists, j)?;
     }
 
+    let l_cols = map_cols.into_iter().map(BTreeMap::into_iter).collect();
     Ok(LdltFactor { n, l_cols, d })
 }
 
@@ -345,34 +330,257 @@ pub struct LdltPreview {
     pub negative_pivots: usize,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 struct LdltCheckpoint {
+    identity: NumericalCheckpointIdentity,
     a: CscSym,
-    l_cols: Vec<BTreeMap<u32, f64>>,
+    l_cols: Vec<Vec<(u32, f64)>>,
     d: Vec<f64>,
     row_lists: Vec<Vec<usize>>,
     column: usize,
-    columns_per_step: usize,
+    cursor: LdltColumnCursor,
+    workspace: LdltColumnWorkspace,
+    admission_fault: bool,
+    reserve_lane: u8,
+    reserve_cursor: usize,
+    checkpoint_due: bool,
+    publication_stage: u8,
+    publication_outer: usize,
+    publication_inner: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+struct NumericalCheckpointIdentity {
+    operation: u64,
+    revision: u64,
+    generation: u64,
+    seed: u64,
+}
+
+impl NumericalCheckpointIdentity {
+    fn from_operation(operation: Operation) -> Self {
+        Self { operation: operation.operation.0, revision: operation.base_revision.0, generation: operation.generation.0, seed: operation.seed }
+    }
+
+    fn matches(self, operation: Operation) -> bool {
+        self == Self::from_operation(operation)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+enum LdltColumnStage {
+    ReserveColumn,
+    SourceEntry,
+    ContributorLookup,
+    ContributorEntry,
+    PivotRead,
+    DiagonalCommit,
+    EmitRow,
+    PublishColumn,
+    CompleteColumn,
+}
+
+#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+struct LdltColumnCursor {
+    stage: LdltColumnStage,
+    source: usize,
+    contributor: usize,
+    entry: usize,
+    emit_row: usize,
+    active_column: usize,
+    factor: f64,
+    pivot: f64,
+}
+
+#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+struct LdltColumnWorkspace {
+    values: Vec<f64>,
+    marks: Vec<u32>,
+    generation: u32,
+    candidate: Vec<(u32, f64)>,
+}
+
+const LDLT_MAXIMUM_ORDER: usize = 40;
+const NUMERICAL_OWNER_PAGE_BYTES: usize = 16 * 1024;
+const NUMERICAL_CHECKPOINT_VERSION: u16 = 1;
+const NUMERICAL_CHECKPOINT_HEADER_BYTES: usize = 32;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct NumericalPageCursor {
+    field: u16,
+    owner: usize,
+    item: usize,
+}
+
+impl NumericalPageCursor {
+    fn new() -> Self {
+        Self { field: 0, owner: 0, item: 0 }
+    }
+}
+
+fn numerical_page_header(magic: &[u8; 8], kind: u16, cursor: NumericalPageCursor) -> [u8; NUMERICAL_CHECKPOINT_HEADER_BYTES] {
+    let mut bytes = [0; NUMERICAL_CHECKPOINT_HEADER_BYTES];
+    bytes[..8].copy_from_slice(magic);
+    bytes[8..10].copy_from_slice(&NUMERICAL_CHECKPOINT_VERSION.to_le_bytes());
+    bytes[10..12].copy_from_slice(&kind.to_le_bytes());
+    bytes[12..14].copy_from_slice(&cursor.field.to_le_bytes());
+    bytes[16..24].copy_from_slice(&(cursor.owner as u64).to_le_bytes());
+    bytes[24..32].copy_from_slice(&(cursor.item as u64).to_le_bytes());
+    bytes
+}
+
+fn advance_numerical_page_header(writer: &mut RetainedJobPayloadWriter, magic: &[u8; 8], kind: u16, cursor: NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if writer.staged_page_len() == Some(0) {
+        writer.write_staged(&numerical_page_header(magic, kind, cursor))?;
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NumericalCheckpointFault {
+    Cancelled,
+    Stale,
+    Version,
+    Truncated,
+    Field,
+    Envelope,
+    Admission,
+}
+
+fn advance_owner_length(writer: &mut RetainedJobPayloadWriter, length: usize, cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if cursor.owner == 0 {
+        writer.write_staged(&(length as u64).to_le_bytes())?;
+        cursor.owner = 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn advance_u32_owner(writer: &mut RetainedJobPayloadWriter, values: &[u32], cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if !advance_owner_length(writer, values.len(), cursor)? {
+        return Ok(false);
+    }
+    if let Some(value) = values.get(cursor.item) {
+        writer.write_staged(&value.to_le_bytes())?;
+        cursor.item += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn advance_u64_owner(writer: &mut RetainedJobPayloadWriter, values: &[usize], cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if !advance_owner_length(writer, values.len(), cursor)? {
+        return Ok(false);
+    }
+    if let Some(value) = values.get(cursor.item) {
+        writer.write_staged(&(*value as u64).to_le_bytes())?;
+        cursor.item += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn advance_u64_values(writer: &mut RetainedJobPayloadWriter, values: &[u64], cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if !advance_owner_length(writer, values.len(), cursor)? {
+        return Ok(false);
+    }
+    if let Some(value) = values.get(cursor.item) {
+        writer.write_staged(&value.to_le_bytes())?;
+        cursor.item += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn advance_f64_owner(writer: &mut RetainedJobPayloadWriter, values: &[f64], cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if !advance_owner_length(writer, values.len(), cursor)? {
+        return Ok(false);
+    }
+    if let Some(value) = values.get(cursor.item) {
+        writer.write_staged(&value.to_bits().to_le_bytes())?;
+        cursor.item += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn advance_pair_owner(writer: &mut RetainedJobPayloadWriter, values: &[(u32, f64)], cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if !advance_owner_length(writer, values.len(), cursor)? {
+        return Ok(false);
+    }
+    if let Some((index, value)) = values.get(cursor.item) {
+        let mut bytes = [0; 12];
+        bytes[..4].copy_from_slice(&index.to_le_bytes());
+        bytes[4..].copy_from_slice(&value.to_bits().to_le_bytes());
+        writer.write_staged(&bytes)?;
+        cursor.item += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn advance_matrix_owner(writer: &mut RetainedJobPayloadWriter, matrix: &MatD, cursor: &mut NumericalPageCursor) -> Result<bool, JobPayloadAdmissionFault> {
+    if cursor.owner == 0 {
+        let mut bytes = [0; 24];
+        bytes[..8].copy_from_slice(&(matrix.rows as u64).to_le_bytes());
+        bytes[8..16].copy_from_slice(&(matrix.cols as u64).to_le_bytes());
+        bytes[16..].copy_from_slice(&(matrix.data.len() as u64).to_le_bytes());
+        writer.write_staged(&bytes)?;
+        cursor.owner = 1;
+        return Ok(false);
+    }
+    if let Some(value) = matrix.data.get(cursor.item) {
+        writer.write_staged(&value.to_bits().to_le_bytes())?;
+        cursor.item += 1;
+        return Ok(false);
+    }
+    Ok(true)
 }
 
 pub struct LdltJob {
     operation: Operation,
     state: LdltCheckpoint,
+    output_writer: Option<RetainedJobPayloadWriter>,
+    output_page_cursor: usize,
+    checkpoint_writer: Option<RetainedJobPayloadWriter>,
+    checkpoint_cursor: NumericalPageCursor,
 }
 
 impl LdltJob {
     pub fn new(operation: Operation, a: CscSym, columns_per_step: usize) -> Self {
         assert!(columns_per_step > 0, "ldlt batch must contain work");
         let n = a.n;
-        Self { operation, state: LdltCheckpoint { a, l_cols: vec![BTreeMap::new(); n], d: vec![0.0; n], row_lists: vec![Vec::new(); n], column: 0, columns_per_step } }
-    }
-
-    pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, serde_json::Error> {
-        Ok(Self { operation, state: serde_json::from_slice(bytes)? })
-    }
-
-    pub fn checkpoint_bytes(&self) -> Vec<u8> {
-        serde_json::to_vec(&self.state).expect("ldlt checkpoint is serializable")
+        let input_pages_valid = a.colptr.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
+            && a.rowind.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
+            && a.vals.capacity().saturating_mul(std::mem::size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
+        let admission_fault = n > LDLT_MAXIMUM_ORDER || a.colptr.len() != n.saturating_add(1) || a.rowind.len() != a.vals.len() || !input_pages_valid;
+        let workspace = LdltColumnWorkspace { values: Vec::new(), marks: Vec::new(), generation: 0, candidate: Vec::new() };
+        let cursor = LdltColumnCursor { stage: LdltColumnStage::ReserveColumn, source: 0, contributor: 0, entry: 0, emit_row: 0, active_column: 0, factor: 0.0, pivot: 0.0 };
+        Self {
+            operation,
+            state: LdltCheckpoint {
+                identity: NumericalCheckpointIdentity::from_operation(operation),
+                a,
+                l_cols: Vec::new(),
+                d: Vec::new(),
+                row_lists: Vec::new(),
+                column: 0,
+                cursor,
+                workspace,
+                admission_fault,
+                reserve_lane: 0,
+                reserve_cursor: 0,
+                checkpoint_due: false,
+                publication_stage: 0,
+                publication_outer: 0,
+                publication_inner: 0,
+            },
+            output_writer: None,
+            output_page_cursor: 0,
+            checkpoint_writer: None,
+            checkpoint_cursor: NumericalPageCursor::new(),
+        }
     }
 
     pub fn preview(&self) -> LdltPreview {
@@ -383,15 +591,341 @@ impl LdltJob {
         (self.state.column == self.state.a.n).then(|| LdltFactor { n: self.state.a.n, l_cols: self.state.l_cols.clone(), d: self.state.d.clone() })
     }
 
+    fn workspace_add(&mut self, row: usize, value: f64) {
+        if self.state.workspace.marks[row] != self.state.workspace.generation {
+            self.state.workspace.marks[row] = self.state.workspace.generation;
+            self.state.workspace.values[row] = 0.0;
+        }
+        self.state.workspace.values[row] += value;
+    }
+
+    fn workspace_get(&self, row: usize) -> f64 {
+        if self.state.workspace.marks[row] == self.state.workspace.generation {
+            self.state.workspace.values[row]
+        } else {
+            0.0
+        }
+    }
+
+    fn reserve_fixed_owner<T>(owner: &mut Vec<T>, items: usize) -> Result<(), SparseError> {
+        owner.try_reserve_exact(items).map_err(|_| SparseError::DimensionMismatch)?;
+        let bytes = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(SparseError::DimensionMismatch)?;
+        if bytes > NUMERICAL_OWNER_PAGE_BYTES {
+            return Err(SparseError::DimensionMismatch);
+        }
+        Ok(())
+    }
+
+    fn advance_reservation(&mut self) -> Result<bool, SparseError> {
+        let n = self.state.a.n;
+        match self.state.reserve_lane {
+            0 => {
+                Self::reserve_fixed_owner(&mut self.state.row_lists, n)?;
+                self.state.reserve_lane = 1;
+            }
+            1 => {
+                if self.state.reserve_cursor < n {
+                    let mut owner = Vec::new();
+                    Self::reserve_fixed_owner(&mut owner, self.state.reserve_cursor)?;
+                    self.state.row_lists.push(owner);
+                    self.state.reserve_cursor += 1;
+                } else {
+                    self.state.reserve_cursor = 0;
+                    self.state.reserve_lane = 2;
+                }
+            }
+            2 => {
+                Self::reserve_fixed_owner(&mut self.state.l_cols, n)?;
+                self.state.reserve_lane = 3;
+            }
+            3 => {
+                if self.state.reserve_cursor < n {
+                    let mut owner = Vec::new();
+                    Self::reserve_fixed_owner(&mut owner, n.saturating_sub(self.state.reserve_cursor + 1))?;
+                    self.state.l_cols.push(owner);
+                    self.state.reserve_cursor += 1;
+                } else {
+                    self.state.reserve_cursor = 0;
+                    self.state.reserve_lane = 4;
+                }
+            }
+            4 => {
+                if self.state.d.capacity() == 0 {
+                    Self::reserve_fixed_owner(&mut self.state.d, n)?;
+                } else if self.state.d.len() < n {
+                    self.state.d.push(0.0);
+                } else {
+                    self.state.reserve_lane = 5;
+                }
+            }
+            5 => {
+                if self.state.workspace.values.capacity() == 0 {
+                    Self::reserve_fixed_owner(&mut self.state.workspace.values, n)?;
+                } else if self.state.workspace.values.len() < n {
+                    self.state.workspace.values.push(0.0);
+                } else {
+                    self.state.reserve_lane = 6;
+                }
+            }
+            6 => {
+                if self.state.workspace.marks.capacity() == 0 {
+                    Self::reserve_fixed_owner(&mut self.state.workspace.marks, n)?;
+                } else if self.state.workspace.marks.len() < n {
+                    self.state.workspace.marks.push(0);
+                } else {
+                    self.state.reserve_lane = 7;
+                }
+            }
+            7 => {
+                Self::reserve_fixed_owner(&mut self.state.workspace.candidate, n)?;
+                self.state.reserve_lane = 8;
+            }
+            8 => {
+                self.state.reserve_lane = 9;
+            }
+            _ => return Ok(true),
+        }
+        Ok(self.state.reserve_lane == 9)
+    }
+
+    fn advance_column_microcursor(&mut self) -> Result<(), SparseError> {
+        if self.state.reserve_lane < 9 {
+            self.advance_reservation()?;
+            return Ok(());
+        }
+        let column = self.state.column;
+        match self.state.cursor.stage {
+            LdltColumnStage::ReserveColumn => {
+                let Some(generation) = self.state.workspace.generation.checked_add(1) else {
+                    return Err(SparseError::DimensionMismatch);
+                };
+                self.state.workspace.generation = generation;
+                self.state.workspace.candidate.clear();
+                self.state.cursor.source = self.state.a.colptr[column] as usize;
+                self.state.cursor.contributor = 0;
+                self.state.cursor.entry = 0;
+                self.state.cursor.active_column = 0;
+                self.state.cursor.emit_row = column.saturating_add(1);
+                self.state.cursor.stage = LdltColumnStage::SourceEntry;
+            }
+            LdltColumnStage::SourceEntry => {
+                let end = self.state.a.colptr[column + 1] as usize;
+                if self.state.cursor.source < end {
+                    let index = self.state.cursor.source;
+                    let row = self.state.a.rowind[index] as usize;
+                    self.workspace_add(row, self.state.a.vals[index]);
+                    self.state.cursor.source += 1;
+                } else {
+                    self.state.cursor.stage = LdltColumnStage::ContributorLookup;
+                }
+            }
+            LdltColumnStage::ContributorLookup => {
+                if self.state.cursor.contributor < self.state.row_lists[column].len() {
+                    let active = self.state.row_lists[column][self.state.cursor.contributor];
+                    self.state.cursor.active_column = active;
+                    self.state.cursor.entry = 0;
+                    self.state.cursor.factor = match self.state.l_cols[active].binary_search_by_key(&(column as u32), |entry| entry.0).ok().map(|index| self.state.l_cols[active][index].1 * self.state.d[active]) {
+                        Some(factor) => factor,
+                        None => 0.0,
+                    };
+                    self.state.cursor.contributor += 1;
+                    self.state.cursor.stage = LdltColumnStage::ContributorEntry;
+                } else {
+                    self.state.cursor.stage = LdltColumnStage::PivotRead;
+                }
+            }
+            LdltColumnStage::ContributorEntry => {
+                let active = self.state.cursor.active_column;
+                if self.state.cursor.factor == 0.0 || self.state.cursor.entry >= self.state.l_cols[active].len() {
+                    self.state.cursor.stage = LdltColumnStage::ContributorLookup;
+                } else {
+                    let (row, value) = self.state.l_cols[active][self.state.cursor.entry];
+                    if row as usize >= column {
+                        self.workspace_add(row as usize, -self.state.cursor.factor * value);
+                    }
+                    self.state.cursor.entry += 1;
+                }
+            }
+            LdltColumnStage::PivotRead => {
+                self.state.cursor.pivot = self.workspace_get(column);
+                if self.state.cursor.pivot.abs() < 1e-12 {
+                    return Err(SparseError::ZeroPivot { column });
+                }
+                self.state.cursor.stage = LdltColumnStage::DiagonalCommit;
+            }
+            LdltColumnStage::DiagonalCommit => {
+                self.state.d[column] = self.state.cursor.pivot;
+                self.state.cursor.stage = LdltColumnStage::EmitRow;
+            }
+            LdltColumnStage::EmitRow => {
+                if self.state.cursor.emit_row < self.state.a.n {
+                    let row = self.state.cursor.emit_row;
+                    let value = self.workspace_get(row);
+                    if value != 0.0 {
+                        self.state.workspace.candidate.push((row as u32, value / self.state.cursor.pivot));
+                    }
+                    self.state.cursor.emit_row += 1;
+                } else {
+                    self.state.cursor.entry = 0;
+                    self.state.cursor.stage = LdltColumnStage::PublishColumn;
+                }
+            }
+            LdltColumnStage::PublishColumn => {
+                if self.state.cursor.entry < self.state.workspace.candidate.len() {
+                    let entry = self.state.workspace.candidate[self.state.cursor.entry];
+                    self.state.l_cols[column].push(entry);
+                    self.state.row_lists[entry.0 as usize].push(column);
+                    self.state.cursor.entry += 1;
+                } else {
+                    self.state.cursor.stage = LdltColumnStage::CompleteColumn;
+                }
+            }
+            LdltColumnStage::CompleteColumn => {
+                self.state.column += 1;
+                self.state.cursor.stage = LdltColumnStage::ReserveColumn;
+                self.state.checkpoint_due = self.state.column < self.state.a.n;
+            }
+        }
+        Ok(())
+    }
+
+    fn advance_checkpoint_entry(state: &LdltCheckpoint, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter) -> Result<bool, JobPayloadAdmissionFault> {
+        let n = state.a.n;
+        let row_base = 520u16;
+        if advance_numerical_page_header(writer, b"FEMLCP1\0", 11, *cursor)? {
+            return Ok(false);
+        }
+        let complete = match cursor.field {
+            0 => {
+                let values = [
+                    state.identity.operation,
+                    state.identity.revision,
+                    state.identity.generation,
+                    state.identity.seed,
+                    n as u64,
+                    state.column as u64,
+                    state.cursor.stage as u64,
+                    state.cursor.source as u64,
+                    state.cursor.contributor as u64,
+                    state.cursor.entry as u64,
+                    state.cursor.emit_row as u64,
+                    state.cursor.active_column as u64,
+                    state.cursor.factor.to_bits(),
+                    state.cursor.pivot.to_bits(),
+                    state.admission_fault as u64,
+                    state.reserve_lane as u64,
+                    state.reserve_cursor as u64,
+                    state.publication_stage as u64,
+                    state.publication_outer as u64,
+                    state.publication_inner as u64,
+                    state.workspace.generation as u64,
+                ];
+                advance_u64_values(writer, &values, cursor)?
+            }
+            1 => advance_u32_owner(writer, &state.a.colptr, cursor)?,
+            2 => advance_u32_owner(writer, &state.a.rowind, cursor)?,
+            3 => advance_f64_owner(writer, &state.a.vals, cursor)?,
+            4 => advance_owner_length(writer, state.l_cols.len(), cursor)?,
+            field if field >= 5 && field < 5 + state.l_cols.len() as u16 => advance_pair_owner(writer, &state.l_cols[(field - 5) as usize], cursor)?,
+            517 => advance_f64_owner(writer, &state.d, cursor)?,
+            518 => advance_owner_length(writer, state.row_lists.len(), cursor)?,
+            field if field >= row_base && field < row_base + state.row_lists.len() as u16 => advance_u64_owner(writer, &state.row_lists[(field - row_base) as usize], cursor)?,
+            1032 => advance_f64_owner(writer, &state.workspace.values, cursor)?,
+            1033 => advance_u32_owner(writer, &state.workspace.marks, cursor)?,
+            1034 => advance_pair_owner(writer, &state.workspace.candidate, cursor)?,
+            _ => return Ok(true),
+        };
+        if complete {
+            writer.commit_staged_page()?;
+            cursor.item = 0;
+            cursor.owner = 0;
+            cursor.field = match cursor.field {
+                4 if state.l_cols.is_empty() => 517,
+                4 => 5,
+                field if field >= 5 && field + 1 < 5 + state.l_cols.len() as u16 => field + 1,
+                field if field >= 5 && field < 5 + state.l_cols.len() as u16 => 517,
+                517 => 518,
+                518 if state.row_lists.is_empty() => 1032,
+                518 => row_base,
+                field if field >= row_base && field + 1 < row_base + state.row_lists.len() as u16 => field + 1,
+                field if field >= row_base && field < row_base + state.row_lists.len() as u16 => 1032,
+                1032 | 1033 => cursor.field + 1,
+                1034 => u16::MAX,
+                field => field + 1,
+            };
+        }
+        Ok(cursor.field == u16::MAX)
+    }
+
+    fn advance_output_entry(state: &mut LdltCheckpoint, operation: Operation, writer: &mut RetainedJobPayloadWriter) -> Result<bool, JobPayloadAdmissionFault> {
+        let cursor = NumericalPageCursor { field: state.publication_stage as u16, owner: state.publication_outer, item: state.publication_inner };
+        if advance_numerical_page_header(writer, b"FEMLDL2\0", 1, cursor)? {
+            return Ok(false);
+        }
+        match state.publication_stage {
+            0 => {
+                let values = [operation.operation.0, operation.base_revision.0, operation.generation.0, operation.seed, state.a.n as u64];
+                if let Some(value) = values.get(state.publication_outer) {
+                    writer.write_staged(&value.to_le_bytes())?;
+                    state.publication_outer += 1;
+                } else {
+                    writer.commit_staged_page()?;
+                    state.publication_outer = 0;
+                    state.publication_stage = 1;
+                }
+            }
+            1 => {
+                if let Some(value) = state.d.get(state.publication_outer) {
+                    writer.write_staged(&value.to_bits().to_le_bytes())?;
+                    state.publication_outer += 1;
+                } else {
+                    writer.commit_staged_page()?;
+                    state.publication_outer = 0;
+                    state.publication_stage = 2;
+                }
+            }
+            2 => {
+                if state.publication_outer == state.l_cols.len() {
+                    writer.commit_staged_page()?;
+                    state.publication_stage = 3;
+                } else {
+                    let column = &state.l_cols[state.publication_outer];
+                    if state.publication_inner == 0 {
+                        writer.write_staged(&(column.len() as u64).to_le_bytes())?;
+                        state.publication_inner = 1;
+                    } else if let Some((row, value)) = column.get(state.publication_inner - 1) {
+                        let mut bytes = [0; 12];
+                        bytes[..4].copy_from_slice(&row.to_le_bytes());
+                        bytes[4..].copy_from_slice(&value.to_bits().to_le_bytes());
+                        writer.write_staged(&bytes)?;
+                        state.publication_inner += 1;
+                    } else {
+                        state.publication_inner = 0;
+                        state.publication_outer += 1;
+                    }
+                }
+            }
+            _ => {}
+        }
+        Ok(state.publication_stage == 3)
+    }
+
     fn close_retained_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        for step in [close_nested_vec_owner_step(&mut self.state.row_lists, maximum_bytes), close_map_owner_step(&mut self.state.l_cols, maximum_bytes)] {
+        for step in [close_nested_vec_owner_step(&mut self.state.row_lists, maximum_bytes), close_nested_vec_owner_step(&mut self.state.l_cols, maximum_bytes)] {
             match step {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
                 Ok(None) => {}
             }
         }
-        for owner in [&mut self.state.d, &mut self.state.a.vals] {
+        for owner in [&mut self.state.workspace.candidate] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        for owner in [&mut self.state.d, &mut self.state.a.vals, &mut self.state.workspace.values] {
             match close_vec_owner_step(owner, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
@@ -405,6 +939,11 @@ impl LdltJob {
                 Ok(None) => {}
             }
         }
+        match close_vec_owner_step(&mut self.state.workspace.marks, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
         (true, 0, 0)
     }
 
@@ -417,6 +956,377 @@ impl LdltJob {
             && self.state.a.vals.capacity() == 0
             && self.state.a.rowind.capacity() == 0
             && self.state.a.colptr.capacity() == 0
+            && self.state.workspace.values.capacity() == 0
+            && self.state.workspace.marks.capacity() == 0
+            && self.state.workspace.candidate.capacity() == 0
+    }
+}
+
+struct NumericalPageView<'a> {
+    kind: u16,
+    field: u16,
+    owner: usize,
+    item: usize,
+    bytes: &'a [u8],
+}
+
+fn read_checkpoint_u16(bytes: &[u8], offset: usize) -> Result<u16, NumericalCheckpointFault> {
+    let value = bytes.get(offset..offset + 2).ok_or(NumericalCheckpointFault::Truncated)?;
+    Ok(u16::from_le_bytes([value[0], value[1]]))
+}
+
+fn read_checkpoint_u32(bytes: &[u8], offset: usize) -> Result<u32, NumericalCheckpointFault> {
+    let value = bytes.get(offset..offset + 4).ok_or(NumericalCheckpointFault::Truncated)?;
+    Ok(u32::from_le_bytes([value[0], value[1], value[2], value[3]]))
+}
+
+fn read_checkpoint_u64(bytes: &[u8], offset: usize) -> Result<u64, NumericalCheckpointFault> {
+    let value = bytes.get(offset..offset + 8).ok_or(NumericalCheckpointFault::Truncated)?;
+    Ok(u64::from_le_bytes([value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7]]))
+}
+
+fn parse_numerical_page<'a>(bytes: &'a [u8], magic: &[u8; 8]) -> Result<NumericalPageView<'a>, NumericalCheckpointFault> {
+    if bytes.len() < NUMERICAL_CHECKPOINT_HEADER_BYTES || bytes.get(..8) != Some(magic.as_slice()) {
+        return Err(NumericalCheckpointFault::Truncated);
+    }
+    if read_checkpoint_u16(bytes, 8)? != NUMERICAL_CHECKPOINT_VERSION {
+        return Err(NumericalCheckpointFault::Version);
+    }
+    Ok(NumericalPageView {
+        kind: read_checkpoint_u16(bytes, 10)?,
+        field: read_checkpoint_u16(bytes, 12)?,
+        owner: read_checkpoint_u64(bytes, 16)? as usize,
+        item: read_checkpoint_u64(bytes, 24)? as usize,
+        bytes: &bytes[NUMERICAL_CHECKPOINT_HEADER_BYTES..],
+    })
+}
+
+fn declared_owner_length(page: &NumericalPageView<'_>, maximum: usize) -> Result<usize, NumericalCheckpointFault> {
+    let length = read_checkpoint_u64(page.bytes, 0)? as usize;
+    (length <= maximum).then_some(length).ok_or(NumericalCheckpointFault::Envelope)
+}
+
+fn validate_restored_owner<T>(owner: &Vec<T>) -> Result<(), NumericalCheckpointFault> {
+    let bytes = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(NumericalCheckpointFault::Envelope)?;
+    (bytes <= NUMERICAL_OWNER_PAGE_BYTES).then_some(()).ok_or(NumericalCheckpointFault::Envelope)
+}
+
+fn restore_u32_entry(owner: &mut Vec<u32>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
+    let length = declared_owner_length(page, maximum)?;
+    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(4)) {
+        return Err(NumericalCheckpointFault::Truncated);
+    }
+    if *entry == 0 {
+        if !owner.is_empty() {
+            return Err(NumericalCheckpointFault::Field);
+        }
+        owner.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
+        validate_restored_owner(owner)?;
+        *entry = 1;
+        return Ok(false);
+    }
+    let item = *entry - 1;
+    if owner.len() != item {
+        return Err(NumericalCheckpointFault::Field);
+    }
+    if item < length {
+        owner.push(read_checkpoint_u32(page.bytes, 8 + item * 4)?);
+        *entry += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn restore_usize_entry(owner: &mut Vec<usize>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
+    let length = declared_owner_length(page, maximum)?;
+    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(8)) {
+        return Err(NumericalCheckpointFault::Truncated);
+    }
+    if *entry == 0 {
+        if !owner.is_empty() {
+            return Err(NumericalCheckpointFault::Field);
+        }
+        owner.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
+        validate_restored_owner(owner)?;
+        *entry = 1;
+        return Ok(false);
+    }
+    let item = *entry - 1;
+    if owner.len() != item {
+        return Err(NumericalCheckpointFault::Field);
+    }
+    if item < length {
+        owner.push(read_checkpoint_u64(page.bytes, 8 + item * 8)? as usize);
+        *entry += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn restore_f64_entry(owner: &mut Vec<f64>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
+    let length = declared_owner_length(page, maximum)?;
+    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(8)) {
+        return Err(NumericalCheckpointFault::Truncated);
+    }
+    if *entry == 0 {
+        if !owner.is_empty() {
+            return Err(NumericalCheckpointFault::Field);
+        }
+        owner.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
+        validate_restored_owner(owner)?;
+        *entry = 1;
+        return Ok(false);
+    }
+    let item = *entry - 1;
+    if owner.len() != item {
+        return Err(NumericalCheckpointFault::Field);
+    }
+    if item < length {
+        owner.push(f64::from_bits(read_checkpoint_u64(page.bytes, 8 + item * 8)?));
+        *entry += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+fn restore_pair_entry(owner: &mut Vec<(u32, f64)>, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
+    let length = declared_owner_length(page, maximum)?;
+    if page.item != 0 || page.bytes.len() != 8usize.saturating_add(length.saturating_mul(12)) {
+        return Err(NumericalCheckpointFault::Truncated);
+    }
+    if *entry == 0 {
+        if !owner.is_empty() {
+            return Err(NumericalCheckpointFault::Field);
+        }
+        owner.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
+        validate_restored_owner(owner)?;
+        *entry = 1;
+        return Ok(false);
+    }
+    let item = *entry - 1;
+    if owner.len() != item {
+        return Err(NumericalCheckpointFault::Field);
+    }
+    if item < length {
+        let offset = 8 + item * 12;
+        owner.push((read_checkpoint_u32(page.bytes, offset)?, f64::from_bits(read_checkpoint_u64(page.bytes, offset + 4)?)));
+        *entry += 1;
+        return Ok(false);
+    }
+    Ok(true)
+}
+
+pub struct LdltRestoreCursor {
+    operation: Operation,
+    payload: Option<RetainedJobPayload>,
+    total_pages: usize,
+    page_slot: usize,
+    close_due: bool,
+    expected_field: u16,
+    state: Option<LdltCheckpoint>,
+    fault: Option<NumericalCheckpointFault>,
+}
+
+impl LdltRestoreCursor {
+    pub fn new(operation: Operation, payload: RetainedJobPayload) -> Self {
+        let total_pages = payload.page_count();
+        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, state: None, fault: None }
+    }
+
+    fn decode_page(&mut self, bytes: &[u8]) -> Result<(), NumericalCheckpointFault> {
+        let page = parse_numerical_page(bytes, b"FEMLCP1\0")?;
+        if page.kind != 11 || page.field != self.expected_field {
+            return Err(NumericalCheckpointFault::Field);
+        }
+        if page.field == 0 {
+            let count = declared_owner_length(&page, 32)?;
+            if count != 21 || page.bytes.len() != 8 + count * 8 {
+                return Err(NumericalCheckpointFault::Truncated);
+            }
+            let value = |index| read_checkpoint_u64(page.bytes, 8 + index * 8);
+            let identity = NumericalCheckpointIdentity { operation: value(0)?, revision: value(1)?, generation: value(2)?, seed: value(3)? };
+            if !identity.matches(self.operation) {
+                return Err(NumericalCheckpointFault::Stale);
+            }
+            let n = value(4)? as usize;
+            if n > LDLT_MAXIMUM_ORDER {
+                return Err(NumericalCheckpointFault::Envelope);
+            }
+            let stage = match value(6)? {
+                0 => LdltColumnStage::ReserveColumn,
+                1 => LdltColumnStage::SourceEntry,
+                2 => LdltColumnStage::ContributorLookup,
+                3 => LdltColumnStage::ContributorEntry,
+                4 => LdltColumnStage::PivotRead,
+                5 => LdltColumnStage::DiagonalCommit,
+                6 => LdltColumnStage::EmitRow,
+                7 => LdltColumnStage::PublishColumn,
+                8 => LdltColumnStage::CompleteColumn,
+                _ => return Err(NumericalCheckpointFault::Field),
+            };
+            self.state = Some(LdltCheckpoint {
+                identity,
+                a: CscSym { n, colptr: Vec::new(), rowind: Vec::new(), vals: Vec::new() },
+                l_cols: Vec::new(),
+                d: Vec::new(),
+                row_lists: Vec::new(),
+                column: value(5)? as usize,
+                cursor: LdltColumnCursor {
+                    stage,
+                    source: value(7)? as usize,
+                    contributor: value(8)? as usize,
+                    entry: value(9)? as usize,
+                    emit_row: value(10)? as usize,
+                    active_column: value(11)? as usize,
+                    factor: f64::from_bits(value(12)?),
+                    pivot: f64::from_bits(value(13)?),
+                },
+                workspace: LdltColumnWorkspace { values: Vec::new(), marks: Vec::new(), generation: value(20)? as u32, candidate: Vec::new() },
+                admission_fault: value(14)? != 0,
+                reserve_lane: value(15)? as u8,
+                reserve_cursor: value(16)? as usize,
+                checkpoint_due: false,
+                publication_stage: value(17)? as u8,
+                publication_outer: value(18)? as usize,
+                publication_inner: value(19)? as usize,
+            });
+            self.expected_field = 1;
+            return Ok(());
+        }
+        let state = self.state.as_mut().ok_or(NumericalCheckpointFault::Field)?;
+        let n = state.a.n;
+        let row_base = 520u16;
+        let complete = match page.field {
+            1 => restore_u32_owner(&mut state.a.colptr, &page, n + 1)?,
+            2 => restore_u32_owner(&mut state.a.rowind, &page, n.saturating_mul(n))?,
+            3 => restore_f64_owner(&mut state.a.vals, &page, n.saturating_mul(n))?,
+            4 => {
+                let length = declared_owner_length(&page, n)?;
+                if page.bytes.len() != 8 {
+                    return Err(NumericalCheckpointFault::Field);
+                }
+                state.l_cols.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
+                validate_restored_owner(&state.l_cols)?;
+                for _ in 0..length {
+                    state.l_cols.push(Vec::new());
+                }
+                true
+            }
+            field if field >= 5 && field < 5 + state.l_cols.len() as u16 => restore_pair_owner(&mut state.l_cols[(field - 5) as usize], &page, n)?,
+            517 => restore_f64_owner(&mut state.d, &page, n)?,
+            518 => {
+                let length = declared_owner_length(&page, n)?;
+                if page.bytes.len() != 8 {
+                    return Err(NumericalCheckpointFault::Field);
+                }
+                state.row_lists.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
+                validate_restored_owner(&state.row_lists)?;
+                for _ in 0..length {
+                    state.row_lists.push(Vec::new());
+                }
+                true
+            }
+            field if field >= row_base && field < row_base + state.row_lists.len() as u16 => restore_usize_owner(&mut state.row_lists[(field - row_base) as usize], &page, n)?,
+            1032 => restore_f64_owner(&mut state.workspace.values, &page, n)?,
+            1033 => restore_u32_owner(&mut state.workspace.marks, &page, n)?,
+            1034 => restore_pair_owner(&mut state.workspace.candidate, &page, n)?,
+            _ => return Err(NumericalCheckpointFault::Field),
+        };
+        if complete {
+            self.expected_field = match page.field {
+                4 if state.l_cols.is_empty() => 517,
+                4 => 5,
+                field if field >= 5 && field + 1 < 5 + state.l_cols.len() as u16 => field + 1,
+                field if field >= 5 && field < 5 + state.l_cols.len() as u16 => 517,
+                517 => 518,
+                518 if state.row_lists.is_empty() => 1032,
+                518 => row_base,
+                field if field >= row_base && field + 1 < row_base + state.row_lists.len() as u16 => field + 1,
+                field if field >= row_base && field < row_base + state.row_lists.len() as u16 => 1032,
+                1032 | 1033 => page.field + 1,
+                1034 => u16::MAX,
+                field => field + 1,
+            };
+        }
+        Ok(())
+    }
+
+    pub fn step(&mut self, context: &mut StepContext<'_>) -> Result<Option<LdltJob>, NumericalCheckpointFault> {
+        if context.is_cancelled() {
+            return Err(NumericalCheckpointFault::Cancelled);
+        }
+        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
+            return Err(NumericalCheckpointFault::Stale);
+        }
+        if context.should_yield() {
+            return Ok(None);
+        }
+        context.consume_fuel(1);
+        if self.close_due {
+            let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;
+            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            self.page_slot += 1;
+            self.close_due = false;
+            if self.page_slot == self.total_pages {
+                if self.expected_field != u16::MAX || !payload.terminal_is_empty() {
+                    return Err(NumericalCheckpointFault::Truncated);
+                }
+                self.payload = None;
+                let state = self.state.take().ok_or(NumericalCheckpointFault::Truncated)?;
+                return Ok(Some(LdltJob { operation: self.operation, state, output_writer: None, output_page_cursor: 0, checkpoint_writer: None, checkpoint_cursor: NumericalPageCursor::new() }));
+            }
+            return Ok(None);
+        }
+        let source = self.payload.as_ref().and_then(|payload| payload.page(self.page_slot)).ok_or(NumericalCheckpointFault::Truncated)?;
+        let mut bytes = [0u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES];
+        bytes[..source.len()].copy_from_slice(source);
+        if let Err(fault) = self.decode_page(&bytes[..source.len()]) {
+            self.fault = Some(fault);
+            return Err(fault);
+        }
+        self.close_due = true;
+        Ok(None)
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(payload) = self.payload.as_mut() {
+            if !payload.terminal_is_empty() {
+                return match payload.close_step(1, maximum_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                };
+            }
+            self.payload = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let Some(state) = self.state.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
+        for step in [close_nested_vec_owner_step(&mut state.row_lists, maximum_bytes), close_nested_vec_owner_step(&mut state.l_cols, maximum_bytes)] {
+            if let Ok(Some((released_items, released_bytes))) = step {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            }
+        }
+        if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(&mut state.workspace.candidate, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        for owner in [&mut state.d, &mut state.a.vals, &mut state.workspace.values] {
+            if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(owner, maximum_bytes) {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            }
+        }
+        for owner in [&mut state.a.rowind, &mut state.a.colptr, &mut state.workspace.marks] {
+            if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(owner, maximum_bytes) {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            }
+        }
+        self.state = None;
+        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.payload.is_none() && self.state.is_none()
     }
 }
 
@@ -426,33 +1336,145 @@ impl InteractiveJob for LdltJob {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: b"stale-fem-ldlt-operation".to_vec() });
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
-        context.set_stage("fem.ldlt.column");
-        let stop = (self.state.column + self.state.columns_per_step).min(self.state.a.n);
-        while self.state.column < stop && !context.should_yield() {
-            let column = self.state.column;
-            if let Err(SparseError::ZeroPivot { column }) = ldlt_column(&self.state.a, &mut self.state.l_cols, &mut self.state.d, &mut self.state.row_lists, column) {
-                return StepOutcome::Fault(JobFault { detail: format!("zero-pivot:{column}").into_bytes() });
+        if self.state.admission_fault {
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+        }
+        if self.state.checkpoint_due || self.checkpoint_writer.is_some() {
+            context.set_stage("fem.ldlt.checkpoint-page");
+            if context.should_yield() {
+                return StepOutcome::Yield;
             }
-            self.state.column += 1;
             context.consume_fuel(1);
-            if context.is_cancelled() {
-                return StepOutcome::Cancelled;
+            if self.checkpoint_writer.is_none() {
+                self.state.checkpoint_due = false;
+                self.checkpoint_cursor = NumericalPageCursor::new();
+                self.checkpoint_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState));
+                return StepOutcome::Yield;
             }
+            let Some(writer) = self.checkpoint_writer.as_mut() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            if writer.staged_page_len().is_none() {
+                return match writer.begin_staged_page(context) {
+                    Ok(()) => StepOutcome::Yield,
+                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                };
+            }
+            let complete = match Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer) {
+                Ok(complete) => complete,
+                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
+            if !complete {
+                return StepOutcome::Yield;
+            }
+            let Some(writer) = self.checkpoint_writer.take() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            let state = match writer.finish() {
+                Ok(state) => state,
+                Err(writer) => {
+                    self.checkpoint_writer = Some(writer);
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                }
+            };
+            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.column as u64 });
         }
         if self.state.column == self.state.a.n {
-            let factor = self.factor().expect("complete ldlt has a factor");
-            return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&factor).expect("ldlt output is serializable") });
+            context.set_stage("fem.ldlt.output-entry");
+            if context.should_yield() {
+                return StepOutcome::Yield;
+            }
+            if self.output_writer.is_none() {
+                context.consume_fuel(1);
+                self.output_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
+                self.output_page_cursor = 0;
+                return StepOutcome::Yield;
+            }
+            context.consume_fuel(1);
+            let Some(writer) = self.output_writer.as_mut() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            if writer.staged_page_len().is_none() {
+                return match writer.begin_staged_page(context) {
+                    Ok(()) => StepOutcome::Yield,
+                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                };
+            }
+            let complete = match Self::advance_output_entry(&mut self.state, self.operation, writer) {
+                Ok(complete) => complete,
+                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
+            if !complete {
+                return StepOutcome::Yield;
+            }
+            let Some(writer) = self.output_writer.take() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            let output = match writer.finish() {
+                Ok(output) => output,
+                Err(writer) => {
+                    self.output_writer = Some(writer);
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                }
+            };
+            return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output });
         }
-        StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.column as u64 })
+        context.set_stage(match self.state.cursor.stage {
+            LdltColumnStage::ReserveColumn => "fem.ldlt.reserve-column",
+            LdltColumnStage::SourceEntry => "fem.ldlt.source-entry",
+            LdltColumnStage::ContributorLookup => "fem.ldlt.contributor-lookup",
+            LdltColumnStage::ContributorEntry => "fem.ldlt.contributor-entry",
+            LdltColumnStage::PivotRead => "fem.ldlt.pivot-read",
+            LdltColumnStage::DiagonalCommit => "fem.ldlt.diagonal-commit",
+            LdltColumnStage::EmitRow => "fem.ldlt.emit-row",
+            LdltColumnStage::PublishColumn => "fem.ldlt.publish-column",
+            LdltColumnStage::CompleteColumn => "fem.ldlt.complete-column",
+        });
+        if context.should_yield() {
+            return StepOutcome::Yield;
+        }
+        context.consume_fuel(1);
+        if self.advance_column_microcursor().is_err() {
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+        }
+        if context.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        StepOutcome::Yield
     }
 
-    fn begin_close(&mut self) {}
+    fn begin_close(&mut self) {
+        if let Some(writer) = self.checkpoint_writer.as_mut() {
+            writer.begin_close();
+        }
+        if let Some(writer) = self.output_writer.as_mut() {
+            writer.begin_close();
+        }
+    }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(writer) = self.checkpoint_writer.as_mut() {
+            return match writer.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                semio_framework_job::JobPayloadCloseStep::Complete => {
+                    self.checkpoint_writer = None;
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+            };
+        }
+        if let Some(writer) = self.output_writer.as_mut() {
+            return match writer.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                semio_framework_job::JobPayloadCloseStep::Complete => {
+                    self.output_writer = None;
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+            };
         }
         let (complete, released_items, released_bytes) = self.close_retained_step(maximum_bytes);
         if complete {
@@ -463,7 +1485,7 @@ impl InteractiveJob for LdltJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.close_terminal_is_empty()
+        self.checkpoint_writer.is_none() && self.output_writer.is_none() && self.close_terminal_is_empty()
     }
 }
 
@@ -478,7 +1500,7 @@ impl LdltFactor {
             if yj == 0.0 {
                 continue;
             }
-            for (&row, &lij) in self.l_cols[j].iter() {
+            for &(row, lij) in self.l_cols[j].iter() {
                 y[row as usize] -= lij * yj;
             }
         }
@@ -487,7 +1509,7 @@ impl LdltFactor {
         }
         for j in (0..n).rev() {
             let mut sum = y[j];
-            for (&row, &lij) in self.l_cols[j].iter() {
+            for &(row, lij) in self.l_cols[j].iter() {
                 sum -= lij * y[row as usize];
             }
             y[j] = sum;
@@ -505,25 +1527,6 @@ impl LdltFactor {
             }
         }
         out
-    }
-
-    fn multiply(&self, x: &VecD) -> VecD {
-        let mut upper = x.0.clone();
-        for (column, entries) in self.l_cols.iter().enumerate() {
-            for (&row, &value) in entries {
-                upper[column] += value * x.get(row as usize);
-            }
-        }
-        for (index, value) in upper.iter_mut().enumerate() {
-            *value *= self.d[index];
-        }
-        let mut output = upper.clone();
-        for (column, entries) in self.l_cols.iter().enumerate() {
-            for (&row, &value) in entries {
-                output[row as usize] += value * upper[column];
-            }
-        }
-        VecD::from_vec(output)
     }
 
     /// 🔢️ Count of `D[j] < 0` — a Sturm-sequence inertia count, used later for eigenvalue-count checks.
@@ -1247,23 +2250,9 @@ fn mat_col(m: &MatD, col: usize) -> VecD {
     VecD::from_vec((0..m.rows).map(|row| m.get(row, col)).collect())
 }
 
-fn set_col(m: &mut MatD, col: usize, v: &VecD) {
-    for row in 0..m.rows {
-        m.set(row, col, v.get(row));
-    }
-}
-
-fn apply_b(b: &Csr, m: &MatD) -> MatD {
-    let mut out = MatD::zeros(m.rows, m.cols);
-    for col in 0..m.cols {
-        let bv = b.mul_vec(&mat_col(m, col));
-        set_col(&mut out, col, &bv);
-    }
-    out
-}
-
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 struct SubspaceCheckpoint {
+    identity: NumericalCheckpointIdentity,
     k_factor: LdltFactor,
     b: Csr,
     n: usize,
@@ -1273,71 +2262,192 @@ struct SubspaceCheckpoint {
     x: MatD,
     prev_theta: Vec<f64>,
     final_theta: Vec<f64>,
-    final_x: MatD,
     iteration: usize,
     residuals: Vec<f64>,
     converged_count: usize,
     converged: bool,
     checkpoint_due: bool,
+    preview_due: bool,
+    admission_fault: bool,
+    initialization_cursor: usize,
+    publication_stage: u8,
+    publication_first: usize,
+    publication_second: usize,
+    work: SubspaceWork,
+    retiring_work: Option<SubspaceWork>,
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+enum SubspaceStage {
+    ReserveIteration,
+    ApplyOperatorColumnRow,
+    FactorForwardEntry,
+    FactorDiagonalEntry,
+    FactorBackwardEntry,
+    OrthogonalizePairElement,
+    NormalizeColumnElement,
+    ProjectedMatrixCellEntry,
+    JacobiFindPairCell,
+    JacobiRotateCell,
+    JacobiConvergenceCell,
+    ModeSortCompare,
+    ModePermuteElement,
+    ResidualColumnRow,
+    ConvergenceMode,
+    PublishIteration,
+}
+
+#[derive(Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+struct SubspaceWork {
+    stage: SubspaceStage,
+    reserve: usize,
+    first: usize,
+    second: usize,
+    third: usize,
+    phase: usize,
+    sweep: usize,
+    scalar: f64,
+    coefficient: f64,
+    cosine: f64,
+    sine: f64,
+    tangent: f64,
+    rhs: MatD,
+    solved: MatD,
+    b_basis: MatD,
+    projected: MatD,
+    jacobi: MatD,
+    jacobi_vectors: MatD,
+    ordered_vectors: MatD,
+    candidate_x: MatD,
+    mu: Vec<f64>,
+    theta: Vec<f64>,
+    order: Vec<usize>,
+    close_lane: u8,
+}
+
+impl SubspaceWork {
+    fn empty() -> Self {
+        Self {
+            stage: SubspaceStage::ReserveIteration,
+            reserve: 0,
+            first: 0,
+            second: 0,
+            third: 0,
+            phase: 0,
+            sweep: 0,
+            scalar: 0.0,
+            coefficient: 0.0,
+            cosine: 0.0,
+            sine: 0.0,
+            tangent: 0.0,
+            rhs: MatD::zeros(0, 0),
+            solved: MatD::zeros(0, 0),
+            b_basis: MatD::zeros(0, 0),
+            projected: MatD::zeros(0, 0),
+            jacobi: MatD::zeros(0, 0),
+            jacobi_vectors: MatD::zeros(0, 0),
+            ordered_vectors: MatD::zeros(0, 0),
+            candidate_x: MatD::zeros(0, 0),
+            mu: Vec::new(),
+            theta: Vec::new(),
+            order: Vec::new(),
+            close_lane: 0,
+        }
+    }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        loop {
+            let step = match self.close_lane {
+                0 => close_vec_owner_step(&mut self.rhs.data, maximum_bytes),
+                1 => close_vec_owner_step(&mut self.solved.data, maximum_bytes),
+                2 => close_vec_owner_step(&mut self.b_basis.data, maximum_bytes),
+                3 => close_vec_owner_step(&mut self.projected.data, maximum_bytes),
+                4 => close_vec_owner_step(&mut self.jacobi.data, maximum_bytes),
+                5 => close_vec_owner_step(&mut self.jacobi_vectors.data, maximum_bytes),
+                6 => close_vec_owner_step(&mut self.ordered_vectors.data, maximum_bytes),
+                7 => close_vec_owner_step(&mut self.candidate_x.data, maximum_bytes),
+                8 => close_vec_owner_step(&mut self.mu, maximum_bytes),
+                9 => close_vec_owner_step(&mut self.theta, maximum_bytes),
+                10 => close_vec_owner_step(&mut self.order, maximum_bytes),
+                _ => return (true, 0, 0),
+            };
+            match step {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Ok(None) => self.close_lane += 1,
+                Err(()) => return (false, 0, 0),
+            }
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.close_lane > 10
+    }
+}
+
+const SUBSPACE_MAXIMUM_ORDER: usize = 40;
+const SUBSPACE_MAXIMUM_COLUMNS: usize = 40;
 
 pub struct SubspaceIterationJob {
     operation: Operation,
     state: SubspaceCheckpoint,
+    preview_writer: Option<RetainedJobPayloadWriter>,
+    preview_page_cursor: usize,
+    terminal_writer: Option<RetainedJobPayloadWriter>,
+    terminal_page_cursor: usize,
+    checkpoint_writer: Option<RetainedJobPayloadWriter>,
+    checkpoint_cursor: NumericalPageCursor,
 }
 
 impl SubspaceIterationJob {
     pub fn new(operation: Operation, k_factor: LdltFactor, b: Csr, n: usize, p: usize, max_iter: usize) -> Self {
-        assert!(n > 0, "subspace iteration needs at least one equation");
-        assert!(p > 0 && p <= n, "subspace mode count must be within the equation count");
-        assert_eq!(b.n, n, "subspace mass matrix dimension mismatch");
-        assert_eq!(k_factor.n, n, "subspace stiffness factor dimension mismatch");
-        let m = (p + 8).max(2 * p).min(n).max(1);
-        let mut x = MatD::zeros(n, m);
-        for j in 0..m {
-            x.set(j, j, 1.0);
-            if j + 1 < n {
-                x.add_at(j + 1, j, 0.3);
-            }
-            if j >= 1 {
-                x.add_at(j - 1, j, 0.3);
-            }
-        }
+        let factor_pages_valid = k_factor.l_cols.capacity().saturating_mul(std::mem::size_of::<Vec<(u32, f64)>>()) <= NUMERICAL_OWNER_PAGE_BYTES
+            && k_factor.l_cols.iter().all(|column| column.capacity().saturating_mul(std::mem::size_of::<(u32, f64)>()) <= NUMERICAL_OWNER_PAGE_BYTES);
+        let sparse_pages_valid = b.indptr.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
+            && b.indices.capacity().saturating_mul(std::mem::size_of::<u32>()) <= NUMERICAL_OWNER_PAGE_BYTES
+            && b.vals.capacity().saturating_mul(std::mem::size_of::<f64>()) <= NUMERICAL_OWNER_PAGE_BYTES;
+        let admission_fault = n == 0 || p == 0 || p > n || b.n != n || k_factor.n != n || n > SUBSPACE_MAXIMUM_ORDER || !factor_pages_valid || !sparse_pages_valid;
+        let m = if admission_fault { 0 } else { (p + 8).max(2 * p).min(n).max(1) };
         Self {
             operation,
             state: SubspaceCheckpoint {
+                identity: NumericalCheckpointIdentity::from_operation(operation),
                 k_factor,
                 b,
                 n,
                 p,
                 max_iter,
                 m,
-                final_x: x.clone(),
-                x,
-                prev_theta: vec![f64::MAX; p],
+                x: MatD::zeros(0, 0),
+                prev_theta: Vec::new(),
                 final_theta: Vec::new(),
                 iteration: 0,
-                residuals: vec![f64::MAX; p],
+                residuals: Vec::new(),
                 converged_count: 0,
                 converged: false,
                 checkpoint_due: false,
+                preview_due: false,
+                admission_fault,
+                initialization_cursor: 0,
+                publication_stage: 0,
+                publication_first: 0,
+                publication_second: 0,
+                work: SubspaceWork::empty(),
+                retiring_work: None,
             },
+            preview_writer: None,
+            preview_page_cursor: 0,
+            terminal_writer: None,
+            terminal_page_cursor: 0,
+            checkpoint_writer: None,
+            checkpoint_cursor: NumericalPageCursor::new(),
         }
-    }
-
-    pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, serde_json::Error> {
-        Ok(Self { operation, state: serde_json::from_slice(bytes)? })
-    }
-
-    pub fn checkpoint_bytes(&self) -> Vec<u8> {
-        serde_json::to_vec(&self.state).expect("subspace checkpoint is serializable")
     }
 
     pub fn preview(&self) -> SubspacePreview {
         SubspacePreview {
             iteration: self.state.iteration,
             eigenvalues: self.state.final_theta.iter().take(self.state.p).copied().collect(),
-            mode_shapes: (0..self.state.p.min(self.state.final_x.cols)).map(|column| mat_col(&self.state.final_x, column).0).collect(),
+            mode_shapes: (0..self.state.p.min(self.state.x.cols)).map(|column| mat_col(&self.state.x, column).0).collect(),
             residuals: self.state.residuals.clone(),
             converged_count: self.state.converged_count,
             converged: self.state.converged,
@@ -1345,76 +2455,1000 @@ impl SubspaceIterationJob {
     }
 
     pub fn solution(&self) -> EigenPairs {
-        EigenPairs { values: self.state.final_theta.iter().take(self.state.p).copied().collect(), vectors: (0..self.state.p.min(self.state.final_x.cols)).map(|column| mat_col(&self.state.final_x, column)).collect() }
+        EigenPairs { values: self.state.final_theta.iter().take(self.state.p).copied().collect(), vectors: (0..self.state.p.min(self.state.x.cols)).map(|column| mat_col(&self.state.x, column)).collect() }
     }
 
-    fn iterate(&mut self) {
-        let rhs = apply_b(&self.state.b, &self.state.x);
-        let y = self.state.k_factor.solve_many(&rhs);
-        let mut cols: Vec<VecD> = (0..self.state.m).map(|j| mat_col(&y, j)).collect();
-        let mut kcols: Vec<VecD> = (0..self.state.m).map(|j| mat_col(&rhs, j)).collect();
-        for j in 0..self.state.m {
-            for k in 0..j {
-                let coeff = cols[j].dot(&kcols[k]);
-                cols[j] = cols[j].sub(&cols[k].scale(coeff));
-                kcols[j] = kcols[j].sub(&kcols[k].scale(coeff));
+    fn reset_cursor(&mut self, stage: SubspaceStage) {
+        self.state.work.stage = stage;
+        self.state.work.first = 0;
+        self.state.work.second = 0;
+        self.state.work.third = 0;
+        self.state.work.phase = 0;
+        self.state.work.scalar = 0.0;
+    }
+
+    fn advance_work_checkpoint_entry(work: &SubspaceWork, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter, base: u16) -> Result<bool, JobPayloadAdmissionFault> {
+        Ok(match cursor.field - base {
+            0 => {
+                let values = [
+                    work.stage as u64,
+                    work.reserve as u64,
+                    work.first as u64,
+                    work.second as u64,
+                    work.third as u64,
+                    work.phase as u64,
+                    work.sweep as u64,
+                    work.scalar.to_bits(),
+                    work.coefficient.to_bits(),
+                    work.cosine.to_bits(),
+                    work.sine.to_bits(),
+                    work.tangent.to_bits(),
+                    work.close_lane as u64,
+                ];
+                advance_u64_values(writer, &values, cursor)?
             }
-            let mut norm_sq = cols[j].dot(&kcols[j]);
-            if !norm_sq.is_finite() || norm_sq <= 1e-24 {
-                cols[j] = mat_col(&self.state.x, j);
-                kcols[j] = self.state.k_factor.multiply(&cols[j]);
-                for k in 0..j {
-                    let coeff = cols[j].dot(&kcols[k]);
-                    cols[j] = cols[j].sub(&cols[k].scale(coeff));
-                    kcols[j] = kcols[j].sub(&kcols[k].scale(coeff));
+            1 => advance_matrix_owner(writer, &work.rhs, cursor)?,
+            2 => advance_matrix_owner(writer, &work.solved, cursor)?,
+            3 => advance_matrix_owner(writer, &work.b_basis, cursor)?,
+            4 => advance_matrix_owner(writer, &work.projected, cursor)?,
+            5 => advance_matrix_owner(writer, &work.jacobi, cursor)?,
+            6 => advance_matrix_owner(writer, &work.jacobi_vectors, cursor)?,
+            7 => advance_matrix_owner(writer, &work.ordered_vectors, cursor)?,
+            8 => advance_matrix_owner(writer, &work.candidate_x, cursor)?,
+            9 => advance_f64_owner(writer, &work.mu, cursor)?,
+            10 => advance_f64_owner(writer, &work.theta, cursor)?,
+            11 => advance_u64_owner(writer, &work.order, cursor)?,
+            _ => true,
+        })
+    }
+
+    fn advance_checkpoint_entry(state: &SubspaceCheckpoint, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter) -> Result<bool, JobPayloadAdmissionFault> {
+        if advance_numerical_page_header(writer, b"FEMSCP1\0", 12, *cursor)? {
+            return Ok(false);
+        }
+        let complete = match cursor.field {
+            0 => {
+                let values = [
+                    state.identity.operation,
+                    state.identity.revision,
+                    state.identity.generation,
+                    state.identity.seed,
+                    state.n as u64,
+                    state.p as u64,
+                    state.max_iter as u64,
+                    state.m as u64,
+                    state.iteration as u64,
+                    state.converged_count as u64,
+                    state.converged as u64,
+                    state.checkpoint_due as u64,
+                    state.preview_due as u64,
+                    state.admission_fault as u64,
+                    state.initialization_cursor as u64,
+                    state.publication_stage as u64,
+                    state.publication_first as u64,
+                    state.publication_second as u64,
+                ];
+                advance_u64_values(writer, &values, cursor)?
+            }
+            1 => advance_owner_length(writer, state.k_factor.l_cols.len(), cursor)?,
+            field if field >= 2 && field < 2 + state.n as u16 => advance_pair_owner(writer, &state.k_factor.l_cols[(field - 2) as usize], cursor)?,
+            514 => advance_f64_owner(writer, &state.k_factor.d, cursor)?,
+            515 => advance_u32_owner(writer, &state.b.indptr, cursor)?,
+            516 => advance_u32_owner(writer, &state.b.indices, cursor)?,
+            517 => advance_f64_owner(writer, &state.b.vals, cursor)?,
+            518 => advance_matrix_owner(writer, &state.x, cursor)?,
+            519 => advance_f64_owner(writer, &state.prev_theta, cursor)?,
+            520 => advance_f64_owner(writer, &state.final_theta, cursor)?,
+            521 => advance_f64_owner(writer, &state.residuals, cursor)?,
+            field if (522..=533).contains(&field) => Self::advance_work_checkpoint_entry(&state.work, cursor, writer, 522)?,
+            534 => {
+                if cursor.owner == 0 {
+                    writer.write_staged(&(state.retiring_work.is_some() as u64).to_le_bytes())?;
+                    cursor.owner = 1;
+                    false
+                } else if let Some(work) = state.retiring_work.as_ref() {
+                    let values = [
+                        work.stage as u64,
+                        work.reserve as u64,
+                        work.first as u64,
+                        work.second as u64,
+                        work.third as u64,
+                        work.phase as u64,
+                        work.sweep as u64,
+                        work.scalar.to_bits(),
+                        work.coefficient.to_bits(),
+                        work.cosine.to_bits(),
+                        work.sine.to_bits(),
+                        work.tangent.to_bits(),
+                        work.close_lane as u64,
+                    ];
+                    if cursor.owner == 1 {
+                        writer.write_staged(&(values.len() as u64).to_le_bytes())?;
+                        cursor.owner = 2;
+                        false
+                    } else if let Some(value) = values.get(cursor.item) {
+                        writer.write_staged(&value.to_le_bytes())?;
+                        cursor.item += 1;
+                        false
+                    } else {
+                        true
+                    }
+                } else {
+                    true
                 }
-                norm_sq = cols[j].dot(&kcols[j]);
             }
-            let norm = norm_sq.max(1e-300).sqrt();
-            cols[j] = cols[j].scale(1.0 / norm);
-            kcols[j] = kcols[j].scale(1.0 / norm);
+            field if (535..=545).contains(&field) => {
+                let Some(work) = state.retiring_work.as_ref() else { return Ok(true) };
+                Self::advance_work_checkpoint_entry(work, cursor, writer, 534)?
+            }
+            _ => return Ok(true),
+        };
+        if complete {
+            writer.commit_staged_page()?;
+            cursor.item = 0;
+            cursor.owner = 0;
+            cursor.field = match cursor.field {
+                0 => 1,
+                1 if state.n == 0 => 514,
+                1 => 2,
+                field if field >= 2 && field + 1 < 2 + state.n as u16 => field + 1,
+                field if field >= 2 && field < 2 + state.n as u16 => 514,
+                field if (514..=533).contains(&field) => field + 1,
+                534 if state.retiring_work.is_some() => 535,
+                534 => u16::MAX,
+                field if (535..545).contains(&field) => field + 1,
+                545 => u16::MAX,
+                _ => u16::MAX,
+            };
         }
-        let mut basis = MatD::zeros(self.state.n, self.state.m);
-        for j in 0..self.state.m {
-            set_col(&mut basis, j, &cols[j]);
-        }
+        Ok(cursor.field == u16::MAX)
+    }
 
-        let projected = symmetrize(&basis.transpose().matmul(&apply_b(&self.state.b, &basis)));
-        let (mu, vectors) = dense_symmetric_eigen_jacobi(&projected);
-        let mut order: Vec<usize> = (0..mu.len()).collect();
-        order.sort_by(|&left, &right| {
-            let left_lambda = if mu[left] > 1e-14 { mu[left].recip() } else { f64::MAX };
-            let right_lambda = if mu[right] > 1e-14 { mu[right].recip() } else { f64::MAX };
-            left_lambda.total_cmp(&right_lambda).then_with(|| left.cmp(&right))
-        });
-        let theta: Vec<f64> = order.iter().map(|&index| if mu[index] > 1e-14 { mu[index].recip() } else { f64::MAX }).collect();
-        let mut ordered_vectors = MatD::zeros(vectors.rows, vectors.cols);
-        for (column, &source) in order.iter().enumerate() {
-            for row in 0..vectors.rows {
-                ordered_vectors.set(row, column, vectors.get(row, source));
+    fn reserve_matrix_owner(matrix: &mut MatD, rows: usize, columns: usize) -> Result<(), ()> {
+        let cells = rows.checked_mul(columns).ok_or(())?;
+        if matrix.data.capacity() == 0 {
+            matrix.data.try_reserve_exact(cells).map_err(|_| ())?;
+        }
+        if matrix.data.capacity().checked_mul(std::mem::size_of::<f64>()).ok_or(())? > NUMERICAL_OWNER_PAGE_BYTES {
+            return Err(());
+        }
+        matrix.rows = rows;
+        matrix.cols = columns;
+        Ok(())
+    }
+
+    fn initialize_matrix_owner(matrix: &mut MatD) -> bool {
+        let cells = matrix.rows.saturating_mul(matrix.cols);
+        if matrix.data.len() < cells {
+            matrix.data.push(0.0);
+            false
+        } else {
+            true
+        }
+    }
+
+    fn reserve_scalar_owner<T>(owner: &mut Vec<T>, items: usize) -> Result<(), ()> {
+        owner.try_reserve_exact(items).map_err(|_| ())?;
+        if owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(())? > NUMERICAL_OWNER_PAGE_BYTES {
+            return Err(());
+        }
+        Ok(())
+    }
+
+    fn reserve_iteration_owner(&mut self) -> Result<(), ()> {
+        if let Some(retiring) = self.state.retiring_work.as_mut() {
+            if retiring.close_step(usize::MAX).0 {
+                self.state.retiring_work = None;
+            }
+            return Ok(());
+        }
+        let n = self.state.n;
+        let m = self.state.m;
+        let work = &mut self.state.work;
+        match work.reserve {
+            0 => Self::reserve_matrix_owner(&mut self.state.x, n, m)?,
+            1 => {
+                if !Self::initialize_matrix_owner(&mut self.state.x) {
+                    return Ok(());
+                }
+            }
+            2 => {
+                if self.state.initialization_cursor < m {
+                    let column = self.state.initialization_cursor;
+                    self.state.x.set(column, column, 1.0);
+                    if column + 1 < n {
+                        self.state.x.add_at(column + 1, column, 0.3);
+                    }
+                    if column > 0 {
+                        self.state.x.add_at(column - 1, column, 0.3);
+                    }
+                    self.state.initialization_cursor += 1;
+                    return Ok(());
+                }
+            }
+            3 => {
+                if self.state.prev_theta.capacity() == 0 {
+                    Self::reserve_scalar_owner(&mut self.state.prev_theta, self.state.p)?;
+                }
+            }
+            4 => {
+                if self.state.prev_theta.len() < self.state.p {
+                    self.state.prev_theta.push(f64::MAX);
+                    return Ok(());
+                }
+            }
+            5 => {
+                if self.state.residuals.capacity() == 0 {
+                    Self::reserve_scalar_owner(&mut self.state.residuals, self.state.p)?;
+                }
+            }
+            6 => {
+                if self.state.residuals.len() < self.state.p {
+                    self.state.residuals.push(f64::MAX);
+                    return Ok(());
+                }
+            }
+            7 => {
+                if self.state.final_theta.capacity() == 0 {
+                    Self::reserve_scalar_owner(&mut self.state.final_theta, m)?;
+                }
+            }
+            8 => {}
+            9 => Self::reserve_matrix_owner(&mut work.rhs, n, m)?,
+            10 => {
+                if !Self::initialize_matrix_owner(&mut work.rhs) {
+                    return Ok(());
+                }
+            }
+            11 => Self::reserve_matrix_owner(&mut work.solved, n, m)?,
+            12 => {
+                if !Self::initialize_matrix_owner(&mut work.solved) {
+                    return Ok(());
+                }
+            }
+            13 => Self::reserve_matrix_owner(&mut work.b_basis, n, m)?,
+            14 => {
+                if !Self::initialize_matrix_owner(&mut work.b_basis) {
+                    return Ok(());
+                }
+            }
+            15 => Self::reserve_matrix_owner(&mut work.projected, m, m)?,
+            16 => {
+                if !Self::initialize_matrix_owner(&mut work.projected) {
+                    return Ok(());
+                }
+            }
+            17 => Self::reserve_matrix_owner(&mut work.jacobi, m, m)?,
+            18 => {
+                if !Self::initialize_matrix_owner(&mut work.jacobi) {
+                    return Ok(());
+                }
+            }
+            19 => Self::reserve_matrix_owner(&mut work.jacobi_vectors, m, m)?,
+            20 => {
+                if !Self::initialize_matrix_owner(&mut work.jacobi_vectors) {
+                    return Ok(());
+                }
+            }
+            21 => {
+                if work.first < m {
+                    work.jacobi_vectors.set(work.first, work.first, 1.0);
+                    work.first += 1;
+                    return Ok(());
+                }
+                work.first = 0;
+            }
+            22 => Self::reserve_matrix_owner(&mut work.ordered_vectors, m, m)?,
+            23 => {
+                if !Self::initialize_matrix_owner(&mut work.ordered_vectors) {
+                    return Ok(());
+                }
+            }
+            24 => Self::reserve_matrix_owner(&mut work.candidate_x, n, m)?,
+            25 => {
+                if !Self::initialize_matrix_owner(&mut work.candidate_x) {
+                    return Ok(());
+                }
+            }
+            26 => Self::reserve_scalar_owner(&mut work.mu, m)?,
+            27 => {
+                if work.mu.len() < m {
+                    work.mu.push(0.0);
+                    return Ok(());
+                }
+            }
+            28 => Self::reserve_scalar_owner(&mut work.theta, m)?,
+            29 => {
+                if work.theta.len() < m {
+                    work.theta.push(f64::MAX);
+                    return Ok(());
+                }
+            }
+            30 => Self::reserve_scalar_owner(&mut work.order, m)?,
+            31 => {
+                if work.order.len() < m {
+                    work.order.push(work.order.len());
+                    return Ok(());
+                }
+            }
+            32 => {
+                self.reset_cursor(SubspaceStage::ApplyOperatorColumnRow);
+                return Ok(());
+            }
+            _ => return Err(()),
+        }
+        work.reserve += 1;
+        Ok(())
+    }
+
+    fn advance_apply_operator(&mut self) {
+        let n = self.state.n;
+        let m = self.state.m;
+        let work = &mut self.state.work;
+        let using_basis = work.phase == 1;
+        if work.first >= m {
+            if using_basis {
+                self.reset_cursor(SubspaceStage::ProjectedMatrixCellEntry);
+            } else {
+                self.reset_cursor(SubspaceStage::FactorForwardEntry);
+            }
+            return;
+        }
+        let row = work.second;
+        let start = self.state.b.indptr[row] as usize;
+        let end = self.state.b.indptr[row + 1] as usize;
+        if work.third < end.saturating_sub(start) {
+            let index = start + work.third;
+            let source_row = self.state.b.indices[index] as usize;
+            let source = if using_basis { work.solved.get(source_row, work.first) } else { self.state.x.get(source_row, work.first) };
+            work.scalar += self.state.b.vals[index] * source;
+            work.third += 1;
+            return;
+        }
+        if using_basis {
+            work.b_basis.set(row, work.first, work.scalar);
+        } else {
+            work.rhs.set(row, work.first, work.scalar);
+        }
+        work.scalar = 0.0;
+        work.third = 0;
+        work.second += 1;
+        if work.second == n {
+            work.second = 0;
+            work.first += 1;
+        }
+    }
+
+    fn advance_factor_forward(&mut self) {
+        let n = self.state.n;
+        let m = self.state.m;
+        let work = &mut self.state.work;
+        if work.first >= m {
+            self.reset_cursor(SubspaceStage::OrthogonalizePairElement);
+            return;
+        }
+        if work.phase == 0 {
+            work.solved.set(work.second, work.first, work.rhs.get(work.second, work.first));
+            work.second += 1;
+            if work.second == n {
+                work.second = 0;
+                work.phase = 1;
+            }
+            return;
+        }
+        if work.second == n {
+            work.second = 0;
+            work.phase = 0;
+            work.first += 1;
+            return;
+        }
+        let entries = &self.state.k_factor.l_cols[work.second];
+        if work.third < entries.len() {
+            let (row, value) = entries[work.third];
+            let delta = value * work.solved.get(work.second, work.first);
+            work.solved.add_at(row as usize, work.first, -delta);
+            work.third += 1;
+        } else {
+            work.third = 0;
+            work.stage = SubspaceStage::FactorDiagonalEntry;
+        }
+    }
+
+    fn advance_factor_diagonal(&mut self) {
+        let work = &mut self.state.work;
+        let value = work.solved.get(work.second, work.first) / self.state.k_factor.d[work.second];
+        work.solved.set(work.second, work.first, value);
+        work.second += 1;
+        if work.second == self.state.n {
+            work.second = self.state.n;
+            work.third = 0;
+            work.stage = SubspaceStage::FactorBackwardEntry;
+        }
+    }
+
+    fn advance_factor_backward(&mut self) {
+        let work = &mut self.state.work;
+        if work.second == 0 {
+            work.second = 0;
+            work.third = 0;
+            work.phase = 0;
+            work.first += 1;
+            work.stage = SubspaceStage::FactorForwardEntry;
+            return;
+        }
+        let column = work.second - 1;
+        let entries = &self.state.k_factor.l_cols[column];
+        if work.third < entries.len() {
+            let (row, value) = entries[work.third];
+            let delta = value * work.solved.get(row as usize, work.first);
+            work.solved.add_at(column, work.first, -delta);
+            work.third += 1;
+        } else {
+            work.second -= 1;
+            work.third = 0;
+        }
+    }
+
+    fn advance_orthogonalize(&mut self) -> Result<(), ()> {
+        let n = self.state.n;
+        let m = self.state.m;
+        let work = &mut self.state.work;
+        if work.first >= m {
+            work.phase = 1;
+            self.reset_cursor(SubspaceStage::ApplyOperatorColumnRow);
+            self.state.work.phase = 1;
+            return Ok(());
+        }
+        if work.second < work.first {
+            if work.phase == 0 {
+                work.coefficient += work.solved.get(work.third, work.first) * work.rhs.get(work.third, work.second);
+                work.third += 1;
+                if work.third == n {
+                    work.third = 0;
+                    work.phase = 1;
+                }
+            } else {
+                let row = work.third;
+                let coefficient = work.coefficient;
+                work.solved.add_at(row, work.first, -coefficient * work.solved.get(row, work.second));
+                work.rhs.add_at(row, work.first, -coefficient * work.rhs.get(row, work.second));
+                work.third += 1;
+                if work.third == n {
+                    work.third = 0;
+                    work.phase = 0;
+                    work.coefficient = 0.0;
+                    work.second += 1;
+                }
+            }
+            return Ok(());
+        }
+        work.stage = SubspaceStage::NormalizeColumnElement;
+        work.phase = 0;
+        work.third = 0;
+        work.scalar = 0.0;
+        Ok(())
+    }
+
+    fn advance_normalize(&mut self) -> Result<(), ()> {
+        let n = self.state.n;
+        let work = &mut self.state.work;
+        if work.phase == 0 {
+            work.scalar += work.solved.get(work.third, work.first) * work.rhs.get(work.third, work.first);
+            work.third += 1;
+            if work.third == n {
+                if !work.scalar.is_finite() || work.scalar <= 1e-24 {
+                    work.second = 0;
+                    work.third = 0;
+                    work.scalar = 0.0;
+                    work.phase = 2;
+                    return Ok(());
+                }
+                work.coefficient = work.scalar.max(1e-300).sqrt().recip();
+                work.third = 0;
+                work.phase = 1;
+            }
+            return Ok(());
+        }
+        if work.phase == 2 {
+            let value = self.state.x.get(work.third, work.first);
+            work.solved.set(work.third, work.first, value);
+            work.b_basis.set(work.third, work.first, value);
+            work.third += 1;
+            if work.third == n {
+                work.second = 0;
+                work.third = 0;
+                work.phase = 3;
+            }
+            return Ok(());
+        }
+        if work.phase == 3 {
+            if work.second == n {
+                work.second = 0;
+                work.phase = 4;
+                return Ok(());
+            }
+            let entries = &self.state.k_factor.l_cols[work.second];
+            if work.third < entries.len() {
+                let (row, value) = entries[work.third];
+                let delta = value * self.state.x.get(row as usize, work.first);
+                work.b_basis.add_at(work.second, work.first, delta);
+                work.third += 1;
+            } else {
+                work.second += 1;
+                work.third = 0;
+            }
+            return Ok(());
+        }
+        if work.phase == 4 {
+            let value = work.b_basis.get(work.second, work.first) * self.state.k_factor.d[work.second];
+            work.b_basis.set(work.second, work.first, value);
+            work.rhs.set(work.second, work.first, value);
+            work.second += 1;
+            if work.second == n {
+                work.second = 0;
+                work.third = 0;
+                work.phase = 5;
+            }
+            return Ok(());
+        }
+        if work.phase == 5 {
+            if work.second == n {
+                work.second = 0;
+                work.third = 0;
+                work.coefficient = 0.0;
+                work.phase = 6;
+                return Ok(());
+            }
+            let entries = &self.state.k_factor.l_cols[work.second];
+            if work.third < entries.len() {
+                let (row, value) = entries[work.third];
+                let delta = value * work.b_basis.get(work.second, work.first);
+                work.rhs.add_at(row as usize, work.first, delta);
+                work.third += 1;
+            } else {
+                work.second += 1;
+                work.third = 0;
+            }
+            return Ok(());
+        }
+        if work.phase == 6 {
+            if work.second == work.first {
+                work.third = 0;
+                work.scalar = 0.0;
+                work.phase = 8;
+                return Ok(());
+            }
+            work.coefficient += work.solved.get(work.third, work.first) * work.rhs.get(work.third, work.second);
+            work.third += 1;
+            if work.third == n {
+                work.third = 0;
+                work.phase = 7;
+            }
+            return Ok(());
+        }
+        if work.phase == 7 {
+            let coefficient = work.coefficient;
+            work.solved.add_at(work.third, work.first, -coefficient * work.solved.get(work.third, work.second));
+            work.rhs.add_at(work.third, work.first, -coefficient * work.rhs.get(work.third, work.second));
+            work.third += 1;
+            if work.third == n {
+                work.second += 1;
+                work.third = 0;
+                work.coefficient = 0.0;
+                work.phase = 6;
+            }
+            return Ok(());
+        }
+        if work.phase == 8 {
+            work.scalar += work.solved.get(work.third, work.first) * work.rhs.get(work.third, work.first);
+            work.third += 1;
+            if work.third == n {
+                work.coefficient = work.scalar.max(1e-300).sqrt().recip();
+                work.third = 0;
+                work.phase = 1;
+            }
+            return Ok(());
+        }
+        let scale = work.coefficient;
+        let row = work.third;
+        work.solved.set(row, work.first, work.solved.get(row, work.first) * scale);
+        work.rhs.set(row, work.first, work.rhs.get(row, work.first) * scale);
+        work.third += 1;
+        if work.third == n {
+            work.first += 1;
+            work.second = 0;
+            work.third = 0;
+            work.phase = 0;
+            work.scalar = 0.0;
+            work.coefficient = 0.0;
+            work.stage = SubspaceStage::OrthogonalizePairElement;
+        }
+        Ok(())
+    }
+
+    fn advance_projected(&mut self) {
+        let m = self.state.m;
+        let n = self.state.n;
+        let work = &mut self.state.work;
+        if work.phase == 1 {
+            let row = work.first / m;
+            let column = work.first % m;
+            work.jacobi.set(row, column, 0.5 * (work.projected.get(row, column) + work.projected.get(column, row)));
+            work.first += 1;
+            if work.first == m * m {
+                self.reset_cursor(SubspaceStage::JacobiConvergenceCell);
+            }
+            return;
+        }
+        work.scalar += work.solved.get(work.third, work.first) * work.b_basis.get(work.third, work.second);
+        work.third += 1;
+        if work.third < n {
+            return;
+        }
+        work.projected.set(work.first, work.second, work.scalar);
+        work.scalar = 0.0;
+        work.third = 0;
+        work.second += 1;
+        if work.second == m {
+            work.second = 0;
+            work.first += 1;
+        }
+        if work.first == m {
+            work.first = 0;
+            work.second = 0;
+            work.phase = 1;
+        }
+    }
+
+    fn advance_jacobi_convergence(&mut self) {
+        let m = self.state.m;
+        let work = &mut self.state.work;
+        if work.first < m * m {
+            let row = work.first / m;
+            let column = work.first % m;
+            let value = work.jacobi.get(row, column);
+            work.scalar += value * value;
+            if row < column {
+                work.coefficient += value * value;
+            }
+            work.first += 1;
+            return;
+        }
+        if work.coefficient.sqrt() < 1e-12 * (work.scalar.sqrt() + 1.0) || work.sweep == 100 {
+            work.first = 0;
+            work.second = 0;
+            work.phase = 0;
+            work.stage = SubspaceStage::ModeSortCompare;
+        } else {
+            work.first = 0;
+            work.second = 1;
+            work.third = 0;
+            work.stage = SubspaceStage::JacobiFindPairCell;
+        }
+        work.scalar = 0.0;
+        work.coefficient = 0.0;
+    }
+
+    fn advance_jacobi_pair(&mut self) {
+        let m = self.state.m;
+        let work = &mut self.state.work;
+        if work.first + 1 >= m {
+            work.sweep += 1;
+            self.reset_cursor(SubspaceStage::JacobiConvergenceCell);
+            return;
+        }
+        if work.second >= m {
+            work.first += 1;
+            work.second = work.first + 1;
+            return;
+        }
+        let p = work.first;
+        let q = work.second;
+        let apq = work.jacobi.get(p, q);
+        if apq.abs() < 1e-300 {
+            work.second += 1;
+            return;
+        }
+        let theta = (work.jacobi.get(q, q) - work.jacobi.get(p, p)) / (2.0 * apq);
+        work.tangent = if theta >= 0.0 { 1.0 / (theta + (theta * theta + 1.0).sqrt()) } else { -1.0 / (-theta + (theta * theta + 1.0).sqrt()) };
+        work.cosine = 1.0 / (work.tangent * work.tangent + 1.0).sqrt();
+        work.sine = work.tangent * work.cosine;
+        work.phase = 0;
+        work.third = 0;
+        work.stage = SubspaceStage::JacobiRotateCell;
+    }
+
+    fn advance_jacobi_rotation(&mut self) {
+        let m = self.state.m;
+        let work = &mut self.state.work;
+        let p = work.first;
+        let q = work.second;
+        match work.phase {
+            0 => {
+                let apq = work.jacobi.get(p, q);
+                let app = work.jacobi.get(p, p);
+                work.jacobi.set(p, p, app - work.tangent * apq);
+                work.phase = 1;
+            }
+            1 => {
+                let apq = work.jacobi.get(q, p);
+                let aqq = work.jacobi.get(q, q);
+                work.jacobi.set(q, q, aqq + work.tangent * apq);
+                work.phase = 2;
+            }
+            2 => {
+                work.jacobi.set(p, q, 0.0);
+                work.phase = 3;
+            }
+            3 => {
+                work.jacobi.set(q, p, 0.0);
+                work.phase = 4;
+            }
+            4 => {
+                if work.third == p || work.third == q {
+                    work.third += 1;
+                    return;
+                }
+                if work.third < m {
+                    let row = work.third;
+                    work.scalar = work.jacobi.get(row, p);
+                    work.coefficient = work.jacobi.get(row, q);
+                    work.phase = 5;
+                } else {
+                    work.third = 0;
+                    work.phase = 9;
+                }
+            }
+            5 => {
+                let value = work.cosine * work.scalar - work.sine * work.coefficient;
+                work.jacobi.set(work.third, p, value);
+                work.phase = 6;
+            }
+            6 => {
+                let value = work.cosine * work.scalar - work.sine * work.coefficient;
+                work.jacobi.set(p, work.third, value);
+                work.phase = 7;
+            }
+            7 => {
+                let value = work.sine * work.scalar + work.cosine * work.coefficient;
+                work.jacobi.set(work.third, q, value);
+                work.phase = 8;
+            }
+            8 => {
+                let value = work.sine * work.scalar + work.cosine * work.coefficient;
+                work.jacobi.set(q, work.third, value);
+                work.third += 1;
+                work.phase = 4;
+            }
+            9 => {
+                if work.third < m {
+                    let row = work.third;
+                    work.scalar = work.jacobi_vectors.get(row, p);
+                    work.coefficient = work.jacobi_vectors.get(row, q);
+                    work.phase = 10;
+                } else {
+                    work.second += 1;
+                    work.third = 0;
+                    work.stage = SubspaceStage::JacobiFindPairCell;
+                }
+            }
+            10 => {
+                work.jacobi_vectors.set(work.third, p, work.cosine * work.scalar - work.sine * work.coefficient);
+                work.phase = 11;
+            }
+            _ => {
+                work.jacobi_vectors.set(work.third, q, work.sine * work.scalar + work.cosine * work.coefficient);
+                work.third += 1;
+                work.phase = 9;
             }
         }
-        let x_new = basis.matmul(&ordered_vectors);
+    }
 
-        let current: Vec<f64> = theta.iter().take(self.state.p).copied().collect();
-        self.state.residuals = current.iter().zip(&self.state.prev_theta).map(|(&value, &previous)| if previous < f64::MAX { ((value - previous) / previous.abs().max(1e-12)).abs() } else { f64::MAX }).collect();
-        self.state.converged_count = self.state.residuals.iter().filter(|&&residual| residual < 1e-6).count();
-        self.state.converged = self.state.converged_count == self.state.p;
-        self.state.prev_theta = current;
-        self.state.final_theta = theta;
-        self.state.final_x = x_new.clone();
-        self.state.x = x_new;
+    fn mode_key(&self, index: usize) -> f64 {
+        if self.state.work.mu[index] > 1e-14 {
+            self.state.work.mu[index].recip()
+        } else {
+            f64::MAX
+        }
+    }
+
+    fn advance_mode_sort(&mut self) {
+        let m = self.state.m;
+        if self.state.work.phase == 0 {
+            let index = self.state.work.first;
+            self.state.work.mu[index] = self.state.work.jacobi.get(index, index);
+            self.state.work.order[index] = index;
+            self.state.work.first += 1;
+            if self.state.work.first == m {
+                self.state.work.first = 1;
+                self.state.work.second = 1;
+                self.state.work.phase = 1;
+            }
+            return;
+        }
+        if self.state.work.first >= m {
+            self.reset_cursor(SubspaceStage::ModePermuteElement);
+            return;
+        }
+        let position = self.state.work.second;
+        if position == 0 {
+            self.state.work.first += 1;
+            self.state.work.second = self.state.work.first;
+            return;
+        }
+        let left = self.state.work.order[position - 1];
+        let right = self.state.work.order[position];
+        let comparison = self.mode_key(left).total_cmp(&self.mode_key(right)).then_with(|| left.cmp(&right));
+        if comparison.is_gt() {
+            self.state.work.order.swap(position - 1, position);
+            self.state.work.second -= 1;
+        } else {
+            self.state.work.first += 1;
+            self.state.work.second = self.state.work.first;
+        }
+    }
+
+    fn advance_mode_permute(&mut self) {
+        let m = self.state.m;
+        let n = self.state.n;
+        let work = &mut self.state.work;
+        if work.phase == 0 {
+            if work.first < m {
+                let source = work.order[work.first];
+                work.theta[work.first] = if work.mu[source] > 1e-14 { work.mu[source].recip() } else { f64::MAX };
+                work.first += 1;
+            } else {
+                work.first = 0;
+                work.second = 0;
+                work.phase = 1;
+            }
+            return;
+        }
+        if work.phase == 1 {
+            let source = work.order[work.first];
+            work.ordered_vectors.set(work.second, work.first, work.jacobi_vectors.get(work.second, source));
+            work.second += 1;
+            if work.second == m {
+                work.second = 0;
+                work.first += 1;
+            }
+            if work.first == m {
+                work.first = 0;
+                work.second = 0;
+                work.third = 0;
+                work.scalar = 0.0;
+                work.phase = 2;
+            }
+            return;
+        }
+        work.scalar += work.solved.get(work.first, work.third) * work.ordered_vectors.get(work.third, work.second);
+        work.third += 1;
+        if work.third == m {
+            work.candidate_x.set(work.first, work.second, work.scalar);
+            work.third = 0;
+            work.scalar = 0.0;
+            work.second += 1;
+            if work.second == m {
+                work.second = 0;
+                work.first += 1;
+            }
+        }
+        if work.first == n {
+            self.reset_cursor(SubspaceStage::ResidualColumnRow);
+        }
+    }
+
+    fn advance_residual(&mut self) {
+        let work = &mut self.state.work;
+        if work.first < self.state.p {
+            let value = work.theta[work.first];
+            let previous = self.state.prev_theta[work.first];
+            self.state.residuals[work.first] = if previous < f64::MAX { ((value - previous) / previous.abs().max(1e-12)).abs() } else { f64::MAX };
+            work.first += 1;
+        } else {
+            work.first = 0;
+            self.state.converged_count = 0;
+            work.stage = SubspaceStage::ConvergenceMode;
+        }
+    }
+
+    fn advance_convergence(&mut self) {
+        let work = &mut self.state.work;
+        if work.first < self.state.p {
+            if self.state.residuals[work.first] < 1e-6 {
+                self.state.converged_count += 1;
+            }
+            self.state.prev_theta[work.first] = work.theta[work.first];
+            work.first += 1;
+        } else {
+            self.state.converged = self.state.converged_count == self.state.p;
+            work.stage = SubspaceStage::PublishIteration;
+        }
+    }
+
+    fn advance_preview_entry(state: &mut SubspaceCheckpoint, operation: Operation, writer: &mut RetainedJobPayloadWriter) -> Result<bool, JobPayloadAdmissionFault> {
+        let cursor = NumericalPageCursor { field: state.publication_stage as u16, owner: state.publication_first, item: state.publication_second };
+        if advance_numerical_page_header(writer, b"FEMSUB2\0", 2, cursor)? {
+            return Ok(false);
+        }
+        match state.publication_stage {
+            0 => {
+                let values = [operation.operation.0, operation.base_revision.0, operation.generation.0, operation.seed, state.iteration as u64, state.converged_count as u64, state.converged as u64, state.n as u64, state.p as u64];
+                if let Some(value) = values.get(state.publication_first) {
+                    writer.write_staged(&value.to_le_bytes())?;
+                    state.publication_first += 1;
+                } else {
+                    state.publication_first = 0;
+                    state.publication_stage = 1;
+                }
+            }
+            1 => {
+                if let Some(value) = state.final_theta.get(state.publication_first).filter(|_| state.publication_first < state.p) {
+                    writer.write_staged(&value.to_bits().to_le_bytes())?;
+                    state.publication_first += 1;
+                } else {
+                    state.publication_first = 0;
+                    state.publication_stage = 2;
+                }
+            }
+            2 => {
+                if state.publication_first < state.p {
+                    writer.write_staged(&state.x.get(state.publication_second, state.publication_first).to_bits().to_le_bytes())?;
+                    state.publication_second += 1;
+                    if state.publication_second == state.n {
+                        state.publication_second = 0;
+                        state.publication_first += 1;
+                    }
+                } else {
+                    state.publication_first = 0;
+                    state.publication_stage = 3;
+                }
+            }
+            3 => {
+                if let Some(value) = state.residuals.get(state.publication_first).filter(|_| state.publication_first < state.p) {
+                    writer.write_staged(&value.to_bits().to_le_bytes())?;
+                    state.publication_first += 1;
+                } else {
+                    state.publication_stage = 4;
+                }
+            }
+            4 => writer.commit_staged_page()?,
+            _ => {}
+        }
+        Ok(state.publication_stage == 4 && writer.staged_page_len().is_none())
+    }
+
+    fn publish_iteration(&mut self) {
+        if self.state.work.phase == 0 {
+            if self.state.work.first == 0 {
+                self.state.final_theta.clear();
+            }
+            if self.state.work.first < self.state.m {
+                self.state.final_theta.push(self.state.work.theta[self.state.work.first]);
+                self.state.work.first += 1;
+                return;
+            }
+            self.state.work.phase = 1;
+            return;
+        }
+        std::mem::swap(&mut self.state.x, &mut self.state.work.candidate_x);
         self.state.iteration += 1;
         self.state.checkpoint_due = true;
+        self.state.preview_due = true;
+        self.state.publication_stage = 0;
+        self.state.publication_first = 0;
+        self.state.publication_second = 0;
+        let displaced = std::mem::replace(&mut self.state.work, SubspaceWork::empty());
+        self.state.retiring_work = Some(displaced);
     }
 
     fn close_retained_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        match close_map_owner_step(&mut self.state.k_factor.l_cols, maximum_bytes) {
+        match close_nested_vec_owner_step(&mut self.state.k_factor.l_cols, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),
             Err(()) => return (false, 0, 0),
             Ok(None) => {}
         }
-        for owner in [&mut self.state.k_factor.d, &mut self.state.b.vals, &mut self.state.x.data, &mut self.state.prev_theta, &mut self.state.final_theta, &mut self.state.final_x.data, &mut self.state.residuals] {
+        for owner in [&mut self.state.k_factor.d, &mut self.state.b.vals, &mut self.state.x.data, &mut self.state.prev_theta, &mut self.state.final_theta, &mut self.state.residuals] {
             match close_vec_owner_step(owner, maximum_bytes) {
                 Ok(Some((items, bytes))) => return (false, items, bytes),
                 Err(()) => return (false, 0, 0),
@@ -1428,6 +3462,18 @@ impl SubspaceIterationJob {
                 Ok(None) => {}
             }
         }
+        let (terminal, items, bytes) = self.state.work.close_step(maximum_bytes);
+        if !terminal {
+            return (false, items, bytes);
+        }
+        if let Some(retiring) = self.state.retiring_work.as_mut() {
+            let (terminal, items, bytes) = retiring.close_step(maximum_bytes);
+            if !terminal {
+                return (false, items, bytes);
+            }
+            self.state.retiring_work = None;
+            return (false, 1, 0);
+        }
         (true, 0, 0)
     }
 
@@ -1440,8 +3486,322 @@ impl SubspaceIterationJob {
             && self.state.x.data.capacity() == 0
             && self.state.prev_theta.capacity() == 0
             && self.state.final_theta.capacity() == 0
-            && self.state.final_x.data.capacity() == 0
             && self.state.residuals.capacity() == 0
+            && self.state.work.terminal_is_empty()
+            && self.state.retiring_work.is_none()
+    }
+}
+
+fn restore_matrix_owner(matrix: &mut MatD, page: &NumericalPageView<'_>, maximum: usize) -> Result<bool, NumericalCheckpointFault> {
+    let rows = read_checkpoint_u64(page.bytes, 0)? as usize;
+    let cols = read_checkpoint_u64(page.bytes, 8)? as usize;
+    let capacity = rows.checked_mul(cols).ok_or(NumericalCheckpointFault::Envelope)?;
+    let length = read_checkpoint_u64(page.bytes, 16)? as usize;
+    if capacity > maximum || length > capacity || page.item != matrix.data.len() {
+        return Err(NumericalCheckpointFault::Envelope);
+    }
+    if page.item == 0 {
+        matrix.data.try_reserve_exact(capacity).map_err(|_| NumericalCheckpointFault::Admission)?;
+        validate_restored_owner(&matrix.data)?;
+        matrix.rows = rows;
+        matrix.cols = cols;
+    } else if matrix.rows != rows || matrix.cols != cols {
+        return Err(NumericalCheckpointFault::Field);
+    }
+    let data = page.bytes.get(24..).ok_or(NumericalCheckpointFault::Truncated)?;
+    if data.len() % 8 != 0 || matrix.data.len().saturating_add(data.len() / 8) > length {
+        return Err(NumericalCheckpointFault::Truncated);
+    }
+    for offset in (0..data.len()).step_by(8) {
+        matrix.data.push(f64::from_bits(read_checkpoint_u64(data, offset)?));
+    }
+    Ok(matrix.data.len() == length)
+}
+
+fn decode_subspace_stage(value: u64) -> Result<SubspaceStage, NumericalCheckpointFault> {
+    match value {
+        0 => Ok(SubspaceStage::ReserveIteration),
+        1 => Ok(SubspaceStage::ApplyOperatorColumnRow),
+        2 => Ok(SubspaceStage::FactorForwardEntry),
+        3 => Ok(SubspaceStage::FactorDiagonalEntry),
+        4 => Ok(SubspaceStage::FactorBackwardEntry),
+        5 => Ok(SubspaceStage::OrthogonalizePairElement),
+        6 => Ok(SubspaceStage::NormalizeColumnElement),
+        7 => Ok(SubspaceStage::ProjectedMatrixCellEntry),
+        8 => Ok(SubspaceStage::JacobiFindPairCell),
+        9 => Ok(SubspaceStage::JacobiRotateCell),
+        10 => Ok(SubspaceStage::JacobiConvergenceCell),
+        11 => Ok(SubspaceStage::ModeSortCompare),
+        12 => Ok(SubspaceStage::ModePermuteElement),
+        13 => Ok(SubspaceStage::ResidualColumnRow),
+        14 => Ok(SubspaceStage::ConvergenceMode),
+        15 => Ok(SubspaceStage::PublishIteration),
+        _ => Err(NumericalCheckpointFault::Field),
+    }
+}
+
+fn restore_work_control(work: &mut SubspaceWork, bytes: &[u8]) -> Result<(), NumericalCheckpointFault> {
+    let count = read_checkpoint_u64(bytes, 0)? as usize;
+    if count != 13 || bytes.len() != 8 + count * 8 {
+        return Err(NumericalCheckpointFault::Truncated);
+    }
+    let value = |index| read_checkpoint_u64(bytes, 8 + index * 8);
+    work.stage = decode_subspace_stage(value(0)?)?;
+    work.reserve = value(1)? as usize;
+    work.first = value(2)? as usize;
+    work.second = value(3)? as usize;
+    work.third = value(4)? as usize;
+    work.phase = value(5)? as usize;
+    work.sweep = value(6)? as usize;
+    work.scalar = f64::from_bits(value(7)?);
+    work.coefficient = f64::from_bits(value(8)?);
+    work.cosine = f64::from_bits(value(9)?);
+    work.sine = f64::from_bits(value(10)?);
+    work.tangent = f64::from_bits(value(11)?);
+    work.close_lane = value(12)? as u8;
+    Ok(())
+}
+
+fn restore_work_owner(work: &mut SubspaceWork, page: &NumericalPageView<'_>, base: u16, n: usize, m: usize) -> Result<bool, NumericalCheckpointFault> {
+    match page.field - base {
+        0 => {
+            restore_work_control(work, page.bytes)?;
+            Ok(true)
+        }
+        1 => restore_matrix_owner(&mut work.rhs, page, n.saturating_mul(m)),
+        2 => restore_matrix_owner(&mut work.solved, page, n.saturating_mul(m)),
+        3 => restore_matrix_owner(&mut work.b_basis, page, n.saturating_mul(m)),
+        4 => restore_matrix_owner(&mut work.projected, page, m.saturating_mul(m)),
+        5 => restore_matrix_owner(&mut work.jacobi, page, m.saturating_mul(m)),
+        6 => restore_matrix_owner(&mut work.jacobi_vectors, page, m.saturating_mul(m)),
+        7 => restore_matrix_owner(&mut work.ordered_vectors, page, m.saturating_mul(m)),
+        8 => restore_matrix_owner(&mut work.candidate_x, page, n.saturating_mul(m)),
+        9 => restore_f64_owner(&mut work.mu, page, m),
+        10 => restore_f64_owner(&mut work.theta, page, m),
+        11 => restore_usize_owner(&mut work.order, page, m),
+        _ => Err(NumericalCheckpointFault::Field),
+    }
+}
+
+pub struct SubspaceRestoreCursor {
+    operation: Operation,
+    payload: Option<RetainedJobPayload>,
+    total_pages: usize,
+    page_slot: usize,
+    close_due: bool,
+    expected_field: u16,
+    state: Option<SubspaceCheckpoint>,
+    fault: Option<NumericalCheckpointFault>,
+}
+
+impl SubspaceRestoreCursor {
+    pub fn new(operation: Operation, payload: RetainedJobPayload) -> Self {
+        let total_pages = payload.page_count();
+        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, state: None, fault: None }
+    }
+
+    fn decode_page(&mut self, bytes: &[u8]) -> Result<(), NumericalCheckpointFault> {
+        let page = parse_numerical_page(bytes, b"FEMSCP1\0")?;
+        if page.kind != 12 || page.field != self.expected_field {
+            return Err(NumericalCheckpointFault::Field);
+        }
+        if page.field == 0 {
+            let count = declared_owner_length(&page, 24)?;
+            if count != 18 || page.bytes.len() != 8 + count * 8 {
+                return Err(NumericalCheckpointFault::Truncated);
+            }
+            let value = |index| read_checkpoint_u64(page.bytes, 8 + index * 8);
+            let identity = NumericalCheckpointIdentity { operation: value(0)?, revision: value(1)?, generation: value(2)?, seed: value(3)? };
+            if !identity.matches(self.operation) {
+                return Err(NumericalCheckpointFault::Stale);
+            }
+            let n = value(4)? as usize;
+            let p = value(5)? as usize;
+            let m = value(7)? as usize;
+            if n == 0 || n > SUBSPACE_MAXIMUM_ORDER || p == 0 || p > n || m == 0 || m > SUBSPACE_MAXIMUM_COLUMNS || m > n {
+                return Err(NumericalCheckpointFault::Envelope);
+            }
+            self.state = Some(SubspaceCheckpoint {
+                identity,
+                k_factor: LdltFactor { n, l_cols: Vec::new(), d: Vec::new() },
+                b: Csr { n, indptr: Vec::new(), indices: Vec::new(), vals: Vec::new() },
+                n,
+                p,
+                max_iter: value(6)? as usize,
+                m,
+                x: MatD::zeros(0, 0),
+                prev_theta: Vec::new(),
+                final_theta: Vec::new(),
+                iteration: value(8)? as usize,
+                residuals: Vec::new(),
+                converged_count: value(9)? as usize,
+                converged: value(10)? != 0,
+                checkpoint_due: false,
+                preview_due: value(12)? != 0,
+                admission_fault: value(13)? != 0,
+                initialization_cursor: value(14)? as usize,
+                publication_stage: value(15)? as u8,
+                publication_first: value(16)? as usize,
+                publication_second: value(17)? as usize,
+                work: SubspaceWork::empty(),
+                retiring_work: None,
+            });
+            self.expected_field = 1;
+            return Ok(());
+        }
+        let state = self.state.as_mut().ok_or(NumericalCheckpointFault::Field)?;
+        let n = state.n;
+        let m = state.m;
+        let complete = match page.field {
+            1 => {
+                let length = declared_owner_length(&page, n)?;
+                if length != n || page.bytes.len() != 8 {
+                    return Err(NumericalCheckpointFault::Field);
+                }
+                state.k_factor.l_cols.try_reserve_exact(n).map_err(|_| NumericalCheckpointFault::Admission)?;
+                validate_restored_owner(&state.k_factor.l_cols)?;
+                for _ in 0..n {
+                    state.k_factor.l_cols.push(Vec::new());
+                }
+                true
+            }
+            field if field >= 2 && field < 2 + n as u16 => restore_pair_owner(&mut state.k_factor.l_cols[(field - 2) as usize], &page, n)?,
+            514 => restore_f64_owner(&mut state.k_factor.d, &page, n)?,
+            515 => restore_u32_owner(&mut state.b.indptr, &page, n + 1)?,
+            516 => restore_u32_owner(&mut state.b.indices, &page, n.saturating_mul(n))?,
+            517 => restore_f64_owner(&mut state.b.vals, &page, n.saturating_mul(n))?,
+            518 => restore_matrix_owner(&mut state.x, &page, n.saturating_mul(m))?,
+            519 => restore_f64_owner(&mut state.prev_theta, &page, state.p)?,
+            520 => restore_f64_owner(&mut state.final_theta, &page, m)?,
+            521 => restore_f64_owner(&mut state.residuals, &page, state.p)?,
+            field if (522..=533).contains(&field) => restore_work_owner(&mut state.work, &page, 522, n, m)?,
+            534 => {
+                let present = read_checkpoint_u64(page.bytes, 0)?;
+                match present {
+                    0 if page.bytes.len() == 8 => state.retiring_work = None,
+                    1 => {
+                        let mut work = SubspaceWork::empty();
+                        restore_work_control(&mut work, page.bytes.get(8..).ok_or(NumericalCheckpointFault::Truncated)?)?;
+                        state.retiring_work = Some(work);
+                    }
+                    _ => return Err(NumericalCheckpointFault::Field),
+                }
+                true
+            }
+            field if (535..=545).contains(&field) => {
+                let work = state.retiring_work.as_mut().ok_or(NumericalCheckpointFault::Field)?;
+                restore_work_owner(work, &page, 534, n, m)?
+            }
+            _ => return Err(NumericalCheckpointFault::Field),
+        };
+        if complete {
+            self.expected_field = match page.field {
+                1 if n == 0 => 514,
+                1 => 2,
+                field if field >= 2 && field + 1 < 2 + n as u16 => field + 1,
+                field if field >= 2 && field < 2 + n as u16 => 514,
+                field if (514..=533).contains(&field) => field + 1,
+                534 if state.retiring_work.is_some() => 535,
+                534 => u16::MAX,
+                field if (535..545).contains(&field) => field + 1,
+                545 => u16::MAX,
+                _ => return Err(NumericalCheckpointFault::Field),
+            };
+        }
+        Ok(())
+    }
+
+    pub fn step(&mut self, context: &mut StepContext<'_>) -> Result<Option<SubspaceIterationJob>, NumericalCheckpointFault> {
+        if context.is_cancelled() {
+            return Err(NumericalCheckpointFault::Cancelled);
+        }
+        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
+            return Err(NumericalCheckpointFault::Stale);
+        }
+        if context.should_yield() {
+            return Ok(None);
+        }
+        context.consume_fuel(1);
+        if self.close_due {
+            let payload = self.payload.as_mut().ok_or(NumericalCheckpointFault::Truncated)?;
+            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            self.page_slot += 1;
+            self.close_due = false;
+            if self.page_slot == self.total_pages {
+                if self.expected_field != u16::MAX || !payload.terminal_is_empty() {
+                    return Err(NumericalCheckpointFault::Truncated);
+                }
+                self.payload = None;
+                let state = self.state.take().ok_or(NumericalCheckpointFault::Truncated)?;
+                return Ok(Some(SubspaceIterationJob {
+                    operation: self.operation,
+                    state,
+                    preview_writer: None,
+                    preview_page_cursor: 0,
+                    terminal_writer: None,
+                    terminal_page_cursor: 0,
+                    checkpoint_writer: None,
+                    checkpoint_cursor: NumericalPageCursor::new(),
+                }));
+            }
+            return Ok(None);
+        }
+        let source = self.payload.as_ref().and_then(|payload| payload.page(self.page_slot)).ok_or(NumericalCheckpointFault::Truncated)?;
+        let mut bytes = [0u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES];
+        bytes[..source.len()].copy_from_slice(source);
+        if let Err(fault) = self.decode_page(&bytes[..source.len()]) {
+            self.fault = Some(fault);
+            return Err(fault);
+        }
+        self.close_due = true;
+        Ok(None)
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(payload) = self.payload.as_mut() {
+            if !payload.terminal_is_empty() {
+                return match payload.close_step(1, maximum_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                };
+            }
+            self.payload = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let Some(state) = self.state.as_mut() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
+        if let Some(work) = state.retiring_work.as_mut() {
+            let (complete, released_items, released_bytes) = work.close_step(maximum_bytes);
+            if complete {
+                state.retiring_work = None;
+            }
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        let (work_complete, released_items, released_bytes) = state.work.close_step(maximum_bytes);
+        if !work_complete {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        if let Ok(Some((released_items, released_bytes))) = close_nested_vec_owner_step(&mut state.k_factor.l_cols, maximum_bytes) {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+        }
+        for owner in [&mut state.k_factor.d, &mut state.b.vals, &mut state.x.data, &mut state.prev_theta, &mut state.final_theta, &mut state.residuals] {
+            if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(owner, maximum_bytes) {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            }
+        }
+        for owner in [&mut state.b.indices, &mut state.b.indptr] {
+            if let Ok(Some((released_items, released_bytes))) = close_vec_owner_step(owner, maximum_bytes) {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes };
+            }
+        }
+        self.state = None;
+        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.payload.is_none() && self.state.is_none()
     }
 }
 
@@ -1451,32 +3811,265 @@ impl InteractiveJob for SubspaceIterationJob {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return StepOutcome::Fault(JobFault { detail: b"stale-fem-subspace-operation".to_vec() });
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
         }
-        if self.state.checkpoint_due {
-            self.state.checkpoint_due = false;
-            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.iteration as u64 });
+        if self.state.admission_fault || self.state.n > SUBSPACE_MAXIMUM_ORDER || self.state.m > SUBSPACE_MAXIMUM_COLUMNS {
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+        }
+        if self.state.checkpoint_due || self.checkpoint_writer.is_some() {
+            context.set_stage("fem.subspace.checkpoint-page");
+            if context.should_yield() {
+                return StepOutcome::Yield;
+            }
+            context.consume_fuel(1);
+            if self.checkpoint_writer.is_none() {
+                self.state.checkpoint_due = false;
+                self.checkpoint_cursor = NumericalPageCursor::new();
+                self.checkpoint_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState));
+                return StepOutcome::Yield;
+            }
+            let Some(writer) = self.checkpoint_writer.as_mut() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            if writer.staged_page_len().is_none() {
+                return match writer.begin_staged_page(context) {
+                    Ok(()) => StepOutcome::Yield,
+                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                };
+            }
+            let complete = match Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer) {
+                Ok(complete) => complete,
+                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
+            if !complete {
+                return StepOutcome::Yield;
+            }
+            let Some(writer) = self.checkpoint_writer.take() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            let state = match writer.finish() {
+                Ok(state) => state,
+                Err(writer) => {
+                    self.checkpoint_writer = Some(writer);
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                }
+            };
+            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state, applied_progress: self.state.iteration as u64 });
+        }
+        if self.state.preview_due {
+            context.set_stage("fem.subspace.preview-entry");
+            if context.should_yield() {
+                return StepOutcome::Yield;
+            }
+            if self.preview_writer.is_none() {
+                context.consume_fuel(1);
+                self.preview_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::Preview));
+                self.preview_page_cursor = 0;
+                return StepOutcome::Yield;
+            }
+            context.consume_fuel(1);
+            let Some(writer) = self.preview_writer.as_mut() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            if writer.staged_page_len().is_none() && self.state.publication_stage < 4 {
+                return match writer.begin_staged_page(context) {
+                    Ok(()) => StepOutcome::Yield,
+                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                };
+            }
+            let complete = match Self::advance_preview_entry(&mut self.state, self.operation, writer) {
+                Ok(complete) => complete,
+                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
+            if !complete {
+                return StepOutcome::Yield;
+            }
+            let Some(writer) = self.preview_writer.take() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            let preview = match writer.finish() {
+                Ok(preview) => preview,
+                Err(writer) => {
+                    self.preview_writer = Some(writer);
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                }
+            };
+            self.preview_page_cursor = 0;
+            self.state.preview_due = false;
+            return StepOutcome::PreviewReady(preview);
         }
         if self.state.iteration >= self.state.max_iter || self.state.converged {
-            return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&self.preview()).expect("subspace output is serializable") });
+            context.set_stage("fem.subspace.terminal-page");
+            if context.should_yield() {
+                return StepOutcome::Yield;
+            }
+            context.consume_fuel(1);
+            if self.terminal_writer.is_none() {
+                self.state.publication_stage = 0;
+                self.state.publication_first = 0;
+                self.state.publication_second = 0;
+                self.terminal_writer = Some(RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
+                self.terminal_page_cursor = 0;
+                return StepOutcome::Yield;
+            }
+            let Some(writer) = self.terminal_writer.as_mut() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            if writer.staged_page_len().is_none() && self.state.publication_stage < 4 {
+                return match writer.begin_staged_page(context) {
+                    Ok(()) => StepOutcome::Yield,
+                    Err(_) => StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+                };
+            }
+            let complete = match Self::advance_preview_entry(&mut self.state, self.operation, writer) {
+                Ok(complete) => complete,
+                Err(_) => return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) }),
+            };
+            if !complete {
+                return StepOutcome::Yield;
+            }
+            let Some(writer) = self.terminal_writer.take() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            let output = match writer.finish() {
+                Ok(output) => output,
+                Err(writer) => {
+                    self.terminal_writer = Some(writer);
+                    return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+                }
+            };
+            return StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output });
         }
-        context.set_stage("fem.subspace.iteration");
+        context.set_stage(match self.state.work.stage {
+            SubspaceStage::ReserveIteration => "fem.subspace.reserve-iteration",
+            SubspaceStage::ApplyOperatorColumnRow => "fem.subspace.apply-operator-column-row",
+            SubspaceStage::FactorForwardEntry => "fem.subspace.factor-forward-entry",
+            SubspaceStage::FactorDiagonalEntry => "fem.subspace.factor-diagonal-entry",
+            SubspaceStage::FactorBackwardEntry => "fem.subspace.factor-backward-entry",
+            SubspaceStage::OrthogonalizePairElement => "fem.subspace.orthogonalize-pair-element",
+            SubspaceStage::NormalizeColumnElement => "fem.subspace.normalize-column-element",
+            SubspaceStage::ProjectedMatrixCellEntry => "fem.subspace.projected-matrix-cell-entry",
+            SubspaceStage::JacobiFindPairCell => "fem.subspace.jacobi-find-pair-cell",
+            SubspaceStage::JacobiRotateCell => "fem.subspace.jacobi-rotate-cell",
+            SubspaceStage::JacobiConvergenceCell => "fem.subspace.jacobi-convergence-cell",
+            SubspaceStage::ModeSortCompare => "fem.subspace.mode-sort-compare",
+            SubspaceStage::ModePermuteElement => "fem.subspace.mode-permute-element",
+            SubspaceStage::ResidualColumnRow => "fem.subspace.residual-column-row",
+            SubspaceStage::ConvergenceMode => "fem.subspace.convergence-mode",
+            SubspaceStage::PublishIteration => "fem.subspace.publish-iteration",
+        });
         if context.should_yield() {
             return StepOutcome::Yield;
         }
-        self.iterate();
         context.consume_fuel(1);
+        let result = match self.state.work.stage {
+            SubspaceStage::ReserveIteration => self.reserve_iteration_owner(),
+            SubspaceStage::ApplyOperatorColumnRow => {
+                self.advance_apply_operator();
+                Ok(())
+            }
+            SubspaceStage::FactorForwardEntry => {
+                self.advance_factor_forward();
+                Ok(())
+            }
+            SubspaceStage::FactorDiagonalEntry => {
+                self.advance_factor_diagonal();
+                Ok(())
+            }
+            SubspaceStage::FactorBackwardEntry => {
+                self.advance_factor_backward();
+                Ok(())
+            }
+            SubspaceStage::OrthogonalizePairElement => self.advance_orthogonalize(),
+            SubspaceStage::NormalizeColumnElement => self.advance_normalize(),
+            SubspaceStage::ProjectedMatrixCellEntry => {
+                self.advance_projected();
+                Ok(())
+            }
+            SubspaceStage::JacobiFindPairCell => {
+                self.advance_jacobi_pair();
+                Ok(())
+            }
+            SubspaceStage::JacobiRotateCell => {
+                self.advance_jacobi_rotation();
+                Ok(())
+            }
+            SubspaceStage::JacobiConvergenceCell => {
+                self.advance_jacobi_convergence();
+                Ok(())
+            }
+            SubspaceStage::ModeSortCompare => {
+                self.advance_mode_sort();
+                Ok(())
+            }
+            SubspaceStage::ModePermuteElement => {
+                self.advance_mode_permute();
+                Ok(())
+            }
+            SubspaceStage::ResidualColumnRow => {
+                self.advance_residual();
+                Ok(())
+            }
+            SubspaceStage::ConvergenceMode => {
+                self.advance_convergence();
+                Ok(())
+            }
+            SubspaceStage::PublishIteration => {
+                self.publish_iteration();
+                Ok(())
+            }
+        };
+        if result.is_err() {
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+        }
         if context.is_cancelled() {
             return StepOutcome::Cancelled;
         }
-        StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("subspace preview is serializable"))
+        StepOutcome::Yield
     }
 
-    fn begin_close(&mut self) {}
+    fn begin_close(&mut self) {
+        if let Some(writer) = self.checkpoint_writer.as_mut() {
+            writer.begin_close();
+        }
+        if let Some(writer) = self.preview_writer.as_mut() {
+            writer.begin_close();
+        }
+        if let Some(writer) = self.terminal_writer.as_mut() {
+            writer.begin_close();
+        }
+    }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(writer) = self.checkpoint_writer.as_mut() {
+            return match writer.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                semio_framework_job::JobPayloadCloseStep::Complete => {
+                    self.checkpoint_writer = None;
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+            };
+        }
+        if let Some(writer) = self.preview_writer.as_mut() {
+            return match writer.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                semio_framework_job::JobPayloadCloseStep::Complete => {
+                    self.preview_writer = None;
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+            };
+        }
+        if let Some(writer) = self.terminal_writer.as_mut() {
+            return match writer.close_step(maximum_items, maximum_bytes) {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                semio_framework_job::JobPayloadCloseStep::Complete => {
+                    self.terminal_writer = None;
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+            };
         }
         let (complete, released_items, released_bytes) = self.close_retained_step(maximum_bytes);
         if complete {
@@ -1487,25 +4080,41 @@ impl InteractiveJob for SubspaceIterationJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.close_terminal_is_empty()
+        self.checkpoint_writer.is_none() && self.preview_writer.is_none() && self.terminal_writer.is_none() && self.close_terminal_is_empty()
     }
 }
 
-/// 🎯️ Finds the lowest `p` eigenpairs of `K x = λ B x`, given `K`'s LDLT factorization and `B` as a
-/// `Csr` (mass matrix, or `−Kg` for buckling — sign convention is the caller's responsibility).
-/// Bathe-style subspace iteration: B-orthonormalize the current subspace via modified Gram-Schmidt,
-/// solve `K Y = B X`, project both `K` and `B` onto `Y` (using `Yᵀ K Y = Yᵀ (K Y) = Yᵀ (B X)` so the
-/// raw `K` operator is never needed — only its factorization), solve the small dense generalized
-/// eigenproblem via a Cholesky-of-`B_proj` transform to a standard eigenproblem, rotate the subspace
-/// by the recovered eigenvectors, and repeat until the lowest `p` eigenvalues stop changing.
+/// 🧹️ Closes retained batch-adapter payload pages before the next solver grant.
+fn close_batch_payload(mut payload: RetainedJobPayload) {
+    while !payload.terminal_is_empty() {
+        let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+}
+
+/// 🎯️ Finds the lowest `p` generalized eigenpairs through the retained subspace cursor.
 pub fn subspace_iteration(k_factor: &LdltFactor, b: &Csr, n: usize, p: usize, max_iter: usize) -> EigenPairs {
     let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), 0);
     let mut job = SubspaceIterationJob::new(operation, k_factor.clone(), b.clone(), n, p, max_iter);
     let mut preview_sequence = 0;
     loop {
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut preview_sequence);
-        if matches!(job.step(&mut context), StepOutcome::Complete(_)) {
-            return job.solution();
+        match job.step(&mut context) {
+            StepOutcome::Complete(candidate) => {
+                close_batch_payload(candidate.state);
+                close_batch_payload(candidate.output);
+                let solution = job.solution();
+                while !job.terminal_is_empty() {
+                    let _ = job.close_step(1, usize::MAX);
+                }
+                return solution;
+            }
+            StepOutcome::CheckpointReady(checkpoint) => close_batch_payload(checkpoint.state),
+            StepOutcome::PreviewReady(preview) => close_batch_payload(preview),
+            StepOutcome::Fault(fault) => {
+                close_batch_payload(fault.detail);
+                panic!("subspace batch adapter faulted")
+            }
+            _ => {}
         }
     }
 }
@@ -1920,6 +4529,50 @@ mod tests {
         }
     }
 
+    fn restore_ldlt(operation: Operation, payload: RetainedJobPayload) -> Result<LdltJob, NumericalCheckpointFault> {
+        let mut restore = LdltRestoreCursor::new(operation, payload);
+        let mut sequence = 0;
+        for _ in 0..200_000 {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            match restore.step(&mut context) {
+                Ok(Some(job)) => return Ok(job),
+                Ok(None) => {}
+                Err(fault) => {
+                    while !restore.terminal_is_empty() {
+                        let _ = restore.close_step(1, usize::MAX);
+                    }
+                    return Err(fault);
+                }
+            }
+        }
+        Err(NumericalCheckpointFault::Truncated)
+    }
+
+    fn restore_subspace(operation: Operation, payload: RetainedJobPayload) -> Result<SubspaceIterationJob, NumericalCheckpointFault> {
+        let mut restore = SubspaceRestoreCursor::new(operation, payload);
+        let mut sequence = 0;
+        for _ in 0..400_000 {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            match restore.step(&mut context) {
+                Ok(Some(job)) => return Ok(job),
+                Ok(None) => {}
+                Err(fault) => {
+                    while !restore.terminal_is_empty() {
+                        let _ = restore.close_step(1, usize::MAX);
+                    }
+                    return Err(fault);
+                }
+            }
+        }
+        Err(NumericalCheckpointFault::Truncated)
+    }
+
+    fn close_payload(mut payload: RetainedJobPayload) {
+        while !payload.terminal_is_empty() {
+            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+    }
+
     #[test]
     fn pcg_job_is_batch_deterministic_and_matches_reference() {
         let n = 24;
@@ -2018,18 +4671,172 @@ mod tests {
         let mut sequence = 0;
         let checkpoint = loop {
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
-            if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-                break checkpoint.state;
+            match job.step(&mut context) {
+                StepOutcome::CheckpointReady(checkpoint) => break checkpoint.state,
+                StepOutcome::Yield => {}
+                outcome => panic!("unexpected LDLT checkpoint outcome: {outcome:?}"),
             }
         };
-        let mut resumed = LdltJob::from_checkpoint(operation, &checkpoint).expect("ldlt checkpoint restores");
+        let mut resumed = restore_ldlt(operation, checkpoint).expect("retained LDLT checkpoint restores");
         loop {
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
-            if matches!(resumed.step(&mut context), StepOutcome::Complete(_)) {
-                break;
+            match resumed.step(&mut context) {
+                StepOutcome::Complete(candidate) => {
+                    close_payload(candidate.state);
+                    close_payload(candidate.output);
+                    break;
+                }
+                StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
+                _ => {}
             }
         }
         assert_eq!(resumed.factor(), Some(expected));
+        while !InteractiveJob::terminal_is_empty(&job) {
+            let _ = InteractiveJob::close_step(&mut job, 1, usize::MAX);
+        }
+        while !InteractiveJob::terminal_is_empty(&resumed) {
+            let _ = InteractiveJob::close_step(&mut resumed, 1, usize::MAX);
+        }
+    }
+
+    #[test]
+    fn p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_parity() {
+        let n = 18;
+        let edges: Vec<(usize, usize)> = (0..n - 1).map(|index| (index, index + 1)).collect();
+        let matrix = graph_laplacian_plus_identity(n, &edges).to_csc_sym_upper();
+        let reference = ldlt_factor(&matrix).expect("batch reference factor");
+        let operation = test_operation(121);
+        let drive = |fuel: u64| {
+            let mut job = LdltJob::new(operation, matrix.clone(), 1);
+            let mut sequence = 0;
+            loop {
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                match job.step(&mut context) {
+                    StepOutcome::Complete(mut candidate) => {
+                        close_payload(candidate.state);
+                        close_payload(candidate.output);
+                        let factor = job.factor().expect("completed factor owner");
+                        while !InteractiveJob::terminal_is_empty(&job) {
+                            let _ = InteractiveJob::close_step(&mut job, 1, usize::MAX);
+                        }
+                        return factor;
+                    }
+                    StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
+                    StepOutcome::PreviewReady(preview) => close_payload(preview),
+                    _ => {}
+                }
+            }
+        };
+        assert_eq!(drive(1), reference);
+        assert_eq!(drive(2), reference);
+        assert_eq!(drive(4), reference);
+
+        let mut zero_fuel = LdltJob::new(operation, matrix.clone(), 1);
+        let before = zero_fuel.state.clone();
+        let mut sequence = 0;
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert_eq!(zero_fuel.step(&mut context), StepOutcome::Yield);
+        assert!(zero_fuel.state == before);
+
+        let mut deadline = LdltJob::new(operation, matrix.clone(), 1);
+        let before = deadline.state.clone();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert_eq!(deadline.step(&mut context), StepOutcome::Yield);
+        assert!(deadline.state == before);
+
+        let mut stale = LdltJob::new(operation, matrix.clone(), 1);
+        let before = stale.state.clone();
+        let mut context = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert!(matches!(stale.step(&mut context), StepOutcome::Fault(_)));
+        assert!(stale.state == before);
+
+        let mut cancelled = LdltJob::new(operation, matrix, 1);
+        let before = cancelled.state.clone();
+        let token = semio_framework_job::root_cancel_token();
+        semio_framework_async::block_on(token.cancel());
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+        assert_eq!(cancelled.step(&mut context), StepOutcome::Cancelled);
+        assert!(cancelled.state == before);
+
+        let refused = CscSym { n: LDLT_MAXIMUM_ORDER + 1, colptr: vec![0; LDLT_MAXIMUM_ORDER + 2], rowind: Vec::new(), vals: Vec::new() };
+        let mut maximum_plus_one = LdltJob::new(operation, refused, 1);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert!(matches!(maximum_plus_one.step(&mut context), StepOutcome::Fault(_)));
+
+        let mut publishing = LdltJob::new(operation, deadline.state.a.clone(), 1);
+        for _ in 0..200_000 {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = publishing.step(&mut context) {
+                close_payload(checkpoint.state);
+            }
+            if publishing.output_writer.is_some() {
+                break;
+            }
+        }
+        assert!(publishing.output_writer.is_some(), "retained LDLT result writer becomes interruptible before publication");
+        InteractiveJob::begin_close(&mut publishing);
+        for _ in 0..200_000 {
+            if matches!(InteractiveJob::close_step(&mut publishing, 1, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Complete) {
+                break;
+            }
+        }
+        assert!(InteractiveJob::terminal_is_empty(&publishing));
+
+        let checkpoint = loop {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = zero_fuel.step(&mut context) {
+                break checkpoint.state;
+            }
+        };
+        let mut roundtrip = restore_ldlt(operation, checkpoint).expect("LDLT retained checkpoint roundtrip");
+        assert_eq!(roundtrip.state.identity, zero_fuel.state.identity);
+        while !InteractiveJob::terminal_is_empty(&roundtrip) {
+            let _ = InteractiveJob::close_step(&mut roundtrip, 1, usize::MAX);
+        }
+        assert!(matches!(restore_ldlt(operation, RetainedJobPayload::empty(JobPayloadStream::CheckpointState)), Err(NumericalCheckpointFault::Truncated)));
+        let wrong_revision = Operation::new(operation.operation, semio_framework_job::RevisionId(operation.base_revision.0 + 1), operation.generation, operation.seed);
+        let wrong_seed = Operation::new(operation.operation, operation.base_revision, operation.generation, operation.seed + 1);
+        let fresh_checkpoint = |id: u64| {
+            let mut source = LdltJob::new(operation, graph_laplacian_plus_identity(6, &[(0, 1), (1, 2)]).to_csc_sym_upper(), 1);
+            let mut local_sequence = id;
+            loop {
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut local_sequence);
+                if let StepOutcome::CheckpointReady(checkpoint) = source.step(&mut context) {
+                    break checkpoint.state;
+                }
+            }
+        };
+        assert!(matches!(restore_ldlt(wrong_revision, fresh_checkpoint(1)), Err(NumericalCheckpointFault::Stale)));
+        assert!(matches!(restore_ldlt(wrong_seed, fresh_checkpoint(2)), Err(NumericalCheckpointFault::Stale)));
+        let mut interrupted_restore = LdltRestoreCursor::new(operation, fresh_checkpoint(3));
+        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert!(matches!(interrupted_restore.step(&mut restore_context), Ok(None)));
+        while !interrupted_restore.terminal_is_empty() {
+            match interrupted_restore.close_step(1, usize::MAX) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
+                semio_framework_job::InteractiveJobCloseStep::Complete => {}
+                semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("LDLT restore close cannot block"),
+            }
+        }
+
+        for owner in [&mut deadline, &mut stale, &mut cancelled, &mut maximum_plus_one] {
+            while !InteractiveJob::terminal_is_empty(owner) {
+                let _ = InteractiveJob::close_step(owner, 1, usize::MAX);
+            }
+        }
+
+        let mut closing = zero_fuel;
+        let mut close_turns = 0;
+        loop {
+            close_turns += 1;
+            match InteractiveJob::close_step(&mut closing, 1, usize::MAX) {
+                semio_framework_job::InteractiveJobCloseStep::Complete => break,
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
+                semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("fixed LDLT close cannot block"),
+            }
+            assert!(close_turns < 20_000);
+        }
+        assert!(InteractiveJob::terminal_is_empty(&closing));
     }
 
     #[test]
@@ -2048,30 +4855,198 @@ mod tests {
         let mut sequence = 0;
         let expected = loop {
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
-            if matches!(uninterrupted.step(&mut context), StepOutcome::Complete(_)) {
-                break uninterrupted.solution();
+            match uninterrupted.step(&mut context) {
+                StepOutcome::Complete(candidate) => {
+                    close_payload(candidate.state);
+                    close_payload(candidate.output);
+                    break uninterrupted.solution();
+                }
+                StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
+                StepOutcome::PreviewReady(preview) => close_payload(preview),
+                _ => {}
             }
         };
 
         let mut interrupted = SubspaceIterationJob::new(operation, factor, mass, n, 4, 30);
         let checkpoint = loop {
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
-            if let StepOutcome::CheckpointReady(checkpoint) = interrupted.step(&mut context) {
-                break checkpoint.state;
+            match interrupted.step(&mut context) {
+                StepOutcome::CheckpointReady(checkpoint) => break checkpoint.state,
+                StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
+                outcome => panic!("unexpected subspace checkpoint outcome: {outcome:?}"),
             }
         };
-        let mut resumed = SubspaceIterationJob::from_checkpoint(operation, &checkpoint).expect("subspace checkpoint restores");
-        assert_eq!(resumed.checkpoint_bytes(), checkpoint);
+        let mut resumed = restore_subspace(operation, checkpoint).expect("subspace retained checkpoint restores");
+        while !InteractiveJob::terminal_is_empty(&interrupted) {
+            let _ = InteractiveJob::close_step(&mut interrupted, 1, usize::MAX);
+        }
         loop {
             let mut yielded = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
-            assert!(matches!(resumed.step(&mut yielded), StepOutcome::Yield | StepOutcome::CheckpointReady(_)));
+            assert!(matches!(resumed.step(&mut yielded), StepOutcome::Yield));
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
-            if matches!(resumed.step(&mut context), StepOutcome::Complete(_)) {
-                break;
+            match resumed.step(&mut context) {
+                StepOutcome::Complete(candidate) => {
+                    close_payload(candidate.state);
+                    close_payload(candidate.output);
+                    break;
+                }
+                StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
+                StepOutcome::PreviewReady(preview) => close_payload(preview),
+                _ => {}
             }
         }
         assert_eq!(resumed.solution(), expected);
         assert_eq!(resumed.preview().converged_count, 4);
+        while !InteractiveJob::terminal_is_empty(&uninterrupted) {
+            let _ = InteractiveJob::close_step(&mut uninterrupted, 1, usize::MAX);
+        }
+        while !InteractiveJob::terminal_is_empty(&resumed) {
+            let _ = InteractiveJob::close_step(&mut resumed, 1, usize::MAX);
+        }
+    }
+
+    #[test]
+    fn p6h_subspace_cancellation_is_observed_at_every_nested_stage_and_worker_replay_is_exact() {
+        let n = 8;
+        let mut stiffness = Coo::new(n);
+        let mut mass = Coo::new(n);
+        for index in 0..n {
+            stiffness.add(index, index, (index + 1) as f64);
+            mass.add(index, index, 1.0);
+        }
+        let factor = ldlt_factor(&stiffness.to_csc_sym_upper()).expect("factor");
+        let operation = test_operation(122);
+        let mass = mass.to_csr();
+        let drive = |fuel: u64| {
+            let mut replay = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 3);
+            let mut replay_sequence = 0;
+            for _ in 0..200_000 {
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut replay_sequence);
+                match replay.step(&mut context) {
+                    StepOutcome::Complete(candidate) => {
+                        close_payload(candidate.state);
+                        close_payload(candidate.output);
+                        let solution = replay.solution();
+                        while !InteractiveJob::terminal_is_empty(&replay) {
+                            let _ = InteractiveJob::close_step(&mut replay, 1, usize::MAX);
+                        }
+                        return solution;
+                    }
+                    StepOutcome::CheckpointReady(checkpoint) => close_payload(checkpoint.state),
+                    StepOutcome::PreviewReady(preview) => close_payload(preview),
+                    StepOutcome::Fault(fault) => panic!("subspace replay fault: {:?}", fault.detail),
+                    _ => {}
+                }
+            }
+            panic!("subspace replay did not reach a terminal state")
+        };
+        let single = drive(1);
+        assert_eq!(drive(2), single);
+        assert_eq!(drive(4), single);
+
+        for refused_order in [0, SUBSPACE_MAXIMUM_ORDER + 1] {
+            let factor = LdltFactor { n: refused_order, l_cols: vec![Vec::new(); refused_order], d: vec![1.0; refused_order] };
+            let mass = Csr::from_owned_parts(refused_order, vec![0; refused_order + 1], Vec::new(), Vec::new());
+            let mut refused = SubspaceIterationJob::new(operation, factor, mass, refused_order, usize::from(refused_order != 0), 1);
+            let mut refused_sequence = 0;
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut refused_sequence);
+            assert!(matches!(refused.step(&mut context), StepOutcome::Fault(_)));
+            while !InteractiveJob::terminal_is_empty(&refused) {
+                let _ = InteractiveJob::close_step(&mut refused, 1, usize::MAX);
+            }
+        }
+
+        let mut publishing = SubspaceIterationJob::new(operation, factor.clone(), mass.clone(), n, 3, 1);
+        let mut publishing_sequence = 0;
+        for _ in 0..200_000 {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut publishing_sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = publishing.step(&mut context) {
+                close_payload(checkpoint.state);
+            }
+            if publishing.preview_writer.is_some() {
+                break;
+            }
+        }
+        assert!(publishing.preview_writer.is_some(), "retained preview page writer becomes interruptible before publication");
+        InteractiveJob::begin_close(&mut publishing);
+        for _ in 0..200_000 {
+            if matches!(InteractiveJob::close_step(&mut publishing, 1, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Complete) {
+                break;
+            }
+        }
+        assert!(InteractiveJob::terminal_is_empty(&publishing));
+
+        let mut job = SubspaceIterationJob::new(operation, factor, mass, n, 3, 3);
+        let mut seen = std::collections::BTreeSet::new();
+        let mut sequence = 0;
+        for _ in 0..200_000 {
+            if seen.len() == 16 {
+                break;
+            }
+            seen.insert(job.state.work.stage as u8);
+            job.state.checkpoint_due = true;
+            let checkpoint = loop {
+                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
+                    break checkpoint.state;
+                }
+            };
+            let mut cancelled = restore_subspace(operation, checkpoint).expect("stage retained checkpoint");
+            let before = cancelled.state.clone();
+            let token = semio_framework_job::root_cancel_token();
+            semio_framework_async::block_on(token.cancel());
+            let mut cancelled_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+            assert_eq!(cancelled.step(&mut cancelled_context), StepOutcome::Cancelled);
+            assert!(cancelled.state == before);
+            while !InteractiveJob::terminal_is_empty(&cancelled) {
+                let _ = InteractiveJob::close_step(&mut cancelled, 1, usize::MAX);
+            }
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            if let StepOutcome::Fault(fault) = job.step(&mut context) {
+                panic!("subspace stage walk fault: {:?}", fault.detail);
+            }
+        }
+        assert_eq!(seen.len(), 16);
+
+        assert!(matches!(restore_subspace(operation, RetainedJobPayload::empty(JobPayloadStream::CheckpointState)), Err(NumericalCheckpointFault::Truncated)));
+        let wrong_generation = Operation::new(operation.operation, operation.base_revision, semio_framework_job::Generation(operation.generation.0 + 1), operation.seed);
+        job.state.checkpoint_due = true;
+        let checkpoint = loop {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
+                break checkpoint.state;
+            }
+        };
+        assert!(matches!(restore_subspace(wrong_generation, checkpoint), Err(NumericalCheckpointFault::Stale)));
+        job.state.checkpoint_due = true;
+        let checkpoint = loop {
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
+                break checkpoint.state;
+            }
+        };
+        let mut interrupted_restore = SubspaceRestoreCursor::new(operation, checkpoint);
+        let mut restore_context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert!(matches!(interrupted_restore.step(&mut restore_context), Ok(None)));
+        while !interrupted_restore.terminal_is_empty() {
+            match interrupted_restore.close_step(1, usize::MAX) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
+                semio_framework_job::InteractiveJobCloseStep::Complete => {}
+                semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("subspace restore close cannot block"),
+            }
+        }
+        let mut closing = job;
+        let mut close_turns = 0;
+        loop {
+            close_turns += 1;
+            match InteractiveJob::close_step(&mut closing, 1, usize::MAX) {
+                semio_framework_job::InteractiveJobCloseStep::Complete => break,
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items, .. } => assert!(released_items <= 1),
+                semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("fixed subspace close cannot block"),
+            }
+            assert!(close_turns < 200_000);
+        }
+        assert!(InteractiveJob::terminal_is_empty(&closing));
     }
 
     #[test]

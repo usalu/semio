@@ -6175,32 +6175,173 @@ pub mod app {
     // optional_json_to_dsl(args) } }` body — every app keeps its own locally-named wrapper (so call
     // sites never change), delegating to `ActionFactory::new(X_CONTROLLER_ID).action(action, args)`.
 
-    /// 🔄️ M1 (ticket 26/08/17 `design-unified.md`): `ui_contract::UiValue` → `serde_json::Value` —
-    /// the JSON fold for the typed intent bridge, placed at the SDK boundary so the contract remains
-    /// (the contract crate must never depend on `serde_json` — see `UiValue`'s own doc in
-    /// `🦀️action.rs`). Needed by `command_from_intent`'s default bridge: `ActionBinding.args`/the
-    /// trigger's `input` are `UiValue`, but `ArtifactApp::command_from_action` takes `Option<&Value>`.
-    // 🚫️async: E1-adjacent pure structural transform consumed by typed intent dispatch.
-    fn ui_value_to_json(value: &UiValue) -> Value {
-        match value {
-            UiValue::Null => Value::Null,
-            UiValue::Bool(value) => Value::Bool(*value),
-            UiValue::Number(value) => serde_json::Number::from_f64(*value).map(Value::Number).unwrap_or(Value::Null),
-            UiValue::Text(value) => Value::String(value.to_string()),
-            UiValue::List(values) => Value::Array(values.iter().map(|value| ui_value_to_json(&value)).collect()),
-            UiValue::Map(entries) => Value::Object(entries.iter().map(|(key, value)| (key.to_string(), ui_value_to_json(&value))).collect()),
+    pub const UI_COMMAND_VALUE_DEPTH: usize = 64;
+    pub const UI_COMMAND_VALUE_ITEMS: usize = 256;
+
+    enum UiCommandJsonFrame {
+        List { cursor: ui_contract::UiListCursor, output: Vec<Value> },
+        Map { cursor: ui_contract::UiMapCursor, output: serde_json::Map<String, Value>, key: Option<String> },
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum UiCommandJsonStep {
+        MoreWork,
+        Ready,
+        Cancelled,
+        Fault,
+    }
+
+    struct UiCommandJsonProducer {
+        stack: UiFixedList<UiCommandJsonFrame, UI_COMMAND_VALUE_DEPTH>,
+        pending: Option<UiValue>,
+        ready: Option<Value>,
+        fault: Option<Fault>,
+        items: usize,
+    }
+
+    impl UiCommandJsonProducer {
+        fn try_new(value: &UiValue) -> Result<Self, Fault> {
+            let pending = value.credited_clone().ok_or_else(|| {
+                Fault::new(FaultOrigin::Framework, FaultCode::new("app.intent.bridge-admission"), "typed intent value alias admission refused before conversion")
+            })?;
+            Ok(Self { stack: UiFixedList::default(), pending: Some(pending), ready: None, fault: None, items: 0 })
+        }
+
+        fn reject(&mut self, code: &'static str, detail: &'static str) -> UiCommandJsonStep {
+            self.pending = None;
+            self.stack = UiFixedList::default();
+            self.fault = Some(Fault::new(FaultOrigin::Framework, FaultCode::new(code), detail));
+            UiCommandJsonStep::Fault
+        }
+
+        fn accept(&mut self, value: Value) -> UiCommandJsonStep {
+            let Some(items) = self.items.checked_add(1).filter(|items| *items <= UI_COMMAND_VALUE_ITEMS) else {
+                return self.reject("app.intent.bridge-items", "typed intent value exceeds the fixed command item census");
+            };
+            self.items = items;
+            let Some(frame) = self.stack.last_mut() else {
+                self.ready = Some(value);
+                return UiCommandJsonStep::Ready;
+            };
+            match frame {
+                UiCommandJsonFrame::List { output, .. } => {
+                    if output.try_reserve(1).is_err() {
+                        return self.reject("app.intent.bridge-allocation", "typed intent list candidate allocation was refused");
+                    }
+                    output.push(value);
+                }
+                UiCommandJsonFrame::Map { output, key, .. } => {
+                    let Some(key) = key.take() else {
+                        return self.reject("app.intent.bridge-map-key", "typed intent map child lost its retained key");
+                    };
+                    output.insert(key, value);
+                }
+            }
+            UiCommandJsonStep::MoreWork
+        }
+
+        fn drive_one(&mut self, cancelled: bool, deadline_expired: bool) -> UiCommandJsonStep {
+            if self.ready.is_some() {
+                return UiCommandJsonStep::Ready;
+            }
+            if self.fault.is_some() {
+                return UiCommandJsonStep::Fault;
+            }
+            if cancelled {
+                self.pending = None;
+                self.stack = UiFixedList::default();
+                self.fault = Some(Fault::new(FaultOrigin::Framework, FaultCode::new("app.intent.bridge-cancelled"), "typed intent value conversion was cancelled"));
+                return UiCommandJsonStep::Cancelled;
+            }
+            if deadline_expired {
+                return UiCommandJsonStep::MoreWork;
+            }
+            if let Some(value) = self.pending.take() {
+                return match value {
+                    UiValue::Null => self.accept(Value::Null),
+                    UiValue::Bool(value) => self.accept(Value::Bool(value)),
+                    UiValue::Number(value) => self.accept(serde_json::Number::from_f64(value).map(Value::Number).unwrap_or(Value::Null)),
+                    UiValue::Text(value) => self.accept(Value::String(value.to_string())),
+                    UiValue::List(values) => {
+                        let frame = UiCommandJsonFrame::List { cursor: values.cursor(), output: Vec::new() };
+                        match self.stack.try_push(frame) {
+                            Ok(()) => UiCommandJsonStep::MoreWork,
+                            Err(_) => self.reject("app.intent.bridge-depth", "typed intent list exceeds the fixed command depth"),
+                        }
+                    }
+                    UiValue::Map(values) => {
+                        let frame = UiCommandJsonFrame::Map { cursor: values.cursor(), output: serde_json::Map::new(), key: None };
+                        match self.stack.try_push(frame) {
+                            Ok(()) => UiCommandJsonStep::MoreWork,
+                            Err(_) => self.reject("app.intent.bridge-depth", "typed intent map exceeds the fixed command depth"),
+                        }
+                    }
+                };
+            }
+            let Some(frame) = self.stack.last_mut() else {
+                return self.reject("app.intent.bridge-state", "typed intent conversion lost its retained frame");
+            };
+            let completed = match frame {
+                UiCommandJsonFrame::List { cursor, output } => match cursor.next() {
+                    Some(value) => {
+                        self.pending = Some(value);
+                        return UiCommandJsonStep::MoreWork;
+                    }
+                    None => Value::Array(std::mem::take(output)),
+                },
+                UiCommandJsonFrame::Map { cursor, output, key } => match cursor.next() {
+                    Some((next_key, value)) => {
+                        *key = Some(next_key.to_string());
+                        self.pending = Some(value);
+                        return UiCommandJsonStep::MoreWork;
+                    }
+                    None => Value::Object(std::mem::take(output)),
+                },
+            };
+            let _ = self.stack.pop();
+            self.accept(completed)
+        }
+
+        fn take_ready(mut self) -> Result<Value, Self> {
+            self.ready.take().ok_or(self)
+        }
+
+        fn take_fault(&mut self) -> Option<Fault> {
+            self.fault.take()
         }
     }
 
-    /// 🔀️ M1: folds a firing `ActionBinding`'s echoed `args` and the trigger's own `input` into ONE
+    async fn ui_value_to_json_retained(value: &UiValue) -> Result<Value, Fault> {
+        let mut producer = UiCommandJsonProducer::try_new(value)?;
+        loop {
+            match producer.drive_one(false, false) {
+                UiCommandJsonStep::MoreWork => semio_framework_async::yield_once().await,
+                UiCommandJsonStep::Ready => return producer.take_ready().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("app.intent.bridge-publication"), "typed intent candidate was not complete")),
+                UiCommandJsonStep::Cancelled | UiCommandJsonStep::Fault => {
+                    return Err(producer.take_fault().unwrap_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("app.intent.bridge-fault"), "typed intent conversion faulted")));
+                }
+            }
+        }
+    }
+
+    /// 🔀️ M1: advances a firing `ActionBinding`'s echoed `args` and trigger `input` through
+    /// retained fixed-depth cursors into one complete typed-command JSON candidate.
     /// `serde_json::Value` for `ArtifactApp::command_from_action`'s `Option<&Value>` — `input` wins on
     /// key collision when both are JSON objects (the trigger-specific payload is the more specific,
     /// more recent datum); otherwise a present `input` replaces `args` wholesale (a scalar `input`,
     /// e.g. `Trigger::Delta`'s signed step count, has no field to merge INTO). `None` when neither is
     /// set, matching `command_from_action`'s existing `None` (no-args) call shape.
     // 🚫️async: E1-adjacent pure structural transform consumed by typed intent dispatch.
-    fn merge_ui_values(args: Option<&UiValue>, input: Option<&UiValue>) -> Option<Value> {
-        match (args.map(ui_value_to_json), input.map(ui_value_to_json)) {
+    async fn merge_ui_values(args: Option<&UiValue>, input: Option<&UiValue>) -> Result<Option<Value>, Fault> {
+        let args = match args {
+            Some(value) => Some(ui_value_to_json_retained(value).await?),
+            None => None,
+        };
+        let input = match input {
+            Some(value) => Some(ui_value_to_json_retained(value).await?),
+            None => None,
+        };
+        Ok(match (args, input) {
             (None, None) => None,
             (Some(args), None) => Some(args),
             (None, Some(input)) => Some(input),
@@ -6209,7 +6350,7 @@ pub mod app {
                 Some(Value::Object(args))
             }
             (Some(_), Some(input)) => Some(input),
-        }
+        })
     }
 
     /// 🎯️ Constructs [`ActionId`]s bound to one controller id (renamed `scope`, per
@@ -6238,10 +6379,8 @@ pub mod app {
     //#endregion 🔖️ActionFactory
 
     //#region 🧪️MergeUiValuesTests
-    /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): unit coverage for `ui_value_to_json`/
-    /// `merge_ui_values` — the fold `command_from_intent`'s default bridge depends on, kept separate
-    /// from the intent-dispatch integration tests below so a fold regression fails here directly
-    /// instead of being masked by a dispatch-level assertion.
+    /// 🎯️ M1 retained typed-command bridge fixtures, kept separate from intent dispatch so
+    /// cursor, cancellation, deadline, and depth regressions fail at their owner boundary.
     #[cfg(test)]
     mod merge_ui_values_tests {
         use super::*;
@@ -6266,32 +6405,32 @@ pub mod app {
             builder.finish()
         }
 
-        #[test]
-        fn every_ui_value_shape_folds_to_the_matching_json_shape() {
-            assert_eq!(ui_value_to_json(&UiValue::Null), Value::Null);
-            assert_eq!(ui_value_to_json(&UiValue::Bool(true)), Value::Bool(true));
-            assert_eq!(ui_value_to_json(&UiValue::Number(-2.5)), serde_json::json!(-2.5));
-            assert_eq!(ui_value_to_json(&UiValue::Text(ui_text("hi"))), Value::String("hi".into()));
-            assert_eq!(ui_value_to_json(&UiValue::List(ui_list([UiValue::Number(1.0), UiValue::Bool(false)]))), serde_json::json!([1.0, false]));
+        #[semio_framework_async_macros::async_test]
+        async fn retained_ui_value_bridge_advances_every_shape_to_the_matching_json_candidate() {
+            assert_eq!(ui_value_to_json_retained(&UiValue::Null).await.expect("retained null"), Value::Null);
+            assert_eq!(ui_value_to_json_retained(&UiValue::Bool(true)).await.expect("retained bool"), Value::Bool(true));
+            assert_eq!(ui_value_to_json_retained(&UiValue::Number(-2.5)).await.expect("retained number"), serde_json::json!(-2.5));
+            assert_eq!(ui_value_to_json_retained(&UiValue::Text(ui_text("hi"))).await.expect("retained text"), Value::String("hi".into()));
+            assert_eq!(ui_value_to_json_retained(&UiValue::List(ui_list([UiValue::Number(1.0), UiValue::Bool(false)]))).await.expect("retained list"), serde_json::json!([1.0, false]));
             let mut map = std::collections::BTreeMap::new();
             map.insert("id".to_string(), UiValue::Text(ui_text("w1")));
-            assert_eq!(ui_value_to_json(&UiValue::Map(ui_map(map))), serde_json::json!({ "id": "w1" }));
+            assert_eq!(ui_value_to_json_retained(&UiValue::Map(ui_map(map))).await.expect("retained map"), serde_json::json!({ "id": "w1" }));
         }
 
-        #[test]
-        fn merge_ui_values_returns_none_when_neither_side_is_set() {
-            assert_eq!(merge_ui_values(None, None), None);
+        #[semio_framework_async_macros::async_test]
+        async fn merge_ui_values_returns_none_when_neither_side_is_set() {
+            assert_eq!(merge_ui_values(None, None).await.expect("empty merge"), None);
         }
 
-        #[test]
-        fn merge_ui_values_falls_back_to_whichever_single_side_is_set() {
-            assert_eq!(merge_ui_values(Some(&UiValue::Text(ui_text("a"))), None), Some(serde_json::json!("a")));
-            assert_eq!(merge_ui_values(None, Some(&UiValue::Number(3.0))), Some(serde_json::json!(3.0)));
+        #[semio_framework_async_macros::async_test]
+        async fn merge_ui_values_falls_back_to_whichever_single_side_is_set() {
+            assert_eq!(merge_ui_values(Some(&UiValue::Text(ui_text("a"))), None).await.expect("args merge"), Some(serde_json::json!("a")));
+            assert_eq!(merge_ui_values(None, Some(&UiValue::Number(3.0))).await.expect("input merge"), Some(serde_json::json!(3.0)));
         }
 
         /// 🔀️ The decided merge rule: `input` wins on key collision when both are objects.
-        #[test]
-        fn merge_ui_values_prefers_input_on_key_collision_between_two_maps() {
+        #[semio_framework_async_macros::async_test]
+        async fn merge_ui_values_prefers_input_on_key_collision_between_two_maps() {
             let mut args_map = std::collections::BTreeMap::new();
             args_map.insert("value".to_string(), UiValue::Number(1.0));
             args_map.insert("scope".to_string(), UiValue::Text(ui_text("keep")));
@@ -6301,16 +6440,50 @@ pub mod app {
                 Some(&UiValue::Map(ui_map(args_map))),
                 Some(&UiValue::Map(ui_map(input_map))),
             )
+            .await
+            .expect("retained merge")
             .expect("both sides set");
             assert_eq!(merged, serde_json::json!({ "value": 2.0, "scope": "keep" }));
         }
 
         /// 🔀️ A scalar `input` has no field to merge INTO — it replaces `args` wholesale (e.g.
         /// `Trigger::Delta`'s signed step count next to a non-object `args`).
-        #[test]
-        fn merge_ui_values_replaces_a_non_object_args_wholesale_when_input_is_also_set() {
-            let merged = merge_ui_values(Some(&UiValue::Text(ui_text("stale"))), Some(&UiValue::Number(-2.0)));
+        #[semio_framework_async_macros::async_test]
+        async fn merge_ui_values_replaces_a_non_object_args_wholesale_when_input_is_also_set() {
+            let merged = merge_ui_values(Some(&UiValue::Text(ui_text("stale"))), Some(&UiValue::Number(-2.0))).await.expect("retained merge");
             assert_eq!(merged, Some(serde_json::json!(-2.0)));
+        }
+
+        #[test]
+        fn retained_ui_value_bridge_cancel_and_deadline_preserve_the_original_owner() {
+            let original = UiValue::List(ui_list([UiValue::Text(ui_text("kept"))]));
+            let mut producer = UiCommandJsonProducer::try_new(&original).expect("credited alias");
+            assert_eq!(producer.drive_one(false, true), UiCommandJsonStep::MoreWork);
+            assert_eq!(producer.items, 0);
+            assert_eq!(producer.drive_one(true, false), UiCommandJsonStep::Cancelled);
+            let UiValue::List(values) = original else { panic!("original list") };
+            assert_eq!(values.len(), 1);
+        }
+
+        #[test]
+        fn retained_ui_value_bridge_rejects_depth_plus_one_without_consuming_the_original() {
+            let mut original = UiValue::Null;
+            for _ in 0..=UI_COMMAND_VALUE_DEPTH {
+                original = UiValue::List(ui_list([original]));
+            }
+            let mut producer = UiCommandJsonProducer::try_new(&original).expect("credited root alias");
+            let mut opportunities = 0;
+            loop {
+                opportunities += 1;
+                match producer.drive_one(false, false) {
+                    UiCommandJsonStep::MoreWork => continue,
+                    UiCommandJsonStep::Fault => break,
+                    step => panic!("unexpected bridge step {step:?}"),
+                }
+            }
+            assert!(opportunities > UI_COMMAND_VALUE_DEPTH);
+            let UiValue::List(values) = original else { panic!("original list") };
+            assert_eq!(values.len(), 1);
         }
     }
     //#endregion 🧪️MergeUiValuesTests
@@ -11642,7 +11815,8 @@ pub mod app {
                     ),
                 ));
             }
-            Self::command_from_action(&intent.action.name, merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).as_ref()).await
+            let merged = merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?;
+            Self::command_from_action(&intent.action.name, merged.as_ref()).await
         }
         /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
         async fn config_spec() -> ConfigSpec {
@@ -11922,7 +12096,7 @@ pub mod app {
     /// Send` is a TYPE bound (R3) — it constrains the state an app enum's variants hold, not the
     /// futures its async methods return, which stay `?Send` per the guest ruling.
     #[dyn_enum]
-    pub trait PluginApp: Send {
+    pub trait PluginApp: Send + 'static {
         /// 🪪️ Binds the host's live instance identity before any operation-scoped work starts.
         async fn bind_instance_id(&mut self, _instance_id: u32) {}
         /// 🧹 Releases one synchronous, bounded close unit. Implementations must never suspend and
@@ -12945,6 +13119,10 @@ pub mod app {
             Self { inner: std::sync::Arc::new(std::sync::Mutex::new(None)) }
         }
 
+        pub fn has_mounted_consumer(&self) -> bool {
+            std::sync::Arc::strong_count(&self.inner) > 1
+        }
+
         pub fn complete(&self, emit: Result<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, Fault>, ephemeral: EphemeralEmit<A>) -> Result<(), Fault> {
             let mut value = self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion authority is busy or poisoned"))?;
             if value.is_some() {
@@ -13067,6 +13245,8 @@ pub mod app {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome;
         fn request_cancel(&mut self);
         fn take_candidate(&mut self) -> Option<ArtifactStore<P, Mutation>>;
+        fn begin_close(&mut self);
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
         fn terminal_is_empty(&self) -> bool;
     }
 
@@ -13131,6 +13311,37 @@ pub mod app {
                 }),
                 None => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"artifact-store.initializer-owner-missing".to_vec() }),
             }
+        }
+
+        fn begin_close(&mut self) {
+            self.request_cancel_now();
+            if let Some(authority) = self.authority.as_mut() {
+                authority.begin_close();
+            }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.begin_close();
+            let Some(authority) = self.authority.as_mut() else {
+                return if self.terminal_handoff { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Blocked };
+            };
+            match authority.close_step(maximum_items, maximum_bytes) {
+                Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                Ok(PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+                Ok(PluginCloseStep::Complete) if authority.terminal_is_empty() => {
+                    if maximum_items == 0 {
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    drop(self.authority.take());
+                    self.terminal_handoff = true;
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+                }
+                Ok(PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            ArtifactStoreInitializationJob::terminal_is_empty(self)
         }
     }
 
@@ -13536,7 +13747,7 @@ pub mod app {
     /// 📡️ Result of advancing one submitted media export by at most one worker slice.
     #[derive(Clone, Debug)]
     pub enum ArtifactMediaExportPoll {
-        Running { applied_progress: u64, checkpoint: Option<Vec<u8>> },
+        Running { applied_progress: u64, checkpoint_available: bool },
         Complete(ArtifactMediaExportResult),
         Cancelled,
         Failed(String),
@@ -13583,6 +13794,14 @@ pub mod app {
         fn terminal_is_empty(&self) -> bool {
             self.state.try_lock().is_ok_and(|state| state.inner.is_none())
         }
+
+        fn begin_close(&mut self) {
+            if let Ok(mut state) = self.state.try_lock() {
+                if let Some(inner) = state.inner.as_mut() {
+                    inner.begin_close();
+                }
+            }
+        }
     }
 
     impl semio_framework_job::InteractiveJob for ArtifactReservedToolJob {
@@ -13592,6 +13811,22 @@ pub mod app {
                 Err(std::sync::TryLockError::WouldBlock) => semio_framework_job::StepOutcome::Yield,
                 Err(std::sync::TryLockError::Poisoned(_)) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"reserved job authority is poisoned".to_vec() }),
             }
+        }
+
+        fn begin_close(&mut self) {
+            ArtifactReservedToolJob::begin_close(self);
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            match ArtifactReservedToolJob::close_step(self, maximum_items, maximum_bytes) {
+                Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                Ok(PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+                Ok(PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            ArtifactReservedToolJob::terminal_is_empty(self)
         }
     }
 
@@ -13612,11 +13847,12 @@ pub mod app {
                 stage: FrameworkReservedStage,
                 contract: semio_framework::ToolExecutionContract,
                 operation: Option<semio_framework_job::Operation>,
+                closing: bool,
             }
 
             impl $job {
                 fn new(raw: Vec<u8>, total_items: usize) -> Self {
-                    Self { raw, envelope_cursor: 0, item_cursor: 0, total_items, stage: FrameworkReservedStage::Admitted, contract: semio_framework::ToolExecutionContract::resumable($raw, $items, $work, $output, 7_500, 1, 1), operation: None }
+                    Self { raw, envelope_cursor: 0, item_cursor: 0, total_items, stage: FrameworkReservedStage::Admitted, contract: semio_framework::ToolExecutionContract::resumable($raw, $items, $work, $output, 7_500, 1, 1), operation: None, closing: false }
                 }
 
                 fn checkpoint(&self) -> semio_framework_job::Checkpoint {
@@ -13669,6 +13905,28 @@ pub mod app {
                             semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.checkpoint().state, output: self.raw.clone() })
                         }
                     }
+                }
+
+                fn begin_close(&mut self) {
+                    self.closing = true;
+                }
+
+                fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+                    self.closing = true;
+                    if !self.raw.is_empty() {
+                        if maximum_items == 0 || maximum_bytes == 0 {
+                            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                        }
+                        let released_bytes = self.raw.len().min(maximum_bytes);
+                        self.raw.truncate(self.raw.len() - released_bytes);
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+                    }
+                    self.operation = None;
+                    semio_framework_job::InteractiveJobCloseStep::Complete
+                }
+
+                fn terminal_is_empty(&self) -> bool {
+                    self.closing && self.raw.is_empty() && self.operation.is_none()
                 }
             }
 
@@ -13739,7 +13997,8 @@ pub mod app {
         cursor: usize,
         stage: FrameworkConfigurationBinaryStage,
         operation: Option<semio_framework_job::Operation>,
-        decoded: std::sync::Arc<std::sync::Mutex<Option<Result<ArtifactCommand<A::ConfigMutation>, Fault>>>>,
+        decoded: std::mem::ManuallyDrop<Option<std::sync::Arc<std::sync::Mutex<Option<Result<ArtifactCommand<A::ConfigMutation>, Fault>>>>>>,
+        closing: bool,
     }
 
     impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurationBinaryJob<A> {
@@ -13764,12 +14023,43 @@ pub mod app {
                 FrameworkConfigurationBinaryStage::Decode => {
                     cx.set_stage("framework-configuration-binary-decode");
                     let decoded = <ArtifactCommand<A::ConfigMutation> as ::protocol::OpBinary>::decode_op(&self.raw).map_err(|error| error.into_fault());
-                    *self.decoded.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(decoded);
+                    if let Some(output) = self.decoded.as_ref() {
+                        *output.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(decoded);
+                    }
                     self.stage = FrameworkConfigurationBinaryStage::Complete;
                     semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.cursor.to_le_bytes().to_vec(), applied_progress: self.cursor.saturating_add(1) as u64 })
                 }
                 FrameworkConfigurationBinaryStage::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.cursor.to_le_bytes().to_vec(), output: self.raw.clone() }),
             }
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.closing = true;
+            if !self.raw.is_empty() {
+                if maximum_items == 0 || maximum_bytes == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                let released_bytes = self.raw.len().min(maximum_bytes);
+                self.raw.truncate(self.raw.len() - released_bytes);
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            if self.decoded.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.decoded.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            self.operation = None;
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.raw.is_empty() && self.decoded.is_none() && self.operation.is_none()
         }
     }
 
@@ -14167,7 +14457,6 @@ pub mod app {
     }
 
     struct FrameworkReservedCommitPermit {
-        output: Vec<u8>,
         operation: semio_framework_job::Operation,
         lease: ToolCancellationLease,
     }
@@ -14187,26 +14476,52 @@ pub mod app {
         port: String,
         operation: semio_framework_job::Operation,
         contract: semio_framework::ToolExecutionContract,
-        session: Option<semio_framework_job::WorkerJobSession<semio_framework::ErasedToolJob>>,
+        session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
+        session_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::ErasedToolJob>>,
         closing_job: Option<ArtifactReservedToolJob>,
-        pending_step: Option<semio_framework_async::oneshot::Receiver<semio_framework_job::StepOutcome>>,
+        retained_outcome: Option<semio_framework_job::StepOutcome>,
         output_credit: ArtifactMediaExportCredit,
         output_chunks: ArtifactOutputChunks,
         completion: ArtifactMediaExportCompletion,
         lease: ToolCancellationLease,
-        checkpoint: Option<Vec<u8>>,
+        checkpoint_available: bool,
         applied_progress: u64,
         close_stage: ActiveMediaExportCloseStage,
     }
 
     impl ActiveMediaExport {
+        fn running_poll(&self) -> ArtifactMediaExportPoll {
+            ArtifactMediaExportPoll::Running { applied_progress: self.applied_progress, checkpoint_available: self.checkpoint_available }
+        }
+
+        fn retire_nonterminal_outcome(&mut self) -> Result<PluginCloseStep, Fault> {
+            let Some(outcome) = self.retained_outcome.as_mut() else {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            };
+            if outcome.is_terminal() {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-terminal-retirement"), "terminal media outcome cannot resume its mounted job"));
+            }
+            let step = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if outcome.terminal_is_empty() {
+                self.retained_outcome = None;
+                let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-session-missing"), "media outcome handback lost its mounted session"))?;
+                session.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-resume-contention"), "media outcome handback is contended"))?;
+            }
+            Ok(match step {
+                semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                semio_framework_job::JobPayloadCloseStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+            })
+        }
+
         fn terminal_is_empty(&self) -> Result<bool, Fault> {
             Ok(self.close_stage == ActiveMediaExportCloseStage::Complete
                 && self.session.is_none()
+                && self.session_rejected.is_none()
+                && self.retained_outcome.as_ref().is_none_or(semio_framework_job::StepOutcome::terminal_is_empty)
                 && self.closing_job.as_ref().is_none_or(ArtifactReservedToolJob::terminal_is_empty)
                 && self.output_chunks.chunks_remaining() == 0
                 && self.completion.terminal_is_empty()?
-                && self.checkpoint.is_none())
+                && !self.checkpoint_available)
         }
 
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
@@ -14216,30 +14531,48 @@ pub mod app {
             match self.close_stage {
                 ActiveMediaExportCloseStage::Live => {
                     self.lease.cancel_token().cancel_now();
+                    if let Some(session) = self.session.as_mut() {
+                        session.begin_close();
+                    }
                     self.close_stage = ActiveMediaExportCloseStage::AwaitWorker;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
-                ActiveMediaExportCloseStage::AwaitWorker => match self.pending_step.as_mut().map(|pending| pending.try_recv()) {
-                    Some(Err(semio_framework_async::oneshot::TryRecvError::Empty)) => Ok(PluginCloseStep::Blocked { reason: "media export worker step has not released its exact session ownership" }),
-                    Some(Ok(_)) | Some(Err(semio_framework_async::oneshot::TryRecvError::Closed)) | None => {
-                        self.pending_step = None;
-                        let Some(session) = self.session.take() else {
-                            self.close_stage = ActiveMediaExportCloseStage::DisposeJob;
-                            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-                        };
-                        match session.try_into_job() {
-                            Ok(job) => {
-                                drop(job);
-                                self.close_stage = ActiveMediaExportCloseStage::DisposeJob;
-                                Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                            }
-                            Err(session) => {
-                                self.session = Some(session);
-                                Ok(PluginCloseStep::Blocked { reason: "media export worker retains a session share after its terminal signal" })
-                            }
+                ActiveMediaExportCloseStage::AwaitWorker => {
+                    if let Some(outcome) = self.retained_outcome.as_mut() {
+                        let step = outcome.close_step(maximum_items.min(1), maximum_bytes);
+                        if outcome.terminal_is_empty() {
+                            self.retained_outcome = None;
                         }
+                        return Ok(match step {
+                            semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                            semio_framework_job::JobPayloadCloseStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                        });
                     }
-                },
+                    if let Some(rejected) = self.session_rejected.as_mut() {
+                        let step = rejected.close_step(maximum_items.min(1), maximum_bytes);
+                        if rejected.terminal_is_empty() {
+                            self.session_rejected = None;
+                        }
+                        return Ok(match step {
+                            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                            semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "media export rejected session close is blocked" },
+                            semio_framework_job::InteractiveJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                        });
+                    }
+                    if let Some(session) = self.session.as_mut() {
+                        let step = session.close_step(maximum_items.min(1), maximum_bytes);
+                        if session.terminal_is_empty() {
+                            self.session = None;
+                        }
+                        return Ok(match step {
+                            semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                            semio_framework_job::WorkerJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "media export mounted session close is blocked" },
+                            semio_framework_job::WorkerJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                        });
+                    }
+                    self.close_stage = ActiveMediaExportCloseStage::DisposeJob;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
                 ActiveMediaExportCloseStage::DisposeJob => {
                     let Some(job) = self.closing_job.as_mut() else {
                         self.close_stage = ActiveMediaExportCloseStage::DrainChunks;
@@ -14268,7 +14601,7 @@ pub mod app {
                 }
                 ActiveMediaExportCloseStage::DrainCompletion => match self.completion.close_step(maximum_items, maximum_bytes)? {
                     PluginCloseStep::Complete => {
-                        self.checkpoint = None;
+                        self.checkpoint_available = false;
                         self.close_stage = ActiveMediaExportCloseStage::Complete;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
@@ -14561,10 +14894,6 @@ pub mod app {
     }
 
     impl FrameworkReservedCommitPermit {
-        fn output(&self) -> &[u8] {
-            &self.output
-        }
-
         async fn is_cancelled(&self) -> bool {
             self.lease.is_cancelled().await
         }
@@ -14572,6 +14901,38 @@ pub mod app {
         fn finish(self) {
             self.lease.finish();
         }
+    }
+
+    /// 🫧️ Yields one mounted plugin-job transition back to the host executor.
+    async fn plugin_job_yield_once() {
+        let mut yielded = false;
+        std::future::poll_fn(move |cx| {
+            if yielded {
+                std::task::Poll::Ready(())
+            } else {
+                yielded = true;
+                cx.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+        })
+        .await
+    }
+
+    /// 🧾️ Compares a retained fixed-page payload without materializing a whole-buffer adapter.
+    fn retained_payload_eq_slice(payload: &semio_framework_job::RetainedJobPayload, expected: &[u8]) -> bool {
+        if payload.len() != expected.len() {
+            return false;
+        }
+        let mut cursor = 0usize;
+        let mut reader = payload.reader();
+        while let Some(page) = reader.read_page(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            let end = cursor.saturating_add(page.len());
+            if expected.get(cursor..end) != Some(page) {
+                return false;
+            }
+            cursor = end;
+        }
+        reader.terminal_is_empty() && cursor == expected.len()
     }
 
     struct AdmittedToolCommand {
@@ -14736,24 +15097,25 @@ pub mod app {
     struct BoundedFirstStepCommandJob<A: ArtifactApp> {
         operation: Option<semio_framework_job::Operation>,
         app_instance_id: u32,
-        parent_document_id: String,
+        parent_document_id: Option<String>,
         canonical_base_revision: [u8; 32],
-        command: Option<Box<A::Command>>,
-        snapshot: std::sync::Arc<A::Snapshot>,
-        config: std::sync::Arc<A::Config>,
-        history: std::sync::Arc<HistoryView>,
-        children: ChildContentView,
-        draft: Box<A::Draft>,
-        interaction_state: protocol::InteractionState,
-        interaction_hover: InteractionHoverState,
-        peer_presence: std::sync::Arc<PeerPresenceRoot>,
-        presence_local: Box<A::Presence>,
-        presence_peers: std::sync::Arc<store::PresencePeersRoot<A::Presence>>,
-        transient: Box<A::Transient>,
+        command: Option<std::sync::Arc<A::Command>>,
+        snapshot: Option<std::sync::Arc<A::Snapshot>>,
+        config: Option<std::sync::Arc<A::Config>>,
+        history: Option<std::sync::Arc<HistoryView>>,
+        children: Option<std::sync::Arc<ChildContentView>>,
+        draft: Option<std::sync::Arc<A::Draft>>,
+        interaction_state: Option<std::sync::Arc<protocol::InteractionState>>,
+        interaction_hover: Option<std::sync::Arc<InteractionHoverState>>,
+        peer_presence: Option<std::sync::Arc<PeerPresenceRoot>>,
+        presence_local: Option<std::sync::Arc<A::Presence>>,
+        presence_peers: Option<std::sync::Arc<store::PresencePeersRoot<A::Presence>>>,
+        transient: Option<std::sync::Arc<A::Transient>>,
         contract: semio_framework::ToolExecutionContract,
         decoded_items: usize,
         work_units: u64,
-        output: std::sync::Arc<std::sync::Mutex<Option<BoundedFirstStepCommandJobOutput<A>>>>,
+        output: Option<std::sync::Arc<std::sync::Mutex<Option<BoundedFirstStepCommandJobOutput<A>>>>>,
+        closing: bool,
     }
 
     impl<A: ArtifactApp> semio_framework_job::InteractiveJob for BoundedFirstStepCommandJob<A> {
@@ -14770,14 +15132,30 @@ pub mod app {
             cx.consume_fuel(self.work_units);
             let operation = self.operation.expect("tool job factory assigns operation identity");
             debug_assert_eq!(operation.operation, cx.operation());
-            let command = self.command.take().expect("app command job is terminal after one bounded reducer step");
-            let context = AppOperationContext::from_operation(self.app_instance_id, self.parent_document_id.clone(), operation, self.canonical_base_revision);
-            let doc = resolve_ready(ArtifactView::with_dispatch_context(self.snapshot.as_ref(), self.history.as_ref(), self.children.clone(), context));
-            let cfg = ConfigView { snapshot: self.config.as_ref() };
-            let draft = DraftView { snapshot: self.draft.as_ref() };
-            let presence = PresenceView { local: self.presence_local.as_ref(), peers: PresencePeersView { root: self.presence_peers.as_ref() } };
-            let transient = TransientView { snapshot: self.transient.as_ref() };
-            let interaction = InteractionView { state: &self.interaction_state, hover: &self.interaction_hover, peers: self.peer_presence.as_ref() };
+            let (Some(parent_document_id), Some(command), Some(snapshot), Some(config), Some(history), Some(children), Some(draft), Some(interaction_state), Some(interaction_hover), Some(peer_presence), Some(presence_local), Some(presence_peers), Some(transient)) = (
+                self.parent_document_id.as_ref(),
+                self.command.as_ref(),
+                self.snapshot.as_ref(),
+                self.config.as_ref(),
+                self.history.as_ref(),
+                self.children.as_ref(),
+                self.draft.as_ref(),
+                self.interaction_state.as_ref(),
+                self.interaction_hover.as_ref(),
+                self.peer_presence.as_ref(),
+                self.presence_local.as_ref(),
+                self.presence_peers.as_ref(),
+                self.transient.as_ref(),
+            ) else {
+                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+            };
+            let context = AppOperationContext::from_operation(self.app_instance_id, parent_document_id.clone(), operation, self.canonical_base_revision);
+            let doc = resolve_ready(ArtifactView::with_dispatch_context(snapshot.as_ref(), history.as_ref(), children.as_ref().clone(), context));
+            let cfg = ConfigView { snapshot: config.as_ref() };
+            let draft = DraftView { snapshot: draft.as_ref() };
+            let presence = PresenceView { local: presence_local.as_ref(), peers: PresencePeersView { root: presence_peers.as_ref() } };
+            let transient = TransientView { snapshot: transient.as_ref() };
+            let interaction = InteractionView { state: interaction_state.as_ref(), hover: interaction_hover.as_ref(), peers: peer_presence.as_ref() };
             let started = std::time::Instant::now();
             let ephemeral = resolve_ready(A::ephemeral(command.as_ref(), &doc, &cfg, &presence, &transient));
             let mut emit = resolve_ready(A::handle(command.as_ref(), &doc, &cfg, &interaction, &draft, &EngineHandles::empty()));
@@ -14792,7 +15170,9 @@ pub mod app {
                 emit = Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.step-overrun"), format!("bounded command exceeded its {} µs contract", self.contract.max_step_micros)));
             }
             let fault_detail = emit.as_ref().err().map(|fault| fault.message.as_bytes().to_vec());
-            *self.output.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactToolCompletionValue::Emit(emit, ephemeral));
+            if let Some(output) = self.output.as_ref() {
+                *output.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactToolCompletionValue::Emit(emit, ephemeral));
+            }
             match fault_detail {
                 Some(detail) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail }),
                 None => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
@@ -14800,6 +15180,67 @@ pub mod app {
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
                 }),
             }
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.closing = true;
+            if let Some(parent) = self.parent_document_id.as_ref() {
+                if maximum_items == 0 || maximum_bytes < parent.capacity() {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                let released_bytes = parent.capacity();
+                drop(self.parent_document_id.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            macro_rules! release_arc {
+                ($field:ident) => {
+                    if self.$field.is_some() {
+                        if maximum_items == 0 {
+                            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                        }
+                        drop(self.$field.take());
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                };
+            }
+            release_arc!(command);
+            release_arc!(snapshot);
+            release_arc!(config);
+            release_arc!(history);
+            release_arc!(children);
+            release_arc!(draft);
+            release_arc!(interaction_state);
+            release_arc!(interaction_hover);
+            release_arc!(peer_presence);
+            release_arc!(presence_local);
+            release_arc!(presence_peers);
+            release_arc!(transient);
+            release_arc!(output);
+            self.operation = None;
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing
+                && self.parent_document_id.is_none()
+                && self.command.is_none()
+                && self.snapshot.is_none()
+                && self.config.is_none()
+                && self.history.is_none()
+                && self.children.is_none()
+                && self.draft.is_none()
+                && self.interaction_state.is_none()
+                && self.interaction_hover.is_none()
+                && self.peer_presence.is_none()
+                && self.presence_local.is_none()
+                && self.presence_peers.is_none()
+                && self.transient.is_none()
+                && self.output.is_none()
+                && self.operation.is_none()
         }
     }
 
@@ -14876,8 +15317,10 @@ pub mod app {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         cancel: semio_framework_job::CancelToken,
-        session: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSession<store::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
-        pending: std::mem::ManuallyDrop<Option<semio_framework_async::oneshot::Receiver<semio_framework_job::StepOutcome>>>,
+        session: std::mem::ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<store::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
+        session_rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<store::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
+        retained_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>,
+        terminal_state: Option<ActiveArtifactEnvelopeDecodeState>,
         rejected: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
         completion: std::sync::Arc<store::ArtifactEnvelopeDecodeCompletion>,
         completed_close_requested: bool,
@@ -14898,12 +15341,18 @@ pub mod app {
                 config: semio_framework_job::BatchDriveConfig { site: "artifact_envelope_decode", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS },
                 now_ms: semio_framework_job::default_now_ms,
             };
+            let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(decode, params) {
+                Ok(session) => (Some(session), None),
+                Err(rejected) => (None, Some(rejected)),
+            };
             Self {
                 operation,
                 generation,
                 cancel,
-                session: std::mem::ManuallyDrop::new(Some(semio_framework_job::WorkerJobSession::new(decode, params))),
-                pending: std::mem::ManuallyDrop::new(None),
+                session: std::mem::ManuallyDrop::new(session),
+                session_rejected: std::mem::ManuallyDrop::new(session_rejected),
+                retained_outcome: std::mem::ManuallyDrop::new(None),
+                terminal_state: None,
                 rejected: std::mem::ManuallyDrop::new(None),
                 completion,
                 completed_close_requested: false,
@@ -14917,26 +15366,13 @@ pub mod app {
                 generation,
                 cancel: semio_framework_job::CancelToken::root_now(),
                 session: std::mem::ManuallyDrop::new(None),
-                pending: std::mem::ManuallyDrop::new(None),
+                session_rejected: std::mem::ManuallyDrop::new(None),
+                retained_outcome: std::mem::ManuallyDrop::new(None),
+                terminal_state: None,
                 rejected: std::mem::ManuallyDrop::new(Some(rejected)),
                 completion,
                 completed_close_requested: false,
                 state: ActiveArtifactEnvelopeDecodeState::ClosingFault,
-            }
-        }
-
-        fn recover_terminal_job(&mut self) -> bool {
-            let Some(session) = self.session.take() else { return true };
-            match session.try_into_job() {
-                Ok(job) if job.terminal_is_empty() => {
-                    drop(job);
-                    true
-                }
-                Ok(_job) => panic!("terminal envelope worker returned a nonempty decode authority"),
-                Err(session) => {
-                    *self.session = Some(session);
-                    false
-                }
             }
         }
 
@@ -14963,6 +15399,18 @@ pub mod app {
         ) -> Result<PluginCloseStep, Fault> {
             if maximum_items == 0 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(rejected) = self.session_rejected.as_mut() {
+                return match rejected.close_step(maximum_items.min(1), maximum_bytes) {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "envelope worker admission rejection is temporarily blocked" }),
+                    semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
+                        drop(self.session_rejected.take());
+                        self.state = ActiveArtifactEnvelopeDecodeState::ClosingFault;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    semio_framework_job::InteractiveJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-rejected-false-terminal"), "rejected envelope worker session reported Complete without terminal-empty authority")),
+                };
             }
             if let Some(rejected) = self.rejected.as_mut() {
                 let step = rejected.close_step(maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(plugin_sdk_fault)?;
@@ -14993,38 +15441,50 @@ pub mod app {
             if matches!(self.state, ActiveArtifactEnvelopeDecodeState::Ready | ActiveArtifactEnvelopeDecodeState::Complete) {
                 return Ok(if self.state == ActiveArtifactEnvelopeDecodeState::Complete { PluginCloseStep::Complete } else { PluginCloseStep::Blocked { reason: "decoded envelope awaits exact consumer publication" } });
             }
-            if let Some(pending) = self.pending.as_mut() {
-                return match pending.try_recv() {
-                    Err(semio_framework_async::oneshot::TryRecvError::Empty) => Ok(PluginCloseStep::Blocked { reason: "envelope worker step is pending" }),
-                    Err(semio_framework_async::oneshot::TryRecvError::Closed) => {
-                        drop(self.pending.take());
-                        self.cancel.cancel_now();
-                        self.state = ActiveArtifactEnvelopeDecodeState::ClosingFault;
+            if let Some(outcome) = self.retained_outcome.as_mut() {
+                return match outcome.close_step(maximum_items.min(1), maximum_bytes) {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "envelope worker outcome close is temporarily blocked" }),
+                    semio_framework_job::InteractiveJobCloseStep::Complete if outcome.terminal_is_empty() => {
+                        drop(self.retained_outcome.take());
+                        if self.terminal_state.is_none() {
+                            self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.resume"), "envelope worker outcome lost its exact resume authority"))?;
+                        }
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    Ok(outcome) => {
-                        drop(self.pending.take());
-                        if !outcome.is_terminal() {
-                            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-                        }
-                        if !self.recover_terminal_job() {
-                            return Ok(PluginCloseStep::Blocked { reason: "terminal envelope worker still owns its bounded task shell" });
-                        }
-                        self.state = match outcome {
-                            semio_framework_job::StepOutcome::Complete(_) if self.completion.ticket().is_some() => ActiveArtifactEnvelopeDecodeState::Ready,
-                            semio_framework_job::StepOutcome::Cancelled => ActiveArtifactEnvelopeDecodeState::ClosingCancelled,
-                            _ => ActiveArtifactEnvelopeDecodeState::ClosingFault,
-                        };
-                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                    }
+                    semio_framework_job::InteractiveJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-false-terminal"), "envelope worker outcome reported Complete without terminal-empty payload")),
                 };
             }
-            let session = self.session.as_ref().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?;
-            match session.try_submit_step(pool, semio_framework_async::Lane::Interactive) {
-                Ok(pending) => {
-                    *self.pending = Some(pending);
+            if let Some(target) = self.terminal_state {
+                let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "terminal envelope decode lost its retained worker session"))?;
+                session.begin_close();
+                return match session.close_step(maximum_items.min(1), maximum_bytes) {
+                    semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::WorkerJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "terminal envelope worker close is temporarily blocked" }),
+                    semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
+                        drop(self.session.take());
+                        self.terminal_state = None;
+                        self.state = target;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    semio_framework_job::WorkerJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-false-terminal"), "terminal envelope worker session reported Complete without terminal-empty authority")),
+                };
+            }
+            let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?;
+            match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
+                Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                    let outcome = session.take_checked_out_outcome().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-missing"), "envelope worker checkout lost its exact outcome"))?;
+                    self.terminal_state = match &outcome {
+                        semio_framework_job::StepOutcome::Complete(_) if self.completion.ticket().is_some() => Some(ActiveArtifactEnvelopeDecodeState::Ready),
+                        semio_framework_job::StepOutcome::Cancelled => Some(ActiveArtifactEnvelopeDecodeState::ClosingCancelled),
+                        semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Complete(_) => Some(ActiveArtifactEnvelopeDecodeState::ClosingFault),
+                        _ => None,
+                    };
+                    *self.retained_outcome = Some(outcome);
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
+                Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Idle) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+                Ok(_) => Ok(PluginCloseStep::Blocked { reason: "envelope worker awaits its mounted wake" }),
                 Err(_) => Ok(PluginCloseStep::Blocked { reason: "envelope worker lane is saturated or contended" }),
             }
         }
@@ -15042,14 +15502,14 @@ pub mod app {
 
         fn terminal_is_empty(&self, completed: &store::ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>) -> bool {
             let output_terminal = self.completion.ticket().is_none_or(|ticket| completed.ticket_reclaimed(ticket));
-            self.state == ActiveArtifactEnvelopeDecodeState::Complete && self.session.is_none() && self.pending.is_none() && self.rejected.is_none() && output_terminal
+            self.state == ActiveArtifactEnvelopeDecodeState::Complete && self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.rejected.is_none() && output_terminal
         }
     }
 
     impl<P, Mutation> Drop for ActiveArtifactEnvelopeDecode<P, Mutation> {
         fn drop(&mut self) {
             assert!(
-                self.session.is_none() && self.pending.is_none() && self.rejected.is_none() && self.state == ActiveArtifactEnvelopeDecodeState::Complete,
+                self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.rejected.is_none() && self.state == ActiveArtifactEnvelopeDecodeState::Complete,
                 "active envelope decode reached Drop before its worker and rejected owner were terminal empty"
             );
         }
@@ -15114,8 +15574,10 @@ pub mod app {
         generation: semio_framework_job::Generation,
         cancel: semio_framework_job::CancelToken,
         cancel_signal: std::sync::Arc<std::sync::atomic::AtomicBool>,
-        session: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>,
-        pending: std::mem::ManuallyDrop<Option<semio_framework_async::oneshot::Receiver<semio_framework_job::StepOutcome>>>,
+        session: std::mem::ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>,
+        session_rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ArtifactStoreInitializationJob<P, Mutation>>>>,
+        retained_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>,
+        terminal_target: Option<ActiveArtifactStoreReplacementState>,
         retained_store: std::mem::ManuallyDrop<Option<ArtifactStore<P, Mutation>>>,
         retained_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<P, Mutation>>>>>,
         committed: bool,
@@ -15128,16 +15590,6 @@ pub mod app {
         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
-        fn session_params(&self) -> semio_framework_job::BatchJobParams {
-            semio_framework_job::BatchJobParams {
-                operation: self.operation,
-                generation: self.generation,
-                cancel: semio_framework_job::CancelToken::root_now(),
-                config: semio_framework_job::BatchDriveConfig { site: "artifact_store_replacement", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS },
-                now_ms: semio_framework_job::default_now_ms,
-            }
-        }
-
         fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, job: ArtifactStoreInitializationJob<P, Mutation>) -> Self {
             let cancel = semio_framework_job::CancelToken::root_now();
             let cancel_signal = job.cancel_signal();
@@ -15148,67 +15600,25 @@ pub mod app {
                 config: semio_framework_job::BatchDriveConfig { site: "artifact_store_replacement", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS },
                 now_ms: semio_framework_job::default_now_ms,
             };
+            let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
+                Ok(session) => (Some(session), None),
+                Err(rejected) => (None, Some(rejected)),
+            };
             Self {
                 operation,
                 generation,
                 cancel,
                 cancel_signal,
-                session: std::mem::ManuallyDrop::new(Some(semio_framework_job::WorkerJobSession::new(job, params))),
-                pending: std::mem::ManuallyDrop::new(None),
+                session: std::mem::ManuallyDrop::new(session),
+                session_rejected: std::mem::ManuallyDrop::new(session_rejected),
+                retained_outcome: std::mem::ManuallyDrop::new(None),
+                terminal_target: None,
                 retained_store: std::mem::ManuallyDrop::new(None),
                 retained_disposer: std::mem::ManuallyDrop::new(None),
                 committed: false,
                 faulted: false,
                 state: ActiveArtifactStoreReplacementState::Initializing,
             }
-        }
-
-        fn retain_initializer_for_close(&mut self, job: ArtifactStoreInitializationJob<P, Mutation>) {
-            job.request_cancel_now();
-            self.request_cancel();
-            *self.session = Some(semio_framework_job::WorkerJobSession::new(job, self.session_params()));
-            self.faulted = true;
-            self.state = ActiveArtifactStoreReplacementState::Initializing;
-        }
-
-        fn recover_job(&mut self, outcome: semio_framework_job::StepOutcome) -> Result<(), Fault> {
-            let Some(session) = self.session.take() else {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained worker session"));
-            };
-            let mut job = match session.try_into_job() {
-                Ok(job) => job,
-                Err(session) => {
-                    *self.session = Some(session);
-                    return Ok(());
-                }
-            };
-            match outcome {
-                semio_framework_job::StepOutcome::Complete(_) => {
-                    let Some(candidate) = job.take_candidate() else {
-                        self.retain_initializer_for_close(job);
-                        return Ok(());
-                    };
-                    if !job.terminal_is_empty() {
-                        *self.retained_store = Some(candidate);
-                        self.retain_initializer_for_close(job);
-                        return Ok(());
-                    }
-                    drop(job);
-                    *self.retained_store = Some(candidate);
-                    self.state = ActiveArtifactStoreReplacementState::CandidateReady;
-                }
-                semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => {
-                    if !job.release_terminal_failure() || !job.terminal_is_empty() {
-                        self.retain_initializer_for_close(job);
-                        return Ok(());
-                    }
-                    drop(job);
-                    self.faulted = true;
-                    self.state = if self.retained_store.is_some() { ActiveArtifactStoreReplacementState::CandidateReady } else { ActiveArtifactStoreReplacementState::Complete };
-                }
-                _ => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-nonterminal-recovery"), "store initializer recovery received a nonterminal outcome")),
-            }
-            Ok(())
         }
 
         fn request_cancel(&self) {
@@ -15220,30 +15630,73 @@ pub mod app {
             if self.state != ActiveArtifactStoreReplacementState::Initializing {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
-            if let Some(pending) = self.pending.as_mut() {
-                return match pending.try_recv() {
-                    Err(semio_framework_async::oneshot::TryRecvError::Empty) => Ok(PluginCloseStep::Blocked { reason: "store initializer worker step is pending" }),
-                    Err(semio_framework_async::oneshot::TryRecvError::Closed) => {
-                        drop(self.pending.take());
-                        self.request_cancel();
+            if let Some(rejected) = self.session_rejected.as_mut() {
+                return match rejected.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "store initializer admission rejection is temporarily blocked" }),
+                    semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
+                        drop(self.session_rejected.take());
                         self.faulted = true;
-                        Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+                        self.state = ActiveArtifactStoreReplacementState::Complete;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    Ok(outcome) => {
-                        drop(self.pending.take());
-                        if outcome.is_terminal() {
-                            self.recover_job(outcome)?;
+                    semio_framework_job::InteractiveJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-rejected-false-terminal"), "store initializer rejection reported Complete without terminal-empty authority")),
+                };
+            }
+            if let Some(outcome) = self.retained_outcome.as_mut() {
+                return match outcome.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "store initializer outcome close is temporarily blocked" }),
+                    semio_framework_job::InteractiveJobCloseStep::Complete if outcome.terminal_is_empty() => {
+                        drop(self.retained_outcome.take());
+                        if self.terminal_target.is_none() {
+                            self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before resume"))?.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-resume"), "store initializer lost its exact resume authority"))?;
                         }
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
+                    semio_framework_job::InteractiveJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-false-terminal"), "store initializer outcome reported Complete without terminal-empty payload")),
                 };
             }
-            let session = self.session.as_ref().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
-            match session.try_submit_step(pool, semio_framework_async::Lane::Interactive) {
-                Ok(pending) => {
-                    *self.pending = Some(pending);
+            if let Some(target) = self.terminal_target {
+                let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "terminal store initializer lost its retained session"))?;
+                session.begin_close();
+                return match session.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                    semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::WorkerJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "terminal store initializer close is temporarily blocked" }),
+                    semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
+                        drop(self.session.take());
+                        self.terminal_target = None;
+                        self.state = target;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    semio_framework_job::WorkerJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-false-terminal"), "store initializer session reported Complete without terminal-empty authority")),
+                };
+            }
+            let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
+            match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
+                Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                    let terminal_kind = session.checked_out_outcome().map(|outcome| match outcome {
+                        semio_framework_job::StepOutcome::Complete(_) => 1,
+                        semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => 2,
+                        _ => 0,
+                    }).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome"))?;
+                    if terminal_kind == 1 {
+                        let candidate = session.checked_out_job_mut().and_then(ArtifactStoreInitializationJob::take_candidate).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-candidate-missing"), "completed store initializer lost its exact candidate"))?;
+                        *self.retained_store = Some(candidate);
+                        self.terminal_target = Some(ActiveArtifactStoreReplacementState::CandidateReady);
+                    } else if terminal_kind == 2 {
+                        let released = session.checked_out_job_mut().is_some_and(ArtifactStoreInitializationJob::release_terminal_failure);
+                        if !released {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-failure-retirement"), "failed store initializer did not reach terminal-empty authority"));
+                        }
+                        self.faulted = true;
+                        self.terminal_target = Some(if self.retained_store.is_some() { ActiveArtifactStoreReplacementState::CandidateReady } else { ActiveArtifactStoreReplacementState::Complete });
+                    }
+                    *self.retained_outcome = session.take_checked_out_outcome();
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
+                Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Idle) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+                Ok(_) => Ok(PluginCloseStep::Blocked { reason: "store initializer awaits its mounted wake" }),
                 Err(_) => Ok(PluginCloseStep::Blocked { reason: "store initializer worker lane is saturated or contended" }),
             }
         }
@@ -15272,14 +15725,14 @@ pub mod app {
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.state == ActiveArtifactStoreReplacementState::Complete && self.session.is_none() && self.pending.is_none() && self.retained_store.is_none() && self.retained_disposer.is_none()
+            self.state == ActiveArtifactStoreReplacementState::Complete && self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.retained_store.is_none() && self.retained_disposer.is_none()
         }
     }
 
     impl<P, Mutation> Drop for ActiveArtifactStoreReplacement<P, Mutation> {
         fn drop(&mut self) {
             assert!(
-                self.state == ActiveArtifactStoreReplacementState::Complete && self.session.is_none() && self.pending.is_none() && self.retained_store.is_none() && self.retained_disposer.is_none(),
+                self.state == ActiveArtifactStoreReplacementState::Complete && self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.retained_store.is_none() && self.retained_disposer.is_none(),
                 "artifact store replacement reached Drop before initializer/candidate/displaced-store ownership was terminal empty"
             );
         }
@@ -15611,31 +16064,92 @@ pub mod app {
             };
             let cores = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
             let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
-            let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
-                Ok(session) => (Some(session), None),
-                Err(rejected) => (None, Some(rejected)),
+            let mut session = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
+                Ok(session) => session,
+                Err(mut rejected) => {
+                    loop {
+                        plugin_job_yield_once().await;
+                        match rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                            semio_framework_job::InteractiveJobCloseStep::Pending { .. } | semio_framework_job::InteractiveJobCloseStep::Blocked => {}
+                            semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => break,
+                            semio_framework_job::InteractiveJobCloseStep::Complete => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.admission-false-terminal"), "framework reserved worker admission rejection did not reach terminal-empty authority")),
+                        }
+                    }
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.admission-capacity"), "framework reserved worker session capacity is exhausted"));
+                }
             };
             let mut checkpoint_progress = 0u64;
-            let candidate = loop {
-                let outcome = session.step(&pool, semio_framework_async::Lane::Interactive).await.map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.worker-closed"), "framework reserved worker result channel closed"))?;
-                if let Some(elapsed_us) = semio_framework_job::watchdog_step_overrun_us(operation_id, generation) {
-                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.step-overrun"), format!("framework route '{verb}' exceeded the 8 ms step ceiling ({elapsed_us} µs)")));
+            loop {
+                plugin_job_yield_once().await;
+                let poll = session.pump_one(&pool, semio_framework_async::Lane::Interactive).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.worker-pump"), "framework reserved mounted worker transition was rejected"))?;
+                if !matches!(poll, semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) {
+                    continue;
                 }
-                match outcome {
-                    semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) => {}
+                let mut outcome = session.take_checked_out_outcome().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.outcome-missing"), "framework reserved mounted worker checkout lost its exact outcome"))?;
+                let terminal = outcome.is_terminal();
+                let mut protocol_fault = None;
+                let terminal_kind = match &outcome {
+                    semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) => 0,
                     semio_framework_job::StepOutcome::CheckpointReady(checkpoint) => {
                         if checkpoint.applied_progress < checkpoint_progress || checkpoint.state.len() > proof.contract().max_output_bytes {
-                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.checkpoint"), "framework reserved checkpoint is non-monotone or oversized"));
+                            protocol_fault = Some("interactive-job.checkpoint");
                         }
                         checkpoint_progress = checkpoint.applied_progress;
+                        0
                     }
-                    semio_framework_job::StepOutcome::Complete(candidate) => break candidate,
-                    semio_framework_job::StepOutcome::Cancelled => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{verb}' was cancelled"))),
-                    semio_framework_job::StepOutcome::Fault(fault) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.fault"), String::from_utf8_lossy(&fault.detail).into_owned())),
+                    semio_framework_job::StepOutcome::Complete(candidate) => {
+                        if candidate.output.len() > proof.contract().max_output_bytes || !retained_payload_eq_slice(&candidate.output, raw) {
+                            protocol_fault = Some("interactive-job.output-envelope");
+                        }
+                        1
+                    }
+                    semio_framework_job::StepOutcome::Cancelled => 2,
+                    semio_framework_job::StepOutcome::Fault(_) => 3,
+                };
+                let overrun = semio_framework_job::watchdog_step_overrun_us(operation_id, generation).is_some();
+                loop {
+                    plugin_job_yield_once().await;
+                    match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                        semio_framework_job::JobPayloadCloseStep::Pending { .. } => {}
+                        semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => break,
+                        semio_framework_job::JobPayloadCloseStep::Complete => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.outcome-false-terminal"), "framework reserved outcome did not reach terminal-empty payload authority")),
+                    }
                 }
-            };
-            if candidate.output.len() > proof.contract().max_output_bytes || cancellation_lease.is_cancelled().await {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled-or-output"), format!("framework route '{verb}' was cancelled or exceeded its output cap")));
+                if !terminal {
+                    if let Some(code) = protocol_fault {
+                        cancellation_lease.cancel_token().cancel_now();
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new(code), format!("framework route '{verb}' returned an invalid retained checkpoint")));
+                    }
+                    if overrun {
+                        cancellation_lease.cancel_token().cancel_now();
+                    }
+                    session.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.resume"), "framework reserved outcome lost its exact resume authority"))?;
+                    continue;
+                }
+                session.begin_close();
+                loop {
+                    plugin_job_yield_once().await;
+                    match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                        semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Blocked => {}
+                        semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => break,
+                        semio_framework_job::WorkerJobCloseStep::Complete => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.session-false-terminal"), "framework reserved session did not reach terminal-empty authority")),
+                    }
+                }
+                if overrun {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.step-overrun"), format!("framework route '{verb}' exceeded the 8 ms step ceiling")));
+                }
+                if let Some(code) = protocol_fault {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new(code), format!("framework route '{verb}' did not preserve its admitted envelope")));
+                }
+                match terminal_kind {
+                    1 => break,
+                    2 => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{verb}' was cancelled"))),
+                    3 => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.fault"), format!("framework route '{verb}' returned a retained fault"))),
+                    _ => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.terminal-kind"), "framework reserved session closed without a terminal outcome")),
+                }
+            }
+            if cancellation_lease.is_cancelled().await {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled-or-output"), format!("framework route '{verb}' was cancelled before commit")));
             }
             let live_revision_bytes = self.store.content_revision().await;
             let live_revision = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision_bytes[..8].try_into().expect("revision lane width")));
@@ -15643,7 +16157,7 @@ pub mod app {
             if !matches!(semio_framework_job::validate_commit(&operation, live_revision, live_generation), semio_framework_job::CommitValidation::Accepted) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.stale"), format!("framework route '{verb}' completed against a stale revision or generation")));
             }
-            Ok(FrameworkReservedCommitPermit { output: candidate.output, operation, lease: cancellation_lease })
+            Ok(FrameworkReservedCommitPermit { operation, lease: cancellation_lease })
         }
 
         async fn validate_framework_reserved_commit(&self, verb: &str, permit: &FrameworkReservedCommitPermit) -> Result<(), Fault> {
@@ -17864,13 +18378,14 @@ pub mod app {
                     operation,
                     contract: proof.contract(),
                     session: None,
+                    session_rejected: None,
                     closing_job: None,
-                    pending_step: None,
+                    retained_outcome: None,
                     output_credit: output_credit.clone(),
                     output_chunks: output_chunks.clone(),
                     completion: completion.clone(),
                     lease,
-                    checkpoint: None,
+                    checkpoint_available: false,
                     applied_progress: 0,
                     close_stage: ActiveMediaExportCloseStage::Live,
                 },
@@ -17916,18 +18431,9 @@ pub mod app {
             };
             {
                 let active = self.media_closures.get_mut(operation_id.0).expect("pre-admitted media construction owner");
-                active.session = Some(session);
+                active.session = session;
+                active.session_rejected = session_rejected;
             }
-            let pool =
-                semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
-            let pending_step = self
-                .media_closures
-                .get(operation_id.0)
-                .and_then(|active| active.session.as_ref())
-                .expect("constructed media session is persistently owned")
-                .try_submit_step(&pool, semio_framework_async::Lane::Interactive)
-                .map_err(|kind| fault(format!("media export worker admission failed closed: {kind:?}")))?;
-            self.media_closures.get_mut(operation_id.0).expect("pre-admitted media construction owner").pending_step = Some(pending_step);
             let active = self.media_closures.remove(operation_id.0).expect("constructed media owner remains exact through submission");
             self.media_exports.insert_admitted(operation_id.0, active);
             self.current_media_export = Some(operation_id.0);
@@ -17961,40 +18467,43 @@ pub mod app {
                 semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
             #[cfg(target_arch = "wasm32")]
             pool.pump(semio_framework_job::default_now_ms());
-            let outcome = match active.pending_step.as_mut().map(|pending| pending.try_recv()) {
-                Some(Ok(outcome)) => {
-                    active.pending_step = None;
-                    outcome
-                }
-                Some(Err(semio_framework_async::oneshot::TryRecvError::Empty)) => {
-                    let poll = ArtifactMediaExportPoll::Running { applied_progress: active.applied_progress, checkpoint: active.checkpoint.clone() };
-                    self.media_exports.insert_admitted(handle.operation_id.0, active);
-                    return Ok(poll);
-                }
-                None => {
-                    if let Some(session) = active.session.as_ref() {
-                        active.pending_step = session.try_submit_step(&pool, semio_framework_async::Lane::Interactive).ok();
+            if active.retained_outcome.is_none() {
+                if let Some(rejected) = active.session_rejected.as_mut() {
+                    let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    if rejected.terminal_is_empty() {
+                        active.session_rejected = None;
+                        return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export mounted session capacity is exhausted".into()));
                     }
-                    let poll = ArtifactMediaExportPoll::Running { applied_progress: active.applied_progress, checkpoint: active.checkpoint.clone() };
+                    let poll = active.running_poll();
                     self.media_exports.insert_admitted(handle.operation_id.0, active);
                     return Ok(poll);
                 }
-                Some(Err(semio_framework_async::oneshot::TryRecvError::Closed)) => {
-                    let port = active.port.clone();
-                    self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export worker result channel closed".into()))?;
-                    return Err(MediaError::Payload(port, "media export worker result channel closed".into()));
+                let pump = active.session.as_mut().map(|session| session.pump_one(&pool, semio_framework_async::Lane::Interactive));
+                match pump {
+                    Some(Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal)) => {
+                        active.retained_outcome = active.session.as_mut().and_then(semio_framework_job::MountedWorkerJobSession::take_checked_out_outcome);
+                    }
+                    Some(Ok(_)) | Some(Err(_)) => {
+                        let poll = active.running_poll();
+                        self.media_exports.insert_admitted(handle.operation_id.0, active);
+                        return Ok(poll);
+                    }
+                    None => return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export lost its mounted session".into())),
                 }
+            }
+            let Some(outcome) = active.retained_outcome.take() else {
+                return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export mounted outcome changed during one host turn".into()));
             };
             if let Some(elapsed_us) = semio_framework_job::watchdog_step_overrun_us(active.operation.operation, active.operation.generation) {
                 return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed(format!("media export exceeded the 8 ms step ceiling ({elapsed_us} µs)")));
             }
             match outcome {
-                semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) => {
-                    let Some(session) = active.session.as_ref() else {
-                        return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export session entered disposal before terminal polling".into()));
-                    };
-                    active.pending_step = session.try_submit_step(&pool, semio_framework_async::Lane::Interactive).ok();
-                    let poll = ArtifactMediaExportPoll::Running { applied_progress: active.applied_progress, checkpoint: active.checkpoint.clone() };
+                outcome @ (semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_)) => {
+                    active.retained_outcome = Some(outcome);
+                    if let Err(error) = active.retire_nonterminal_outcome() {
+                        return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed(error.message));
+                    }
+                    let poll = active.running_poll();
                     self.media_exports.insert_admitted(handle.operation_id.0, active);
                     Ok(poll)
                 }
@@ -18003,12 +18512,12 @@ pub mod app {
                         return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export checkpoint is non-monotone or oversized".into()));
                     }
                     active.applied_progress = checkpoint.applied_progress;
-                    active.checkpoint = Some(checkpoint.state);
-                    let Some(session) = active.session.as_ref() else {
-                        return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export session entered disposal before checkpoint polling".into()));
-                    };
-                    active.pending_step = session.try_submit_step(&pool, semio_framework_async::Lane::Interactive).ok();
-                    let poll = ArtifactMediaExportPoll::Running { applied_progress: active.applied_progress, checkpoint: active.checkpoint.clone() };
+                    active.checkpoint_available = true;
+                    active.retained_outcome = Some(semio_framework_job::StepOutcome::CheckpointReady(checkpoint));
+                    if let Err(error) = active.retire_nonterminal_outcome() {
+                        return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed(error.message));
+                    }
+                    let poll = active.running_poll();
                     self.media_exports.insert_admitted(handle.operation_id.0, active);
                     Ok(poll)
                 }
@@ -18036,13 +18545,17 @@ pub mod app {
                         return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed(error.message));
                     }
                     active.lease.finish_in_place();
+                    active.retained_outcome = Some(semio_framework_job::StepOutcome::Complete(candidate));
                     if self.current_media_export == Some(handle.operation_id.0) {
                         self.current_media_export = None;
                     }
                     self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Complete(result))
                 }
                 semio_framework_job::StepOutcome::Cancelled => self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Cancelled),
-                semio_framework_job::StepOutcome::Fault(fault) => self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed(String::from_utf8_lossy(&fault.detail).into_owned())),
+                semio_framework_job::StepOutcome::Fault(fault) => {
+                    active.retained_outcome = Some(semio_framework_job::StepOutcome::Fault(fault));
+                    self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export job faulted".into()))
+                }
             }
         }
 
@@ -18122,9 +18635,6 @@ pub mod app {
                 }
                 _ => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-reserved"), format!("unknown framework reserved route '{action}'"))),
             };
-            if permit.output() != raw {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.checkpoint-loss"), format!("framework route '{action}' did not preserve its admitted envelope losslessly")));
-            }
             self.validate_framework_reserved_commit(action, &permit).await?;
             let result = if HISTORY_ACTION_IDS.contains(&action) {
                 self.commit_framework_history_route(action, args, meta, &permit).await
@@ -18432,24 +18942,25 @@ pub mod app {
                     let job = BoundedFirstStepCommandJob::<A> {
                         operation: None,
                         app_instance_id: meta.instance_id,
-                        parent_document_id: parent_document_id.clone(),
+                        parent_document_id: Some(parent_document_id.clone()),
                         canonical_base_revision,
-                        command: Some(command),
-                        snapshot,
-                        config,
-                        history,
-                        children,
-                        draft: Box::new(draft_snapshot),
-                        interaction_state,
-                        interaction_hover,
-                        peer_presence,
-                        presence_local: Box::new(presence_local),
-                        presence_peers,
-                        transient: Box::new(transient),
+                        command: Some(std::sync::Arc::from(command)),
+                        snapshot: Some(snapshot),
+                        config: Some(config),
+                        history: Some(history),
+                        children: Some(std::sync::Arc::new(children)),
+                        draft: Some(std::sync::Arc::new(draft_snapshot)),
+                        interaction_state: Some(std::sync::Arc::new(interaction_state)),
+                        interaction_hover: Some(std::sync::Arc::new(interaction_hover)),
+                        peer_presence: Some(peer_presence),
+                        presence_local: Some(std::sync::Arc::new(presence_local)),
+                        presence_peers: Some(presence_peers),
+                        transient: Some(std::sync::Arc::new(transient)),
                         contract: admission.proof.contract(),
                         decoded_items: admission.decoded_items,
                         work_units: admission.decoded_items as u64,
-                        output: completion.inner.clone(),
+                        output: Some(completion.inner.clone()),
+                        closing: false,
                     };
                     semio_framework::ToolOperationSpec::new(self.tool_job_controller_id.clone(), verb.clone(), payload_schema_id, job, operation)
                 }
@@ -18544,9 +19055,6 @@ pub mod app {
             let raw = serde_json::to_vec(&(port, media)).map_err(|error| Fault::from(error.to_string()))?;
             let (job, completion) = self.build_artifact_reserved_media_job(port, media, raw.clone(), meta).await?;
             let permit = self.run_framework_reserved_job("import-media", &raw, 1, job, meta, None).await?;
-            if permit.output() != raw {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.checkpoint-loss"), "media import did not preserve its admitted envelope losslessly"));
-            }
             self.validate_framework_reserved_commit("import-media", &permit).await?;
             let (emit, ephemeral) = completion.take_emit()?.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-output"), format!("media import port '{port}' completed without producer output")))?;
             let emit = emit?;
@@ -18564,11 +19072,15 @@ pub mod app {
         async fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let raw = command_bytes.to_vec();
             let decoded = std::sync::Arc::new(std::sync::Mutex::new(None));
-            let job = FrameworkConfigurationBinaryJob::<A> { raw: raw.clone(), cursor: 0, stage: FrameworkConfigurationBinaryStage::Envelope, operation: None, decoded: decoded.clone() };
+            let job = FrameworkConfigurationBinaryJob::<A> {
+                raw: raw.clone(),
+                cursor: 0,
+                stage: FrameworkConfigurationBinaryStage::Envelope,
+                operation: None,
+                decoded: std::mem::ManuallyDrop::new(Some(decoded.clone())),
+                closing: false,
+            };
             let permit = self.run_framework_reserved_job("configuration-binary", &raw, 1, job, meta, None).await?;
-            if permit.output() != raw {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.checkpoint-loss"), "configuration binary dispatch did not preserve its admitted envelope losslessly"));
-            }
             self.validate_framework_reserved_commit("configuration-binary", &permit).await?;
             let command = decoded
                 .lock()
@@ -20525,16 +21037,33 @@ pub mod app {
         }
     }
 
-    /// 🆔️ One row-scoped action button for `TableWindowKit::render_rows` — dispatches `action` (a
-    /// normal `ui_wgpu::wgpu::ActionDescriptor`, already carrying whatever args its handler needs, e.g. the row's own
-    /// id) on click; rendered via the same `TableCell::Buttons`/`ui_wgpu::wgpu::UiTreeItemAction` primitive every
-    /// hand-built `TableScene` table already uses (`sourcing::curate`'s pool/curated windows, `remodel`'s
-    /// report, …), see `🖱️ui/…/🎯️targets/🧊️wgpu/🦀️component.rs`.
-    #[derive(Clone, Debug, PartialEq)]
+    pub const TABLE_WINDOW_COLUMNS: usize = 32;
+    pub const TABLE_WINDOW_ROWS: usize = 32;
+    pub const TABLE_WINDOW_CELLS: usize = 32;
+    pub const TABLE_WINDOW_ROW_ACTIONS: usize = 32;
+    pub const TABLE_WINDOW_RETIRE_SLOTS: usize = 64;
+
+    pub type TableColumns = UiFixedList<UiText, TABLE_WINDOW_COLUMNS>;
+    pub type TableRows = UiFixedList<TableRow, TABLE_WINDOW_ROWS>;
+    pub type TableRowCells = UiFixedList<UiText, TABLE_WINDOW_CELLS>;
+    pub type TableRowActions = UiFixedList<TableRowAction, TABLE_WINDOW_ROW_ACTIONS>;
+
+    /// 🆔️ One retained UI-native row action; no renderer descriptor crosses the SDK boundary.
+    #[derive(Debug, PartialEq)]
     pub struct TableRowAction {
-        pub icon_id: IconName,
-        pub label: Option<ui_wgpu::wgpu::Label>,
-        pub action: ui_wgpu::wgpu::ActionDescriptor,
+        icon: UiText,
+        label: Label,
+        binding: ActionBinding,
+    }
+
+    impl TableRowAction {
+        pub fn new(icon: UiText, label: Label, action: (ActionId, Option<UiValue>)) -> Self {
+            Self { icon, label, binding: ActionBinding { trigger: Trigger::Activate, action: action.0, args: action.1, capability: None } }
+        }
+
+        fn close_step(&mut self) -> bool {
+            self.binding.args.take().is_none()
+        }
     }
 
     /// 🆔️ One identified, actionable row for `TableWindowKit::render_rows` — `id` reaches the React DOM
@@ -20542,11 +21071,37 @@ pub mod app {
     /// `"{surfaceId}.row.{id}"` (`Scenes/component.rs`'s `render_table` reads the same `row.get("id")`);
     /// `cells` are plain text, positional to `TableRowsView::columns`; `actions` render as one trailing
     /// "actions" column of row buttons.
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub struct TableRow {
-        pub id: String,
-        pub cells: Vec<String>,
-        pub actions: Vec<TableRowAction>,
+        id: UiText,
+        cells: TableRowCells,
+        actions: TableRowActions,
+    }
+
+    impl TableRow {
+        pub fn new(id: UiText) -> Self {
+            Self { id, cells: TableRowCells::default(), actions: TableRowActions::default() }
+        }
+
+        pub fn try_push_cell(&mut self, cell: UiText) -> Result<(), UiText> {
+            self.cells.try_push(cell)
+        }
+
+        pub fn try_push_action(&mut self, action: TableRowAction) -> Result<(), TableRowAction> {
+            self.actions.try_push(action)
+        }
+
+        fn close_step(&mut self) -> bool {
+            if let Some(mut action) = self.actions.pop() {
+                let _ = action.close_step();
+                return false;
+            }
+            if self.cells.pop().is_some() {
+                return false;
+            }
+            self.id = UiText::default();
+            true
+        }
     }
 
     /// 📊️ Identified-rows sibling of `TableView` — same flat columns, but each row is a `TableRow`
@@ -20555,51 +21110,206 @@ pub mod app {
     /// STUDIOS) needs. `TableWindowKit::render_rows` builds it from the exact same `TableScene`/
     /// `TableCell`/`table_row_json` primitives `TableWindowKit::render` already delegates to; `TableView`
     /// and `render` are untouched so every existing caller keeps compiling unchanged.
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    struct TableRowsRetireKey {
+        slot: usize,
+        epoch: u64,
+    }
+
+    #[derive(Debug, Default, PartialEq)]
+    struct RetiredTableRowsView {
+        columns: TableColumns,
+        rows: TableRows,
+        actions_label: UiText,
+        closing_row: Option<TableRow>,
+    }
+
+    impl RetiredTableRowsView {
+        fn close_step(&mut self) -> bool {
+            if let Some(row) = self.closing_row.as_mut() {
+                if !row.close_step() {
+                    return false;
+                }
+                self.closing_row = None;
+                return false;
+            }
+            if let Some(row) = self.rows.pop() {
+                self.closing_row = Some(row);
+                return false;
+            }
+            if self.columns.pop().is_some() {
+                return false;
+            }
+            self.actions_label = UiText::default();
+            true
+        }
+    }
+
+    #[derive(Debug, Default)]
+    struct TableRowsRetireSlot {
+        epoch: u64,
+        reserved: bool,
+        owner: Option<RetiredTableRowsView>,
+    }
+
+    struct TableRowsRetireArena {
+        slots: [TableRowsRetireSlot; TABLE_WINDOW_RETIRE_SLOTS],
+        close_cursor: usize,
+    }
+
+    impl Default for TableRowsRetireArena {
+        fn default() -> Self {
+            Self { slots: std::array::from_fn(|_| TableRowsRetireSlot::default()), close_cursor: 0 }
+        }
+    }
+
+    impl TableRowsRetireArena {
+        fn reserve(&mut self) -> Option<TableRowsRetireKey> {
+            let slot = self.slots.iter().position(|slot| !slot.reserved)?;
+            let epoch = self.slots[slot].epoch.checked_add(1)?;
+            self.slots[slot].epoch = epoch;
+            self.slots[slot].reserved = true;
+            Some(TableRowsRetireKey { slot, epoch })
+        }
+
+        fn release(&mut self, key: TableRowsRetireKey) -> bool {
+            let Some(slot) = self.slots.get_mut(key.slot) else { return false };
+            if !slot.reserved || slot.epoch != key.epoch || slot.owner.is_some() {
+                return false;
+            }
+            slot.reserved = false;
+            true
+        }
+
+        fn handback(&mut self, key: TableRowsRetireKey, owner: RetiredTableRowsView) -> Result<(), RetiredTableRowsView> {
+            let Some(slot) = self.slots.get_mut(key.slot) else { return Err(owner) };
+            if !slot.reserved || slot.epoch != key.epoch || slot.owner.is_some() {
+                return Err(owner);
+            }
+            slot.owner = Some(owner);
+            Ok(())
+        }
+
+        fn close_one(&mut self) -> bool {
+            for offset in 0..TABLE_WINDOW_RETIRE_SLOTS {
+                let Some(next_index) = self.close_cursor.checked_add(offset) else { return false };
+                let index = next_index % TABLE_WINDOW_RETIRE_SLOTS;
+                let Some(owner) = self.slots[index].owner.as_mut() else { continue };
+                let Some(next_cursor) = index.checked_add(1) else { return false };
+                self.close_cursor = next_cursor % TABLE_WINDOW_RETIRE_SLOTS;
+                if owner.close_step() {
+                    self.slots[index].owner = None;
+                    self.slots[index].reserved = false;
+                }
+                return true;
+            }
+            false
+        }
+    }
+
+    fn with_table_rows_retire_arena<T>(f: impl FnOnce(&mut TableRowsRetireArena) -> T) -> T {
+        static ARENA: std::sync::LazyLock<std::sync::Mutex<TableRowsRetireArena>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(TableRowsRetireArena::default()));
+        let mut arena = ARENA.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        f(&mut arena)
+    }
+
+    pub fn close_table_rows_view_one() -> bool {
+        with_table_rows_retire_arena(TableRowsRetireArena::close_one)
+    }
+
+    #[derive(Debug, PartialEq)]
     pub struct TableRowsView {
-        pub columns: Vec<String>,
-        pub rows: Vec<TableRow>,
+        columns: TableColumns,
+        rows: TableRows,
         /// 🏷️ Header for the trailing actions column `render_rows` appends when any row declares an
         /// action (ignored when none do). Caller-supplied so it stays locale-resolved like every other
         /// column header instead of hardcoding one language; pass an empty string for an icon-only header
         /// (matches `sourcing::curate`'s own `{"id": "actions", "label": ""}` precedent).
-        pub actions_label: String,
+        actions_label: UiText,
+        retirement: Option<TableRowsRetireKey>,
+    }
+
+    impl TableRowsView {
+        pub fn new(actions_label: UiText) -> Self {
+            Self { columns: TableColumns::default(), rows: TableRows::default(), actions_label, retirement: None }
+        }
+
+        fn ensure_retirement(&mut self) -> bool {
+            if self.retirement.is_some() {
+                return true;
+            }
+            self.retirement = with_table_rows_retire_arena(TableRowsRetireArena::reserve);
+            self.retirement.is_some()
+        }
+
+        pub fn try_push_column(&mut self, column: UiText) -> Result<(), UiText> {
+            if !self.ensure_retirement() {
+                return Err(column);
+            }
+            self.columns.try_push(column)
+        }
+
+        pub fn try_push_row(&mut self, row: TableRow) -> Result<(), TableRow> {
+            if !self.ensure_retirement() {
+                return Err(row);
+            }
+            self.rows.try_push(row)
+        }
+
+        fn into_parts(mut self) -> (TableColumns, TableRows, UiText) {
+            if let Some(retirement) = self.retirement.take() {
+                let _ = with_table_rows_retire_arena(|arena| arena.release(retirement));
+            }
+            (std::mem::take(&mut self.columns), std::mem::take(&mut self.rows), std::mem::take(&mut self.actions_label))
+        }
+    }
+
+    impl Drop for TableRowsView {
+        fn drop(&mut self) {
+            let Some(retirement) = self.retirement.take() else { return };
+            let owner = RetiredTableRowsView {
+                columns: std::mem::take(&mut self.columns),
+                rows: std::mem::take(&mut self.rows),
+                actions_label: std::mem::take(&mut self.actions_label),
+                closing_row: None,
+            };
+            let _ = with_table_rows_retire_arena(|arena| arena.handback(retirement, owner));
+        }
     }
 
     impl TableWindowKit {
-        /// 🆔️ Sibling of `WindowKit::render` for `TableRowsView`: stamps a real per-row `id` and, when
-        /// any row declares one, a trailing actions column of `TableCell::Buttons` — instead of
-        /// `render`'s flat positional-string grid, which carries neither. The actions column is only
-        /// appended when at least one row has an action, so plain identified tables (no row buttons yet)
-        /// don't grow a dead column.
-        pub fn render_rows(view: &TableRowsView) -> UiAssemblyResult<BuiltNode> {
+        /// 🆔️ Consumes fixed UI-native rows directly into semantic header/row/button nodes.
+        pub fn render_rows(view: TableRowsView) -> UiAssemblyResult<BuiltNode> {
             let has_actions = view.rows.iter().any(|row| !row.actions.is_empty());
-            let mut columns: Vec<Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": format!("col{index}"), "label": label })).collect();
+            let (columns, rows, actions_label) = view.into_parts();
+            let mut root = ui::column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-rows-window.id"))?;
+            let mut header = ui::row().try_id("header").map_err(|_| ui_assembly_error("table-rows-window.header-id"))?;
+            for column in columns {
+                header = header.try_child(ui::text(Label(column))).map_err(|_| ui_assembly_error("table-rows-window.header"))?;
+            }
             if has_actions {
-                columns.push(serde_json::json!({ "id": "actions", "label": view.actions_label }));
+                header = header.try_child(ui::text(Label(actions_label))).map_err(|_| ui_assembly_error("table-rows-window.actions-header"))?;
             }
-            let columns_json = serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into());
-            // 🌉️ Rewritten from a `.map(|row| {...}).collect()` into an explicit loop (sync —
-            // `Iterator::map` cannot take an async closure, and `table_row_json` is genuinely async).
-            let mut rows: Vec<Value> = Vec::with_capacity(view.rows.len());
-            for row in view.rows.iter() {
-                let cell_ids: Vec<String> = (0..row.cells.len()).map(|index| format!("col{index}")).collect();
-                let mut cells: Vec<(&str, ui_wgpu::wgpu::TableCell)> = cell_ids.iter().zip(row.cells.iter()).map(|(id, value)| (id.as_str(), ui_wgpu::wgpu::TableCell::Text { value: value.clone() })).collect();
-                if has_actions {
-                    let buttons =
-                        row.actions.iter().map(|action| ui_wgpu::wgpu::UiTreeItemAction { icon_id: action.icon_id, label: action.label.clone(), action: action.action.clone(), placement: Some(ui_wgpu::wgpu::UiTreeActionPlacement::Row) }).collect();
-                    cells.push(("actions", ui_wgpu::wgpu::TableCell::Buttons { buttons }));
+            root = root.try_child(header).map_err(|_| ui_assembly_error("table-rows-window.header-child"))?;
+            for table_row in rows {
+                let TableRow { id, cells, actions } = table_row;
+                let mut row = ui::row().try_id(id.as_str()).map_err(|_| ui_assembly_error("table-rows-window.row-id"))?;
+                for cell in cells {
+                    row = row.try_child(ui::text(Label(cell))).map_err(|_| ui_assembly_error("table-rows-window.cell"))?;
                 }
-                rows.push(ui_wgpu::wgpu::table_row_json(row.id.clone(), None, &cells));
+                for action in actions {
+                    let TableRowAction { icon, label, binding } = action;
+                    let ActionBinding { trigger, action, args, capability: _ } = binding;
+                    let button = ui::button(label).icon(icon);
+                    let button = match args {
+                        Some(args) => button.try_on_with(trigger, action, args).map_err(|_| ui_assembly_error("table-rows-window.action-binding"))?,
+                        None => button.try_on(trigger, action).map_err(|_| ui_assembly_error("table-rows-window.action-binding"))?,
+                    };
+                    row = row.try_child(button).map_err(|_| ui_assembly_error("table-rows-window.action"))?;
+                }
+                root = root.try_child(row).map_err(|_| ui_assembly_error("table-rows-window.row"))?;
             }
-            let rows_json = serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into());
-            // 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-framework-ui-scene` and its
-            // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
-            // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
-            let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
-            let props = semio_framework_ui_scene::encode(SurfaceKind::Table, &scene).map_err(|_| ui_assembly_error("table-rows-window.scene"))?;
-            let builder = ui::surface(props);
-            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-rows-window.id"))?.try_build().map_err(|_| ui_assembly_error("table-rows-window.build"))
+            root.try_build().map_err(|_| ui_assembly_error("table-rows-window.build"))
         }
     }
     //#endregion 🔖️TableWindowKit
@@ -20985,36 +21695,71 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn table_kit_render_rows_stamps_a_stable_row_id_and_omits_the_actions_column_when_no_row_has_one() {
-            let view = TableRowsView { columns: vec!["Name".into()], rows: vec![TableRow { id: "space:abc".into(), cells: vec!["Atelier".into()], actions: Vec::new() }], actions_label: "Actions".into() };
-            let node = TableWindowKit::render_rows(&view).expect("bounded fixture");
-            let Component::Surface(props) = node.component else { panic!("expected Surface") };
-            let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
-            let rows: Vec<Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
-            assert_eq!(rows[0]["id"], serde_json::json!("space:abc"));
-            assert_eq!(rows[0]["col0"], serde_json::json!({ "kind": "text", "value": "Atelier" }));
-            let columns: Vec<Value> = serde_json::from_str(&scene.columns_json).expect("columns_json parses");
-            assert!(columns.iter().all(|column| column["id"] != "actions"));
+            let mut view = TableRowsView::new(UiText::try_from_str("Actions").expect("bounded text"));
+            view.try_push_column(UiText::try_from_str("Name").expect("bounded text")).expect("fixed column");
+            let mut table_row = TableRow::new(UiText::try_from_str("space:abc").expect("bounded text"));
+            table_row.try_push_cell(UiText::try_from_str("Atelier").expect("bounded text")).expect("fixed cell");
+            view.try_push_row(table_row).expect("fixed row");
+            let node = TableWindowKit::render_rows(view).expect("bounded fixture");
+            assert!(matches!(node.component, Component::Container(_)));
+            assert_eq!(node.children.len(), 2);
+            assert_eq!(node.children.get(1).expect("row").key.as_str(), "space:abc");
+            assert_eq!(node.children.get(0).expect("header").children.len(), 1);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn table_kit_render_rows_renders_row_action_buttons_carrying_their_dispatchable_descriptor() {
-            let action = ui_wgpu::wgpu::ActionDescriptor { controller_id: "s.space.home".into(), action: "delete-space".into(), args: None };
-            let view = TableRowsView {
-                columns: vec!["Name".into()],
-                rows: vec![TableRow { id: "space:abc".into(), cells: vec!["Atelier".into()], actions: vec![TableRowAction { icon_id: IconName::Trash2, label: None, action: action.clone() }] }],
-                actions_label: "Actions".into(),
-            };
-            let node = TableWindowKit::render_rows(&view).expect("bounded fixture");
-            let Component::Surface(props) = node.component else { panic!("expected Surface") };
-            let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
-            let columns: Vec<Value> = serde_json::from_str(&scene.columns_json).expect("columns_json parses");
-            assert!(columns.iter().any(|column| column["id"] == "actions" && column["label"] == "Actions"));
-            let rows: Vec<Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
-            let button = &rows[0]["actions"]["buttons"][0];
-            assert_eq!(button["iconId"], serde_json::json!("trash-2"));
-            assert_eq!(button["action"]["controllerId"], serde_json::json!("s.space.home"));
-            assert_eq!(button["action"]["action"], serde_json::json!("delete-space"));
-            assert_eq!(button["placement"], serde_json::json!("row"));
+            let action = ActionId::try_v1("s.space.home", "delete-space").expect("bounded action");
+            let mut view = TableRowsView::new(UiText::try_from_str("Actions").expect("bounded text"));
+            view.try_push_column(UiText::try_from_str("Name").expect("bounded text")).expect("fixed column");
+            let mut table_row = TableRow::new(UiText::try_from_str("space:abc").expect("bounded text"));
+            table_row.try_push_cell(UiText::try_from_str("Atelier").expect("bounded text")).expect("fixed cell");
+            table_row
+                .try_push_action(TableRowAction::new(
+                    UiText::try_from_str(IconName::Trash2.as_str()).expect("bounded icon"),
+                    Label(UiText::try_from_str("Delete").expect("bounded label")),
+                    (action.clone(), None),
+                ))
+                .expect("fixed action");
+            view.try_push_row(table_row).expect("fixed row");
+            let node = TableWindowKit::render_rows(view).expect("bounded fixture");
+            assert_eq!(node.children.get(0).expect("header").children.len(), 2);
+            let button = node.children.get(1).expect("row").children.get(1).expect("button");
+            assert!(matches!(button.component, Component::Button(_)));
+            assert_eq!(button.bindings.get(0).expect("binding").action, action);
+        }
+
+        #[test]
+        fn table_rows_max_plus_one_returns_the_exact_row_owner() {
+            let mut view = TableRowsView::new(UiText::default());
+            for index in 0..TABLE_WINDOW_ROWS {
+                let id = UiText::try_format(format_args!("row-{index}")).expect("bounded id");
+                assert!(view.try_push_row(TableRow::new(id)).is_ok());
+            }
+            let rejected_id = UiText::try_from_str("row-max-plus-one").expect("bounded id");
+            let rejected = view.try_push_row(TableRow::new(rejected_id.clone())).expect_err("fixed row cap");
+            assert_eq!(rejected.id, rejected_id);
+        }
+
+        #[test]
+        fn abandoned_table_rows_retire_one_row_action_or_cell_per_opportunity() {
+            while close_table_rows_view_one() {}
+            let mut view = TableRowsView::new(UiText::default());
+            let mut row = TableRow::new(UiText::try_from_str("row").expect("bounded id"));
+            row.try_push_cell(UiText::try_from_str("cell").expect("bounded cell")).expect("fixed cell");
+            row.try_push_action(TableRowAction::new(
+                UiText::try_from_str("trash-2").expect("bounded icon"),
+                Label(UiText::try_from_str("Delete").expect("bounded label")),
+                (ActionId::try_v1("fixture", "delete").expect("bounded action"), None),
+            ))
+            .expect("fixed action");
+            view.try_push_row(row).expect("fixed row");
+            drop(view);
+            let mut opportunities = 0;
+            while close_table_rows_view_one() {
+                opportunities += 1;
+            }
+            assert!(opportunities >= 4);
         }
 
         #[semio_framework_async_macros::async_test]
@@ -21240,7 +21985,8 @@ pub mod app {
                     ),
                 ));
             }
-            Self::command_from_action(&intent.action.name, merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).as_ref()).await
+            let merged = merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?;
+            Self::command_from_action(&intent.action.name, merged.as_ref()).await
         }
         async fn config_spec() -> ConfigSpec {
             ConfigSpec::empty().await
@@ -22843,6 +23589,7 @@ pub mod plugin_runtime {
     struct RuntimeAppCell<PA: PluginApp> {
         id: u32,
         instance: std::sync::Mutex<AppInstance<PA>>,
+        maintenance_pump: std::sync::Mutex<RuntimeLiveCleanupPump<PA>>,
         maintenance_status: AtomicU8,
         maintenance_generation: AtomicU64,
         maintenance_stalled_steps: AtomicU32,
@@ -22850,7 +23597,14 @@ pub mod plugin_runtime {
 
     impl<PA: PluginApp> RuntimeAppCell<PA> {
         fn new(instance: AppInstance<PA>) -> Self {
-            Self { id: instance.id, instance: std::sync::Mutex::new(instance), maintenance_status: AtomicU8::new(RUNTIME_MAINTENANCE_READY), maintenance_generation: AtomicU64::new(0), maintenance_stalled_steps: AtomicU32::new(0) }
+            Self {
+                id: instance.id,
+                instance: std::sync::Mutex::new(instance),
+                maintenance_pump: std::sync::Mutex::new(RuntimeLiveCleanupPump::new()),
+                maintenance_status: AtomicU8::new(RUNTIME_MAINTENANCE_READY),
+                maintenance_generation: AtomicU64::new(0),
+                maintenance_stalled_steps: AtomicU32::new(0),
+            }
         }
     }
 
@@ -22871,6 +23625,7 @@ pub mod plugin_runtime {
         instance_id: u32,
         generation: semio_framework_job::Generation,
         cell: std::sync::Mutex<std::mem::ManuallyDrop<Option<std::sync::Arc<RuntimeAppCell<PA>>>>>,
+        pump: std::sync::Mutex<RuntimeCloseCleanupPump<PA>>,
         status: AtomicU8,
         stalled_steps: AtomicU8,
         preview_sequence: AtomicU64,
@@ -23599,11 +24354,83 @@ pub mod plugin_runtime {
     const RUNTIME_CLOSE_CALLBACK_WALL_US: u64 = 8_000;
     const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
 
+    struct RuntimeLiveCleanupPump<PA: PluginApp> {
+        session: Option<semio_framework_job::BatchJobSession<RuntimeLiveCleanupJob<PA>>>,
+        rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<RuntimeLiveCleanupJob<PA>>>,
+        outcome: Option<semio_framework_job::StepOutcome>,
+        terminal: bool,
+        pending_status: u8,
+        closing: bool,
+        faulted: bool,
+    }
+
+    impl<PA: PluginApp> RuntimeLiveCleanupPump<PA> {
+        fn new() -> Self {
+            Self { session: None, rejected: None, outcome: None, terminal: false, pending_status: RUNTIME_MAINTENANCE_READY, closing: false, faulted: false }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.closing = true;
+            if let Some(outcome) = self.outcome.as_mut() {
+                let step = outcome.close_step(maximum_items, maximum_bytes);
+                if outcome.terminal_is_empty() {
+                    self.outcome = None;
+                }
+                return match step {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                };
+            }
+            if let Some(rejected) = self.rejected.as_mut() {
+                let step = rejected.close_step(maximum_items, maximum_bytes);
+                if rejected.terminal_is_empty() {
+                    self.rejected = None;
+                }
+                return step;
+            }
+            if let Some(session) = self.session.as_mut() {
+                session.begin_close();
+                let step = session.close_step(maximum_items, maximum_bytes);
+                if session.terminal_is_empty() {
+                    self.session = None;
+                }
+                return match step {
+                    semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::WorkerJobCloseStep::Blocked => semio_framework_job::InteractiveJobCloseStep::Blocked,
+                    semio_framework_job::WorkerJobCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                };
+            }
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.session.is_none() && self.rejected.is_none() && self.outcome.is_none()
+        }
+    }
+
+    struct RuntimeCloseCleanupPump<PA: PluginApp> {
+        session: Option<semio_framework_job::BatchJobSession<RuntimeCloseCleanupJob<PA>>>,
+        rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<RuntimeCloseCleanupJob<PA>>>,
+        outcome: Option<semio_framework_job::StepOutcome>,
+        terminal: bool,
+        complete: bool,
+        blocked: bool,
+        pending_status: u8,
+        faulted: bool,
+    }
+
+    impl<PA: PluginApp> RuntimeCloseCleanupPump<PA> {
+        fn new() -> Self {
+            Self { session: None, rejected: None, outcome: None, terminal: false, complete: false, blocked: false, pending_status: RUNTIME_CLOSE_READY, faulted: false }
+        }
+    }
+
     struct RuntimeLiveCleanupJob<PA: PluginApp> {
         instance_id: u32,
-        cell: std::sync::Arc<RuntimeAppCell<PA>>,
+        cell: Option<std::sync::Weak<RuntimeAppCell<PA>>>,
         progress: Option<crate::app::PluginCloseStep>,
         contended: bool,
+        closing: bool,
     }
 
     impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJob<PA> {
@@ -23612,7 +24439,10 @@ pub mod plugin_runtime {
             if cx.is_cancelled() {
                 return semio_framework_job::StepOutcome::Cancelled;
             }
-            let mut instance = match self.cell.instance.try_lock() {
+            let Some(cell) = self.cell.as_ref().and_then(std::sync::Weak::upgrade) else {
+                return semio_framework_job::StepOutcome::Cancelled;
+            };
+            let mut instance = match cell.instance.try_lock() {
                 Ok(instance) => instance,
                 Err(std::sync::TryLockError::WouldBlock) => {
                     self.contended = true;
@@ -23640,6 +24470,26 @@ pub mod plugin_runtime {
                 Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error.message.into_bytes() }),
             }
         }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.closing = true;
+            if self.cell.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.cell.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.cell.is_none()
+        }
     }
 
     fn runtime_live_cleanup_nonterminal_status(contended: bool, progress: Option<crate::app::PluginCloseStep>, stalled_steps: &AtomicU32) -> u8 {
@@ -23664,32 +24514,98 @@ pub mod plugin_runtime {
         if cell.maintenance_status.compare_exchange(RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_err() {
             return;
         }
-        let mut job = RuntimeLiveCleanupJob { instance_id: cell.id, cell: cell.clone(), progress: None, contended: false };
-        let mut preview_sequence = 0;
-        let outcome = semio_framework_job::drive_step(
-            &mut job,
-            "plugin_runtime_live_cleanup",
-            semio_framework_job::OperationId((1u64 << 62) | cell.id as u64),
-            generation,
-            semio_framework_job::InteractiveStage::InteractiveStep,
-            semio_framework_job::StepBudget::new(1, semio_framework_job::default_now_ms().saturating_add(RUNTIME_CLOSE_INNER_GRANT_MS)),
-            semio_framework_job::CancelToken::root_now(),
-            semio_framework_job::default_now_ms,
-            &mut preview_sequence,
-        );
-        let status = match outcome {
-            semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled => RUNTIME_MAINTENANCE_FAULT,
-            _ => runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps),
+        let status = match cell.maintenance_pump.try_lock() {
+            Ok(mut pump) => runtime_live_cleanup_pump_one(cell, generation, &mut pump),
+            Err(_) => RUNTIME_MAINTENANCE_READY,
         };
         let elapsed_us = started.elapsed().as_micros().min(u64::MAX as u128) as u64;
         cell.maintenance_status.store(if elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US { RUNTIME_MAINTENANCE_FAULT } else { status }, Ordering::SeqCst);
     }
 
+    fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>, generation: semio_framework_job::Generation, pump: &mut RuntimeLiveCleanupPump<PA>) -> u8 {
+        if pump.closing {
+            let _ = pump.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            return RUNTIME_MAINTENANCE_FAULT;
+        }
+        if let Some(rejected) = pump.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                pump.rejected = None;
+                return RUNTIME_MAINTENANCE_FAULT;
+            }
+            return RUNTIME_MAINTENANCE_READY;
+        }
+        if let Some(outcome) = pump.outcome.as_mut() {
+            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if !outcome.terminal_is_empty() {
+                return RUNTIME_MAINTENANCE_READY;
+            }
+            pump.outcome = None;
+            if pump.terminal {
+                if let Some(session) = pump.session.as_mut() {
+                    session.begin_close();
+                }
+            } else if pump.session.as_mut().is_some_and(|session| session.resume().is_err()) {
+                return RUNTIME_MAINTENANCE_FAULT;
+            } else {
+                return pump.pending_status;
+            }
+        }
+        if pump.terminal {
+            let Some(session) = pump.session.as_mut() else {
+                pump.terminal = false;
+                return pump.pending_status;
+            };
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if session.terminal_is_empty() {
+                pump.session = None;
+                pump.terminal = false;
+                return if pump.faulted { RUNTIME_MAINTENANCE_FAULT } else { pump.pending_status };
+            }
+            return RUNTIME_MAINTENANCE_READY;
+        }
+        if pump.session.is_none() {
+            let job = RuntimeLiveCleanupJob { instance_id: cell.id, cell: Some(std::sync::Arc::downgrade(cell)), progress: None, contended: false, closing: false };
+            let params = semio_framework_job::BatchJobParams {
+                operation: semio_framework_job::OperationId((1u64 << 62) | cell.id as u64),
+                generation,
+                cancel: semio_framework_job::CancelToken::root_now(),
+                config: semio_framework_job::BatchDriveConfig {
+                    site: "plugin_runtime_live_cleanup",
+                    stage: semio_framework_job::InteractiveStage::InteractiveStep,
+                    fuel_per_step: 1,
+                    step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS,
+                },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            match semio_framework_job::BatchJobSession::try_new(job, params) {
+                Ok(session) => pump.session = Some(session),
+                Err(rejected) => {
+                    pump.rejected = Some(rejected);
+                    return RUNTIME_MAINTENANCE_READY;
+                }
+            }
+        }
+        let Some(session) = pump.session.as_mut() else { return RUNTIME_MAINTENANCE_FAULT };
+        if session.step().is_err() {
+            return RUNTIME_MAINTENANCE_FAULT;
+        }
+        let Some(job) = session.checked_out_job_mut() else { return RUNTIME_MAINTENANCE_FAULT };
+        pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
+        let Some(outcome) = session.take_outcome() else { return RUNTIME_MAINTENANCE_FAULT };
+        pump.terminal = outcome.is_terminal();
+        let faulted = matches!(outcome, semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled);
+        pump.faulted = faulted;
+        pump.outcome = Some(outcome);
+        RUNTIME_MAINTENANCE_READY
+    }
+
     struct RuntimeCloseCleanupJob<PA: PluginApp> {
         instance_id: u32,
-        state: std::sync::Arc<RuntimeCloseWorkerState<PA>>,
+        state: Option<std::sync::Weak<RuntimeCloseWorkerState<PA>>>,
         progress: Option<crate::app::PluginCloseStep>,
         contended: bool,
+        closing: bool,
     }
 
     impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA> {
@@ -23698,8 +24614,11 @@ pub mod plugin_runtime {
             if cx.is_cancelled() {
                 return semio_framework_job::StepOutcome::Cancelled;
             }
+            let Some(state) = self.state.as_ref().and_then(std::sync::Weak::upgrade) else {
+                return semio_framework_job::StepOutcome::Cancelled;
+            };
             let cell = {
-                let cell = match self.state.cell.try_lock() {
+                let cell = match state.cell.try_lock() {
                     Ok(cell) => cell,
                     Err(std::sync::TryLockError::WouldBlock) => {
                         self.contended = true;
@@ -23711,10 +24630,27 @@ pub mod plugin_runtime {
                 };
                 let Some(cell) = cell.as_ref() else {
                     self.progress = Some(crate::app::PluginCloseStep::Complete);
-                    return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.state.instance_id.to_le_bytes().to_vec(), output: Vec::new() });
+                    return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: state.instance_id.to_le_bytes().to_vec(), output: Vec::new() });
                 };
                 cell.clone()
             };
+            {
+                let mut maintenance = match cell.maintenance_pump.try_lock() {
+                    Ok(maintenance) => maintenance,
+                    Err(std::sync::TryLockError::WouldBlock) => {
+                        self.contended = true;
+                        return semio_framework_job::StepOutcome::Yield;
+                    }
+                    Err(std::sync::TryLockError::Poisoned(_)) => {
+                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin maintenance session authority is poisoned".to_vec() });
+                    }
+                };
+                let _ = maintenance.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if !maintenance.terminal_is_empty() {
+                    cx.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
+            }
             let mut instance = match cell.instance.try_lock() {
                 Ok(instance) => instance,
                 Err(std::sync::TryLockError::WouldBlock) => {
@@ -23729,7 +24665,7 @@ pub mod plugin_runtime {
             match instance.app.close_step(RUNTIME_CLOSE_ITEMS_PER_STEP, RUNTIME_CLOSE_BYTES_PER_STEP) {
                 Ok(progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= RUNTIME_CLOSE_ITEMS_PER_STEP && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP => {
                     self.progress = Some(progress);
-                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.state.instance_id.to_le_bytes().to_vec(), applied_progress: released_items as u64 })
+                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: state.instance_id.to_le_bytes().to_vec(), applied_progress: released_items as u64 })
                 }
                 Ok(crate::app::PluginCloseStep::Pending { .. }) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin close step exceeded its item or byte contract".to_vec() }),
                 Ok(progress @ crate::app::PluginCloseStep::Blocked { reason }) => {
@@ -23741,10 +24677,30 @@ pub mod plugin_runtime {
                         return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin close reported Complete without a terminal-empty app witness".to_vec() });
                     }
                     self.progress = Some(crate::app::PluginCloseStep::Complete);
-                    semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.state.instance_id.to_le_bytes().to_vec(), output: Vec::new() })
+                    semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: state.instance_id.to_le_bytes().to_vec(), output: Vec::new() })
                 }
                 Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error.message.into_bytes() }),
             }
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.closing = true;
+            if self.state.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.state.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.state.is_none()
         }
     }
 
@@ -23775,22 +24731,12 @@ pub mod plugin_runtime {
         if state.status.compare_exchange(RUNTIME_CLOSE_QUEUED, RUNTIME_CLOSE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_err() {
             return;
         }
-        let mut job = RuntimeCloseCleanupJob { instance_id: state.instance_id, state: state.clone(), progress: None, contended: false };
-        let mut preview_sequence = state.preview_sequence.load(Ordering::SeqCst);
-        let outcome = semio_framework_job::drive_step(
-            &mut job,
-            "plugin_runtime_close_cleanup",
-            semio_framework_job::OperationId((1u64 << 63) | state.instance_id as u64),
-            state.generation,
-            semio_framework_job::InteractiveStage::InteractiveStep,
-            semio_framework_job::StepBudget::new(1, semio_framework_job::default_now_ms().saturating_add(RUNTIME_CLOSE_INNER_GRANT_MS)),
-            semio_framework_job::CancelToken::root_now(),
-            semio_framework_job::default_now_ms,
-            &mut preview_sequence,
-        );
-        state.preview_sequence.store(preview_sequence, Ordering::SeqCst);
-        match outcome {
-            semio_framework_job::StepOutcome::Complete(_) if job.progress == Some(crate::app::PluginCloseStep::Complete) => {
+        let status = match state.pump.try_lock() {
+            Ok(mut pump) => runtime_close_cleanup_pump_one(state, &mut pump),
+            Err(_) => RUNTIME_CLOSE_READY,
+        };
+        match status {
+            RUNTIME_CLOSE_COMPLETE => {
                 let detached = match state.cell.try_lock() {
                     Ok(mut cell) => cell.take(),
                     Err(_) => {
@@ -23827,16 +24773,90 @@ pub mod plugin_runtime {
                 drop(instance);
                 state.status.store(RUNTIME_CLOSE_COMPLETE, Ordering::SeqCst);
             }
-            semio_framework_job::StepOutcome::Fault(_) if matches!(job.progress, Some(crate::app::PluginCloseStep::Blocked { .. })) => {
-                state.status.store(RUNTIME_CLOSE_EXTERNAL_WAIT, Ordering::SeqCst);
+            status => state.status.store(status, Ordering::SeqCst),
+        }
+    }
+
+    fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>, pump: &mut RuntimeCloseCleanupPump<PA>) -> u8 {
+        if let Some(rejected) = pump.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                pump.rejected = None;
+                return RUNTIME_CLOSE_FAULT;
             }
-            semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled => {
-                state.status.store(RUNTIME_CLOSE_FAULT, Ordering::SeqCst);
+            return RUNTIME_CLOSE_READY;
+        }
+        if let Some(outcome) = pump.outcome.as_mut() {
+            let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if !outcome.terminal_is_empty() {
+                return RUNTIME_CLOSE_READY;
             }
-            _ => {
-                state.status.store(runtime_close_nonterminal_status(job.contended, job.progress, &state.stalled_steps), Ordering::SeqCst);
+            pump.outcome = None;
+            if pump.terminal {
+                if let Some(session) = pump.session.as_mut() {
+                    session.begin_close();
+                }
+            } else if pump.session.as_mut().is_some_and(|session| session.resume().is_err()) {
+                return RUNTIME_CLOSE_FAULT;
+            } else {
+                return pump.pending_status;
             }
         }
+        if pump.terminal {
+            let Some(session) = pump.session.as_mut() else { return RUNTIME_CLOSE_FAULT };
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if !session.terminal_is_empty() {
+                return RUNTIME_CLOSE_READY;
+            }
+            pump.session = None;
+            pump.terminal = false;
+            if pump.complete {
+                return RUNTIME_CLOSE_COMPLETE;
+            }
+            if pump.blocked {
+                return RUNTIME_CLOSE_EXTERNAL_WAIT;
+            }
+            if pump.faulted {
+                return RUNTIME_CLOSE_FAULT;
+            }
+            return pump.pending_status;
+        }
+        if pump.session.is_none() {
+            let job = RuntimeCloseCleanupJob { instance_id: state.instance_id, state: Some(std::sync::Arc::downgrade(state)), progress: None, contended: false, closing: false };
+            let params = semio_framework_job::BatchJobParams {
+                operation: semio_framework_job::OperationId((1u64 << 63) | state.instance_id as u64),
+                generation: state.generation,
+                cancel: semio_framework_job::CancelToken::root_now(),
+                config: semio_framework_job::BatchDriveConfig {
+                    site: "plugin_runtime_close_cleanup",
+                    stage: semio_framework_job::InteractiveStage::InteractiveStep,
+                    fuel_per_step: 1,
+                    step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS,
+                },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            match semio_framework_job::BatchJobSession::try_new(job, params) {
+                Ok(session) => pump.session = Some(session),
+                Err(rejected) => {
+                    pump.rejected = Some(rejected);
+                    return RUNTIME_CLOSE_READY;
+                }
+            }
+        }
+        let Some(session) = pump.session.as_mut() else { return RUNTIME_CLOSE_FAULT };
+        if session.step().is_err() {
+            return RUNTIME_CLOSE_FAULT;
+        }
+        let Some(job) = session.checked_out_job_mut() else { return RUNTIME_CLOSE_FAULT };
+        pump.complete = job.progress == Some(crate::app::PluginCloseStep::Complete);
+        pump.blocked = matches!(job.progress, Some(crate::app::PluginCloseStep::Blocked { .. }));
+        pump.pending_status = runtime_close_nonterminal_status(job.contended, job.progress, &state.stalled_steps);
+        let Some(outcome) = session.take_outcome() else { return RUNTIME_CLOSE_FAULT };
+        pump.terminal = outcome.is_terminal();
+        let faulted = matches!(outcome, semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled);
+        pump.faulted = faulted;
+        pump.outcome = Some(outcome);
+        RUNTIME_CLOSE_READY
     }
 
     #[cfg(test)]
@@ -23933,6 +24953,7 @@ pub mod plugin_runtime {
             instance_id,
             generation: semio_framework_job::Generation(generation),
             cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(Some(cell))),
+            pump: std::sync::Mutex::new(RuntimeCloseCleanupPump::new()),
             status: AtomicU8::new(RUNTIME_CLOSE_READY),
             stalled_steps: AtomicU8::new(0),
             preview_sequence: AtomicU64::new(0),

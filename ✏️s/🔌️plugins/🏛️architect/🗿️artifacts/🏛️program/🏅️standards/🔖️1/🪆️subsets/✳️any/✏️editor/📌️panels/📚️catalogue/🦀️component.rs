@@ -1,10 +1,8 @@
 //! 📚️ Architect catalogue panel — the action shortcuts and the register index.
 
-use crate::editor::architect::architect_action;
+use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
 use crate::editor::architect::catalog::REGISTER_IDS;
-use crate::editor::architect::chrome::{tree_item_with_action, tree_node, tree_section};
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
-use serde_json::json;
+use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_CATALOGUE: &str = "architect.catalogue";
@@ -25,27 +23,33 @@ pub async fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 pub async fn render() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let register_items: Vec<UiTreeItemNode> =
-        REGISTER_IDS.iter().map(|register| tree_item_with_action(format!("architect-catalogue.register.{register}"), *register, None, architect_action("selectRegister", Some(json!({ "registerId": register }))))?).collect();
-    tree_node(vec![
-        tree_section(
-            "architect-catalogue.actions",
-            Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
-            vec![
-                tree_item_with_action("architect-catalogue.add-item", "Add Register Item", None, architect_action("addRegisterItem", Some(json!({ "registerId": "elements", "template": null }))))?,
-                tree_item_with_action("architect-catalogue.validate", "Run Validation", None, architect_action("runValidation", None))?,
-                tree_item_with_action("architect-catalogue.analysis", "Run Analysis", None, architect_action("runAnalysis", Some(json!({ "analysisKind": "gap" }))))?,
-                tree_item_with_action("architect-catalogue.report", "Run Report", None, architect_action("runReport", Some(json!({ "reportKind": "executiveSummary" }))))?,
-                tree_item_with_action("architect-catalogue.export", "Export ProgramSnapshot", None, architect_action("exportProgram", None))?,
-                tree_item_with_action("architect-catalogue.import", "Import ProgramSnapshot", None, architect_action("importProgramRequest", None))?,
-                tree_item_with_action("architect-catalogue.export-csv", "Export Registers CSV", None, architect_action("exportRegistersCsv", None))?,
-                tree_item_with_action("architect-catalogue.import-csv", "Import Registers CSV", None, architect_action("importRegistersCsv", Some(json!({ "csv": "", "strategy": "upsert" }))))?,
-                tree_item_with_action("architect-catalogue.apply-template", "Apply Template", None, architect_action("applyTemplate", Some(json!({ "templateId": "" }))))?,
-                tree_item_with_action("architect-catalogue.search", "Search ProgramSnapshot", None, architect_action("search", Some(json!({ "query": "" }))))?,
-            ],
-        ),
-        tree_section("architect-catalogue.registers", Some("Registers".into()), register_items),
-    ])
+    let mut register_items = UiFixedList::default();
+    for register in REGISTER_IDS {
+        let args = ui_value_map([("registerId", ui_value_text(register)?)])?;
+        let item = tree_item_with_action(format!("architect-catalogue.register.{register}"), Label::data(*register), None, architect_action("selectRegister", Some(args))?)?;
+        register_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect catalogue register admission failed"))?;
+    }
+    let specs = [
+        ("architect-catalogue.add-item", "Add Register Item", "addRegisterItem", Some(ui_value_map([("registerId", ui_value_text("elements")?), ("template", UiValue::Null)])?)),
+        ("architect-catalogue.validate", "Run Validation", "runValidation", None),
+        ("architect-catalogue.analysis", "Run Analysis", "runAnalysis", Some(ui_value_map([("analysisKind", ui_value_text("gap")?)])?)),
+        ("architect-catalogue.report", "Run Report", "runReport", Some(ui_value_map([("reportKind", ui_value_text("executiveSummary")?)])?)),
+        ("architect-catalogue.export", "Export ProgramSnapshot", "exportProgram", None),
+        ("architect-catalogue.import", "Import ProgramSnapshot", "importProgramRequest", None),
+        ("architect-catalogue.export-csv", "Export Registers CSV", "exportRegistersCsv", None),
+        ("architect-catalogue.import-csv", "Import Registers CSV", "importRegistersCsv", Some(ui_value_map([("csv", ui_value_text("")?), ("strategy", ui_value_text("upsert")?)])?)),
+        ("architect-catalogue.apply-template", "Apply Template", "applyTemplate", Some(ui_value_map([("templateId", ui_value_text("")?)])?)),
+        ("architect-catalogue.search", "Search ProgramSnapshot", "search", Some(ui_value_map([("query", ui_value_text("")?)])?)),
+    ];
+    let mut actions = UiFixedList::default();
+    for (id, label, action, args) in specs {
+        let item = tree_item_with_action(id, Label::data(label), None, architect_action(action, args)?)?;
+        actions.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect catalogue action admission failed"))?;
+    }
+    PanelTreeBuilder::new("architect-catalogue")?
+        .section("architect-catalogue.actions", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, actions)?
+        .section("architect-catalogue.registers", Some(Label::data("Registers")), true, register_items)?
+        .build()
 }
 //#endregion 🔖️Render
 

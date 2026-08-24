@@ -4,7 +4,6 @@ use crate::artifacts::shooting::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::SHOOTING_INTERACTION_DOMAIN;
 use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_BODY_DOCUMENT: &str = "shooting.play.document";
@@ -29,19 +28,35 @@ pub async fn definition() -> PanelTabDefinition {
 /// `.interaction_domain(...)?` (matches `cad`'s `document_tree_selected_ids` precedent) — the asset row's
 /// click action is built manually instead, one target per click (`"replace"` merge, matching the old
 /// `setSelection` row-click semantics).
-async fn asset_select_action(asset_id: &str) -> semio_framework_plugin::ActionDescriptor {
-    let targets = serde_json::to_string(&json!([{ "granularity": "asset", "id": asset_id }])).unwrap_or_default();
-    crate::editor::shooting::shooting_action("interactionSelect", Some(json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })))
+fn asset_select_action(asset_id: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+    let targets = serde_json::to_string(&[semio_framework_plugin::InteractionTarget { granularity: "asset".into(), id: asset_id.into() }])
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.targets", "selection target encoding failed"))?;
+    let args = crate::editor::shooting::ui_value_map([
+        ("domainId", crate::editor::shooting::ui_value_text(SHOOTING_INTERACTION_DOMAIN)?),
+        ("merge", crate::editor::shooting::ui_value_text("replace")?),
+        ("targets", crate::editor::shooting::ui_value_text(&targets)?),
+    ])?;
+    crate::editor::shooting::shooting_action("interactionSelect", Some(args))
 }
 
 pub async fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let shot_items: Vec<semio_framework_plugin::UiTreeItemNode> = snapshot
-        .shots
-        .iter()
-        .map(|shot| crate::editor::shooting::tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", crate::editor::shooting::shooting_action("setShotSelection", Some(json!({ "shotIds": [shot.id] }))))?)
-        .collect();
-    let asset_items: Vec<semio_framework_plugin::UiTreeItemNode> =
-        snapshot.assets.iter().map(|asset| crate::editor::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id))?).collect();
+    let mut shot_items = semio_framework_plugin::UiFixedList::default();
+    for shot in &snapshot.shots {
+        let ids = crate::editor::shooting::ui_value_list([crate::editor::shooting::ui_value_text(&shot.id)?])?;
+        let args = crate::editor::shooting::ui_value_map([("shotIds", ids)])?;
+        let item = crate::editor::shooting::tree_item_with_icon(
+            format!("shooting-shot:{}", shot.id),
+            Label::data(shot.label.clone()),
+            "camera",
+            crate::editor::shooting::shooting_action("setShotSelection", Some(args)),
+        )?;
+        shot_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.shots", "fixed shot list admission failed"))?;
+    }
+    let mut asset_items = semio_framework_plugin::UiFixedList::default();
+    for asset in &snapshot.assets {
+        let item = crate::editor::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id))?;
+        asset_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.assets", "fixed asset list admission failed"))?;
+    }
     PanelTreeBuilder::new("shooting-play-document")?.section("shooting-play-document.shots", Some(labels.shots.into()), true, shot_items)?.section("shooting-play-document.assets", Some(labels.assets.into()), true, asset_items)?.build()
 }
 //#endregion 🔖️Render

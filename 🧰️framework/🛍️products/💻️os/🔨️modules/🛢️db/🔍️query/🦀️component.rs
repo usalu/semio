@@ -91,11 +91,7 @@ impl QueryBytes {
             if writer.write_fragment(fragment)? != fragment.len() {
                 return Err(DbError::Internal("query byte copy made partial progress".to_string()));
             }
-            std::future::poll_fn(|context| {
-                context.waker().wake_by_ref();
-                std::task::Poll::Ready(())
-            })
-            .await;
+            semio_framework_async::yield_once().await;
         }
         Ok(Self { pages: writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)? })
     }
@@ -707,6 +703,7 @@ impl QueryRow {
 }
 
 const QUERY_ROW_SLOTS: usize = 64;
+const QUERY_RETIRED_ROW_SETS: usize = 64;
 
 #[derive(Debug)]
 pub struct QueryRows {
@@ -796,9 +793,84 @@ impl Default for QueryRows {
     }
 }
 
+static QUERY_RETIRED_ROWS: std::sync::Mutex<[Option<QueryRows>; QUERY_RETIRED_ROW_SETS]> = std::sync::Mutex::new([const { None }; QUERY_RETIRED_ROW_SETS]);
+static QUERY_RETIRED_ROWS_OVERFLOW: std::sync::Mutex<[Option<QueryRows>; QUERY_RETIRED_ROW_SETS]> = std::sync::Mutex::new([const { None }; QUERY_RETIRED_ROW_SETS]);
+static QUERY_RETIRED_ROWS_QUARANTINE: std::sync::Mutex<[Option<QueryRows>; QUERY_RETIRED_ROW_SETS]> = std::sync::Mutex::new([const { None }; QUERY_RETIRED_ROW_SETS]);
+static QUERY_RETIREMENT_PRESSURE_FAULT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn retire_query_rows(owner: QueryRows) -> Result<(), QueryRows> {
+    let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some(slot) = retired.iter_mut().find(|slot| slot.is_none()) {
+        *slot = Some(owner);
+        Ok(())
+    } else {
+        drop(retired);
+        QUERY_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
+        let mut overflow = QUERY_RETIRED_ROWS_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(slot) = overflow.iter_mut().find(|slot| slot.is_none()) {
+            *slot = Some(owner);
+            return Ok(());
+        }
+        drop(overflow);
+        let mut quarantine = QUERY_RETIRED_ROWS_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(slot) = quarantine.iter_mut().find(|slot| slot.is_none()) else { return Err(owner) };
+        *slot = Some(owner);
+        Ok(())
+    }
+}
+
+fn retire_query_row(row: QueryRow) {
+    let mut rows = QueryRows::new();
+    let _ = rows.push(row);
+    retire_query_rows_or_recover(rows);
+}
+
+fn retire_query_rows_or_recover(owner: QueryRows) {
+    if let Err(mut owner) = retire_query_rows(owner) {
+        let rows = std::mem::replace(&mut owner.slots, std::array::from_fn(|_| None));
+        owner.len = 0;
+        drop(owner);
+        drop(rows);
+    }
+}
+
+pub fn query_rows_maintenance_step() -> Result<bool, DbError> {
+    let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(slot) = retired.iter_mut().find(|slot| slot.is_some()) else {
+        drop(retired);
+        let mut overflow = QUERY_RETIRED_ROWS_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(index) = overflow.iter().position(Option::is_some) else {
+            drop(overflow);
+            let mut quarantine = QUERY_RETIRED_ROWS_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let Some(index) = quarantine.iter().position(Option::is_some) else { return Ok(false) };
+            let owner = quarantine[index].take().ok_or_else(|| DbError::Internal("query quarantine retirement changed row owner".to_string()))?;
+            drop(quarantine);
+            let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let slot = retired.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("query retirement primary refilled before quarantine recovery".to_string()))?;
+            *slot = Some(owner);
+            return Ok(true);
+        };
+        let owner = overflow[index].take().ok_or_else(|| DbError::Internal("query overflow retirement changed row owner".to_string()))?;
+        drop(overflow);
+        let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = retired.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("query primary retirement refilled before overflow recovery".to_string()))?;
+        *slot = Some(owner);
+        return Ok(true);
+    };
+    let owner = slot.as_mut().ok_or_else(|| DbError::Internal("query retired row set changed owner".to_string()))?;
+    if owner.close_step()? {
+        return Ok(true);
+    }
+    *slot = None;
+    Ok(true)
+}
+
 impl Drop for QueryRows {
     fn drop(&mut self) {
-        while matches!(self.close_step(), Ok(true)) {}
+        if self.terminal_is_empty() {
+            return;
+        }
+        retire_query_rows_or_recover(std::mem::replace(self, Self::new()));
     }
 }
 
@@ -835,9 +907,9 @@ pub trait QuerySource {
     async fn get(&self, id: RowId, control: &mut QueryCursorControl) -> Result<Option<QueryRow>, DbError> {
         let mut rows = self.scan(control).await?;
         let found = rows.iter().position(|row| row.id() == id).and_then(|index| rows.take(index));
-        while rows.close_step()? {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = rows.close_step()?;
+        drop(rows);
         Ok(found)
     }
 }
@@ -1021,6 +1093,7 @@ pub struct QueryResult {
 // or `db_artifact`'s own `StateQuerySource`), never a runtime-chosen mix — parameter-position
 // generic, no design question.
 pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits, control: &mut QueryCursorControl) -> Result<QueryResult, DbError> {
+    query_rows_maintenance_step()?;
     let chosen_plan = plan(query);
     let mut scanned: u64 = 0;
     let mut matched = source.scan(control).await?;
@@ -1036,10 +1109,7 @@ pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<
                 if accepted {
                     index += 1;
                 } else {
-                    let mut row = matched.take(index).expect("live query row slot");
-                    while value_close_step(&mut row.value)? {
-                        control.grant()?;
-                    }
+                    retire_query_row(matched.take(index).expect("live query row slot"));
                 }
             }
         }
@@ -1056,15 +1126,12 @@ pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<
                 if accepted {
                     index += 1;
                 } else {
-                    let mut row = matched.take(index).expect("live query row slot");
-                    while value_close_step(&mut row.value)? {
-                        control.grant()?;
-                    }
+                    retire_query_row(matched.take(index).expect("live query row slot"));
                 }
             }
-            while ids.close_step() {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = ids.close_step();
+            drop(ids);
         }
     }
 
@@ -1075,17 +1142,11 @@ pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<
 
     let offset = query.offset.unwrap_or(0) as usize;
     for _ in 0..offset.min(matched.len()) {
-        let mut row = matched.take(0).expect("live query row slot");
-        while value_close_step(&mut row.value)? {
-            control.grant()?;
-        }
+        retire_query_row(matched.take(0).expect("live query row slot"));
     }
     if let Some(limit) = query.limit.and_then(|limit| usize::try_from(limit).ok()) {
         while matched.len() > limit {
-            let mut row = matched.take(matched.len() - 1).expect("live query row slot");
-            while value_close_step(&mut row.value)? {
-                control.grant()?;
-            }
+            retire_query_row(matched.take(matched.len() - 1).expect("live query row slot"));
         }
     }
     check_len(matched.len() as u64, limits.max_result_rows, "db_query::result_rows")?;
@@ -1261,11 +1322,7 @@ impl LiveQuery {
             match previous {
                 None => diff.added.push(row).map_err(|_| DbError::LimitExceeded("live query added slots"))?,
                 Some(previous) if previous != hash => diff.updated.push(row).map_err(|_| DbError::LimitExceeded("live query updated slots"))?,
-                Some(_) => {
-                    while value_close_step(&mut row.value)? {
-                        control.grant()?;
-                    }
-                }
+                Some(_) => retire_query_row(row),
             }
         }
         for (id, _) in self.snapshot[..self.snapshot_len as usize].iter().flatten() {
@@ -1308,6 +1365,52 @@ mod tests {
             offset += writer.write_fragment(&bytes[offset..]).unwrap();
         }
         QueryBytes::from_pages(writer.seal_retained().await.unwrap()).unwrap()
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn interrupted_query_rows_drop_retains_one_resumable_close_owner() {
+        while query_rows_maintenance_step().unwrap() {}
+        let mut rows = QueryRows::new();
+        rows.push(QueryRow::new(RowId(1), Value::Bytes(query_bytes(&vec![0x5a; db_storage::DB_IO_PAGE_BYTES + 1]).await))).unwrap();
+        drop(rows);
+        assert!(query_rows_maintenance_step().unwrap());
+        {
+            let retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert!(retired.iter().flatten().any(|owner| !owner.terminal_is_empty()));
+        }
+        while query_rows_maintenance_step().unwrap() {}
+
+        QUERY_RETIREMENT_PRESSURE_FAULT.store(false, std::sync::atomic::Ordering::Release);
+        {
+            let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in retired.iter_mut() {
+                *slot = Some(QueryRows::new());
+            }
+        }
+        let mut exact = QueryRows::new();
+        exact.push(QueryRow::new(RowId(0x5155_4552_59), Value::Null)).unwrap();
+        let mut second = QueryRows::new();
+        second.push(QueryRow::new(RowId(0x5155_4552_5a), Value::Null)).unwrap();
+        assert!(retire_query_rows(exact).is_ok());
+        assert!(retire_query_rows(second).is_ok());
+        assert!(QUERY_RETIREMENT_PRESSURE_FAULT.load(std::sync::atomic::Ordering::Acquire));
+        {
+            let overflow = QUERY_RETIRED_ROWS_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert_eq!(overflow.iter().flatten().find_map(|rows| rows.get(0).map(QueryRow::id)), Some(RowId(0x5155_4552_59)));
+            assert!(overflow.iter().flatten().any(|rows| rows.get(0).map(QueryRow::id) == Some(RowId(0x5155_4552_5a))));
+        }
+        {
+            let mut retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in retired.iter_mut() {
+                *slot = None;
+            }
+        }
+        assert!(query_rows_maintenance_step().unwrap());
+        {
+            let retired = QUERY_RETIRED_ROWS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert_eq!(retired.iter().flatten().find_map(|rows| rows.get(0).map(QueryRow::id)), Some(RowId(0x5155_4552_59)));
+        }
+        while query_rows_maintenance_step().unwrap() {}
     }
 
     //#region 🔖️Value

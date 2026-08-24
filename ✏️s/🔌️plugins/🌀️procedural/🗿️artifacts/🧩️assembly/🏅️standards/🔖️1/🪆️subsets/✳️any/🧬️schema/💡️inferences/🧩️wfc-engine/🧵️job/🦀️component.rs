@@ -421,6 +421,7 @@ pub(crate) struct WfcJob<T> {
     completed_commit: Option<WfcCommit>,
     preview_units: u64,
     last_preview_ms: Option<u64>,
+    closing: bool,
 }
 
 impl<T: Topology + Clone> WfcJob<T> {
@@ -466,7 +467,7 @@ impl<T: Topology + Clone> WfcJob<T> {
             backtracks: 0,
             observed: Vec::new(),
         };
-        Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None }
+        Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None, closing: false }
     }
 
     pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>, bytes: &[u8]) -> Result<Self, String>
@@ -1213,6 +1214,7 @@ pub(crate) struct WfcRestore<T> {
     restored: Option<WfcJob<T>>,
     preview_units: u64,
     last_preview_ms: Option<u64>,
+    closing: bool,
 }
 
 impl<T: Topology + Clone> WfcRestore<T> {
@@ -1252,6 +1254,7 @@ impl<T: Topology + Clone> WfcRestore<T> {
             restored: None,
             preview_units: 0,
             last_preview_ms: None,
+            closing: false,
         })
     }
 
@@ -1501,6 +1504,7 @@ impl<T: Topology + Clone> WfcRestore<T> {
             completed_commit: None,
             preview_units: 0,
             last_preview_ms: None,
+            closing: false,
         });
         Ok(())
     }
@@ -1566,6 +1570,87 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
                 return StepOutcome::Yield;
             }
         }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(restored) = self.restored.as_mut() {
+            restored.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.begin_close();
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(restored) = self.restored.as_mut() {
+            let step = restored.close_step(maximum_items, maximum_bytes);
+            if restored.terminal_is_empty() {
+                self.restored = None;
+            }
+            return step;
+        }
+        if !self.bytes.is_empty() {
+            if maximum_bytes == 0 {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.bytes.pop();
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 1 };
+        }
+        macro_rules! pop_owner {
+            ($owners:expr) => {
+                if $owners.pop().is_some() {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+            };
+        }
+        pop_owner!(self.fixed);
+        if let Some(domains) = self.initial_domains.as_mut() {
+            pop_owner!(domains);
+            self.initial_domains = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        pop_owner!(self.domains);
+        pop_owner!(self.domain_words);
+        pop_owner!(self.trail);
+        pop_owner!(self.decisions);
+        pop_owner!(self.observed);
+        pop_owner!(self.domain_counts);
+        pop_owner!(self.weight_sums);
+        pop_owner!(self.weighted_log_sums);
+        pop_owner!(self.revisions);
+        pop_owner!(self.queued_marks);
+        if self.entropy_heap.pop().is_some()
+            || self.header.take().is_some()
+            || self.model.take().is_some()
+            || self.topology.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.model.is_none()
+            && self.topology.is_none()
+            && self.initial_domains.is_none()
+            && self.fixed.is_empty()
+            && self.bytes.is_empty()
+            && self.header.is_none()
+            && self.domains.is_empty()
+            && self.domain_words.is_empty()
+            && self.trail.is_empty()
+            && self.decisions.is_empty()
+            && self.observed.is_empty()
+            && self.domain_counts.is_empty()
+            && self.weight_sums.is_empty()
+            && self.weighted_log_sums.is_empty()
+            && self.revisions.is_empty()
+            && self.queued_marks.is_empty()
+            && self.entropy_heap.is_empty()
+            && self.restored.is_none()
     }
 }
 //#endregion 🔄️RestoreJob
@@ -1649,6 +1734,88 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                 return StepOutcome::Yield;
             }
         }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.closing = true;
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        macro_rules! pop_owner {
+            ($owners:expr) => {
+                if $owners.pop().is_some() {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+            };
+        }
+        if let Some(domains) = self.initial_domains.as_mut() {
+            pop_owner!(domains);
+            self.initial_domains = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        pop_owner!(self.fixed);
+        pop_owner!(self.state.domains);
+        pop_owner!(self.state.domain_counts);
+        pop_owner!(self.state.domain_weight_sums);
+        pop_owner!(self.state.domain_weighted_log_sums);
+        pop_owner!(self.state.revisions);
+        if self.state.queue.pop_front().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        pop_owner!(self.state.queued_marks);
+        pop_owner!(self.state.trail);
+        pop_owner!(self.state.decisions);
+        pop_owner!(self.state.propagation_wave);
+        pop_owner!(self.state.changed_domains);
+        pop_owner!(self.state.backtrack_path);
+        pop_owner!(self.state.observed);
+        if self.state.entropy_heap.pop().is_some()
+            || self.checkpoint_build.take().is_some()
+            || self.commit_build.take().is_some()
+            || self.completed_commit.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(bytes) = self.final_checkpoint.as_mut() {
+            if !bytes.is_empty() {
+                if maximum_bytes == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                bytes.pop();
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 1 };
+            }
+            self.final_checkpoint = None;
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.initial_domains.is_none()
+            && self.fixed.is_empty()
+            && self.state.domains.is_empty()
+            && self.state.domain_counts.is_empty()
+            && self.state.domain_weight_sums.is_empty()
+            && self.state.domain_weighted_log_sums.is_empty()
+            && self.state.revisions.is_empty()
+            && self.state.queue.is_empty()
+            && self.state.queued_marks.is_empty()
+            && self.state.trail.is_empty()
+            && self.state.decisions.is_empty()
+            && self.state.entropy_heap.is_empty()
+            && self.state.propagation_wave.is_empty()
+            && self.state.changed_domains.is_empty()
+            && self.state.backtrack_path.is_empty()
+            && self.state.observed.is_empty()
+            && self.checkpoint_build.is_none()
+            && self.final_checkpoint.is_none()
+            && self.commit_build.is_none()
+            && self.completed_commit.is_none()
     }
 }
 //#endregion 🧩️Job

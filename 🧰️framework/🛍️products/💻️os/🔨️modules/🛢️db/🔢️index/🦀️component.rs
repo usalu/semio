@@ -277,18 +277,17 @@ async fn admit_generated_index_bytes(source: Vec<u8>, maximum: u64, control: &mu
     match IndexBytes::try_admit(source, maximum, control).await {
         Ok(bytes) => Ok(bytes),
         Err(mut rejected) => {
-            while rejected.close_step()? {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = rejected.close_step()?;
             Err(rejected.error)
         }
     }
 }
 
 async fn close_index_bytes(mut bytes: IndexBytes, control: &mut IndexCursorControl) -> Result<(), DbError> {
-    while bytes.close_step()?.is_some() {
-        control.grant()?;
-    }
+    control.grant()?;
+    let _ = bytes.close_step()?;
+    drop(bytes);
     Ok(())
 }
 
@@ -419,21 +418,22 @@ impl RunEntries {
     }
 
     pub fn close_step(&mut self) -> Result<bool, DbError> {
-        for entry in self.entries.iter_mut().rev().flatten() {
-            if let RunValue::Put(value) = &mut entry.value {
-                if value.close_step()?.is_some() {
-                    return Ok(true);
-                }
-            }
-            if entry.key.close_step()?.is_some() {
+        if self.len == 0 {
+            return Ok(false);
+        }
+        let index = self.len as usize - 1;
+        let entry = self.entries[index].as_mut().ok_or_else(|| DbError::Internal("index close lost retained entry".to_string()))?;
+        if let RunValue::Put(value) = &mut entry.value {
+            if value.close_step()?.is_some() {
                 return Ok(true);
             }
         }
-        for entry in &mut self.entries {
-            *entry = None;
+        if entry.key.close_step()?.is_some() {
+            return Ok(true);
         }
-        self.len = 0;
-        Ok(false)
+        self.entries[index] = None;
+        self.len -= 1;
+        Ok(true)
     }
 }
 
@@ -729,25 +729,22 @@ async fn decode_run_pages_inner(pages: &db_storage::DbIoPages, expected_kind: In
 
 async fn decode_run_pages(mut pages: db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
     let result = decode_run_pages_inner(&pages, expected_kind, control).await;
-    while pages.close_step()?.is_some() {}
+    let _ = pages.close_step()?;
+    drop(pages);
     result
 }
 //#endregion 🔖️SortedRun
 
 //#region 🔖️Merge
 async fn close_run_entry(mut entry: RunEntry, control: &mut IndexCursorControl) -> Result<(), DbError> {
-    loop {
-        control.grant()?;
-        if let RunValue::Put(value) = &mut entry.value {
-            if value.close_step()?.is_some() {
-                continue;
-            }
-        }
-        if entry.key.close_step()?.is_some() {
-            continue;
-        }
-        return Ok(());
+    control.grant()?;
+    if let RunValue::Put(value) = &mut entry.value {
+        let _ = value.close_step()?;
+    } else {
+        let _ = entry.key.close_step()?;
     }
+    drop(entry);
+    Ok(())
 }
 
 async fn merge_run_entries(mut older: RunEntries, mut newer: RunEntries, drop_tombstones: bool, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
@@ -871,9 +868,9 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
                 output.push(*id)?;
             }
         }
-        while source.close_step() {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = source.close_step();
+        drop(source);
         Ok(output)
     }
 
@@ -882,9 +879,9 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     async fn next_sequence(&self, control: &mut IndexCursorControl) -> Result<u64, DbError> {
         let mut ids = self.kind_run_ids(control).await?;
         let next = ids.as_slice().last().map_or(0, |id| sequence_of_run_id(*id) + 1);
-        while ids.close_step() {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = ids.close_step();
+        drop(ids);
         Ok(next)
     }
 
@@ -916,9 +913,9 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
             }
         }
         let pages = encode_run_pages(self.kind, &unique, control).await?;
-        while unique.close_step()? {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = unique.close_step()?;
+        drop(unique);
         let run_id = make_run_id(self.kind, self.next_sequence(control).await?)?;
         self.storage.write_run(&self.document, run_id, pages).await?;
         self.maybe_auto_merge(control).await
@@ -954,26 +951,24 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
                             RunValue::Tombstone => None,
                         };
                         let mut key = entry.key;
-                        while key.close_step()?.is_some() {
-                            control.grant()?;
-                        }
-                        while entries.close_step()? {
-                            control.grant()?;
-                        }
-                        while ids.close_step() {
-                            control.grant()?;
-                        }
+                        control.grant()?;
+                        let _ = key.close_step()?;
+                        drop(key);
+                        let _ = entries.close_step()?;
+                        drop(entries);
+                        let _ = ids.close_step();
+                        drop(ids);
                         return Ok(result);
                     }
                 }
             }
-            while entries.close_step()? {
-                control.grant()?;
-            }
-        }
-        while ids.close_step() {
             control.grant()?;
+            let _ = entries.close_step()?;
+            drop(entries);
         }
+        control.grant()?;
+        let _ = ids.close_step();
+        drop(ids);
         Ok(None)
     }
 
@@ -987,9 +982,9 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
             let next = self.load_run(run_ids.as_slice()[index], control).await?;
             merged = merge_run_entries(merged, next, true, control).await?;
         }
-        while run_ids.close_step() {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = run_ids.close_step();
+        drop(run_ids);
         let mut output = RunEntries::new();
         for index in 0..merged.len() {
             let entry = merged.take(index).unwrap();
@@ -1011,9 +1006,9 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         loop {
             let mut run_ids = self.kind_run_ids(control).await?;
             if run_ids.len() <= self.policy.max_runs_before_merge {
-                while run_ids.close_step() {
-                    control.grant()?;
-                }
+                control.grant()?;
+                let _ = run_ids.close_step();
+                drop(run_ids);
                 return Ok(());
             }
             let (oldest, second_oldest) = (run_ids.as_slice()[0], run_ids.as_slice()[1]);
@@ -1021,12 +1016,11 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
             let newer = self.load_run(second_oldest, control).await?;
             let mut merged = merge_run_entries(older, newer, false, control).await?;
             let pages = encode_run_pages(self.kind, &merged, control).await?;
-            while merged.close_step()? {
-                control.grant()?;
-            }
-            while run_ids.close_step() {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = merged.close_step()?;
+            drop(merged);
+            let _ = run_ids.close_step();
+            drop(run_ids);
             self.storage.write_run(&self.document, oldest, pages).await?;
             self.storage.delete_run(&self.document, second_oldest).await?;
         }
@@ -1044,17 +1038,17 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
                 merged = merge_run_entries(merged, next, index + 1 == run_ids.len(), control).await?;
             }
             let pages = encode_run_pages(self.kind, &merged, control).await?;
-            while merged.close_step()? {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = merged.close_step()?;
+            drop(merged);
             self.storage.write_run(&self.document, run_ids.as_slice()[0], pages).await?;
             for index in 1..run_ids.len() {
                 self.storage.delete_run(&self.document, run_ids.as_slice()[index]).await?;
             }
         }
-        while run_ids.close_step() {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = run_ids.close_step();
+        drop(run_ids);
         self.stats(control).await
     }
 
@@ -1069,14 +1063,14 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
             let mut bytes = self.storage.read_run(&self.document, *run_id).await?;
             total_bytes += bytes.len() as u64;
             entry_count += peek_entry_count(&bytes, self.kind, control).await?;
-            while bytes.close_step()?.is_some() {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = bytes.close_step()?;
+            drop(bytes);
         }
         let run_count = run_ids.len();
-        while run_ids.close_step() {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = run_ids.close_step();
+        drop(run_ids);
         Ok(IndexStats { run_count, entry_count, total_bytes })
     }
 
@@ -1086,13 +1080,13 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         let mut ids = self.kind_run_ids(control).await?;
         for index in 0..ids.len() {
             let mut entries = self.load_run(ids.as_slice()[index], control).await?;
-            while entries.close_step()? {
-                control.grant()?;
-            }
-        }
-        while ids.close_step() {
             control.grant()?;
+            let _ = entries.close_step()?;
+            drop(entries);
         }
+        control.grant()?;
+        let _ = ids.close_step();
+        drop(ids);
         Ok(())
     }
 }
@@ -1135,9 +1129,9 @@ async fn decode_index_bytes<T>(mut bytes: IndexBytes, control: &mut IndexCursorC
         }
         Ok(decoded)
     })();
-    while bytes.close_step()?.is_some() {
-        control.grant()?;
-    }
+    control.grant()?;
+    let _ = bytes.close_step()?;
+    drop(bytes);
     result
 }
 
@@ -1328,9 +1322,9 @@ impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
             close_index_bytes(entry.key, &mut control).await?;
             Some((u64::from_be_bytes(suffix), command))
         };
-        while entries.close_step()? {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = entries.close_step()?;
+        drop(entries);
         Ok(result)
     }
 }
@@ -1415,9 +1409,9 @@ impl<'a, S: IndexStorage> FrontierIndex<'a, S> {
                 RunValue::Tombstone => None,
             }
         };
-        while entries.close_step()? {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = entries.close_step()?;
+        drop(entries);
         Ok(result)
     }
 }
@@ -1475,13 +1469,13 @@ impl<'a, S: IndexStorage> TouchedRegionIndex<'a, S> {
         if !inserted {
             updated.push(command_seq)?;
         }
-        while postings.close_step() {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = postings.close_step();
+        drop(postings);
         let value = admit_generated_index_bytes(encode_postings(&updated).await, MAX_VALUE_LEN, &mut control).await?;
-        while updated.close_step() {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = updated.close_step();
+        drop(updated);
         let key = IndexBytes::copy_for_operation(value.operation(), region, &mut control).await?;
         self.handle.put(key, value, &mut control).await
     }
@@ -1581,15 +1575,15 @@ impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
                 if !inserted {
                     updated.push(doc_ref)?;
                 }
-                while postings.close_step() {
-                    control.grant()?;
-                }
+                control.grant()?;
+                let _ = postings.close_step();
+                drop(postings);
                 postings = updated;
             }
             let value = admit_generated_index_bytes(encode_postings(&postings).await, MAX_VALUE_LEN, &mut control).await?;
-            while postings.close_step() {
-                control.grant()?;
-            }
+            control.grant()?;
+            let _ = postings.close_step();
+            drop(postings);
             let key = IndexBytes::copy_for_operation(value.operation(), term.as_bytes(), &mut control).await?;
             self.handle.put(key, value, &mut control).await?;
         }
@@ -1636,16 +1630,17 @@ impl IndexBlobList {
     }
 
     pub fn close_step(&mut self) -> Result<bool, DbError> {
-        for blob in self.blobs.iter_mut().rev().flatten() {
-            if blob.close_step()?.is_some() {
-                return Ok(true);
-            }
+        if self.len == 0 {
+            return Ok(false);
         }
-        for blob in &mut self.blobs {
-            *blob = None;
+        let index = self.len as usize - 1;
+        let blob = self.blobs[index].as_mut().ok_or_else(|| DbError::Internal("index blob close lost retained owner".to_string()))?;
+        if blob.close_step()?.is_some() {
+            return Ok(true);
         }
-        self.len = 0;
-        Ok(false)
+        self.blobs[index] = None;
+        self.len -= 1;
+        Ok(true)
     }
 }
 
@@ -1724,9 +1719,9 @@ impl<'a, S: IndexStorage> ConflictIndex<'a, S> {
         let mut records = self.conflicts_for_with_control(command_seq, &mut control).await?;
         records.push(record).map_err(|_| DbError::LimitExceeded("index conflict list owner"))?;
         let value = encode_blob_list(&records, &mut control).await?;
-        while records.close_step()? {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = records.close_step()?;
+        drop(records);
         let key = IndexBytes::copy_for_operation(value.operation(), &command_seq.to_be_bytes(), &mut control).await?;
         self.handle.put(key, value, &mut control).await
     }
@@ -1841,9 +1836,9 @@ impl<'a, S: IndexStorage> ProjectionIndex<'a, S> {
                 RunValue::Tombstone => None,
             };
         }
-        while entries.close_step()? {
-            control.grant()?;
-        }
+        control.grant()?;
+        let _ = entries.close_step()?;
+        drop(entries);
         close_index_bytes(prefix_owner, &mut control).await?;
         Ok(result)
     }

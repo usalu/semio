@@ -115,12 +115,27 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// panel (`action: None` — the tree is `interaction_domain`-bound now, so the framework's renderer
 /// translates clicks into injected `interactionSelect`) and the catalogue panel (`action: Some(..)` —
 /// a real, non-selection click that toggles layer visibility).
-pub async fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: Option<String>, icon_id: &str, action: Option<ActionDescriptor>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let base = match action {
-        Some(action) => tree_item_with_action(id, label, description, action),
-        None => UiTreeItemNode { description, menu: None, ..tree_item(id, label) },
+pub async fn gis2d_layer_tree_item(
+    id: String,
+    label: impl TryInto<Label>,
+    description: Option<String>,
+    icon_id: &str,
+    action: Option<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut node = match action {
+        Some(action) => tree_item_with_action(id, label, description.clone(), action)?,
+        None => tree_item(id, label)?,
     };
-    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..base }
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+        if props.description.is_none() {
+            props.description = match description {
+                Some(value) => Some(semio_framework_plugin::UiText::try_from_string(value).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer description admission failed"))?),
+                None => None,
+            };
+        }
+        props.icon = Some(semio_framework_plugin::UiText::try_from_str(icon_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer icon admission failed"))?);
+    }
+    Ok(node)
 }
 //#endregion 🔖️Constants
 

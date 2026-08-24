@@ -2,8 +2,8 @@
 
 use crate::editor::gis2d::config::Gis2dConfig;
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
-use crate::editor::gis2d::{gis2d_layer_tree_item, GIS_MAP_LAYER_IDS};
-use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use crate::editor::gis2d::{gis2d_layer_tree_item, ui_node_list, GIS_MAP_LAYER_IDS};
+use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_BODY_DOCUMENT: &str = "gis2d.play.document";
@@ -29,7 +29,7 @@ pub async fn definition() -> PanelTabDefinition {
 /// `.selected()?`/`.selection_change()` calls.
 pub async fn render(_cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let builder = PanelTreeBuilder::new("gis2d-play-document")?;
-    let layer_items: Vec<UiTreeItemNode> = GIS_MAP_LAYER_IDS.iter().map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id)?, Label::data(gis2d_layer_label(id, labels)), Some((*id).into()), icon, None)?).collect();
+    let layer_items = ui_node_list(GIS_MAP_LAYER_IDS.iter().map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id)?, Label::data(gis2d_layer_label(id, labels)), Some((*id).into()), icon, None)))?;
     builder.section("gis2d-play-document.layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, layer_items)?.interaction_domain("features")?.build()
 }
 //#endregion 🔖️Render

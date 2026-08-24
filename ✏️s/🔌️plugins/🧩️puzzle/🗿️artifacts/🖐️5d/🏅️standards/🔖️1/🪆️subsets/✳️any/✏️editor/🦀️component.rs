@@ -1265,7 +1265,7 @@ enum Puzzle5dSelectionStage {
 }
 
 struct Puzzle5dSelectionScan {
-    snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>,
+    snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
     part_ids: HashSet<String>,
     explicit_fastener_ids: HashSet<String>,
     stage: Puzzle5dSelectionStage,
@@ -1277,11 +1277,11 @@ struct Puzzle5dSelectionScan {
 impl Puzzle5dSelectionScan {
     fn new(snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>, interaction: &semio_framework::protocol::InteractionState) -> Self {
         let (part_ids, explicit_fastener_ids) = puzzle5d_selection_ids(interaction);
-        Self { snapshot, part_ids, explicit_fastener_ids, stage: Puzzle5dSelectionStage::Endpoints, cursor: 0, parts: Vec::new(), fasteners: Vec::new() }
+        Self { snapshot: Some(snapshot), part_ids, explicit_fastener_ids, stage: Puzzle5dSelectionStage::Endpoints, cursor: 0, parts: Vec::new(), fasteners: Vec::new() }
     }
 
     fn rows(&self, key: &str) -> &[Value] {
-        self.snapshot.0.get(key).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
+        self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get(key)).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[])
     }
 
     fn step(&mut self) -> Result<bool, String> {
@@ -1342,6 +1342,107 @@ enum Puzzle5dClipboardStage {
     Complete,
 }
 
+const PUZZLE5D_JSON_RETIREMENT_KEY_BYTES: usize = 4_096;
+
+fn puzzle5d_retire_vec_backing<T>(owners: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
+    if !owners.is_empty() || owners.capacity() == 0 {
+        return Ok(None);
+    }
+    let bytes = owners.capacity().saturating_mul(std::mem::size_of::<T>());
+    if bytes > maximum_bytes {
+        return Err(Fault::from("puzzle5d vector backing exceeds its bounded disposal byte slice"));
+    }
+    owners.shrink_to_fit();
+    Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
+}
+
+fn puzzle5d_retire_json_step(value: &mut Value, key: &mut [u8; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES], maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
+    match value {
+        Value::Null => Ok(None),
+        Value::Bool(_) | Value::Number(_) => {
+            *value = Value::Null;
+            Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }))
+        }
+        Value::String(text) => {
+            let bytes = text.capacity();
+            if bytes > maximum_bytes {
+                return Err(Fault::from("puzzle5d recursive string exceeds its bounded disposal byte slice"));
+            }
+            *value = Value::Null;
+            Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
+        }
+        Value::Array(values) => {
+            if let Some(last) = values.last_mut() {
+                if last.is_null() {
+                    values.pop();
+                    return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
+                }
+                return puzzle5d_retire_json_step(last, key, maximum_bytes);
+            }
+            let bytes = values.capacity().saturating_mul(std::mem::size_of::<Value>());
+            if bytes > maximum_bytes {
+                return Err(Fault::from("puzzle5d recursive array backing exceeds its bounded disposal byte slice"));
+            }
+            *value = Value::Null;
+            Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
+        }
+        Value::Object(values) => {
+            let next = values.iter().next().map(|(name, child)| (name.len(), child.is_null()));
+            let Some((name_len, child_empty)) = next else {
+                *value = Value::Null;
+                return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
+            };
+            if !child_empty {
+                let child = values.iter_mut().next().map(|(_, child)| child).ok_or_else(|| Fault::from("puzzle5d recursive object changed during retirement"))?;
+                return puzzle5d_retire_json_step(child, key, maximum_bytes);
+            }
+            if name_len > key.len() || name_len > maximum_bytes {
+                return Err(Fault::from("puzzle5d recursive object key exceeds its fixed disposal key slice"));
+            }
+            let name = values.iter().next().map(|(name, _)| name.as_bytes()).ok_or_else(|| Fault::from("puzzle5d recursive object changed during key retirement"))?;
+            key[..name_len].copy_from_slice(name);
+            let name = std::str::from_utf8(&key[..name_len]).map_err(|error| Fault::from(error.to_string()))?;
+            let removed = values.remove_entry(name).ok_or_else(|| Fault::from("puzzle5d recursive object lost its admitted key"))?;
+            let bytes = removed.0.capacity();
+            drop(removed);
+            Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
+        }
+    }
+}
+
+#[cfg(test)]
+mod puzzle5d_retirement_laws {
+    use super::*;
+
+    #[test]
+    fn recursive_json_zero_and_key_max_plus_one_preserve_exact_owner_before_incremental_close() {
+        let oversized_key = "k".repeat(PUZZLE5D_JSON_RETIREMENT_KEY_BYTES + 1);
+        let mut value = serde_json::json!({ oversized_key.clone(): { "nested": ["payload"] } });
+        let before = value.clone();
+        let mut key = [0; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES];
+        assert!(puzzle5d_retire_json_step(&mut value, &mut key, 0).is_err());
+        assert_eq!(value, before);
+        let nested = value.as_object_mut().and_then(|object| object.get_mut(&oversized_key)).and_then(Value::as_object_mut).and_then(|object| object.get_mut("nested")).and_then(Value::as_array_mut).and_then(|array| array.last_mut());
+        if let Some(nested) = nested {
+            *nested = Value::Null;
+        }
+        assert!(puzzle5d_retire_json_step(&mut value, &mut key, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).is_err());
+        assert!(value.get(&oversized_key).is_some());
+    }
+
+    #[test]
+    fn empty_vector_backing_requires_exact_byte_credit_and_retires_once() {
+        let mut owners = Vec::<u64>::with_capacity(17);
+        let admitted = owners.capacity();
+        let bytes = admitted * std::mem::size_of::<u64>();
+        assert!(puzzle5d_retire_vec_backing(&mut owners, bytes - 1).is_err());
+        assert_eq!(owners.capacity(), admitted);
+        assert!(matches!(puzzle5d_retire_vec_backing(&mut owners, bytes), Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes })) if released_bytes == bytes));
+        assert_eq!(owners.capacity(), 0);
+        assert!(matches!(puzzle5d_retire_vec_backing(&mut owners, bytes), Ok(None)));
+    }
+}
+
 struct Puzzle5dClipboardWork {
     raw: Vec<u8>,
     raw_cursor: usize,
@@ -1350,12 +1451,13 @@ struct Puzzle5dClipboardWork {
     scan: Puzzle5dSelectionScan,
     encode_cursor: usize,
     dsl_text: String,
-    completion: ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>,
+    completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
+    closing: bool,
 }
 
 impl Puzzle5dClipboardWork {
     fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, interaction: semio_framework::protocol::InteractionState) -> Self {
-        Self { raw: request.raw_wire, raw_cursor: 0, progress: 0, stage: Puzzle5dClipboardStage::Envelope, scan: Puzzle5dSelectionScan::new(request.snapshot, &interaction), encode_cursor: 0, dsl_text: String::new(), completion: request.completion }
+        Self { raw: request.raw_wire, raw_cursor: 0, progress: 0, stage: Puzzle5dClipboardStage::Envelope, scan: Puzzle5dSelectionScan::new(request.snapshot, &interaction), encode_cursor: 0, dsl_text: String::new(), completion: Some(request.completion), closing: false }
     }
 
     fn step_work(&mut self, cx: &mut StepContext<'_>) -> Result<bool, String> {
@@ -1431,6 +1533,7 @@ impl Puzzle5dClipboardWork {
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        self.closing = true;
         if maximum_items == 0 {
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -1442,6 +1545,12 @@ impl Puzzle5dClipboardWork {
                     return Err(Fault::from("puzzle5d clipboard grip exceeds its bounded disposal byte slice"));
                 }
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            if let Some(step) = puzzle5d_retire_vec_backing(&mut part.grips, maximum_bytes)? {
+                return Ok(step);
+            }
+            if let Some(step) = puzzle5d_retire_vec_backing(&mut part.grips, maximum_bytes)? {
+                return Ok(step);
             }
             if matches!(part.part_3d.scale, Some(Value::Array(_)) | Some(Value::Object(_))) {
                 return Err(Fault::from("puzzle5d clipboard part retains an unproved recursive scale value"));
@@ -1468,23 +1577,110 @@ impl Puzzle5dClipboardWork {
             }
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
         }
-        if let Some(key) = self.scan.part_ids.iter().next() {
-            if key.len() > maximum_bytes {
+        if let Some(step) = puzzle5d_retire_vec_backing(&mut self.scan.parts, maximum_bytes)? {
+            return Ok(step);
+        }
+        if let Some(step) = puzzle5d_retire_vec_backing(&mut self.scan.fasteners, maximum_bytes)? {
+            return Ok(step);
+        }
+        let part_id = {
+            let mut ids = self.scan.part_ids.extract_if(|_| true);
+            ids.next()
+        };
+        if let Some(key) = part_id {
+            if key.capacity() > maximum_bytes {
+                self.scan.part_ids.insert(key);
                 return Err(Fault::from("puzzle5d clipboard selection id exceeds its bounded disposal byte slice"));
             }
-            let key = key.clone();
-            self.scan.part_ids.remove(&key);
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: key.len() });
+            let bytes = key.capacity();
+            drop(key);
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
         }
-        if let Some(key) = self.scan.explicit_fastener_ids.iter().next() {
-            if key.len() > maximum_bytes {
+        let fastener_id = {
+            let mut ids = self.scan.explicit_fastener_ids.extract_if(|_| true);
+            ids.next()
+        };
+        if let Some(key) = fastener_id {
+            if key.capacity() > maximum_bytes {
+                self.scan.explicit_fastener_ids.insert(key);
                 return Err(Fault::from("puzzle5d clipboard fastener id exceeds its bounded disposal byte slice"));
             }
-            let key = key.clone();
-            self.scan.explicit_fastener_ids.remove(&key);
-            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: key.len() });
+            let bytes = key.capacity();
+            drop(key);
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if self.scan.part_ids.is_empty() && self.scan.part_ids.capacity() != 0 {
+            let bytes = self.scan.part_ids.capacity().saturating_mul(std::mem::size_of::<String>());
+            if bytes > maximum_bytes {
+                return Err(Fault::from("puzzle5d clipboard selection backing exceeds its bounded disposal byte slice"));
+            }
+            self.scan.part_ids.shrink_to_fit();
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if self.scan.explicit_fastener_ids.is_empty() && self.scan.explicit_fastener_ids.capacity() != 0 {
+            let bytes = self.scan.explicit_fastener_ids.capacity().saturating_mul(std::mem::size_of::<String>());
+            if bytes > maximum_bytes {
+                return Err(Fault::from("puzzle5d clipboard fastener selection backing exceeds its bounded disposal byte slice"));
+            }
+            self.scan.explicit_fastener_ids.shrink_to_fit();
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(character) = self.dsl_text.pop() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: character.len_utf8() });
+        }
+        if self.dsl_text.capacity() != 0 {
+            let bytes = self.dsl_text.capacity();
+            if bytes > maximum_bytes {
+                return Err(Fault::from("puzzle5d clipboard text backing exceeds its bounded disposal byte slice"));
+            }
+            self.dsl_text = String::new();
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if !self.raw.is_empty() && maximum_bytes == 0 {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.raw.pop().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 1 });
+        }
+        if self.raw.capacity() != 0 {
+            let bytes = self.raw.capacity();
+            if bytes > maximum_bytes {
+                return Err(Fault::from("puzzle5d clipboard wire backing exceeds its bounded disposal byte slice"));
+            }
+            self.raw = Vec::new();
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if self.scan.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
+            return Ok(PluginCloseStep::Blocked { reason: "puzzle5d clipboard snapshot has no mounted retained authority" });
+        }
+        if self.scan.snapshot.take().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
+            return Ok(PluginCloseStep::Blocked { reason: "puzzle5d clipboard completion has no mounted consumer authority" });
+        }
+        if self.completion.take().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.raw.is_empty()
+            && self.raw.capacity() == 0
+            && self.scan.snapshot.is_none()
+            && self.scan.part_ids.is_empty()
+            && self.scan.part_ids.capacity() == 0
+            && self.scan.explicit_fastener_ids.is_empty()
+            && self.scan.explicit_fastener_ids.capacity() == 0
+            && self.scan.parts.is_empty()
+            && self.scan.parts.capacity() == 0
+            && self.scan.fasteners.is_empty()
+            && self.scan.fasteners.capacity() == 0
+            && self.dsl_text.is_empty()
+            && self.dsl_text.capacity() == 0
+            && self.completion.is_none()
     }
 }
 
@@ -1507,7 +1703,8 @@ impl InteractiveJob for Puzzle5dCopyJob {
                         Some(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() },
                         None => Emit::default(),
                     };
-                    if let Err(error) = self.work.completion.complete(Ok(emit), EphemeralEmit::default()) {
+                    let Some(completion) = self.work.completion.as_ref() else { return puzzle5d_job_fault("puzzle5d copy lost its completion authority") };
+                    if let Err(error) = completion.complete(Ok(emit), EphemeralEmit::default()) {
                         return puzzle5d_job_fault(error.message);
                     }
                     self.completed = true;
@@ -1515,6 +1712,21 @@ impl InteractiveJob for Puzzle5dCopyJob {
             }
         }
         StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dClipboardStage::Complete as u8], output: self.work.raw.clone() })
+    }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            Ok(PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Ok(PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ArtifactReservedJob::terminal_is_empty(self)
     }
 }
 
@@ -1524,7 +1736,7 @@ impl ArtifactReservedJob for Puzzle5dCopyJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        false
+        self.work.terminal_is_empty()
     }
 }
 
@@ -1547,7 +1759,8 @@ impl InteractiveJob for Puzzle5dCutJob {
                     mutations.extend(self.work.scan.parts.iter().map(|part| crate::artifacts::puzzle5d::mutations::delete_part(part.id.clone())));
                     let effects = self.work.fragment().map(|fragment| vec![Effect::ClipboardWrite { fragment }]).unwrap_or_default();
                     let emit = Emit { artifact_mutations: mutations, effects, ..Default::default() };
-                    if let Err(error) = self.work.completion.complete(Ok(emit), EphemeralEmit::default()) {
+                    let Some(completion) = self.work.completion.as_ref() else { return puzzle5d_job_fault("puzzle5d cut lost its completion authority") };
+                    if let Err(error) = completion.complete(Ok(emit), EphemeralEmit::default()) {
                         return puzzle5d_job_fault(error.message);
                     }
                     self.completed = true;
@@ -1555,6 +1768,21 @@ impl InteractiveJob for Puzzle5dCutJob {
             }
         }
         StepOutcome::Complete(CommitCandidate { state: vec![Puzzle5dClipboardStage::Complete as u8], output: self.work.raw.clone() })
+    }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            Ok(PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Ok(PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ArtifactReservedJob::terminal_is_empty(self)
     }
 }
 
@@ -1564,7 +1792,7 @@ impl ArtifactReservedJob for Puzzle5dCutJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        false
+        self.work.terminal_is_empty()
     }
 }
 
@@ -1584,7 +1812,7 @@ struct Puzzle5dPasteJob {
     raw_cursor: usize,
     progress: u64,
     stage: Puzzle5dPasteStage,
-    snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>,
+    snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
     args: Option<Value>,
     fragment_value: Option<Value>,
     fragment_parts: Vec<Puzzle5dPart>,
@@ -1596,8 +1824,10 @@ struct Puzzle5dPasteJob {
     delta: (f64, f64),
     id_map: HashMap<String, String>,
     mutations: Vec<Puzzle5dMutation>,
-    completion: ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>,
+    completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
     completed: bool,
+    retirement_key: [u8; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES],
+    closing: bool,
 }
 
 impl Puzzle5dPasteJob {
@@ -1607,7 +1837,7 @@ impl Puzzle5dPasteJob {
             raw_cursor: 0,
             progress: 0,
             stage: Puzzle5dPasteStage::Envelope,
-            snapshot: request.snapshot,
+            snapshot: Some(request.snapshot),
             args,
             fragment_value: None,
             fragment_parts: Vec::new(),
@@ -1619,8 +1849,10 @@ impl Puzzle5dPasteJob {
             delta: (0.0, 0.0),
             id_map: HashMap::new(),
             mutations: Vec::new(),
-            completion: request.completion,
+            completion: Some(request.completion),
             completed: false,
+            retirement_key: [0; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES],
+            closing: false,
         }
     }
 
@@ -1689,7 +1921,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
                 }
             }
             Puzzle5dPasteStage::TargetParts => {
-                let rows = self.snapshot.0.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
+                let rows = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or(&[]);
                 if let Some(row) = rows.get(self.cursor) {
                     self.cursor += 1;
                     self.target_sum.0 += row.get("2d").and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or_default();
@@ -1756,7 +1988,8 @@ impl InteractiveJob for Puzzle5dPasteJob {
             Puzzle5dPasteStage::Complete => {
                 if !self.completed {
                     let emit = Emit::mutations(std::mem::take(&mut self.mutations));
-                    if let Err(error) = self.completion.complete(Ok(emit), EphemeralEmit::default()) {
+                    let Some(completion) = self.completion.as_ref() else { return puzzle5d_job_fault("puzzle5d paste lost its completion authority") };
+                    if let Err(error) = completion.complete(Ok(emit), EphemeralEmit::default()) {
                         return puzzle5d_job_fault(error.message);
                     }
                     self.completed = true;
@@ -1768,15 +2001,139 @@ impl InteractiveJob for Puzzle5dPasteJob {
         cx.consume_fuel(1);
         self.checkpoint()
     }
-}
 
-impl ArtifactReservedJob for Puzzle5dPasteJob {
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Err(Fault::from("puzzle5d paste retains recursive JSON and mutation owners without bounded disposal"))
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            Ok(PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Ok(PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+        }
     }
 
     fn terminal_is_empty(&self) -> bool {
-        false
+        ArtifactReservedJob::terminal_is_empty(self)
+    }
+}
+
+impl ArtifactReservedJob for Puzzle5dPasteJob {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        self.closing = true;
+        if maximum_items == 0 {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.args.as_mut() {
+            if let Some(step) = puzzle5d_retire_json_step(value, &mut self.retirement_key, maximum_bytes)? {
+                return Ok(step);
+            }
+            self.args = None;
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(value) = self.fragment_value.as_mut() {
+            if let Some(step) = puzzle5d_retire_json_step(value, &mut self.retirement_key, maximum_bytes)? {
+                return Ok(step);
+            }
+            self.fragment_value = None;
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(part) = self.fragment_parts.last_mut() {
+            if let Some(scale) = part.part_3d.scale.as_mut() {
+                if let Some(step) = puzzle5d_retire_json_step(scale, &mut self.retirement_key, maximum_bytes)? {
+                    return Ok(step);
+                }
+                part.part_3d.scale = None;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(grip) = part.grips.pop() {
+                let bytes = grip.id.capacity().saturating_add(grip.grip_kind.capacity()).saturating_add(grip.grip_2d.grip_kind.capacity()).saturating_add(grip.grip_3d.label.as_ref().map_or(0, String::capacity));
+                if bytes > maximum_bytes {
+                    part.grips.push(grip);
+                    return Err(Fault::from("puzzle5d paste grip exceeds its bounded disposal byte slice"));
+                }
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            let part = self.fragment_parts.pop().ok_or_else(|| Fault::from("puzzle5d paste part changed during retirement"))?;
+            let bytes = part.id.capacity().saturating_add(part.part_kind.capacity()).saturating_add(part.part_2d.shape.capacity()).saturating_add(part.part_2d.text.capacity());
+            if bytes > maximum_bytes {
+                self.fragment_parts.push(part);
+                return Err(Fault::from("puzzle5d paste part exceeds its bounded disposal byte slice"));
+            }
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        let mapping = {
+            let mut mappings = self.id_map.extract_if(|_, _| true);
+            mappings.next()
+        };
+        if let Some((source, target)) = mapping {
+            let bytes = source.capacity().saturating_add(target.capacity());
+            if bytes > maximum_bytes {
+                self.id_map.insert(source, target);
+                return Err(Fault::from("puzzle5d paste id mapping exceeds its bounded disposal byte slice"));
+            }
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if self.id_map.is_empty() && self.id_map.capacity() != 0 {
+            let bytes = self.id_map.capacity().saturating_mul(std::mem::size_of::<(String, String)>());
+            if bytes > maximum_bytes {
+                return Err(Fault::from("puzzle5d paste id map backing exceeds its bounded disposal byte slice"));
+            }
+            self.id_map.shrink_to_fit();
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(mutation) = self.mutations.last() {
+            let bytes = std::mem::size_of_val(mutation);
+            if bytes > maximum_bytes {
+                return Err(Fault::from("puzzle5d paste mutation exceeds its bounded disposal byte slice"));
+            }
+            self.mutations.pop();
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if let Some(step) = puzzle5d_retire_vec_backing(&mut self.fragment_parts, maximum_bytes)? {
+            return Ok(step);
+        }
+        if let Some(step) = puzzle5d_retire_vec_backing(&mut self.mutations, maximum_bytes)? {
+            return Ok(step);
+        }
+        if !self.raw.is_empty() && maximum_bytes == 0 {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.raw.pop().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 1 });
+        }
+        if let Some(step) = puzzle5d_retire_vec_backing(&mut self.raw, maximum_bytes)? {
+            return Ok(step);
+        }
+        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
+            return Ok(PluginCloseStep::Blocked { reason: "puzzle5d paste snapshot has no mounted retained authority" });
+        }
+        if self.snapshot.take().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
+            return Ok(PluginCloseStep::Blocked { reason: "puzzle5d paste completion has no mounted consumer authority" });
+        }
+        if self.completion.take().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.raw.is_empty()
+            && self.raw.capacity() == 0
+            && self.snapshot.is_none()
+            && self.args.is_none()
+            && self.fragment_value.is_none()
+            && self.fragment_parts.is_empty()
+            && self.fragment_parts.capacity() == 0
+            && self.id_map.is_empty()
+            && self.id_map.capacity() == 0
+            && self.mutations.is_empty()
+            && self.mutations.capacity() == 0
+            && self.completion.is_none()
     }
 }
 
@@ -1800,7 +2157,7 @@ struct Puzzle5dImportJob {
     stage: Puzzle5dImportStage,
     port: String,
     media_json: Option<String>,
-    snapshot: std::sync::Arc<Puzzle5dPlaySnapshot>,
+    snapshot: Option<std::sync::Arc<Puzzle5dPlaySnapshot>>,
     fragment: Option<Value>,
     initial_catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs,
     catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs,
@@ -1811,8 +2168,10 @@ struct Puzzle5dImportJob {
     compatibility_index: HashMap<(String, String), usize>,
     compatibility_mutations: Vec<Puzzle5dMutation>,
     cursor: usize,
-    completion: ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>,
+    completion: Option<ArtifactToolCompletion<EditorApp<Puzzle5dPlayApp>>>,
     completed: bool,
+    retirement_key: [u8; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES],
+    closing: bool,
 }
 
 impl Puzzle5dImportJob {
@@ -1828,7 +2187,7 @@ impl Puzzle5dImportJob {
             stage: Puzzle5dImportStage::Envelope,
             port,
             media_json,
-            snapshot: request.snapshot,
+            snapshot: Some(request.snapshot),
             fragment: None,
             initial_catalogs: Default::default(),
             catalogs: Default::default(),
@@ -1839,8 +2198,10 @@ impl Puzzle5dImportJob {
             compatibility_index: HashMap::new(),
             compatibility_mutations: Vec::new(),
             cursor: 0,
-            completion: request.completion,
+            completion: Some(request.completion),
             completed: false,
+            retirement_key: [0; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES],
+            closing: false,
         }
     }
 
@@ -1886,7 +2247,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                 if decoded_items > PUZZLE5D_RESERVED_ITEMS {
                     return puzzle5d_job_fault("puzzle5d kit:in decoded item limit exceeded");
                 }
-                self.had_catalogs = self.snapshot.0.get("kindCatalogs").is_some_and(|value| !value.is_null());
+                self.had_catalogs = self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("kindCatalogs")).is_some_and(|value| !value.is_null());
                 self.catalogs = self
                     .snapshot
                     .0
@@ -2049,7 +2410,8 @@ impl InteractiveJob for Puzzle5dImportJob {
                         mutations.push(crate::artifacts::puzzle5d::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs))));
                     }
                     mutations.append(&mut self.compatibility_mutations);
-                    if let Err(error) = self.completion.complete(Ok(Emit::mutations(mutations)), EphemeralEmit::default()) {
+                    let Some(completion) = self.completion.as_ref() else { return puzzle5d_job_fault("puzzle5d import lost its completion authority") };
+                    if let Err(error) = completion.complete(Ok(Emit::mutations(mutations)), EphemeralEmit::default()) {
                         return puzzle5d_job_fault(error.message);
                     }
                     self.completed = true;
@@ -2061,15 +2423,212 @@ impl InteractiveJob for Puzzle5dImportJob {
         cx.consume_fuel(1);
         self.checkpoint()
     }
-}
 
-impl ArtifactReservedJob for Puzzle5dImportJob {
-    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Err(Fault::from("puzzle5d import retains recursive JSON, catalog, index, and mutation owners without bounded disposal"))
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            Ok(PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Ok(PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+        }
     }
 
     fn terminal_is_empty(&self) -> bool {
-        false
+        ArtifactReservedJob::terminal_is_empty(self)
+    }
+}
+
+impl ArtifactReservedJob for Puzzle5dImportJob {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        self.closing = true;
+        if maximum_items == 0 {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(fragment) = self.fragment.as_mut() {
+            if let Some(step) = puzzle5d_retire_json_step(fragment, &mut self.retirement_key, maximum_bytes)? {
+                return Ok(step);
+            }
+            self.fragment = None;
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        macro_rules! pop_owner {
+            ($owners:expr) => {
+                if let Some(owner) = $owners.last() {
+                    let bytes = std::mem::size_of_val(owner);
+                    if bytes > maximum_bytes {
+                        return Err(Fault::from("puzzle5d typed owner exceeds its bounded disposal byte slice"));
+                    }
+                    $owners.pop();
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                }
+            };
+        }
+        pop_owner!(self.compatibility_mutations);
+        pop_owner!(self.compatibility);
+        pop_owner!(self.catalogs.parts);
+        pop_owner!(self.catalogs.grips);
+        pop_owner!(self.catalogs.fasteners);
+        pop_owner!(self.catalogs.ropes);
+        pop_owner!(self.initial_catalogs.parts);
+        pop_owner!(self.initial_catalogs.grips);
+        pop_owner!(self.initial_catalogs.fasteners);
+        pop_owner!(self.initial_catalogs.ropes);
+        macro_rules! retire_backing {
+            ($owners:expr) => {
+                if let Some(step) = puzzle5d_retire_vec_backing(&mut $owners, maximum_bytes)? {
+                    return Ok(step);
+                }
+            };
+        }
+        retire_backing!(self.compatibility_mutations);
+        retire_backing!(self.compatibility);
+        retire_backing!(self.catalogs.parts);
+        retire_backing!(self.catalogs.grips);
+        retire_backing!(self.catalogs.fasteners);
+        retire_backing!(self.catalogs.ropes);
+        retire_backing!(self.initial_catalogs.parts);
+        retire_backing!(self.initial_catalogs.grips);
+        retire_backing!(self.initial_catalogs.fasteners);
+        retire_backing!(self.initial_catalogs.ropes);
+        let part_index = {
+            let mut entries = self.part_index.extract_if(|_, _| true);
+            entries.next()
+        };
+        if let Some((key, index)) = part_index {
+            let bytes = key.capacity();
+            if bytes > maximum_bytes {
+                self.part_index.insert(key, index);
+                return Err(Fault::from("puzzle5d import part index key exceeds its bounded disposal byte slice"));
+            }
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        let grip_index = {
+            let mut entries = self.grip_index.extract_if(|_, _| true);
+            entries.next()
+        };
+        if let Some((key, index)) = grip_index {
+            let bytes = key.capacity();
+            if bytes > maximum_bytes {
+                self.grip_index.insert(key, index);
+                return Err(Fault::from("puzzle5d import grip index key exceeds its bounded disposal byte slice"));
+            }
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        let compatibility_index = {
+            let mut entries = self.compatibility_index.extract_if(|_, _| true);
+            entries.next()
+        };
+        if let Some(((source, target), index)) = compatibility_index {
+            let bytes = source.capacity().saturating_add(target.capacity());
+            if bytes > maximum_bytes {
+                self.compatibility_index.insert((source, target), index);
+                return Err(Fault::from("puzzle5d import compatibility index key exceeds its bounded disposal byte slice"));
+            }
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        macro_rules! retire_map_backing {
+            ($owners:expr, $entry:ty) => {
+                if $owners.is_empty() && $owners.capacity() != 0 {
+                    let bytes = $owners.capacity().saturating_mul(std::mem::size_of::<$entry>());
+                    if bytes > maximum_bytes {
+                        return Err(Fault::from("puzzle5d index backing exceeds its bounded disposal byte slice"));
+                    }
+                    $owners.shrink_to_fit();
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                }
+            };
+        }
+        retire_map_backing!(self.part_index, (String, usize));
+        retire_map_backing!(self.grip_index, (String, usize));
+        retire_map_backing!(self.compatibility_index, ((String, String), usize));
+        if let Some(text) = self.media_json.as_mut() {
+            if let Some(character) = text.pop() {
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: character.len_utf8() });
+            }
+            if text.capacity() != 0 {
+                let bytes = text.capacity();
+                if bytes > maximum_bytes {
+                    return Err(Fault::from("puzzle5d import media text backing exceeds its bounded disposal byte slice"));
+                }
+                text.shrink_to_fit();
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            self.media_json = None;
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(character) = self.port.pop() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: character.len_utf8() });
+        }
+        if self.port.capacity() != 0 {
+            let bytes = self.port.capacity();
+            if bytes > maximum_bytes {
+                return Err(Fault::from("puzzle5d import port backing exceeds its bounded disposal byte slice"));
+            }
+            self.port.shrink_to_fit();
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        if !self.raw.is_empty() && maximum_bytes == 0 {
+            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.raw.pop().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 1 });
+        }
+        if let Some(step) = puzzle5d_retire_vec_backing(&mut self.raw, maximum_bytes)? {
+            return Ok(step);
+        }
+        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
+            return Ok(PluginCloseStep::Blocked { reason: "puzzle5d import snapshot has no mounted retained authority" });
+        }
+        if self.snapshot.take().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
+            return Ok(PluginCloseStep::Blocked { reason: "puzzle5d import completion has no mounted consumer authority" });
+        }
+        if self.completion.take().is_some() {
+            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.raw.is_empty()
+            && self.raw.capacity() == 0
+            && self.port.is_empty()
+            && self.port.capacity() == 0
+            && self.media_json.is_none()
+            && self.snapshot.is_none()
+            && self.fragment.is_none()
+            && self.initial_catalogs.parts.is_empty()
+            && self.initial_catalogs.parts.capacity() == 0
+            && self.initial_catalogs.grips.is_empty()
+            && self.initial_catalogs.grips.capacity() == 0
+            && self.initial_catalogs.fasteners.is_empty()
+            && self.initial_catalogs.fasteners.capacity() == 0
+            && self.initial_catalogs.ropes.is_empty()
+            && self.initial_catalogs.ropes.capacity() == 0
+            && self.catalogs.parts.is_empty()
+            && self.catalogs.parts.capacity() == 0
+            && self.catalogs.grips.is_empty()
+            && self.catalogs.grips.capacity() == 0
+            && self.catalogs.fasteners.is_empty()
+            && self.catalogs.fasteners.capacity() == 0
+            && self.catalogs.ropes.is_empty()
+            && self.catalogs.ropes.capacity() == 0
+            && self.compatibility.is_empty()
+            && self.compatibility.capacity() == 0
+            && self.part_index.is_empty()
+            && self.part_index.capacity() == 0
+            && self.grip_index.is_empty()
+            && self.grip_index.capacity() == 0
+            && self.compatibility_index.is_empty()
+            && self.compatibility_index.capacity() == 0
+            && self.compatibility_mutations.is_empty()
+            && self.compatibility_mutations.capacity() == 0
+            && self.completion.is_none()
     }
 }
 //#endregion 🧵️ReservedJobs

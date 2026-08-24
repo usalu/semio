@@ -2,13 +2,12 @@
 //! component groups.
 
 use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::editor::lowpoly::lowpoly_action;
+use crate::editor::lowpoly::{lowpoly_action, ui_value_list, ui_value_map, ui_value_number};
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{document_object_row_id, document_target_row_id, mesh_select_action, resolve_active_object_id, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
-use semio_framework_plugin::{
-    IconName, Label, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
-use serde_json::json;
+use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, HasChildren, Label, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const LOWPOLY_PLAY_BODY_DOCUMENT: &str = "lowpoly.play.document";
@@ -29,47 +28,73 @@ pub async fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub async fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let active_id = resolve_active_object_id(view.snapshot, view.config);
-    let items: Vec<UiTreeItemNode> = view
-        .snapshot
-        .objects
-        .iter()
-        .enumerate()
-        .map(|(object_index, object)| {
-            let object_id = object.id.clone();
-            let mesh = doc.object_index(&object.id).ok().and_then(|index| doc.mesh_at(index));
-            let vertex_count = mesh.as_ref().map_or(0, |entry| entry.vertex_count());
-            let edge_count = mesh.as_ref().map_or(0, |entry| entry.edge_count());
-            let face_count = mesh.as_ref().map_or(0, |entry| entry.face_count());
-            let component_group = |mode: &str, label: LabelText, icon: &str, count: usize| {
-                let leaves: Vec<UiTreeItemNode> = (0..count)
-                    .map(|id| {
-                        let row_id = document_target_row_id(&object.id, object_index, mode, id as u32);
-                        let mut actions = None;
-                        if mode == "face" {
-                            actions = Some(vec![UiTreeItemAction {
-                                icon_id: "flip-vertical".into(),
-                                label: Some(labels.flip_normal.into()),
-                                action: lowpoly_action("flipFaces", Some(json!({ "faceIds": [id] }))),
-                                placement: Some(UiTreeActionPlacement::Menu),
-                            }]);
-                        }
-                        UiTreeItemNode { icon_id: IconName::from_str(icon), action: Some(mesh_select_action(mode, &row_id, "invertive")), actions, menu: None, ..UiTreeItemNode::base(row_id.clone(), Label::data(format!("{} {id}", label.as_str()))) }
-                    })
-                    .collect();
-                UiTreeItemNode { icon_id: IconName::from_str(icon), items: Some(leaves), description: Some(format!("{count}")), menu: None, ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}.{mode}.group"), label) }
-            };
-            let object_row_id = document_object_row_id(&object.id);
-            UiTreeItemNode {
-                icon_id: Some("box".into()),
-                action: Some(mesh_select_action(MESH_GRANULARITY_OBJECT, &object_row_id, "invertive")),
-                items: Some(vec![component_group("vertex", labels.vertices, "circle", vertex_count), component_group("edge", labels.edges, "minus", edge_count), component_group("face", labels.faces, "square", face_count)]),
-                default_open: Some(object.id == active_id),
-                description: Some(object.id.clone()),
-                menu: None,
-                ..UiTreeItemNode::base(object_row_id, Label::data(object.name.clone()))
+    let mut items = UiFixedList::<BuiltNode>::default();
+    for (object_index, object) in view.snapshot.objects.iter().enumerate() {
+        let mesh = doc.object_index(&object.id).ok().and_then(|index| doc.mesh_at(index));
+        let counts = [
+            ("vertex", labels.vertices, "circle", mesh.as_ref().map_or(0, |entry| entry.vertex_count())),
+            ("edge", labels.edges, "minus", mesh.as_ref().map_or(0, |entry| entry.edge_count())),
+            ("face", labels.faces, "square", mesh.as_ref().map_or(0, |entry| entry.face_count())),
+        ];
+        let mut groups = UiFixedList::<BuiltNode>::default();
+        for (mode, label, icon, count) in counts {
+            let mut leaves = UiFixedList::<BuiltNode>::default();
+            for id in 0..count {
+                let row_id = document_target_row_id(&object.id, object_index, mode, id as u32);
+                let (action, args) = mesh_select_action(mode, &row_id, "invertive")?;
+                let mut item = ui::tree_item(Label::data(format!("{} {id}", label.as_str())))
+                    .try_id(&row_id)
+                    .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component row id admission failed"))?
+                    .icon(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component icon admission failed"))?);
+                item = match args {
+                    Some(args) => item.try_on_with(Trigger::Activate, action, args),
+                    None => item.try_on(Trigger::Activate, action),
+                }
+                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component action admission failed"))?;
+                if mode == "face" {
+                    let face_ids = ui_value_list([ui_value_number(id as f64)])?;
+                    let (action, args) = lowpoly_action("flipFaces", Some(ui_value_map([("faceIds", face_ids)])?))?;
+                    item = item
+                        .try_row_action(RowAction {
+                            icon: UiText::try_from_str("flip-vertical").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly face action icon admission failed"))?,
+                            label: Some(labels.flip_normal.as_str().into()),
+                            action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None },
+                            placement: RowActionPlacement::Menu,
+                        })
+                        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly face row action admission failed"))?;
+                }
+                let item = item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component row admission failed"))?;
+                leaves.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component list admission failed"))?;
             }
-        })
-        .collect();
+            let group = ui::tree_item(label)
+                .try_id(format!("lowpoly-document.{}.{mode}.group", object.id))
+                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component group id admission failed"))?
+                .icon(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component group icon admission failed"))?)
+                .description(UiText::try_from_string(count.to_string()).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component count admission failed"))?)
+                .try_children(leaves)
+                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component group children admission failed"))?
+                .try_build()
+                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component group admission failed"))?;
+            groups.try_push(group).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly component group list admission failed"))?;
+        }
+        let object_row_id = document_object_row_id(&object.id);
+        let (action, args) = mesh_select_action(MESH_GRANULARITY_OBJECT, &object_row_id, "invertive")?;
+        let mut item = ui::tree_item(Label::data(object.name.clone()))
+            .try_id(&object_row_id)
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly object row id admission failed"))?
+            .icon(UiText::try_from_str("box").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly object icon admission failed"))?)
+            .default_open(object.id == active_id)
+            .description(UiText::try_from_str(&object.id).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly object description admission failed"))?)
+            .try_children(groups)
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly object children admission failed"))?;
+        item = match args {
+            Some(args) => item.try_on_with(Trigger::Activate, action, args),
+            None => item.try_on(Trigger::Activate, action),
+        }
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly object action admission failed"))?;
+        let item = item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly object row admission failed"))?;
+        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "lowpoly object list admission failed"))?;
+    }
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `.interaction_domain` binds this tree
     // to the "mesh" domain — the framework OVERWRITES every row's `presence.selected`/`.hovered` from the
     // live `InteractionState` right after render, so this app never calls `.selected()?`/`.highlighted()?`
