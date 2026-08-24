@@ -146,30 +146,30 @@ pub struct ObjectKindExtra {
 /// 🔀️ `ObjectKind` → the shared `SemioKitType` half of the composed catalog child. `category` maps
 /// from `module_id` — the closest existing kit vocabulary slot for a grouping label (`SemioKitType`
 /// has no separate module concept).
-pub async fn kit_type_from_object_kind(kind: &ObjectKind) -> SemioKitType {
+pub fn kit_type_from_object_kind(kind: &ObjectKind) -> SemioKitType {
     SemioKitType { id: kind.id.clone(), name: kind.name.clone(), category: kind.module_id.clone() }
 }
 
 /// 🔀️ `ObjectKind` → the sourcing-owned overflow half (`stock_extra`) the composed kit type cannot
 /// carry. Lossless together with `kit_type_from_object_kind`: every `ObjectKind` field lands in
 /// exactly one of the two halves.
-pub async fn object_kind_extra_from_object_kind(kind: &ObjectKind) -> ObjectKindExtra {
+pub fn object_kind_extra_from_object_kind(kind: &ObjectKind) -> ObjectKindExtra {
     ObjectKindExtra { id: kind.id.clone(), name: kind.name.clone(), module_id: kind.module_id.clone(), typology_path: kind.typology_path.clone(), availability: kind.availability, geometry: kind.geometry.clone() }
 }
 
 /// 🔀️ Inverse of the split above — reassembles one full `ObjectKind` from its two composed halves.
-pub async fn object_kind_from_parts(kit_type: &SemioKitType, extra: &ObjectKindExtra) -> ObjectKind {
+pub fn object_kind_from_parts(kit_type: &SemioKitType, extra: &ObjectKindExtra) -> ObjectKind {
     ObjectKind { id: kit_type.id.clone(), name: kit_type.name.clone(), module_id: kit_type.category.clone(), typology_path: extra.typology_path.clone(), availability: extra.availability, geometry: extra.geometry.clone() }
 }
 
 /// 🔀️ The full stock list's shared half, as a fresh (design-less, link-less) `SemioKitSnapshot` —
 /// content-addressed by `catalog_child_handle` below, never embedded inline in `CurateSnapshot`.
-pub async fn catalog_snapshot_from_stock(stock: &[ObjectKind]) -> SemioKitSnapshot {
+pub fn catalog_snapshot_from_stock(stock: &[ObjectKind]) -> SemioKitSnapshot {
     SemioKitSnapshot { types: stock.iter().map(kit_type_from_object_kind).collect(), ..SemioKitSnapshot::default() }
 }
 
 /// 🔀️ The full stock list's sourcing-owned overflow half.
-pub async fn stock_extra_from_stock(stock: &[ObjectKind]) -> Vec<ObjectKindExtra> {
+pub fn stock_extra_from_stock(stock: &[ObjectKind]) -> Vec<ObjectKindExtra> {
     stock.iter().map(object_kind_extra_from_object_kind).collect()
 }
 
@@ -177,7 +177,7 @@ pub async fn stock_extra_from_stock(stock: &[ObjectKind]) -> Vec<ObjectKindExtra
 /// sourcing-owned overflow half, id-joined. A `SemioKitType` with no matching `ObjectKindExtra`
 /// (composed-child content the working-scene cache hasn't seen yet — see `stock_of`'s doc comment) is
 /// silently dropped rather than fabricated with placeholder geometry.
-pub async fn stock_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[ObjectKindExtra]) -> Vec<ObjectKind> {
+pub fn stock_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[ObjectKindExtra]) -> Vec<ObjectKind> {
     let extra_by_id: std::collections::HashMap<&str, &ObjectKindExtra> = extra.iter().map(|e| (e.id.as_str(), e)).collect();
     catalog.types.iter().filter_map(|kit_type| extra_by_id.get(kit_type.id.as_str()).map(|extra| object_kind_from_parts(kit_type, extra))).collect()
 }
@@ -185,7 +185,7 @@ pub async fn stock_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[O
 /// 🪪️ Content-addressed child handle for a stock list's shared catalog half — hashes the deterministic
 /// JSON of the derived `SemioKitType` list so peers replaying the same stock converge on the same
 /// `child_id` (never a random/incrementing id), mirroring `lowpoly`'s `mesh_child_handle`.
-pub async fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<SemioKitSnapshot> {
+pub fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<SemioKitSnapshot> {
     use std::hash::{Hash, Hasher};
     let catalog = catalog_snapshot_from_stock(stock);
     let canonical = serde_json::to_string(&catalog.types).unwrap_or_default();
@@ -202,7 +202,7 @@ pub async fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<
 /// seeding the working-scene cache so this SAME call's render/export/inference paths can resolve the
 /// handle immediately. The one sanctioned construction path for "real stock content" — every fixture,
 /// test, and command that used to write `CurateSnapshot { stock, .. }` directly goes through this now.
-pub async fn curate_snapshot_from_stock(stock: Vec<ObjectKind>, curated: Vec<CuratedItem>) -> CurateSnapshot {
+pub fn curate_snapshot_from_stock(stock: Vec<ObjectKind>, curated: Vec<CuratedItem>) -> CurateSnapshot {
     let handle = catalog_child_handle(&stock);
     CurateSnapshot { catalog: handle, stock_extra: stock_extra_from_stock(&stock), curated }
 }
@@ -211,13 +211,13 @@ pub async fn curate_snapshot_from_stock(stock: Vec<ObjectKind>, curated: Vec<Cur
 /// building a whole `CurateSnapshot` — for fixture loaders (`default_document`/`empty_document`) that
 /// parse the persisted snapshot from DSL text (which never embeds child content) but still need the
 /// SAME content-addressed handle's catalog resolvable immediately after loading.
-pub async fn validate_catalog_payload(stock: &[ObjectKind]) {
+pub fn validate_catalog_payload(stock: &[ObjectKind]) {
     let _ = catalog_child_handle(stock);
 }
 
 /// 👁️ The one accessor every render/export/inference call site funnels through to read the full
 /// reassembled stock catalogue from snapshot-owned overflow records.
-pub async fn stock_of(document: &CurateSnapshot) -> Vec<ObjectKind> {
+pub fn stock_of(document: &CurateSnapshot) -> Vec<ObjectKind> {
     let _ = &document.catalog;
     document.stock_extra.iter().map(|row| ObjectKind { id: row.id.clone(), name: row.name.clone(), module_id: row.module_id.clone(), typology_path: row.typology_path.clone(), availability: row.availability, geometry: row.geometry.clone() }).collect()
 }
@@ -255,7 +255,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc). Relocated from
 /// `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes
 /// the artifact (kind, schema, io ports, ownership), which is not engine behaviour.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.curate.standard.v1", "standard", "1", &[], None),
@@ -306,7 +306,7 @@ pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclarat
 /// `🚪️io/🦀️component.rs`'s `io()` (via `language_spec`) to populate `NativeCodecs`'s
 /// `LanguagePair`s — the new declaration tree's home for what the OLD `declaration()`'s
 /// `.languages(...)` call used to register.
-pub(crate) async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub(crate) fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -368,7 +368,7 @@ pub(crate) async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 /// 🔎️ Finds `pilot_languages()`'s entry for one `dsl::LanguageRole` — the lookup `io()` uses to
 /// populate each `NativeCodecs` facet's `LanguagePair`.
-pub(crate) async fn language_spec(role: dsl::LanguageRole) -> Option<&'static dsl::LanguageSpec> {
+pub(crate) fn language_spec(role: dsl::LanguageRole) -> Option<&'static dsl::LanguageSpec> {
     pilot_languages().iter().find(|spec| spec.role == role)
 }
 //#endregion 🔖️Register

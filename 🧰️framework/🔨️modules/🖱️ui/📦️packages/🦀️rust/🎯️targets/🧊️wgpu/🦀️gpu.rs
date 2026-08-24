@@ -8,6 +8,13 @@ use crate::wgpu::prepared::{PreparedRenderEviction, PreparedRenderGate, Prepared
 use crate::wgpu::text::FontAtlas;
 use wgpu::Surface;
 
+#[derive(Clone, Copy)]
+struct PreparedAtlasUploadCursor {
+    generation: u64,
+    upload: usize,
+    page: usize,
+}
+
 pub struct GpuContext {
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -21,6 +28,7 @@ pub struct GpuContext {
     mesh_store: MeshGpuTable,
     raster_store: RasterTextureTable,
     scene_color: Option<SceneColorTarget>,
+    atlas_upload: Option<PreparedAtlasUploadCursor>,
     width: u32,
     height: u32,
     dpr: f32,
@@ -91,6 +99,7 @@ impl GpuContext {
             mesh_store: MeshGpuTable::default(),
             raster_store,
             scene_color: None,
+            atlas_upload: None,
             width,
             height,
             dpr,
@@ -183,12 +192,52 @@ impl GpuContext {
         let Some(upload) = packet.uploads().get(index) else { return Ok(true) };
         let complete = match upload {
             PreparedRenderUpload::GlyphAtlas { pixels, width, height } => {
+                self.atlas_upload = None;
                 self.pipelines.upload_glyph_atlas(&self.queue, pixels, *width, *height);
                 true
             }
             PreparedRenderUpload::IconAtlas { pixels, width, height } => {
+                self.atlas_upload = None;
                 self.pipelines.upload_icon_atlas(&self.queue, pixels, *width, *height);
                 true
+            }
+            PreparedRenderUpload::GlyphAtlasPages { pixels } => {
+                let cursor = match self.atlas_upload {
+                    Some(cursor) if cursor.generation == packet.preview_generation() && cursor.upload == index => cursor,
+                    _ => PreparedAtlasUploadCursor { generation: packet.preview_generation(), upload: index, page: 0 },
+                };
+                let Some((bytes, start_row, rows)) = pixels.page(cursor.page) else {
+                    self.atlas_upload = None;
+                    return Ok(true);
+                };
+                self.pipelines.upload_glyph_atlas_page(&self.queue, bytes, pixels.width(), start_row, rows);
+                let page = cursor.page.checked_add(1).ok_or_else(|| "glyph atlas page cursor exhausted".to_string())?;
+                if page == pixels.len() {
+                    self.atlas_upload = None;
+                    true
+                } else {
+                    self.atlas_upload = Some(PreparedAtlasUploadCursor { page, ..cursor });
+                    false
+                }
+            }
+            PreparedRenderUpload::IconAtlasPages { pixels } => {
+                let cursor = match self.atlas_upload {
+                    Some(cursor) if cursor.generation == packet.preview_generation() && cursor.upload == index => cursor,
+                    _ => PreparedAtlasUploadCursor { generation: packet.preview_generation(), upload: index, page: 0 },
+                };
+                let Some((bytes, start_row, rows)) = pixels.page(cursor.page) else {
+                    self.atlas_upload = None;
+                    return Ok(true);
+                };
+                self.pipelines.upload_icon_atlas_page(&self.queue, bytes, pixels.width(), start_row, rows);
+                let page = cursor.page.checked_add(1).ok_or_else(|| "icon atlas page cursor exhausted".to_string())?;
+                if page == pixels.len() {
+                    self.atlas_upload = None;
+                    true
+                } else {
+                    self.atlas_upload = Some(PreparedAtlasUploadCursor { page, ..cursor });
+                    false
+                }
             }
             PreparedRenderUpload::Raster { key, pixels, width, height } => self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels), *width, *height, candidate, expected).map_err(str::to_owned)?,
             PreparedRenderUpload::RasterPages { key, pixels } => {

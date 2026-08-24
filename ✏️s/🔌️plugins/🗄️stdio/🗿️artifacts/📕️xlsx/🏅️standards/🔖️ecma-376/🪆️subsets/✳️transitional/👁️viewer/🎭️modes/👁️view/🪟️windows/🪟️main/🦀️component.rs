@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `XlsxSnapshot -> BuiltNode` read: one row per cell, columns `sheet`/`row`/`col`/`value` —
 /// no command-driven cell edits (a viewer declares none).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &XlsxSnapshot) -> BuiltNode {
+pub fn render(document: &XlsxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let shared_strings = &document.workbook.shared_strings;
     let columns = vec!["sheet".to_string(), "row".to_string(), "col".to_string(), "value".to_string()];
     let rows = xlsx_flat_cells(document).into_iter().map(|(sheet, row, col, value)| vec![sheet, row.to_string(), col.to_string(), render_xlsx_cell_value(&value, shared_strings)]).collect();

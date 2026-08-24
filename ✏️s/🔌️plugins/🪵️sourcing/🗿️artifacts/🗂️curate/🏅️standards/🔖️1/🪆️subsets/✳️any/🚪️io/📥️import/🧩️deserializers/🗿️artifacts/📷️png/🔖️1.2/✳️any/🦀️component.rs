@@ -17,13 +17,13 @@ use semio_s_plugin_stdio::artifacts::png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEM
 
 pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
-pub async fn deserialize(from: &PngSnapshot) -> Result<CurateSnapshot, store::TextError> {
+pub fn deserialize(from: &PngSnapshot) -> Result<CurateSnapshot, store::TextError> {
     let _ = STDIO_PNG_DOCUMENT_SCHEMA;
     let bytes = <PngSnapshot as store::ArtifactPack>::encode_pack(from);
     deserialize_bytes(&bytes)
 }
 
-pub async fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {
     <CurateSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| <CurateSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
 }
 
@@ -32,7 +32,7 @@ pub struct PngIntoCurate;
 impl Deserializer<CurateSnapshot> for PngIntoCurate {
     const FROM: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PngIntoCurate: expected a binary png payload".to_string(), diagnostics: Vec::new() });
         };

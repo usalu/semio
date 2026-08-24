@@ -51,6 +51,8 @@ impl ArtifactSerializer for SemioVideoToAvi {
                     rc_frame_top: 0,
                     rc_frame_right: s.width as i32,
                     rc_frame_bottom: s.height as i32,
+                    rc_frame_width: 16,
+                    strh_extra: Vec::new(),
                 };
                 let strf = if fcc_type == "vids" {
                     AviStreamFormat::BitmapInfo {
@@ -70,7 +72,7 @@ impl ArtifactSerializer for SemioVideoToAvi {
                     AviStreamFormat::Raw { data: Vec::new() }
                 };
                 let chunks = s.samples.iter().map(|sample| AviChunk { fourcc: if fcc_type == "vids" { "00dc".into() } else { "01wb".into() }, data: sample.data.clone(), keyframe: sample.key }).collect();
-                AviStream { strh, strf, chunks }
+                AviStream { strh, strf, chunks, strl_extra: Vec::new() }
             })
             .collect();
         let first = from.streams.first();
@@ -87,7 +89,7 @@ impl ArtifactSerializer for SemioVideoToAvi {
             height: first.map(|s| s.height).unwrap_or(0),
             reserved: vec![0, 0, 0, 0],
         };
-        Ok(AviSnapshot { schema: "stdio.avi".into(), main_header, streams, idx1_present: true, unknown_chunks: Vec::new() })
+        Ok(AviSnapshot { schema: "stdio.avi".into(), main_header, streams, idx1_present: true, unknown_chunks: Vec::new(), hdrl_extra: Vec::new() })
     }
 }
 

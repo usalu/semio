@@ -100,6 +100,8 @@ pub enum SvgBasicMutation {
 /// `kinds` list `../../🧪️oracle/🔣️component.json`'s `mutationCatalogs` entry declares.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "stamp-base-profile", "insert-basic-element", "remove-element", "set-basic-attribute", "set-clip-path-reference", "insert-clip-path-shape", "set-text", "set-view-box", "set-transform"];
 
+crate::impl_serde_op_codec!(SvgBasicMutation, "svg-basic-mutation");
+
 /// 🏷️ The `KINDS` spelling of one mutation's own variant, exhaustively matched.
 pub fn kind_of(mutation: &SvgBasicMutation) -> &'static str {
     match mutation {

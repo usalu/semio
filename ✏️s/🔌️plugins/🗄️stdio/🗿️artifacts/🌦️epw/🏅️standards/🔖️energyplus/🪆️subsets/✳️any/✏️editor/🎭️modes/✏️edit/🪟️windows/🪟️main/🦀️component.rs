@@ -67,7 +67,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `EpwSnapshot -> BuiltNode`: one row per hourly record, all 35 spec columns — every column is
 /// a real `set-cell` edit target (`EpwEditorCommand::SetCell`, keyed by row index + column name).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &EpwSnapshot) -> BuiltNode {
+pub fn render(document: &EpwSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect();
     let rows = document.records.iter().map(|record| record.fields().iter().map(|field| field.to_string()).collect()).collect();
     TableWindowKit::render(&TableView { columns, rows })

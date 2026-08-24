@@ -17,7 +17,7 @@ const SOURCING_CURATE_SURFACE_POOL: &str = "sourcing.pool.table";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SOURCING_CURATE_WINDOW_POOL.into(),
         label: LocalizedLabel::native("Pool", "Pool"),
@@ -38,7 +38,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️FilterBar
-pub async fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: &SourcingLabels) -> UiNode {
+pub fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: &SourcingLabels) -> UiNode {
     let mut children = vec![UiNode::Input(UiInputNode {
         presence: UiPresence::default(),
         id: "sourcing-filter-query".into(),
@@ -94,7 +94,7 @@ pub async fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], la
 //#endregion 🔖️FilterBar
 
 //#region 🔖️Render
-async fn pool_columns_json(labels: &SourcingLabels) -> String {
+fn pool_columns_json(labels: &SourcingLabels) -> String {
     json!([
         {"id": "name", "label": labels.col_name.as_str()},
         {"id": "module", "label": labels.col_module.as_str(), "sortable": true},
@@ -105,7 +105,7 @@ async fn pool_columns_json(labels: &SourcingLabels) -> String {
     .to_string()
 }
 
-async fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
     let mut filtered = crate::artifacts::curate::schema::filtered_stock(document, &cfg.filters);
     if let Some(sort) = &cfg.filters.sort {
         filtered.sort_by(|a, b| {
@@ -147,7 +147,7 @@ async fn build_pool_table(document: &CurateSnapshot, cfg: &SourcingCurateConfig,
     build_table_scene(SOURCING_CURATE_SURFACE_POOL, SOURCING_CONTROLLER_ID, scene)
 }
 
-pub async fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
+pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
     let modules = available_modules(&cfg.contributions_json);
     ui_stack_vertical(vec![build_filter_bar(&cfg.filters, &modules, labels), build_pool_table(document, cfg, labels)])
 }

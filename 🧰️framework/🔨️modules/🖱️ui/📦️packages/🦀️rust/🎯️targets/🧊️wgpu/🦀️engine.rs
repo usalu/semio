@@ -16,8 +16,8 @@ use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
 use crate::wgpu::mounted_layout::{MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
-use crate::wgpu::paint::paint_tree;
-use crate::wgpu::scene_slots::{collect_scene_slots, SceneHost};
+use crate::wgpu::paint::{paint_node_self, paint_tree, sync_interactive_state_node};
+use crate::wgpu::scene_slots::{collect_scene_slots, scene_slot_for_node, SceneHost};
 use crate::wgpu::shell::{Shell, ShellEvent};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::Theme;
@@ -51,6 +51,8 @@ struct UiWindow {
     layout_generation: u64,
     document_ingress: Option<UiDocumentIngress>,
     retiring_document: Option<UiDocumentTree>,
+    paint_frame: Option<RetainedPaintFrame>,
+    retiring_draw: Option<DrawList>,
 }
 
 impl UiWindow {
@@ -74,6 +76,8 @@ impl UiWindow {
             layout_generation: 1,
             document_ingress: None,
             retiring_document: None,
+            paint_frame: None,
+            retiring_draw: None,
         }
     }
 
@@ -82,6 +86,88 @@ impl UiWindow {
     fn is_dirty(&self) -> bool {
         self.tree.root.and_then(|root| self.tree.node(root)).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY))
     }
+}
+
+const RETAINED_PAINT_DEPTH_CREDITS: usize = 64;
+
+#[derive(Clone, Copy)]
+struct RetainedPaintVisit {
+    node: crate::wgpu::arena::NodeId,
+    origin_x: f32,
+    origin_y: f32,
+    next_child: Option<crate::wgpu::arena::NodeId>,
+    entered: bool,
+}
+
+struct RetainedPaintWalk {
+    visits: [Option<RetainedPaintVisit>; RETAINED_PAINT_DEPTH_CREDITS],
+    len: usize,
+}
+
+enum RetainedPaintWalkStep {
+    Visit(crate::wgpu::arena::NodeId, f32, f32),
+    Scalar,
+    Complete,
+    DepthFault,
+}
+
+impl RetainedPaintWalk {
+    fn new(tree: &UiTree, root: crate::wgpu::arena::NodeId) -> Self {
+        let root_visit = RetainedPaintVisit { node: root, origin_x: 0.0, origin_y: 0.0, next_child: tree.node(root).and_then(|node| node.first_child), entered: false };
+        let mut visits = [None; RETAINED_PAINT_DEPTH_CREDITS];
+        visits[0] = Some(root_visit);
+        Self { visits, len: 1 }
+    }
+
+    fn step(&mut self, tree: &UiTree) -> RetainedPaintWalkStep {
+        let Some(index) = self.len.checked_sub(1) else { return RetainedPaintWalkStep::Complete };
+        let Some(visit) = self.visits[index].as_mut() else { return RetainedPaintWalkStep::DepthFault };
+        if !visit.entered {
+            visit.entered = true;
+            return RetainedPaintWalkStep::Visit(visit.node, visit.origin_x, visit.origin_y);
+        }
+        if let Some(child) = visit.next_child {
+            visit.next_child = tree.node(child).and_then(|node| node.next_sibling);
+            if self.len == RETAINED_PAINT_DEPTH_CREDITS {
+                return RetainedPaintWalkStep::DepthFault;
+            }
+            let Some(layout) = tree.accepted_layout(visit.node) else { return RetainedPaintWalkStep::DepthFault };
+            let child_visit = RetainedPaintVisit { node: child, origin_x: visit.origin_x + layout.x, origin_y: visit.origin_y + layout.y, next_child: tree.node(child).and_then(|node| node.first_child), entered: false };
+            self.visits[self.len] = Some(child_visit);
+            self.len += 1;
+            return RetainedPaintWalkStep::Scalar;
+        }
+        self.visits[index] = None;
+        self.len = index;
+        RetainedPaintWalkStep::Scalar
+    }
+}
+
+#[derive(Clone, Copy)]
+enum RetainedPaintPhase {
+    Synchronize,
+    Paint,
+    Scenes,
+    Publish,
+    Complete,
+    Fault,
+}
+
+struct RetainedPaintFrame {
+    phase: RetainedPaintPhase,
+    walk: RetainedPaintWalk,
+    candidate: DrawList,
+    revision: u64,
+    theme_revision: u64,
+    viewport_revision: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UiFrameStep {
+    Pending,
+    Ready,
+    Missing,
+    Fault,
 }
 pub const UI_LAYOUT_SURFACE_SLOTS: usize = 64;
 
@@ -794,6 +880,217 @@ impl Ui {
     // generic argument-position case (R11(a)): each call site already hands `frame` ONE concrete host
     // reference, so `H: SceneHost` loses no expressiveness versus `dyn` and every existing caller's
     // call syntax (`Some(&mut concrete_host)`) is unchanged — `H` is inferred from the argument.
+    /// 🧵️ Advances one retained paint node, traversal scalar, scene child, publication swap, or
+    /// retirement scalar for one mounted window.
+    pub fn frame_step<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>) -> UiFrameStep {
+        self.set_viewport(window_id, viewport_width, viewport_height);
+        let theme = self.theme;
+        let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
+        let Some(root) = window.tree.root else { return UiFrameStep::Missing };
+        if let Some(retiring) = window.retiring_draw.as_mut() {
+            if !retiring.retire_step() {
+                return UiFrameStep::Pending;
+            }
+            window.retiring_draw = None;
+            return UiFrameStep::Pending;
+        }
+        let layout_dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
+        if layout_dirty {
+            return UiFrameStep::Pending;
+        }
+        if window.paint_frame.is_none() {
+            let dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_PAINT));
+            if !dirty {
+                return UiFrameStep::Ready;
+            }
+            window.paint_frame = Some(RetainedPaintFrame {
+                phase: RetainedPaintPhase::Synchronize,
+                walk: RetainedPaintWalk::new(&window.tree, root),
+                candidate: DrawList::default(),
+                revision: window.revision,
+                theme_revision: window.theme_revision,
+                viewport_revision: window.viewport_revision,
+            });
+            return UiFrameStep::Pending;
+        }
+        let fresh = window.paint_frame.as_ref().is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision);
+        if !fresh {
+            let Some(frame) = window.paint_frame.take() else { return UiFrameStep::Fault };
+            window.retiring_draw = Some(frame.candidate);
+            return UiFrameStep::Pending;
+        }
+        let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
+        match frame.phase {
+            RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
+                RetainedPaintWalkStep::Visit(node, _, _) => {
+                    sync_interactive_state_node(&mut window.tree, node, &theme);
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
+                RetainedPaintWalkStep::Complete => {
+                    frame.phase = RetainedPaintPhase::Paint;
+                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::DepthFault => {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    UiFrameStep::Fault
+                }
+            },
+            RetainedPaintPhase::Paint => match frame.walk.step(&window.tree) {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                    paint_node_self(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), &mut frame.candidate);
+                    if let Some(node) = window.tree.node_mut(node) {
+                        node.flags.set(NodeFlags::DIRTY_PAINT, false);
+                    }
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
+                RetainedPaintWalkStep::Complete => {
+                    frame.phase = RetainedPaintPhase::Scenes;
+                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::DepthFault => {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    UiFrameStep::Fault
+                }
+            },
+            RetainedPaintPhase::Scenes => match frame.walk.step(&window.tree) {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                    if let (Some(host), Some(slot)) = (scene_host.as_deref_mut(), scene_slot_for_node(&window.tree, node, origin_x, origin_y)) {
+                        host.paint_slot(&slot, &mut frame.candidate, atlas, icons);
+                    }
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
+                RetainedPaintWalkStep::Complete => {
+                    frame.phase = RetainedPaintPhase::Publish;
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::DepthFault => {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    UiFrameStep::Fault
+                }
+            },
+            RetainedPaintPhase::Publish => {
+                std::mem::swap(&mut window.draw, &mut frame.candidate);
+                window.retiring_draw = Some(std::mem::take(&mut frame.candidate));
+                frame.phase = RetainedPaintPhase::Complete;
+                UiFrameStep::Pending
+            }
+            RetainedPaintPhase::Complete => {
+                window.paint_frame = None;
+                UiFrameStep::Ready
+            }
+            RetainedPaintPhase::Fault => UiFrameStep::Fault,
+        }
+    }
+
+    /// 🧱️ Advances one retained UI node directly into a caller-owned unpublished frame candidate.
+    pub fn frame_into_step<H: SceneHost>(
+        &mut self,
+        window_id: &str,
+        viewport_width: f32,
+        viewport_height: f32,
+        offset_x: f32,
+        offset_y: f32,
+        atlas: &mut FontAtlas,
+        icons: Option<&IconAtlas>,
+        mut scene_host: Option<&mut H>,
+        target: &mut DrawList,
+    ) -> UiFrameStep {
+        self.set_viewport(window_id, viewport_width, viewport_height);
+        let theme = self.theme;
+        let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
+        let Some(root) = window.tree.root else { return UiFrameStep::Missing };
+        let layout_dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
+        if layout_dirty {
+            return UiFrameStep::Pending;
+        }
+        if window.paint_frame.is_none() {
+            window.paint_frame = Some(RetainedPaintFrame {
+                phase: RetainedPaintPhase::Synchronize,
+                walk: RetainedPaintWalk::new(&window.tree, root),
+                candidate: DrawList::default(),
+                revision: window.revision,
+                theme_revision: window.theme_revision,
+                viewport_revision: window.viewport_revision,
+            });
+            return UiFrameStep::Pending;
+        }
+        let fresh = window.paint_frame.as_ref().is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision);
+        if !fresh {
+            let Some(frame) = window.paint_frame.take() else { return UiFrameStep::Fault };
+            window.retiring_draw = Some(frame.candidate);
+            return UiFrameStep::Pending;
+        }
+        let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
+        match frame.phase {
+            RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
+                RetainedPaintWalkStep::Visit(node, _, _) => {
+                    sync_interactive_state_node(&mut window.tree, node, &theme);
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
+                RetainedPaintWalkStep::Complete => {
+                    frame.phase = RetainedPaintPhase::Paint;
+                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::DepthFault => {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    UiFrameStep::Fault
+                }
+            },
+            RetainedPaintPhase::Paint => match frame.walk.step(&window.tree) {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                    paint_node_self(&window.tree, node, origin_x + offset_x, origin_y + offset_y, &theme, atlas, icons, scene_host.is_some(), target);
+                    if let Some(node) = window.tree.node_mut(node) {
+                        node.flags.set(NodeFlags::DIRTY_PAINT, false);
+                    }
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
+                RetainedPaintWalkStep::Complete => {
+                    frame.phase = RetainedPaintPhase::Scenes;
+                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::DepthFault => {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    UiFrameStep::Fault
+                }
+            },
+            RetainedPaintPhase::Scenes => match frame.walk.step(&window.tree) {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                    if let (Some(host), Some(slot)) = (scene_host.as_deref_mut(), scene_slot_for_node(&window.tree, node, origin_x + offset_x, origin_y + offset_y)) {
+                        host.paint_slot(&slot, target, atlas, icons);
+                    }
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
+                RetainedPaintWalkStep::Complete => {
+                    frame.phase = RetainedPaintPhase::Publish;
+                    UiFrameStep::Pending
+                }
+                RetainedPaintWalkStep::DepthFault => {
+                    frame.phase = RetainedPaintPhase::Fault;
+                    UiFrameStep::Fault
+                }
+            },
+            RetainedPaintPhase::Publish => {
+                frame.phase = RetainedPaintPhase::Complete;
+                UiFrameStep::Pending
+            }
+            RetainedPaintPhase::Complete => {
+                window.paint_frame = None;
+                UiFrameStep::Ready
+            }
+            RetainedPaintPhase::Fault => UiFrameStep::Fault,
+        }
+    }
+
     pub fn frame<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, scene_host: Option<&mut H>) -> Option<&DrawList> {
         self.set_viewport(window_id, viewport_width, viewport_height);
         let window = self.windows.get_mut(window_id)?;
@@ -947,6 +1244,13 @@ mod tests {
         semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1))
     }
 
+    fn retained_walk_leaf(discriminant: u32, ordinal: u32, value: &str) -> crate::wgpu::tree::Node {
+        crate::wgpu::tree::Node::new(
+            crate::wgpu::tree::NodeKey::Positional(discriminant, ordinal),
+            crate::wgpu::tree::WidgetSpec(UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })),
+        )
+    }
+
     fn drive_layout(ui: &mut Ui, window_id: &str, width: f32, height: f32, atlas: &mut FontAtlas) {
         ui.set_viewport(window_id, width, height);
         let operation = semio_framework_job::allocate_operation_id();
@@ -979,6 +1283,59 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         assert!(ui.frame::<RecordingSceneHost>("nonexistent", 400.0, 400.0, &mut atlas, None, None).is_none());
+    }
+
+    #[test]
+    fn retained_paint_walk_yields_one_node_or_scalar_per_step_in_tree_order() {
+        let mut tree = UiTree::new();
+        let root = tree.insert_child(None, retained_walk_leaf(0, 0, "root"));
+        let first = tree.insert_child(Some(root), retained_walk_leaf(1, 0, "first"));
+        let second = tree.insert_child(Some(root), retained_walk_leaf(1, 1, "second"));
+        let nested = tree.insert_child(Some(first), retained_walk_leaf(2, 0, "nested"));
+        let expected = [root, first, nested, second];
+        let mut observed = [None; 4];
+        let mut observed_len = 0;
+        let mut walk = RetainedPaintWalk::new(&tree, root);
+        let mut complete = false;
+        for _ in 0..16 {
+            match walk.step(&tree) {
+                RetainedPaintWalkStep::Visit(node, _, _) => {
+                    observed[observed_len] = Some(node);
+                    observed_len += 1;
+                }
+                RetainedPaintWalkStep::Scalar => {}
+                RetainedPaintWalkStep::Complete => {
+                    complete = true;
+                    break;
+                }
+                RetainedPaintWalkStep::DepthFault => panic!("bounded tree should not exhaust retained depth credits"),
+            }
+        }
+        assert!(complete);
+        assert_eq!(observed, expected.map(Some));
+    }
+
+    #[test]
+    fn retained_paint_walk_depth_cap_plus_one_faults_without_dynamic_spill() {
+        let mut tree = UiTree::new();
+        let root = tree.insert_child(None, retained_walk_leaf(0, 0, "root"));
+        let mut parent = root;
+        for ordinal in 1..=RETAINED_PAINT_DEPTH_CREDITS {
+            let ordinal = match u32::try_from(ordinal) {
+                Ok(ordinal) => ordinal,
+                Err(_) => panic!("retained depth credit must fit a node ordinal"),
+            };
+            parent = tree.insert_child(Some(parent), retained_walk_leaf(1, ordinal, "child"));
+        }
+        let mut walk = RetainedPaintWalk::new(&tree, root);
+        let mut faulted = false;
+        for _ in 0..(RETAINED_PAINT_DEPTH_CREDITS * 3) {
+            if matches!(walk.step(&tree), RetainedPaintWalkStep::DepthFault) {
+                faulted = true;
+                break;
+            }
+        }
+        assert!(faulted);
     }
 
     #[test]

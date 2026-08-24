@@ -15,12 +15,12 @@ use crate::artifacts::curate::schema::mutations::SourcingMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `SourcingMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &SourcingMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &SourcingMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `SourcingMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::ProtocolError> {
     SourcingMutation::decode_op(bytes)
 }
 

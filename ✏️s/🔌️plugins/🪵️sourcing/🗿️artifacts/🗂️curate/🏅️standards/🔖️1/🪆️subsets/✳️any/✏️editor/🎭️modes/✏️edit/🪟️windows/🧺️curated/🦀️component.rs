@@ -13,7 +13,7 @@ const SOURCING_CURATE_SURFACE_CURATED: &str = "sourcing.curated.table";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SOURCING_CURATE_WINDOW_CURATED.into(),
         label: LocalizedLabel::native("Curated", "Kuratiert"),
@@ -34,7 +34,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &CurateSnapshot, labels: &SourcingLabels) -> UiNode {
+pub fn render(document: &CurateSnapshot, labels: &SourcingLabels) -> UiNode {
     let columns = json!([
         {"id": "name", "label": labels.col_name.as_str()},
         {"id": "availability", "label": labels.col_availability.as_str()},

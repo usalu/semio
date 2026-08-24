@@ -1221,10 +1221,130 @@ pub fn render_ui_node(
 //#region 📄️RetainedDocumentConsumer
 static DOCUMENT_PAGE_OPPORTUNITY_CONSUMED: AtomicBool = AtomicBool::new(false);
 
+#[derive(Clone, Copy, Default)]
+enum UiDocumentFramePhase {
+    #[default]
+    Ingress,
+    Viewport,
+    Layout,
+    Paint,
+    Complete,
+    Fault,
+}
+
+#[derive(Default)]
+pub struct UiDocumentFrameCursor {
+    phase: UiDocumentFramePhase,
+}
+
+impl UiDocumentFrameCursor {
+    pub fn terminal_is_complete(&self) -> bool {
+        matches!(self.phase, UiDocumentFramePhase::Complete)
+    }
+
+    pub fn terminal_is_fault(&self) -> bool {
+        matches!(self.phase, UiDocumentFramePhase::Fault)
+    }
+}
+
 pub fn begin_ui_document_opportunity(consumed: bool) {
     DOCUMENT_PAGE_OPPORTUNITY_CONSUMED.store(consumed, Ordering::Release);
 }
 
+pub fn render_ui_document_step(
+    cursor: &mut UiDocumentFrameCursor,
+    document: &UiDocumentLease,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    window_id: &str,
+    engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+    world_resources: &mut infinite_world::world::World3dBuildContext,
+    world3d_states: &mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
+    node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
+    tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
+    icon_render_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
+    board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
+) -> bool {
+    let Ok(header) = document.header() else {
+        cursor.phase = UiDocumentFramePhase::Fault;
+        return false;
+    };
+    let generation = header.generation;
+    let mut preview_sequence = 0;
+    let now = semio_framework_job::default_now_ms();
+    let mut step = semio_framework_job::StepContext::new(
+        semio_framework_job::OperationId(generation),
+        semio_framework_job::Generation(generation),
+        semio_framework_job::StepBudget::new(1, now.saturating_add(2)),
+        semio_framework_job::CancelToken::root_now(),
+        semio_framework_job::default_now_ms,
+        &mut preview_sequence,
+    );
+    let viewport_w = bounds.w.max(1.0);
+    let viewport_h = bounds.h.max(1.0);
+    UI_ENGINE.with(|cell| {
+        let mut engine = cell.borrow_mut();
+        match cursor.phase {
+            UiDocumentFramePhase::Ingress => match engine.document_status(window_id, generation) {
+                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant => {
+                    if engine.begin_document(window_id, header, &mut step).is_err() {
+                        cursor.phase = UiDocumentFramePhase::Fault;
+                    }
+                }
+                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Pending { next_page, node_count } => {
+                    if next_page == node_count {
+                        match engine.finish_document(window_id, generation, &mut step) {
+                            Ok(()) => cursor.phase = UiDocumentFramePhase::Viewport,
+                            Err(ui_wgpu::wgpu::engine::UiDocumentIngressFault::ValidationPending | ui_wgpu::wgpu::engine::UiDocumentIngressFault::InterruptedClose) => {}
+                            Err(_) => cursor.phase = UiDocumentFramePhase::Fault,
+                        }
+                    } else {
+                        match document.read_node_page(next_page) {
+                            Ok(Some(page)) if engine.apply_document_page(window_id, page, &mut step).is_ok() => {}
+                            _ => cursor.phase = UiDocumentFramePhase::Fault,
+                        }
+                    }
+                }
+                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Published => cursor.phase = UiDocumentFramePhase::Viewport,
+            },
+            UiDocumentFramePhase::Viewport => {
+                engine.set_theme(*ctx.theme);
+                engine.set_viewport(window_id, viewport_w, viewport_h);
+                cursor.phase = UiDocumentFramePhase::Layout;
+            }
+            UiDocumentFramePhase::Layout => {
+                if matches!(drive_mounted_layout_text_one(&mut engine, window_id, ctx.atlas), ui_wgpu::wgpu::UiLayoutStep::Ready { .. } | ui_wgpu::wgpu::UiLayoutStep::Idle) {
+                    cursor.phase = UiDocumentFramePhase::Paint;
+                }
+            }
+            UiDocumentFramePhase::Paint => {
+                let mut scene_host = FrameworkSceneHost {
+                    engine_resources,
+                    world_resources,
+                    input: ctx.input,
+                    theme: ctx.theme,
+                    scroll_offsets: ctx.scroll_offsets,
+                    collapsed_sections: ctx.collapsed_sections,
+                    open_selects: ctx.open_selects,
+                    world3d_states,
+                    node_graph_states,
+                    tiled_map_states,
+                    icon_render_states,
+                    board2d_states,
+                };
+                match engine.frame_into_step(window_id, viewport_w, viewport_h, bounds.x, bounds.y, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw) {
+                    ui_wgpu::wgpu::UiFrameStep::Ready | ui_wgpu::wgpu::UiFrameStep::Missing => cursor.phase = UiDocumentFramePhase::Complete,
+                    ui_wgpu::wgpu::UiFrameStep::Pending => {}
+                    ui_wgpu::wgpu::UiFrameStep::Fault => cursor.phase = UiDocumentFramePhase::Fault,
+                }
+            }
+            UiDocumentFramePhase::Complete | UiDocumentFramePhase::Fault => {}
+        }
+    });
+    cursor.terminal_is_complete()
+}
+
+#[cfg(test)]
 pub fn render_ui_document(
     document: &UiDocumentLease,
     bounds: Rect,

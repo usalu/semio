@@ -114,48 +114,78 @@ const ORIGINAL_UNKNOWN_STATEMENTS: [&str; 7] = [
     "# trailing orphan v/vt/vn above: a duplicate of index 0, unreferenced by any face on purpose",
 ];
 
-/// 🏷️ The face-index membership the pristine fixture's OWN `g`/`o` statement carries for `name`,
-/// read back out of the real document rather than written down here. Both name-keyed inverses need
-/// it, and reading it is also the guard that keeps an `Examples` row honest: a row naming a band or
-/// object the real mesh does not carry fails here instead of quietly inverting into a fabrication.
-fn membership_of(base: &[u8], collection: &str, name: &str) -> Result<Json, String> {
-    let snapshot = oracle_snapshot_json(base)?;
-    snapshot
+/// 🏷️ The `g`/`o` membership the pristine fixture's OWN statements declare, in file order, read back
+/// out of the real document rather than written down here. Every name-keyed inverse needs it, and
+/// reading it is also the guard that keeps an `Examples` row honest: a row naming a band or object
+/// the real mesh does not carry fails here instead of quietly inverting into a fabrication.
+fn memberships(base: &[u8], collection: &str) -> Result<Vec<(String, Vec<f64>, Json)>, String> {
+    Ok(oracle_snapshot_json(base)?
         .array(collection)
         .into_iter()
-        .find(|entry| entry.str("name") == name)
-        .map(|entry| entry.get("faces").cloned().unwrap_or_else(|| Json::Array(Vec::new())))
+        .map(|entry| {
+            let faces = entry.get("faces").cloned().unwrap_or_else(|| Json::Array(Vec::new()));
+            let indices = match &faces {
+                Json::Array(items) => items.iter().filter_map(|item| match item { Json::Number(number) => Some(*number), _ => None }).collect(),
+                _ => Vec::new(),
+            };
+            (entry.str("name"), indices, faces)
+        })
+        .collect())
+}
+
+/// 📍️ The position `name` holds in the real document's `collection`, or a failure naming what the
+/// mesh actually carries.
+fn position_of(entries: &[(String, Vec<f64>, Json)], collection: &str, name: &str) -> Result<usize, String> {
+    entries
+        .iter()
+        .position(|(existing, _, _)| existing == name)
         .ok_or_else(|| format!("the real fixture carries no {collection} entry named {name:?} — the mesh's own partition is `o pattern-sphere` over all 16,128 faces and `g band-0`/`band-1`/`band-2` over 5,376 faces each"))
 }
 
-/// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
+/// ↩️ Restoring a `g`/`o` entry that a `remove-<kind>` took out at position `at`. A lone
+/// `set-<kind>` re-declares the membership but APPENDS the entry, so the list order the document's
+/// own statements gave it is lost — and that order decides the token order of a `g a b` line for a
+/// face two bands share. The tail after `at` is lifted off and re-declared in its own order instead,
+/// which is the same repair `ObjMutation::inverse` performs on the subject side.
+fn restore_named_entry(entries: &[(String, Vec<f64>, Json)], at: usize, remove_kind: &str, set_kind: &str) -> Vec<Json> {
+    let mut specs: Vec<Json> = entries[at + 1..].iter().map(|(name, _, _)| json_spec(remove_kind, json_obj(vec![("name", json_str(name))]))).collect();
+    specs.extend(entries[at..].iter().map(|(name, _, faces)| json_spec(set_kind, json_obj(vec![("name", json_str(name)), ("faces", faces.clone())]))));
+    specs
+}
+
+/// ↩️ The semantically correct inverse SEQUENCE for one forward `(kind, params)` pair against the
 /// pristine fixture's own real values — index/name-aware, mirroring the same per-variant
 /// `ObjMutation::inverse()` semantics `../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
 /// 🦀️component.rs` documents, computed independently here since neither the oracle nor this adapter
-/// can reach that subject-side method. Whatever the inverse needs to know about the pre-mutation
-/// state it reads out of `base` with the oracle's own independent parser: `set-snapshot` inverts
-/// through a REAL `set-snapshot` carrying the original document's emitted payload — never a
-/// hand-back of the pristine input bytes, which would let the scenario pass without the reference
-/// re-serializing anything at all — and the four name-keyed `g`/`o` kinds invert through the band
-/// or object membership the real file actually declares.
-fn inverse_spec(spec: &Json, base: &[u8]) -> Result<Json, String> {
+/// can reach that subject-side method. A SEQUENCE and not a single mutation because `Mutation::
+/// inverse` returns `Vec<Self>` and two of the twenty-two kinds genuinely need more than one step:
+/// `remove-face` (the face row alone carries no `g`/`o` membership, so re-inserting it by value
+/// lands the geometry in no band and `tobj` reads a fourth model — `$.vertexCount` 8577 against the
+/// mesh's own 8576) and `remove-group`/`remove-object` (a re-declared entry appends rather than
+/// returning to its own position). Whatever the inverse needs to know about the pre-mutation state
+/// it reads out of `base` with the oracle's own independent parser: `set-snapshot` inverts through a
+/// REAL `set-snapshot` carrying the original document's emitted payload — never a hand-back of the
+/// pristine input bytes, which would let the scenario pass without the reference re-serializing
+/// anything at all.
+fn inverse_specs(spec: &Json, base: &[u8]) -> Result<Vec<Json>, String> {
     let kind = spec.str("kind");
     let empty = json_obj(vec![]);
     let params = spec.get("params").unwrap_or(&empty);
     let named = |key: &str| -> Result<String, String> { params.get(key).and_then(|value| match value { Json::String(text) => Some(text.clone()), _ => None }).ok_or_else(|| format!("{kind} requires a string {key:?} parameter")) };
-    Ok(match kind.as_str() {
-        "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", oracle_snapshot_json(base)?)])),
-        "no-mutation" => json_spec("no-mutation", json_obj(vec![])),
-        "insert-vertex" => json_spec("remove-vertex", json_obj(vec![("index", json_num(8449.0))])),
-        "remove-vertex" => json_spec("insert-vertex", json_obj(vec![("index", json_num(8448.0)), ("vertex", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))])),
-        "set-vertex" => json_spec("set-vertex", json_obj(vec![("index", json_num(0.0)), ("vertex", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))])),
-        "insert-texcoord" => json_spec("remove-texcoord", json_obj(vec![("index", json_num(8449.0))])),
-        "remove-texcoord" => json_spec("insert-texcoord", json_obj(vec![("index", json_num(8448.0)), ("texcoord", json_obj(vec![("u", json_num(0.00390625)), ("v", json_num(0.0))]))])),
-        "set-texcoord" => json_spec("set-texcoord", json_obj(vec![("index", json_num(0.0)), ("texcoord", json_obj(vec![("u", json_num(0.00390625)), ("v", json_num(0.0))]))])),
-        "insert-normal" => json_spec("remove-normal", json_obj(vec![("index", json_num(8449.0))])),
-        "remove-normal" => json_spec("insert-normal", json_obj(vec![("index", json_num(8448.0)), ("normal", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))])),
-        "set-normal" => json_spec("set-normal", json_obj(vec![("index", json_num(0.0)), ("normal", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))])),
-        "insert-face" => json_spec("remove-face", json_obj(vec![("index", json_num(16128.0))])),
+    let one = |value: Json| -> Result<Vec<Json>, String> { Ok(vec![value]) };
+    match kind.as_str() {
+        "set-snapshot" => one(json_spec("set-snapshot", json_obj(vec![("snapshot", oracle_snapshot_json(base)?)]))),
+        "no-mutation" => one(json_spec("no-mutation", json_obj(vec![]))),
+        "insert-vertex" => one(json_spec("remove-vertex", json_obj(vec![("index", json_num(8449.0))]))),
+        "remove-vertex" => one(json_spec("insert-vertex", json_obj(vec![("index", json_num(8448.0)), ("vertex", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))]))),
+        "set-vertex" => one(json_spec("set-vertex", json_obj(vec![("index", json_num(0.0)), ("vertex", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))]))),
+        "insert-texcoord" => one(json_spec("remove-texcoord", json_obj(vec![("index", json_num(8449.0))]))),
+        "remove-texcoord" => one(json_spec("insert-texcoord", json_obj(vec![("index", json_num(8448.0)), ("texcoord", json_obj(vec![("u", json_num(0.00390625)), ("v", json_num(0.0))]))]))),
+        "set-texcoord" => one(json_spec("set-texcoord", json_obj(vec![("index", json_num(0.0)), ("texcoord", json_obj(vec![("u", json_num(0.00390625)), ("v", json_num(0.0))]))]))),
+        "insert-normal" => one(json_spec("remove-normal", json_obj(vec![("index", json_num(8449.0))]))),
+        "remove-normal" => one(json_spec("insert-normal", json_obj(vec![("index", json_num(8448.0)), ("normal", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))]))),
+        "set-normal" => one(json_spec("set-normal", json_obj(vec![("index", json_num(0.0)), ("normal", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))]))),
+        "insert-face" => one(json_spec("remove-face", json_obj(vec![("index", json_num(16128.0))]))),
         "remove-face" | "set-face" => {
             let face = json_obj(vec![(
                 "vertices",
@@ -165,26 +195,49 @@ fn inverse_spec(spec: &Json, base: &[u8]) -> Result<Json, String> {
                     json_obj(vec![("vertex", json_num(8383.0)), ("texcoord", json_num(8383.0)), ("normal", json_num(8383.0))]),
                 ]),
             )]);
-            let restore_kind = if kind == "remove-face" { "insert-face" } else { "set-face" };
-            json_spec(restore_kind, json_obj(vec![("index", json_num(16127.0)), ("face", face)]))
+            if kind == "set-face" {
+                return one(json_spec("set-face", json_obj(vec![("index", json_num(16127.0)), ("face", face)])));
+            }
+            let removed_at = 16127.0;
+            let mut specs = vec![json_spec("insert-face", json_obj(vec![("index", json_num(removed_at)), ("face", face)]))];
+            for (collection, set_kind) in [("groups", "set-group"), ("objects", "set-object")] {
+                for (name, indices, faces) in memberships(base, collection)? {
+                    if indices.iter().any(|index| *index >= removed_at) {
+                        specs.push(json_spec(set_kind, json_obj(vec![("name", json_str(&name)), ("faces", faces)])));
+                    }
+                }
+            }
+            Ok(specs)
         }
-        "set-group" | "remove-group" => {
-            let name = named("name")?;
-            json_spec("set-group", json_obj(vec![("name", json_str(&name)), ("faces", membership_of(base, "groups", &name)?)]))
+        "set-group" => {
+            let entries = memberships(base, "groups")?;
+            let at = position_of(&entries, "groups", &named("name")?)?;
+            one(json_spec("set-group", json_obj(vec![("name", json_str(&entries[at].0)), ("faces", entries[at].2.clone())])))
         }
-        "set-object" | "remove-object" => {
-            let name = named("name")?;
-            json_spec("set-object", json_obj(vec![("name", json_str(&name)), ("faces", membership_of(base, "objects", &name)?)]))
+        "remove-group" => {
+            let entries = memberships(base, "groups")?;
+            let at = position_of(&entries, "groups", &named("name")?)?;
+            Ok(restore_named_entry(&entries, at, "remove-group", "set-group"))
         }
-        "set-mtllib" => json_spec("set-mtllib", json_obj(vec![])),
-        "set-usemtl" => json_spec("set-usemtl", json_obj(vec![("usemtl", Json::Array(vec![json_obj(vec![("faceIndexFrom", json_num(0.0)), ("material", json_str("pattern"))])]))])),
-        "set-smoothing-groups" => json_spec("set-smoothing-groups", json_obj(vec![("smoothingGroups", Json::Array(vec![]))])),
+        "set-object" => {
+            let entries = memberships(base, "objects")?;
+            let at = position_of(&entries, "objects", &named("name")?)?;
+            one(json_spec("set-object", json_obj(vec![("name", json_str(&entries[at].0)), ("faces", entries[at].2.clone())])))
+        }
+        "remove-object" => {
+            let entries = memberships(base, "objects")?;
+            let at = position_of(&entries, "objects", &named("name")?)?;
+            Ok(restore_named_entry(&entries, at, "remove-object", "set-object"))
+        }
+        "set-mtllib" => one(json_spec("set-mtllib", json_obj(vec![]))),
+        "set-usemtl" => one(json_spec("set-usemtl", json_obj(vec![("usemtl", Json::Array(vec![json_obj(vec![("faceIndexFrom", json_num(0.0)), ("material", json_str("pattern"))])]))]))),
+        "set-smoothing-groups" => one(json_spec("set-smoothing-groups", json_obj(vec![("smoothingGroups", Json::Array(vec![]))]))),
         "set-unknown-statements" => {
             let lines = ORIGINAL_UNKNOWN_STATEMENTS.iter().map(|raw| json_obj(vec![("raw", json_str(raw))])).collect();
-            json_spec("set-unknown-statements", json_obj(vec![("unknownStatements", Json::Array(lines))]))
+            one(json_spec("set-unknown-statements", json_obj(vec![("unknownStatements", Json::Array(lines))])))
         }
-        other => json_spec(other, json_obj(vec![])),
-    })
+        other => one(json_spec(other, json_obj(vec![]))),
+    }
 }
 //#endregion 🔖️Inverse
 
@@ -211,8 +264,10 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
-    let mutated = oracle_apply_mutation(&input, &spec)?;
-    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&spec, &input)?)?;
+    let mut restored = oracle_apply_mutation(&input, &spec)?;
+    for undo in inverse_specs(&spec, &input)? {
+        restored = oracle_apply_mutation(&restored, &undo)?;
+    }
     let projection = project(&restored)?;
     inverse_restores_within(&kind, &projection, &project(&input)?, OBJ_WRITER_FREEDOM, OBJ_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
@@ -236,7 +291,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, moved_the_document, mutable_input, project};
+    use super::{inverse_specs, moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
     use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, ObjMutation};
@@ -357,14 +412,24 @@ mod subject {
     //#endregion 🔖️MutationFromSpec
 
     //#region 🔖️Codec
-    /// 📐️ Full parse → typed mutation → re-serialize from the model alone — the no-byte-pass-
-    /// through rule this wave exists to enforce.
-    fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+    /// 📐️ Full parse → typed mutation → re-serialize from the model alone. One step of a
+    /// restoration SEQUENCE is entitled to move nothing — `remove-face`'s undo re-declares the bands
+    /// it disturbed, and a band whose membership is already right yields an empty diff — so the
+    /// no-byte-pass-through tripwire lives in [`apply_and_encode`] around the step that has to
+    /// change something, never around every step.
+    fn mutate_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
         let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
         let mut snapshot = decode_obj(text).map_err(|error| format!("decode_obj failed: {error}"))?;
         let mutation = mutation_from_spec(spec)?;
         apply_obj_mutation(&mut snapshot, &mutation);
-        let bytes = encode_obj(&snapshot).into_bytes();
+        Ok(encode_obj(&snapshot).into_bytes())
+    }
+
+    /// 📐️ [`mutate_and_encode`] plus the no-byte-pass-through rule this wave exists to enforce: our
+    /// encoder cannot reproduce another writer's statement layout, so bit-identical output means the
+    /// input was smuggled rather than parsed.
+    fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+        let bytes = mutate_and_encode(input, spec)?;
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
@@ -390,8 +455,10 @@ mod subject {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
-        let mutated = apply_and_encode(&input, &spec)?;
-        let restored = apply_and_encode(&mutated, &inverse_spec(&spec, &input)?)?;
+        let mut restored = apply_and_encode(&input, &spec)?;
+        for undo in inverse_specs(&spec, &input)? {
+            restored = mutate_and_encode(&restored, &undo)?;
+        }
         let projection = project(&restored)?;
         Ok(Outcome::with_raw(restored, projection))
     }

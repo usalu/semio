@@ -8,7 +8,7 @@
 
 use crate::engine_canvas;
 use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDER_PLAN_LIMITS};
-use crate::shell::{push_find_item, ShellFindItem};
+use crate::shell::{try_push_find_item, ShellFindItem};
 use base64::Engine;
 use infinite_world::world::{render_world_3d, World3dBuildContext, World3dState};
 use semio_framework::IconName;
@@ -7400,7 +7400,7 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
     for node in &graph.nodes {
         register_graph_node(&node.id, node.instance_id.as_deref());
         let label = node.label.as_deref().or(node.instance_id.as_deref()).unwrap_or(&node.id);
-        push_find_item(ShellFindItem { id: node.id.clone(), label: label.to_string(), description: node.instance_id.clone(), category: Some("Nodes".into()), surface_id: scene.surface_id.clone(), node_id: node.id.clone() });
+        let _ = try_push_find_item(ShellFindItem { id: node.id.clone(), label: label.to_string(), description: node.instance_id.clone(), category: Some("Nodes".into()), surface_id: scene.surface_id.clone(), node_id: node.id.clone() });
     }
     let inner = bounds;
     if let Some(surface) = node_graph_states.get_mut(&scene.surface_id) {

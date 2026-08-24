@@ -181,7 +181,8 @@ pub fn apply_x_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfXM
 /// `diff_set_snapshot` is built on, and it is exact on `objects` (keyed by `ObjRef`), on `trailer`
 /// (keyed by dict key) and on `pages` (keyed by index).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn transform(mutation: &PdfXMutation, base: &PdfSnapshot) -> PdfSnapshot {
+impl PdfXMutation {
+    fn transform(mutation: &PdfXMutation, base: &PdfSnapshot) -> PdfSnapshot {
     let mut next = base.clone();
     match mutation {
             Self::NoMutation => {},
@@ -208,6 +209,7 @@ fn transform(mutation: &PdfXMutation, base: &PdfSnapshot) -> PdfSnapshot {
             Self::RemoveMediaAnnotation { subtype, title } => { if let Some(id) = support::media_annotation(&next, subtype, title) { support::remove_object(&mut next, id); } },
     }
     next
+    }
 }
 //#endregion 🔖️Transform
 
@@ -216,7 +218,7 @@ impl Mutation<PdfSnapshot> for PdfXMutation {
     type Diff = PdfDiff;
 
     fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
-        protocol::MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &transform(self, base)))
+        protocol::MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &Self::transform(self, base)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {

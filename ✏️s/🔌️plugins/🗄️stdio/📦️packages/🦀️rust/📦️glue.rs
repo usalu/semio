@@ -24,6 +24,35 @@ extern crate semio_framework_schema as schema;
 // them byte-for-byte.
 extern crate semio_framework_graph as graph_core;
 
+//#region MutationWire
+/// 📡 Supplies the canonical JSON text/binary wire representation for schema-owned mutation
+/// vocabularies whose derived serde shape is already their language-neutral schema.
+macro_rules! impl_serde_op_codec {
+    ($mutation:ty, $what:literal) => {
+        impl protocol::OpText for $mutation {
+            fn print_op(&self) -> String {
+                serde_json::to_string(self).expect("derived mutation serialization must be total")
+            }
+
+            fn parse_op(line: &str) -> Result<Self, store::TextError> {
+                serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
+            }
+        }
+
+        impl protocol::OpBinary for $mutation {
+            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+                serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })
+            }
+
+            fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+                serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })
+            }
+        }
+    };
+}
+pub(crate) use impl_serde_op_codec;
+//#endregion MutationWire
+
 //#region Base64
 /// 🔡 Encodes bytes with the padded RFC 4648 standard Base64 alphabet.
 pub fn base64_standard(bytes: &[u8]) -> String {

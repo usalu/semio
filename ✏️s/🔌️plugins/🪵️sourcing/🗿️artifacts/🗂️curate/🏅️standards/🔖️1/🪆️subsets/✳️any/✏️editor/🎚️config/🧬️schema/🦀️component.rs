@@ -23,7 +23,7 @@ pub struct SourcingCurateConfig {
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app` — app-scope
 /// config/presence schema is the one registration `ArtifactDeclaration` deliberately has no field
 /// for (see that struct's own doc). `🪵️sourcing/🦀️component.rs` no longer needs `.setup()` for this.
-pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.sourcing.curate",
         config: ::schema::FacetLeaves {

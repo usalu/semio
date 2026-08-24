@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `BcfSnapshot -> BuiltNode` read: one row per topic, real fields
 /// (guid/title/status/priority/creation author) straight off the document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BcfSnapshot) -> BuiltNode {
+pub fn render(document: &BcfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let columns = vec!["GUID".to_string(), "Title".to_string(), "Status".to_string(), "Priority".to_string(), "Author".to_string()];
     let rows: Vec<Vec<String>> = document.topics.iter().map(|topic| vec![topic.guid.clone(), topic.title.clone(), topic.status.clone(), topic.priority.clone(), topic.creation_author.clone()]).collect();
     let view = TableView { columns, rows };

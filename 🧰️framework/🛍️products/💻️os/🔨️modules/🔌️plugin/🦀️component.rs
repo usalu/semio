@@ -149,7 +149,7 @@ pub mod app {
     //! 🧩️ Declarative app builder and plugin trait.
 
     use dsl::{to_dsl_value, DslValue};
-    use protocol::OpText;
+    use protocol::{OpBinary, OpText};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
     pub use semio_framework::AppDefinition;
@@ -202,8 +202,8 @@ pub mod app {
     /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
     use store::os_io::{ArtifactKindId, ArtifactRef};
     use store::{
-        build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles, GroupMeta, HistoryColumn, HistoryLane, MemberFactory,
-        Mutation, MutationDiff, NoMembers, SpaceMember,
+        build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles, GroupMeta, HistoryColumn, HistoryLane,
+        MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember,
     };
     /// 🔗️ `manifest::Keybinding.action` (FORBIDDEN file, `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`)
     /// is still declared as `ui_wgpu::wgpu::ActionDescriptor` and was not part of this migration's scope
@@ -246,6 +246,12 @@ pub mod app {
         ui::text(value).try_build().map_err(|_| label)
     }
 
+    /// 🧩️ Admits a dynamic text root into the fixed-capacity UI tree and preserves admission
+    /// failure at the plugin assembly boundary.
+    pub fn built_text_to_component_tree(label: ui_wgpu::wgpu::Label) -> UiAssemblyResult<ComponentTree> {
+        built_text_node(label).map(built_to_component_tree).map_err(|_| ui_assembly_error("built-text-root"))
+    }
+
     /// 🧩 Fallible fixed-capacity UI assembly result shared by plugin render boundaries.
     pub type UiAssemblyResult<T> = Result<T, PluginAssemblyError>;
 
@@ -259,6 +265,17 @@ pub mod app {
 
     fn ui_text<T: TryInto<UiText>>(value: T, stage: &'static str) -> UiAssemblyResult<UiText> {
         value.try_into().map_err(|_| ui_assembly_error(stage))
+    }
+
+    #[cfg(test)]
+    mod tree_convert_tests {
+        use super::*;
+
+        #[test]
+        fn dynamic_text_root_reports_fixed_capacity_admission_failure() {
+            let error = built_text_to_component_tree(ui_wgpu::wgpu::Label::data("x".repeat(semio_framework_ui_contract::UI_TEXT_MAX_BYTES + 1))).expect_err("oversized dynamic text must not panic or truncate");
+            assert_eq!(error.code, "ui.fixed-capacity");
+        }
     }
     //#endregion 🔖️TreeConvert
 
@@ -3137,7 +3154,7 @@ pub mod app {
         /// to the same plural codec capability set as `.document_codec::<A>()`.
         pub fn document_codec_bare<Snapshot, Mutation>(self, schema: impl Into<String>) -> Self
         where
-            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
+            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
             resolve_ready(self.document_codec_bare_async::<Snapshot, Mutation>(schema))
@@ -3145,7 +3162,7 @@ pub mod app {
 
         async fn document_codec_bare_async<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self
         where
-            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
+            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
             let codec = DocumentCodecSpec::bare::<Snapshot, Mutation>(schema);
@@ -3249,12 +3266,12 @@ pub mod app {
         /// `register_document_codec_for_app`'s `A::` indirection since there is no `A` to name.
         fn bare<Snapshot, Mutation>(schema: impl Into<String>) -> Self
         where
-            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
+            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
             fn codec<Snapshot, Mutation>(schema: String) -> store::ArtifactCodec
             where
-                Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
+                Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
                 Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
             {
                 store::ArtifactCodec::of::<Snapshot, Mutation>(schema)
@@ -6173,8 +6190,8 @@ pub mod app {
     pub const UI_COMMAND_VALUE_ITEMS: usize = 256;
 
     enum UiCommandJsonFrame {
-        List { cursor: ui_contract::UiListCursor, output: Vec<Value> },
-        Map { cursor: ui_contract::UiMapCursor, output: serde_json::Map<String, Value>, key: Option<String> },
+        List { cursor: ui::UiListCursor, output: Vec<Value> },
+        Map { cursor: ui::UiMapCursor, output: serde_json::Map<String, Value>, key: Option<String> },
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -9966,9 +9983,9 @@ pub mod app {
                     return Err(plugin_sdk_fault(error));
                 }
             };
-            let typed = self.typed.take().expect("terminal app-typed peer candidate");
-            assert!(typed.terminal_is_empty(), "take_commit consumes every app-typed publication owner before its shell is released");
-            drop(typed);
+            let typed_shell = self.typed.take().expect("terminal app-typed peer candidate");
+            assert!(typed_shell.terminal_is_empty(), "take_commit consumes every app-typed publication owner before its shell is released");
+            drop(typed_shell);
             let root = std::sync::Arc::new(metadata);
             Ok(PeerRosterCandidate { seq: self.seq, generation: self.generation, cancel: self.cancel.clone(), own_color: self.own_color, now_ms: self.now_ms, root, typed })
         }
@@ -10697,7 +10714,7 @@ pub mod app {
         let filter_builder = filter_builder.try_id("framework.history.filter").map_err(|_| ui_assembly_error("history-panel.filter-item-id"))?;
         let filter_item = filter_builder.try_child(filter_select).map_err(|_| ui_assembly_error("history-panel.filter-child"))?.try_build().map_err(|_| ui_assembly_error("history-panel.filter-item-build"))?;
 
-        let mut command_items = UiFixedList::default();
+        let mut command_items = BuiltChildren::default();
         for entry in history.commands.iter().filter(|entry| match history.command_filter {
             HistoryCommandFilter::All => true,
             HistoryCommandFilter::WithoutMutations => entry.edit_id.is_none(),
@@ -10736,7 +10753,7 @@ pub mod app {
             command_items.try_push(command).map_err(|_| ui_assembly_error("history-panel.commands"))?;
         }
 
-        let mut action_items = UiFixedList::default();
+        let mut action_items = BuiltChildren::default();
         for item in [
             action_item("framework.history.undo", IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo && !read_only)?,
             action_item("framework.history.redo", IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo && !read_only)?,
@@ -10752,7 +10769,7 @@ pub mod app {
         let commands_builder = ui::tree_section(ui_label(if is_de { "Befehle" } else { "Commands" }, "history-panel.commands-label")?).default_open(true);
         let commands_builder = commands_builder.try_id("framework.history.commands").map_err(|_| ui_assembly_error("history-panel.commands-id"))?;
         let commands_section = commands_builder.try_children(command_items).map_err(|_| ui_assembly_error("history-panel.commands"))?.try_build().map_err(|_| ui_assembly_error("history-panel.commands-build"))?;
-        let mut sections = UiFixedList::default();
+        let mut sections = BuiltChildren::default();
         sections.try_push(actions_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
         sections.try_push(commands_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
         ui::tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_assembly_error("history-panel.build"))
@@ -13214,7 +13231,11 @@ pub mod app {
     /// @emoji 🏗️ Domain-owned persistent initializer for one completed envelope. A terminal
     /// success retains exactly one fully prepared store until the wrapper takes it; fault/cancel may
     /// become terminal only after the envelope and every partial owner have been cursor-retired.
-    pub trait ArtifactStoreInitializationAuthority<P, Mutation>: Send {
+    pub trait ArtifactStoreInitializationAuthority<P, Mutation>: Send
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+    {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome;
         fn request_cancel(&mut self);
         fn take_candidate(&mut self) -> Option<ArtifactStore<P, Mutation>>;
@@ -13223,13 +13244,21 @@ pub mod app {
         fn terminal_is_empty(&self) -> bool;
     }
 
-    pub struct ArtifactStoreInitializationJob<P, Mutation> {
+    pub struct ArtifactStoreInitializationJob<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+    {
         authority: std::mem::ManuallyDrop<Option<Box<dyn ArtifactStoreInitializationAuthority<P, Mutation>>>>,
         cancel_requested: std::sync::Arc<std::sync::atomic::AtomicBool>,
         terminal_handoff: bool,
     }
 
-    impl<P, Mutation> ArtifactStoreInitializationJob<P, Mutation> {
+    impl<P, Mutation> ArtifactStoreInitializationJob<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+    {
         pub fn new(authority: Box<dyn ArtifactStoreInitializationAuthority<P, Mutation>>) -> Self {
             Self { authority: std::mem::ManuallyDrop::new(Some(authority)), cancel_requested: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), terminal_handoff: false }
         }
@@ -13267,8 +13296,8 @@ pub mod app {
 
     impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactStoreInitializationJob<P, Mutation>
     where
-        P: Send,
-        Mutation: Send,
+        P: Clone + Serialize + serde::de::DeserializeOwned + Send,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + Send,
     {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
             match self.authority.as_mut() {
@@ -13282,7 +13311,9 @@ pub mod app {
                     state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
                 }),
-                None => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"artifact-store.initializer-owner-missing".to_vec() }),
+                None => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"artifact-store.initializer-owner-missing"),
+                }),
             }
         }
 
@@ -13318,7 +13349,11 @@ pub mod app {
         }
     }
 
-    impl<P, Mutation> Drop for ArtifactStoreInitializationJob<P, Mutation> {
+    impl<P, Mutation> Drop for ArtifactStoreInitializationJob<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+    {
         fn drop(&mut self) {
             assert!(self.authority.is_none() && self.terminal_handoff, "artifact store initialization job reached Drop before exact candidate handoff or terminal retained close");
         }
@@ -13337,6 +13372,16 @@ pub mod app {
         }
         drop(disposer.take());
         Ok(PluginCloseStep::Complete)
+    }
+
+    pub(crate) fn retained_job_payload(cx: &mut semio_framework_job::StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
+        match cx.payload_from_bytes(stream, bytes) {
+            Ok(payload) => payload,
+            Err(rejected) => {
+                drop(rejected.into_source());
+                semio_framework_job::RetainedJobPayload::empty(stream)
+            }
+        }
     }
 
     trait ErasedArtifactSnapshotDisposer: Send {
@@ -13388,9 +13433,9 @@ pub mod app {
     impl ArtifactSnapshotCloseRetention {
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             let Some(inner) = self.inner.as_mut() else { return Ok(PluginCloseStep::Complete) };
-            let step = inner.close_step(maximum_items, maximum_bytes)?;
+            let step = ErasedArtifactSnapshotDisposer::close_step(&mut **inner, maximum_items, maximum_bytes)?;
             if step == PluginCloseStep::Complete {
-                if !inner.terminal_is_empty() {
+                if !ErasedArtifactSnapshotDisposer::terminal_is_empty(&**inner) {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.snapshot-terminal-not-empty"), "snapshot disposer reported Complete before its exact terminal shell was empty"));
                 }
                 drop(self.inner.take());
@@ -13752,9 +13797,9 @@ pub mod app {
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             let mut state = self.state.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-close-busy"), "reserved job close authority is busy or poisoned"))?;
             let Some(inner) = state.inner.as_mut() else { return Ok(PluginCloseStep::Complete) };
-            let step = inner.close_step(maximum_items, maximum_bytes)?;
+            let step = ArtifactReservedJob::close_step(&mut **inner, maximum_items, maximum_bytes)?;
             if step == PluginCloseStep::Complete {
-                if !inner.terminal_is_empty() {
+                if !ArtifactReservedJob::terminal_is_empty(&**inner) {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-terminal-not-empty"), "reserved job reported Complete without an exact terminal-empty witness"));
                 }
                 let terminal = state.inner.take();
@@ -13782,7 +13827,9 @@ pub mod app {
             match self.state.try_lock() {
                 Ok(mut state) => state.inner.as_mut().map_or(semio_framework_job::StepOutcome::Cancelled, |inner| inner.step(cx)),
                 Err(std::sync::TryLockError::WouldBlock) => semio_framework_job::StepOutcome::Yield,
-                Err(std::sync::TryLockError::Poisoned(_)) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"reserved job authority is poisoned".to_vec() }),
+                Err(std::sync::TryLockError::Poisoned(_)) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"reserved job authority is poisoned"),
+                }),
             }
         }
 
@@ -13837,13 +13884,21 @@ pub mod app {
                     }
                 }
 
-                fn checkpoint(&self) -> semio_framework_job::Checkpoint {
+                fn cursor_state(&self) -> Vec<u8> {
                     let mut state = vec![$route_index, self.stage as u8];
                     state.extend_from_slice(&(self.envelope_cursor as u64).to_le_bytes());
                     state.extend_from_slice(&(self.raw.len() as u64).to_le_bytes());
                     state.extend_from_slice(&(self.item_cursor as u64).to_le_bytes());
                     state.extend_from_slice(&(self.total_items as u64).to_le_bytes());
-                    semio_framework_job::Checkpoint { state, applied_progress: self.envelope_cursor.saturating_add(self.item_cursor) as u64 }
+                    state
+                }
+
+                fn checkpoint(&self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::Checkpoint {
+                    let state = self.cursor_state();
+                    semio_framework_job::Checkpoint {
+                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &state),
+                        applied_progress: self.envelope_cursor.saturating_add(self.item_cursor) as u64,
+                    }
                 }
             }
 
@@ -13856,7 +13911,8 @@ pub mod app {
                         FrameworkReservedStage::Admitted => {
                             self.stage = FrameworkReservedStage::Cursor;
                             cx.set_stage(concat!("framework-reserved-", $route, "-envelope"));
-                            semio_framework_job::StepOutcome::PreviewReady(self.checkpoint().state)
+                            let state = self.cursor_state();
+                            semio_framework_job::StepOutcome::PreviewReady(retained_job_payload(cx, semio_framework_job::JobPayloadStream::Preview, &state))
                         }
                         FrameworkReservedStage::Cursor => {
                             let envelope_remaining = self.raw.len().saturating_sub(self.envelope_cursor);
@@ -13873,18 +13929,23 @@ pub mod app {
                                 return semio_framework_job::StepOutcome::Cancelled;
                             }
                             if self.envelope_cursor < self.raw.len() || self.item_cursor < self.total_items {
-                                semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint())
+                                semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
                             } else {
                                 self.stage = FrameworkReservedStage::CommitReady;
                                 cx.set_stage(concat!("framework-reserved-", $route, "-commit-ready"));
-                                semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint())
+                                semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
                             }
                         }
                         FrameworkReservedStage::CommitReady => {
                             if self.raw.len() > self.contract.max_output_bytes {
-                                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: concat!("framework reserved ", $route, " output exceeds its exact cap").as_bytes().to_vec() });
+                                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, concat!("framework reserved ", $route, " output exceeds its exact cap").as_bytes()),
+                                });
                             }
-                            semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.checkpoint().state, output: self.raw.clone() })
+                            semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                                output: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CommitOutput, &self.raw),
+                            })
                         }
                     }
                 }
@@ -13994,7 +14055,10 @@ pub mod app {
                     let units = self.raw.len().saturating_sub(self.cursor).min(4_096).min(cx.fuel_remaining() as usize);
                     self.cursor += units;
                     cx.consume_fuel(units as u64);
-                    let checkpoint = semio_framework_job::Checkpoint { state: self.cursor.to_le_bytes().to_vec(), applied_progress: self.cursor as u64 };
+                    let checkpoint = semio_framework_job::Checkpoint {
+                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &self.cursor.to_le_bytes()),
+                        applied_progress: self.cursor as u64,
+                    };
                     if self.cursor < self.raw.len() {
                         semio_framework_job::StepOutcome::CheckpointReady(checkpoint)
                     } else {
@@ -14009,9 +14073,15 @@ pub mod app {
                         *output.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(decoded);
                     }
                     self.stage = FrameworkConfigurationBinaryStage::Complete;
-                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.cursor.to_le_bytes().to_vec(), applied_progress: self.cursor.saturating_add(1) as u64 })
+                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
+                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &self.cursor.to_le_bytes()),
+                        applied_progress: self.cursor.saturating_add(1) as u64,
+                    })
                 }
-                FrameworkConfigurationBinaryStage::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.cursor.to_le_bytes().to_vec(), output: self.raw.clone() }),
+                FrameworkConfigurationBinaryStage::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CommitOutput, &self.raw),
+                }),
             }
         }
 
@@ -15106,8 +15176,9 @@ pub mod app {
                 return semio_framework_job::StepOutcome::Cancelled;
             }
             if self.decoded_items > self.contract.max_decoded_items || self.work_units > self.contract.max_work_units_per_step {
+                let detail = format!("decoded/work contract exceeded: {}/{} decoded items, {}/{} work units", self.decoded_items, self.contract.max_decoded_items, self.work_units, self.contract.max_work_units_per_step);
                 return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                    detail: format!("decoded/work contract exceeded: {}/{} decoded items, {}/{} work units", self.decoded_items, self.contract.max_decoded_items, self.work_units, self.contract.max_work_units_per_step).into_bytes(),
+                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, detail.as_bytes()),
                 });
             }
             cx.set_stage("app-tool-command");
@@ -15171,7 +15242,9 @@ pub mod app {
                 *output.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactToolCompletionValue::Emit(emit, ephemeral));
             }
             match fault_detail {
-                Some(detail) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail }),
+                Some(detail) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, &detail),
+                }),
                 None => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
                     state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
@@ -15310,7 +15383,7 @@ pub mod app {
         Complete,
     }
 
-    struct ActiveArtifactEnvelopeDecode<P, Mutation> {
+    struct ActiveArtifactEnvelopeDecode<P: Send + 'static, Mutation: Send + 'static> {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         cancel: semio_framework_job::CancelToken,
@@ -15442,9 +15515,8 @@ pub mod app {
             }
             if let Some(outcome) = self.retained_outcome.as_mut() {
                 return match outcome.close_step(maximum_items.min(1), maximum_bytes) {
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                    semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "envelope worker outcome close is temporarily blocked" }),
-                    semio_framework_job::InteractiveJobCloseStep::Complete if outcome.terminal_is_empty() => {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => {
                         drop(self.retained_outcome.take());
                         if self.terminal_state.is_none() {
                             self.session
@@ -15455,7 +15527,7 @@ pub mod app {
                         }
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    semio_framework_job::InteractiveJobCloseStep::Complete => {
+                    semio_framework_job::JobPayloadCloseStep::Complete => {
                         Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-false-terminal"), "envelope worker outcome reported Complete without terminal-empty payload"))
                     }
                 };
@@ -15513,7 +15585,7 @@ pub mod app {
         }
     }
 
-    impl<P, Mutation> Drop for ActiveArtifactEnvelopeDecode<P, Mutation> {
+    impl<P: Send + 'static, Mutation: Send + 'static> Drop for ActiveArtifactEnvelopeDecode<P, Mutation> {
         fn drop(&mut self) {
             assert!(
                 self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.rejected.is_none() && self.state == ActiveArtifactEnvelopeDecodeState::Complete,
@@ -15576,7 +15648,11 @@ pub mod app {
         Complete,
     }
 
-    struct ActiveArtifactStoreReplacement<P, Mutation> {
+    struct ActiveArtifactStoreReplacement<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         cancel: semio_framework_job::CancelToken,
@@ -15654,9 +15730,8 @@ pub mod app {
             }
             if let Some(outcome) = self.retained_outcome.as_mut() {
                 return match outcome.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                    semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "store initializer outcome close is temporarily blocked" }),
-                    semio_framework_job::InteractiveJobCloseStep::Complete if outcome.terminal_is_empty() => {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => {
                         drop(self.retained_outcome.take());
                         if self.terminal_target.is_none() {
                             self.session
@@ -15667,7 +15742,7 @@ pub mod app {
                         }
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    semio_framework_job::InteractiveJobCloseStep::Complete => {
+                    semio_framework_job::JobPayloadCloseStep::Complete => {
                         Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-false-terminal"), "store initializer outcome reported Complete without terminal-empty payload"))
                     }
                 };
@@ -15752,7 +15827,11 @@ pub mod app {
         }
     }
 
-    impl<P, Mutation> Drop for ActiveArtifactStoreReplacement<P, Mutation> {
+    impl<P, Mutation> Drop for ActiveArtifactStoreReplacement<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
         fn drop(&mut self) {
             assert!(
                 self.state == ActiveArtifactStoreReplacementState::Complete && self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.retained_store.is_none() && self.retained_disposer.is_none(),
@@ -16030,7 +16109,7 @@ pub mod app {
     }
     //#endregion 🔖️ViewerGuard
 
-    impl<A: ArtifactApp, M: SpaceMember + MemberFactory> VcsArtifactApp<A, M> {
+    impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
         #[cfg(test)]
         pub(crate) fn test_registered_tool_keys(&self) -> BTreeSet<(String, String)> {
             self.tool_jobs.keys().into_iter().map(|key| (key.controller_id, key.tool_id)).collect()
@@ -17045,7 +17124,8 @@ pub mod app {
                 if permit.is_cancelled().await {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "checkout cascade was cancelled between child steps"));
                 }
-                match self.children.keys().find(|(_, child_id)| *child_id == pin.child_ref.artifact_id).cloned() {
+                let child_key = self.children.keys().find(|(_, child_id)| *child_id == pin.child_ref.artifact_id).cloned();
+                match child_key {
                     Some((slot, child_id)) => {
                         let publication_generation = self.admit_child_content_publication()?;
                         let (_, member) = self.children.get_mut(&(slot.clone(), child_id.clone())).ok_or_else(|| plugin_sdk_fault("checkout child authority changed during bounded publication"))?;
@@ -18296,7 +18376,8 @@ pub mod app {
             }
             let mut marks: UiFixedList<ui::PeerMark> = UiFixedList::default();
             for mark in &selecting {
-                if let Some(index) = marks.iter().position(|entry| entry.actor == mark.actor) {
+                let existing = marks.iter().position(|entry| entry.actor == mark.actor);
+                if let Some(index) = existing {
                     if let Some(entry) = marks.get_mut(index) {
                         entry.selected = true;
                     }
@@ -18305,7 +18386,8 @@ pub mod app {
                 }
             }
             for mark in &hovering {
-                if let Some(index) = marks.iter().position(|entry| entry.actor == mark.actor) {
+                let existing = marks.iter().position(|entry| entry.actor == mark.actor);
+                if let Some(index) = existing {
                     if let Some(entry) = marks.get_mut(index) {
                         entry.hovered = true;
                     }
@@ -18321,7 +18403,7 @@ pub mod app {
                 surface: SurfaceId::try_from(body_key).map_err(|_| ui_assembly_error("presence.surface"))?,
                 node_key: node.key.to_string(),
                 own: OwnPresence { hovered: own_hovered, selected: own_selected, previewed: false, color: own_color },
-                peers: marks.into_values().collect(),
+                peers: marks.into_iter().collect(),
                 ttl_ms: PRESENCE_TTL_MS,
             });
             Ok(())
@@ -19287,7 +19369,7 @@ pub mod app {
         AppEvent { kind: "history-changed".into(), payload: DslValue::Null }
     }
 
-    impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send> PluginApp for VcsArtifactApp<A, M> {
+    impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M> {
         async fn bind_instance_id(&mut self, instance_id: u32) {
             self.live_runtime_instance_id = Some(instance_id);
         }
@@ -21505,7 +21587,7 @@ pub mod app {
         }
 
         fn render(view: &DocumentView) -> UiAssemblyResult<BuiltNode> {
-            let mut children = UiFixedList::default();
+            let mut children = BuiltChildren::default();
             for (index, page) in view.pages.iter().enumerate() {
                 let id = UiText::try_format(format_args!("page-{index}")).ok_or_else(|| ui_assembly_error("document-window.page-id"))?;
                 let builder = ui::text(ui_label(page.text.clone(), "document-window.page-text")?);
@@ -22115,6 +22197,22 @@ pub mod app {
         type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Command: ::protocol::OpBinary + Send + Sync + 'static;
 
+        fn mounted_job_maintenance_step(_instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn mounted_job_close_step(_instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn mounted_jobs_terminal_is_empty(_instance_id: u32) -> bool {
+            true
+        }
+
+        fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot) -> bool {
+            false
+        }
+
         /// 👥️🫧️ See `ArtifactEditor::ephemeral` for why this returns a tuple, not `EphemeralEmit<Self>`.
         async fn ephemeral(
             _command: &Self::Command,
@@ -22153,6 +22251,9 @@ pub mod app {
             protocol::InteractionTopology::default()
         }
         async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree>;
+        async fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
+            Vec::new()
+        }
         async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
@@ -22475,6 +22576,18 @@ pub mod app {
         async fn instance_id(&self) -> &str {
             self.surface_id().await
         }
+        fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            V::mounted_job_maintenance_step(instance_id, maximum_items, maximum_bytes)
+        }
+        fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            V::mounted_job_close_step(instance_id, maximum_items, maximum_bytes)
+        }
+        fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
+            V::mounted_jobs_terminal_is_empty(instance_id)
+        }
+        fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
+            V::mounted_job_prepare_snapshot_read(operation, snapshot)
+        }
         type Snapshot = V::Snapshot;
         type Mutation = V::Mutation;
         type Config = V::Config;
@@ -22525,6 +22638,9 @@ pub mod app {
         }
         async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
             V::render(body_key, doc, cfg).await
+        }
+        async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
+            V::pending_effects(doc, cfg).await
         }
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
             V::window_engagements(doc, cfg).await
@@ -23579,7 +23695,11 @@ pub mod plugin_runtime {
     // #region plugin_runtime
     //! 📤️ WASM component export glue for plugin bundles.
 
-    use crate::app::{resolve_ready, ActionMeta, AppInstance, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginApp, PluginAssemblyError, PluginProgram, TransactionProposalDraft};
+    use crate::app::{
+        resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll,
+        EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp,
+        PluginAssemblyError, PluginProgram, PresenceRosterAdmission, TransactionProposalDraft,
+    };
     use crate::ArtifactApp;
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
@@ -24466,25 +24586,37 @@ pub mod plugin_runtime {
                     return semio_framework_job::StepOutcome::Yield;
                 }
                 Err(std::sync::TryLockError::Poisoned(_)) => {
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin live cleanup authority is poisoned".to_vec() });
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                        detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin live cleanup authority is poisoned"),
+                    });
                 }
             };
             cx.consume_fuel(1);
             match instance.app.maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP) {
                 Ok(progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP => {
                     self.progress = Some(progress);
-                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.instance_id.to_le_bytes().to_vec(), applied_progress: released_items as u64 })
+                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
+                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &self.instance_id.to_le_bytes()),
+                        applied_progress: released_items as u64,
+                    })
                 }
-                Ok(crate::app::PluginCloseStep::Pending { .. }) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin live cleanup step exceeded its exact item or byte contract".to_vec() }),
+                Ok(crate::app::PluginCloseStep::Pending { .. }) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin live cleanup step exceeded its exact item or byte contract"),
+                }),
                 Ok(progress @ crate::app::PluginCloseStep::Blocked { .. }) => {
                     self.progress = Some(progress);
                     semio_framework_job::StepOutcome::Yield
                 }
                 Ok(crate::app::PluginCloseStep::Complete) => {
                     self.progress = Some(crate::app::PluginCloseStep::Complete);
-                    semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.instance_id.to_le_bytes().to_vec(), output: Vec::new() })
+                    semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CommitState, &self.instance_id.to_le_bytes()),
+                        output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                    })
                 }
-                Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error.message.into_bytes() }),
+                Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, error.message.as_bytes()),
+                }),
             }
         }
 
@@ -24637,12 +24769,17 @@ pub mod plugin_runtime {
                         return semio_framework_job::StepOutcome::Yield;
                     }
                     Err(std::sync::TryLockError::Poisoned(_)) => {
-                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin close cell authority is poisoned".to_vec() });
+                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                            detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin close cell authority is poisoned"),
+                        });
                     }
                 };
                 let Some(cell) = cell.as_ref() else {
                     self.progress = Some(crate::app::PluginCloseStep::Complete);
-                    return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: state.instance_id.to_le_bytes().to_vec(), output: Vec::new() });
+                    return semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CommitState, &state.instance_id.to_le_bytes()),
+                        output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                    });
                 };
                 cell.clone()
             };
@@ -24654,7 +24791,9 @@ pub mod plugin_runtime {
                         return semio_framework_job::StepOutcome::Yield;
                     }
                     Err(std::sync::TryLockError::Poisoned(_)) => {
-                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin maintenance session authority is poisoned".to_vec() });
+                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                            detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin maintenance session authority is poisoned"),
+                        });
                     }
                 };
                 let _ = maintenance.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
@@ -24670,28 +24809,44 @@ pub mod plugin_runtime {
                     return semio_framework_job::StepOutcome::Yield;
                 }
                 Err(std::sync::TryLockError::Poisoned(_)) => {
-                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin app close authority is poisoned".to_vec() });
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                        detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin app close authority is poisoned"),
+                    });
                 }
             };
             cx.consume_fuel(1);
             match instance.app.close_step(RUNTIME_CLOSE_ITEMS_PER_STEP, RUNTIME_CLOSE_BYTES_PER_STEP) {
                 Ok(progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= RUNTIME_CLOSE_ITEMS_PER_STEP && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP => {
                     self.progress = Some(progress);
-                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: state.instance_id.to_le_bytes().to_vec(), applied_progress: released_items as u64 })
+                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
+                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &state.instance_id.to_le_bytes()),
+                        applied_progress: released_items as u64,
+                    })
                 }
-                Ok(crate::app::PluginCloseStep::Pending { .. }) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin close step exceeded its item or byte contract".to_vec() }),
+                Ok(crate::app::PluginCloseStep::Pending { .. }) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin close step exceeded its item or byte contract"),
+                }),
                 Ok(progress @ crate::app::PluginCloseStep::Blocked { reason }) => {
                     self.progress = Some(progress);
-                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: reason.as_bytes().to_vec() })
+                    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                        detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, reason.as_bytes()),
+                    })
                 }
                 Ok(crate::app::PluginCloseStep::Complete) => {
                     if !instance.app.close_terminal_is_empty() {
-                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin close reported Complete without a terminal-empty app witness".to_vec() });
+                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                            detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin close reported Complete without a terminal-empty app witness"),
+                        });
                     }
                     self.progress = Some(crate::app::PluginCloseStep::Complete);
-                    semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: state.instance_id.to_le_bytes().to_vec(), output: Vec::new() })
+                    semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                        state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CommitState, &state.instance_id.to_le_bytes()),
+                        output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                    })
                 }
-                Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error.message.into_bytes() }),
+                Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                    detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, error.message.as_bytes()),
+                }),
             }
         }
 
@@ -24764,8 +24919,8 @@ pub mod plugin_runtime {
                     Ok(cell) => cell,
                     Err(detached) => {
                         match state.cell.try_lock() {
-                            Ok(mut owner) => *owner = Some(detached),
-                            Err(std::sync::TryLockError::Poisoned(error)) => *error.into_inner() = Some(detached),
+                            Ok(mut owner) => **owner = Some(detached),
+                            Err(std::sync::TryLockError::Poisoned(error)) => **error.into_inner() = Some(detached),
                             Err(std::sync::TryLockError::WouldBlock) => {
                                 std::mem::forget(detached);
                                 state.status.store(RUNTIME_CLOSE_FAULT, Ordering::SeqCst);
@@ -25726,12 +25881,12 @@ pub mod plugin_runtime {
                 let active_utility_id = request.view_state.active_utility_by_window_id.get(&entry.key).cloned().or_else(|| request.view_state.active_utility_id.clone());
                 let window_view_state = ViewModel { window_id: Some(entry.key.clone()), active_utility_id, ..request.view_state.clone() };
                 let node = resolve_ready(instance.app.render(&entry.body_key, None, &window_view_state))?;
-                let (hash, value) = resolve_ready(ui_refresh_section(&node, entry.hash.as_deref()));
+                let (hash, value) = resolve_ready(ui_refresh_section(&node.root, entry.hash.as_deref()));
                 response.windows.push(SectionResponse { key: entry.key.clone(), hash, value });
             }
             for entry in &request.panels {
                 let node = resolve_ready(instance.app.render(&entry.body_key, None, &request.view_state))?;
-                let (hash, value) = resolve_ready(ui_refresh_section(&node, entry.hash.as_deref()));
+                let (hash, value) = resolve_ready(ui_refresh_section(&node.root, entry.hash.as_deref()));
                 response.panels.push(SectionResponse { key: entry.key.clone(), hash, value });
             }
             // 🚧️ `utilities` intentionally unhandled here: `PluginApp`/`ArtifactApp` currently expose no
@@ -26212,7 +26367,7 @@ pub mod plugin_runtime {
         .unwrap_or_default();
         let mut qualified = Vec::with_capacity(drained.len());
         for mut update in drained {
-            let surface = UiText::try_format(format_args!("{instance_id}:{}", update.surface.0)).ok_or_else(|| plugin_internal_fault("qualified presence surface exceeds fixed capacity"))?;
+            let surface = ui_contract::UiText::try_format(format_args!("{instance_id}:{}", update.surface.0)).ok_or_else(|| plugin_internal_fault("qualified presence surface exceeds fixed capacity"))?;
             update.surface = ui_contract::SurfaceId(surface);
             qualified.push(update);
         }
@@ -31596,6 +31751,7 @@ pub use app::ActionFactory;
 pub use app::{
     artifact_inference_service,
     built_text_node,
+    built_text_to_component_tree,
     built_to_component_tree,
     built_to_tree,
     cancel_artifact_inference,
@@ -31744,6 +31900,7 @@ pub use app::{
     TwoDSvgDocumentRenderer,
     TwoDSvgExportRequest,
     TwoDSvgExportResult,
+    UiAssemblyResult,
     VcsArtifactApp,
     ViewEmit,
     Viewer,
@@ -31772,6 +31929,7 @@ pub use plugin_runtime::{
 };
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};
+pub use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, UiFixedList, UiListBuilder, UiMapBuilder, UiText, UiValue};
 pub use world3d_host::{
     apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera, world3d_environment_json, world3d_mesh_id_from_url,
     world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_projection_spec_json, world3d_scene,

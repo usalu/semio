@@ -14,13 +14,13 @@ use semio_s_plugin_stdio::artifacts::obj::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEM
 
 pub const OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId::ANY };
 
-pub async fn deserialize(from: &ObjSnapshot) -> Result<CurateSnapshot, store::TextError> {
+pub fn deserialize(from: &ObjSnapshot) -> Result<CurateSnapshot, store::TextError> {
     let _ = STDIO_OBJ_DOCUMENT_SCHEMA;
     let bytes = <ObjSnapshot as store::ArtifactPack>::encode_pack(from);
     deserialize_bytes(&bytes)
 }
 
-pub async fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<CurateSnapshot, store::TextError> {
     <CurateSnapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| <CurateSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
 }
 
@@ -29,7 +29,7 @@ pub struct ObjIntoCurate;
 impl Deserializer<CurateSnapshot> for ObjIntoCurate {
     const FROM: Dialect = OBJ_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<CurateSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "ObjIntoCurate: expected a binary obj payload".to_string(), diagnostics: Vec::new() });
         };

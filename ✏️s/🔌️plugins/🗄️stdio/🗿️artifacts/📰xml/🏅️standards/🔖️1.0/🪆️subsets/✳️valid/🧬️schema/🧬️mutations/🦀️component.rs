@@ -118,6 +118,8 @@ pub enum XmlValidMutation {
 /// the two declarations honest against each other.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "declare-doctype", "rename-document-element", "set-external-subset", "set-standalone", "declare-entity", "set-internal-subset", "set-text"];
 
+crate::impl_serde_op_codec!(XmlValidMutation, "xml-valid-mutation");
+
 /// 🏷️ The `KINDS` spelling of one mutation's own variant. An exhaustive match (no wildcard arm), so
 /// a new variant that forgets its kebab spelling fails to compile rather than failing silently.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

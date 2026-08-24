@@ -2,7 +2,7 @@
 
 use crate::analyses::{AnalysisModel, AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, FemJobGraph, FemJobStage, FemStagePlan};
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement, FemLoad};
-use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, Fem2dMountedVisualBuild, Fem2dMountedVisualLease, Fem2dVisualFreshness, Fem2dVisualJob, FemVisualState, RegionVisualQuality};
+use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, Fem2dMountedVisualLease, Fem2dVisualFreshness, Fem2dVisualJob, FemVisualState, RegionVisualQuality};
 use crate::mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
 use crate::model::Element;
 use crate::sparse::{PcgJob, PcgJobConstruction};
@@ -922,7 +922,6 @@ struct MountedState {
     pcg: Option<PcgJob>,
     visual: Fem2dLiveVisual,
     visual_region_owner: Option<(String, RegionVisualQuality)>,
-    visual_candidate: Option<Fem2dMountedVisualBuild>,
     visual_job_candidate: Option<Fem2dVisualJob>,
     visual_rejected: Option<Fem2dVisualJob>,
     visual_current: Option<Fem2dMountedVisualLease>,
@@ -961,7 +960,6 @@ impl MountedState {
             pcg: None,
             visual: Fem2dLiveVisual::default(),
             visual_region_owner: None,
-            visual_candidate: None,
             visual_job_candidate: None,
             visual_rejected: None,
             visual_current: None,
@@ -1676,17 +1674,6 @@ impl MountedState {
                         self.visual_job_candidate = None;
                         return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                     }
-                    if let Some(candidate) = self.visual_candidate.as_mut() {
-                        let (terminal, released_items, released_bytes) = candidate.close_step(maximum_bytes);
-                        if !terminal {
-                            return PluginCloseStep::Pending { released_items, released_bytes };
-                        }
-                        if !candidate.terminal_is_empty() {
-                            return PluginCloseStep::Blocked { reason: "mounted FEM visual candidate reported false terminal" };
-                        }
-                        self.visual_candidate = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
-                    }
                     self.close_cursor += 1;
                 }
                 13 => {
@@ -1774,7 +1761,6 @@ impl MountedState {
             && self.visual_region_owner.is_none()
             && self.visual.assembling_element_ids.is_empty()
             && self.visual.fields.is_empty()
-            && self.visual_candidate.is_none()
             && self.visual_job_candidate.is_none()
             && self.visual_rejected.is_none()
             && self.visual_current.is_none()

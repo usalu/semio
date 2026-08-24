@@ -5,11 +5,16 @@
 Feature: Apply every typed DOCX ECMA-376 Strict conformance-class mutation to a real package
   The input is shared://📜️example-readme.docx, a real committed ECMA-376 package: 7 parts whose
   word/document.xml is 92,873 bytes of real content, derived once from this repository's own 47 KB
-  README. Unzipping the committed file and reading every declared namespace confirms it is a genuine
-  ISO/IEC 29500-4 Transitional package that declares no strict-family namespace, no VML, no
-  mc:AlternateContent and no conformance attribute — which is exactly what makes it the right input
-  for a conformance-class case: every scenario moves the real package along one axis of the class
-  and then back.
+  README.
+  Unzipping it and reading every namespace it declares shows a package that fails this class on the
+  very first axis: word/document.xml declares the Transitional WordprocessingML namespace, every
+  relationship carries the Transitional officeDocument base, and there is no conformance attribute
+  at all. That is the right starting point for an ISO/IEC 29500-1 STRICT case precisely because it
+  is not strict — set-main-namespace, set-relationship-base and set-conformance-attribute each move
+  the real package ONTO the class from outside it, and their inverses move it back off. The mirror
+  case, mutate-docx-ecma-376-transitional, starts from the same bytes already inside its class and
+  moves them out; between the two, the same real package is driven across the boundary in both
+  directions.
 
   WHAT THIS VOCABULARY IS, AND WHY IT IS NOT A COPY OF ✳️any. The ✳️any subset of this same standard
   owns the DOCUMENT vocabulary — insert-block, remove-block, set-run-text, set-run-formatting, the
@@ -19,26 +24,29 @@ Feature: Apply every typed DOCX ECMA-376 Strict conformance-class mutation to a 
   WordprocessingML namespace, the Transitional namespace anywhere in the package, the VML namespace
   anywhere in the package, the officeDocument relationship base of every relationship, the main
   part's root conformance="strict", and mc:AlternateContent compatibility markup. This catalog is
-  one kind per axis. No ✳️any mutation moves any of those axes and no mutation here touches document
-  content, so the two vocabularies are disjoint by construction.
+  one kind per axis. Disjointness here is checkable rather than asserted: insert-block edits w:body and
+  set-run-text edits a w:t, and neither can reach a root xmlns, a relationship base or a *.rels
+  part — while nothing in this catalog opens the block tree at all.
 
-  THE REFERENCE. `quick-xml` 0.42 performs and observes every part edit, over the `zip` 6 container
-  codec, which reads every entry of the real package and reassembles the whole container from those
-  entries alone — never a patch of the input bytes. That pairing is a genuine second producer for
-  every kind this catalog declares, which is why every mutate scenario is @mode-differential rather
-  than a weaker mode. Both crates are test-only; this repository's own OPC and XML codecs are
-  hand-written and link neither, so the oracle is not production-reachable.
+  THE REFERENCE, AND WHAT IT CAN AND CANNOT WITNESS. `quick-xml` 0.42 rewrites word/document.xml's
+  root element and every *.rels part; `zip` 6 reads all 7 entries of the real package and reassembles
+  the container from those entries alone, never patching input bytes. Both read AND write, so this case has a real second producer for all ten kinds and every mutate scenario is honestly @mode-differential.
+  What it witnesses is the six-axis conformance projection and nothing else: the 414-block body and
+  the seven declared styles that mutate-docx-ecma-376 measures do not appear here at all, so a
+  mutation that silently corrupted a paragraph would pass this case. That is a division of labour
+  between two vocabularies, not coverage this case claims.
 
-  THE REMOVAL KINDS ARE ARRANGED, AND THAT IS RECORDED. Not one real ECMA-376 package committed to
-  this repository carries VML markup, mc:AlternateContent or a conformance attribute — verified by
-  unzipping all three committed OOXML fixtures and searching every entry, and a fact about the
-  corpus rather than a gap to paper over. remove-conformance-attribute, remove-vml-part,
-  remove-alternate-content therefore run on the real package after the SAME independent
-  implementation has inserted their target; the mutation under test is still the removal, still
-  performed by the reference, still on a genuine OPC container.
+  THREE OF THE TEN KINDS RUN ON AN ARRANGED PRE-STATE, AND THAT IS RECORDED RATHER THAN HIDDEN.
+  remove-conformance-attribute, remove-vml-part and remove-alternate-content each need their target
+  to exist, and this package carries none of the three — nor does any other ECMA-376 package
+  committed to this repository, verified by unzipping all three committed OOXML fixtures and
+  searching every entry. That is a fact about the corpus, not a gap to paper over. Each of those
+  three therefore runs after the SAME independent implementation has inserted its target into the
+  real 7-part container; the mutation under test is still the removal, still performed by the
+  reference, still on genuine OPC. The other seven kinds read the committed bytes untouched.
 
-  Every scenario copies the fixture into the case work directory before touching it; the committed
-  file is never written to.
+  Every scenario copies the committed .docx into the case work directory before touching it, so the
+  6-figure body part the ✳️any case also reads is never written to by this one.
 
   @id-mutate
   @level-exhaustive

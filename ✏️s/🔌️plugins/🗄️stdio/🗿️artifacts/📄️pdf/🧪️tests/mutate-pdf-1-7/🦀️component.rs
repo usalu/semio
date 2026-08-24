@@ -7,22 +7,22 @@
 //! `oracle_apply_mutation`/`oracle_apply_mutation_inverse`); `subject` drives this repository's own
 //! `decode_pdf`/`encode_pdf`/`apply_pdf_mutation` over the full 18-kind `PdfMutation` vocabulary.
 //! Both results are read back by the SAME independent `project_pdf_1_7` (`lopdf`, augmented with
-//! per-page `/Rotate`) before the `semantic-pdf-v1` profile compares them. The subject half is
-//! gated behind the generated host's `sut` feature so the oracle-only run never compiles the local
-//! implementation.
+//! each page's `/CropBox` and `/Rotate` and with the resolved trailer/catalog object graph) before
+//! the `semantic-pdf-v1` profile compares them. The subject half is gated behind the generated
+//! host's `sut` feature so the oracle-only run never compiles the local implementation.
+//!
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
+//! module and under `semantic-pdf-v1`'s own tolerance, so a scenario cannot pass merely because
+//! `lopdf` declined to error: `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>`
+//! must land back on the untouched document's projection, and `identity-round-trip` must both
+//! preserve the projection and produce bytes that differ from the input. The two carve-outs — one
+//! kind exempt from observability, one axis exempt from the inverse law for three kinds — are named
+//! by the subset's own oracle module (`UNOBSERVABLE`, `regenerates_page_content`), argued there in
+//! full, and repeated in this case's feature description.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_pdf_1_7};
-
-//#region 🔖️Kinds
-/// 📇️ Kebab-case spelling of every `PdfMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own `KINDS` --
-/// duplicated rather than imported because the ORACLE-only build of this adapter must never link
-/// `semio-s-plugin-stdio` (see this file's own header); `kinds_const_matches_enum_variants_in_
-/// declaration_order` on the production side and the framework's own catalog-completeness gate on
-/// this side are what keep the two lists honest against each other.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-page", "remove-page", "set-page-media-box", "set-page-crop-box", "append-page-content", "set-info", "insert-object", "remove-object", "set-object-value", "set-dict-entry", "remove-dict-entry", "set-trailer-entry", "remove-trailer-entry", "move-page", "set-page-content", "set-page-rotation"];
-//#endregion 🔖️Kinds
+use semio_s_plugin_stdio_test_oracle::artifacts::pdf::standards::v1_7::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_pdf_1_7, regenerates_page_content, without_content_operators, KINDS, UNOBSERVABLE};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Input
 const INPUT: &str = "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf";
@@ -32,68 +32,44 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     let copy = ctx.copy_fixture(INPUT, Some("bachelor-thesis.pdf"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
+
+/// 🈳️ The `no-mutation` spec, which is how the identity round trip asks the reference to parse and
+/// re-serialize the real document without changing anything.
+fn no_mutation() -> Json {
+    Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))])
+}
 //#endregion 🔖️Input
 
-//#region 🔖️Law
-/// 🔬️ First structural divergence between two projections — a dotted field path plus both values,
-/// so a law that fails names WHICH field moved instead of only "not equal". Kept local to this
-/// adapter for the same reason `KINDS` is duplicated here: a case adapter is a leaf that links the
-/// test host and this subset's own oracle module, nothing else.
-fn first_divergence(path: &str, expected: &Json, actual: &Json) -> Option<String> {
-    let here = if path.is_empty() { "the projection".to_string() } else { path.to_string() };
-    let child = |key: &str| if path.is_empty() { key.to_string() } else { format!("{path}.{key}") };
-    match (expected, actual) {
-        (Json::Object(left), Json::Object(right)) => {
-            for (key, value) in left {
-                match right.iter().find(|(name, _)| name == key) {
-                    Some((_, other)) => {
-                        if let Some(found) = first_divergence(&child(key), value, other) {
-                            return Some(found);
-                        }
-                    }
-                    None => return Some(format!("{} is gone (the original carried {})", child(key), brief(value))),
-                }
-            }
-            right.iter().find(|(name, _)| !left.iter().any(|(other, _)| other == name)).map(|(name, value)| format!("{} appeared (absent in the original, now {})", child(name), brief(value)))
-        }
-        (Json::Array(left), Json::Array(right)) => {
-            if left.len() != right.len() {
-                return Some(format!("{here} has {} entries, the original had {}", right.len(), left.len()));
-            }
-            left.iter().zip(right.iter()).enumerate().find_map(|(index, (value, other))| first_divergence(&child(&index.to_string()), value, other))
-        }
-        (left, right) if left == right => None,
-        (left, right) => Some(format!("{here} is {} — the original had {}", brief(right), brief(left))),
-    }
-}
-
-/// ✂️ A projection value, truncated: a divergence message must stay readable, and this projection
-/// carries all 65 pages of a real thesis.
-fn brief(value: &Json) -> String {
-    let text = value.to_string();
-    match text.char_indices().nth(160) {
-        Some((cut, _)) => format!("{}…", &text[..cut]),
-        None => text,
-    }
-}
-//#endregion 🔖️Law
+//#region 🔖️Profile
+/// 📏️ `semantic-pdf-v1`'s own declared freedom list and tolerance (`../../../../🧪️oracle/
+/// 🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as the profile
+/// the case is measured by — never stricter, which would invent a failure the comparison itself
+/// would forgive, and never looser, which would let a real one through.
+const PDF_WRITER_FREEDOM: &[&str] = &["objectNumber", "xrefOffset", "producer", "creationDate", "modificationDate", "documentId", "fileSize", "byteLength", "generation", "streamFilter", "streamLength"];
+const PDF_TOLERANCE: f64 = 0.0001;
+//#endregion 🔖️Profile
 
 //#region 🔖️Oracle
-/// 🔮️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
-/// spec is carried in its doc string, not in the function it dispatches to.
+/// 🦠️ The forward half, with the OBSERVABILITY law asserted in role: the reference applies the kind
+/// to the real thesis and the result has to differ from the untouched document under the very
+/// profile the case is measured by. Returning the projection uncompared is what made these
+/// eighteen scenarios pass whenever `lopdf` merely did not error. The one exemption is this
+/// subset's own [`UNOBSERVABLE`], which names `insert-object` and says why in full.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_pdf_1_7(&bytes)?;
+    mutation_is_observable_within(&spec.str("kind"), &projection, &project_pdf_1_7(&input)?, UNOBSERVABLE, PDF_WRITER_FREEDOM, PDF_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔮️ One handler shared by every `inverse-<kind>` scenario id -- and the place the inverse LAW is
-/// asserted, in-role, without needing the subject: `apply(inverse(m), apply(m, base))` must land
-/// back on the ORIGINAL document's own projection, read through the same independent reader.
-/// Producing that projection and returning it uncompared is what made every one of these scenarios
-/// pass whenever `lopdf` merely did not error.
+/// ↩️ The INVERSE law, asserted in role without needing the subject: `apply(inverse(m), apply(m,
+/// base))` must land back on the ORIGINAL document's own projection, read through the same
+/// independent reader. `regenerates_page_content`'s three kinds drop `pages.N.contentOperators`
+/// from BOTH sides and nothing else — that carve-out lives in the subset's oracle module, next to
+/// the reason for it, so this handler and the module's own law test can never exempt different
+/// things.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
@@ -101,76 +77,22 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = project_pdf_1_7(&input)?;
     let bytes = oracle_apply_mutation_inverse(&input, &spec)?;
     let projection = project_pdf_1_7(&bytes)?;
-    let (expected, actual) = if regenerates_page_content(&kind) { (without_content_operators(&original), without_content_operators(&projection)) } else { (original, projection.clone()) };
-    if let Some(divergence) = first_divergence("", &expected, &actual) {
-        return Err(format!("inverse-{kind}: the mutation followed by its own computed inverse did not restore the original document — {divergence}"));
-    }
+    let (expected, restored) = if regenerates_page_content(&kind) { (without_content_operators(&original), without_content_operators(&projection)) } else { (original, projection.clone()) };
+    inverse_restores_within(&kind, &restored, &expected, PDF_WRITER_FREEDOM, PDF_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🧱️ The three kinds whose undo has to REBUILD a page's content stream, and therefore cannot
-/// restore `contentOperators`. This is a property of the `pdf-1-7-any` VOCABULARY, not of the
-/// reference implementation, and it was found by asserting the law rather than by reasoning about
-/// it: `PdfPage`'s only content field is `text`
-/// (`../../🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`), so
-/// `InsertPage`/`SetPageContent` carry extracted text and nothing else, and both producers
-/// regenerate a five-operator `BT /F1 12 Tf 72 720 Td (…) Tj ET` stream from it. Page 8 of the real
-/// thesis carries 294 operators — glyph positioning, graphics state, the lot — and no round trip
-/// through a single `text` field can bring them back. `AppendPageContent` was documented from the
-/// start as having no minimal inverse in this vocabulary; this is the same gap, measured.
-///
-/// ⚖️ Exactly ONE axis is exempted, and only for these three kinds. `version`, `pageCount`, every
-/// page's `mediaBox`, `rotate` and — critically — the shown `text` the vocabulary DOES carry all stay
-/// under the full law, and `set-page-media-box`, `set-page-crop-box`, `set-page-rotation`,
-/// `move-page` and the whole object-graph half of the catalog stay under it on every axis including
-/// `contentOperators`. Widening `PdfPage` to retain a real content stream is the fix; it belongs to
-/// whoever owns that snapshot.
-fn regenerates_page_content(kind: &str) -> bool {
-    matches!(kind, "remove-page" | "append-page-content" | "set-page-content")
-}
-
-/// ✂️ The same projection with every page's `contentOperators` dropped — nothing else is touched, so
-/// a divergence anywhere else still fails.
-fn without_content_operators(projection: &Json) -> Json {
-    let Json::Object(fields) = projection else { return projection.clone() };
-    Json::Object(
-        fields
-            .iter()
-            .map(|(key, value)| {
-                if key != "pages" {
-                    return (key.clone(), value.clone());
-                }
-                let Json::Array(pages) = value else { return (key.clone(), value.clone()) };
-                let stripped = pages
-                    .iter()
-                    .map(|page| match page {
-                        Json::Object(entries) => Json::Object(entries.iter().filter(|(name, _)| name != "contentOperators").cloned().collect()),
-                        other => other.clone(),
-                    })
-                    .collect();
-                (key.clone(), Json::Array(stripped))
-            })
-            .collect(),
-    )
-}
-
-/// 🔒️ The ORACLE side of the no-byte-pass-through law, asserted rather than merely claimed in
-/// prose: `lopdf` fully parses the real document and re-serializes it from its own object graph
-/// alone (the same "no-mutation" routing `oracle_apply_mutation` already gives every other kind),
-/// and BOTH halves of the law are checked here — the re-serialized bytes must differ from the input
-/// (nothing was copied) and their projection must be identical to the input's (nothing was lost).
+/// 🔒️ The ORACLE side of the identity law, both halves asserted: `lopdf` fully parses the real
+/// document and re-serializes it from its own object graph alone (the same `no-mutation` routing
+/// every other kind goes through), the re-serialized bytes must differ from the input — our
+/// encoder cannot reproduce another writer's object layout, so bit-identical output would mean the
+/// input was smuggled rather than parsed — and the projection must survive intact.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
-    let bytes = oracle_apply_mutation(&input, &no_mutation)?;
-    if bytes == input {
-        return Err("byte pass-through: the re-serialized document is bit-identical to the input".to_string());
-    }
+    let bytes = oracle_apply_mutation(&input, &no_mutation())?;
+    reparsed_not_copied(&bytes, &input)?;
     let projection = project_pdf_1_7(&bytes)?;
-    let original = project_pdf_1_7(&input)?;
-    if let Some(divergence) = first_divergence("", &original, &projection) {
-        return Err(format!("identity round trip: parsing and re-serializing the real document did not preserve its semantic projection — {divergence}"));
-    }
+    round_trip_preserves_within(&projection, &project_pdf_1_7(&input)?, PDF_WRITER_FREEDOM, PDF_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle

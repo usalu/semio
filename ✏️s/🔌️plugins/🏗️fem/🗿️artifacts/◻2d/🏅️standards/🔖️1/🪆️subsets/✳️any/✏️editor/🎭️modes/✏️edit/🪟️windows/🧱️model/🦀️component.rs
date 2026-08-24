@@ -174,32 +174,6 @@ const FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES: usize = 16 * 1_024;
 const FEM2D_MOUNTED_VISUAL_PAGE_BYTES: usize = 4_096;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Fem2dMountedVisualStage {
-    ReserveOutput,
-    ObserveOutput,
-    ReserveOrderIndexes,
-    OrderRegionKey,
-    OrderAssemblyKey,
-    OrderFieldKey,
-    Begin,
-    Node,
-    Element,
-    Support,
-    Load,
-    LoadAreaPoint,
-    LoadAreaCommit,
-    Region,
-    RegionPoint,
-    RegionClose,
-    Assembly,
-    Displacement,
-    Residual,
-    Status,
-    Seal,
-    Complete,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Fem2dVisualFreshness {
     pub app_instance_id: u32,
     pub model_revision: u64,
@@ -208,6 +182,134 @@ pub struct Fem2dVisualFreshness {
     pub numerical_preview_sequence: u64,
     pub surface_generation: u64,
     pub renderer_scene_generation: u64,
+}
+
+const FEM2D_MOUNTED_VISUAL_PAGE_COUNT: usize = FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES / FEM2D_MOUNTED_VISUAL_PAGE_BYTES;
+
+#[derive(Debug, PartialEq)]
+struct Fem2dFixedJsonPages {
+    pages: [Option<Box<[u8; FEM2D_MOUNTED_VISUAL_PAGE_BYTES]>>; FEM2D_MOUNTED_VISUAL_PAGE_COUNT],
+    lengths: [u16; FEM2D_MOUNTED_VISUAL_PAGE_COUNT],
+    write_page: usize,
+    len: usize,
+}
+
+impl Fem2dFixedJsonPages {
+    fn new() -> Self {
+        Self { pages: std::array::from_fn(|_| None), lengths: [0; FEM2D_MOUNTED_VISUAL_PAGE_COUNT], write_page: 0, len: 0 }
+    }
+
+    fn admit_page(&mut self, page: usize) -> Result<(), &'static [u8]> {
+        let Some(owner) = self.pages.get_mut(page) else { return Err(b"fem2d.visual-page-index") };
+        if owner.is_some() {
+            return Err(b"fem2d.visual-page-duplicate");
+        }
+        *owner = Some(Box::new([0; FEM2D_MOUNTED_VISUAL_PAGE_BYTES]));
+        Ok(())
+    }
+
+    fn append_page(&self, page: usize, output: &mut String) {
+        let Some(owner) = self.pages[page].as_ref() else { return };
+        let len = usize::from(self.lengths[page]);
+        output.push_str(unsafe { std::str::from_utf8_unchecked(&owner[..len]) });
+    }
+
+    fn materialize(&self) -> String {
+        let mut output = String::with_capacity(self.len);
+        self.append_page(0, &mut output);
+        self.append_page(1, &mut output);
+        self.append_page(2, &mut output);
+        self.append_page(3, &mut output);
+        output
+    }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        let Some(page) = self.pages.iter_mut().find(|page| page.is_some()) else { return (true, 0, 0) };
+        if maximum_bytes < FEM2D_MOUNTED_VISUAL_PAGE_BYTES {
+            return (false, 0, 0);
+        }
+        *page = None;
+        (self.pages.iter().all(Option::is_none), 1, FEM2D_MOUNTED_VISUAL_PAGE_BYTES)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.pages.iter().all(Option::is_none)
+    }
+}
+
+impl Write for Fem2dFixedJsonPages {
+    fn write_str(&mut self, value: &str) -> std::fmt::Result {
+        if value.len() > FEM2D_MOUNTED_VISUAL_PAGE_BYTES || self.len.checked_add(value.len()).is_none_or(|len| len > FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES) {
+            return Err(std::fmt::Error);
+        }
+        let first_page = self.pages.get_mut(self.write_page).and_then(Option::as_mut).ok_or(std::fmt::Error)?;
+        let first_len = usize::from(self.lengths[self.write_page]);
+        let mut first = value.len().min(FEM2D_MOUNTED_VISUAL_PAGE_BYTES - first_len);
+        if !value.is_char_boundary(first) {
+            first -= 1;
+        }
+        if !value.is_char_boundary(first) {
+            first -= 1;
+        }
+        if !value.is_char_boundary(first) {
+            first -= 1;
+        }
+        first_page[first_len..first_len + first].copy_from_slice(&value.as_bytes()[..first]);
+        self.lengths[self.write_page] += first as u16;
+        self.len += first;
+        if first != value.len() {
+            self.write_page += 1;
+            let second_page = self.pages.get_mut(self.write_page).and_then(Option::as_mut).ok_or(std::fmt::Error)?;
+            let rest = value.len() - first;
+            second_page[..rest].copy_from_slice(&value.as_bytes()[first..]);
+            self.lengths[self.write_page] = rest as u16;
+            self.len += rest;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, PartialEq)]
+struct Fem2dFixedOrder<const N: usize> {
+    slots: [Option<usize>; N],
+    len: usize,
+}
+
+impl<const N: usize> Fem2dFixedOrder<N> {
+    fn new() -> Self {
+        Self { slots: [None; N], len: 0 }
+    }
+
+    fn push(&mut self, value: usize) -> Result<(), ()> {
+        let Some(slot) = self.slots.get_mut(self.len) else { return Err(()) };
+        *slot = Some(value);
+        self.len += 1;
+        Ok(())
+    }
+
+    fn get(&self, index: usize) -> Option<usize> {
+        self.slots.get(index).copied().flatten()
+    }
+
+    fn swap(&mut self, left: usize, right: usize) {
+        self.slots.swap(left, right);
+    }
+
+    fn pop(&mut self) -> Option<usize> {
+        let index = self.len.checked_sub(1)?;
+        self.len = index;
+        self.slots[index].take()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
+impl<const N: usize> Default for Fem2dFixedOrder<N> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -219,11 +321,10 @@ pub struct Fem2dMountedVisualLease {
     preview_sequence: u64,
     surface_generation: u64,
     renderer_scene_generation: u64,
-    layers_json: String,
-    region_order: Vec<usize>,
-    assembly_order: Vec<usize>,
-    field_order: Vec<usize>,
-    close_pages: usize,
+    pages: Fem2dFixedJsonPages,
+    region_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_REGIONS>,
+    assembly_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_ELEMENTS>,
+    field_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_FIELDS>,
 }
 
 impl Fem2dMountedVisualLease {
@@ -231,8 +332,8 @@ impl Fem2dMountedVisualLease {
         self.app_instance_id == app_instance_id && self.base_revision == base_revision && self.generation == generation
     }
 
-    pub(crate) fn layers_json(&self) -> &str {
-        &self.layers_json
+    pub(crate) fn layers_json(&self) -> String {
+        self.pages.materialize()
     }
 
     pub(crate) fn matches_freshness(&self, freshness: Fem2dVisualFreshness) -> bool {
@@ -246,443 +347,14 @@ impl Fem2dMountedVisualLease {
     }
 
     pub(crate) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        for owner in [&mut self.region_order, &mut self.assembly_order, &mut self.field_order] {
-            if owner.pop().is_some() {
-                return (false, 1, 0);
-            }
-            let bytes = owner.capacity() * std::mem::size_of::<usize>();
-            if bytes != 0 {
-                if bytes > maximum_bytes {
-                    return (false, 0, 0);
-                }
-                *owner = Vec::new();
-                return (false, 1, bytes);
-            }
+        if self.region_order.pop().is_some() || self.assembly_order.pop().is_some() || self.field_order.pop().is_some() {
+            return (false, 1, std::mem::size_of::<usize>());
         }
-        if self.close_pages != 0 {
-            let bytes = self.layers_json.len().min(FEM2D_MOUNTED_VISUAL_PAGE_BYTES);
-            if bytes > maximum_bytes {
-                return (false, 0, 0);
-            }
-            self.layers_json.truncate(self.layers_json.len() - bytes);
-            self.close_pages -= 1;
-            return (false, 1, bytes);
-        }
-        if self.layers_json.capacity() != 0 {
-            self.layers_json = String::new();
-            return (false, 1, 0);
-        }
-        (true, 0, 0)
+        self.pages.close_step(maximum_bytes)
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.layers_json.capacity() == 0 && self.close_pages == 0 && self.region_order.capacity() == 0 && self.assembly_order.capacity() == 0 && self.field_order.capacity() == 0
-    }
-}
-
-struct Fem2dBoundedJson {
-    bytes: String,
-    admitted_capacity: usize,
-}
-
-impl Fem2dBoundedJson {
-    fn new() -> Self {
-        Self { bytes: String::new(), admitted_capacity: 0 }
-    }
-
-    fn reserve(&mut self) -> Result<(), &'static [u8]> {
-        self.bytes.try_reserve_exact(FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES).map_err(|_| b"fem2d.visual-output-allocation" as &'static [u8])
-    }
-
-    fn observe_and_admit(&mut self) -> Result<(), &'static [u8]> {
-        let capacity = self.bytes.capacity();
-        if capacity != FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES {
-            return Err(b"fem2d.visual-output-observed-capacity");
-        }
-        self.admitted_capacity = capacity;
-        Ok(())
-    }
-}
-
-impl Write for Fem2dBoundedJson {
-    fn write_str(&mut self, value: &str) -> std::fmt::Result {
-        let next = self.bytes.len().checked_add(value.len()).ok_or(std::fmt::Error)?;
-        if self.admitted_capacity == 0 || next > self.admitted_capacity {
-            return Err(std::fmt::Error);
-        }
-        self.bytes.push_str(value);
-        Ok(())
-    }
-}
-
-/// 🧵 Mounted whole-scene encoder; one call emits one stable schema key, glyph, vector or control.
-pub struct Fem2dMountedVisualBuild {
-    app_instance_id: u32,
-    base_revision: u64,
-    generation: u64,
-    operation: u64,
-    preview_sequence: u64,
-    stage: Fem2dMountedVisualStage,
-    cursor: usize,
-    load_case: usize,
-    load: usize,
-    point: usize,
-    area_sum: [f64; 2],
-    output: Fem2dBoundedJson,
-    region_order: Vec<usize>,
-    assembly_order: Vec<usize>,
-    field_order: Vec<usize>,
-    first: bool,
-    close_pages: usize,
-    complete: Option<Fem2dMountedVisualLease>,
-}
-
-impl Fem2dMountedVisualBuild {
-    pub fn new(app_instance_id: u32, base_revision: u64, generation: u64, operation: u64, preview_sequence: u64) -> Self {
-        Self {
-            app_instance_id,
-            base_revision,
-            generation,
-            operation,
-            preview_sequence,
-            stage: Fem2dMountedVisualStage::ReserveOutput,
-            cursor: 0,
-            load_case: 0,
-            load: 0,
-            point: 0,
-            area_sum: [0.0; 2],
-            output: Fem2dBoundedJson::new(),
-            region_order: Vec::new(),
-            assembly_order: Vec::new(),
-            field_order: Vec::new(),
-            first: true,
-            close_pages: 0,
-            complete: None,
-        }
-    }
-
-    fn layer_prefix(&mut self) -> Result<(), Vec<u8>> {
-        let separator = if std::mem::replace(&mut self.first, false) { "" } else { "," };
-        self.output.write_str(separator).map_err(|_| b"fem2d.visual-output-capacity".to_vec())
-    }
-
-    fn finish_stage(&mut self, stage: Fem2dMountedVisualStage) {
-        self.cursor = 0;
-        self.stage = stage;
-    }
-
-    pub fn step_one(&mut self, doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -> Result<bool, Vec<u8>> {
-        match self.stage {
-            Fem2dMountedVisualStage::ReserveOutput => {
-                self.output.reserve().map_err(<[u8]>::to_vec)?;
-                self.stage = Fem2dMountedVisualStage::ObserveOutput;
-            }
-            Fem2dMountedVisualStage::ObserveOutput => {
-                self.output.observe_and_admit().map_err(<[u8]>::to_vec)?;
-                self.close_pages = self.output.admitted_capacity / FEM2D_MOUNTED_VISUAL_PAGE_BYTES;
-                self.stage = Fem2dMountedVisualStage::ReserveOrderIndexes;
-            }
-            Fem2dMountedVisualStage::ReserveOrderIndexes => {
-                self.region_order.try_reserve_exact(doc.regions.len()).map_err(|_| b"fem2d.visual-region-order-backing".to_vec())?;
-                self.assembly_order.try_reserve_exact(visual.assembling_element_ids.len()).map_err(|_| b"fem2d.visual-assembly-order-backing".to_vec())?;
-                self.field_order.try_reserve_exact(visual.fields.len()).map_err(|_| b"fem2d.visual-field-order-backing".to_vec())?;
-                if [&self.region_order, &self.assembly_order, &self.field_order].into_iter().any(|owner| owner.capacity().checked_mul(std::mem::size_of::<usize>()).is_none_or(|bytes| bytes > FEM2D_MOUNTED_VISUAL_PAGE_BYTES)) {
-                    return Err(b"fem2d.visual-order-observed-capacity".to_vec());
-                }
-                self.cursor = 0;
-                self.stage = Fem2dMountedVisualStage::OrderRegionKey;
-            }
-            Fem2dMountedVisualStage::OrderRegionKey => {
-                let Some(region) = doc.regions.get(self.cursor) else {
-                    self.cursor = 0;
-                    self.stage = Fem2dMountedVisualStage::OrderAssemblyKey;
-                    return Ok(false);
-                };
-                let index = self.region_order.binary_search_by(|current| doc.regions[*current].id.cmp(&region.id).then_with(|| current.cmp(&self.cursor))).unwrap_or_else(|index| index);
-                self.region_order.insert(index, self.cursor);
-                self.cursor += 1;
-            }
-            Fem2dMountedVisualStage::OrderAssemblyKey => {
-                let Some(id) = visual.assembling_element_ids.get(self.cursor) else {
-                    self.cursor = 0;
-                    self.stage = Fem2dMountedVisualStage::OrderFieldKey;
-                    return Ok(false);
-                };
-                let index = self.assembly_order.binary_search_by(|current| visual.assembling_element_ids[*current].cmp(id).then_with(|| current.cmp(&self.cursor))).unwrap_or_else(|index| index);
-                self.assembly_order.insert(index, self.cursor);
-                self.cursor += 1;
-            }
-            Fem2dMountedVisualStage::OrderFieldKey => {
-                let Some(field) = visual.fields.get(self.cursor) else {
-                    self.cursor = 0;
-                    self.stage = Fem2dMountedVisualStage::Begin;
-                    return Ok(false);
-                };
-                let index = self.field_order.binary_search_by(|current| visual.fields[*current].node_id.cmp(&field.node_id).then_with(|| current.cmp(&self.cursor))).unwrap_or_else(|index| index);
-                self.field_order.insert(index, self.cursor);
-                self.cursor += 1;
-            }
-            Fem2dMountedVisualStage::Begin => {
-                self.output.write_char('[').map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                self.stage = Fem2dMountedVisualStage::Node;
-            }
-            Fem2dMountedVisualStage::Node => {
-                let Some(node) = doc.nodes.get(self.cursor) else {
-                    self.finish_stage(Fem2dMountedVisualStage::Element);
-                    return Ok(false);
-                };
-                self.layer_prefix()?;
-                let (x, y) = screen_2d(node.x, node.y);
-                write!(self.output, "{{\"kind\":\"circle\",\"id\":\"node-{}\",\"x\":{},\"y\":{},\"width\":8,\"height\":8,\"color\":\"#38bdf8\"}}", node.id, x - 4.0, y - 4.0).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                self.cursor += 1;
-            }
-            Fem2dMountedVisualStage::Element => {
-                let Some(element) = doc.elements.get(self.cursor) else {
-                    self.finish_stage(Fem2dMountedVisualStage::Support);
-                    return Ok(false);
-                };
-                let (start, end) = fem2d_element_endpoints(element);
-                if let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) {
-                    self.layer_prefix()?;
-                    let (x0, y0) = screen_2d(a.x, a.y);
-                    let (x1, y1) = screen_2d(b.x, b.y);
-                    write!(self.output, "{{\"kind\":\"line\",\"id\":\"el-{}\",\"x0\":{x0},\"y0\":{y0},\"x1\":{x1},\"y1\":{y1},\"color\":\"#94a3b8\"}}", element_id(element)).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                }
-                self.cursor += 1;
-            }
-            Fem2dMountedVisualStage::Support => {
-                let Some(support) = doc.supports.get(self.cursor) else {
-                    self.finish_stage(Fem2dMountedVisualStage::Load);
-                    return Ok(false);
-                };
-                if let Some(node) = find_node_2d(&doc.nodes, &support.node_id) {
-                    self.layer_prefix()?;
-                    let (x, y) = screen_2d(node.x, node.y);
-                    write!(self.output, "{{\"kind\":\"circle\",\"id\":\"support-{}\",\"x\":{},\"y\":{},\"width\":10,\"height\":10,\"color\":\"#f97316\"}}", support.id, x - 5.0, y - 5.0).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                }
-                self.cursor += 1;
-            }
-            Fem2dMountedVisualStage::Load => {
-                let Some(case) = doc.load_cases.get(self.load_case) else {
-                    self.finish_stage(Fem2dMountedVisualStage::Region);
-                    return Ok(false);
-                };
-                let Some(load) = case.loads.get(self.load) else {
-                    self.load_case += 1;
-                    self.load = 0;
-                    return Ok(false);
-                };
-                match load {
-                    FemLoad::Nodal { id, node_id, dof, value } => {
-                        if let Some(node) = find_node_2d(&doc.nodes, node_id) {
-                            self.layer_prefix()?;
-                            let origin = screen_2d(node.x, node.y);
-                            let vector = match dof {
-                                FemDof::Tx => [value.signum() * 18.0, 0.0],
-                                FemDof::Ty => [0.0, value.signum() * 18.0],
-                                _ => [0.0, -12.0],
-                            };
-                            write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"load-{id}\",\"points\":[[{},{}],[{},{}]],\"color\":\"#ef4444\"}}", origin.0, origin.1, origin.0 + vector[0], origin.1 - vector[1])
-                                .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                        }
-                    }
-                    FemLoad::MemberUdl { id, element_id: target, wx, wy } => {
-                        if let Some(element) = doc.elements.iter().find(|element| element_id(element) == target) {
-                            let (start, end) = fem2d_element_endpoints(element);
-                            if let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) {
-                                self.layer_prefix()?;
-                                let origin = screen_2d((a.x + b.x) * 0.5, (a.y + b.y) * 0.5);
-                                let vector = [wx.signum() * 18.0, wy.signum() * 18.0];
-                                write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"load-{id}\",\"points\":[[{},{}],[{},{}]],\"color\":\"#ef4444\"}}", origin.0, origin.1, origin.0 + vector[0], origin.1 - vector[1])
-                                    .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                            }
-                        }
-                    }
-                    FemLoad::Area { .. } => {
-                        self.point = 0;
-                        self.area_sum = [0.0; 2];
-                        self.stage = Fem2dMountedVisualStage::LoadAreaPoint;
-                        return Ok(false);
-                    }
-                }
-                self.load += 1;
-            }
-            Fem2dMountedVisualStage::LoadAreaPoint => {
-                let FemLoad::Area { region_id, .. } = &doc.load_cases[self.load_case].loads[self.load] else { return Err(b"fem2d.visual-area-load-cursor".to_vec()) };
-                let Some(region) = doc.regions.iter().find(|region| region.id == *region_id) else {
-                    self.load += 1;
-                    self.stage = Fem2dMountedVisualStage::Load;
-                    return Ok(false);
-                };
-                if let Some(point) = region.outline.get(self.point) {
-                    self.area_sum[0] += point[0];
-                    self.area_sum[1] += point[1];
-                    self.point += 1;
-                } else {
-                    self.stage = Fem2dMountedVisualStage::LoadAreaCommit;
-                }
-            }
-            Fem2dMountedVisualStage::LoadAreaCommit => {
-                let FemLoad::Area { id, pressure, .. } = &doc.load_cases[self.load_case].loads[self.load] else { return Err(b"fem2d.visual-area-load-cursor".to_vec()) };
-                if self.point != 0 {
-                    self.layer_prefix()?;
-                    let origin = screen_2d(self.area_sum[0] / self.point as f64, self.area_sum[1] / self.point as f64);
-                    let vector = [0.0, -pressure.signum() * 18.0];
-                    write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"load-{id}\",\"points\":[[{},{}],[{},{}]],\"color\":\"#ef4444\"}}", origin.0, origin.1, origin.0 + vector[0], origin.1 - vector[1])
-                        .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                }
-                self.load += 1;
-                self.stage = Fem2dMountedVisualStage::Load;
-            }
-            Fem2dMountedVisualStage::Region => {
-                let Some(region_index) = self.region_order.get(self.cursor).copied() else {
-                    self.finish_stage(Fem2dMountedVisualStage::Assembly);
-                    return Ok(false);
-                };
-                let region = &doc.regions[region_index];
-                let quality = visual.region_quality.get(&region.id).copied().unwrap_or_default();
-                self.layer_prefix()?;
-                write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"region-quality-{}-{}\",\"points\":[", quality.id(), region.id).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                self.point = 0;
-                self.stage = Fem2dMountedVisualStage::RegionPoint;
-            }
-            Fem2dMountedVisualStage::RegionPoint => {
-                let region = &doc.regions[self.region_order[self.cursor]];
-                if let Some(point) = region.outline.get(self.point) {
-                    let separator = if self.point == 0 { "" } else { "," };
-                    let (x, y) = screen_2d(point[0], point[1]);
-                    write!(self.output, "{separator}[{x},{y}]").map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                    self.point += 1;
-                } else {
-                    self.stage = Fem2dMountedVisualStage::RegionClose;
-                }
-            }
-            Fem2dMountedVisualStage::RegionClose => {
-                let region = &doc.regions[self.region_order[self.cursor]];
-                if let Some(point) = region.outline.first() {
-                    let separator = if self.point == 0 { "" } else { "," };
-                    let (x, y) = screen_2d(point[0], point[1]);
-                    write!(self.output, "{separator}[{x},{y}]").map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                }
-                let quality = visual.region_quality.get(&region.id).copied().unwrap_or_default();
-                write!(self.output, "],\"color\":\"{}\"}}", quality.color()).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                self.cursor += 1;
-                self.stage = Fem2dMountedVisualStage::Region;
-            }
-            Fem2dMountedVisualStage::Assembly => {
-                let Some(index) = self.assembly_order.get(self.cursor).copied() else {
-                    self.finish_stage(Fem2dMountedVisualStage::Displacement);
-                    return Ok(false);
-                };
-                let id = &visual.assembling_element_ids[index];
-                if let Some(element) = doc.elements.iter().find(|element| element_id(element) == id) {
-                    let (start, end) = fem2d_element_endpoints(element);
-                    if let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) {
-                        self.layer_prefix()?;
-                        let (x0, y0) = screen_2d(a.x, a.y);
-                        let (x1, y1) = screen_2d(b.x, b.y);
-                        write!(self.output, "{{\"kind\":\"line\",\"id\":\"assembling-{id}\",\"x0\":{x0},\"y0\":{y0},\"x1\":{x1},\"y1\":{y1},\"color\":\"#a855f7\"}}").map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                    }
-                }
-                self.cursor += 1;
-            }
-            Fem2dMountedVisualStage::Displacement | Fem2dMountedVisualStage::Residual => {
-                let Some(index) = self.field_order.get(self.cursor).copied() else {
-                    self.finish_stage(if self.stage == Fem2dMountedVisualStage::Displacement { Fem2dMountedVisualStage::Residual } else { Fem2dMountedVisualStage::Status });
-                    return Ok(false);
-                };
-                let field = &visual.fields[index];
-                if let Some(node) = find_node_2d(&doc.nodes, &field.node_id) {
-                    self.layer_prefix()?;
-                    let origin = screen_2d(node.x, node.y);
-                    let (prefix, vector, color) =
-                        if self.stage == Fem2dMountedVisualStage::Displacement { ("displacement", [field.displacement[0] * SCALE_2D, field.displacement[1] * SCALE_2D], "#f472b6") } else { ("residual", field.residual, "#eab308") };
-                    write!(self.output, "{{\"kind\":\"polyline\",\"id\":\"{prefix}-field-{}\",\"points\":[[{},{}],[{},{}]],\"color\":\"{color}\"}}", field.node_id, origin.0, origin.1, origin.0 + vector[0], origin.1 - vector[1])
-                        .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                }
-                self.cursor += 1;
-            }
-            Fem2dMountedVisualStage::Status => {
-                self.layer_prefix()?;
-                let status = if visual.validated_final {
-                    "validated-final"
-                } else if visual.converged {
-                    "converged"
-                } else {
-                    "unconverged"
-                };
-                write!(self.output, "{{\"id\":\"solve-status-{status}\",\"transform\":[1,0,0,1,10,18],\"text\":{{\"content\":\"{status}\",\"size\":11}}}}").map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                self.stage = Fem2dMountedVisualStage::Seal;
-            }
-            Fem2dMountedVisualStage::Seal => {
-                self.output.write_char(']').map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
-                let layers_json = std::mem::take(&mut self.output.bytes);
-                let close_pages = self.close_pages;
-                self.close_pages = 0;
-                self.complete = Some(Fem2dMountedVisualLease {
-                    app_instance_id: self.app_instance_id,
-                    base_revision: self.base_revision,
-                    generation: self.generation,
-                    operation: self.operation,
-                    preview_sequence: self.preview_sequence,
-                    surface_generation: self.generation,
-                    renderer_scene_generation: self.generation,
-                    layers_json,
-                    region_order: std::mem::take(&mut self.region_order),
-                    assembly_order: std::mem::take(&mut self.assembly_order),
-                    field_order: std::mem::take(&mut self.field_order),
-                    close_pages,
-                });
-                self.stage = Fem2dMountedVisualStage::Complete;
-            }
-            Fem2dMountedVisualStage::Complete => return Ok(true),
-        }
-        Ok(self.stage == Fem2dMountedVisualStage::Complete)
-    }
-
-    pub fn take_complete(&mut self) -> Option<Fem2dMountedVisualLease> {
-        (self.stage == Fem2dMountedVisualStage::Complete).then(|| self.complete.take()).flatten()
-    }
-
-    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        if let Some(lease) = self.complete.as_mut() {
-            let step = lease.close_step(maximum_bytes);
-            if !step.0 {
-                return step;
-            }
-            self.complete = None;
-            return (false, 1, 0);
-        }
-        for owner in [&mut self.region_order, &mut self.assembly_order, &mut self.field_order] {
-            if owner.pop().is_some() {
-                return (false, 1, 0);
-            }
-            let bytes = owner.capacity() * std::mem::size_of::<usize>();
-            if bytes != 0 {
-                if bytes > maximum_bytes {
-                    return (false, 0, 0);
-                }
-                *owner = Vec::new();
-                return (false, 1, bytes);
-            }
-        }
-        if self.close_pages != 0 {
-            if FEM2D_MOUNTED_VISUAL_PAGE_BYTES > maximum_bytes {
-                return (false, 0, 0);
-            }
-            self.output.bytes.truncate(self.output.bytes.len().saturating_sub(FEM2D_MOUNTED_VISUAL_PAGE_BYTES));
-            self.close_pages -= 1;
-            return (false, 1, FEM2D_MOUNTED_VISUAL_PAGE_BYTES);
-        }
-        if self.output.bytes.capacity() != 0 {
-            self.output.bytes = String::new();
-            return (false, 1, 0);
-        }
-        (true, 0, 0)
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.complete.is_none() && self.output.bytes.capacity() == 0 && self.close_pages == 0 && self.region_order.capacity() == 0 && self.assembly_order.capacity() == 0 && self.field_order.capacity() == 0
+        self.pages.terminal_is_empty() && self.region_order.is_empty() && self.assembly_order.is_empty() && self.field_order.is_empty()
     }
 }
 
@@ -722,10 +394,10 @@ pub enum Fem2dVisualJobStage {
 pub struct Fem2dVisualJob {
     freshness: Fem2dVisualFreshness,
     stage: Fem2dVisualJobStage,
-    output: Fem2dBoundedJson,
-    region_order: Vec<usize>,
-    element_order: Vec<usize>,
-    field_order: Vec<usize>,
+    output: Fem2dFixedJsonPages,
+    region_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_REGIONS>,
+    element_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_ELEMENTS>,
+    field_order: Fem2dFixedOrder<FEM2D_VISUAL_MAXIMUM_FIELDS>,
     reserve_lane: u8,
     scalar_cursor: u8,
     order_input: usize,
@@ -740,11 +412,9 @@ pub struct Fem2dVisualJob {
     endpoint_a: [f64; 2],
     endpoint_b: [f64; 2],
     first: bool,
-    admitted_pages: usize,
     page_cursor: usize,
     validated: bool,
     complete: Option<Fem2dMountedVisualLease>,
-    close_lane: u8,
 }
 
 impl Fem2dVisualJob {
@@ -752,10 +422,10 @@ impl Fem2dVisualJob {
         Self {
             freshness,
             stage: Fem2dVisualJobStage::ReserveSnapshot,
-            output: Fem2dBoundedJson::new(),
-            region_order: Vec::new(),
-            element_order: Vec::new(),
-            field_order: Vec::new(),
+            output: Fem2dFixedJsonPages::new(),
+            region_order: Fem2dFixedOrder::new(),
+            element_order: Fem2dFixedOrder::new(),
+            field_order: Fem2dFixedOrder::new(),
             reserve_lane: 0,
             scalar_cursor: 0,
             order_input: 0,
@@ -770,11 +440,9 @@ impl Fem2dVisualJob {
             endpoint_a: [0.0; 2],
             endpoint_b: [0.0; 2],
             first: true,
-            admitted_pages: 0,
             page_cursor: 0,
             validated: false,
             complete: None,
-            close_lane: 0,
         }
     }
 
@@ -803,8 +471,8 @@ impl Fem2dVisualJob {
 
     fn order_region_one(&mut self, doc: &Fem2dSnapshot) -> bool {
         if self.order_slot != 0 {
-            let left = self.region_order[self.order_slot - 1];
-            let right = self.region_order[self.order_slot];
+            let Some(left) = self.region_order.get(self.order_slot - 1) else { return false };
+            let Some(right) = self.region_order.get(self.order_slot) else { return false };
             if doc.regions[left].id > doc.regions[right].id {
                 self.region_order.swap(self.order_slot - 1, self.order_slot);
                 self.order_slot -= 1;
@@ -817,8 +485,10 @@ impl Fem2dVisualJob {
         if self.order_input == doc.regions.len() {
             return true;
         }
-        self.region_order.push(self.order_input);
-        self.order_slot = self.region_order.len() - 1;
+        if self.region_order.push(self.order_input).is_err() {
+            return true;
+        }
+        self.order_slot = self.region_order.len - 1;
         if self.order_slot == 0 {
             self.order_input += 1;
         }
@@ -827,8 +497,8 @@ impl Fem2dVisualJob {
 
     fn order_element_one(&mut self, doc: &Fem2dSnapshot) -> bool {
         if self.order_slot != 0 {
-            let left = self.element_order[self.order_slot - 1];
-            let right = self.element_order[self.order_slot];
+            let Some(left) = self.element_order.get(self.order_slot - 1) else { return false };
+            let Some(right) = self.element_order.get(self.order_slot) else { return false };
             if element_id(&doc.elements[left]) > element_id(&doc.elements[right]) {
                 self.element_order.swap(self.order_slot - 1, self.order_slot);
                 self.order_slot -= 1;
@@ -841,8 +511,10 @@ impl Fem2dVisualJob {
         if self.order_input == doc.elements.len() {
             return true;
         }
-        self.element_order.push(self.order_input);
-        self.order_slot = self.element_order.len() - 1;
+        if self.element_order.push(self.order_input).is_err() {
+            return true;
+        }
+        self.order_slot = self.element_order.len - 1;
         if self.order_slot == 0 {
             self.order_input += 1;
         }
@@ -851,8 +523,8 @@ impl Fem2dVisualJob {
 
     fn order_field_one(&mut self, visual: &Fem2dLiveVisual) -> bool {
         if self.order_slot != 0 {
-            let left = self.field_order[self.order_slot - 1];
-            let right = self.field_order[self.order_slot];
+            let Some(left) = self.field_order.get(self.order_slot - 1) else { return false };
+            let Some(right) = self.field_order.get(self.order_slot) else { return false };
             if visual.fields[left].node_id > visual.fields[right].node_id {
                 self.field_order.swap(self.order_slot - 1, self.order_slot);
                 self.order_slot -= 1;
@@ -865,8 +537,10 @@ impl Fem2dVisualJob {
         if self.order_input == visual.fields.len() {
             return true;
         }
-        self.field_order.push(self.order_input);
-        self.order_slot = self.field_order.len() - 1;
+        if self.field_order.push(self.order_input).is_err() {
+            return true;
+        }
+        self.order_slot = self.field_order.len - 1;
         if self.order_slot == 0 {
             self.order_input += 1;
         }
@@ -884,24 +558,11 @@ impl Fem2dVisualJob {
                 {
                     return Err(b"fem2d.visual-maximum-plus-one".to_vec());
                 }
-                match self.reserve_lane {
-                    0 => self.output.reserve().map_err(<[u8]>::to_vec)?,
-                    1 => self.output.observe_and_admit().map_err(<[u8]>::to_vec)?,
-                    2 => self.region_order.try_reserve_exact(doc.regions.len()).map_err(|_| b"fem2d.visual-region-order-allocation".to_vec())?,
-                    3 => self.element_order.try_reserve_exact(doc.elements.len()).map_err(|_| b"fem2d.visual-element-order-allocation".to_vec())?,
-                    4 => self.field_order.try_reserve_exact(visual.fields.len()).map_err(|_| b"fem2d.visual-field-order-allocation".to_vec())?,
-                    _ => {
-                        let index_bytes = std::mem::size_of::<usize>();
-                        if self.region_order.capacity() * index_bytes > FEM2D_MOUNTED_VISUAL_PAGE_BYTES
-                            || self.element_order.capacity() * index_bytes > FEM2D_MOUNTED_VISUAL_PAGE_BYTES
-                            || self.field_order.capacity() * index_bytes > FEM2D_MOUNTED_VISUAL_PAGE_BYTES
-                        {
-                            return Err(b"fem2d.visual-index-observed-capacity".to_vec());
-                        }
-                        self.admitted_pages = self.output.admitted_capacity / FEM2D_MOUNTED_VISUAL_PAGE_BYTES;
-                        self.stage = Fem2dVisualJobStage::ReadProgressScalar;
-                        return Ok(false);
-                    }
+                if usize::from(self.reserve_lane) < FEM2D_MOUNTED_VISUAL_PAGE_COUNT {
+                    self.output.admit_page(usize::from(self.reserve_lane)).map_err(<[u8]>::to_vec)?;
+                } else {
+                    self.stage = Fem2dVisualJobStage::ReadProgressScalar;
+                    return Ok(false);
                 }
                 self.reserve_lane += 1;
             }
@@ -948,7 +609,7 @@ impl Fem2dVisualJob {
                 }
             }
             Fem2dVisualJobStage::BuildRegion => {
-                let Some(region_index) = self.region_order.get(self.cursor).copied() else {
+                let Some(region_index) = self.region_order.get(self.cursor) else {
                     self.order_input = 0;
                     self.order_slot = 0;
                     self.advance(Fem2dVisualJobStage::OrderElementKey);
@@ -1020,7 +681,7 @@ impl Fem2dVisualJob {
                     }
                     return Ok(false);
                 }
-                let Some(index) = self.element_order.get(self.cursor).copied() else {
+                let Some(index) = self.element_order.get(self.cursor) else {
                     self.advance(Fem2dVisualJobStage::BuildAssemblyMark);
                     return Ok(false);
                 };
@@ -1093,7 +754,7 @@ impl Fem2dVisualJob {
                 self.cursor += 1;
             }
             Fem2dVisualJobStage::BuildDisplacementEntry | Fem2dVisualJobStage::BuildResidualEntry | Fem2dVisualJobStage::BuildReactionEntry | Fem2dVisualJobStage::BuildContourEntry | Fem2dVisualJobStage::BuildModeEntry => {
-                let Some(index) = self.field_order.get(self.cursor).copied() else {
+                let Some(index) = self.field_order.get(self.cursor) else {
                     let next = match self.stage {
                         Fem2dVisualJobStage::BuildDisplacementEntry => Fem2dVisualJobStage::BuildResidualEntry,
                         Fem2dVisualJobStage::BuildResidualEntry => Fem2dVisualJobStage::BuildReactionEntry,
@@ -1157,7 +818,7 @@ impl Fem2dVisualJob {
                 if self.page_cursor == 0 {
                     self.output.write_char(']').map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                     self.page_cursor = 1;
-                } else if self.page_cursor <= self.admitted_pages {
+                } else if self.page_cursor <= FEM2D_MOUNTED_VISUAL_PAGE_COUNT {
                     self.page_cursor += 1;
                 } else {
                     self.stage = Fem2dVisualJobStage::ValidateFreshness;
@@ -1182,11 +843,10 @@ impl Fem2dVisualJob {
                     preview_sequence: freshness.numerical_preview_sequence,
                     surface_generation: freshness.surface_generation,
                     renderer_scene_generation: freshness.renderer_scene_generation,
-                    layers_json: std::mem::take(&mut self.output.bytes),
+                    pages: std::mem::replace(&mut self.output, Fem2dFixedJsonPages::new()),
                     region_order: std::mem::take(&mut self.region_order),
                     assembly_order: std::mem::take(&mut self.element_order),
                     field_order: std::mem::take(&mut self.field_order),
-                    close_pages: std::mem::take(&mut self.admitted_pages),
                 });
                 self.stage = Fem2dVisualJobStage::RetireDisplacedLease;
             }
@@ -1213,41 +873,14 @@ impl Fem2dVisualJob {
             }
             return result;
         }
-        let owner = match self.close_lane {
-            0 => &mut self.region_order,
-            1 => &mut self.element_order,
-            2 => &mut self.field_order,
-            _ => {
-                if self.admitted_pages != 0 {
-                    let bytes = self.output.bytes.len().min(FEM2D_MOUNTED_VISUAL_PAGE_BYTES);
-                    if bytes > maximum_bytes {
-                        return (false, 0, 0);
-                    }
-                    self.output.bytes.truncate(self.output.bytes.len() - bytes);
-                    self.admitted_pages -= 1;
-                    return (false, 1, bytes);
-                }
-                if self.output.bytes.capacity() != 0 {
-                    self.output.bytes = String::new();
-                    return (false, 1, 0);
-                }
-                return (true, 0, 0);
-            }
-        };
-        if owner.pop().is_some() {
-            return (false, 1, 0);
+        if self.region_order.pop().is_some() || self.element_order.pop().is_some() || self.field_order.pop().is_some() {
+            return (false, 1, std::mem::size_of::<usize>());
         }
-        let bytes = owner.capacity() * std::mem::size_of::<usize>();
-        if bytes > maximum_bytes {
-            return (false, 0, 0);
-        }
-        *owner = Vec::new();
-        self.close_lane += 1;
-        (false, 1, bytes)
+        self.output.close_step(maximum_bytes)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.complete.is_none() && self.output.bytes.capacity() == 0 && self.admitted_pages == 0 && self.region_order.capacity() == 0 && self.element_order.capacity() == 0 && self.field_order.capacity() == 0
+        self.complete.is_none() && self.output.terminal_is_empty() && self.region_order.is_empty() && self.element_order.is_empty() && self.field_order.is_empty()
     }
 }
 //#endregion 🧵️MountedVisualJob
@@ -1490,7 +1123,7 @@ pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin
 
 /// 👁️ Renders the model plus an optional replaceable worker-job progress snapshot.
 pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &FemCamera, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let layers_json = progress.map(Fem2dMountedVisualLease::layers_json).unwrap_or("[]").to_owned();
+    let layers_json = progress.map(Fem2dMountedVisualLease::layers_json).unwrap_or_else(|| "[]".into());
     crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }
 //#endregion 🔖️Render
@@ -1612,26 +1245,27 @@ mod tests {
     }
 
     #[test]
-    fn mounted_visual_output_exact_maximum_plus_one_and_displacement_handback() {
-        let mut output = Fem2dBoundedJson::new();
-        output.reserve().expect("fixed output backing");
-        output.observe_and_admit().expect("observed backing is the admitted backing");
-        let exact = "x".repeat(FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES);
-        output.write_str(&exact).expect("exact maximum");
-        let before = output.bytes.as_ptr();
-        assert!(output.write_char('x').is_err(), "maximum plus one must reject before reallocating");
-        assert_eq!(output.bytes.len(), FEM2D_MOUNTED_VISUAL_OUTPUT_BYTES);
-        assert_eq!(output.bytes.as_ptr(), before, "rejection returns the exact unchanged output owner");
+    fn mounted_visual_output_exact_maximum_plus_one_and_page_handback() {
+        let mut output = Fem2dFixedJsonPages::new();
+        output.admit_page(0).expect("page zero");
+        output.admit_page(1).expect("page one");
+        output.admit_page(2).expect("page two");
+        output.admit_page(3).expect("page three");
+        let exact = "x".repeat(FEM2D_MOUNTED_VISUAL_PAGE_BYTES);
+        output.write_str(&exact).expect("page zero exact");
+        output.write_str(&exact).expect("page one exact");
+        output.write_str(&exact).expect("page two exact");
+        output.write_str(&exact).expect("page three exact");
+        let before = output.pages[0].as_ref().expect("page retained").as_ptr();
+        assert!(output.write_char('x').is_err(), "maximum plus one must reject before allocating");
+        assert_eq!(output.pages[0].as_ref().expect("same page").as_ptr(), before);
 
-        let doc = Fem2dSnapshot::default();
-        let visual = Fem2dLiveVisual::default();
-        let mut build = Fem2dMountedVisualBuild::new(1, 2, 3, 4, 5);
-        while !build.step_one(&doc, &visual).expect("bounded visual step") {}
-        let mut lease = build.take_complete().expect("sealed output lease");
-        assert_eq!(lease.layers_json(), "[{\"id\":\"solve-status-unconverged\",\"transform\":[1,0,0,1,10,18],\"text\":{\"content\":\"unconverged\",\"size\":11}}]");
-        assert!(build.terminal_is_empty(), "all order/output backing moved into the exact lease");
-        while !lease.close_step(FEM2D_MOUNTED_VISUAL_PAGE_BYTES).0 {}
-        assert!(lease.terminal_is_empty());
+        let mut released = 0;
+        while !output.close_step(FEM2D_MOUNTED_VISUAL_PAGE_BYTES).0 {
+            released += 1;
+        }
+        assert_eq!(released + 1, FEM2D_MOUNTED_VISUAL_PAGE_COUNT);
+        assert!(output.terminal_is_empty());
     }
 
     #[test]

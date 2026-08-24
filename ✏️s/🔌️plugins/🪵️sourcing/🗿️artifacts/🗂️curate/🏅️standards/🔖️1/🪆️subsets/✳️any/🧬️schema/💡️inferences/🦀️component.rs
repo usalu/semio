@@ -30,7 +30,7 @@ pub struct CurateInference {
 }
 
 impl protocol::Inference<CurateSnapshot> for CurateInference {
-    async fn infer(snapshot: &CurateSnapshot) -> Self {
+    fn infer(snapshot: &CurateSnapshot) -> Self {
         Self { entries: compute_curate_entries(snapshot) }
     }
 }
@@ -46,13 +46,13 @@ impl Default for CurateInference {
 }
 
 impl protocol::InferenceSpec<CurateSnapshot> for CurateInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.sourcing.curate.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.sourcing.curate.inference.entries", reads: &["catalog", "stockExtra", "curated"] }]
     }
 }
@@ -82,7 +82,7 @@ impl ArtifactInferrer for CurateInferrer {
 /// mesh URL (geometry is a procedural `GeometryRecipe`, not an asset reference) or vortex/attachment
 /// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
 /// mesh as "no visual representation yet", not an error.
-pub async fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
+pub fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
     let object_kinds: Vec<Value> = crate::artifacts::curate::stock_of(document).iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() })).collect();
     json!({
         "schema": "manifest",

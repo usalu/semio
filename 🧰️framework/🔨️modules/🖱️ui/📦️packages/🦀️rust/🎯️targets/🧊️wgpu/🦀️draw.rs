@@ -3486,12 +3486,30 @@ impl UiPipelines {
         );
     }
 
+    pub fn upload_glyph_atlas_page(&self, queue: &wgpu::Queue, pixels: &[u8], width: u32, start_row: u32, rows: u32) {
+        queue.write_texture(
+            wgpu::TexelCopyTextureInfo { texture: &self.glyph_texture, mip_level: 0, origin: wgpu::Origin3d { x: 0, y: start_row, z: 0 }, aspect: wgpu::TextureAspect::All },
+            pixels,
+            wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(width), rows_per_image: Some(rows) },
+            wgpu::Extent3d { width, height: rows, depth_or_array_layers: 1 },
+        );
+    }
+
     pub fn upload_icon_atlas(&self, queue: &wgpu::Queue, pixels: &[u8], width: u32, height: u32) {
         queue.write_texture(
             wgpu::TexelCopyTextureInfo { texture: &self.icon_texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
             pixels,
             wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(width * 4), rows_per_image: Some(height) },
             wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        );
+    }
+
+    pub fn upload_icon_atlas_page(&self, queue: &wgpu::Queue, pixels: &[u8], width: u32, start_row: u32, rows: u32) {
+        queue.write_texture(
+            wgpu::TexelCopyTextureInfo { texture: &self.icon_texture, mip_level: 0, origin: wgpu::Origin3d { x: 0, y: start_row, z: 0 }, aspect: wgpu::TextureAspect::All },
+            pixels,
+            wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(width * 4), rows_per_image: Some(rows) },
+            wgpu::Extent3d { width, height: rows, depth_or_array_layers: 1 },
         );
     }
 

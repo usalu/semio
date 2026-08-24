@@ -1,0 +1,10 @@
+[workspace]
+
+[package]
+name = "w13-pdf-object-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+lopdf = "0.44"

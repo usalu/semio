@@ -146,6 +146,8 @@ pub enum JpgBaselineMutation {
 /// `kinds_match_enum_variants_in_declaration_order` below is what keeps the two honest. No
 /// `mutationCatalogs` entry mirrors this list — see the module docstring for why that is deliberate.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-sof-marker", "set-sample-precision", "set-arithmetic", "insert-huffman-table", "remove-huffman-table", "insert-frame-component", "remove-frame-component", "set-component-sampling"];
+
+crate::impl_serde_op_codec!(JpgBaselineMutation, "jpg-baseline-mutation");
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -190,7 +192,7 @@ fn component(base: &JpgSnapshot, id: u8) -> Option<&JpgFrameComponent> {
 
 /// 🔎️ The Huffman table at `(class, id)`, or `None`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn huffman(base: &JpgSnapshot, key: &JpgHuffmanTableKey) -> Option<&JpgHuffmanTable> {
+fn huffman<'a>(base: &'a JpgSnapshot, key: &JpgHuffmanTableKey) -> Option<&'a JpgHuffmanTable> {
     base.huffman_tables.iter().find(|table| table.class == key.class && table.id == key.id)
 }
 //#endregion 🔖️Axes

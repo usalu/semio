@@ -591,14 +591,7 @@ mod tests {
     #[test]
     fn retained_document_close_retires_one_record_per_step() {
         let id = UiNodeId(1);
-        let header = UiDocumentLeaseHeader {
-            generation: 1,
-            surface: SurfaceId::try_from("test.surface").expect("bounded surface"),
-            revision: UiRevision(1),
-            root: id,
-            layout_epoch: 1,
-            node_count: 1,
-        };
+        let header = UiDocumentLeaseHeader { generation: 1, surface: SurfaceId::try_from("test.surface").expect("bounded surface"), revision: UiRevision(1), root: id, layout_epoch: 1, node_count: 1 };
         let mut document = UiDocumentTree::new(header).expect("valid header");
         document
             .try_upsert_record(UiNodeRecord {

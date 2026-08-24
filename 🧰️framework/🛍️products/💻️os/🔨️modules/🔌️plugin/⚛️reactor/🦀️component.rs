@@ -1413,7 +1413,7 @@ mod wit_bridge {
                 command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor);
             } else if cursor.kind == 28 {
                 let own_color = if cursor.metadata & !0x1ff != 0 {
-                    command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-presence-metadata".to_vec() };
+                    command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor: cursor.clone(), fault: b"plugin.command-presence-metadata".to_vec() };
                     None
                 } else if cursor.metadata & 0x100 != 0 {
                     Some((cursor.metadata & 0xff) as u8)
@@ -1527,7 +1527,8 @@ mod wit_bridge {
         // `ArtifactApp::command_from_intent` → `dispatch_typed_command_inner`), never a parallel path.
         // Each handled batch's surfaces feed the retained render set so the reply patch — the next `UiPatch`
         // revision bump — is produced in this SAME turn (design decision: no new reply channel).
-        for DirtyIntentBatch { instance, intents } in dirty.intents {
+        let intent_batches = std::mem::take(&mut dirty.intents);
+        for DirtyIntentBatch { instance, intents } in intent_batches {
             // 🚫️async: E5 executor bridge — `plugin_dispatch_intents` stays genuinely `async fn`; safe to
             // resolve synchronously here for the same reason as `plugin_exchange` above.
             match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_dispatch_intents(runtime, instance, &intents)) {
@@ -1579,7 +1580,9 @@ mod wit_bridge {
         for (instance, surface) in dirty.surfaces {
             PATCHES.with(|patches| match patches.reserve_mounted(surface) {
                 Ok(grant) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(runtime, instance, "window", "{}")) {
-                    Ok(tree) => grant.commit_source(tree.root),
+                    Ok(tree) => {
+                        let _ = grant.commit_source(tree.root);
+                    }
                     Err(_) => grant.cancel(),
                 },
                 Err(surface) => {
@@ -1891,8 +1894,9 @@ mod wit_bridge {
             // in `📓️terra-wit-flip-report.md`'s consumer inventory; not fixed here, out of `OWNS`).
             protocol::AppFrame::UiPatch { surface, kind: _, revision, base_revision, ops, .. } => {
                 let Ok(ops_value) = store::pack_rt::decode_wire_value(&ops) else { return };
-                let Ok(ops) = dsl::from_dsl_value::<Vec<UiPatchOp>>(ops_value) else { return };
-                let patch = UiPatch { surface: surface.into(), base_revision: ui_contract::UiRevision(base_revision), revision: ui_contract::UiRevision(revision), ops };
+                let Ok(ops) = dsl::from_dsl_value::<ui_contract::UiPatchOps>(ops_value) else { return };
+                let Ok(surface) = ui_contract::SurfaceId::try_from(surface) else { return };
+                let patch = UiPatch { surface, base_revision: ui_contract::UiRevision(base_revision), revision: ui_contract::UiRevision(revision), ops };
                 if let Err(patch) = PENDING_PATCHES.with(|pending| pending.borrow_mut().push_external(patch)) {
                     effects.push(Effect::SendMessage {
                         target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },

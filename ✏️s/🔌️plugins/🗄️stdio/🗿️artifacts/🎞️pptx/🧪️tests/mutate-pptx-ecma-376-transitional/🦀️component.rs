@@ -1,26 +1,27 @@
 //! 🦀️ PPTX ECMA-376 ✳️transitional exhaustive conformance-class mutation case — Rust adapter.
 //!
-//! Every scenario copies the immutable real fixture into the case work directory first; the
-//! committed file is never written to. `oracle` handlers drive the registered `quick-xml` + `zip`
-//! reference implementation through this subset's own `🧪️oracle/🦀️component.rs`, `subject` handlers
-//! drive this repository's own decode/mutate/encode round trip, and both results are read back by
-//! the SAME independent reader (`project_package`) before the
-//! `semantic-ooxml-pptx-transitional-v1` profile compares them. The subject half is gated behind the
-//! generated host's `sut` feature so the oracle-only run never compiles the local implementation.
+//! The input is the real committed `🎞️semio-talk.pptx`, a 55-part OPC package that ALREADY
+//! satisfies this class on all three of its axes, with BOTH of its Transitional namespace families
+//! declared — PresentationML on the presentation and slide parts, DrawingML inside their shape
+//! trees. This case is the mirror of `mutate-pptx-ecma-376-strict` over the same bytes: seven kinds
+//! move the deck OUT of the ISO/IEC 29500-4 class and back in, two of them along namespace families
+//! that are addressable independently and that no DOCX or XLSX conformance subset has. `oracle`
+//! handlers drive the registered `quick-xml` 0.42 + `zip` 6 pair through this subset's own
+//! `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧪️oracle/🦀️component.rs`; `subject`
+//! handlers drive `decode_pptx`/`apply_pptx_transitional_mutation`/`encode_pptx`; both results are
+//! read back by the SAME independent `project_package` before
+//! `semantic-ooxml-pptx-transitional-v1` compares them. The subject half is `sut`-gated so the
+//! oracle-only run never compiles the local implementation.
+//!
+//! ⚖️ All three laws are asserted IN ROLE through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
+//! module, under a profile that declares no writer freedom at all, and no kind is exempt from any
+//! of them. Only ONE kind — `remove-conformance-attribute` — needs an arranged pre-state, two fewer
+//! than the ✳️strict sibling. The evidence stops where ISO/IEC 29500-4 does: VML and
+//! `mc:AlternateContent` are legal Transitional markup, so this case polices neither.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::transitional::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, project_package};
-
-//#region 🔖️Kinds
-/// 🧾️ Test-case-local mirror of the `pptx-ecma-376-transitional` catalog. Duplicated, not imported,
-/// from `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs::KINDS`
-/// — that module lives in the SUBJECT crate, and the oracle role must not link the subject crate at
-/// all, while this loop registers handlers for both roles from one list. A mismatch here is caught
-/// structurally: the contract phase fails with `mutation-kind-uncovered`/`mutation-kind-undeclared`
-/// if this list omits or invents a kind, and the runner fails every unregistered scenario id
-/// outright.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-main-namespace", "set-drawing-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute"];
-//#endregion 🔖️Kinds
+use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::transitional::{oracle_apply_mutation, oracle_arrange, oracle_inverse_spec, oracle_round_trip, project_package, KINDS};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🎞️semio-talk.pptx";
@@ -31,30 +32,33 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
-/// 🎬️ The real pre-state a scenario's mutation runs on. For the removal kinds this is the real
-/// package after the reference implementation has independently inserted their target — no committed
-/// ECMA-376 package in this repository carries VML, `mc:AlternateContent` or a `conformance`
-/// attribute, which the Feature file records rather than papers over. Every other kind reads the
-/// committed bytes untouched.
+/// 🎬️ The real pre-state a scenario's mutation runs on. Only `remove-conformance-attribute` needs
+/// one: no ECMA-376 package in this repository carries a conformance attribute, verified by
+/// unzipping all three committed OOXML fixtures, so that kind runs on the real 55-part deck after
+/// the reference implementation has independently stamped one onto `ppt/presentation.xml`. The
+/// other six kinds read the committed bytes untouched.
 fn arranged_input(ctx: &Context, spec: &Json) -> Result<Vec<u8>, String> {
     oracle_arrange(&mutable_input(ctx)?, spec)
 }
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 🦠️ The forward half, with the OBSERVABILITY law asserted in role: each kind has to move the
+/// three-axis Transitional projection of the real deck, or its scenario would pass whether or not
+/// the mutation ran. Nothing is exempt — including `set-drawing-namespace`, which moves the second
+/// namespace family on its own and would otherwise be the easiest kind here to leave unobserved.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let base = arranged_input(ctx, &spec)?;
     let output = oracle_apply_mutation(&base, &spec)?;
     let projection = project_package(&output)?;
-    if spec.str("kind") != "no-mutation" && projection == project_package(&base)? {
-        return Err(format!("{:?} left the conformance-class projection unchanged — a mutation that is not observable proves nothing", spec.str("kind")));
-    }
+    mutation_is_observable(&spec.str("kind"), &projection, &project_package(&base)?, &[])?;
     Ok(Outcome::with_raw(output, projection))
 }
 
-/// ↩️ Applies the mutation and then its independently computed inverse, and asserts the metamorphic
-/// law on the oracle side too: a run with no subject must still be evidence, not a recorded no-op.
+/// ↩️ The INVERSE law, asserted in role and against the ARRANGED pre-state rather than the committed
+/// bytes: for `remove-conformance-attribute` the deck to be restored is the stamped one, which is
+/// the only baseline that removal can honestly be undone onto.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let base = arranged_input(ctx, &spec)?;
@@ -62,24 +66,19 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let undo = oracle_inverse_spec(&base, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &undo)?;
     let projection = project_package(&restored)?;
-    if projection != project_package(&base)? {
-        return Err(format!("undoing {:?} did not restore the package's conformance-class projection", spec.str("kind")));
-    }
+    inverse_restores(&spec.str("kind"), &projection, &project_package(&base)?)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
-/// 🔁️ The reference implementation's own container decode/re-encode — proves the independent codec
-/// is projection-stable on the real package before the subject's own codec is asked to be.
+/// 🔁️ The identity law, both halves asserted in role: `zip` re-reads all 55 entries — the 3 media
+/// binaries included — and rebuilds the container from those entries alone, so the rebuilt package
+/// must differ from the input while its conformance-class projection must not move at all.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = oracle_round_trip(&input)?;
-    if output == input {
-        return Err("byte pass-through: output is bit-identical to the input".to_string());
-    }
+    reparsed_not_copied(&output, &input)?;
     let projection = project_package(&output)?;
-    if projection != project_package(&input)? {
-        return Err("the reference container round trip is not projection-stable on the real package".to_string());
-    }
+    round_trip_preserves(&projection, &project_package(&input)?)?;
     Ok(Outcome::with_raw(output, projection))
 }
 //#endregion 🔖️Oracle

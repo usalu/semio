@@ -15,7 +15,7 @@ pub struct SetArtifactJson {
 }
 
 /// 🛠️ Dev-only whole-document import — kept out of the command palette.
-pub async fn handle(payload: &SetArtifactJson, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub fn handle(payload: &SetArtifactJson, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     if !sourcing_json_envelope_is_bounded(&payload.json) {
         return Err(Fault::from("sourcing.invalid-payload: document JSON exceeds byte, depth, string, or cardinality limit"));
     }

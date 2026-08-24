@@ -91,6 +91,8 @@ pub enum SvgTinyMutation {
 /// declarations honest against each other.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "stamp-base-profile", "insert-tiny-element", "remove-element", "set-tiny-attribute", "set-text", "set-view-box", "set-transform", "strip-non-tiny"];
 
+crate::impl_serde_op_codec!(SvgTinyMutation, "svg-tiny-mutation");
+
 /// 🏷️ The `KINDS` spelling of one mutation's own variant. An exhaustive match (no wildcard arm), so
 /// a new variant that forgets its kebab spelling fails to compile rather than failing silently.
 pub fn kind_of(mutation: &SvgTinyMutation) -> &'static str {

@@ -12,7 +12,7 @@ pub struct SetFilterTypology {
     pub path: String,
 }
 
-pub async fn handle(payload: &SetFilterTypology, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub fn handle(payload: &SetFilterTypology, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     let path = if payload.path.is_empty() { Vec::new() } else { payload.path.split('/').map(String::from).collect() };
     Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterTypology { path }]))
 }

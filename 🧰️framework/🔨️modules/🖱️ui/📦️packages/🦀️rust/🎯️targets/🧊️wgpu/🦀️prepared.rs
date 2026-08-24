@@ -175,6 +175,120 @@ pub struct PreparedRasterPages {
     close_phase: u8,
 }
 
+pub const PREPARED_ATLAS_PAGE_BYTES: usize = 16 * 1024;
+pub const PREPARED_ATLAS_PAGE_CAPACITY: usize = 2_048;
+const PREPARED_ATLAS_PROCESS_BYTES: usize = 64 * 1024 * 1024;
+
+static PREPARED_ATLAS_PROCESS_LEDGER: Mutex<usize> = Mutex::new(0);
+
+#[derive(Debug, PartialEq, Eq)]
+struct PreparedAtlasPage {
+    bytes: Box<[u8; PREPARED_ATLAS_PAGE_BYTES]>,
+    len: u16,
+    start_row: u32,
+    rows: u32,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct PreparedAtlasPages {
+    slots: Box<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>,
+    len: usize,
+    width: u32,
+    height: u32,
+    channels: u8,
+    byte_len: usize,
+    rows_per_page: u32,
+    reserved_bytes: usize,
+    credit_released: bool,
+}
+
+impl PreparedAtlasPages {
+    pub fn try_new(width: u32, height: u32, channels: u8, byte_len: usize) -> Result<Self, &'static str> {
+        let row_bytes = usize::try_from(width).ok().and_then(|width| width.checked_mul(usize::from(channels))).ok_or("atlas row bytes exhausted")?;
+        let expected = row_bytes.checked_mul(usize::try_from(height).map_err(|_| "atlas height exhausted")?).ok_or("atlas byte length exhausted")?;
+        if expected != byte_len || row_bytes == 0 || row_bytes > PREPARED_ATLAS_PAGE_BYTES {
+            return Err("atlas dimensions do not fit fixed page credits");
+        }
+        let rows_per_page = u32::try_from(PREPARED_ATLAS_PAGE_BYTES / row_bytes).map_err(|_| "atlas rows per page exhausted")?;
+        let rows_per_page_usize = usize::try_from(rows_per_page).map_err(|_| "atlas rows per page exhausted")?;
+        let pages = usize::try_from(height).ok().and_then(|height| height.checked_add(rows_per_page_usize.checked_sub(1)?)).map(|rows| rows / rows_per_page_usize).ok_or("atlas page count exhausted")?;
+        if pages > PREPARED_ATLAS_PAGE_CAPACITY || byte_len > PREPARED_ATLAS_PROCESS_BYTES {
+            return Err("atlas page or byte credits exceeded");
+        }
+        let mut ledger = PREPARED_ATLAS_PROCESS_LEDGER.lock().map_err(|_| "atlas process ledger faulted")?;
+        let next = ledger.checked_add(byte_len).ok_or("atlas process byte credits exhausted")?;
+        if next > PREPARED_ATLAS_PROCESS_BYTES {
+            return Err("atlas process byte credits exceeded");
+        }
+        *ledger = next;
+        drop(ledger);
+        Ok(Self { slots: Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY]), len: 0, width, height, channels, byte_len, rows_per_page, reserved_bytes: byte_len, credit_released: false })
+    }
+
+    pub fn push_page(&mut self, source: &[u8], start_row: u32) -> Result<bool, &'static str> {
+        if self.len == PREPARED_ATLAS_PAGE_CAPACITY || start_row >= self.height {
+            return Err("atlas page item credits exceeded");
+        }
+        let row_bytes = usize::try_from(self.width).ok().and_then(|width| width.checked_mul(usize::from(self.channels))).ok_or("atlas row bytes exhausted")?;
+        let remaining_rows = self.height - start_row;
+        let rows = remaining_rows.min(self.rows_per_page);
+        let bytes = usize::try_from(rows).ok().and_then(|rows| rows.checked_mul(row_bytes)).ok_or("atlas page byte count exhausted")?;
+        let start = usize::try_from(start_row).ok().and_then(|row| row.checked_mul(row_bytes)).ok_or("atlas page offset exhausted")?;
+        let slice = source.get(start..start.checked_add(bytes).ok_or("atlas page end exhausted")?).ok_or("atlas page source was truncated")?;
+        let mut page = Box::new([0; PREPARED_ATLAS_PAGE_BYTES]);
+        page[..bytes].copy_from_slice(slice);
+        self.slots[self.len] = Some(PreparedAtlasPage { bytes: page, len: u16::try_from(bytes).map_err(|_| "atlas page length exhausted")?, start_row, rows });
+        self.len += 1;
+        Ok(start_row.checked_add(rows) == Some(self.height))
+    }
+
+    pub fn page(&self, index: usize) -> Option<(&[u8], u32, u32)> {
+        let page = self.slots.get(index)?.as_ref()?;
+        Some((&page.bytes[..usize::from(page.len)], page.start_row, page.rows))
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn next_row(&self) -> u32 {
+        self.len.checked_sub(1).and_then(|index| self.slots[index].as_ref()).and_then(|page| page.start_row.checked_add(page.rows)).unwrap_or(0)
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
+    pub fn byte_len(&self) -> usize {
+        self.byte_len
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if let Some(index) = self.len.checked_sub(1) {
+            self.len = index;
+            self.slots[index] = None;
+            return false;
+        }
+        if !self.credit_released {
+            let Ok(mut ledger) = PREPARED_ATLAS_PROCESS_LEDGER.lock() else { return false };
+            let Some(next) = ledger.checked_sub(self.reserved_bytes) else { return false };
+            *ledger = next;
+            self.reserved_bytes = 0;
+            self.credit_released = true;
+            return false;
+        }
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.slots.iter().all(Option::is_none) && self.reserved_bytes == 0 && self.credit_released
+    }
+}
+
 impl PreparedRasterPages {
     pub fn width(&self) -> u32 {
         self.width
@@ -623,6 +737,8 @@ pub enum RenderDirective {
 pub enum PreparedRenderUpload {
     GlyphAtlas { pixels: Vec<u8>, width: u32, height: u32 },
     IconAtlas { pixels: Vec<u8>, width: u32, height: u32 },
+    GlyphAtlasPages { pixels: PreparedAtlasPages },
+    IconAtlasPages { pixels: PreparedAtlasPages },
     Raster { key: String, pixels: Vec<u8>, width: u32, height: u32 },
     RasterPages { key: String, pixels: PreparedRasterPages },
     Mesh { key: String, version: u64, lease: Mesh3dLease },
@@ -646,6 +762,7 @@ impl PreparedRenderUpload {
     pub fn byte_len(&self) -> usize {
         match self {
             Self::GlyphAtlas { pixels, .. } | Self::IconAtlas { pixels, .. } => pixels.len(),
+            Self::GlyphAtlasPages { pixels } | Self::IconAtlasPages { pixels } => pixels.byte_len(),
             Self::Raster { key, pixels, .. } => key.len().saturating_add(pixels.len()),
             Self::RasterPages { key, pixels } => key.len().saturating_add(pixels.byte_len()),
             Self::Mesh { key, lease, .. } => key.len().saturating_add(lease.schema().map_or(0, |schema| {
@@ -737,6 +854,7 @@ impl PreparedRenderPacket {
                         false
                     }
                 }
+                PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels } => !pixels.close_step(),
                 PreparedRenderUpload::Raster { key, pixels, .. } => {
                     let next = pixels.len().saturating_sub(Self::RETIRE_PAGE_BYTES);
                     if next != pixels.len() {
@@ -944,6 +1062,7 @@ impl PreparedRenderJob {
         if let Some(upload) = input.uploads.last_mut() {
             let retained = match upload {
                 PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. } => pixels.pop().is_some(),
+                PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels } => !pixels.close_step(),
                 PreparedRenderUpload::Raster { key, pixels, .. } => pixels.pop().is_some() || key.pop().is_some(),
                 PreparedRenderUpload::RasterPages { key, pixels } => !pixels.retire_with_key_step(key),
                 PreparedRenderUpload::Mesh { key, .. } => key.pop().is_some(),
@@ -1583,6 +1702,37 @@ mod tests {
         assert!(rejected.fault().contains("fixed item or byte credits"));
         assert!(!rejected.close_step(), "one rejection grant retires one source page only");
         while !rejected.close_step() {}
+    }
+
+    #[test]
+    fn atlas_page_cap_plus_one_faults_before_process_credit_transfer() {
+        let height = 33_554_433_u32;
+        let byte_len = 33_554_433_usize;
+        assert!(matches!(PreparedAtlasPages::try_new(1, height, 1, byte_len), Err("atlas page or byte credits exceeded")));
+        let mut admitted = match PreparedAtlasPages::try_new(4, 2, 4, 32) {
+            Ok(admitted) => admitted,
+            Err(fault) => panic!("fixed atlas admission faulted: {fault}"),
+        };
+        assert!(!admitted.close_step());
+        assert!(admitted.close_step());
+        assert!(admitted.terminal_is_empty());
+    }
+
+    #[test]
+    fn atlas_close_releases_one_fixed_page_then_its_exact_credit() {
+        let source = [9_u8; 32];
+        let mut pages = match PreparedAtlasPages::try_new(4, 2, 4, source.len()) {
+            Ok(pages) => pages,
+            Err(fault) => panic!("fixed atlas admission faulted: {fault}"),
+        };
+        assert!(matches!(pages.push_page(&source, 0), Ok(true)));
+        assert_eq!(pages.page(0), Some((&source[..], 0, 2)));
+        assert!(!pages.close_step());
+        assert_eq!(pages.len(), 0);
+        assert!(!pages.terminal_is_empty());
+        assert!(!pages.close_step());
+        assert!(pages.close_step());
+        assert!(pages.terminal_is_empty());
     }
 
     #[test]

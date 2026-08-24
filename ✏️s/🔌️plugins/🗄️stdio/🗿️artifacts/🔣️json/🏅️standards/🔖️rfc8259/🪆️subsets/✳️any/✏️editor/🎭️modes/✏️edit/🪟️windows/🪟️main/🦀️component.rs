@@ -48,7 +48,7 @@ fn scalar_label(value: &JsonValue) -> Option<String> {
 /// object members keep source order, array elements keep position, scalars show their literal
 /// value inline.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &JsonSnapshot) -> BuiltNode {
+pub fn render(document: &JsonSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     TreeWindowKit::render(&TreeView { roots: vec![node_view(Vec::new(), None, &document.value)] })
 }
 

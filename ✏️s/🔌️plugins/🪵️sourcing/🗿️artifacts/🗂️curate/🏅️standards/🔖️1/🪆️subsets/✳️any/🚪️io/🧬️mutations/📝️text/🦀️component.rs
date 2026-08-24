@@ -34,7 +34,7 @@ enum SourcingMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for SourcingMutationDsl {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -45,7 +45,7 @@ impl OpText for SourcingMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -54,16 +54,16 @@ impl OpText for SourcingMutationDsl {
 }
 
 impl protocol::OpBinary for SourcingMutationDsl {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-async fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl {
+fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl {
     match mutation {
         SourcingMutation::CreateCuratedItem(payload) => SourcingMutationDsl::CreateCuratedItem { item: payload.item.clone() },
         SourcingMutation::DeleteCuratedItem(payload) => SourcingMutationDsl::DeleteCuratedItem { object_id: payload.object_id.clone() },
@@ -71,7 +71,7 @@ async fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutati
     }
 }
 
-async fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation {
+fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation {
     match mutation {
         SourcingMutationDsl::CreateCuratedItem { item } => SourcingMutation::CreateCuratedItem(create_curated_item::mutation::CreateCuratedItem { item }),
         SourcingMutationDsl::DeleteCuratedItem { object_id } => SourcingMutation::DeleteCuratedItem(delete_curated_item::mutation::DeleteCuratedItem { object_id }),
@@ -80,11 +80,11 @@ async fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMu
 }
 
 impl OpText for SourcingMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(sourcing_mutation_from_dsl(<SourcingMutationDsl as OpText>::parse_op(line)?))
     }
 
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         <SourcingMutationDsl as OpText>::print_op(&sourcing_mutation_to_dsl(self))
     }
 }
@@ -92,11 +92,11 @@ impl OpText for SourcingMutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `SourcingMutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for SourcingMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         sourcing_mutation_to_dsl(self).encode_op()
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(sourcing_mutation_from_dsl(SourcingMutationDsl::decode_op(bytes)?))
     }
 }

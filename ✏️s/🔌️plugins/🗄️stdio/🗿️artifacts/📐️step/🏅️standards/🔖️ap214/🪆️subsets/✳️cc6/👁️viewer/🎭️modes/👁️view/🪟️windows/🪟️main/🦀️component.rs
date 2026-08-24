@@ -58,7 +58,7 @@ fn world_instances_json(document: &StepSnapshot) -> String {
 /// 👁️ Pure `StepSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &StepSnapshot) -> BuiltNode {
+pub fn render(document: &StepSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": STEP_CC6_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(STEP_CC6_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(STEP_CC6_VIEW_DEFAULT_CAMERA_POSITION, STEP_CC6_VIEW_DEFAULT_CAMERA_TARGET, STEP_CC6_VIEW_DEFAULT_CAMERA_FOV),

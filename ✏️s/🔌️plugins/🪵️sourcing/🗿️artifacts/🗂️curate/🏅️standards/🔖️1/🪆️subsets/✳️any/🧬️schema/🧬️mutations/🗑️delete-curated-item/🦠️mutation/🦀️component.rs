@@ -15,23 +15,23 @@ pub struct DeleteCuratedItem {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_curated_item(object_id: String) -> SourcingMutation {
+pub fn delete_curated_item(object_id: String) -> SourcingMutation {
     SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id })
 }
 
 impl protocol::MutationKind<CurateSnapshot, SourcingMutation> for DeleteCuratedItem {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "curated-item", kind: "delete-curated-item", record: "DeletedCuratedItem" };
 
-    async fn diff(&self, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
+    fn diff(&self, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &CurateSnapshot) -> Vec<SourcingMutation> {
+    fn inverse(&self, base: &CurateSnapshot) -> Vec<SourcingMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Remove \"{}\" from curation", self.object_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]
     }
 }

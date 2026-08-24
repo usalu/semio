@@ -4,12 +4,14 @@
 @mutations-xlsx-ecma-376-strict
 Feature: Apply every typed XLSX ECMA-376 Strict conformance-class mutation to a real package
   The input is shared://📕️reuse-marketplaces.xlsx, a real committed ECMA-376 package: 11 parts, two
-  worksheets and a genuine 229-entry shared-string table, derived once from the real committed
-  survey of 50 European building-component reuse marketplaces. Unzipping the committed file and
-  reading every declared namespace confirms it is a genuine ISO/IEC 29500-4 Transitional package
-  that declares no strict-family namespace, no VML, no mc:AlternateContent and no conformance
-  attribute — which is exactly what makes it the right input for a conformance-class case: every
-  scenario moves the real package along one axis of the class and then back.
+  worksheets and a genuine 229-entry shared-string table, derived once from the real committed survey
+  of 50 European building-component reuse marketplaces.
+  Unzipping it and reading xl/workbook.xml's root element shows a workbook that fails this class on
+  its first two axes — a Transitional SpreadsheetML xmlns and a Transitional xmlns:r — with no
+  conformance attribute and no VML part anywhere. A workbook is also the only OOXML package with a
+  PER-WORKSHEET axis: [Content_Types].xml declares an Override for each of the two sheet parts, and
+  set-worksheet-content-type moves exactly that declaration, which is why this catalog carries a
+  kind neither the DOCX nor the PPTX conformance subsets have.
 
   WHAT THIS VOCABULARY IS, AND WHY IT IS NOT A COPY OF ✳️any. The ✳️any subset of this same standard
   owns the DOCUMENT vocabulary — insert-sheet, remove-sheet, rename-sheet, set-cell, remove-cell and
@@ -17,27 +19,33 @@ Feature: Apply every typed XLSX ECMA-376 Strict conformance-class mutation to a 
   which is a property of the OPC package and of no document object at all: check_strict_conformance
   reads exactly five axes on an already-decoded XlsxSnapshot: xl/workbook.xml's root xmlns, its root
   xmlns:r, its root conformance attribute, any part whose content type is the legacy VML drawing
-  type, and each worksheet part's own content type. This catalog is one kind per axis. No ✳️any
-  mutation moves any of those axes and no mutation here touches document content, so the two
-  vocabularies are disjoint by construction.
+  type, and each worksheet part's own content type. This catalog is one kind per axis. Disjointness here is checkable rather than asserted: set-cell writes a c/v pair inside a
+  sheetData row and the shared-string kinds write sst entries, and none of them can reach
+  xl/workbook.xml's root attributes or a [Content_Types].xml Override — while nothing in this
+  catalog reads a cell.
 
-  THE REFERENCE. `quick-xml` 0.42 performs and observes every part edit, over the `zip` 6 container
-  codec, which reads every entry of the real package and reassembles the whole container from those
-  entries alone — never a patch of the input bytes. That pairing is a genuine second producer for
-  every kind this catalog declares, which is why every mutate scenario is @mode-differential rather
-  than a weaker mode. Both crates are test-only; this repository's own OPC and XML codecs are
-  hand-written and link neither, so the oracle is not production-reachable.
+  THE REFERENCE, AND WHAT IT CAN AND CANNOT WITNESS. `quick-xml` 0.42 rewrites xl/workbook.xml's
+  root element and the Override entries of [Content_Types].xml; `zip` 6 reads all 11 entries of the
+  real workbook and reassembles the container from those entries alone, never patching input bytes.
+  Both read AND write, so this case really does have a second producer and every mutate scenario is
+  honestly @mode-differential — worth stating plainly, because the ✳️any XLSX case is NOT
+  differential: no single crate both reads and writes a workbook, so it composes `calamine` for
+  reading with `rust_xlsxwriter` for writing. At the CONTAINER level that problem does not arise.
+  What this case witnesses is the five class axes only: the two worksheets and the 229-entry
+  shared-string table are carried through faithfully and read by no axis at all.
 
-  THE REMOVAL KINDS ARE ARRANGED, AND THAT IS RECORDED. Not one real ECMA-376 package committed to
-  this repository carries VML markup, mc:AlternateContent or a conformance attribute — verified by
-  unzipping all three committed OOXML fixtures and searching every entry, and a fact about the
-  corpus rather than a gap to paper over. remove-conformance-attribute, remove-vml-part therefore
-  run on the real package after the SAME independent implementation has inserted their target; the
-  mutation under test is still the removal, still performed by the reference, still on a genuine OPC
-  container.
+  TWO OF THE NINE KINDS RUN ON AN ARRANGED PRE-STATE, AND THAT IS RECORDED RATHER THAN HIDDEN.
+  remove-conformance-attribute and remove-vml-part each need their target to exist, and this workbook
+  carries neither — nor does any other ECMA-376 package committed to this repository, verified by
+  unzipping all three committed OOXML fixtures and searching every entry. That is a fact about the
+  corpus rather than a gap to paper over. Both therefore run after the SAME independent
+  implementation has inserted their target into the real 11-part container; the mutation under test
+  is still the removal, still performed by the reference, still on genuine OPC. The other seven
+  kinds read the committed bytes untouched. There is no alternate-content pair here at all, because
+  ISO/IEC 29500-1's spreadsheet rules give this checker no mc:AlternateContent axis to police.
 
-  Every scenario copies the fixture into the case work directory before touching it; the committed
-  file is never written to.
+  Every scenario copies the committed .xlsx into the case work directory before touching it, so the
+  229-entry shared-string table the ✳️any case also reads is never written to by this one.
 
   @id-mutate
   @level-exhaustive

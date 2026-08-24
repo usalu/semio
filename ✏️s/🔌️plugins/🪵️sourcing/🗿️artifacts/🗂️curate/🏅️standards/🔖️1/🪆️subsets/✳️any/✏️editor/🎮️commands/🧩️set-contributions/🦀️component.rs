@@ -11,6 +11,6 @@ pub struct SetContributions {
     pub json: String,
 }
 
-pub async fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     Ok(Emit::config(vec![SourcingCurateConfigMutation::SetContributions { json: payload.json.clone() }]))
 }

@@ -13,19 +13,18 @@
 //! subject half is gated behind the generated host's `sut` feature so the oracle-only run never
 //! links `semio-s-plugin-stdio`, whose subject phase is peer-blocked right now (concurrent
 //! os-kernel refactor).
+//!
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
+//! module, so a scenario cannot pass merely because `zip`+`quick-xml` declined to error:
+//! `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>` must land back on the
+//! untouched deck's projection, and `identity-round-trip` must both preserve the projection and
+//! rebuild an archive that differs from the input. There is no carve-out of any kind: the profile
+//! declares no writer freedom, no kind is exempt from observability, and no axis — slide order
+//! included — is dropped from the inverse law.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_pptx_mutation};
-
-//#region 🔖️Kinds
-/// 📇️ Kebab-case spelling of every `PptxMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
-/// `KINDS` — duplicated rather than imported because the ORACLE-only build of this adapter must
-/// never link `semio-s-plugin-stdio` (see this file's own header); `kinds_matches_enum_variants_
-/// and_manifest` on the production side and the framework's own catalog-completeness gate on this
-/// side are what keep the two lists honest against each other.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position"];
-//#endregion 🔖️Kinds
+use semio_s_plugin_stdio_test_oracle::artifacts::pptx::standards::v_ecma_376::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_pptx_mutation, KINDS};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🎞️semio-talk.pptx";
@@ -37,97 +36,47 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 }
 //#endregion 🔖️Input
 
-//#region 🔖️Law
-/// 🔬️ First structural divergence between two projections — a dotted field path plus both values,
-/// so a law that fails names WHICH field moved instead of only "not equal". Kept local to this
-/// adapter for the same reason `KINDS` is duplicated here: a case adapter is a leaf that links the
-/// test host and this subset's own oracle module, nothing else.
-fn first_divergence(path: &str, expected: &Json, actual: &Json) -> Option<String> {
-    let here = if path.is_empty() { "the projection".to_string() } else { path.to_string() };
-    let child = |key: &str| if path.is_empty() { key.to_string() } else { format!("{path}.{key}") };
-    match (expected, actual) {
-        (Json::Object(left), Json::Object(right)) => {
-            for (key, value) in left {
-                match right.iter().find(|(name, _)| name == key) {
-                    Some((_, other)) => {
-                        if let Some(found) = first_divergence(&child(key), value, other) {
-                            return Some(found);
-                        }
-                    }
-                    None => return Some(format!("{} is gone (the original carried {})", child(key), brief(value))),
-                }
-            }
-            right.iter().find(|(name, _)| !left.iter().any(|(other, _)| other == name)).map(|(name, value)| format!("{} appeared (absent in the original, now {})", child(name), brief(value)))
-        }
-        (Json::Array(left), Json::Array(right)) => {
-            if left.len() != right.len() {
-                return Some(format!("{here} has {} entries, the original had {}", right.len(), left.len()));
-            }
-            left.iter().zip(right.iter()).enumerate().find_map(|(index, (value, other))| first_divergence(&child(&index.to_string()), value, other))
-        }
-        (left, right) if left == right => None,
-        (left, right) => Some(format!("{here} is {} — the original had {}", brief(right), brief(left))),
-    }
-}
-
-/// ✂️ A projection value, truncated: a divergence message must stay readable, and this projection
-/// carries seven real slides of shapes.
-fn brief(value: &Json) -> String {
-    let text = value.to_string();
-    match text.char_indices().nth(160) {
-        Some((cut, _)) => format!("{}…", &text[..cut]),
-        None => text,
-    }
-}
-//#endregion 🔖️Law
-
 //#region 🔖️Oracle
-/// 🔮️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
-/// spec is carried in its doc string, not in the function it dispatches to.
+/// 🦠️ The forward half, with the OBSERVABILITY law asserted in role: the reference composition
+/// applies the kind to the real seven-slide deck and the result has to differ from the untouched
+/// presentation. Returning the projection uncompared is what made these nine scenarios pass whenever
+/// `zip`+`quick-xml` merely did not error. NOTHING is exempt — every declared kind is defined on the
+/// ordered slide list or on a shape inside it, which is exactly what `semantic-pptx-mutate-v1`
+/// reports, and that profile declares no writer freedom at all (`ignoreKeys: []`).
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_pptx_mutation(&bytes)?;
+    mutation_is_observable(&spec.str("kind"), &projection, &project_pptx_mutation(&input)?, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔮️ One handler shared by every `inverse-<kind>` scenario id -- and the place the inverse LAW is
-/// asserted, in-role, without needing the subject: `apply(inverse(m), apply(m, base))` must land
-/// back on the ORIGINAL presentation's own projection, read through the same independent reader.
-/// Producing that projection and returning it uncompared is what made every one of these scenarios
-/// pass whenever the reference composition merely did not error.
+/// ↩️ The INVERSE law, asserted in role without needing the subject: `apply(inverse(m), apply(m,
+/// base))` must land back on the ORIGINAL presentation's own projection, read through the same
+/// independent reader. No axis is dropped and no tolerance is allowed — slide ORDER included, which
+/// is the whole point of a vocabulary that declares `move-slide`.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let original = project_pptx_mutation(&input)?;
+    let kind = spec.str("kind");
     let bytes = oracle_apply_mutation_inverse(&input, &spec)?;
     let projection = project_pptx_mutation(&bytes)?;
-    if let Some(divergence) = first_divergence("", &original, &projection) {
-        return Err(format!("inverse-{}: the mutation followed by its own computed inverse did not restore the original presentation — {}", spec.str("kind"), divergence));
-    }
+    inverse_restores(&kind, &projection, &project_pptx_mutation(&input)?)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔒️ The ORACLE side of the no-byte-pass-through law, asserted rather than merely claimed in
-/// prose: the `zip`+`quick-xml` composition fully parses the real presentation and re-serializes it
-/// from its own typed slide/shape list alone (the same "no-mutation" routing `oracle_apply_mutation`
-/// already gives every other kind — this oracle's own header explains why every call, including
-/// `no-mutation`, is a genuine re-serialization), and BOTH halves of the law are checked here — the
-/// re-serialized bytes must differ from the input (nothing was copied) and their projection must be
-/// identical to the input's (nothing was lost).
+/// 🔒️ The ORACLE side of the identity law, both halves asserted: the `zip`+`quick-xml` composition
+/// unzips the real deck, parses every slide, regenerates every slide-related OPC part from its own
+/// typed slide/shape list and rezips — the same rebuild every kind goes through. The result must
+/// differ from the input, because two independent writers agree on neither compression nor part
+/// layout, and the projection must survive intact.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
-    let bytes = oracle_apply_mutation(&input, &no_mutation)?;
-    if bytes == input {
-        return Err("byte pass-through: the re-serialized package is bit-identical to the input".to_string());
-    }
+    let bytes = oracle_round_trip(&input)?;
+    reparsed_not_copied(&bytes, &input)?;
     let projection = project_pptx_mutation(&bytes)?;
-    let original = project_pptx_mutation(&input)?;
-    if let Some(divergence) = first_divergence("", &original, &projection) {
-        return Err(format!("identity round trip: parsing and re-serializing the real presentation did not preserve its semantic projection — {divergence}"));
-    }
+    round_trip_preserves(&projection, &project_pptx_mutation(&input)?)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -299,7 +248,7 @@ mod subject {
     //#endregion 🔖️Handlers
 
     /// 🧭️ Re-exported so `super::adapter()` can register the same 9-kind sweep for the subject role
-    /// without duplicating `KINDS` a third time.
+    /// from the one list the subset's own oracle module declares.
     pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
 //#endregion 🔖️Subject

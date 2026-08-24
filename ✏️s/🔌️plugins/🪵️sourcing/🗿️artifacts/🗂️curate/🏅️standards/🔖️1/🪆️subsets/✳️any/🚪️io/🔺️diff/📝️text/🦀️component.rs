@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Apply
-pub async fn apply_stock_extra_delta(stock_extra: &[ObjectKindExtra], delta: &CurateStockExtraDelta) -> protocol::MutationApplyResult<Vec<ObjectKindExtra>> {
+pub fn apply_stock_extra_delta(stock_extra: &[ObjectKindExtra], delta: &CurateStockExtraDelta) -> protocol::MutationApplyResult<Vec<ObjectKindExtra>> {
     let mut removed = std::collections::BTreeSet::new();
     for (index, id) in delta.removed.iter().enumerate() {
         if !removed.insert(id.as_str()) {
@@ -55,7 +55,7 @@ pub async fn apply_stock_extra_delta(stock_extra: &[ObjectKindExtra], delta: &Cu
     reorder_named(next, delta.reordered.as_deref(), |extra| extra.id.as_str())
 }
 
-pub async fn apply_curated_delta(curated: &[CuratedItem], delta: &CurateCuratedDelta) -> protocol::MutationApplyResult<Vec<CuratedItem>> {
+pub fn apply_curated_delta(curated: &[CuratedItem], delta: &CurateCuratedDelta) -> protocol::MutationApplyResult<Vec<CuratedItem>> {
     let mut removed = std::collections::BTreeSet::new();
     for (index, id) in delta.removed.iter().enumerate() {
         if !removed.insert(id.as_str()) {
@@ -97,7 +97,7 @@ pub async fn apply_curated_delta(curated: &[CuratedItem], delta: &CurateCuratedD
     reorder_named(next, delta.reordered.as_deref(), |item| item.object_id.as_str())
 }
 
-async fn reorder_named<T>(items: Vec<T>, order: Option<&[String]>, id: impl for<'a> Fn(&'a T) -> &'a str) -> protocol::MutationApplyResult<Vec<T>> {
+fn reorder_named<T>(items: Vec<T>, order: Option<&[String]>, id: impl for<'a> Fn(&'a T) -> &'a str) -> protocol::MutationApplyResult<Vec<T>> {
     let Some(order) = order else {
         return Ok(items);
     };
@@ -115,7 +115,7 @@ async fn reorder_named<T>(items: Vec<T>, order: Option<&[String]>, id: impl for<
 
 impl CurateDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &CurateArtifact) -> protocol::MutationApplyResult<CurateArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &CurateArtifact) -> protocol::MutationApplyResult<CurateArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -145,12 +145,12 @@ impl CurateDiff {
 }
 
 /// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
-pub async fn diff_set_snapshot(snapshot: &CurateSnapshot) -> CurateDiff {
+pub fn diff_set_snapshot(snapshot: &CurateSnapshot) -> CurateDiff {
     CurateDiff { artifact: Some(Box::new(CurateArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 impl MutationDiff<CurateSnapshot> for CurateDiff {
-    async fn apply(&self, snapshot: &CurateSnapshot) -> protocol::MutationApplyResult<CurateSnapshot> {
+    fn apply(&self, snapshot: &CurateSnapshot) -> protocol::MutationApplyResult<CurateSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -168,7 +168,7 @@ impl MutationDiff<CurateSnapshot> for CurateDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;

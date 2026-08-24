@@ -1,0 +1,5610 @@
+{
+ "📓️iso16757": {
+  "enum": "Iso16757Mutation",
+  "count": 21,
+  "kinds": [
+   {
+    "variant": "ChangeExchangeProcess",
+    "payload": "ChangeExchangeProcess",
+    "kind": "change-exchange-process",
+    "leaf": {
+     "dir": "🍃change-exchange-process",
+     "cases": [
+      "advances-the-exchange-stage-to-determine-product"
+     ],
+     "allcases": [
+      "advances-the-exchange-stage-to-determine-product"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateScriptLimits",
+    "payload": "UpdateScriptLimits",
+    "kind": "update-script-limits",
+    "leaf": {
+     "dir": "🌷update-script-limits",
+     "cases": [
+      "doubles-the-step-budget-and-quintuples-the-timeout"
+     ],
+     "allcases": [
+      "doubles-the-step-budget-and-quintuples-the-timeout"
+     ]
+    }
+   },
+   {
+    "variant": "ReplacePartNumberRule",
+    "payload": "ReplacePartNumberRule",
+    "kind": "replace-part-number-rule",
+    "leaf": {
+     "dir": "🍂replace-part-number-rule",
+     "cases": [
+      "swaps-the-literal-rule-for-a-height-driven-script"
+     ],
+     "allcases": [
+      "swaps-the-literal-rule-for-a-height-driven-script"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePartNumberInput",
+    "payload": "ChangePartNumberInput",
+    "kind": "change-part-number-input",
+    "leaf": {
+     "dir": "🌱change-part-number-input",
+     "cases": [
+      "raises-the-height-part-number-input-to-750"
+     ],
+     "allcases": [
+      "raises-the-height-part-number-input-to-750"
+     ]
+    }
+   },
+   {
+    "variant": "RemovePartNumberInput",
+    "payload": "RemovePartNumberInput",
+    "kind": "remove-part-number-input",
+    "leaf": {
+     "dir": "🌿remove-part-number-input",
+     "cases": [
+      "drops-the-length-part-number-input"
+     ],
+     "allcases": [
+      "drops-the-length-part-number-input"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSelectionClass",
+    "payload": "ChangeSelectionClass",
+    "kind": "change-selection-class",
+    "leaf": {
+     "dir": "🌴change-selection-class",
+     "cases": [
+      "retargets-the-selection-at-the-towel-radiator-class"
+     ],
+     "allcases": [
+      "retargets-the-selection-at-the-towel-radiator-class"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSelectionSeries",
+    "payload": "ChangeSelectionSeries",
+    "kind": "change-selection-series",
+    "leaf": {
+     "dir": "🌼change-selection-series",
+     "cases": [
+      "narrows-the-selection-to-the-pr-plus-series"
+     ],
+     "allcases": [
+      "narrows-the-selection-to-the-pr-plus-series"
+     ]
+    }
+   },
+   {
+    "variant": "AddSelectionConstraint",
+    "payload": "AddSelectionConstraint",
+    "kind": "add-selection-constraint",
+    "leaf": {
+     "dir": "🛁add-selection-constraint",
+     "cases": [
+      "appends-a-width-under-800-constraint"
+     ],
+     "allcases": [
+      "appends-a-width-under-800-constraint"
+     ]
+    }
+   },
+   {
+    "variant": "RemoveSelectionConstraint",
+    "payload": "RemoveSelectionConstraint",
+    "kind": "remove-selection-constraint",
+    "leaf": {
+     "dir": "🛋️remove-selection-constraint",
+     "cases": [
+      "drops-the-trailing-length-constraint"
+     ],
+     "allcases": [
+      "drops-the-trailing-length-constraint"
+     ]
+    }
+   },
+   {
+    "variant": "RenameCatalogue",
+    "payload": "RenameCatalogue",
+    "kind": "rename-catalogue",
+    "leaf": {
+     "dir": "🌲rename-catalogue",
+     "cases": [
+      "restamps-the-catalogue-as-the-2026-edition"
+     ],
+     "allcases": [
+      "restamps-the-catalogue-as-the-2026-edition"
+     ]
+    }
+   },
+   {
+    "variant": "RenameManufacturer",
+    "payload": "RenameManufacturer",
+    "kind": "rename-manufacturer",
+    "leaf": {
+     "dir": "🌳rename-manufacturer",
+     "cases": [
+      "adds-the-ag-suffix-to-the-manufacturer"
+     ],
+     "allcases": [
+      "adds-the-ag-suffix-to-the-manufacturer"
+     ]
+    }
+   },
+   {
+    "variant": "CreateProductGroup",
+    "payload": "CreateProductGroup",
+    "kind": "create-product-group",
+    "leaf": {
+     "dir": "🍀create-product-group",
+     "cases": [
+      "appends-a-towel-radiators-group"
+     ],
+     "allcases": [
+      "appends-a-towel-radiators-group"
+     ]
+    }
+   },
+   {
+    "variant": "DeleteProductGroup",
+    "payload": "DeleteProductGroup",
+    "kind": "delete-product-group",
+    "leaf": {
+     "dir": "🌹delete-product-group",
+     "cases": [
+      "removes-the-radiators-group-and-strands-its-class"
+     ],
+     "allcases": [
+      "removes-the-radiators-group-and-strands-its-class"
+     ]
+    }
+   },
+   {
+    "variant": "RenameProductGroup",
+    "payload": "RenameProductGroup",
+    "kind": "rename-product-group",
+    "leaf": {
+     "dir": "🚿rename-product-group",
+     "cases": [
+      "renames-the-radiators-group-to-panel-radiators"
+     ],
+     "allcases": [
+      "renames-the-radiators-group-to-panel-radiators"
+     ]
+    }
+   },
+   {
+    "variant": "CreateProduct",
+    "payload": "CreateProduct",
+    "kind": "create-product",
+    "leaf": {
+     "dir": "🍁create-product",
+     "cases": [
+      "appends-a-pr900-product-to-the-existing-series"
+     ],
+     "allcases": [
+      "appends-a-pr900-product-to-the-existing-series"
+     ]
+    }
+   },
+   {
+    "variant": "DeleteProduct",
+    "payload": "DeleteProduct",
+    "kind": "delete-product",
+    "leaf": {
+     "dir": "🌸delete-product",
+     "cases": [
+      "removes-the-pr600-product-from-the-catalogue"
+     ],
+     "allcases": [
+      "removes-the-pr600-product-from-the-catalogue"
+     ]
+    }
+   },
+   {
+    "variant": "RenameProduct",
+    "payload": "RenameProduct",
+    "kind": "rename-product",
+    "leaf": {
+     "dir": "🛏️rename-product",
+     "cases": [
+      "renames-pr600-to-the-compact-variant-name"
+     ],
+     "allcases": [
+      "renames-pr600-to-the-compact-variant-name"
+     ]
+    }
+   },
+   {
+    "variant": "CreatePropertyDefinition",
+    "payload": "CreatePropertyDefinition",
+    "kind": "create-property-definition",
+    "leaf": {
+     "dir": "🌾create-property-definition",
+     "cases": [
+      "appends-a-selection-scoped-length-property"
+     ],
+     "allcases": [
+      "appends-a-selection-scoped-length-property"
+     ]
+    }
+   },
+   {
+    "variant": "DeletePropertyDefinition",
+    "payload": "DeletePropertyDefinition",
+    "kind": "delete-property-definition",
+    "leaf": {
+     "dir": "🌺delete-property-definition",
+     "cases": [
+      "removes-the-height-property-definition"
+     ],
+     "allcases": [
+      "removes-the-height-property-definition"
+     ]
+    }
+   },
+   {
+    "variant": "CreateSubject",
+    "payload": "CreateSubject",
+    "kind": "create-subject",
+    "leaf": {
+     "dir": "🌵create-subject",
+     "cases": [
+      "appends-a-towel-radiator-subject-under-the-radiator-parent"
+     ],
+     "allcases": [
+      "appends-a-towel-radiator-subject-under-the-radiator-parent"
+     ]
+    }
+   },
+   {
+    "variant": "DeleteSubject",
+    "payload": "DeleteSubject",
+    "kind": "delete-subject",
+    "leaf": {
+     "dir": "🌻delete-subject",
+     "cases": [
+      "removes-the-radiator-subject-from-the-dictionary"
+     ],
+     "allcases": [
+      "removes-the-radiator-subject-from-the-dictionary"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📔️vdi3805": {
+  "enum": "Vdi3805Mutation",
+  "count": 19,
+  "kinds": [
+   {
+    "variant": "UpdateManufacturerFile",
+    "payload": "UpdateManufacturerFile",
+    "kind": "update-manufacturer-file",
+    "leaf": {
+     "dir": "🏕️update-manufacturer-file",
+     "cases": [
+      "renames-the-header-manufacturer-to-acme"
+     ],
+     "allcases": [
+      "renames-the-header-manufacturer-to-acme"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCorrectionAsOf",
+    "payload": "ChangeCorrectionAsOf",
+    "kind": "change-correction-as-of",
+    "leaf": {
+     "dir": "🏜️change-correction-as-of",
+     "cases": [
+      "advances-the-correction-cut-off-to-2025-03"
+     ],
+     "allcases": [
+      "advances-the-correction-cut-off-to-2025-03"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeStrictMode",
+    "payload": "ChangeStrictMode",
+    "kind": "change-strict-mode",
+    "leaf": {
+     "dir": "🦋change-strict-mode",
+     "cases": [
+      "turns-strict-mode-on"
+     ],
+     "allcases": [
+      "turns-strict-mode-on"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateLimits",
+    "payload": "UpdateLimits",
+    "kind": "update-limits",
+    "leaf": {
+     "dir": "🦈update-limits",
+     "cases": [
+      "tightens-every-untrusted-input-limit"
+     ],
+     "allcases": [
+      "tightens-every-untrusted-input-limit"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEditionProfile",
+    "payload": "ChangeEditionProfile",
+    "kind": "change-edition-profile",
+    "leaf": {
+     "dir": "🐝change-edition-profile",
+     "cases": [
+      "switches-sheet-8-from-legacy-to-current"
+     ],
+     "allcases": [
+      "switches-sheet-8-from-legacy-to-current"
+     ]
+    }
+   },
+   {
+    "variant": "RemoveEditionProfile",
+    "payload": "RemoveEditionProfile",
+    "kind": "remove-edition-profile",
+    "leaf": {
+     "dir": "⛰️remove-edition-profile",
+     "cases": [
+      "clears-the-sheet-8-legacy-override"
+     ],
+     "allcases": [
+      "clears-the-sheet-8-legacy-override"
+     ]
+    }
+   },
+   {
+    "variant": "CreateProduct",
+    "payload": "CreateProduct",
+    "kind": "create-product",
+    "leaf": {
+     "dir": "🪵create-product",
+     "cases": [
+      "appends-vlv-80-002-and-its-index-entry"
+     ],
+     "allcases": [
+      "appends-vlv-80-002-and-its-index-entry"
+     ]
+    }
+   },
+   {
+    "variant": "DeleteProduct",
+    "payload": "DeleteProduct",
+    "kind": "delete-product",
+    "leaf": {
+     "dir": "🐳delete-product",
+     "cases": [
+      "removes-vlv-50-001-and-its-index-entry"
+     ],
+     "allcases": [
+      "removes-vlv-50-001-and-its-index-entry"
+     ]
+    }
+   },
+   {
+    "variant": "RenameProduct",
+    "payload": "RenameProduct",
+    "kind": "rename-product",
+    "leaf": {
+     "dir": "🏖️rename-product",
+     "cases": [
+      "retitles-vlv-50-001-and-resyncs-its-index-tags"
+     ],
+     "allcases": [
+      "retitles-vlv-50-001-and-resyncs-its-index-tags"
+     ]
+    }
+   },
+   {
+    "variant": "ReplaceProductConfiguration",
+    "payload": "ReplaceProductConfiguration",
+    "kind": "replace-product-configuration",
+    "leaf": {
+     "dir": "🗻replace-product-configuration",
+     "cases": [
+      "reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn"
+     ],
+     "allcases": [
+      "reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn"
+     ]
+    }
+   },
+   {
+    "variant": "CreateGeometry",
+    "payload": "CreateGeometry",
+    "kind": "create-geometry",
+    "leaf": {
+     "dir": "🦭create-geometry",
+     "cases": [
+      "adds-the-geom-valve-80-definition"
+     ],
+     "allcases": [
+      "adds-the-geom-valve-80-definition"
+     ]
+    }
+   },
+   {
+    "variant": "DeleteGeometry",
+    "payload": "DeleteGeometry",
+    "kind": "delete-geometry",
+    "leaf": {
+     "dir": "🐬delete-geometry",
+     "cases": [
+      "removes-the-geom-valve-50-definition"
+     ],
+     "allcases": [
+      "removes-the-geom-valve-50-definition"
+     ]
+    }
+   },
+   {
+    "variant": "ResizeGeometry",
+    "payload": "ResizeGeometry",
+    "kind": "resize-geometry",
+    "leaf": {
+     "dir": "🏟️resize-geometry",
+     "cases": [
+      "doubles-the-geom-valve-50-bounding-box"
+     ],
+     "allcases": [
+      "doubles-the-geom-valve-50-bounding-box"
+     ]
+    }
+   },
+   {
+    "variant": "AddGeometryConnection",
+    "payload": "AddGeometryConnection",
+    "kind": "add-geometry-connection",
+    "leaf": {
+     "dir": "🐞add-geometry-connection",
+     "cases": [
+      "attaches-the-drain-connection-to-geom-valve-50"
+     ],
+     "allcases": [
+      "attaches-the-drain-connection-to-geom-valve-50"
+     ]
+    }
+   },
+   {
+    "variant": "RemoveGeometryConnection",
+    "payload": "RemoveGeometryConnection",
+    "kind": "remove-geometry-connection",
+    "leaf": {
+     "dir": "🏔️remove-geometry-connection",
+     "cases": [
+      "detaches-the-out-connection-from-geom-valve-50"
+     ],
+     "allcases": [
+      "detaches-the-out-connection-from-geom-valve-50"
+     ]
+    }
+   },
+   {
+    "variant": "ReplaceGeometryParameters",
+    "payload": "ReplaceGeometryParameters",
+    "kind": "replace-geometry-parameters",
+    "leaf": {
+     "dir": "🐌replace-geometry-parameters",
+     "cases": [
+      "rescales-geom-valve-50-to-half-and-adds-clearance"
+     ],
+     "allcases": [
+      "rescales-geom-valve-50-to-half-and-adds-clearance"
+     ]
+    }
+   },
+   {
+    "variant": "CreateCurve",
+    "payload": "CreateCurve",
+    "kind": "create-curve",
+    "leaf": {
+     "dir": "🏝️create-curve",
+     "cases": [
+      "adds-the-curve-dp-pressure-drop-curve"
+     ],
+     "allcases": [
+      "adds-the-curve-dp-pressure-drop-curve"
+     ]
+    }
+   },
+   {
+    "variant": "DeleteCurve",
+    "payload": "DeleteCurve",
+    "kind": "delete-curve",
+    "leaf": {
+     "dir": "🐢delete-curve",
+     "cases": [
+      "removes-the-curve-kvs-flow-curve"
+     ],
+     "allcases": [
+      "removes-the-curve-kvs-flow-curve"
+     ]
+    }
+   },
+   {
+    "variant": "ReplaceCurvePoints",
+    "payload": "ReplaceCurvePoints",
+    "kind": "replace-curve-points",
+    "leaf": {
+     "dir": "🏞️replace-curve-points",
+     "cases": [
+      "resamples-curve-kvs-onto-three-points"
+     ],
+     "allcases": [
+      "resamples-curve-kvs-onto-three-points"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📕️din4108": {
+  "enum": "Din4108Mutation",
+  "count": 22,
+  "kinds": [
+   {
+    "variant": "ChangeCategory",
+    "payload": "ChangeCategory",
+    "kind": "change-category",
+    "leaf": {
+     "dir": "🪜change-category",
+     "cases": [
+      "retypes-the-assembly-as-office"
+     ],
+     "allcases": [
+      "retypes-the-assembly-as-office"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeClimate",
+    "payload": "ChangeClimate",
+    "kind": "change-climate",
+    "leaf": {
+     "dir": "🛠️change-climate",
+     "cases": [
+      "moves-the-building-to-climate-zone-4"
+     ],
+     "allcases": [
+      "moves-the-building-to-climate-zone-4"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAirtightnessN50",
+    "payload": "ChangeAirtightnessN50",
+    "kind": "change-airtightness-n50",
+    "leaf": {
+     "dir": "🧰change-airtightness-n50",
+     "cases": [
+      "tightens-n50-to-1-point-5-per-hour"
+     ],
+     "allcases": [
+      "tightens-n50-to-1-point-5-per-hour"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePsiTimesLSum",
+    "payload": "ChangePsiTimesLSum",
+    "kind": "change-psi-times-l-sum",
+    "leaf": {
+     "dir": "🧯change-psi-times-l-sum",
+     "cases": [
+      "raises-the-thermal-bridge-sum-to-0-point-05"
+     ],
+     "allcases": [
+      "raises-the-thermal-bridge-sum-to-0-point-05"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeRhInt",
+    "payload": "ChangeRhInt",
+    "kind": "change-rh-int",
+    "leaf": {
+     "dir": "🪣change-rh-int",
+     "cases": [
+      "raises-indoor-relative-humidity-to-0-point-65"
+     ],
+     "allcases": [
+      "raises-indoor-relative-humidity-to-0-point-65"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCatalogId",
+    "payload": "ChangeCatalogId",
+    "kind": "change-catalog-id",
+    "leaf": {
+     "dir": "🧵change-catalog-id",
+     "cases": [
+      "repoints-the-catalogue-entry-to-aw-07"
+     ],
+     "allcases": [
+      "repoints-the-catalogue-entry-to-aw-07"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMaterialId",
+    "payload": "ChangeMaterialId",
+    "kind": "change-material-id",
+    "leaf": {
+     "dir": "🪥change-material-id",
+     "cases": [
+      "swaps-the-insulation-material-to-eps"
+     ],
+     "allcases": [
+      "swaps-the-insulation-material-to-eps"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAirtightnessClass",
+    "payload": "ChangeAirtightnessClass",
+    "kind": "change-airtightness-class",
+    "leaf": {
+     "dir": "🪚change-airtightness-class",
+     "cases": [
+      "upgrades-the-airtightness-class-to-class1"
+     ],
+     "allcases": [
+      "upgrades-the-airtightness-class-to-class1"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTIntC",
+    "payload": "ChangeTIntC",
+    "kind": "change-t-int-c",
+    "leaf": {
+     "dir": "🚨change-t-int-c",
+     "cases": [
+      "raises-the-indoor-design-temperature-to-22-point-5-c"
+     ],
+     "allcases": [
+      "raises-the-indoor-design-temperature-to-22-point-5-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSolarAbsorptance",
+    "payload": "ChangeSolarAbsorptance",
+    "kind": "change-solar-absorptance",
+    "leaf": {
+     "dir": "🏷️change-solar-absorptance",
+     "cases": [
+      "lightens-the-facade-to-absorptance-0-point-25"
+     ],
+     "allcases": [
+      "lightens-the-facade-to-absorptance-0-point-25"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeIrradianceWM2",
+    "payload": "ChangeIrradianceWM2",
+    "kind": "change-irradiance-wm2",
+    "leaf": {
+     "dir": "🧲change-irradiance-wm2",
+     "cases": [
+      "raises-design-irradiance-to-750-w-per-m2"
+     ],
+     "allcases": [
+      "raises-design-irradiance-to-750-w-per-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMoistureMuExterior",
+    "payload": "ChangeMoistureMuExterior",
+    "kind": "change-moisture-mu-exterior",
+    "leaf": {
+     "dir": "🪛change-moisture-mu-exterior",
+     "cases": [
+      "raises-the-exterior-mu-value-to-20"
+     ],
+     "allcases": [
+      "raises-the-exterior-mu-value-to-20"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMoistureMuInterior",
+    "payload": "ChangeMoistureMuInterior",
+    "kind": "change-moisture-mu-interior",
+    "leaf": {
+     "dir": "🪝change-moisture-mu-interior",
+     "cases": [
+      "raises-the-interior-mu-value-to-2-point-5"
+     ],
+     "allcases": [
+      "raises-the-interior-mu-value-to-2-point-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEnvelopeAreaM2",
+    "payload": "ChangeEnvelopeAreaM2",
+    "kind": "change-envelope-area-m2",
+    "leaf": {
+     "dir": "🪢change-envelope-area-m2",
+     "cases": [
+      "grows-the-envelope-to-150-m2"
+     ],
+     "allcases": [
+      "grows-the-envelope-to-150-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBb2DetailsConform",
+    "payload": "ChangeBb2DetailsConform",
+    "kind": "change-bb2-details-conform",
+    "leaf": {
+     "dir": "🔀change-bb2-details-conform",
+     "cases": [
+      "declares-the-beiblatt-2-details-non-conforming"
+     ],
+     "allcases": [
+      "declares-the-beiblatt-2-details-non-conforming"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeApplicationType",
+    "payload": "ChangeApplicationType",
+    "kind": "change-application-type",
+    "leaf": {
+     "dir": "🪤change-application-type",
+     "cases": [
+      "reclassifies-the-application-type-as-wab"
+     ],
+     "allcases": [
+      "reclassifies-the-application-type-as-wab"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDeclaredApplicationClass",
+    "payload": "ChangeDeclaredApplicationClass",
+    "kind": "change-declared-application-class",
+    "leaf": {
+     "dir": "🧶change-declared-application-class",
+     "cases": [
+      "declares-application-class-kh"
+     ],
+     "allcases": [
+      "declares-application-class-kh"
+     ]
+    }
+   },
+   {
+    "variant": "InsertLayer",
+    "payload": "InsertLayer",
+    "kind": "insert-layer",
+    "leaf": {
+     "dir": "🔢insert-layer",
+     "cases": [
+      "inserts-an-interior-plaster-layer-at-index-1"
+     ],
+     "allcases": [
+      "inserts-an-interior-plaster-layer-at-index-1"
+     ]
+    }
+   },
+   {
+    "variant": "RemoveLayer",
+    "payload": "RemoveLayer",
+    "kind": "remove-layer",
+    "leaf": {
+     "dir": "🛡️remove-layer",
+     "cases": [
+      "removes-the-load-bearing-masonry-layer"
+     ],
+     "allcases": [
+      "removes-the-load-bearing-masonry-layer"
+     ]
+    }
+   },
+   {
+    "variant": "ReorderLayers",
+    "payload": "ReorderLayers",
+    "kind": "reorder-layers",
+    "leaf": {
+     "dir": "🧷reorder-layers",
+     "cases": [
+      "moves-the-insulation-in-front-of-the-masonry"
+     ],
+     "allcases": [
+      "moves-the-insulation-in-front-of-the-masonry"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLayerThickness",
+    "payload": "ChangeLayerThickness",
+    "kind": "change-layer-thickness",
+    "leaf": {
+     "dir": "🪡change-layer-thickness",
+     "cases": [
+      "thickens-the-insulation-layer-to-0-point-2-m"
+     ],
+     "allcases": [
+      "thickens-the-insulation-layer-to-0-point-2-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLayerLambda",
+    "payload": "ChangeLayerLambda",
+    "kind": "change-layer-lambda",
+    "leaf": {
+     "dir": "🪒change-layer-lambda",
+     "cases": [
+      "degrades-the-masonry-lambda-to-0-point-5"
+     ],
+     "allcases": [
+      "degrades-the-masonry-lambda-to-0-point-5"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📗️din16798": {
+  "enum": "Din16798Mutation",
+  "count": 62,
+  "kinds": [
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🏷️change-annex",
+     "cases": [
+      "switches-the-check-to-the-en-annex"
+     ],
+     "allcases": [
+      "switches-the-check-to-the-en-annex"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeOccupancy",
+    "payload": "ChangeOccupancy",
+    "kind": "change-occupancy",
+    "leaf": {
+     "dir": "🍂change-occupancy",
+     "cases": [
+      "reclassifies-the-space-as-office"
+     ],
+     "allcases": [
+      "reclassifies-the-space-as-office"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeComfortCategory",
+    "payload": "ChangeComfortCategory",
+    "kind": "change-comfort-category",
+    "leaf": {
+     "dir": "🪛change-comfort-category",
+     "cases": [
+      "tightens-the-comfort-category-to-i"
+     ],
+     "allcases": [
+      "tightens-the-comfort-category-to-i"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTOpC",
+    "payload": "ChangeTOpC",
+    "kind": "change-t-op-c",
+    "leaf": {
+     "dir": "🌊change-t-op-c",
+     "cases": [
+      "raises-the-operative-temperature-to-24-point-5-c"
+     ],
+     "allcases": [
+      "raises-the-operative-temperature-to-24-point-5-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeRhPercent",
+    "payload": "ChangeRhPercent",
+    "kind": "change-rh-percent",
+    "leaf": {
+     "dir": "🌹change-rh-percent",
+     "cases": [
+      "drops-indoor-humidity-to-42-point-5-percent"
+     ],
+     "allcases": [
+      "drops-indoor-humidity-to-42-point-5-percent"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAirSpeedMS",
+    "payload": "ChangeAirSpeedMS",
+    "kind": "change-air-speed-ms",
+    "leaf": {
+     "dir": "🔀change-air-speed-ms",
+     "cases": [
+      "doubles-the-draught-air-speed-to-0-point-25-ms"
+     ],
+     "allcases": [
+      "doubles-the-draught-air-speed-to-0-point-25-ms"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeThetaRmC",
+    "payload": "ChangeThetaRmC",
+    "kind": "change-theta-rm-c",
+    "leaf": {
+     "dir": "🌍️change-theta-rm-c",
+     "cases": [
+      "raises-the-running-mean-outdoor-temperature-to-18-point-5-c"
+     ],
+     "allcases": [
+      "raises-the-running-mean-outdoor-temperature-to-18-point-5-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCo2Ppm",
+    "payload": "ChangeCo2Ppm",
+    "kind": "change-co2-ppm",
+    "leaf": {
+     "dir": "🛠️change-co2-ppm",
+     "cases": [
+      "raises-the-measured-co2-to-950-ppm"
+     ],
+     "allcases": [
+      "raises-the-measured-co2-to-950-ppm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDfPercent",
+    "payload": "ChangeDfPercent",
+    "kind": "change-df-percent",
+    "leaf": {
+     "dir": "🧵change-df-percent",
+     "cases": [
+      "raises-the-daylight-factor-to-3-point-75-percent"
+     ],
+     "allcases": [
+      "raises-the-daylight-factor-to-3-point-75-percent"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLAeqDb",
+    "payload": "ChangeLAeqDb",
+    "kind": "change-l-aeq-db",
+    "leaf": {
+     "dir": "🌳change-l-aeq-db",
+     "cases": [
+      "raises-the-equivalent-sound-level-to-30-db"
+     ],
+     "allcases": [
+      "raises-the-equivalent-sound-level-to-30-db"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePersons",
+    "payload": "ChangePersons",
+    "kind": "change-persons",
+    "leaf": {
+     "dir": "🌱change-persons",
+     "cases": [
+      "raises-the-design-occupancy-to-16-people"
+     ],
+     "allcases": [
+      "raises-the-design-occupancy-to-16-people"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeIdaClass",
+    "payload": "ChangeIdaClass",
+    "kind": "change-ida-class",
+    "leaf": {
+     "dir": "🌵change-ida-class",
+     "cases": [
+      "relaxes-the-indoor-air-class-to-ida-3"
+     ],
+     "allcases": [
+      "relaxes-the-indoor-air-class-to-ida-3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVentilationM3H",
+    "payload": "ChangeVentilationM3H",
+    "kind": "change-ventilation-m3-h",
+    "leaf": {
+     "dir": "🌐change-ventilation-m3-h",
+     "cases": [
+      "raises-the-supply-airflow-to-360-m3-per-hour"
+     ],
+     "allcases": [
+      "raises-the-supply-airflow-to-360-m3-per-hour"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFloorAreaM2",
+    "payload": "ChangeFloorAreaM2",
+    "kind": "change-floor-area-m2",
+    "leaf": {
+     "dir": "🧼change-floor-area-m2",
+     "cases": [
+      "grows-the-conditioned-floor-area-to-120-m2"
+     ],
+     "allcases": [
+      "grows-the-conditioned-floor-area-to-120-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBedrooms",
+    "payload": "ChangeBedrooms",
+    "kind": "change-bedrooms",
+    "leaf": {
+     "dir": "🔢change-bedrooms",
+     "cases": [
+      "adds-a-fourth-bedroom"
+     ],
+     "allcases": [
+      "adds-a-fourth-bedroom"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDwellingVentilationM3H",
+    "payload": "ChangeDwellingVentilationM3H",
+    "kind": "change-dwelling-ventilation-m3-h",
+    "leaf": {
+     "dir": "🧲change-dwelling-ventilation-m3-h",
+     "cases": [
+      "raises-the-dwelling-airflow-to-96-m3-per-hour"
+     ],
+     "allcases": [
+      "raises-the-dwelling-airflow-to-96-m3-per-hour"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeOccupants",
+    "payload": "ChangeOccupants",
+    "kind": "change-occupants",
+    "leaf": {
+     "dir": "🍃change-occupants",
+     "cases": [
+      "raises-the-household-to-five-occupants"
+     ],
+     "allcases": [
+      "raises-the-household-to-five-occupants"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeResidentialVentilationM3H",
+    "payload": "ChangeResidentialVentilationM3H",
+    "kind": "change-residential-ventilation-m3-h",
+    "leaf": {
+     "dir": "🌸change-residential-ventilation-m3-h",
+     "cases": [
+      "raises-the-residential-airflow-to-110-m3-per-hour"
+     ],
+     "allcases": [
+      "raises-the-residential-airflow-to-110-m3-per-hour"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSfpWM3S",
+    "payload": "ChangeSfpWM3S",
+    "kind": "change-sfp-wm3-s",
+    "leaf": {
+     "dir": "🌻change-sfp-wm3-s",
+     "cases": [
+      "improves-the-specific-fan-power-to-1250-w-per-m3-s"
+     ],
+     "allcases": [
+      "improves-the-specific-fan-power-to-1250-w-per-m3-s"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSfpRequiredClass",
+    "payload": "ChangeSfpRequiredClass",
+    "kind": "change-sfp-required-class",
+    "leaf": {
+     "dir": "🌺change-sfp-required-class",
+     "cases": [
+      "tightens-the-required-sfp-class-to-3"
+     ],
+     "allcases": [
+      "tightens-the-required-sfp-class-to-3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHeatRecoveryEta",
+    "payload": "ChangeHeatRecoveryEta",
+    "kind": "change-heat-recovery-eta",
+    "leaf": {
+     "dir": "🪑change-heat-recovery-eta",
+     "cases": [
+      "raises-the-achieved-heat-recovery-to-0-point-875"
+     ],
+     "allcases": [
+      "raises-the-achieved-heat-recovery-to-0-point-875"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHeatRecoveryEtaMin",
+    "payload": "ChangeHeatRecoveryEtaMin",
+    "kind": "change-heat-recovery-eta-min",
+    "leaf": {
+     "dir": "🪞change-heat-recovery-eta-min",
+     "cases": [
+      "raises-the-required-heat-recovery-minimum-to-0-point-625"
+     ],
+     "allcases": [
+      "raises-the-required-heat-recovery-minimum-to-0-point-625"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSystemType",
+    "payload": "ChangeSystemType",
+    "kind": "change-system-type",
+    "leaf": {
+     "dir": "🌰change-system-type",
+     "cases": [
+      "switches-to-a-decentral-mechanical-system"
+     ],
+     "allcases": [
+      "switches-to-a-decentral-mechanical-system"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeYearsSinceInspection",
+    "payload": "ChangeYearsSinceInspection",
+    "kind": "change-years-since-inspection",
+    "leaf": {
+     "dir": "🏔️change-years-since-inspection",
+     "cases": [
+      "ages-the-last-inspection-to-six-years"
+     ],
+     "allcases": [
+      "ages-the-last-inspection-to-six-years"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHumidificationRequiredKgH",
+    "payload": "ChangeHumidificationRequiredKgH",
+    "kind": "change-humidification-required-kg-h",
+    "leaf": {
+     "dir": "🌾change-humidification-required-kg-h",
+     "cases": [
+      "raises-the-required-humidification-to-3-point-5-kg-per-hour"
+     ],
+     "allcases": [
+      "raises-the-required-humidification-to-3-point-5-kg-per-hour"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHumidificationProvidedKgH",
+    "payload": "ChangeHumidificationProvidedKgH",
+    "kind": "change-humidification-provided-kg-h",
+    "leaf": {
+     "dir": "🍀change-humidification-provided-kg-h",
+     "cases": [
+      "drops-the-provided-humidification-to-1-point-25-kg-per-hour"
+     ],
+     "allcases": [
+      "drops-the-provided-humidification-to-1-point-25-kg-per-hour"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFanQVM3S",
+    "payload": "ChangeFanQVM3S",
+    "kind": "change-fan-qvm3-s",
+    "leaf": {
+     "dir": "🪥change-fan-qvm3-s",
+     "cases": [
+      "raises-the-fan-volume-flow-to-1-point-5-m3-per-second"
+     ],
+     "allcases": [
+      "raises-the-fan-volume-flow-to-1-point-5-m3-per-second"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFanTRunH",
+    "payload": "ChangeFanTRunH",
+    "kind": "change-fan-t-run-h",
+    "leaf": {
+     "dir": "🧴change-fan-t-run-h",
+     "cases": [
+      "extends-the-daily-fan-runtime-to-12-hours"
+     ],
+     "allcases": [
+      "extends-the-daily-fan-runtime-to-12-hours"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFanEnergyReferenceKwh",
+    "payload": "ChangeFanEnergyReferenceKwh",
+    "kind": "change-fan-energy-reference-kwh",
+    "leaf": {
+     "dir": "🪒change-fan-energy-reference-kwh",
+     "cases": [
+      "raises-the-fan-energy-reference-to-18-kwh"
+     ],
+     "allcases": [
+      "raises-the-fan-energy-reference-to-18-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeNightSetbackK",
+    "payload": "ChangeNightSetbackK",
+    "kind": "change-night-setback-k",
+    "leaf": {
+     "dir": "🍁change-night-setback-k",
+     "cases": [
+      "deepens-the-night-setback-to-5-kelvin"
+     ],
+     "allcases": [
+      "deepens-the-night-setback-to-5-kelvin"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHrMDotKgS",
+    "payload": "ChangeHrMDotKgS",
+    "kind": "change-hr-m-dot-kg-s",
+    "leaf": {
+     "dir": "🚿change-hr-m-dot-kg-s",
+     "cases": [
+      "raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second"
+     ],
+     "allcases": [
+      "raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHrCpJKgk",
+    "payload": "ChangeHrCpJKgk",
+    "kind": "change-hr-cp-j-kgk",
+    "leaf": {
+     "dir": "🛋️change-hr-cp-j-kgk",
+     "cases": [
+      "corrects-the-air-specific-heat-to-1010-j-per-kgk"
+     ],
+     "allcases": [
+      "corrects-the-air-specific-heat-to-1010-j-per-kgk"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHrDeltaTC",
+    "payload": "ChangeHrDeltaTC",
+    "kind": "change-hr-delta-tc",
+    "leaf": {
+     "dir": "🛏️change-hr-delta-tc",
+     "cases": [
+      "drops-the-heat-recovery-temperature-lift-to-12-point-5-c"
+     ],
+     "allcases": [
+      "drops-the-heat-recovery-temperature-lift-to-12-point-5-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHrTH",
+    "payload": "ChangeHrTH",
+    "kind": "change-hr-th",
+    "leaf": {
+     "dir": "🌿change-hr-th",
+     "cases": [
+      "extends-the-heat-recovery-operating-hours-to-14"
+     ],
+     "allcases": [
+      "extends-the-heat-recovery-operating-hours-to-14"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHrSavingsReferenceKwh",
+    "payload": "ChangeHrSavingsReferenceKwh",
+    "kind": "change-hr-savings-reference-kwh",
+    "leaf": {
+     "dir": "🛁change-hr-savings-reference-kwh",
+     "cases": [
+      "raises-the-heat-recovery-savings-reference-to-65-kwh"
+     ],
+     "allcases": [
+      "raises-the-heat-recovery-savings-reference-to-65-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeN50HInv",
+    "payload": "ChangeN50HInv",
+    "kind": "change-n50-h-inv",
+    "leaf": {
+     "dir": "🌲change-n50-h-inv",
+     "cases": [
+      "loosens-the-blower-door-result-to-2-point-5-per-hour"
+     ],
+     "allcases": [
+      "loosens-the-blower-door-result-to-2-point-5-per-hour"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVolumeM3",
+    "payload": "ChangeVolumeM3",
+    "kind": "change-volume-m3",
+    "leaf": {
+     "dir": "🗻change-volume-m3",
+     "cases": [
+      "grows-the-air-volume-to-640-m3"
+     ],
+     "allcases": [
+      "grows-the-air-volume-to-640-m3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeInfiltrationAllowanceM3H",
+    "payload": "ChangeInfiltrationAllowanceM3H",
+    "kind": "change-infiltration-allowance-m3-h",
+    "leaf": {
+     "dir": "🌴change-infiltration-allowance-m3-h",
+     "cases": [
+      "raises-the-infiltration-allowance-to-52-point-5-m3-per-hour"
+     ],
+     "allcases": [
+      "raises-the-infiltration-allowance-to-52-point-5-m3-per-hour"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCellarAreaM2",
+    "payload": "ChangeCellarAreaM2",
+    "kind": "change-cellar-area-m2",
+    "leaf": {
+     "dir": "🛡️change-cellar-area-m2",
+     "cases": [
+      "grows-the-cellar-floor-area-to-62-point-5-m2"
+     ],
+     "allcases": [
+      "grows-the-cellar-floor-area-to-62-point-5-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCellarVentilationM3H",
+    "payload": "ChangeCellarVentilationM3H",
+    "kind": "change-cellar-ventilation-m3-h",
+    "leaf": {
+     "dir": "🧯change-cellar-ventilation-m3-h",
+     "cases": [
+      "raises-the-cellar-airflow-to-22-point-5-m3-per-hour"
+     ],
+     "allcases": [
+      "raises-the-cellar-airflow-to-22-point-5-m3-per-hour"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHTrWK",
+    "payload": "ChangeHTrWK",
+    "kind": "change-h-tr-wk",
+    "leaf": {
+     "dir": "🧹change-h-tr-wk",
+     "cases": [
+      "improves-the-transmission-heat-transfer-to-175-w-per-k"
+     ],
+     "allcases": [
+      "improves-the-transmission-heat-transfer-to-175-w-per-k"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHVeWK",
+    "payload": "ChangeHVeWK",
+    "kind": "change-h-ve-wk",
+    "leaf": {
+     "dir": "🧺change-h-ve-wk",
+     "cases": [
+      "raises-the-ventilation-heat-transfer-to-125-w-per-k"
+     ],
+     "allcases": [
+      "raises-the-ventilation-heat-transfer-to-125-w-per-k"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeThetaEC",
+    "payload": "ChangeThetaEC",
+    "kind": "change-theta-ec",
+    "leaf": {
+     "dir": "🪨change-theta-ec",
+     "cases": [
+      "raises-the-external-design-temperature-to-34-point-5-c"
+     ],
+     "allcases": [
+      "raises-the-external-design-temperature-to-34-point-5-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeThetaSetC",
+    "payload": "ChangeThetaSetC",
+    "kind": "change-theta-set-c",
+    "leaf": {
+     "dir": "🌎️change-theta-set-c",
+     "cases": [
+      "lowers-the-cooling-set-point-to-25-c"
+     ],
+     "allcases": [
+      "lowers-the-cooling-set-point-to-25-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCoolingDeltaTH",
+    "payload": "ChangeCoolingDeltaTH",
+    "kind": "change-cooling-delta-th",
+    "leaf": {
+     "dir": "🪚change-cooling-delta-th",
+     "cases": [
+      "extends-the-cooling-period-to-12-point-5-hours"
+     ],
+     "allcases": [
+      "extends-the-cooling-period-to-12-point-5-hours"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCoolingGainsKwh",
+    "payload": "ChangeCoolingGainsKwh",
+    "kind": "change-cooling-gains-kwh",
+    "leaf": {
+     "dir": "🪜change-cooling-gains-kwh",
+     "cases": [
+      "raises-the-internal-cooling-gains-to-7-point-5-kwh"
+     ],
+     "allcases": [
+      "raises-the-internal-cooling-gains-to-7-point-5-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCoolingUtilizationFactor",
+    "payload": "ChangeCoolingUtilizationFactor",
+    "kind": "change-cooling-utilization-factor",
+    "leaf": {
+     "dir": "🪣change-cooling-utilization-factor",
+     "cases": [
+      "raises-the-cooling-utilization-factor-to-0-point-875"
+     ],
+     "allcases": [
+      "raises-the-cooling-utilization-factor-to-0-point-875"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCoolingReferenceKwh",
+    "payload": "ChangeCoolingReferenceKwh",
+    "kind": "change-cooling-reference-kwh",
+    "leaf": {
+     "dir": "🪝change-cooling-reference-kwh",
+     "cases": [
+      "raises-the-cooling-reference-to-25-kwh"
+     ],
+     "allcases": [
+      "raises-the-cooling-reference-to-25-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeChillerType",
+    "payload": "ChangeChillerType",
+    "kind": "change-chiller-type",
+    "leaf": {
+     "dir": "🚨change-chiller-type",
+     "cases": [
+      "switches-to-a-water-cooled-chiller"
+     ],
+     "allcases": [
+      "switches-to-a-water-cooled-chiller"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEerActual",
+    "payload": "ChangeEerActual",
+    "kind": "change-eer-actual",
+    "leaf": {
+     "dir": "🪤change-eer-actual",
+     "cases": [
+      "raises-the-achieved-eer-to-3-point-5"
+     ],
+     "allcases": [
+      "raises-the-achieved-eer-to-3-point-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeQCKwh",
+    "payload": "ChangeQCKwh",
+    "kind": "change-qc-kwh",
+    "leaf": {
+     "dir": "🌷change-qc-kwh",
+     "cases": [
+      "raises-the-annual-cooling-demand-to-1250-kwh"
+     ],
+     "allcases": [
+      "raises-the-annual-cooling-demand-to-1250-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeGenerationReferenceKwh",
+    "payload": "ChangeGenerationReferenceKwh",
+    "kind": "change-generation-reference-kwh",
+    "leaf": {
+     "dir": "🧽change-generation-reference-kwh",
+     "cases": [
+      "raises-the-generation-reference-to-450-kwh"
+     ],
+     "allcases": [
+      "raises-the-generation-reference-to-450-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDataCenterSupplyC",
+    "payload": "ChangeDataCenterSupplyC",
+    "kind": "change-data-center-supply-c",
+    "leaf": {
+     "dir": "🧰change-data-center-supply-c",
+     "cases": [
+      "raises-the-data-centre-supply-air-to-27-c"
+     ],
+     "allcases": [
+      "raises-the-data-centre-supply-air-to-27-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHStWK",
+    "payload": "ChangeHStWK",
+    "kind": "change-h-st-wk",
+    "leaf": {
+     "dir": "🪠change-h-st-wk",
+     "cases": [
+      "raises-the-storage-loss-coefficient-to-6-point-5-w-per-k"
+     ],
+     "allcases": [
+      "raises-the-storage-loss-coefficient-to-6-point-5-w-per-k"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeThetaStC",
+    "payload": "ChangeThetaStC",
+    "kind": "change-theta-st-c",
+    "leaf": {
+     "dir": "🌏️change-theta-st-c",
+     "cases": [
+      "lowers-the-storage-temperature-to-55-c"
+     ],
+     "allcases": [
+      "lowers-the-storage-temperature-to-55-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeThetaAmbC",
+    "payload": "ChangeThetaAmbC",
+    "kind": "change-theta-amb-c",
+    "leaf": {
+     "dir": "🐚change-theta-amb-c",
+     "cases": [
+      "lowers-the-storage-room-ambient-to-18-c"
+     ],
+     "allcases": [
+      "lowers-the-storage-room-ambient-to-18-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeStorageTH",
+    "payload": "ChangeStorageTH",
+    "kind": "change-storage-th",
+    "leaf": {
+     "dir": "🍄change-storage-th",
+     "cases": [
+      "shortens-the-storage-standby-period-to-18-hours"
+     ],
+     "allcases": [
+      "shortens-the-storage-standby-period-to-18-hours"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeStorageAllowanceKwh",
+    "payload": "ChangeStorageAllowanceKwh",
+    "kind": "change-storage-allowance-kwh",
+    "leaf": {
+     "dir": "🌼change-storage-allowance-kwh",
+     "cases": [
+      "tightens-the-storage-loss-allowance-to-4-point-5-kwh"
+     ],
+     "allcases": [
+      "tightens-the-storage-loss-allowance-to-4-point-5-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDhwDeliveryC",
+    "payload": "ChangeDhwDeliveryC",
+    "kind": "change-dhw-delivery-c",
+    "leaf": {
+     "dir": "🧶change-dhw-delivery-c",
+     "cases": [
+      "raises-the-dhw-delivery-temperature-to-60-c"
+     ],
+     "allcases": [
+      "raises-the-dhw-delivery-temperature-to-60-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDuctClass",
+    "payload": "ChangeDuctClass",
+    "kind": "change-duct-class",
+    "leaf": {
+     "dir": "🪡change-duct-class",
+     "cases": [
+      "upgrades-the-duct-tightness-class-to-d"
+     ],
+     "allcases": [
+      "upgrades-the-duct-tightness-class-to-d"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDuctTestPressurePa",
+    "payload": "ChangeDuctTestPressurePa",
+    "kind": "change-duct-test-pressure-pa",
+    "leaf": {
+     "dir": "🧷change-duct-test-pressure-pa",
+     "cases": [
+      "raises-the-duct-test-pressure-to-500-pa"
+     ],
+     "allcases": [
+      "raises-the-duct-test-pressure-to-500-pa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDuctLeakageM3SM2",
+    "payload": "ChangeDuctLeakageM3SM2",
+    "kind": "change-duct-leakage-m3-sm2",
+    "leaf": {
+     "dir": "🪢change-duct-leakage-m3-sm2",
+     "cases": [
+      "halves-the-measured-duct-leakage-to-0-point-0625"
+     ],
+     "allcases": [
+      "halves-the-measured-duct-leakage-to-0-point-0625"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1990": {
+  "enum": "En1990Mutation",
+  "count": 10,
+  "kinds": [
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🐷set-snapshot",
+     "cases": [
+      "switches-the-national-annex-from-de-to-en"
+     ],
+     "allcases": [
+      "switches-the-national-annex-from-de-to-en"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePermanentAction",
+    "payload": "ChangePermanentAction",
+    "kind": "change-permanent-action",
+    "leaf": {
+     "dir": "🐐change-permanent-action",
+     "cases": [
+      "raises-the-permanent-action-to-62-5-kn"
+     ],
+     "allcases": [
+      "raises-the-permanent-action-to-62-5-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeResistance",
+    "payload": "ChangeResistance",
+    "kind": "change-resistance",
+    "leaf": {
+     "dir": "🐘change-resistance",
+     "cases": [
+      "raises-the-design-resistance-to-320-kn"
+     ],
+     "allcases": [
+      "raises-the-design-resistance-to-320-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeConsequenceClass",
+    "payload": "ChangeConsequenceClass",
+    "kind": "change-consequence-class",
+    "leaf": {
+     "dir": "🐑change-consequence-class",
+     "cases": [
+      "escalates-the-building-from-cc2-to-cc3"
+     ],
+     "allcases": [
+      "escalates-the-building-from-cc2-to-cc3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSeismicAction",
+    "payload": "ChangeSeismicAction",
+    "kind": "change-seismic-action",
+    "leaf": {
+     "dir": "🦄change-seismic-action",
+     "cases": [
+      "enables-the-seismic-situation-with-an-85-kn-a-ed"
+     ],
+     "allcases": [
+      "enables-the-seismic-situation-with-an-85-kn-a-ed"
+     ]
+    }
+   },
+   {
+    "variant": "InsertVariableAction",
+    "payload": "InsertVariableAction",
+    "kind": "insert-variable-action",
+    "leaf": {
+     "dir": "🐴insert-variable-action",
+     "cases": [
+      "seeds-the-first-variable-action-q-snow-at-12-5-kn"
+     ],
+     "allcases": [
+      "seeds-the-first-variable-action-q-snow-at-12-5-kn"
+     ]
+    }
+   },
+   {
+    "variant": "RemoveVariableAction",
+    "payload": "RemoveVariableAction",
+    "kind": "remove-variable-action",
+    "leaf": {
+     "dir": "🐎remove-variable-action",
+     "cases": [
+      "refuses-to-remove-action-0-from-an-unseeded-child-slot"
+     ],
+     "allcases": [
+      "refuses-to-remove-action-0-from-an-unseeded-child-slot"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVariableActionCategory",
+    "payload": "ChangeVariableActionCategory",
+    "kind": "change-variable-action-category",
+    "leaf": {
+     "dir": "🐮change-variable-action-category",
+     "cases": [
+      "refuses-to-recategorise-a-missing-action-0"
+     ],
+     "allcases": [
+      "refuses-to-recategorise-a-missing-action-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVariableActionValue",
+    "payload": "ChangeVariableActionValue",
+    "kind": "change-variable-action-value",
+    "leaf": {
+     "dir": "🦌change-variable-action-value",
+     "cases": [
+      "refuses-to-revalue-a-missing-action-0"
+     ],
+     "allcases": [
+      "refuses-to-revalue-a-missing-action-0"
+     ]
+    }
+   },
+   {
+    "variant": "ReorderVariableActions",
+    "payload": "ReorderVariableActions",
+    "kind": "reorder-variable-actions",
+    "leaf": {
+     "dir": "🐗reorder-variable-actions",
+     "cases": [
+      "refuses-to-move-action-0-to-slot-1-in-an-empty-list"
+     ],
+     "allcases": [
+      "refuses-to-move-action-0-to-slot-1-in-an-empty-list"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1991": {
+  "enum": "En1991Mutation",
+  "count": 32,
+  "kinds": [
+   {
+    "variant": "ChangeAreaM2",
+    "payload": "ChangeAreaM2",
+    "kind": "change-area-m2",
+    "leaf": {
+     "dir": "🧪change-area-m2",
+     "cases": [
+      "enlarges-loaded-area-to-360-m2"
+     ],
+     "allcases": [
+      "enlarges-loaded-area-to-360-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCategory",
+    "payload": "ChangeCategory",
+    "kind": "change-category",
+    "leaf": {
+     "dir": "🧭change-category",
+     "cases": [
+      "reclassifies-imposed-load-to-category-d"
+     ],
+     "allcases": [
+      "reclassifies-imposed-load-to-category-d"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🧫change-annex",
+     "cases": [
+      "switches-national-annex-to-en"
+     ],
+     "allcases": [
+      "switches-national-annex-to-en"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSelfWeightMaterial",
+    "payload": "ChangeSelfWeightMaterial",
+    "kind": "change-self-weight-material",
+    "leaf": {
+     "dir": "🏷️change-self-weight-material",
+     "cases": [
+      "switches-self-weight-material-to-structural-steel"
+     ],
+     "allcases": [
+      "switches-self-weight-material-to-structural-steel"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSelfWeightThicknessM",
+    "payload": "ChangeSelfWeightThicknessM",
+    "kind": "change-self-weight-thickness-m",
+    "leaf": {
+     "dir": "🧮change-self-weight-thickness-m",
+     "cases": [
+      "thickens-self-weight-layer-to-0-375-m"
+     ],
+     "allcases": [
+      "thickens-self-weight-layer-to-0-375-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAssumedGKKnM2",
+    "payload": "ChangeAssumedGKKnM2",
+    "kind": "change-assumed-gk-kn-m2",
+    "leaf": {
+     "dir": "🎢change-assumed-gk-kn-m2",
+     "cases": [
+      "raises-assumed-gk-to-7-5-kn-m2"
+     ],
+     "allcases": [
+      "raises-assumed-gk-to-7-5-kn-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFireCurve",
+    "payload": "ChangeFireCurve",
+    "kind": "change-fire-curve",
+    "leaf": {
+     "dir": "🔭change-fire-curve",
+     "cases": [
+      "switches-fire-curve-to-hydrocarbon"
+     ],
+     "allcases": [
+      "switches-fire-curve-to-hydrocarbon"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFireResistanceMin",
+    "payload": "ChangeFireResistanceMin",
+    "kind": "change-fire-resistance-min",
+    "leaf": {
+     "dir": "🧱change-fire-resistance-min",
+     "cases": [
+      "extends-fire-resistance-to-120-min"
+     ],
+     "allcases": [
+      "extends-fire-resistance-to-120-min"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFireMemberCapacityC",
+    "payload": "ChangeFireMemberCapacityC",
+    "kind": "change-fire-member-capacity-c",
+    "leaf": {
+     "dir": "🏛️change-fire-member-capacity-c",
+     "cases": [
+      "raises-fire-member-capacity-to-700-c"
+     ],
+     "allcases": [
+      "raises-fire-member-capacity-to-700-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSnowZone",
+    "payload": "ChangeSnowZone",
+    "kind": "change-snow-zone",
+    "leaf": {
+     "dir": "💧change-snow-zone",
+     "cases": [
+      "moves-site-to-snow-zone-3"
+     ],
+     "allcases": [
+      "moves-site-to-snow-zone-3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSnowAltitudeM",
+    "payload": "ChangeSnowAltitudeM",
+    "kind": "change-snow-altitude-m",
+    "leaf": {
+     "dir": "🌡️change-snow-altitude-m",
+     "cases": [
+      "lifts-snow-altitude-to-780-m"
+     ],
+     "allcases": [
+      "lifts-snow-altitude-to-780-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEnSKKnM2",
+    "payload": "ChangeEnSKKnM2",
+    "kind": "change-en-sk-kn-m2",
+    "leaf": {
+     "dir": "🏗️change-en-sk-kn-m2",
+     "cases": [
+      "raises-en-characteristic-snow-load-to-1-25-kn-m2"
+     ],
+     "allcases": [
+      "raises-en-characteristic-snow-load-to-1-25-kn-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWindZone",
+    "payload": "ChangeWindZone",
+    "kind": "change-wind-zone",
+    "leaf": {
+     "dir": "🌞change-wind-zone",
+     "cases": [
+      "moves-site-to-wind-zone-4"
+     ],
+     "allcases": [
+      "moves-site-to-wind-zone-4"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEnVBMS",
+    "payload": "ChangeEnVBMS",
+    "kind": "change-en-vbms",
+    "leaf": {
+     "dir": "📈change-en-vbms",
+     "cases": [
+      "raises-en-basic-wind-speed-to-30-m-s"
+     ],
+     "allcases": [
+      "raises-en-basic-wind-speed-to-30-m-s"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDeltaTK",
+    "payload": "ChangeDeltaTK",
+    "kind": "change-delta-tk",
+    "leaf": {
+     "dir": "⚡change-delta-tk",
+     "cases": [
+      "raises-thermal-delta-tk-to-45-k"
+     ],
+     "allcases": [
+      "raises-thermal-delta-tk-to-45-k"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeConstructionActivity",
+    "payload": "ChangeConstructionActivity",
+    "kind": "change-construction-activity",
+    "leaf": {
+     "dir": "🪟change-construction-activity",
+     "cases": [
+      "switches-construction-activity-to-concreting"
+     ],
+     "allcases": [
+      "switches-construction-activity-to-concreting"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAccidentalMassT",
+    "payload": "ChangeAccidentalMassT",
+    "kind": "change-accidental-mass-t",
+    "leaf": {
+     "dir": "🎚️change-accidental-mass-t",
+     "cases": [
+      "lightens-impact-vehicle-to-12-5-t"
+     ],
+     "allcases": [
+      "lightens-impact-vehicle-to-12-5-t"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAccidentalSpeedKmH",
+    "payload": "ChangeAccidentalSpeedKmH",
+    "kind": "change-accidental-speed-km-h",
+    "leaf": {
+     "dir": "🕹️change-accidental-speed-km-h",
+     "cases": [
+      "lowers-impact-speed-to-50-km-h"
+     ],
+     "allcases": [
+      "lowers-impact-speed-to-50-km-h"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBridgeLane",
+    "payload": "ChangeBridgeLane",
+    "kind": "change-bridge-lane",
+    "leaf": {
+     "dir": "❄️change-bridge-lane",
+     "cases": [
+      "widens-carriageway-to-3-notional-lanes"
+     ],
+     "allcases": [
+      "widens-carriageway-to-3-notional-lanes"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBridgeSpanM",
+    "payload": "ChangeBridgeSpanM",
+    "kind": "change-bridge-span-m",
+    "leaf": {
+     "dir": "🎯change-bridge-span-m",
+     "cases": [
+      "lengthens-bridge-span-to-36-m"
+     ],
+     "allcases": [
+      "lengthens-bridge-span-to-36-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBridgeLaneWidthM",
+    "payload": "ChangeBridgeLaneWidthM",
+    "kind": "change-bridge-lane-width-m",
+    "leaf": {
+     "dir": "🗺️change-bridge-lane-width-m",
+     "cases": [
+      "widens-notional-lane-to-3-5-m"
+     ],
+     "allcases": [
+      "widens-notional-lane-to-3-5-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBridgeMomentResistanceKnm",
+    "payload": "ChangeBridgeMomentResistanceKnm",
+    "kind": "change-bridge-moment-resistance-knm",
+    "leaf": {
+     "dir": "📡change-bridge-moment-resistance-knm",
+     "cases": [
+      "raises-bridge-moment-resistance-to-4500-knm"
+     ],
+     "allcases": [
+      "raises-bridge-moment-resistance-to-4500-knm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCraneClass",
+    "payload": "ChangeCraneClass",
+    "kind": "change-crane-class",
+    "leaf": {
+     "dir": "🔀change-crane-class",
+     "cases": [
+      "upgrades-crane-to-class-hc3"
+     ],
+     "allcases": [
+      "upgrades-crane-to-class-hc3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHoistClass",
+    "payload": "ChangeHoistClass",
+    "kind": "change-hoist-class",
+    "leaf": {
+     "dir": "🧊change-hoist-class",
+     "cases": [
+      "upgrades-hoist-to-class-hc4"
+     ],
+     "allcases": [
+      "upgrades-hoist-to-class-hc4"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHoistingSpeedMS",
+    "payload": "ChangeHoistingSpeedMS",
+    "kind": "change-hoisting-speed-ms",
+    "leaf": {
+     "dir": "🌬️change-hoisting-speed-ms",
+     "cases": [
+      "speeds-hoisting-to-1-25-m-s"
+     ],
+     "allcases": [
+      "speeds-hoisting-to-1-25-m-s"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloBulkDensityKnM3",
+    "payload": "ChangeSiloBulkDensityKnM3",
+    "kind": "change-silo-bulk-density-kn-m3",
+    "leaf": {
+     "dir": "🌗change-silo-bulk-density-kn-m3",
+     "cases": [
+      "raises-silo-bulk-density-to-10-5-kn-m3"
+     ],
+     "allcases": [
+      "raises-silo-bulk-density-to-10-5-kn-m3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloHeightM",
+    "payload": "ChangeSiloHeightM",
+    "kind": "change-silo-height-m",
+    "leaf": {
+     "dir": "🎛️change-silo-height-m",
+     "cases": [
+      "raises-silo-to-18-m"
+     ],
+     "allcases": [
+      "raises-silo-to-18-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloHydraulicRadiusM",
+    "payload": "ChangeSiloHydraulicRadiusM",
+    "kind": "change-silo-hydraulic-radius-m",
+    "leaf": {
+     "dir": "📊change-silo-hydraulic-radius-m",
+     "cases": [
+      "widens-silo-hydraulic-radius-to-2-25-m"
+     ],
+     "allcases": [
+      "widens-silo-hydraulic-radius-to-2-25-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloMu",
+    "payload": "ChangeSiloMu",
+    "kind": "change-silo-mu",
+    "leaf": {
+     "dir": "📉change-silo-mu",
+     "cases": [
+      "raises-silo-wall-friction-mu-to-0-625"
+     ],
+     "allcases": [
+      "raises-silo-wall-friction-mu-to-0-625"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloK",
+    "payload": "ChangeSiloK",
+    "kind": "change-silo-k",
+    "leaf": {
+     "dir": "🔬change-silo-k",
+     "cases": [
+      "raises-silo-lateral-pressure-ratio-k-to-0-625"
+     ],
+     "allcases": [
+      "raises-silo-lateral-pressure-ratio-k-to-0-625"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCS",
+    "payload": "ChangeCS",
+    "kind": "change-cs",
+    "leaf": {
+     "dir": "🔥change-cs",
+     "cases": [
+      "raises-size-factor-cs-to-1-125"
+     ],
+     "allcases": [
+      "raises-size-factor-cs-to-1-125"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCD",
+    "payload": "ChangeCD",
+    "kind": "change-cd",
+    "leaf": {
+     "dir": "🔆change-cd",
+     "cases": [
+      "lowers-dynamic-factor-cd-to-0-875"
+     ],
+     "allcases": [
+      "lowers-dynamic-factor-cd-to-0-875"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1992": {
+  "enum": "En1992Mutation",
+  "count": 35,
+  "kinds": [
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🐝set-snapshot",
+     "cases": [
+      "switches-annex-to-en"
+     ],
+     "allcases": [
+      "switches-annex-to-en"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMEdKnm",
+    "payload": "ChangeMEdKnm",
+    "kind": "change-m-ed-knm",
+    "leaf": {
+     "dir": "🐮change-m-ed-knm",
+     "cases": [
+      "raises-m-ed-knm-to-187-5"
+     ],
+     "allcases": [
+      "raises-m-ed-knm-to-187-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVEdKn",
+    "payload": "ChangeVEdKn",
+    "kind": "change-v-ed-kn",
+    "leaf": {
+     "dir": "🦒change-v-ed-kn",
+     "cases": [
+      "raises-v-ed-kn-to-96-5"
+     ],
+     "allcases": [
+      "raises-v-ed-kn-to-96-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFCk",
+    "payload": "ChangeFCk",
+    "kind": "change-f-ck",
+    "leaf": {
+     "dir": "🐜change-f-ck",
+     "cases": [
+      "raises-f-ck-to-45-0"
+     ],
+     "allcases": [
+      "raises-f-ck-to-45-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBMm",
+    "payload": "ChangeBMm",
+    "kind": "change-b-mm",
+    "leaf": {
+     "dir": "🦂change-b-mm",
+     "cases": [
+      "raises-b-mm-to-375-0"
+     ],
+     "allcases": [
+      "raises-b-mm-to-375-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDMm",
+    "payload": "ChangeDMm",
+    "kind": "change-d-mm",
+    "leaf": {
+     "dir": "🕷️change-d-mm",
+     "cases": [
+      "raises-d-mm-to-512-5"
+     ],
+     "allcases": [
+      "raises-d-mm-to-512-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeASMm2",
+    "payload": "ChangeASMm2",
+    "kind": "change-as-mm2",
+    "leaf": {
+     "dir": "🐍change-as-mm2",
+     "cases": [
+      "raises-a-s-mm2-to-1608-5"
+     ],
+     "allcases": [
+      "raises-a-s-mm2-to-1608-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFYk",
+    "payload": "ChangeFYk",
+    "kind": "change-f-yk",
+    "leaf": {
+     "dir": "🦔change-f-yk",
+     "cases": [
+      "raises-f-yk-to-550-0"
+     ],
+     "allcases": [
+      "raises-f-yk-to-550-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeRhoL",
+    "payload": "ChangeRhoL",
+    "kind": "change-rho-l",
+    "leaf": {
+     "dir": "🐘change-rho-l",
+     "cases": [
+      "raises-rho-l-to-0-015625"
+     ],
+     "allcases": [
+      "raises-rho-l-to-0-015625"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeNEdKn",
+    "payload": "ChangeNEdKn",
+    "kind": "change-n-ed-kn",
+    "leaf": {
+     "dir": "🐷change-n-ed-kn",
+     "cases": [
+      "raises-n-ed-kn-to-62-5"
+     ],
+     "allcases": [
+      "raises-n-ed-kn-to-62-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePKn",
+    "payload": "ChangePKn",
+    "kind": "change-p-kn",
+    "leaf": {
+     "dir": "🐗change-p-kn",
+     "cases": [
+      "raises-p-kn-to-45-5"
+     ],
+     "allcases": [
+      "raises-p-kn-to-45-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeACMm2",
+    "payload": "ChangeACMm2",
+    "kind": "change-ac-mm2",
+    "leaf": {
+     "dir": "🐞change-ac-mm2",
+     "cases": [
+      "raises-a-c-mm2-to-168750-0"
+     ],
+     "allcases": [
+      "raises-a-c-mm2-to-168750-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeUseFem",
+    "payload": "ChangeUseFem",
+    "kind": "change-use-fem",
+    "leaf": {
+     "dir": "🐫change-use-fem",
+     "cases": [
+      "turns-use-fem-on"
+     ],
+     "allcases": [
+      "turns-use-fem-on"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSpanM",
+    "payload": "ChangeSpanM",
+    "kind": "change-span-m",
+    "leaf": {
+     "dir": "🦏change-span-m",
+     "cases": [
+      "raises-span-m-to-7-5"
+     ],
+     "allcases": [
+      "raises-span-m-to-7-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeUdlKnM",
+    "payload": "ChangeUdlKnM",
+    "kind": "change-udl-kn-m",
+    "leaf": {
+     "dir": "🐪change-udl-kn-m",
+     "cases": [
+      "raises-udl-kn-m-to-26-25"
+     ],
+     "allcases": [
+      "raises-udl-kn-m-to-26-25"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFireRating",
+    "payload": "ChangeFireRating",
+    "kind": "change-fire-rating",
+    "leaf": {
+     "dir": "🦇change-fire-rating",
+     "cases": [
+      "switches-fire-rating-to-r120"
+     ],
+     "allcases": [
+      "switches-fire-rating-to-r120"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeProvidedAxisDistanceMm",
+    "payload": "ChangeProvidedAxisDistanceMm",
+    "kind": "change-provided-axis-distance-mm",
+    "leaf": {
+     "dir": "🦌change-provided-axis-distance-mm",
+     "cases": [
+      "raises-provided-axis-distance-mm-to-42-5"
+     ],
+     "allcases": [
+      "raises-provided-axis-distance-mm-to-42-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBridgeSigmaCMpa",
+    "payload": "ChangeBridgeSigmaCMpa",
+    "kind": "change-bridge-sigma-c-mpa",
+    "leaf": {
+     "dir": "🦗change-bridge-sigma-c-mpa",
+     "cases": [
+      "raises-bridge-sigma-c-mpa-to-15-75"
+     ],
+     "allcases": [
+      "raises-bridge-sigma-c-mpa-to-15-75"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBridgeDeltaSigmaSMpa",
+    "payload": "ChangeBridgeDeltaSigmaSMpa",
+    "kind": "change-bridge-delta-sigma-s-mpa",
+    "leaf": {
+     "dir": "🦟change-bridge-delta-sigma-s-mpa",
+     "cases": [
+      "raises-bridge-delta-sigma-s-mpa-to-132-5"
+     ],
+     "allcases": [
+      "raises-bridge-delta-sigma-s-mpa-to-132-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTightnessClass",
+    "payload": "ChangeTightnessClass",
+    "kind": "change-tightness-class",
+    "leaf": {
+     "dir": "🦛change-tightness-class",
+     "cases": [
+      "switches-tightness-class-to-tc2"
+     ],
+     "allcases": [
+      "switches-tightness-class-to-tc2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHdOverH",
+    "payload": "ChangeHdOverH",
+    "kind": "change-hd-over-h",
+    "leaf": {
+     "dir": "🦉change-hd-over-h",
+     "cases": [
+      "raises-hd-over-h-to-12-5"
+     ],
+     "allcases": [
+      "raises-hd-over-h-to-12-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLiquidSigmaSMpa",
+    "payload": "ChangeLiquidSigmaSMpa",
+    "kind": "change-liquid-sigma-s-mpa",
+    "leaf": {
+     "dir": "🐑change-liquid-sigma-s-mpa",
+     "cases": [
+      "raises-liquid-sigma-s-mpa-to-235-5"
+     ],
+     "allcases": [
+      "raises-liquid-sigma-s-mpa-to-235-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLiquidRhoPEff",
+    "payload": "ChangeLiquidRhoPEff",
+    "kind": "change-liquid-rho-p-eff",
+    "leaf": {
+     "dir": "🦄change-liquid-rho-p-eff",
+     "cases": [
+      "raises-liquid-rho-p-eff-to-0-0078125"
+     ],
+     "allcases": [
+      "raises-liquid-rho-p-eff-to-0-0078125"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLiquidFCtEffMpa",
+    "payload": "ChangeLiquidFCtEffMpa",
+    "kind": "change-liquid-f-ct-eff-mpa",
+    "leaf": {
+     "dir": "🐎change-liquid-f-ct-eff-mpa",
+     "cases": [
+      "raises-liquid-f-ct-eff-mpa-to-3-25"
+     ],
+     "allcases": [
+      "raises-liquid-f-ct-eff-mpa-to-3-25"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLiquidESMpa",
+    "payload": "ChangeLiquidESMpa",
+    "kind": "change-liquid-es-mpa",
+    "leaf": {
+     "dir": "🐴change-liquid-es-mpa",
+     "cases": [
+      "raises-liquid-e-s-mpa-to-205000-0"
+     ],
+     "allcases": [
+      "raises-liquid-e-s-mpa-to-205000-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLiquidSRMaxMm",
+    "payload": "ChangeLiquidSRMaxMm",
+    "kind": "change-liquid-sr-max-mm",
+    "leaf": {
+     "dir": "🐐change-liquid-sr-max-mm",
+     "cases": [
+      "raises-liquid-s-r-max-mm-to-312-5"
+     ],
+     "allcases": [
+      "raises-liquid-s-r-max-mm-to-312-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnchorHEfMm",
+    "payload": "ChangeAnchorHEfMm",
+    "kind": "change-anchor-h-ef-mm",
+    "leaf": {
+     "dir": "🦭change-anchor-h-ef-mm",
+     "cases": [
+      "raises-anchor-h-ef-mm-to-105-0"
+     ],
+     "allcases": [
+      "raises-anchor-h-ef-mm-to-105-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnchorCracked",
+    "payload": "ChangeAnchorCracked",
+    "kind": "change-anchor-cracked",
+    "leaf": {
+     "dir": "🐢change-anchor-cracked",
+     "cases": [
+      "turns-anchor-cracked-on"
+     ],
+     "allcases": [
+      "turns-anchor-cracked-on"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnchorFUkMpa",
+    "payload": "ChangeAnchorFUkMpa",
+    "kind": "change-anchor-f-uk-mpa",
+    "leaf": {
+     "dir": "🐳change-anchor-f-uk-mpa",
+     "cases": [
+      "raises-anchor-f-uk-mpa-to-900-0"
+     ],
+     "allcases": [
+      "raises-anchor-f-uk-mpa-to-900-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnchorFYkMpa",
+    "payload": "ChangeAnchorFYkMpa",
+    "kind": "change-anchor-f-yk-mpa",
+    "leaf": {
+     "dir": "🦈change-anchor-f-yk-mpa",
+     "cases": [
+      "raises-anchor-f-yk-mpa-to-720-0"
+     ],
+     "allcases": [
+      "raises-anchor-f-yk-mpa-to-720-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnchorASMm2",
+    "payload": "ChangeAnchorASMm2",
+    "kind": "change-anchor-as-mm2",
+    "leaf": {
+     "dir": "🦋change-anchor-as-mm2",
+     "cases": [
+      "raises-anchor-a-s-mm2-to-157-0"
+     ],
+     "allcases": [
+      "raises-anchor-a-s-mm2-to-157-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnchorDMm",
+    "payload": "ChangeAnchorDMm",
+    "kind": "change-anchor-d-mm",
+    "leaf": {
+     "dir": "🐬change-anchor-d-mm",
+     "cases": [
+      "raises-anchor-d-mm-to-16-0"
+     ],
+     "allcases": [
+      "raises-anchor-d-mm-to-16-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnchorC1Mm",
+    "payload": "ChangeAnchorC1Mm",
+    "kind": "change-anchor-c1-mm",
+    "leaf": {
+     "dir": "🐌change-anchor-c1-mm",
+     "cases": [
+      "raises-anchor-c1-mm-to-137-5"
+     ],
+     "allcases": [
+      "raises-anchor-c1-mm-to-137-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnchorNEdKn",
+    "payload": "ChangeAnchorNEdKn",
+    "kind": "change-anchor-n-ed-kn",
+    "leaf": {
+     "dir": "🐊change-anchor-n-ed-kn",
+     "cases": [
+      "raises-anchor-n-ed-kn-to-22-5"
+     ],
+     "allcases": [
+      "raises-anchor-n-ed-kn-to-22-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnchorVEdKn",
+    "payload": "ChangeAnchorVEdKn",
+    "kind": "change-anchor-v-ed-kn",
+    "leaf": {
+     "dir": "🦎change-anchor-v-ed-kn",
+     "cases": [
+      "raises-anchor-v-ed-kn-to-11-25"
+     ],
+     "allcases": [
+      "raises-anchor-v-ed-kn-to-11-25"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1993": {
+  "enum": "En1993Mutation",
+  "count": 17,
+  "kinds": [
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🎢change-annex",
+     "cases": [
+      "switches-the-national-annex-from-de-to-en"
+     ],
+     "allcases": [
+      "switches-the-national-annex-from-de-to-en"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateMemberProperties",
+    "payload": "UpdateMemberProperties",
+    "kind": "update-member-properties",
+    "leaf": {
+     "dir": "🧊update-member-properties",
+     "cases": [
+      "re-grades-the-base-member-to-s460-under-a-heavier-load"
+     ],
+     "allcases": [
+      "re-grades-the-base-member-to-s460-under-a-heavier-load"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateFireInputs",
+    "payload": "UpdateFireInputs",
+    "kind": "update-fire-inputs",
+    "leaf": {
+     "dir": "🔆update-fire-inputs",
+     "cases": [
+      "raises-the-fire-protection-to-r90"
+     ],
+     "allcases": [
+      "raises-the-fire-protection-to-r90"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateColdFormedInputs",
+    "payload": "UpdateColdFormedInputs",
+    "kind": "update-cold-formed-inputs",
+    "leaf": {
+     "dir": "🔥update-cold-formed-inputs",
+     "cases": [
+      "thickens-the-cold-formed-flange-and-reverses-its-stress-gradient"
+     ],
+     "allcases": [
+      "thickens-the-cold-formed-flange-and-reverses-its-stress-gradient"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateStainlessInputs",
+    "payload": "UpdateStainlessInputs",
+    "kind": "update-stainless-inputs",
+    "leaf": {
+     "dir": "🎚️update-stainless-inputs",
+     "cases": [
+      "upsizes-the-stainless-section-to-a-duplex-grade"
+     ],
+     "allcases": [
+      "upsizes-the-stainless-section-to-a-duplex-grade"
+     ]
+    }
+   },
+   {
+    "variant": "UpdatePlatedInputs",
+    "payload": "UpdatePlatedInputs",
+    "kind": "update-plated-inputs",
+    "leaf": {
+     "dir": "🧭update-plated-inputs",
+     "cases": [
+      "makes-the-plate-panel-more-slender-and-more-stressed"
+     ],
+     "allcases": [
+      "makes-the-plate-panel-more-slender-and-more-stressed"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateSiloShellInputs",
+    "payload": "UpdateSiloShellInputs",
+    "kind": "update-silo-shell-inputs",
+    "leaf": {
+     "dir": "🪟update-silo-shell-inputs",
+     "cases": [
+      "deepens-the-silo-and-thickens-its-shell"
+     ],
+     "allcases": [
+      "deepens-the-silo-and-thickens-its-shell"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateBoltInputs",
+    "payload": "UpdateBoltInputs",
+    "kind": "update-bolt-inputs",
+    "leaf": {
+     "dir": "🌞update-bolt-inputs",
+     "cases": [
+      "moves-the-connection-to-four-m24-grade-10-9-bolts"
+     ],
+     "allcases": [
+      "moves-the-connection-to-four-m24-grade-10-9-bolts"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateWeldInputs",
+    "payload": "UpdateWeldInputs",
+    "kind": "update-weld-inputs",
+    "leaf": {
+     "dir": "🧱update-weld-inputs",
+     "cases": [
+      "lengthens-the-fillet-weld-and-re-grades-it-to-s460"
+     ],
+     "allcases": [
+      "lengthens-the-fillet-weld-and-re-grades-it-to-s460"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateFatigueInputs",
+    "payload": "UpdateFatigueInputs",
+    "kind": "update-fatigue-inputs",
+    "leaf": {
+     "dir": "❄️update-fatigue-inputs",
+     "cases": [
+      "drops-to-detail-category-56-under-a-safe-life-assessment"
+     ],
+     "allcases": [
+      "drops-to-detail-category-56-under-a-safe-life-assessment"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateThroughThicknessInputs",
+    "payload": "UpdateThroughThicknessInputs",
+    "kind": "update-through-thickness-inputs",
+    "leaf": {
+     "dir": "🌬️update-through-thickness-inputs",
+     "cases": [
+      "upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c"
+     ],
+     "allcases": [
+      "upgrades-the-subgrade-to-k2-for-a-thicker-plate-at-minus-20c"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateTensionComponentInputs",
+    "payload": "UpdateTensionComponentInputs",
+    "kind": "update-tension-component-inputs",
+    "leaf": {
+     "dir": "⚡update-tension-component-inputs",
+     "cases": [
+      "derates-the-tension-rod-to-a-400-kn-characteristic-strength"
+     ],
+     "allcases": [
+      "derates-the-tension-rod-to-a-400-kn-characteristic-strength"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateHssInputs",
+    "payload": "UpdateHssInputs",
+    "kind": "update-hss-inputs",
+    "leaf": {
+     "dir": "💧update-hss-inputs",
+     "cases": [
+      "reclassifies-the-hollow-section-to-class-3-in-s355"
+     ],
+     "allcases": [
+      "reclassifies-the-hollow-section-to-class-3-in-s355"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateBridgeInputs",
+    "payload": "UpdateBridgeInputs",
+    "kind": "update-bridge-inputs",
+    "leaf": {
+     "dir": "🏗️update-bridge-inputs",
+     "cases": [
+      "raises-the-bridge-damage-equivalence-and-dynamic-factors"
+     ],
+     "allcases": [
+      "raises-the-bridge-damage-equivalence-and-dynamic-factors"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateTowerInputs",
+    "payload": "UpdateTowerInputs",
+    "kind": "update-tower-inputs",
+    "leaf": {
+     "dir": "🌗update-tower-inputs",
+     "cases": [
+      "raises-the-tower-wind-factor-and-leg-force"
+     ],
+     "allcases": [
+      "raises-the-tower-wind-factor-and-leg-force"
+     ]
+    }
+   },
+   {
+    "variant": "UpdatePileInputs",
+    "payload": "UpdatePileInputs",
+    "kind": "update-pile-inputs",
+    "leaf": {
+     "dir": "🗺️update-pile-inputs",
+     "cases": [
+      "derates-the-driven-pile-for-hard-driving"
+     ],
+     "allcases": [
+      "derates-the-driven-pile-for-hard-driving"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateCraneInputs",
+    "payload": "UpdateCraneInputs",
+    "kind": "update-crane-inputs",
+    "leaf": {
+     "dir": "🌡️update-crane-inputs",
+     "cases": [
+      "widens-the-crane-wheel-contact-patch-under-a-heavier-wheel"
+     ],
+     "allcases": [
+      "widens-the-crane-wheel-contact-patch-under-a-heavier-wheel"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1994": {
+  "enum": "En1994Mutation",
+  "count": 22,
+  "kinds": [
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🏞️change-annex",
+     "cases": [
+      "switches-national-annex-to-en"
+     ],
+     "allcases": [
+      "switches-national-annex-to-en"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMEdKnm",
+    "payload": "ChangeMEdKnm",
+    "kind": "change-m-ed-knm",
+    "leaf": {
+     "dir": "🗻change-m-ed-knm",
+     "cases": [
+      "raises-design-moment-to-320-knm"
+     ],
+     "allcases": [
+      "raises-design-moment-to-320-knm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVEdKn",
+    "payload": "ChangeVEdKn",
+    "kind": "change-v-ed-kn",
+    "leaf": {
+     "dir": "🍄change-v-ed-kn",
+     "cases": [
+      "raises-design-shear-to-225-kn"
+     ],
+     "allcases": [
+      "raises-design-shear-to-225-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMPla",
+    "payload": "ChangeMPla",
+    "kind": "change-m-pla",
+    "leaf": {
+     "dir": "🏝️change-m-pla",
+     "cases": [
+      "raises-steel-plastic-moment-to-128-knm"
+     ],
+     "allcases": [
+      "raises-steel-plastic-moment-to-128-knm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMPlRd",
+    "payload": "ChangeMPlRd",
+    "kind": "change-m-pl-rd",
+    "leaf": {
+     "dir": "🐚change-m-pl-rd",
+     "cases": [
+      "raises-plastic-moment-resistance-to-375-knm"
+     ],
+     "allcases": [
+      "raises-plastic-moment-resistance-to-375-knm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEta",
+    "payload": "ChangeEta",
+    "kind": "change-eta",
+    "leaf": {
+     "dir": "🏕️change-eta",
+     "cases": [
+      "raises-shear-connection-degree-to-0-875"
+     ],
+     "allcases": [
+      "raises-shear-connection-degree-to-0-875"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVLRd",
+    "payload": "ChangeVLRd",
+    "kind": "change-vl-rd",
+    "leaf": {
+     "dir": "🐞change-vl-rd",
+     "cases": [
+      "raises-longitudinal-shear-resistance-to-240-kn"
+     ],
+     "allcases": [
+      "raises-longitudinal-shear-resistance-to-240-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeInsulationThicknessMm",
+    "payload": "ChangeInsulationThicknessMm",
+    "kind": "change-insulation-thickness-mm",
+    "leaf": {
+     "dir": "🏖️change-insulation-thickness-mm",
+     "cases": [
+      "thickens-fire-insulation-to-40-mm"
+     ],
+     "allcases": [
+      "thickens-fire-insulation-to-40-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFireRating",
+    "payload": "ChangeFireRating",
+    "kind": "change-fire-rating",
+    "leaf": {
+     "dir": "🏟️change-fire-rating",
+     "cases": [
+      "upgrades-fire-rating-to-r90"
+     ],
+     "allcases": [
+      "upgrades-fire-rating-to-r90"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDeckType",
+    "payload": "ChangeDeckType",
+    "kind": "change-deck-type",
+    "leaf": {
+     "dir": "🐝change-deck-type",
+     "cases": [
+      "switches-deck-to-re-entrant"
+     ],
+     "allcases": [
+      "switches-deck-to-re-entrant"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDeltaSigmaMpa",
+    "payload": "ChangeDeltaSigmaMpa",
+    "kind": "change-delta-sigma-mpa",
+    "leaf": {
+     "dir": "🌏️change-delta-sigma-mpa",
+     "cases": [
+      "raises-steel-stress-range-to-96-mpa"
+     ],
+     "allcases": [
+      "raises-steel-stress-range-to-96-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFatigueDetail",
+    "payload": "ChangeFatigueDetail",
+    "kind": "change-fatigue-detail",
+    "leaf": {
+     "dir": "⛰️change-fatigue-detail",
+     "cases": [
+      "switches-fatigue-detail-to-flange-butt-weld"
+     ],
+     "allcases": [
+      "switches-fatigue-detail-to-flange-butt-weld"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDMm",
+    "payload": "ChangeDMm",
+    "kind": "change-d-mm",
+    "leaf": {
+     "dir": "🌰change-d-mm",
+     "cases": [
+      "thickens-stud-shank-to-22-mm"
+     ],
+     "allcases": [
+      "thickens-stud-shank-to-22-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHScMm",
+    "payload": "ChangeHScMm",
+    "kind": "change-h-sc-mm",
+    "leaf": {
+     "dir": "🌐change-h-sc-mm",
+     "cases": [
+      "lengthens-stud-to-125-mm"
+     ],
+     "allcases": [
+      "lengthens-stud-to-125-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFCkMpa",
+    "payload": "ChangeFCkMpa",
+    "kind": "change-f-ck-mpa",
+    "leaf": {
+     "dir": "🪵change-f-ck-mpa",
+     "cases": [
+      "upgrades-concrete-cylinder-strength-to-40-mpa"
+     ],
+     "allcases": [
+      "upgrades-concrete-cylinder-strength-to-40-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFUMpa",
+    "payload": "ChangeFUMpa",
+    "kind": "change-fu-mpa",
+    "leaf": {
+     "dir": "🪨change-fu-mpa",
+     "cases": [
+      "upgrades-stud-ultimate-strength-to-500-mpa"
+     ],
+     "allcases": [
+      "upgrades-stud-ultimate-strength-to-500-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeECmMpa",
+    "payload": "ChangeECmMpa",
+    "kind": "change-e-cm-mpa",
+    "leaf": {
+     "dir": "🌍️change-e-cm-mpa",
+     "cases": [
+      "raises-concrete-modulus-to-35000-mpa"
+     ],
+     "allcases": [
+      "raises-concrete-modulus-to-35000-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVEdPerStudKn",
+    "payload": "ChangeVEdPerStudKn",
+    "kind": "change-v-ed-per-stud-kn",
+    "leaf": {
+     "dir": "🏜️change-v-ed-per-stud-kn",
+     "cases": [
+      "raises-per-stud-shear-to-62-5-kn"
+     ],
+     "allcases": [
+      "raises-per-stud-shear-to-62-5-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSpanM",
+    "payload": "ChangeSpanM",
+    "kind": "change-span-m",
+    "leaf": {
+     "dir": "🌊change-span-m",
+     "cases": [
+      "lengthens-span-to-12-m"
+     ],
+     "allcases": [
+      "lengthens-span-to-12-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFYMpa",
+    "payload": "ChangeFYMpa",
+    "kind": "change-fy-mpa",
+    "leaf": {
+     "dir": "🌼change-fy-mpa",
+     "cases": [
+      "upgrades-steel-yield-to-460-mpa"
+     ],
+     "allcases": [
+      "upgrades-steel-yield-to-460-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeNCyclesStud",
+    "payload": "ChangeNCyclesStud",
+    "kind": "change-n-cycles-stud",
+    "leaf": {
+     "dir": "🏔️change-n-cycles-stud",
+     "cases": [
+      "raises-stud-cycle-count-to-5000000"
+     ],
+     "allcases": [
+      "raises-stud-cycle-count-to-5000000"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDeltaTauStudMpa",
+    "payload": "ChangeDeltaTauStudMpa",
+    "kind": "change-delta-tau-stud-mpa",
+    "leaf": {
+     "dir": "🌎️change-delta-tau-stud-mpa",
+     "cases": [
+      "raises-stud-shear-stress-range-to-110-mpa"
+     ],
+     "allcases": [
+      "raises-stud-shear-stress-range-to-110-mpa"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1995": {
+  "enum": "En1995Mutation",
+  "count": 20,
+  "kinds": [
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "📐change-annex",
+     "cases": [
+      "switches-from-the-german-na-to-the-recommended-en-annex"
+     ],
+     "allcases": [
+      "switches-from-the-german-na-to-the-recommended-en-annex"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMEdKnm",
+    "payload": "ChangeMEdKnm",
+    "kind": "change-m-ed-knm",
+    "leaf": {
+     "dir": "🧴change-m-ed-knm",
+     "cases": [
+      "raises-the-design-bending-moment-to-32-knm"
+     ],
+     "allcases": [
+      "raises-the-design-bending-moment-to-32-knm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeNEdKn",
+    "payload": "ChangeNEdKn",
+    "kind": "change-n-ed-kn",
+    "leaf": {
+     "dir": "🧽change-n-ed-kn",
+     "cases": [
+      "raises-the-design-axial-force-to-75-kn"
+     ],
+     "allcases": [
+      "raises-the-design-axial-force-to-75-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVEdKn",
+    "payload": "ChangeVEdKn",
+    "kind": "change-v-ed-kn",
+    "leaf": {
+     "dir": "🧺change-v-ed-kn",
+     "cases": [
+      "raises-the-design-shear-force-to-22-5-kn"
+     ],
+     "allcases": [
+      "raises-the-design-shear-force-to-22-5-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWMm3",
+    "payload": "ChangeWMm3",
+    "kind": "change-w-mm3",
+    "leaf": {
+     "dir": "🪑change-w-mm3",
+     "cases": [
+      "raises-the-section-modulus-to-4000000-mm3"
+     ],
+     "allcases": [
+      "raises-the-section-modulus-to-4000000-mm3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAMm2",
+    "payload": "ChangeAMm2",
+    "kind": "change-a-mm2",
+    "leaf": {
+     "dir": "🪣change-a-mm2",
+     "cases": [
+      "enlarges-the-gross-area-to-72000-mm2"
+     ],
+     "allcases": [
+      "enlarges-the-gross-area-to-72000-mm2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBMm",
+    "payload": "ChangeBMm",
+    "kind": "change-b-mm",
+    "leaf": {
+     "dir": "🧵change-b-mm",
+     "cases": [
+      "widens-the-beam-to-240-mm"
+     ],
+     "allcases": [
+      "widens-the-beam-to-240-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHMm",
+    "payload": "ChangeHMm",
+    "kind": "change-h-mm",
+    "leaf": {
+     "dir": "🪤change-h-mm",
+     "cases": [
+      "deepens-the-beam-to-360-mm"
+     ],
+     "allcases": [
+      "deepens-the-beam-to-360-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFMK",
+    "payload": "ChangeFMK",
+    "kind": "change-fmk",
+    "leaf": {
+     "dir": "🧷change-fmk",
+     "cases": [
+      "upgrades-the-bending-strength-class-to-28-mpa"
+     ],
+     "allcases": [
+      "upgrades-the-bending-strength-class-to-28-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFC0K",
+    "payload": "ChangeFC0K",
+    "kind": "change-fc0-k",
+    "leaf": {
+     "dir": "🪡change-fc0-k",
+     "cases": [
+      "raises-the-parallel-compressive-strength-to-26-5-mpa"
+     ],
+     "allcases": [
+      "raises-the-parallel-compressive-strength-to-26-5-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeServiceClass",
+    "payload": "ChangeServiceClass",
+    "kind": "change-service-class",
+    "leaf": {
+     "dir": "🧹change-service-class",
+     "cases": [
+      "moves-the-beam-from-service-class-1-to-service-class-2"
+     ],
+     "allcases": [
+      "moves-the-beam-from-service-class-1-to-service-class-2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLoadDuration",
+    "payload": "ChangeLoadDuration",
+    "kind": "change-load-duration",
+    "leaf": {
+     "dir": "🪒change-load-duration",
+     "cases": [
+      "shortens-the-load-duration-class-from-medium-to-short"
+     ],
+     "allcases": [
+      "shortens-the-load-duration-class-from-medium-to-short"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMCritKnm",
+    "payload": "ChangeMCritKnm",
+    "kind": "change-m-crit-knm",
+    "leaf": {
+     "dir": "🪥change-m-crit-knm",
+     "cases": [
+      "raises-the-critical-buckling-moment-to-96-knm"
+     ],
+     "allcases": [
+      "raises-the-critical-buckling-moment-to-96-knm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFEdKn",
+    "payload": "ChangeFEdKn",
+    "kind": "change-f-ed-kn",
+    "leaf": {
+     "dir": "🧶change-f-ed-kn",
+     "cases": [
+      "raises-the-design-fastener-force-to-24-kn"
+     ],
+     "allcases": [
+      "raises-the-design-fastener-force-to-24-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAEfMm2",
+    "payload": "ChangeAEfMm2",
+    "kind": "change-a-ef-mm2",
+    "leaf": {
+     "dir": "🪝change-a-ef-mm2",
+     "cases": [
+      "enlarges-the-effective-connection-area-to-16000-mm2"
+     ],
+     "allcases": [
+      "enlarges-the-effective-connection-area-to-16000-mm2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFVK",
+    "payload": "ChangeFVK",
+    "kind": "change-fvk",
+    "leaf": {
+     "dir": "🧲change-fvk",
+     "cases": [
+      "lowers-the-characteristic-shear-strength-to-3-5-mpa"
+     ],
+     "allcases": [
+      "lowers-the-characteristic-shear-strength-to-3-5-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFireDurationMin",
+    "payload": "ChangeFireDurationMin",
+    "kind": "change-fire-duration-min",
+    "leaf": {
+     "dir": "🪢change-fire-duration-min",
+     "cases": [
+      "raises-the-fire-exposure-from-r30-to-r60"
+     ],
+     "allcases": [
+      "raises-the-fire-exposure-from-r30-to-r60"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSectionDepthMm",
+    "payload": "ChangeSectionDepthMm",
+    "kind": "change-section-depth-mm",
+    "leaf": {
+     "dir": "🪠change-section-depth-mm",
+     "cases": [
+      "raises-the-size-effect-depth-to-360-mm"
+     ],
+     "allcases": [
+      "raises-the-size-effect-depth-to-360-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAVertMS2",
+    "payload": "ChangeAVertMS2",
+    "kind": "change-a-vert-ms2",
+    "leaf": {
+     "dir": "🧰change-a-vert-ms2",
+     "cases": [
+      "doubles-the-vertical-footfall-acceleration-to-0-5-m-s2"
+     ],
+     "allcases": [
+      "doubles-the-vertical-footfall-acceleration-to-0-5-m-s2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeNCyclesBridge",
+    "payload": "ChangeNCyclesBridge",
+    "kind": "change-n-cycles-bridge",
+    "leaf": {
+     "dir": "🧼change-n-cycles-bridge",
+     "cases": [
+      "quadruples-the-bridge-fatigue-cycles-to-2000000"
+     ],
+     "allcases": [
+      "quadruples-the-bridge-fatigue-cycles-to-2000000"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1996": {
+  "enum": "En1996Mutation",
+  "count": 22,
+  "kinds": [
+   {
+    "variant": "ChangeMEdKnm",
+    "payload": "ChangeMEdKnm",
+    "kind": "change-m-ed-knm",
+    "leaf": {
+     "dir": "📐change-m-ed-knm",
+     "cases": [
+      "raises-the-design-bending-moment-to-12-5-knm"
+     ],
+     "allcases": [
+      "raises-the-design-bending-moment-to-12-5-knm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeNEdKn",
+    "payload": "ChangeNEdKn",
+    "kind": "change-n-ed-kn",
+    "leaf": {
+     "dir": "🔽change-n-ed-kn",
+     "cases": [
+      "raises-the-design-axial-force-to-320-kn"
+     ],
+     "allcases": [
+      "raises-the-design-axial-force-to-320-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVEdKn",
+    "payload": "ChangeVEdKn",
+    "kind": "change-v-ed-kn",
+    "leaf": {
+     "dir": "🔼change-v-ed-kn",
+     "cases": [
+      "raises-the-design-shear-force-to-48-kn"
+     ],
+     "allcases": [
+      "raises-the-design-shear-force-to-48-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHEdKn",
+    "payload": "ChangeHEdKn",
+    "kind": "change-h-ed-kn",
+    "leaf": {
+     "dir": "↔️change-h-ed-kn",
+     "cases": [
+      "raises-the-design-sliding-force-to-26-kn"
+     ],
+     "allcases": [
+      "raises-the-design-sliding-force-to-26-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeZMm3",
+    "payload": "ChangeZMm3",
+    "kind": "change-z-mm3",
+    "leaf": {
+     "dir": "➡️change-z-mm3",
+     "cases": [
+      "raises-the-section-modulus-to-9500000-mm3"
+     ],
+     "allcases": [
+      "raises-the-section-modulus-to-9500000-mm3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAreaMm2",
+    "payload": "ChangeAreaMm2",
+    "kind": "change-area-mm2",
+    "leaf": {
+     "dir": "⬅️change-area-mm2",
+     "cases": [
+      "enlarges-the-gross-area-to-640000-mm2"
+     ],
+     "allcases": [
+      "enlarges-the-gross-area-to-640000-mm2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeShearAreaMm2",
+    "payload": "ChangeShearAreaMm2",
+    "kind": "change-shear-area-mm2",
+    "leaf": {
+     "dir": "📏change-shear-area-mm2",
+     "cases": [
+      "enlarges-the-shear-area-to-384000-mm2"
+     ],
+     "allcases": [
+      "enlarges-the-shear-area-to-384000-mm2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFKMpa",
+    "payload": "ChangeFKMpa",
+    "kind": "change-fk-mpa",
+    "leaf": {
+     "dir": "🟩change-fk-mpa",
+     "cases": [
+      "raises-the-characteristic-compressive-strength-to-7-5-mpa"
+     ],
+     "allcases": [
+      "raises-the-characteristic-compressive-strength-to-7-5-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFVkMpa",
+    "payload": "ChangeFVkMpa",
+    "kind": "change-f-vk-mpa",
+    "leaf": {
+     "dir": "✂️change-f-vk-mpa",
+     "cases": [
+      "raises-the-characteristic-shear-strength-to-0-375-mpa"
+     ],
+     "allcases": [
+      "raises-the-characteristic-shear-strength-to-0-375-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🔨change-annex",
+     "cases": [
+      "switches-from-the-german-na-to-the-recommended-en-annex"
+     ],
+     "allcases": [
+      "switches-from-the-german-na-to-the-recommended-en-annex"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMasonryClass",
+    "payload": "ChangeMasonryClass",
+    "kind": "change-masonry-class",
+    "leaf": {
+     "dir": "🗺️change-masonry-class",
+     "cases": [
+      "downgrades-manufacturing-control-to-class-4"
+     ],
+     "allcases": [
+      "downgrades-manufacturing-control-to-class-4"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDesignSituation",
+    "payload": "ChangeDesignSituation",
+    "kind": "change-design-situation",
+    "leaf": {
+     "dir": "🧱change-design-situation",
+     "cases": [
+      "switches-the-design-situation-to-seismic"
+     ],
+     "allcases": [
+      "switches-the-design-situation-to-seismic"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMu",
+    "payload": "ChangeMu",
+    "kind": "change-mu",
+    "leaf": {
+     "dir": "🏗️change-mu",
+     "cases": [
+      "raises-the-bed-joint-friction-coefficient-to-0-625"
+     ],
+     "allcases": [
+      "raises-the-bed-joint-friction-coefficient-to-0-625"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWallThicknessMm",
+    "payload": "ChangeWallThicknessMm",
+    "kind": "change-wall-thickness-mm",
+    "leaf": {
+     "dir": "🎢change-wall-thickness-mm",
+     "cases": [
+      "thickens-the-wall-to-300-mm"
+     ],
+     "allcases": [
+      "thickens-the-wall-to-300-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFireResistanceMin",
+    "payload": "ChangeFireResistanceMin",
+    "kind": "change-fire-resistance-min",
+    "leaf": {
+     "dir": "🧊change-fire-resistance-min",
+     "cases": [
+      "raises-the-fire-resistance-requirement-from-r60-to-r90"
+     ],
+     "allcases": [
+      "raises-the-fire-resistance-requirement-from-r60-to-r90"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeUnit",
+    "payload": "ChangeUnit",
+    "kind": "change-unit",
+    "leaf": {
+     "dir": "🌡️change-unit",
+     "cases": [
+      "switches-the-masonry-unit-from-clay-to-calcium-silicate"
+     ],
+     "allcases": [
+      "switches-the-masonry-unit-from-clay-to-calcium-silicate"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeExposure",
+    "payload": "ChangeExposure",
+    "kind": "change-exposure",
+    "leaf": {
+     "dir": "💧change-exposure",
+     "cases": [
+      "moves-the-wall-to-exposure-class-mx3"
+     ],
+     "allcases": [
+      "moves-the-wall-to-exposure-class-mx3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMortar",
+    "payload": "ChangeMortar",
+    "kind": "change-mortar",
+    "leaf": {
+     "dir": "🌬️change-mortar",
+     "cases": [
+      "upgrades-the-general-purpose-mortar-to-m10"
+     ],
+     "allcases": [
+      "upgrades-the-general-purpose-mortar-to-m10"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBedJointThicknessMm",
+    "payload": "ChangeBedJointThicknessMm",
+    "kind": "change-bed-joint-thickness-mm",
+    "leaf": {
+     "dir": "🔥change-bed-joint-thickness-mm",
+     "cases": [
+      "thickens-the-bed-joint-to-the-15-mm-upper-limit"
+     ],
+     "allcases": [
+      "thickens-the-bed-joint-to-the-15-mm-upper-limit"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeStoreys",
+    "payload": "ChangeStoreys",
+    "kind": "change-storeys",
+    "leaf": {
+     "dir": "❄️change-storeys",
+     "cases": [
+      "adds-a-third-storey-at-the-simplified-method-limit"
+     ],
+     "allcases": [
+      "adds-a-third-storey-at-the-simplified-method-limit"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHEfMm",
+    "payload": "ChangeHEfMm",
+    "kind": "change-h-ef-mm",
+    "leaf": {
+     "dir": "⚡change-h-ef-mm",
+     "cases": [
+      "lengthens-the-effective-height-to-2750-mm"
+     ],
+     "allcases": [
+      "lengthens-the-effective-height-to-2750-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTEfMm",
+    "payload": "ChangeTEfMm",
+    "kind": "change-t-ef-mm",
+    "leaf": {
+     "dir": "🔆change-t-ef-mm",
+     "cases": [
+      "raises-the-effective-thickness-to-300-mm"
+     ],
+     "allcases": [
+      "raises-the-effective-thickness-to-300-mm"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1997": {
+  "enum": "En1997Mutation",
+  "count": 22,
+  "kinds": [
+   {
+    "variant": "ChangeVEdKn",
+    "payload": "ChangeVEdKn",
+    "kind": "change-v-ed-kn",
+    "leaf": {
+     "dir": "🪒change-v-ed-kn",
+     "cases": [
+      "raises-the-design-vertical-load-to-750-kn"
+     ],
+     "allcases": [
+      "raises-the-design-vertical-load-to-750-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHEdKn",
+    "payload": "ChangeHEdKn",
+    "kind": "change-h-ed-kn",
+    "leaf": {
+     "dir": "🪥change-h-ed-kn",
+     "cases": [
+      "raises-the-design-horizontal-load-to-120-kn"
+     ],
+     "allcases": [
+      "raises-the-design-horizontal-load-to-120-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFootingAreaM2",
+    "payload": "ChangeFootingAreaM2",
+    "kind": "change-footing-area-m2",
+    "leaf": {
+     "dir": "🧴change-footing-area-m2",
+     "cases": [
+      "enlarges-the-footing-area-to-6-25-m2"
+     ],
+     "allcases": [
+      "enlarges-the-footing-area-to-6-25-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePhiDeg",
+    "payload": "ChangePhiDeg",
+    "kind": "change-phi-deg",
+    "leaf": {
+     "dir": "🧼change-phi-deg",
+     "cases": [
+      "raises-the-friction-angle-to-35-degrees"
+     ],
+     "allcases": [
+      "raises-the-friction-angle-to-35-degrees"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeCKpa",
+    "payload": "ChangeCKpa",
+    "kind": "change-c-kpa",
+    "leaf": {
+     "dir": "🧽change-c-kpa",
+     "cases": [
+      "gives-the-drained-sand-12-5-kpa-of-effective-cohesion"
+     ],
+     "allcases": [
+      "gives-the-drained-sand-12-5-kpa-of-effective-cohesion"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeGammaKnM3",
+    "payload": "ChangeGammaKnM3",
+    "kind": "change-gamma-kn-m3",
+    "leaf": {
+     "dir": "🪠change-gamma-kn-m3",
+     "cases": [
+      "raises-the-soil-unit-weight-to-20-kn-m3"
+     ],
+     "allcases": [
+      "raises-the-soil-unit-weight-to-20-kn-m3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBM",
+    "payload": "ChangeBM",
+    "kind": "change-bm",
+    "leaf": {
+     "dir": "🧹change-bm",
+     "cases": [
+      "widens-the-footing-to-2-5-m"
+     ],
+     "allcases": [
+      "widens-the-footing-to-2-5-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDFM",
+    "payload": "ChangeDFM",
+    "kind": "change-dfm",
+    "leaf": {
+     "dir": "🧺change-dfm",
+     "cases": [
+      "deepens-the-founding-level-to-2-m"
+     ],
+     "allcases": [
+      "deepens-the-founding-level-to-2-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeESMpa",
+    "payload": "ChangeESMpa",
+    "kind": "change-es-mpa",
+    "leaf": {
+     "dir": "🪑change-es-mpa",
+     "cases": [
+      "stiffens-the-soil-modulus-to-45-mpa"
+     ],
+     "allcases": [
+      "stiffens-the-soil-modulus-to-45-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeNu",
+    "payload": "ChangeNu",
+    "kind": "change-nu",
+    "leaf": {
+     "dir": "🪞change-nu",
+     "cases": [
+      "raises-poissons-ratio-to-0-375"
+     ],
+     "allcases": [
+      "raises-poissons-ratio-to-0-375"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDesignApproach",
+    "payload": "ChangeDesignApproach",
+    "kind": "change-design-approach",
+    "leaf": {
+     "dir": "🛋️change-design-approach",
+     "cases": [
+      "switches-from-design-approach-1-to-design-approach-2"
+     ],
+     "allcases": [
+      "switches-from-design-approach-1-to-design-approach-2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🛏️change-annex",
+     "cases": [
+      "switches-from-the-german-na-to-the-recommended-en-annex"
+     ],
+     "allcases": [
+      "switches-from-the-german-na-to-the-recommended-en-annex"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSettlementLimitMm",
+    "payload": "ChangeSettlementLimitMm",
+    "kind": "change-settlement-limit-mm",
+    "leaf": {
+     "dir": "🚿change-settlement-limit-mm",
+     "cases": [
+      "relaxes-the-settlement-limit-to-40-mm"
+     ],
+     "allcases": [
+      "relaxes-the-settlement-limit-to-40-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeNPileEdKn",
+    "payload": "ChangeNPileEdKn",
+    "kind": "change-n-pile-ed-kn",
+    "leaf": {
+     "dir": "🛁change-n-pile-ed-kn",
+     "cases": [
+      "raises-the-design-pile-axial-load-to-1200-kn"
+     ],
+     "allcases": [
+      "raises-the-design-pile-axial-load-to-1200-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAlphaS",
+    "payload": "ChangeAlphaS",
+    "kind": "change-alpha-s",
+    "leaf": {
+     "dir": "🌿change-alpha-s",
+     "cases": [
+      "lowers-the-shaft-resistance-factor-to-0-5"
+     ],
+     "allcases": [
+      "lowers-the-shaft-resistance-factor-to-0-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePileDM",
+    "payload": "ChangePileDM",
+    "kind": "change-pile-dm",
+    "leaf": {
+     "dir": "🍀change-pile-dm",
+     "cases": [
+      "enlarges-the-pile-diameter-to-0-75-m"
+     ],
+     "allcases": [
+      "enlarges-the-pile-diameter-to-0-75-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeQSKpa",
+    "payload": "ChangeQSKpa",
+    "kind": "change-qs-kpa",
+    "leaf": {
+     "dir": "🌾change-qs-kpa",
+     "cases": [
+      "raises-the-unit-shaft-resistance-to-120-kpa"
+     ],
+     "allcases": [
+      "raises-the-unit-shaft-resistance-to-120-kpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePileLM",
+    "payload": "ChangePileLM",
+    "kind": "change-pile-lm",
+    "leaf": {
+     "dir": "🌵change-pile-lm",
+     "cases": [
+      "lengthens-the-pile-to-15-m"
+     ],
+     "allcases": [
+      "lengthens-the-pile-to-15-m"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeQBKpa",
+    "payload": "ChangeQBKpa",
+    "kind": "change-qb-kpa",
+    "leaf": {
+     "dir": "🌴change-qb-kpa",
+     "cases": [
+      "raises-the-unit-base-resistance-to-3200-kpa"
+     ],
+     "allcases": [
+      "raises-the-unit-base-resistance-to-3200-kpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePileBaseAreaM2",
+    "payload": "ChangePileBaseAreaM2",
+    "kind": "change-pile-base-area-m2",
+    "leaf": {
+     "dir": "🌳change-pile-base-area-m2",
+     "cases": [
+      "doubles-the-pile-base-area-to-0-5-m2"
+     ],
+     "allcases": [
+      "doubles-the-pile-base-area-to-0-5-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePileNProfiles",
+    "payload": "ChangePileNProfiles",
+    "kind": "change-pile-n-profiles",
+    "leaf": {
+     "dir": "🌲change-pile-n-profiles",
+     "cases": [
+      "adds-a-third-investigated-ground-profile"
+     ],
+     "allcases": [
+      "adds-a-third-investigated-ground-profile"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeZInvestigatedM",
+    "payload": "ChangeZInvestigatedM",
+    "kind": "change-z-investigated-m",
+    "leaf": {
+     "dir": "🍁change-z-investigated-m",
+     "cases": [
+      "deepens-the-investigated-depth-to-12-m"
+     ],
+     "allcases": [
+      "deepens-the-investigated-depth-to-12-m"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1998": {
+  "enum": "En1998Mutation",
+  "count": 49,
+  "kinds": [
+   {
+    "variant": "ChangeSeismicZone",
+    "payload": "ChangeSeismicZone",
+    "kind": "change-seismic-zone",
+    "leaf": {
+     "dir": "🌼change-seismic-zone",
+     "cases": [
+      "raises-seismic-zone-to-4"
+     ],
+     "allcases": [
+      "raises-seismic-zone-to-4"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeGroundType",
+    "payload": "ChangeGroundType",
+    "kind": "change-ground-type",
+    "leaf": {
+     "dir": "🍄change-ground-type",
+     "cases": [
+      "switches-ground-type-to-c"
+     ],
+     "allcases": [
+      "switches-ground-type-to-c"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeImportanceClass",
+    "payload": "ChangeImportanceClass",
+    "kind": "change-importance-class",
+    "leaf": {
+     "dir": "🌰change-importance-class",
+     "cases": [
+      "switches-importance-class-to-cc3"
+     ],
+     "allcases": [
+      "switches-importance-class-to-cc3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeStructuralSystem",
+    "payload": "ChangeStructuralSystem",
+    "kind": "change-structural-system",
+    "leaf": {
+     "dir": "🌊change-structural-system",
+     "cases": [
+      "switches-structural-system-to-wall-dcm"
+     ],
+     "allcases": [
+      "switches-structural-system-to-wall-dcm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeT1S",
+    "payload": "ChangeT1S",
+    "kind": "change-t1-s",
+    "leaf": {
+     "dir": "🐚change-t1-s",
+     "cases": [
+      "raises-t1-s-to-0-75"
+     ],
+     "allcases": [
+      "raises-t1-s-to-0-75"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMassT",
+    "payload": "ChangeMassT",
+    "kind": "change-mass-t",
+    "leaf": {
+     "dir": "🪨change-mass-t",
+     "cases": [
+      "raises-mass-t-to-812-5"
+     ],
+     "allcases": [
+      "raises-mass-t-to-812-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVRdKn",
+    "payload": "ChangeVRdKn",
+    "kind": "change-v-rd-kn",
+    "leaf": {
+     "dir": "🌍️change-v-rd-kn",
+     "cases": [
+      "raises-v-rd-kn-to-925-0"
+     ],
+     "allcases": [
+      "raises-v-rd-kn-to-925-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDriftMm",
+    "payload": "ChangeDriftMm",
+    "kind": "change-drift-mm",
+    "leaf": {
+     "dir": "🌎️change-drift-mm",
+     "cases": [
+      "raises-drift-mm-to-33-5"
+     ],
+     "allcases": [
+      "raises-drift-mm-to-33-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHeightM",
+    "payload": "ChangeHeightM",
+    "kind": "change-height-m",
+    "leaf": {
+     "dir": "🌏️change-height-m",
+     "cases": [
+      "raises-height-m-to-18-75"
+     ],
+     "allcases": [
+      "raises-height-m-to-18-75"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMultipleResistingSystems",
+    "payload": "ChangeMultipleResistingSystems",
+    "kind": "change-multiple-resisting-systems",
+    "leaf": {
+     "dir": "🌐change-multiple-resisting-systems",
+     "cases": [
+      "turns-multiple-resisting-systems-off"
+     ],
+     "allcases": [
+      "turns-multiple-resisting-systems-off"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🗻change-annex",
+     "cases": [
+      "switches-annex-to-en"
+     ],
+     "allcases": [
+      "switches-annex-to-en"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEnAGr",
+    "payload": "ChangeEnAGr",
+    "kind": "change-en-a-gr",
+    "leaf": {
+     "dir": "🏔️change-en-a-gr",
+     "cases": [
+      "raises-en-a-gr-to-0-25"
+     ],
+     "allcases": [
+      "raises-en-a-gr-to-0-25"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEnGroundType",
+    "payload": "ChangeEnGroundType",
+    "kind": "change-en-ground-type",
+    "leaf": {
+     "dir": "⛰️change-en-ground-type",
+     "cases": [
+      "switches-en-ground-type-to-e"
+     ],
+     "allcases": [
+      "switches-en-ground-type-to-e"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEnSpectrumType",
+    "payload": "ChangeEnSpectrumType",
+    "kind": "change-en-spectrum-type",
+    "leaf": {
+     "dir": "🏕️change-en-spectrum-type",
+     "cases": [
+      "switches-en-spectrum-type-to-type2"
+     ],
+     "allcases": [
+      "switches-en-spectrum-type-to-type2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangePeriodRatio",
+    "payload": "ChangePeriodRatio",
+    "kind": "change-period-ratio",
+    "leaf": {
+     "dir": "🏖️change-period-ratio",
+     "cases": [
+      "raises-period-ratio-to-3-5"
+     ],
+     "allcases": [
+      "raises-period-ratio-to-3-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBridgeVRdKn",
+    "payload": "ChangeBridgeVRdKn",
+    "kind": "change-bridge-v-rd-kn",
+    "leaf": {
+     "dir": "🏜️change-bridge-v-rd-kn",
+     "cases": [
+      "raises-bridge-v-rd-kn-to-725-0"
+     ],
+     "allcases": [
+      "raises-bridge-v-rd-kn-to-725-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBearingDEdMm",
+    "payload": "ChangeBearingDEdMm",
+    "kind": "change-bearing-d-ed-mm",
+    "leaf": {
+     "dir": "🏝️change-bearing-d-ed-mm",
+     "cases": [
+      "raises-bearing-d-ed-mm-to-165-5"
+     ],
+     "allcases": [
+      "raises-bearing-d-ed-mm-to-165-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBearingDRdMm",
+    "payload": "ChangeBearingDRdMm",
+    "kind": "change-bearing-d-rd-mm",
+    "leaf": {
+     "dir": "🏞️change-bearing-d-rd-mm",
+     "cases": [
+      "raises-bearing-d-rd-mm-to-312-5"
+     ],
+     "allcases": [
+      "raises-bearing-d-rd-mm-to-312-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeRetrofitKnowledgeLevel",
+    "payload": "ChangeRetrofitKnowledgeLevel",
+    "kind": "change-retrofit-knowledge-level",
+    "leaf": {
+     "dir": "🏟️change-retrofit-knowledge-level",
+     "cases": [
+      "switches-retrofit-knowledge-level-to-kl3"
+     ],
+     "allcases": [
+      "switches-retrofit-knowledge-level-to-kl3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeRetrofitLimitState",
+    "payload": "ChangeRetrofitLimitState",
+    "kind": "change-retrofit-limit-state",
+    "leaf": {
+     "dir": "🪵change-retrofit-limit-state",
+     "cases": [
+      "switches-retrofit-limit-state-to-near-collapse"
+     ],
+     "allcases": [
+      "switches-retrofit-limit-state-to-near-collapse"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeRetrofitEDKn",
+    "payload": "ChangeRetrofitEDKn",
+    "kind": "change-retrofit-ed-kn",
+    "leaf": {
+     "dir": "🐝change-retrofit-ed-kn",
+     "cases": [
+      "raises-retrofit-e-d-kn-to-337-5"
+     ],
+     "allcases": [
+      "raises-retrofit-e-d-kn-to-337-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeRetrofitRKKn",
+    "payload": "ChangeRetrofitRKKn",
+    "kind": "change-retrofit-rk-kn",
+    "leaf": {
+     "dir": "🐞change-retrofit-rk-kn",
+     "cases": [
+      "raises-retrofit-r-k-kn-to-512-5"
+     ],
+     "allcases": [
+      "raises-retrofit-r-k-kn-to-512-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeRetrofitGammaEl",
+    "payload": "ChangeRetrofitGammaEl",
+    "kind": "change-retrofit-gamma-el",
+    "leaf": {
+     "dir": "🦋change-retrofit-gamma-el",
+     "cases": [
+      "raises-retrofit-gamma-el-to-1-25"
+     ],
+     "allcases": [
+      "raises-retrofit-gamma-el-to-1-25"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloHeightM",
+    "payload": "ChangeSiloHeightM",
+    "kind": "change-silo-height-m",
+    "leaf": {
+     "dir": "🐌change-silo-height-m",
+     "cases": [
+      "raises-silo-height-m-to-14-5"
+     ],
+     "allcases": [
+      "raises-silo-height-m-to-14-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloRadiusM",
+    "payload": "ChangeSiloRadiusM",
+    "kind": "change-silo-radius-m",
+    "leaf": {
+     "dir": "🐢change-silo-radius-m",
+     "cases": [
+      "raises-silo-radius-m-to-6-25"
+     ],
+     "allcases": [
+      "raises-silo-radius-m-to-6-25"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloNRdKn",
+    "payload": "ChangeSiloNRdKn",
+    "kind": "change-silo-n-rd-kn",
+    "leaf": {
+     "dir": "🐬change-silo-n-rd-kn",
+     "cases": [
+      "raises-silo-n-rd-kn-to-640-0"
+     ],
+     "allcases": [
+      "raises-silo-n-rd-kn-to-640-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloVEdKn",
+    "payload": "ChangeSiloVEdKn",
+    "kind": "change-silo-v-ed-kn",
+    "leaf": {
+     "dir": "🐳change-silo-v-ed-kn",
+     "cases": [
+      "raises-silo-v-ed-kn-to-225-5"
+     ],
+     "allcases": [
+      "raises-silo-v-ed-kn-to-225-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloVRdKn",
+    "payload": "ChangeSiloVRdKn",
+    "kind": "change-silo-v-rd-kn",
+    "leaf": {
+     "dir": "🦈change-silo-v-rd-kn",
+     "cases": [
+      "raises-silo-v-rd-kn-to-412-5"
+     ],
+     "allcases": [
+      "raises-silo-v-rd-kn-to-412-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSiloQNominal",
+    "payload": "ChangeSiloQNominal",
+    "kind": "change-silo-q-nominal",
+    "leaf": {
+     "dir": "🦭change-silo-q-nominal",
+     "cases": [
+      "raises-silo-q-nominal-to-2-75"
+     ],
+     "allcases": [
+      "raises-silo-q-nominal-to-2-75"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTankHeightM",
+    "payload": "ChangeTankHeightM",
+    "kind": "change-tank-height-m",
+    "leaf": {
+     "dir": "🐊change-tank-height-m",
+     "cases": [
+      "raises-tank-height-m-to-11-5"
+     ],
+     "allcases": [
+      "raises-tank-height-m-to-11-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTankRadiusM",
+    "payload": "ChangeTankRadiusM",
+    "kind": "change-tank-radius-m",
+    "leaf": {
+     "dir": "🦎change-tank-radius-m",
+     "cases": [
+      "raises-tank-radius-m-to-5-75"
+     ],
+     "allcases": [
+      "raises-tank-radius-m-to-5-75"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTankMassT",
+    "payload": "ChangeTankMassT",
+    "kind": "change-tank-mass-t",
+    "leaf": {
+     "dir": "🐍change-tank-mass-t",
+     "cases": [
+      "raises-tank-mass-t-to-425-0"
+     ],
+     "allcases": [
+      "raises-tank-mass-t-to-425-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTankVRdKn",
+    "payload": "ChangeTankVRdKn",
+    "kind": "change-tank-v-rd-kn",
+    "leaf": {
+     "dir": "🦂change-tank-v-rd-kn",
+     "cases": [
+      "raises-tank-v-rd-kn-to-537-5"
+     ],
+     "allcases": [
+      "raises-tank-v-rd-kn-to-537-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTowerMEdKnm",
+    "payload": "ChangeTowerMEdKnm",
+    "kind": "change-tower-m-ed-knm",
+    "leaf": {
+     "dir": "🦟change-tower-m-ed-knm",
+     "cases": [
+      "raises-tower-m-ed-knm-to-1562-5"
+     ],
+     "allcases": [
+      "raises-tower-m-ed-knm-to-1562-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTowerMRdKnm",
+    "payload": "ChangeTowerMRdKnm",
+    "kind": "change-tower-m-rd-knm",
+    "leaf": {
+     "dir": "🦗change-tower-m-rd-knm",
+     "cases": [
+      "raises-tower-m-rd-knm-to-2812-5"
+     ],
+     "allcases": [
+      "raises-tower-m-rd-knm-to-2812-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTowerIsChimney",
+    "payload": "ChangeTowerIsChimney",
+    "kind": "change-tower-is-chimney",
+    "leaf": {
+     "dir": "🕷️change-tower-is-chimney",
+     "cases": [
+      "turns-tower-is-chimney-off"
+     ],
+     "allcases": [
+      "turns-tower-is-chimney-off"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTowerQNominal",
+    "payload": "ChangeTowerQNominal",
+    "kind": "change-tower-q-nominal",
+    "leaf": {
+     "dir": "🐜change-tower-q-nominal",
+     "cases": [
+      "raises-tower-q-nominal-to-3-25"
+     ],
+     "allcases": [
+      "raises-tower-q-nominal-to-3-25"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeTowerMassT",
+    "payload": "ChangeTowerMassT",
+    "kind": "change-tower-mass-t",
+    "leaf": {
+     "dir": "🦔change-tower-mass-t",
+     "cases": [
+      "raises-tower-mass-t-to-112-5"
+     ],
+     "allcases": [
+      "raises-tower-mass-t-to-112-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFoundationAreaM2",
+    "payload": "ChangeFoundationAreaM2",
+    "kind": "change-foundation-area-m2",
+    "leaf": {
+     "dir": "🦇change-foundation-area-m2",
+     "cases": [
+      "raises-foundation-area-m2-to-144-0"
+     ],
+     "allcases": [
+      "raises-foundation-area-m2-to-144-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFoundationPRdKpa",
+    "payload": "ChangeFoundationPRdKpa",
+    "kind": "change-foundation-p-rd-kpa",
+    "leaf": {
+     "dir": "🦉change-foundation-p-rd-kpa",
+     "cases": [
+      "raises-foundation-p-rd-kpa-to-625-0"
+     ],
+     "allcases": [
+      "raises-foundation-p-rd-kpa-to-625-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFoundationHEdKn",
+    "payload": "ChangeFoundationHEdKn",
+    "kind": "change-foundation-h-ed-kn",
+    "leaf": {
+     "dir": "🐴change-foundation-h-ed-kn",
+     "cases": [
+      "raises-foundation-h-ed-kn-to-212-5"
+     ],
+     "allcases": [
+      "raises-foundation-h-ed-kn-to-212-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFoundationHRdKn",
+    "payload": "ChangeFoundationHRdKn",
+    "kind": "change-foundation-h-rd-kn",
+    "leaf": {
+     "dir": "🐎change-foundation-h-rd-kn",
+     "cases": [
+      "raises-foundation-h-rd-kn-to-475-0"
+     ],
+     "allcases": [
+      "raises-foundation-h-rd-kn-to-475-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeKFoundation",
+    "payload": "ChangeKFoundation",
+    "kind": "change-k-foundation",
+    "leaf": {
+     "dir": "🦄change-k-foundation",
+     "cases": [
+      "raises-k-foundation-to-640000-0"
+     ],
+     "allcases": [
+      "raises-k-foundation-to-640000-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeKSoil",
+    "payload": "ChangeKSoil",
+    "kind": "change-k-soil",
+    "leaf": {
+     "dir": "🐑change-k-soil",
+     "cases": [
+      "raises-k-soil-to-262500-0"
+     ],
+     "allcases": [
+      "raises-k-soil-to-262500-0"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWallHeightM",
+    "payload": "ChangeWallHeightM",
+    "kind": "change-wall-height-m",
+    "leaf": {
+     "dir": "🐐change-wall-height-m",
+     "cases": [
+      "raises-wall-height-m-to-5-5"
+     ],
+     "allcases": [
+      "raises-wall-height-m-to-5-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWallPhiDeg",
+    "payload": "ChangeWallPhiDeg",
+    "kind": "change-wall-phi-deg",
+    "leaf": {
+     "dir": "🐮change-wall-phi-deg",
+     "cases": [
+      "raises-wall-phi-deg-to-37-5"
+     ],
+     "allcases": [
+      "raises-wall-phi-deg-to-37-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWallSoilGammaKnM3",
+    "payload": "ChangeWallSoilGammaKnM3",
+    "kind": "change-wall-soil-gamma-kn-m3",
+    "leaf": {
+     "dir": "🐷change-wall-soil-gamma-kn-m3",
+     "cases": [
+      "raises-wall-soil-gamma-kn-m3-to-20-5"
+     ],
+     "allcases": [
+      "raises-wall-soil-gamma-kn-m3-to-20-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWallR",
+    "payload": "ChangeWallR",
+    "kind": "change-wall-r",
+    "leaf": {
+     "dir": "🐗change-wall-r",
+     "cases": [
+      "raises-wall-r-to-2-25"
+     ],
+     "allcases": [
+      "raises-wall-r-to-2-25"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWallHRdKn",
+    "payload": "ChangeWallHRdKn",
+    "kind": "change-wall-h-rd-kn",
+    "leaf": {
+     "dir": "🦌change-wall-h-rd-kn",
+     "cases": [
+      "raises-wall-h-rd-kn-to-187-5"
+     ],
+     "allcases": [
+      "raises-wall-h-rd-kn-to-187-5"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📘️en1999": {
+  "enum": "En1999Mutation",
+  "count": 26,
+  "kinds": [
+   {
+    "variant": "ChangeNEdKn",
+    "payload": "ChangeNEdKn",
+    "kind": "change-n-ed-kn",
+    "leaf": {
+     "dir": "🦎change-n-ed-kn",
+     "cases": [
+      "raises-axial-force-to-180-kn"
+     ],
+     "allcases": [
+      "raises-axial-force-to-180-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeMEdKnm",
+    "payload": "ChangeMEdKnm",
+    "kind": "change-m-ed-knm",
+    "leaf": {
+     "dir": "🐍change-m-ed-knm",
+     "cases": [
+      "raises-design-moment-to-9-5-knm"
+     ],
+     "allcases": [
+      "raises-design-moment-to-9-5-knm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAMm2",
+    "payload": "ChangeAMm2",
+    "kind": "change-a-mm2",
+    "leaf": {
+     "dir": "🦂change-a-mm2",
+     "cases": [
+      "enlarges-section-area-to-2250-mm2"
+     ],
+     "allcases": [
+      "enlarges-section-area-to-2250-mm2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWElMm3",
+    "payload": "ChangeWElMm3",
+    "kind": "change-w-el-mm3",
+    "leaf": {
+     "dir": "🦟change-w-el-mm3",
+     "cases": [
+      "raises-section-modulus-to-40000-mm3"
+     ],
+     "allcases": [
+      "raises-section-modulus-to-40000-mm3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAlloy",
+    "payload": "ChangeAlloy",
+    "kind": "change-alloy",
+    "leaf": {
+     "dir": "🦗change-alloy",
+     "cases": [
+      "switches-alloy-to-aw7020t6"
+     ],
+     "allcases": [
+      "switches-alloy-to-aw7020t6"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeChi",
+    "payload": "ChangeChi",
+    "kind": "change-chi",
+    "leaf": {
+     "dir": "🕷️change-chi",
+     "cases": [
+      "lowers-buckling-chi-to-0-5"
+     ],
+     "allcases": [
+      "lowers-buckling-chi-to-0-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeITMm4",
+    "payload": "ChangeITMm4",
+    "kind": "change-it-mm4",
+    "leaf": {
+     "dir": "🐜change-it-mm4",
+     "cases": [
+      "raises-torsion-constant-to-10240-mm4"
+     ],
+     "allcases": [
+      "raises-torsion-constant-to-10240-mm4"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeLCrMm",
+    "payload": "ChangeLCrMm",
+    "kind": "change-l-cr-mm",
+    "leaf": {
+     "dir": "🦔change-l-cr-mm",
+     "cases": [
+      "lengthens-buckling-length-to-4000-mm"
+     ],
+     "allcases": [
+      "lengthens-buckling-length-to-4000-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeThetaC",
+    "payload": "ChangeThetaC",
+    "kind": "change-theta-c",
+    "leaf": {
+     "dir": "🦇change-theta-c",
+     "cases": [
+      "raises-fatigue-detail-theta-c-to-225-mpa"
+     ],
+     "allcases": [
+      "raises-fatigue-detail-theta-c-to-225-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDeltaSigmaEd",
+    "payload": "ChangeDeltaSigmaEd",
+    "kind": "change-delta-sigma-ed",
+    "leaf": {
+     "dir": "🦉change-delta-sigma-ed",
+     "cases": [
+      "raises-fatigue-stress-range-to-62-5-mpa"
+     ],
+     "allcases": [
+      "raises-fatigue-stress-range-to-62-5-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeDeltaSigmaC",
+    "payload": "ChangeDeltaSigmaC",
+    "kind": "change-delta-sigma-c",
+    "leaf": {
+     "dir": "🐴change-delta-sigma-c",
+     "cases": [
+      "upgrades-detail-category-to-90-mpa"
+     ],
+     "allcases": [
+      "upgrades-detail-category-to-90-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeFatigueM",
+    "payload": "ChangeFatigueM",
+    "kind": "change-fatigue-m",
+    "leaf": {
+     "dir": "🐎change-fatigue-m",
+     "cases": [
+      "flattens-sn-slope-to-m-5"
+     ],
+     "allcases": [
+      "flattens-sn-slope-to-m-5"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeNCycles",
+    "payload": "ChangeNCycles",
+    "kind": "change-n-cycles",
+    "leaf": {
+     "dir": "🦄change-n-cycles",
+     "cases": [
+      "doubles-fatigue-cycles-to-2000000"
+     ],
+     "allcases": [
+      "doubles-fatigue-cycles-to-2000000"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeVWeldEdKn",
+    "payload": "ChangeVWeldEdKn",
+    "kind": "change-v-weld-ed-kn",
+    "leaf": {
+     "dir": "🐑change-v-weld-ed-kn",
+     "cases": [
+      "raises-weld-shear-to-48-kn"
+     ],
+     "allcases": [
+      "raises-weld-shear-to-48-kn"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWeldThroatMm",
+    "payload": "ChangeWeldThroatMm",
+    "kind": "change-weld-throat-mm",
+    "leaf": {
+     "dir": "🐐change-weld-throat-mm",
+     "cases": [
+      "thickens-weld-throat-to-6-5-mm"
+     ],
+     "allcases": [
+      "thickens-weld-throat-to-6-5-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeWeldLengthMm",
+    "payload": "ChangeWeldLengthMm",
+    "kind": "change-weld-length-mm",
+    "leaf": {
+     "dir": "🐮change-weld-length-mm",
+     "cases": [
+      "lengthens-weld-to-200-mm"
+     ],
+     "allcases": [
+      "lengthens-weld-to-200-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeBetaW",
+    "payload": "ChangeBetaW",
+    "kind": "change-beta-w",
+    "leaf": {
+     "dir": "🐷change-beta-w",
+     "cases": [
+      "raises-weld-correlation-beta-w-to-0-75"
+     ],
+     "allcases": [
+      "raises-weld-correlation-beta-w-to-0-75"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSheetBMm",
+    "payload": "ChangeSheetBMm",
+    "kind": "change-sheet-b-mm",
+    "leaf": {
+     "dir": "🐗change-sheet-b-mm",
+     "cases": [
+      "widens-sheet-to-320-mm"
+     ],
+     "allcases": [
+      "widens-sheet-to-320-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSheetTMm",
+    "payload": "ChangeSheetTMm",
+    "kind": "change-sheet-t-mm",
+    "leaf": {
+     "dir": "🦌change-sheet-t-mm",
+     "cases": [
+      "thickens-sheet-to-3-5-mm"
+     ],
+     "allcases": [
+      "thickens-sheet-to-3-5-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSheetKSigma",
+    "payload": "ChangeSheetKSigma",
+    "kind": "change-sheet-k-sigma",
+    "leaf": {
+     "dir": "🐘change-sheet-k-sigma",
+     "cases": [
+      "raises-sheet-plate-buckling-k-sigma-to-6-25"
+     ],
+     "allcases": [
+      "raises-sheet-plate-buckling-k-sigma-to-6-25"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSheetWElMm3",
+    "payload": "ChangeSheetWElMm3",
+    "kind": "change-sheet-w-el-mm3",
+    "leaf": {
+     "dir": "🦏change-sheet-w-el-mm3",
+     "cases": [
+      "raises-sheet-section-modulus-to-12800-mm3"
+     ],
+     "allcases": [
+      "raises-sheet-section-modulus-to-12800-mm3"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSheetMEdKnm",
+    "payload": "ChangeSheetMEdKnm",
+    "kind": "change-sheet-m-ed-knm",
+    "leaf": {
+     "dir": "🦛change-sheet-m-ed-knm",
+     "cases": [
+      "raises-sheet-design-moment-to-1-25-knm"
+     ],
+     "allcases": [
+      "raises-sheet-design-moment-to-1-25-knm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeShellTMm",
+    "payload": "ChangeShellTMm",
+    "kind": "change-shell-t-mm",
+    "leaf": {
+     "dir": "🐪change-shell-t-mm",
+     "cases": [
+      "thickens-shell-to-6-25-mm"
+     ],
+     "allcases": [
+      "thickens-shell-to-6-25-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeShellRMm",
+    "payload": "ChangeShellRMm",
+    "kind": "change-shell-r-mm",
+    "leaf": {
+     "dir": "🐫change-shell-r-mm",
+     "cases": [
+      "widens-shell-radius-to-750-mm"
+     ],
+     "allcases": [
+      "widens-shell-radius-to-750-mm"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSigmaEdShellMpa",
+    "payload": "ChangeSigmaEdShellMpa",
+    "kind": "change-sigma-ed-shell-mpa",
+    "leaf": {
+     "dir": "🦒change-sigma-ed-shell-mpa",
+     "cases": [
+      "raises-shell-design-stress-to-165-mpa"
+     ],
+     "allcases": [
+      "raises-shell-design-stress-to-165-mpa"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnnex",
+    "payload": "ChangeAnnex",
+    "kind": "change-annex",
+    "leaf": {
+     "dir": "🦘change-annex",
+     "cases": [
+      "switches-national-annex-to-en"
+     ],
+     "allcases": [
+      "switches-national-annex-to-en"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ },
+ "📙️din18599": {
+  "enum": "Din18599Mutation",
+  "count": 13,
+  "kinds": [
+   {
+    "variant": "ChangeUseClass",
+    "payload": "ChangeUseClass",
+    "kind": "change-use-class",
+    "leaf": {
+     "dir": "🦏change-use-class",
+     "cases": [
+      "reclassifies-the-building-as-an-office"
+     ],
+     "allcases": [
+      "reclassifies-the-building-as-an-office"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHeatedAreaM2",
+    "payload": "ChangeHeatedAreaM2",
+    "kind": "change-heated-area-m2",
+    "leaf": {
+     "dir": "🦛change-heated-area-m2",
+     "cases": [
+      "extends-the-heated-area-to-160-m2"
+     ],
+     "allcases": [
+      "extends-the-heated-area-to-160-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeOccupants",
+    "payload": "ChangeOccupants",
+    "kind": "change-occupants",
+    "leaf": {
+     "dir": "🐪change-occupants",
+     "cases": [
+      "raises-the-occupancy-to-six-people"
+     ],
+     "allcases": [
+      "raises-the-occupancy-to-six-people"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHT",
+    "payload": "ChangeHT",
+    "kind": "change-ht",
+    "leaf": {
+     "dir": "🐫change-ht",
+     "cases": [
+      "raises-the-transmission-loss-coefficient-to-118-w-per-k"
+     ],
+     "allcases": [
+      "raises-the-transmission-loss-coefficient-to-118-w-per-k"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeHV",
+    "payload": "ChangeHV",
+    "kind": "change-hv",
+    "leaf": {
+     "dir": "🦒change-hv",
+     "cases": [
+      "raises-the-ventilation-loss-coefficient-to-52-25-w-per-k"
+     ],
+     "allcases": [
+      "raises-the-ventilation-loss-coefficient-to-52-25-w-per-k"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeInternalGainsWM2",
+    "payload": "ChangeInternalGainsWM2",
+    "kind": "change-internal-gains-wm2",
+    "leaf": {
+     "dir": "🦘change-internal-gains-wm2",
+     "cases": [
+      "raises-the-internal-gains-to-5-w-per-m2"
+     ],
+     "allcases": [
+      "raises-the-internal-gains-to-5-w-per-m2"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSolarGainsKwh",
+    "payload": "ChangeSolarGainsKwh",
+    "kind": "change-solar-gains-kwh",
+    "leaf": {
+     "dir": "🦥change-solar-gains-kwh",
+     "cases": [
+      "raises-the-annual-solar-gains-to-132-kwh"
+     ],
+     "allcases": [
+      "raises-the-annual-solar-gains-to-132-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeSystemLossesKwh",
+    "payload": "ChangeSystemLossesKwh",
+    "kind": "change-system-losses-kwh",
+    "leaf": {
+     "dir": "🦦change-system-losses-kwh",
+     "cases": [
+      "cuts-the-system-losses-to-450-kwh"
+     ],
+     "allcases": [
+      "cuts-the-system-losses-to-450-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeRenewableKwh",
+    "payload": "ChangeRenewableKwh",
+    "kind": "change-renewable-kwh",
+    "leaf": {
+     "dir": "🦨change-renewable-kwh",
+     "cases": [
+      "raises-the-on-site-renewable-yield-to-2250-kwh"
+     ],
+     "allcases": [
+      "raises-the-on-site-renewable-yield-to-2250-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeAnnualLimitKwh",
+    "payload": "ChangeAnnualLimitKwh",
+    "kind": "change-annual-limit-kwh",
+    "leaf": {
+     "dir": "🦡change-annual-limit-kwh",
+     "cases": [
+      "tightens-the-annual-primary-energy-limit-to-6000-kwh"
+     ],
+     "allcases": [
+      "tightens-the-annual-primary-energy-limit-to-6000-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeEnergyCarrier",
+    "payload": "ChangeEnergyCarrier",
+    "kind": "change-energy-carrier",
+    "leaf": {
+     "dir": "📐change-energy-carrier",
+     "cases": [
+      "switches-the-energy-carrier-to-an-electric-heat-pump"
+     ],
+     "allcases": [
+      "switches-the-energy-carrier-to-an-electric-heat-pump"
+     ]
+    }
+   },
+   {
+    "variant": "ChangeReferenceQPKwh",
+    "payload": "ChangeReferenceQPKwh",
+    "kind": "change-reference-qp-kwh",
+    "leaf": {
+     "dir": "🔽change-reference-qp-kwh",
+     "cases": [
+      "lowers-the-reference-building-primary-energy-to-8750-kwh"
+     ],
+     "allcases": [
+      "lowers-the-reference-building-primary-energy-to-8750-kwh"
+     ]
+    }
+   },
+   {
+    "variant": "UpdateClimate",
+    "payload": "UpdateClimate",
+    "kind": "update-climate",
+    "leaf": {
+     "dir": "🐘update-climate",
+     "cases": [
+      "refuses-a-negative-january-irradiance"
+     ],
+     "allcases": [
+      "refuses-a-negative-january-irradiance"
+     ]
+    }
+   }
+  ],
+  "problems": [],
+  "leaves_without_variant": []
+ }
+}

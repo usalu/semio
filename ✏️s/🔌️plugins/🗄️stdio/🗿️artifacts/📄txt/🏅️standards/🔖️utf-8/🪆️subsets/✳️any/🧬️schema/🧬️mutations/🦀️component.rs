@@ -1,5 +1,27 @@
 //! 🧬️ TxtMutation — document mutation dispatch. Every variant's `diff()`/`inverse()` is
 //! handcrafted directly against `TxtDiff`/`TxtLinesDiff` -- no apply-and-capture.
+//!
+//! 🔒️ REPRESENTABILITY, decided here rather than worked around downstream. `TxtSnapshot::to_body`
+//! is `lines.join(sep)` plus an optional terminator, so `(L, true)` and `(L ++ [""], false)` render
+//! the SAME bytes, as do `(vec![], true)` and `(vec![""], true)`; `from_body` can only return one
+//! pre-image and returns the terminated one. The pair is therefore injective over exactly the
+//! images `from_body` produces and nowhere else, and a snapshot outside that image is a document
+//! this carrier cannot write down: exporting it and reading it back yields a DIFFERENT snapshot,
+//! silently one line short. Measured, not argued — the real 170-line interview transcript ends
+//! `…conversation.\n\n`, so `SetTrailingNewline { value: false }` on it renders 170 lines with no
+//! terminator, which reads back as 169 WITH one, and the inverse can no longer recover the lost
+//! blank line (ticket `26/08/23/END-TO-END-TESTING-REFACTOR`,
+//! `every_feature_row_inverts_back_to_the_real_document`).
+//!
+//! The remedy is the NARROWING below rather than a wider snapshot type: every variant is gated on
+//! [`non_canonical_reason`], so the only `TxtSnapshot` values this vocabulary can reach are the
+//! canonical ones, on which `from_body`/`to_body` IS a bijection. A mutation that would leave the
+//! document outside that image is REJECTED with [`CODE_NOT_REPRESENTABLE`] and changes nothing —
+//! the same "refuse rather than silently lose" discipline the sibling `📰xml ✳️valid` vocabulary
+//! applies to §2.8. The cost is stated plainly: on a document whose last line is empty,
+//! `set-trailing-newline false` has no result at all, because the document it would name is already
+//! spelled `(L, true)` with one line fewer. Reaching that document is `remove-line`'s job, not this
+//! kind's.
 
 use crate::artifacts::txt::schema::diff::{diff_set_snapshot, TxtDiff, TxtLineAdded, TxtLineModified, TxtLinesDiff};
 use crate::artifacts::txt::schema::snapshot::LineEnding;
@@ -52,7 +74,83 @@ pub enum TxtMutation {
 /// reads that JSON catalog, never this enum, so `kinds_match_enum_variants_and_catalog` below is
 /// what keeps the two lists honest.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-trailing-newline", "set-line-ending", "insert-line", "remove-line", "set-line"];
+
+/// 🏷️ The kebab-case kind one mutation value spells — the same names [`KINDS`] lists, used by the
+/// rejection diagnostics so a refusal names the kind that was refused.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn kind_of(mutation: &TxtMutation) -> &'static str {
+    match mutation {
+        TxtMutation::NoMutation => "no-mutation",
+        TxtMutation::SetSnapshot { .. } => "set-snapshot",
+        TxtMutation::SetTrailingNewline { .. } => "set-trailing-newline",
+        TxtMutation::SetLineEnding { .. } => "set-line-ending",
+        TxtMutation::InsertLine { .. } => "insert-line",
+        TxtMutation::RemoveLine { .. } => "remove-line",
+        TxtMutation::SetLine { .. } => "set-line",
+    }
+}
 //#endregion 🔖️Kinds
+
+//#region 🔖️Representability
+/// 🚫 The fault code every mutation refused for leaving the document unrepresentable reports under.
+pub const CODE_NOT_REPRESENTABLE: &str = "stdio.txt.mutation-not-representable";
+
+/// 🔒️ Why `(lines, trailing_newline)` is not the canonical decomposition of the body it renders, or
+/// `None` when it is. Two families of pairs collide under [`TxtSnapshot::to_body`] and `from_body`
+/// resolves both in favour of the terminated reading, so exactly those two shapes are outside its
+/// image: a terminated document with no lines at all, and an unterminated document whose last line
+/// is empty. Everything else round-trips byte-for-byte through the carrier.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn non_canonical_reason(lines: &[String], trailing_newline: bool) -> Option<String> {
+    non_canonical_shape(lines.len(), lines.last().is_some_and(|line| line.is_empty()), trailing_newline)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn non_canonical_shape(line_count: usize, last_line_is_empty: bool, trailing_newline: bool) -> Option<String> {
+    if trailing_newline && line_count == 0 {
+        return Some("a document with no lines cannot carry a trailing terminator — that pair renders the very bytes the one-empty-line document renders, and reading them back returns the latter".to_string());
+    }
+    if !trailing_newline && last_line_is_empty {
+        return Some("a document whose last line is empty cannot drop its trailing terminator — that pair renders the very bytes the same document one line shorter renders, and reading them back returns the latter, losing the empty line".to_string());
+    }
+    None
+}
+
+/// 📐️ The line count and last-line emptiness `mutation` would leave behind, derived per variant from
+/// `base` rather than by applying anything — the gate has to answer before a diff exists, and
+/// apply-and-inspect is the same banned shortcut as apply-and-capture.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn resulting_shape(base: &TxtSnapshot, mutation: &TxtMutation) -> (usize, bool, bool) {
+    let ends_empty = |lines: &[String]| lines.last().is_some_and(|line| line.is_empty());
+    let unchanged = (base.lines.len(), ends_empty(&base.lines), base.trailing_newline);
+    match mutation {
+        TxtMutation::SetSnapshot { snapshot } => (snapshot.lines.len(), ends_empty(&snapshot.lines), snapshot.trailing_newline),
+        TxtMutation::SetTrailingNewline { value } => (unchanged.0, unchanged.1, *value),
+        TxtMutation::InsertLine { index, text } => {
+            let at = (*index).min(base.lines.len());
+            (base.lines.len() + 1, if at == base.lines.len() { text.is_empty() } else { unchanged.1 }, base.trailing_newline)
+        }
+        TxtMutation::RemoveLine { index } if *index < base.lines.len() => {
+            let remaining = base.lines.len() - 1;
+            (remaining, remaining > 0 && base.lines[if *index == remaining { remaining - 1 } else { remaining }].is_empty(), base.trailing_newline)
+        }
+        TxtMutation::SetLine { index, text } if *index + 1 == base.lines.len() => (base.lines.len(), text.is_empty(), base.trailing_newline),
+        _ => unchanged,
+    }
+}
+
+/// 🛡️ The message naming why `mutation` may not be applied to `base`, or `None` when it may. A
+/// mutation that leaves the document exactly as shaped as it found it is never refused, so a base
+/// built by hand outside this vocabulary does not turn `NoMutation` into a fault.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn representability_violation(base: &TxtSnapshot, mutation: &TxtMutation) -> Option<String> {
+    let shape = resulting_shape(base, mutation);
+    if shape == (base.lines.len(), base.lines.last().is_some_and(|line| line.is_empty()), base.trailing_newline) {
+        return None;
+    }
+    non_canonical_shape(shape.0, shape.1, shape.2).map(|reason| format!("{}: {reason}", kind_of(mutation)))
+}
+//#endregion 🔖️Representability
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source: computed once,
@@ -75,6 +173,9 @@ impl Mutation<TxtSnapshot> for TxtMutation {
     type Diff = TxtDiff;
 
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        if let Some(reason) = representability_violation(base, self) {
+            return protocol::MutationOutcome::error(CODE_NOT_REPRESENTABLE, reason, Vec::<String>::new());
+        }
         protocol::MutationOutcome::new(match self {
             TxtMutation::NoMutation => TxtDiff::default(),
             TxtMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -285,20 +386,8 @@ mod tests {
     /// enum, so this test is the only thing tying the two declarations together.
     #[semio_framework_async_macros::async_test]
     async fn kinds_match_enum_variants_and_catalog() {
-        // 🚫️async: E1 pure inherent helper, no I/O — see R9
-        fn kebab_of(mutation: &TxtMutation) -> &'static str {
-            match mutation {
-                TxtMutation::NoMutation => "no-mutation",
-                TxtMutation::SetSnapshot { .. } => "set-snapshot",
-                TxtMutation::SetTrailingNewline { .. } => "set-trailing-newline",
-                TxtMutation::SetLineEnding { .. } => "set-line-ending",
-                TxtMutation::InsertLine { .. } => "insert-line",
-                TxtMutation::RemoveLine { .. } => "remove-line",
-                TxtMutation::SetLine { .. } => "set-line",
-            }
-        }
         let b = base();
-        let variant_kinds: std::collections::BTreeSet<&str> = all_variants(&b).iter().map(kebab_of).collect();
+        let variant_kinds: std::collections::BTreeSet<&str> = all_variants(&b).iter().map(kind_of).collect();
         let declared_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(variant_kinds, declared_kinds, "KINDS must list every TxtMutation variant exactly once");
 
@@ -306,6 +395,104 @@ mod tests {
         let catalog_kinds: Vec<&str> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string")).collect();
         assert_eq!(catalog_kinds, KINDS.to_vec(), "the manifest's mutationCatalogs[0].kinds must match KINDS exactly, declaration order included");
     }
+
+    //#region 🔖️RepresentabilityLaw
+    /// 📄️ A document shaped like the real interview transcript this subset's case mutates: an
+    /// LF-terminated body whose LAST line is empty, i.e. one that ends `…\n\n`.
+    // 🚫️async: E1 pure test-fixture builder, no I/O — see R9
+    fn ends_with_a_blank_line() -> TxtSnapshot {
+        TxtSnapshot { lines: vec!["a".into(), "b".into(), String::new()], trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() }
+    }
+
+    /// 🔒️ The collision itself, pinned: two different pairs render the same bytes and the carrier
+    /// returns only the terminated one. This is the fact the narrowing exists for, so it is asserted
+    /// rather than described — and the second half asserts the narrowing, that the losing pre-image
+    /// is now named as unrepresentable instead of being silently reachable.
+    #[test]
+    fn the_line_terminator_pairs_that_collide_are_exactly_the_ones_refused() {
+        let terminated = TxtSnapshot { lines: vec!["a".into()], trailing_newline: true, ..Default::default() };
+        let empty_last_line = TxtSnapshot { lines: vec!["a".into(), String::new()], trailing_newline: false, ..Default::default() };
+        assert_eq!(terminated.to_body(), empty_last_line.to_body(), "these are the two pre-images that collide");
+        assert_eq!(TxtSnapshot::from_body(&terminated.to_body()).lines, terminated.lines, "the carrier resolves the tie in favour of the terminator");
+        assert_eq!(non_canonical_reason(&terminated.lines, terminated.trailing_newline), None, "the reachable pre-image is canonical");
+        assert!(non_canonical_reason(&empty_last_line.lines, empty_last_line.trailing_newline).is_some(), "the losing pre-image must be named unrepresentable");
+        assert!(non_canonical_reason(&[], true).is_some(), "so must the no-lines-but-terminated pair, which renders what the one-empty-line document renders");
+    }
+
+    /// 🚫 `set-trailing-newline false` on a document whose last line is empty is refused, reports
+    /// [`CODE_NOT_REPRESENTABLE`] and leaves the document exactly where it was — the whole point
+    /// being that its result is already spelled by a document one line shorter.
+    #[test]
+    fn set_trailing_newline_false_is_refused_when_the_last_line_is_empty() {
+        let base = ends_with_a_blank_line();
+        let mut next = base.clone();
+        let outcome = apply_txt_mutation(&mut next, &TxtMutation::SetTrailingNewline { value: false });
+        assert!(outcome.messages().iter().any(|message| message.code.0 == CODE_NOT_REPRESENTABLE), "got {:?}", outcome.messages());
+        assert_eq!(next, base, "a refused mutation must leave the document untouched");
+
+        let ordinary = TxtSnapshot { lines: vec!["a".into(), "b".into()], trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
+        let mut dropped = ordinary.clone();
+        let allowed = apply_txt_mutation(&mut dropped, &TxtMutation::SetTrailingNewline { value: false });
+        assert!(allowed.messages().iter().all(|message| message.code.0 != CODE_NOT_REPRESENTABLE), "the same kind must still work where its result IS representable");
+        assert_eq!(dropped.to_body(), "a\nb");
+    }
+
+    /// 🔁️ Every kind, on the very document shape the collision lives on: whatever the vocabulary
+    /// lets through must be a snapshot the carrier can write down and read back UNCHANGED, and
+    /// whatever it refuses must change nothing. This is the property the narrowing buys — no
+    /// reachable `TxtSnapshot` loses a line to its own serialization.
+    #[test]
+    fn no_reachable_snapshot_survives_its_own_carrier_differently() {
+        let base = ends_with_a_blank_line();
+        let candidates = vec![
+            TxtMutation::NoMutation,
+            TxtMutation::SetSnapshot { snapshot: TxtSnapshot { lines: vec!["z".into(), String::new()], trailing_newline: false, ..Default::default() } },
+            TxtMutation::SetTrailingNewline { value: false },
+            TxtMutation::SetLineEnding { value: LineEnding::CrLf },
+            TxtMutation::InsertLine { index: 3, text: String::new() },
+            TxtMutation::RemoveLine { index: 2 },
+            TxtMutation::SetLine { index: 2, text: "no longer blank".into() },
+        ];
+        let mut refused = 0usize;
+        for mutation in &candidates {
+            let mut next = base.clone();
+            let outcome = apply_txt_mutation(&mut next, mutation);
+            if outcome.messages().iter().any(|message| message.code.0 == CODE_NOT_REPRESENTABLE) {
+                refused += 1;
+                assert_eq!(next, base, "the refused {mutation:?} must leave the document untouched");
+                continue;
+            }
+            let round_tripped = TxtSnapshot::from_body(&next.to_body());
+            assert_eq!(round_tripped.lines, next.lines, "{mutation:?} reached a snapshot its own carrier reads back differently");
+            assert_eq!(round_tripped.trailing_newline, next.trailing_newline, "{mutation:?} reached a snapshot its own carrier reads back differently");
+        }
+        assert_eq!(refused, 2, "exactly `set-trailing-newline false` and the `set-snapshot` carrying the losing pre-image are unrepresentable here");
+    }
+
+    /// ↩️ The inverse law over the blank-line-ending document, which is where it used to break:
+    /// every kind the vocabulary now admits still returns the document to exactly where it started.
+    #[test]
+    fn every_admitted_kind_inverts_on_a_document_ending_in_a_blank_line() {
+        let base = ends_with_a_blank_line();
+        for mutation in [
+            TxtMutation::NoMutation,
+            TxtMutation::SetSnapshot { snapshot: TxtSnapshot { lines: vec!["z".into()], trailing_newline: true, ..Default::default() } },
+            TxtMutation::SetLineEnding { value: LineEnding::CrLf },
+            TxtMutation::InsertLine { index: 1, text: "x".into() },
+            TxtMutation::RemoveLine { index: 2 },
+            TxtMutation::SetLine { index: 0, text: "changed".into() },
+        ] {
+            let mut next = base.clone();
+            let outcome = apply_txt_mutation(&mut next, &mutation);
+            assert!(outcome.messages().iter().all(|message| message.code.0 != CODE_NOT_REPRESENTABLE), "{mutation:?} must be admitted here");
+            assert_ne!(next, base, "{mutation:?} must actually move the document, or it proves nothing");
+            for undo in mutation.inverse(&base) {
+                apply_txt_mutation(&mut next, &undo);
+            }
+            assert_eq!(next, base, "inverse round trip failed for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️RepresentabilityLaw
 }
 //#endregion 🧪️Tests
 

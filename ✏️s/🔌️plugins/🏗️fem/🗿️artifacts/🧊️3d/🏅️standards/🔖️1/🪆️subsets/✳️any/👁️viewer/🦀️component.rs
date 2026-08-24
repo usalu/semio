@@ -49,6 +49,22 @@ impl ArtifactViewer for Fem3dViewer {
     const DIALECT: Dialect = crate::artifacts::fem3d::FEM3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
 
+    fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        Ok(crate::artifacts::fem3d::live_visual::maintenance_step(instance_id, maximum_items, maximum_bytes))
+    }
+
+    fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        Ok(crate::artifacts::fem3d::live_visual::close_step(instance_id, maximum_items, maximum_bytes))
+    }
+
+    fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
+        crate::artifacts::fem3d::live_visual::terminal_is_empty(instance_id)
+    }
+
+    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
+        crate::artifacts::fem3d::live_visual::prepare_snapshot_read(operation, snapshot)
+    }
+
     /// 👁️ Real, non-empty default scene: the artifact's own bundled `default` example DSL, falling
     /// back to the empty snapshot only if that fixture ever fails to parse.
     async fn initial_snapshot() -> Fem3dSnapshot {
@@ -63,9 +79,13 @@ impl ArtifactViewer for Fem3dViewer {
         Ok(ViewEmit::default())
     }
 
+    async fn pending_effects(doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Vec<semio_framework::kernel::Effect> {
+        crate::artifacts::fem3d::live_visual::reconcile(doc)
+    }
+
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
         semio_framework_plugin::built_to_component_tree(match body_key {
-            model::BODY_KEY => model::render(doc.snapshot),
+            model::BODY_KEY => crate::artifacts::fem3d::live_visual::with_live_visual(doc.render_operation(), model::render),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
         })
     }

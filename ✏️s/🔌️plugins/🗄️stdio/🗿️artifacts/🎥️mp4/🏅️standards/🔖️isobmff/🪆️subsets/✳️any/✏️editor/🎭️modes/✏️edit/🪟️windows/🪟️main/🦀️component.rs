@@ -17,7 +17,7 @@ pub fn definition() -> WindowKindDefinition {
 /// model a playable transport position yet (thin v1: the kit's own transport chrome is real, the
 /// per-document duration/position feed is a documented follow-up, not invented here).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(_snapshot: &Mp4Snapshot) -> BuiltNode {
+pub fn render(_snapshot: &Mp4Snapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     MediaWindowKit::render(&MediaView { duration_ms: 0, position_ms: 0, kind: MediaKind::Video })
 }
 

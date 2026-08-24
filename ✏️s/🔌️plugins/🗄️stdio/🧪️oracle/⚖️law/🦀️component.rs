@@ -20,7 +20,38 @@
 //!
 //! @see ../🔣️component.json — the comparison profiles whose tolerances these helpers mirror.
 
-use semio_repo_test_host::Json;
+use semio_repo_test_host::{parse_json, Json};
+
+//#region 🔖️FeatureRows
+/// 🧾️ The `<id>` / `<params>` rows of a case's own `Examples` table, read straight out of the
+/// feature file's text.
+///
+/// A subset oracle module that proves these laws at unit level has to run the SAME rows the case
+/// runs, or the two are measuring different things and only one of them is the evidence.
+/// Transcribing a row into Rust makes that drift possible; reading it does not. The header row is
+/// skipped and ids are de-duplicated, because a `mutate`/`inverse` outline pair repeats one table.
+///
+/// A cell may not contain a bare `|` — the platform's own feature parser demands `\|` there — so
+/// splitting on the bar is exactly as correct here as it is there.
+///
+/// Genuinely shared rather than subset-local: `📜️docx ecma-376/✳️any` and `🎞️pptx ecma-376/✳️any`
+/// both carry `Examples` payloads (a whole replacement block tree, a whole replacement deck) far
+/// too large to restate by hand, and both prove the same two laws over them.
+pub fn feature_rows(feature: &str) -> Vec<(String, Json)> {
+    let mut rows: Vec<(String, Json)> = Vec::new();
+    for line in feature.lines().map(str::trim).filter(|line| line.starts_with('|')) {
+        let cells: Vec<&str> = line.trim_matches('|').split('|').map(str::trim).collect();
+        if cells.len() < 2 || cells[0] == "id" || rows.iter().any(|(id, _)| id == cells[0]) {
+            continue;
+        }
+        match parse_json(cells[1]) {
+            Ok(params) => rows.push((cells[0].to_string(), params)),
+            Err(error) => panic!("the Examples row {:?} carries params this platform's own JSON parser rejects: {error}", cells[0]),
+        }
+    }
+    rows
+}
+//#endregion 🔖️FeatureRows
 
 //#region 🔖️Render
 /// ✂️ A value rendered for an error message, truncated so a divergence inside an 8,448-point cloud
@@ -287,6 +318,18 @@ mod tests {
         let only_metadata_moved = object(vec![("fileSize", Json::Number(99.0))]);
         assert!(mutation_is_observable("set-comment", &only_metadata_moved, &base, &[]).is_ok());
         assert!(mutation_is_observable_within("set-comment", &only_metadata_moved, &base, &[], &["fileSize"], 0.0).is_err(), "a move confined to what the profile ignores is not a move the comparison can see");
+    }
+
+    /// 🧾️ The Examples reader, on a table shaped exactly like a real one: a header, two data rows
+    /// and the same table repeated for the inverse outline.
+    #[test]
+    fn feature_rows_reads_each_id_once_and_parses_its_params() {
+        let feature = "  Examples:\n      | id           | params            |\n      | no-mutation  | {}                |\n      | remove-page  | {\"index\": 7}     |\n      | no-mutation  | {}                |\n";
+        let rows = feature_rows(feature);
+        assert_eq!(rows.len(), 2, "the repeated table contributes no second row for an id already read");
+        assert_eq!(rows[0].0, "no-mutation");
+        assert_eq!(rows[1].0, "remove-page");
+        assert_eq!(rows[1].1.get("index"), Some(&Json::Number(7.0)));
     }
 
     #[test]

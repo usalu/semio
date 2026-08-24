@@ -14,7 +14,7 @@ const SOURCING_CURATE_SURFACE_PREVIEW: &str = "sourcing.preview.world";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SOURCING_CURATE_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
@@ -42,7 +42,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// selection" placeholder until a future wave threads interaction into render. Flagged as a discovered
 /// framework gap, not worked around here — kept as a parameter (rather than deleted outright) so that
 /// future wave has a slot to fill in.
-pub async fn render(document: &CurateSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiNode {
+pub fn render(document: &CurateSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiNode {
     let stock = crate::artifacts::curate::stock_of(document);
     let Some(kind) = selected_ids.first().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
         return ui_text(labels.no_selection);

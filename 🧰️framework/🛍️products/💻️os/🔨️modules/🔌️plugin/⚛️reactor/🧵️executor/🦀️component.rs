@@ -203,16 +203,16 @@ impl ReactorExecutor {
                 }
                 ReactorTaskStep::Complete => {
                     inner.slots[index].closing = true;
-                    inner.slots[index].task = Some(task);
+                    *inner.slots[index].task = Some(task);
                     remaining_units -= 1;
                 }
                 ReactorTaskStep::Pending { processed_units, processed_bytes } if processed_units != 0 && processed_units <= remaining_units && processed_bytes <= remaining_bytes => {
                     remaining_units -= processed_units;
                     remaining_bytes -= processed_bytes;
-                    inner.slots[index].task = Some(task);
+                    *inner.slots[index].task = Some(task);
                 }
                 ReactorTaskStep::Pending { .. } | ReactorTaskStep::Blocked { .. } => {
-                    inner.slots[index].task = Some(task);
+                    *inner.slots[index].task = Some(task);
                     remaining_units -= 1;
                 }
             }
@@ -259,15 +259,15 @@ impl ReactorExecutor {
                 }
             }
             ReactorTaskStep::Complete => {
-                slot.task = Some(task);
+                *slot.task = Some(task);
                 ReactorTaskStep::Blocked { reason: "reactor task reported Complete before its terminal shell was empty" }
             }
             ReactorTaskStep::Pending { processed_units, processed_bytes } if processed_units == 0 || processed_units > budget.maximum_units || processed_bytes > budget.maximum_bytes => {
-                slot.task = Some(task);
+                *slot.task = Some(task);
                 ReactorTaskStep::Blocked { reason: "reactor task close step violated its admitted unit or byte budget" }
             }
             other => {
-                slot.task = Some(task);
+                *slot.task = Some(task);
                 other
             }
         }
@@ -326,15 +326,15 @@ impl ReactorExecutor {
                 ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 }
             }
             ReactorTaskStep::Complete => {
-                slot.task = Some(task);
+                *slot.task = Some(task);
                 ReactorTaskStep::Blocked { reason: "reactor task reported Complete before its shutdown terminal shell was empty" }
             }
             ReactorTaskStep::Pending { processed_units, processed_bytes } if processed_units == 0 || processed_units > budget.maximum_units || processed_bytes > budget.maximum_bytes => {
-                slot.task = Some(task);
+                *slot.task = Some(task);
                 ReactorTaskStep::Blocked { reason: "reactor task shutdown step violated its admitted unit or byte budget" }
             }
             other => {
-                slot.task = Some(task);
+                *slot.task = Some(task);
                 other
             }
         }

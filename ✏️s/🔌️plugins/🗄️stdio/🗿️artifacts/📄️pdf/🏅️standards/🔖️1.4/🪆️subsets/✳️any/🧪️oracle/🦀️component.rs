@@ -24,6 +24,15 @@
 
 use semio_repo_test_host::Json;
 
+//#region 🔖️Vocabulary
+/// 🧾️ Kebab-case spelling of every variant this subset's `PdfMutation` declares, in declaration
+/// order. Two, and the thinness is the vocabulary's, not the case's: `../🧬️schema/🧬️mutations/
+/// 🦀️component.rs` really has exactly `NoMutation` and `SetSnapshot`, because this standard's whole
+/// snapshot is one page with a width, a height and a text. Declared here rather than in the case
+/// adapter so the adapter, this module's own tests and the manifest all read ONE list.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot"];
+//#endregion 🔖️Vocabulary
+
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
@@ -147,3 +156,103 @@ pub fn build_single_page_pdf(text: &str) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 //#endregion 🔖️IndependentWriter
+
+//#region 🧪️Tests
+#[cfg(all(test, feature = "oracles"))]
+mod tests {
+    use super::*;
+
+    /// 🧫️ The real committed document `mutate-pdf-1-4` runs on — the 6.3 MB, 65-page LaTeX
+    /// bachelor thesis this standard's own examples directory carries, true `MediaBox
+    /// [0 0 595.276 841.89]`.
+    const FIXTURE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf");
+
+    /// 📄️ The `set-snapshot` Examples row `../../../../../🧪️tests/mutate-pdf-1-4/component.feature`
+    /// carries, so a failure here and a failure there have the same cause.
+    const REPLACEMENT_TEXT: &str = "Wave seven replaced this page.";
+
+    fn json_object(pairs: Vec<(&str, Json)>) -> Json {
+        Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
+    }
+
+    fn spec(kind: &str) -> Json {
+        let params = match kind {
+            "no-mutation" => json_object(vec![]),
+            "set-snapshot" => json_object(vec![(
+                "snapshot",
+                json_object(vec![("schema", Json::String("s.stdio.pdf".to_string())), ("page", json_object(vec![("width", Json::Number(612.0)), ("height", Json::Number(792.0)), ("text", Json::String(REPLACEMENT_TEXT.to_string()))]))]),
+            )]),
+            other => panic!("no test parameters for kind {other:?}"),
+        };
+        json_object(vec![("kind", Json::String(kind.to_string())), ("params", params)])
+    }
+
+    fn fixture() -> Vec<u8> {
+        std::fs::read(FIXTURE).expect("the committed bachelor-thesis document")
+    }
+
+    /// ⚖️ The two laws `mutate-pdf-1-4`'s adapter asserts in role, proven here against the real
+    /// document without the runner.
+    ///
+    /// The base is the reference's OWN `no-mutation` output, never the committed input's
+    /// projection. That is the whole honesty of this subset's case: the oracle is a
+    /// rebuild-from-text writer pinning `MediaBox [0 0 612 792]`, mirroring `decode_pdf`, which
+    /// hardcodes the same constant and never reads a real page's geometry. Measuring against the
+    /// real input would credit `set-snapshot` with a `595.276 → 612` move the REBUILD made and the
+    /// mutation did not, which is a green for something never observed. Against the rebuild, the
+    /// only thing that can move is `text` — the one field this subset genuinely reads out of a
+    /// document — and it must.
+    #[test]
+    fn every_declared_kind_is_observable_and_its_inverse_restores_the_document() {
+        let original = fixture();
+        let base_text = independent_first_text(&original).expect("the independent reader finds page 1's first shown text");
+        let base = project_pdf_1_4(&oracle_apply_mutation(&original, &spec("no-mutation")).expect("the reference rebuilds the document")).expect("the independent reader projects the rebuild");
+        for kind in KINDS {
+            let mutated = oracle_apply_mutation(&original, &spec(kind)).unwrap_or_else(|error| panic!("{kind}: {error}"));
+            let moved = project_pdf_1_4(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
+            if *kind != "no-mutation" {
+                assert_ne!(moved, base, "{kind} left the compared projection untouched, so its scenario would pass whether or not the mutation ran");
+            }
+            let undo = match *kind {
+                "no-mutation" => spec("no-mutation"),
+                _ => json_object(vec![("kind", Json::String(kind.to_string())), ("params", json_object(vec![("snapshot", json_object(vec![("page", json_object(vec![("text", Json::String(base_text.clone()))]))]))]))]),
+            };
+            let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
+            assert_eq!(project_pdf_1_4(&restored).unwrap(), base, "{kind}: applying the mutation and then its algebraic inverse must restore the rebuilt document's projection");
+        }
+    }
+
+    /// 🔒️ Both halves of the identity law, on the real document. The `text` half is the load-bearing
+    /// one: it is read out of the REAL 6.3 MB input by `lopdf`'s content-stream decoder and must
+    /// survive into a document this module wrote object by object.
+    #[test]
+    fn the_round_trip_recovers_the_real_documents_own_text_and_is_not_a_byte_passthrough() {
+        let original = fixture();
+        let base_text = independent_first_text(&original).expect("the independent reader finds page 1's first shown text");
+        assert!(!base_text.is_empty(), "the real thesis shows text on page 1");
+        let rebuilt = oracle_apply_mutation(&original, &spec("no-mutation")).expect("the reference rebuilds the document");
+        assert_ne!(rebuilt, original, "a from-scratch single-page writer cannot reproduce a 65-page thesis; identical bytes would mean the input was smuggled");
+        assert_eq!(project_pdf_1_4(&rebuilt).unwrap().str("text"), base_text);
+    }
+
+    #[test]
+    fn unknown_kind_is_an_error_never_a_silent_no_op() {
+        let unknown = json_object(vec![("kind", Json::String("not-a-real-kind".to_string())), ("params", json_object(vec![]))]);
+        assert!(oracle_apply_mutation(&fixture(), &unknown).is_err());
+        assert!(oracle_apply_mutation(&fixture(), &json_object(vec![("params", json_object(vec![]))])).is_err(), "a spec with no kind at all is an error too");
+    }
+
+    /// 📇️ The three declarations that must never drift: this module's [`KINDS`], the catalog in
+    /// `🔣️component.json`, and the `Examples` rows of the case that claims it.
+    #[test]
+    fn kinds_matches_the_catalog_and_every_feature_row() {
+        let manifest = include_str!("🔣️component.json");
+        let feature = include_str!("../../../../../🧪️tests/mutate-pdf-1-4/component.feature");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "the pdf-1-4-any catalog is missing {kind:?}");
+            assert!(feature.contains(&format!("| {kind} ")), "the feature declares no Examples row for {kind:?}");
+        }
+        assert_eq!(KINDS.len(), 2, "PdfMutation declares exactly NoMutation and SetSnapshot in this standard");
+    }
+}
+//#endregion 🧪️Tests

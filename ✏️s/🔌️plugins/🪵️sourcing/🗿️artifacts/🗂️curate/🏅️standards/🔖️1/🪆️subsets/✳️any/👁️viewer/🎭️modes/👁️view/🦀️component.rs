@@ -7,12 +7,12 @@ use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, Windo
 pub const SOURCING_VIEW_MODE_VIEW: &str = "view";
 
 //#region 🔖️Definition
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: SOURCING_VIEW_MODE_VIEW.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ Single full-width stack holding the pool table.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
             kind: "row".into(),

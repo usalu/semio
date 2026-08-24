@@ -3,12 +3,12 @@
 use crate::framework_surface_terrain::TerrainSessionCore;
 use base64::Engine;
 use ui_wgpu::wgpu::{
-    ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRenderEviction,
-    PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode, Vec3, WidgetContext, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
     aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
-    marquee_is_crossing_from_path, mesh_content_version, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3,
+    marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, mesh_content_version,
     paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances, transform_aabb,
-    vec3_from_f64, widgets::gizmo, world3d_snapshot_with_page,
+    vec3_from_f64, widgets::gizmo, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController,
+    PointerModifiers, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode, Vec3, WidgetContext, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease,
+    World3dSnapshotPageKind,
 };
 
 //#region 📦️PreparedWorldResources
@@ -23,6 +23,7 @@ impl World3dBuildRejected {
     pub fn close_step(&mut self) -> bool {
         match self {
             Self::Upload(PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. }) => pixels.pop().is_none(),
+            Self::Upload(PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels }) => pixels.close_step(),
             Self::Upload(PreparedRenderUpload::Raster { key, pixels, .. }) => pixels.pop().is_none() && key.pop().is_none(),
             Self::Upload(PreparedRenderUpload::RasterPages { key, .. } | PreparedRenderUpload::Mesh { key, .. }) => key.pop().is_none(),
             Self::Eviction(PreparedRenderEviction::Mesh { key }) => key.pop().is_none(),
@@ -32,6 +33,7 @@ impl World3dBuildRejected {
     pub fn terminal_is_empty(&self) -> bool {
         match self {
             Self::Upload(PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. }) => pixels.is_empty(),
+            Self::Upload(PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels }) => pixels.terminal_is_empty(),
             Self::Upload(PreparedRenderUpload::Raster { key, pixels, .. }) => key.is_empty() && pixels.is_empty(),
             Self::Upload(PreparedRenderUpload::RasterPages { key, .. } | PreparedRenderUpload::Mesh { key, .. }) => key.is_empty(),
             Self::Eviction(PreparedRenderEviction::Mesh { key }) => key.is_empty(),
@@ -285,9 +287,9 @@ impl World3dBuildContext {
 }
 //#endregion 📦️PreparedWorldResources
 
-use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, optional_json_to_dsl};
-use serde::Deserialize;
+use semio_framework::{optional_json_to_dsl, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
 use serde::de::Error as DeError;
+use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use std::mem::MaybeUninit;
@@ -6323,7 +6325,11 @@ fn scene_lod(state: &World3dState) -> f64 {
     let camera = state.orbit.to_camera();
     let distance = camera.position.sub(camera.target).length() as f64;
     let auto_lod = lod_from_camera_distance(distance, state.lod.distance_reference);
-    if state.lod.automatic || state.lod.depth_variable { auto_lod } else { state.lod.manual }
+    if state.lod.automatic || state.lod.depth_variable {
+        auto_lod
+    } else {
+        state.lod.manual
+    }
 }
 
 fn resolve_physical_mesh_id(state: &World3dState, logical_id: &str, desired_lod: f64) -> String {
@@ -6379,11 +6385,13 @@ fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, 
 }
 
 fn queue_lod_mesh_fetch(state: &mut World3dState, logical_id: &str, scene_lod: f64) {
-    let entries: Vec<(f64, &str)> = state.mesh_lod_catalog.get(logical_id).map(|lods| lods.iter().map(|entry| (entry.lod, entry.url.as_str())).collect()).unwrap_or_default();
-    let fallback = state.mesh_url_fallback.get(logical_id).map(String::as_str);
-    let url = pick_closest_mesh_url(&entries, scene_lod, fallback).or(fallback);
+    let url = {
+        let entries: Vec<(f64, &str)> = state.mesh_lod_catalog.get(logical_id).map(|lods| lods.iter().map(|entry| (entry.lod, entry.url.as_str())).collect()).unwrap_or_default();
+        let fallback = state.mesh_url_fallback.get(logical_id).map(String::as_str);
+        pick_closest_mesh_url(&entries, scene_lod, fallback).or(fallback).map(str::to_owned)
+    };
     if let Some(url) = url {
-        if reserve_world3d_asset_request(state, WorldAssetRequestKind::Glb, url).is_err() {
+        if reserve_world3d_asset_request(state, WorldAssetRequestKind::Glb, &url).is_err() {
             mark_world_dynamic_fault(state, WorldDynamicFault::RegistryCapacity);
         }
     }
@@ -6406,7 +6414,11 @@ fn environment_light_dir(environment: &WorldEnvironmentRecord) -> [f32; 3] {
     let azimuth = sun.azimuth.unwrap_or(45.0).to_radians();
     let elevation = sun.elevation.unwrap_or(35.0).to_radians();
     let direction = Vec3::new((elevation.cos() * azimuth.cos()) as f32, (elevation.cos() * azimuth.sin()) as f32, elevation.sin() as f32);
-    if direction.length() < 1e-6 { DEFAULT_LIGHT_DIR } else { direction.normalize().to_array() }
+    if direction.length() < 1e-6 {
+        DEFAULT_LIGHT_DIR
+    } else {
+        direction.normalize().to_array()
+    }
 }
 
 /// 🖼️ Resolves the canvas clear color from `environment.background`, falling back to the ambient
@@ -6574,7 +6586,11 @@ impl WorldTerrainMeshCursor {
             None if normal => [0.0, 0.0, 1.0],
             None => return Err(WorldDynamicFault::StaleToken),
         };
-        if value.iter().all(|value| value.is_finite()) { Ok(value) } else { Err(WorldDynamicFault::ByteCapacity) }
+        if value.iter().all(|value| value.is_finite()) {
+            Ok(value)
+        } else {
+            Err(WorldDynamicFault::ByteCapacity)
+        }
     }
 
     fn token(&self) -> Result<Mesh3dWriteToken, WorldDynamicFault> {
@@ -7223,7 +7239,11 @@ fn placeholder_triangle(kind: WorldPlaceholderKind, triangle: u32) -> [[f32; 3];
                 ([-0.5, -0.5, -0.5], [-0.5, -0.5, 0.5], [-0.5, 0.5, 0.5], [-0.5, 0.5, -0.5]),
             ];
             let (a, b, c, d) = faces[(triangle / 2) as usize];
-            if triangle.is_multiple_of(2) { [a, b, c] } else { [a, c, d] }
+            if triangle.is_multiple_of(2) {
+                [a, b, c]
+            } else {
+                [a, c, d]
+            }
         }
         WorldPlaceholderKind::Plane => {
             if triangle == 0 {
@@ -7253,7 +7273,11 @@ fn placeholder_triangle(kind: WorldPlaceholderKind, triangle: u32) -> [[f32; 3];
             let a1 = (segment + 1) as f32 / 16.0 * std::f32::consts::TAU;
             let p0 = [0.5 * a0.cos(), 0.0, 0.5 * a0.sin()];
             let p1 = [0.5 * a1.cos(), 0.0, 0.5 * a1.sin()];
-            if triangle.is_multiple_of(2) { [[0.0, 1.0, 0.0], p1, p0] } else { [[0.0, 0.0, 0.0], p0, p1] }
+            if triangle.is_multiple_of(2) {
+                [[0.0, 1.0, 0.0], p1, p0]
+            } else {
+                [[0.0, 0.0, 0.0], p0, p1]
+            }
         }
         WorldPlaceholderKind::Icosphere => {
             let t = (1.0 + 5.0_f32.sqrt()) * 0.5;
@@ -7548,7 +7572,11 @@ const PICK_EDGE_SCREEN_PX: f32 = 18.0;
 const FACE_OVERLAY_OFFSET: f32 = 0.003;
 
 fn world_pick_rect(state: &World3dState) -> Rect {
-    if state.pick_bounds.w > 0.0 && state.pick_bounds.h > 0.0 { state.pick_bounds } else { state.bounds }
+    if state.pick_bounds.w > 0.0 && state.pick_bounds.h > 0.0 {
+        state.pick_bounds
+    } else {
+        state.bounds
+    }
 }
 
 fn render_pick_viewport(state: &World3dState) -> Rect {
@@ -7955,7 +7983,15 @@ impl WorldFaceOverlayMeshCursor {
             self.stale = true;
         }
         if self.faulted {
-            return if self.close_step() && self.terminal_is_empty() { if self.stale { WorldFaceOverlayMeshStep::Stale } else { WorldFaceOverlayMeshStep::Fault } } else { WorldFaceOverlayMeshStep::Pending };
+            return if self.close_step() && self.terminal_is_empty() {
+                if self.stale {
+                    WorldFaceOverlayMeshStep::Stale
+                } else {
+                    WorldFaceOverlayMeshStep::Fault
+                }
+            } else {
+                WorldFaceOverlayMeshStep::Pending
+            };
         }
         match self.step_live(state) {
             Ok(step) => step,
@@ -8257,7 +8293,11 @@ fn selection_centroid(state: &World3dState) -> Option<Vec3> {
             }
         }
     }
-    if count == 0 { None } else { Some(sum.scale(1.0 / count as f32)) }
+    if count == 0 {
+        None
+    } else {
+        Some(sum.scale(1.0 / count as f32))
+    }
 }
 
 fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<GumballHandle> {
@@ -8703,12 +8743,13 @@ struct World3dSnapshotApplyCursor {
     page: u16,
     item: u8,
     staged_orbit: Option<OrbitController>,
+    draw_started: bool,
     faulted: bool,
 }
 
 impl World3dSnapshotApplyCursor {
     fn new(lease: World3dSnapshotLease) -> Self {
-        Self { lease, page: 0, item: 0, staged_orbit: None, faulted: false }
+        Self { lease, page: 0, item: 0, staged_orbit: None, draw_started: false, faulted: false }
     }
 
     fn close_step(&mut self) -> bool {
@@ -8742,6 +8783,12 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
         return World3dSnapshotApplyStep::Fault;
     }
     if cursor.page == cursor.lease.page_count {
+        if cursor.draw_started && world3d_draw_rebuild_seal(state).is_err() {
+            state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+            cursor.faulted = true;
+            state.snapshot_apply = Some(cursor);
+            return World3dSnapshotApplyStep::Fault;
+        }
         if let Some(orbit) = cursor.staged_orbit.take() {
             state.orbit = orbit;
         }
@@ -8754,9 +8801,10 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
     let resolved = world3d_snapshot_with_page(cursor.lease, cursor.page, |page| {
         let item_count = page.item_count();
         let item = page.item(usize::from(cursor.item)).copied();
-        (page.kind(), item_count, item)
+        let id = item.and_then(|item| item.strings[0]).and_then(|span| page.string(span)).map(str::to_owned);
+        (page.kind(), item_count, item, id)
     });
-    let (kind, item_count, item) = match resolved {
+    let (kind, item_count, item, id) = match resolved {
         Ok(resolved) => resolved,
         Err(fault) => {
             state.snapshot_fault = Some(fault);
@@ -8779,6 +8827,51 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
         return World3dSnapshotApplyStep::Fault;
     };
     match kind {
+        World3dSnapshotPageKind::Mesh if item.flags == 30 && item.index_len >= 2 => {
+            let Some(mesh_key) = id.as_deref() else {
+                state.snapshot_fault = Some(World3dSnapshotFault::PageState);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            };
+            let instance_count = item.indexes[0];
+            let byte_count = item.indexes[1].checked_add(std::mem::size_of::<SceneDraw3d>() as u32).and_then(|bytes| bytes.checked_add(instance_count.checked_mul(std::mem::size_of::<Instance3d>() as u32)?));
+            let Some(byte_count) = byte_count else {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            };
+            begin_world_placeholder_mesh(state, mesh_key, WorldPlaceholderKind::Box);
+            let descriptor = WorldDrawRebuildDescriptor { generation: state.draw_generation.wrapping_add(1), revision: state.interaction_revision, draw_count: 1, instance_count, byte_count };
+            let admitted = begin_world3d_draw_rebuild(state, descriptor).and_then(|()| world3d_draw_rebuild_admit_draw(state, mesh_key, 0, u16::try_from(instance_count).map_err(|_| WorldDynamicFault::InstanceCapacity)?));
+            if admitted.is_err() {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            }
+            cursor.draw_started = true;
+        }
+        World3dSnapshotPageKind::Instance if item.number_len >= 14 && cursor.draw_started => {
+            let Some(id) = id.as_deref() else {
+                state.snapshot_fault = Some(World3dSnapshotFault::PageState);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            };
+            let position = [item.numbers[0] as f32, item.numbers[1] as f32, item.numbers[2] as f32];
+            let rotation = [item.numbers[3] as f32, item.numbers[4] as f32, item.numbers[5] as f32, item.numbers[6] as f32];
+            let scale = [item.numbers[7] as f32, item.numbers[8] as f32, item.numbers[9] as f32];
+            let color = [item.numbers[10] as f32, item.numbers[11] as f32, item.numbers[12] as f32, item.numbers[13] as f32];
+            let model = Instance3d::model_from_trs(position, rotation, scale);
+            if world3d_draw_rebuild_admit_instance(state, 0, id, model, color, false, false).is_err() {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            }
+        }
         World3dSnapshotPageKind::Camera if item.number_len >= 10 => {
             cursor.staged_orbit = Some(OrbitController::from_camera(&Camera3d {
                 position: Vec3::new(item.numbers[0] as f32, item.numbers[1] as f32, item.numbers[2] as f32),
@@ -9088,14 +9181,14 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
     let mut culled_draws = Vec::new();
     let mut culled_count = 0u32;
     let mut needed_mesh_keys = HashSet::new();
+    let missing_mesh_urls: HashSet<String> = state.draws.iter().filter(|draw| !state.meshes.contains_key(&draw.mesh_key)).filter_map(|draw| state.mesh_source_urls.get(&draw.mesh_key).cloned()).collect();
+    for url in missing_mesh_urls {
+        if reserve_world3d_asset_request(state, WorldAssetRequestKind::Glb, &url).is_err() {
+            mark_world_dynamic_fault(state, WorldDynamicFault::RegistryCapacity);
+        }
+    }
     for (draw_index, draw) in state.draws.iter().enumerate() {
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
-            if let Some(url) = state.mesh_source_urls.get(&draw.mesh_key) {
-                let url = url.clone();
-                if reserve_world3d_asset_request(state, WorldAssetRequestKind::Glb, &url).is_err() {
-                    mark_world_dynamic_fault(state, WorldDynamicFault::RegistryCapacity);
-                }
-            }
             continue;
         };
         let Ok((mesh_min, mesh_max)) = mesh.aabb() else { continue };
@@ -9673,13 +9766,21 @@ fn world_item_id_for_surface<'a>(state: &World3dState, target_id: &'a str) -> Op
 /// bound (`HierarchyProvider::Flat`-style, single-surface-scoped), else `world_item_target_id`'s
 /// `"surfaceId/id"` `PathDelimited` shape for the shared `world` domain.
 fn resolved_item_id(state: &World3dState, object_id: &str) -> String {
-    if state.bound_domain_id.is_some() { object_id.to_string() } else { world_item_target_id(&state.surface_id, object_id) }
+    if state.bound_domain_id.is_some() {
+        object_id.to_string()
+    } else {
+        world_item_target_id(&state.surface_id, object_id)
+    }
 }
 
 /// 🔤️ Inverse of [`resolved_item_id`], for parsing ids back out of an incoming action's targets during
 /// optimistic local preview.
 fn parse_resolved_item_id<'a>(state: &World3dState, target_id: &'a str) -> Option<&'a str> {
-    if state.bound_domain_id.is_some() { Some(target_id) } else { world_item_id_for_surface(state, target_id) }
+    if state.bound_domain_id.is_some() {
+        Some(target_id)
+    } else {
+        world_item_id_for_surface(state, target_id)
+    }
 }
 
 fn merge_mode_wire_str(merge: MergeMode) -> &'static str {
@@ -10305,7 +10406,11 @@ struct VortexArrowLayout {
 
 fn quat_normalize_f32(quat: [f32; 4]) -> [f32; 4] {
     let len = (quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3]).sqrt();
-    if len < 1e-9 { [0.0, 0.0, 0.0, 1.0] } else { [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len] }
+    if len < 1e-9 {
+        [0.0, 0.0, 0.0, 1.0]
+    } else {
+        [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len]
+    }
 }
 
 fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
@@ -10313,7 +10418,11 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
     let to = to.normalize();
     let r = from.dot(to) + 1.0;
     let quat = if r < 0.000_001 {
-        if from.x.abs() > from.z.abs() { [-from.y, from.x, 0.0, r] } else { [0.0, -from.z, from.y, r] }
+        if from.x.abs() > from.z.abs() {
+            [-from.y, from.x, 0.0, r]
+        } else {
+            [0.0, -from.z, from.y, r]
+        }
     } else {
         let cross = from.cross(to);
         [cross.x, cross.y, cross.z, r]
@@ -10323,7 +10432,11 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
 
 fn vortex_unit_direction(direction: Option<[f64; 3]>) -> Vec3 {
     let dir = direction.map(|value| Vec3::new(value[0] as f32, value[1] as f32, value[2] as f32)).unwrap_or(Vec3::new(0.0, 0.0, -1.0));
-    if dir.dot(dir) < 1e-12 { Vec3::new(0.0, 0.0, -1.0) } else { dir.normalize() }
+    if dir.dot(dir) < 1e-12 {
+        Vec3::new(0.0, 0.0, -1.0)
+    } else {
+        dir.normalize()
+    }
 }
 
 fn vortex_arrow_layout(position: [f64; 3], direction: Option<[f64; 3]>, radius: f32, display_direction: Option<&str>) -> VortexArrowLayout {

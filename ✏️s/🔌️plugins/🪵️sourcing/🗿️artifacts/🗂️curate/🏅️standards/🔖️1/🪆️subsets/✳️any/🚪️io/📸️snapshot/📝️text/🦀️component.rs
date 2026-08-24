@@ -21,12 +21,12 @@ curated [object-id:REF count:UINT] {
 "#;
 
 /// 📖️ Parses `.curate` DSL text into a `CurateSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<CurateSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<CurateSnapshot, store::TextError> {
     <CurateSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `CurateSnapshot` back to `.curate` DSL text.
-pub async fn print_dsl(document: &CurateSnapshot) -> String {
+pub fn print_dsl(document: &CurateSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 

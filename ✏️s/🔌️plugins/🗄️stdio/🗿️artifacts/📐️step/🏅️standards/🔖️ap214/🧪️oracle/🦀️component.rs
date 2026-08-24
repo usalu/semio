@@ -26,6 +26,34 @@
 //! five explicitly named subtypes and the "anything else geometry-bearing is rung 2" fallback are
 //! read off the standard on both sides, which is exactly what makes their agreement evidence.
 //!
+//! 🧬️ **Why `cc2`, `cc3`, `cc4` and `cc5` declare the SAME six kinds, and `cc1` and `cc6` do not.**
+//! This is stated here, once, in the module all six share, rather than four times in four places.
+//!
+//! ISO 10303-214 §4.3 defines the six conformance classes as a MONOTONE LADDER over one capability:
+//! which `*_SHAPE_REPRESENTATION` types an exchange structure may carry. The classes differ in their
+//! CEILING rung and in nothing else — the other two axes each class's own checker reads, the
+//! `AUTOMOTIVE_DESIGN` `FILE_SCHEMA` declaration and the PRODUCT/formation/definition identity
+//! chain, are required identically by all six. A vocabulary derived one kind per axis therefore
+//! yields the same list for any two classes whose ceilings sit at the same PLACE on the ladder, and
+//! there are only three such places:
+//!
+//! * **Strictly inside** (ceiling rung 2, 3, 4 or 5 — `cc2`…`cc5`). The class admits a
+//!   representation, so it has a ceiling type to WRITE ([`ladder::ceiling_type_of`] is `Some`), and
+//!   at least one rung sits above it, so there is something to DEMOTE from. Both ladder verbs exist:
+//!   `set-shape-representation` and `demote-shape-representation`. Six kinds, identical for all four
+//!   — not a copy, a consequence, and the four modules differ only in `MAX_RUNG`.
+//! * **Below the ladder** (ceiling rung 1 — `cc1`). CC1 admits no representation at all, so
+//!   `ceiling_type_of(1)` is `None`: there is nothing to write and nothing to demote ONTO, and the
+//!   only repair for an instance that exists is deletion. `remove-shape-representation` replaces
+//!   both verbs. Five kinds, a different list.
+//! * **On top of the ladder** (ceiling rung 6 — `cc6`). Nothing can be above the top rung, so
+//!   `demote-shape-representation` has no possible subject and is not declared. Five kinds, a
+//!   different list again.
+//!
+//! [`tests::the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place`]
+//! is that paragraph as an assertion: it fails the moment a fifth class joins the interior with a
+//! different list, or an edge class grows a verb its own ceiling cannot support.
+//!
 //! @see 🪆️subsets/✳️cc1/🧪️oracle/🦀️component.rs — config data only, the class that admits no
 //!      representation at all.
 //! @see 🪆️subsets/✳️cc6/🧪️oracle/🦀️component.rs — advanced B-rep, the class the committed fixture
@@ -674,6 +702,32 @@ mod tests {
         ladder::set_product_identity(&mut exchange, None).expect("clearing always succeeds");
         assert!(!ladder::has_product_chain(&exchange));
         assert_eq!(ladder::product_identity_json(&exchange), Json::Null);
+    }
+
+    /// 🧬️ The identical-catalog argument this module's own header makes, as an assertion. Four of
+    /// the six conformance classes declare the same six kinds, and that is a CONSEQUENCE of where
+    /// their ceilings sit on the ISO 10303-214 §4.3 ladder rather than a copied list — so it is
+    /// checked here rather than asserted in prose four times.
+    #[test]
+    fn the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place() {
+        use crate::artifacts::step::standards::v_ap214::subsets::{cc1, cc2, cc3, cc4, cc5, cc6};
+
+        for (class, rung, kinds) in [("cc2", cc2::MAX_RUNG, cc2::KINDS), ("cc3", cc3::MAX_RUNG, cc3::KINDS), ("cc4", cc4::MAX_RUNG, cc4::KINDS), ("cc5", cc5::MAX_RUNG, cc5::KINDS)] {
+            assert!(ladder::ceiling_type_of(rung).is_some(), "{class} sits inside the ladder, so it has a ceiling type to write and to demote onto");
+            assert!(rung < 6, "{class} sits inside the ladder, so at least one rung is above it to demote from");
+            assert!(kinds.contains(&"set-shape-representation") && kinds.contains(&"demote-shape-representation"), "{class} admits both ladder verbs");
+            assert_eq!(kinds, cc2::KINDS, "{class} reads the same three axes as cc2 with the same two ladder verbs, so its vocabulary is the same list");
+        }
+
+        assert_eq!(ladder::ceiling_type_of(cc1::MAX_RUNG), None, "cc1 admits no representation, so it has nothing to write and nothing to demote onto");
+        assert!(!cc1::KINDS.contains(&"set-shape-representation") && !cc1::KINDS.contains(&"demote-shape-representation"));
+        assert!(cc1::KINDS.contains(&"remove-shape-representation"), "deletion is cc1's only ladder repair");
+        assert_ne!(cc1::KINDS, cc2::KINDS, "the class below the ladder cannot declare the interior vocabulary");
+
+        assert_eq!(cc6::MAX_RUNG, 6, "cc6 sits on the top rung");
+        assert!(!cc6::KINDS.contains(&"demote-shape-representation"), "nothing can be above the top rung, so a demotion has no subject");
+        assert!(cc6::KINDS.contains(&"set-shape-representation"));
+        assert_ne!(cc6::KINDS, cc2::KINDS, "the class on top of the ladder cannot declare the interior vocabulary");
     }
 
     #[test]

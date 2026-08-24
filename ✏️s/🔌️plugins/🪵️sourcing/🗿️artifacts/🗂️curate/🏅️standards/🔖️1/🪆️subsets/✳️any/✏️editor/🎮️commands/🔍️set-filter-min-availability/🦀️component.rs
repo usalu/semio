@@ -13,7 +13,7 @@ pub struct SetFilterMinAvailability {
     pub value: Option<f64>,
 }
 
-pub async fn handle(payload: &SetFilterMinAvailability, _doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub fn handle(payload: &SetFilterMinAvailability, _doc: &ArtifactView<'_, CurateSnapshot>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     let current = cfg.snapshot.filters.min_availability as f64;
     let next = payload.delta.map(|d| current + d).or(payload.value).unwrap_or(current);
     Ok(Emit::config(vec![SourcingCurateConfigMutation::SetFilterMinAvailability { value: next.max(0.0) as u32 }]))

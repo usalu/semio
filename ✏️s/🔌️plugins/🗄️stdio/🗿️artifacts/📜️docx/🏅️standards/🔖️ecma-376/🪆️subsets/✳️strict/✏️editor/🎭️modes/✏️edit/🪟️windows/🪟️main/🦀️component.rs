@@ -37,7 +37,7 @@ fn block_text(block: &DocxBlock) -> String {
 
 /// ✏️ Real `DocxSnapshot -> BuiltNode`: one `DocumentPage` per top-level `document.body` block.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DocxSnapshot) -> BuiltNode {
+pub fn render(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let pages = document.document.body.iter().map(|block| DocumentPage { text: block_text(block) }).collect();
     DocumentWindowKit::render(&DocumentView { pages })
 }

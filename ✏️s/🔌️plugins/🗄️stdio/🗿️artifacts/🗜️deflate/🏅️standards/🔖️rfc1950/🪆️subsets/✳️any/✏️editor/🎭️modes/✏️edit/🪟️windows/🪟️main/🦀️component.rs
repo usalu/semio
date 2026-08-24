@@ -65,7 +65,7 @@ pub fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 /// (`read_only: false`), plus a trailing `#`-prefixed comment line stating the payload byte count
 /// (informational only — `#`-prefixed lines are never parsed back on `replace-text`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DeflateSnapshot) -> BuiltNode {
+pub fn render(document: &DeflateSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown or editable here)",
         document.compression_method,

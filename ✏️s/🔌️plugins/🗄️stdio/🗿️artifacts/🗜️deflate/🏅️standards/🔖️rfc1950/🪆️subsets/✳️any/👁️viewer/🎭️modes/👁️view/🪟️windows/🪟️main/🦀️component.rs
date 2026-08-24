@@ -50,7 +50,7 @@ fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 /// 👁️ Pure `DeflateSnapshot -> BuiltNode` read: the same `key=value` header summary as the sibling
 /// authoring surface, always `read_only: true`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DeflateSnapshot) -> BuiltNode {
+pub fn render(document: &DeflateSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown here)",
         document.compression_method,

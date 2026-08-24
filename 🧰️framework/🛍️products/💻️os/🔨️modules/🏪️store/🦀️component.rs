@@ -3565,7 +3565,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         Ok(PresencePeersPublication::new(self.peers.as_ref(), factory.clone()))
     }
 
-    pub(crate) fn publish_peer_commit(&mut self, commit: PresencePeersCommit<P>) -> Option<PresencePeersRetirement<P>> {
+    pub fn publish_peer_commit(&mut self, commit: PresencePeersCommit<P>) -> Option<PresencePeersRetirement<P>> {
         let previous = std::mem::replace(&mut self.peers, commit.root);
         drop(previous);
         commit.retirement
@@ -12513,7 +12513,7 @@ where
         Ok(SnapshotRead::new(owner, lease))
     }
 
-    pub(crate) async fn snapshot_owner(&self) -> Arc<P> {
+    pub async fn snapshot_owner(&self) -> Arc<P> {
         Arc::clone(&*self.current)
     }
 

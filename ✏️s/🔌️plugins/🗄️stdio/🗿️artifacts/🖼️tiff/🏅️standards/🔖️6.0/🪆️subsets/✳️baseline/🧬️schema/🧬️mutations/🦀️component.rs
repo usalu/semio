@@ -115,6 +115,8 @@ pub enum TiffBaselineMutation {
 /// `kinds_match_enum_variants_in_declaration_order` below is what keeps the two honest. No
 /// `mutationCatalogs` entry mirrors this list — see the module docstring for why that is deliberate.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-compression", "set-photometric-interpretation", "set-bits-per-sample", "insert-tile-tags", "remove-tile-tags", "set-strip-offsets", "remove-strip-offsets"];
+
+crate::impl_serde_op_codec!(TiffBaselineMutation, "tiff-baseline-mutation");
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply

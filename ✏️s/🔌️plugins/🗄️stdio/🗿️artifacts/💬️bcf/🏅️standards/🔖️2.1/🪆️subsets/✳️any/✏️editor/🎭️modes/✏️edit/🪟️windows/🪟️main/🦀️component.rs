@@ -27,7 +27,7 @@ fn columns_and_rows(document: &BcfSnapshot) -> (Vec<String>, Vec<Vec<String>>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BcfSnapshot) -> BuiltNode {
+pub fn render(document: &BcfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (columns, rows) = columns_and_rows(document);
     TableWindowKit::render(&TableView { columns, rows })
 }

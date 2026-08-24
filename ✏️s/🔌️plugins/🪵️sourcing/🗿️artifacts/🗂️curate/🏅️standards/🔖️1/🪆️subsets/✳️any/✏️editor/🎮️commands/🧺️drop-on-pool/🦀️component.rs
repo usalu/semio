@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// for a no-op adjustment (e.g. dropping an already-zero item), which must NOT be recorded in
 /// history at all (mirrors `apply_sourcing_mutation`'s former no-op-if-unknown-id silence, now
 /// expressed as "emit nothing" instead of "emit a snapshot no-op").
-async fn mutation_for(decision: CurationDecision) -> Option<SourcingMutation> {
+fn mutation_for(decision: CurationDecision) -> Option<SourcingMutation> {
     match decision {
         CurationDecision::NoOp => None,
         CurationDecision::Create(item) => Some(crate::artifacts::curate::mutations::create_curated_item(item)),
@@ -20,7 +20,7 @@ async fn mutation_for(decision: CurationDecision) -> Option<SourcingMutation> {
     }
 }
 
-async fn emit_decision(decision: CurationDecision) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
+fn emit_decision(decision: CurationDecision) -> Emit<SourcingMutation, SourcingCurateConfigMutation> {
     match mutation_for(decision) {
         Some(mutation) => Emit::mutations(vec![mutation]),
         None => Emit::default(),
@@ -49,6 +49,6 @@ pub struct DropOnPool {
 }
 
 /// 🪂️ Dropping a curated row back onto the pool mirrors `curate_remove`: zero its curated count.
-pub async fn handle(payload: &DropOnPool, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
+pub fn handle(payload: &DropOnPool, doc: &ArtifactView<'_, CurateSnapshot>, _cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation>, Fault> {
     Ok(emit_decision(curation_decision_for_set(doc.snapshot, &payload.object_id, 0)))
 }

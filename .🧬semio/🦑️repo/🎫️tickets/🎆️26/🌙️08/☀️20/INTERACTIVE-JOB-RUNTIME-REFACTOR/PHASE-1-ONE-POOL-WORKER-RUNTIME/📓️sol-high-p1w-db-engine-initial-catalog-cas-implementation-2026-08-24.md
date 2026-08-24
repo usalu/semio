@@ -47,9 +47,20 @@ The live Rust fixture bodies cover:
 10. real queue saturation, retained-job identity, and recovery;
 11. deterministic replay and initial-fence single-winner behavior;
 12. publication-before-waker and successor-pressure race closure;
-13. public result Drop handback, terminal recovery, exact owner identity, and admission release.
+13. public result Drop handback, terminal recovery, exact owner identity, and admission release;
+14. deterministic distinct-thread driver-claim races across pre-poll cancellation, Pending, Ready, panic, and terminal retirement, with exact page/storage identity and one admission/registry release.
 
-The isolated P1w verifier inspects the production caller and state machine, all thirteen law bodies, prohibited patterns, exact pre-admission ordering, one-poll ownership publication, check-register-recheck, retirement placement, prepared rejection/result Drop behavior, and unpolled-work ownership. Its 37 hostile mutations restore or remove each prohibited shape/law dependency; every mutation is rejected before the faithful source fixture and live tree are accepted.
+The isolated P1w verifier inspects the production caller and state machine, all fourteen law bodies, prohibited patterns, exact pre-admission ordering, one-poll ownership publication, check-register-recheck, retirement placement, prepared rejection/result Drop behavior, and unpolled-work ownership. Its 51 hostile mutations restore or remove each prohibited shape/law dependency; every mutation is rejected before the faithful source fixture and live tree are accepted.
+
+## Independent RED Remediation — Atomic Driver/Poll Claim
+
+The independent audit exposed the interval in which the former driver cleared `scheduled` before acquiring `polling`, allowing cancellation to submit a competing callback. The live state now has one atomic `DatabaseCatalogBootstrapDriverAuthority` with exact `Idle → Queued → Driving → Idle` and `Queued → Retry → Queued` transitions. `scheduled` and `polling` remain observation mirrors only. Scheduling can claim only `Idle`; every wake, cancellation, Drop, and close request records `wake_requested` against an existing `Queued`, `Driving`, or `Retry` owner. The driver clears `scheduled` only after the `Queued → Driving` claim, retains `Driving` through ownership publication, then releases to `Idle` before consuming the retained wake.
+
+Queue refusal publishes `error.into_job()` into the retry ledger before `Queued → Retry`; the timer must claim `Retry → Queued` before resubmission. Backend work is taken only by the unique driver. Its polling gate is claimed before the cancellation recheck, and a cancellation already published at that linearization point republishes the exact work before gate release without invoking the backend. Pending, Ready, panic, and cancellation paths publish work/result/error authority before `release_poll`; that release cannot consume a wake or schedule another driver.
+
+The new live hostile law uses the real four-worker pool and freezes the callback after the atomic `Driving` claim. Cancellation occurs on a distinct thread while `scheduled == false`; the law proves zero backend polls, one active driver, exact retained page-operation and storage identity, one result, empty duplicate completion slots, and exactly one admission/registry retirement. It repeats the freeze after Pending, Ready, and panic publication and during result-Drop terminal retirement, proving one driver and deterministic owner recovery at every boundary.
+
+The now-51-entry permanent mutation suite rejects the original boolean scheduling authority, claim removal, claim-after-clear, release-before-body, retry without authority, retry owner publication after release, cancellation through a `polling` observation window, cancellation check before the poll claim, cancellation work loss, wake consumption in `release_poll`, terminal close through the polling mirror, and shallow/same-thread/identity-free/retirement-free versions of the new law.
 
 ## Evidence Run
 
@@ -59,6 +70,6 @@ The isolated P1w verifier inspects the production caller and state machine, all 
 | `bun ./📜️script.ts verify interactivity p1q-b1-b6` | PASS — accepted P1q source/mutations preserved |
 | `rustfmt --edition 2021 --check --config skip_children=true` on DB engine | PASS |
 | P1w production prohibited-pattern sweep | PASS — no matches |
-| Scoped unstaged `git diff --check` on engine/script | PASS |
+| Scoped index/worktree `git diff --check` on engine/script/report | PASS |
 
 Cargo, Nx, Wasm, browser, native/release, runtime, worker-count replay, allocation pressure, and timing tests were not run, as required while overlapping source packets remain active. This report claims source/static readiness only; the serialized final matrix remains mandatory.

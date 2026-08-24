@@ -306,7 +306,7 @@ impl PatchTracker {
                     .slots
                     .iter()
                     .flatten()
-                    .find(|slot| slot.surface == **surface)
+                    .find(|slot| slot.surface == *surface)
                     .is_none_or(|slot| slot.producer.is_none() && slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0))
             })
         })?;
@@ -677,7 +677,7 @@ impl PatchTracker {
                 }
                 return false;
             }
-            if let Some(index) = state.deferred.iter().position(|entry| entry.as_ref().is_some_and(|surface| surface_instance(surface) == Some(closing.instance))) {
+            if let Some(index) = state.deferred.iter().position(|entry| entry.as_ref().is_some_and(|surface| surface_instance(surface.as_ref()) == Some(closing.instance))) {
                 state.deferred[index].take();
                 return false;
             }

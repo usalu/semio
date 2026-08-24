@@ -228,12 +228,12 @@ pub use shell::{Shell, ShellEvent};
 #[cfg(feature = "wgpu-engine")]
 pub use action::{
     checked_action_string_bytes, BoundedAction, BoundedActionBatchReservation, BoundedActionBuilder, BoundedActionClaim, BoundedActionClaimBatch, BoundedActionFault, BoundedActionQueue, BoundedActionReservation, BoundedClaimedActionDraft,
-    BoundedClaimedActionReservation, PreparedClaimedAction, PreparedClaimedActionBatch,
+    BoundedClaimedActionReservation, PreparedClaimedAction, PreparedClaimedActionBatch, ACTION_ITEM_BYTE_CAPACITY, ACTION_STRING_BYTE_CAPACITY,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use chrome::{chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY};
 #[cfg(feature = "wgpu-engine")]
-pub use engine::{SurfaceLane, Ui, UiLayoutStep};
+pub use engine::{SurfaceLane, Ui, UiFrameStep, UiLayoutStep};
 #[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 pub use gpu::schedule_frame;
 #[cfg(feature = "wgpu-engine")]

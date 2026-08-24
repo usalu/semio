@@ -16,7 +16,7 @@ const SOURCING_CURATE_GRID_CELL: f64 = 2.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: SOURCING_CURATE_WINDOW_GRID.into(),
         label: LocalizedLabel::native("Grid", "Raster"),
@@ -37,7 +37,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiNode {
+pub fn render(document: &CurateSnapshot, cfg: &SourcingCurateConfig) -> UiNode {
     let filtered = filtered_stock(document, &cfg.filters);
     let mut seen_mesh_ids = HashSet::new();
     let mut meshes = Vec::new();

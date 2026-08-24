@@ -16,6 +16,19 @@
 //! The line this class draws is therefore about topology, not about geometry, and the guard below
 //! is what makes that concrete.
 //!
+//! 🧬️ **This catalog declares exactly the same six kinds as `✳️cc2`, `✳️cc4`, `✳️cc5`, and that is a
+//! CONSEQUENCE rather than a copy.** All four ceilings sit STRICTLY INSIDE the ISO 10303-214 §4.3
+//! ladder, so all four admit a representation to write AND have at least one rung above them to
+//! demote from, and all four read the same three axes — the `AUTOMOTIVE_DESIGN` declaration, the
+//! ladder, and the product identity chain — because §4.3 varies only the ceiling. `✳️cc1` sits below
+//! the ladder and `✳️cc6` on top of it, and each declares five kinds instead. The derivation is
+//! written out once in `../../../🧪️oracle/🦀️component.rs`'s own header and asserted by its
+//! `the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place`, which
+//! fails the moment an interior class's list drifts or an edge class grows a verb its ceiling cannot
+//! support. What distinguishes THIS module from those three siblings is `MAX_RUNG = 3` and the
+//! ceiling it selects; every line of classification and serialization below is the shared
+//! `ladder`/`part21` code reached through that one named module, never re-implemented per class.
+//!
 //! ⚠️ The ladder classification here is re-derived from ISO 10303-214 §4.3, never called out of the
 //! production `engine::ladder` — the oracle crate cannot link the production crate, and an oracle
 //! that asked the code under test how to classify would compare an implementation with itself.

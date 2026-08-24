@@ -55,13 +55,25 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   which append genuinely restores. Widening the vocabulary (an insert-style that carries a position)
   is the fix, and it belongs to whoever owns that enum.
 
-  THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because the reference
-  composition did not error. `inverse-<kind>` applies the mutation, applies its own independently
-  computed inverse, and fails with the first diverging field unless the result projects onto exactly
-  what the original document projects onto. `identity-round-trip` fails unless the re-serialized
-  bytes differ from the input AND their projection is identical to the input's. Neither law is
-  scoped down: the whole projection — the ordered block tree, the ordered style list and the
-  path-keyed digest of every other OPC part — has to come back.
+  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law module,
+  so no scenario can pass merely because the reference composition declined to error.
+  `mutate-<kind>` fails unless the mutation MOVES the very projection the case is compared through:
+  a kind that applies cleanly and changes nothing observable would otherwise report a green for a
+  mutation nobody watched, and until this wave all thirteen of them did exactly that.
+  `inverse-<kind>` applies the mutation, applies its own independently computed inverse, and fails
+  with the first diverging field unless the result projects onto exactly what the original document
+  projects onto. `identity-round-trip` fails unless the rebuilt archive differs from the input AND
+  its projection is identical to the input's. NONE of the three is scoped down and NO kind is exempt
+  from any of them: `semantic-docx-ecma-376-mutate-v1` declares no writer freedom at all, and the
+  whole projection — the ordered block tree, the ordered style list and the path-keyed digest of
+  every other OPC part — has to move for a mutation and come back for an inverse. The set-part and
+  remove-part kinds reach the projection through that last member, which is why the digest map is
+  part of it rather than an afterthought. The same three laws are proven again at unit level over
+  these very Examples rows by
+  `every_declared_kind_is_observable_and_its_inverse_restores_the_document` in
+  ../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs, which READS this table rather
+  than restating it, so the two can never drift apart — and the same module pins the
+  remove-style-of-an-interior-style refusal described above.
 
   @id-mutate
   @level-exhaustive

@@ -22,9 +22,10 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   own oracle module that never calls this subset's production `TxtSnapshot`/`TxtMutation` code.
 
   What the subset claims: exactly `Lf`/`CrLf`, one style for the whole document (CrLf iff at least
-  one literal `\r\n` occurs anywhere), a trailing terminator tracked as a separate boolean, and
-  UTF-8 content with NO normalization, NO BOM handling and NO NEL(U+0085)/LS(U+2028)/PS(U+2029)
-  line-breaking — see the `@id-spec-vector` scenarios for exactly what that means byte-for-byte. A
+  one literal `\r\n` occurs anywhere), a trailing terminator tracked as a separate boolean whose
+  only legal combinations are the ones the split can return (a terminated document has at least one
+  line; an unterminated one's last line is never empty — see the 🔒️ note below), and UTF-8 content
+  with NO normalization, NO BOM handling and NO NEL(U+0085)/LS(U+2028)/PS(U+2029) line-breaking — see the `@id-spec-vector` scenarios for exactly what that means byte-for-byte. A
   second real capture, shared://📓️hub-boot-log.txt (a genuine terminal log, mostly LF with two real
   embedded CRLF sequences from a subprocess's own convention), is exercised directly in the oracle
   module's own tests rather than here: it demonstrates the whole-document CrLf detection rule
@@ -55,20 +56,36 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   Examples parameters. That is stated here because "the evidence is discharged by the subject phase"
   is, today, a claim about a phase that does not run.
 
-  ⚠️ SECOND, and found by asserting the inverse law rather than describing it: `set-trailing-newline`
-  does NOT invert on this document, and the defect is in this subset's own data model. The pair
+  🔒️ SECOND, and found by asserting the inverse law rather than describing it: `set-trailing-newline`
+  did not invert on this document, and the defect was in this subset's own data model. The pair
   `(lines, trailingNewline)` is not an injective encoding of a body — `(["a"], true)` and
-  `(["a", ""], false)` both render to `"a\n"`, and the split resolves the tie in favour of the
-  terminator. This fixture's last line is empty, so `set-trailing-newline` to `false` renders 170
-  lines with no terminator, which reads back as 169 lines WITH one, and the inverse (correctly
-  computed from the original as `true`) can no longer recover the lost blank line. The production
-  `TxtSnapshot`/`TxtMutation` share that decomposition, so the subject has the identical hole — it
-  has simply never been measured. The remedy belongs to the VOCABULARY, on both sides at once:
-  `SetTrailingNewline { value: false }` has no representable result on a document whose last line is
-  empty and should be REJECTED there. Left RED in
-  `every_feature_row_inverts_back_to_the_real_document` rather than tuned away, and NOT worked around
-  by choosing a fixture that does not end with a blank line — that would hide a defect that is live
-  in production code.
+  `(["a", ""], false)` both render to `"a\n"`, as do `([], true)` and `([""], true)` — and the split
+  resolves every such tie in favour of the terminator. This fixture's last line is empty, so
+  `set-trailing-newline` to `false` rendered 170 lines with no terminator, bytes that read back as
+  169 lines WITH one, and the inverse (correctly computed from the original as `true`) could no
+  longer recover the lost blank line.
+
+  The remedy landed in the VOCABULARY, on both sides at once, and it is a NARROWING rather than a
+  wider snapshot type. `TxtSnapshot`'s reachable states are now exactly the canonical ones — the
+  images the carrier's own split produces — because every `TxtMutation` is gated on that predicate
+  and a mutation whose result would fall outside it is REFUSED with
+  `stdio.txt.mutation-not-representable`, changing nothing, the same "refuse rather than silently
+  lose" discipline the sibling `📰xml ✳️valid` vocabulary applies to §2.8. The oracle module states
+  the same rule independently, from the join rule rather than from our code. On the canonical states
+  that remain, `from_body`/`to_body` is a bijection: no reachable document loses a line to its own
+  serialization.
+
+  The cost is stated plainly instead of hidden. On THIS fixture — and on any text file that ends
+  with a blank line — `set-trailing-newline false` now has no result at all, because the document it
+  would name is already spelled with one line fewer and a terminator; reaching it is `remove-line`'s
+  job. Its two `Examples` rows below therefore exercise a REFUSAL, and the oracle module asserts
+  exactly that (`every_feature_row_moves_the_real_documents_projection` requires the refusal and
+  requires it to name the loss; `every_feature_row_inverts_back_to_the_real_document` requires it to
+  leave the bytes untouched, so the row cannot pass by quietly doing nothing). The kind's POSITIVE
+  inverse is exercised on a document whose last line is not empty, in
+  `set_trailing_newline_inverts_where_its_result_is_representable`, so no kind is left with an
+  unexercised inverse. The fixture was NOT swapped for one that avoids the collision — that would
+  have hidden a defect that was live in production code.
 
   @id-mutate
   @level-exhaustive

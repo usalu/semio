@@ -8,20 +8,20 @@ pub const SOURCING_CURATE_MODE_CURATE: &str = "curate";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::sourcing::create_sourcing_curate_app`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: SOURCING_CURATE_MODE_CURATE.into(), label: LocalizedLabel::native("Curate", "Kuratieren"), icon_id: "folder-open".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-async fn sourcing_window(window_kind_id: &str, title: &str) -> WindowLayoutWindowNode {
+fn sourcing_window(window_kind_id: &str, title: &str) -> WindowLayoutWindowNode {
     WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }
 }
 
-async fn sourcing_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
+fn sourcing_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
     WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size, active_window_kind_id: None, children: vec![sourcing_window(window_kind_id, title)] })
 }
 
 /// 🪟️ Three-column layout: pool | curated over preview | grid.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
             kind: "row".into(),

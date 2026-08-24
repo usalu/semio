@@ -8,7 +8,9 @@
 
 use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockStackTab, DockState, WindowSilhouette};
 use crate::engine_canvas::theme_is_dark;
-use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document, resolve_ui_image};
+#[cfg(test)]
+use crate::interpreter::render_ui_document;
+use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, resolve_ui_image, UiDocumentFrameCursor};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
@@ -124,67 +126,133 @@ pub struct ShellFindItem {
     pub node_id: String,
 }
 
-/// 🧺️ Owned callback output shared with the scene renderer for one chrome build.
-#[derive(Clone, Default)]
-struct ShellFindItemSink(std::sync::Arc<std::sync::Mutex<Vec<ShellFindItem>>>);
+const SHELL_FIND_ITEM_CAPACITY: usize = 256;
+const SHELL_FIND_PAYLOAD_BYTES: usize = 1024 * 1024;
 
-#[cfg(not(target_arch = "wasm32"))]
-struct WorkerCell<T>(std::sync::OnceLock<std::sync::Mutex<std::cell::RefCell<T>>>);
+/// 🧺️ Fixed FIFO ownership for one generation of scene find items.
+pub struct ShellFindItems {
+    slots: Box<[Option<ShellFindItem>; SHELL_FIND_ITEM_CAPACITY]>,
+    head: usize,
+    len: usize,
+    payload_bytes: usize,
+    generation: u64,
+}
 
-#[cfg(not(target_arch = "wasm32"))]
-impl<T> WorkerCell<T> {
-    const fn new() -> Self {
-        Self(std::sync::OnceLock::new())
+impl Default for ShellFindItems {
+    fn default() -> Self {
+        Self { slots: Box::new([const { None }; SHELL_FIND_ITEM_CAPACITY]), head: 0, len: 0, payload_bytes: 0, generation: 1 }
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-impl<T: Default> WorkerCell<T> {
-    fn with<R>(&self, f: impl FnOnce(&std::cell::RefCell<T>) -> R) -> R {
-        let guard = self.0.get_or_init(|| std::sync::Mutex::new(std::cell::RefCell::new(T::default()))).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        f(&guard)
+impl ShellFindItems {
+    fn item_bytes(item: &ShellFindItem) -> Option<usize> {
+        item.id
+            .capacity()
+            .checked_add(item.label.capacity())?
+            .checked_add(item.description.as_ref().map_or(0, String::capacity))?
+            .checked_add(item.category.as_ref().map_or(0, String::capacity))?
+            .checked_add(item.surface_id.capacity())?
+            .checked_add(item.node_id.capacity())
+    }
+
+    fn try_push_at(&mut self, generation: u64, item: ShellFindItem) -> Result<(), ShellFindItem> {
+        let Some(bytes) = Self::item_bytes(&item) else { return Err(item) };
+        let Some(next_bytes) = self.payload_bytes.checked_add(bytes) else { return Err(item) };
+        if generation != self.generation || self.len == self.slots.len() || next_bytes > SHELL_FIND_PAYLOAD_BYTES {
+            return Err(item);
+        }
+        let Some(index) = self.head.checked_add(self.len).map(|index| index % self.slots.len()) else { return Err(item) };
+        let Some(next_len) = self.len.checked_add(1) else { return Err(item) };
+        if self.slots[index].is_some() {
+            return Err(item);
+        }
+        self.slots[index] = Some(item);
+        self.len = next_len;
+        self.payload_bytes = next_bytes;
+        Ok(())
+    }
+
+    fn try_push(&mut self, item: ShellFindItem) -> Result<(), ShellFindItem> {
+        self.try_push_at(self.generation, item)
+    }
+
+    fn pop_front(&mut self) -> Option<ShellFindItem> {
+        if self.len == 0 {
+            return None;
+        }
+        let item = self.slots[self.head].take()?;
+        let bytes = Self::item_bytes(&item)?;
+        self.head = self.head.checked_add(1).map(|index| index % self.slots.len())?;
+        self.len = self.len.checked_sub(1)?;
+        self.payload_bytes = self.payload_bytes.checked_sub(bytes)?;
+        Some(item)
+    }
+
+    fn begin_next_generation(&mut self) -> bool {
+        if self.len != 0 {
+            return false;
+        }
+        let Some(generation) = self.generation.checked_add(1) else { return false };
+        self.head = 0;
+        self.generation = generation;
+        true
+    }
+
+    fn iter(&self) -> impl Iterator<Item = &ShellFindItem> {
+        (0..self.len).filter_map(move |offset| self.head.checked_add(offset).map(|index| index % self.slots.len()).and_then(|index| self.slots[index].as_ref()))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.len == 0 && self.payload_bytes == 0 && self.slots.iter().all(Option::is_none)
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[derive(Clone, Copy)]
+struct ActiveShellFindItems {
+    pointer: std::ptr::NonNull<ShellFindItems>,
+    generation: u64,
+}
+
 thread_local! {
-    static ACTIVE_FIND_ITEM_SINKS: std::cell::RefCell<Vec<ShellFindItemSink>> = const { std::cell::RefCell::new(Vec::new()) };
+    static ACTIVE_FIND_ITEMS: std::cell::Cell<Option<ActiveShellFindItems>> = const { std::cell::Cell::new(None) };
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-static ACTIVE_FIND_ITEM_SINKS: WorkerCell<Vec<ShellFindItemSink>> = WorkerCell::new();
+/// 🪢️ Non-nesting single-worker binding for the exact retained collector.
+struct ShellFindItemBinding {
+    active: ActiveShellFindItems,
+}
 
-/// 🪢️ Scoped adapter binding that exposes an owned find-item sink to scene callbacks.
-struct ShellFindItemSinkBinding(std::marker::PhantomData<std::rc::Rc<()>>);
-
-impl ShellFindItemSink {
-    fn bind(&self) -> ShellFindItemSinkBinding {
-        ACTIVE_FIND_ITEM_SINKS.with(|sinks| sinks.borrow_mut().push(self.clone()));
-        ShellFindItemSinkBinding(std::marker::PhantomData)
-    }
-
-    fn retire_step(&self) -> bool {
-        self.0.lock().unwrap_or_else(|error| error.into_inner()).pop().is_none()
-    }
-
-    fn take(&self) -> Vec<ShellFindItem> {
-        std::mem::take(&mut *self.0.lock().unwrap_or_else(|error| error.into_inner()))
+impl ShellFindItems {
+    fn bind(&mut self) -> Result<ShellFindItemBinding, ()> {
+        let active = ActiveShellFindItems { pointer: std::ptr::NonNull::from(&mut *self), generation: self.generation };
+        ACTIVE_FIND_ITEMS.with(|slot| {
+            if slot.get().is_some() {
+                return Err(());
+            }
+            slot.set(Some(active));
+            Ok(ShellFindItemBinding { active })
+        })
     }
 }
 
-impl Drop for ShellFindItemSinkBinding {
+impl Drop for ShellFindItemBinding {
     fn drop(&mut self) {
-        ACTIVE_FIND_ITEM_SINKS.with(|sinks| {
-            sinks.borrow_mut().pop().expect("find-item sink binding stack is empty");
+        ACTIVE_FIND_ITEMS.with(|slot| {
+            if slot.get().is_some_and(|active| active.pointer == self.active.pointer && active.generation == self.active.generation) {
+                slot.set(None);
+            }
         });
     }
 }
 
-pub fn push_find_item(item: ShellFindItem) {
-    ACTIVE_FIND_ITEM_SINKS.with(|sinks| {
-        let sink = sinks.borrow().last().cloned().expect("push_find_item requires an active Shell render binding");
-        sink.0.lock().unwrap_or_else(|error| error.into_inner()).push(item);
-    });
+/// 📥️ Transfers one exact callback item or returns it unchanged on stale/full/unbound refusal.
+pub fn try_push_find_item(item: ShellFindItem) -> Result<(), ShellFindItem> {
+    ACTIVE_FIND_ITEMS.with(|slot| {
+        let Some(active) = slot.get() else { return Err(item) };
+        let collector = unsafe { active.pointer.as_ptr().as_mut() };
+        let Some(collector) = collector else { return Err(item) };
+        collector.try_push_at(active.generation, item)
+    })
 }
 
 /// 🗂️ `ui_wgpu::wgpu::ShellMenuAction.kind` wire string for an `ActionDefinition.kind` — host-side styling
@@ -969,7 +1037,7 @@ pub struct ShellSyncChannel {
 /// 🏗️ Send-capable inputs, scratch state, and outputs consumed by chrome construction.
 #[derive(Default)]
 struct ShellChromeBuildState {
-    find_items: ShellFindItemSink,
+    find_items: ShellFindItems,
     content_focus: HashMap<String, bool>,
     tooltip_titles: HashMap<String, String>,
     tooltip_hover: Option<ChromeTooltipHover>,
@@ -1433,7 +1501,7 @@ pub struct ShellState {
     pub split_resize_axis_total: f32,
     pub active_example_id: Option<String>,
     pub active_left_tab: Option<String>,
-    pub find_items: Vec<ShellFindItem>,
+    pub find_items: ShellFindItems,
     pub find_selected: usize,
     pub engagement_expanded: HashMap<String, bool>,
     pub engagement_activated: HashMap<String, bool>,
@@ -1878,7 +1946,7 @@ impl ShellState {
             split_resize_axis_total: 1.0,
             active_example_id: None,
             active_left_tab: None,
-            find_items: Vec::new(),
+            find_items: ShellFindItems::default(),
             find_selected: 0,
             engagement_expanded: HashMap::new(),
             engagement_activated: HashMap::new(),
@@ -5143,7 +5211,7 @@ impl ShellState {
         Ok(())
     }
 
-    fn render_tree_drag_overlay(&self, overlay: &mut DrawList, input: &InputState<ActionDescriptor>, theme: &Theme) {
+    fn render_tree_drag_overlay_node(&self, overlay: &mut DrawList, input: &InputState<ActionDescriptor>, theme: &Theme) {
         let Some(drag) = &self.tree_drag else {
             return;
         };
@@ -6531,6 +6599,74 @@ fn render_sync_status_and_checkin(
 fn render_footer_section_divider(draw: &mut DrawList, theme: &Theme, x: f32, btn_y: f32, btn_h: f32) -> f32 {
     draw.push_solid([x + theme.gap_standard * 0.5, btn_y + 4.0, theme.stroke_hairline, btn_h - 8.0], theme.border_normal);
     x + theme.gap_standard
+}
+
+fn footer_utility_at_path<'utility>(roots: &'utility [UtilityNode], path: &[u16; 64], depth: usize) -> Option<&'utility UtilityNode> {
+    let mut siblings = roots;
+    for level in 0..=depth {
+        let node = siblings.get(path[level] as usize)?;
+        if level == depth {
+            return Some(node);
+        }
+        let UtilityNode::Collection { children, .. } = node else { return None };
+        siblings = children;
+    }
+    None
+}
+
+fn footer_utility_sibling_count(roots: &[UtilityNode], path: &[u16; 64], depth: usize) -> Option<usize> {
+    if depth == 0 {
+        return Some(roots.len());
+    }
+    let parent = footer_utility_at_path(roots, path, depth - 1)?;
+    let UtilityNode::Collection { children, .. } = parent else { return None };
+    Some(children.len())
+}
+
+fn render_footer_utility_node(
+    chrome: &mut ShellChromeBuildState,
+    draw: &mut DrawList,
+    atlas: &mut FontAtlas,
+    icons: &IconAtlas,
+    input: &mut InputState<ActionDescriptor>,
+    theme: &Theme,
+    x: f32,
+    btn_y: f32,
+    btn_h: f32,
+    utility: &UtilityNode,
+    collection_expanded: &HashMap<String, bool>,
+) -> (f32, bool) {
+    match utility {
+        UtilityNode::Separator { .. } => (render_footer_section_divider(draw, theme, x, btn_y, btn_h), false),
+        UtilityNode::Button { id, icon_id, label, text, title, disabled, on_press, .. } if !disabled.unwrap_or(false) => {
+            let item = ChromeGroupItem { control_id: "framework.utility.button", icon_id: Some(icon_id.as_str()), label: Some(footer_utility_label(label, text, title, id)), active: false, disabled: false, kind: HitKind::Button };
+            let item_w = measure_chrome_group_item(atlas, theme, &item);
+            let rect = Rect::new(x, btn_y, item_w, btn_h);
+            render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+            chrome.register_element_rect(id.clone(), rect);
+            input.register_hit(HitTarget { rect, event: Some(on_press.clone()), control_id: Some(format!("framework.utility.button.{id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
+            (x + item_w + theme.gap_standard * 0.5, false)
+        }
+        UtilityNode::Toggle { id, icon_id, label, text, title, pressed, disabled, on_change, .. } if !disabled.unwrap_or(false) => {
+            let item = ChromeGroupItem { control_id: "framework.utility.toggle", icon_id: Some(icon_id.as_str()), label: Some(footer_utility_label(label, text, title, id)), active: pressed.unwrap_or(false), disabled: false, kind: HitKind::Toggle };
+            let item_w = measure_chrome_group_item(atlas, theme, &item);
+            let rect = Rect::new(x, btn_y, item_w, btn_h);
+            render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+            chrome.register_element_rect(id.clone(), rect);
+            input.register_hit(HitTarget { rect, event: Some(on_change.clone()), control_id: Some(format!("framework.utility.toggle.{id}")), kind: HitKind::Toggle, drag_axis: None, drag_data: None });
+            (x + item_w + theme.gap_standard * 0.5, false)
+        }
+        UtilityNode::Collection { id, icon_id, label, text, title, disabled, children, .. } if !disabled.unwrap_or(false) => {
+            let expanded = collection_expanded.get(id).copied().unwrap_or(false);
+            let item = ChromeGroupItem { control_id: "framework.utility.collection", icon_id: Some(icon_id.as_str()), label: Some(footer_utility_label(label, text, title, id)), active: expanded, disabled: false, kind: HitKind::Button };
+            let item_w = measure_chrome_group_item(atlas, theme, &item);
+            let rect = Rect::new(x, btn_y, item_w, btn_h);
+            render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+            input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("framework.utility.collection.{id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
+            (x + item_w + theme.gap_standard * 0.5, expanded && !children.is_empty())
+        }
+        UtilityNode::Button { .. } | UtilityNode::Toggle { .. } | UtilityNode::Collection { .. } => (x, false),
+    }
 }
 
 fn render_footer_utility_nodes(
@@ -8532,7 +8668,7 @@ fn tutorial_gesture_endpoints(gesture: &semio_framework::IntroductionGesture) ->
 /// 👻️ Paints a simple ghost-cursor dot at the active `TutorialGestureCue`'s interpolated position (linear
 /// by playhead progress within the cue) — the minimal demonstration painter neither this shell nor its
 /// introduction mechanism had before (verified: no `demonstration`/ghost-cursor renderer existed here).
-fn render_tutorial_gesture_overlay(state: &ShellState, overlay: &mut DrawList, theme: &Theme) {
+fn render_tutorial_gesture_overlay_node(state: &ShellState, overlay: &mut DrawList, theme: &Theme) {
     let Some(runtime) = state.tutorial.as_ref() else {
         return;
     };
@@ -8969,6 +9105,7 @@ impl ShellState {
     /// 🎬️ The tutorial control bar (play/pause, stop, scrubber, time, rate) — rendered right after
     /// `render_navbar` in the chrome pass, reusing its own `ChromeGroupItem`/`render_chrome_group`
     /// button plumbing and `chrome_clicked_this_frame` click-edge detection.
+    #[cfg(test)]
     fn render_tutorial_bar(&mut self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) {
         if self.tutorial.is_none() {
             return;
@@ -9329,6 +9466,24 @@ mod tutorial_tests {
 pub(crate) struct ShellChromeFrameCursor {
     phase: ShellChromeFramePhase,
     setup: u8,
+    child: ShellChromeChildCursor,
+}
+
+#[derive(Default)]
+struct ShellChromeChildCursor {
+    phase: u16,
+    item: usize,
+    scalar: usize,
+    x: f32,
+    y: f32,
+    right: f32,
+    flag: bool,
+    document: UiDocumentFrameCursor,
+    window: Option<UiText>,
+    rect: Option<Rect>,
+    path: [u16; 64],
+    depth: usize,
+    find_rejected: Option<ShellFindItem>,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -9357,13 +9512,18 @@ enum ShellChromeFramePhase {
 
 impl Default for ShellChromeFrameCursor {
     fn default() -> Self {
-        Self { phase: ShellChromeFramePhase::default(), setup: 0 }
+        Self { phase: ShellChromeFramePhase::default(), setup: 0, child: ShellChromeChildCursor::default() }
     }
 }
 
 impl ShellChromeFrameCursor {
     pub(crate) fn terminal_is_complete(&self) -> bool {
         matches!(self.phase, ShellChromeFramePhase::Complete)
+    }
+
+    fn advance(&mut self, phase: ShellChromeFramePhase) {
+        self.phase = phase;
+        self.child = ShellChromeChildCursor::default();
     }
 }
 
@@ -9416,89 +9576,81 @@ impl ShellState {
                     }
                     1 => overlay.set_screen_height(h),
                     2 => draw.push_solid([0.0, 0.0, w, h], theme.background),
-                    3 if !self.chrome_build.find_items.retire_step() => return false,
-                    4 if self.find_items.pop().is_some() => return false,
+                    3 => {
+                        if self.chrome_build.find_items.pop_front().is_some() {
+                            return false;
+                        }
+                        if !self.chrome_build.find_items.begin_next_generation() {
+                            cursor.phase = ShellChromeFramePhase::Complete;
+                            return false;
+                        }
+                    }
+                    4 => {
+                        if self.find_items.pop_front().is_some() {
+                            return false;
+                        }
+                        if !self.find_items.begin_next_generation() {
+                            cursor.phase = ShellChromeFramePhase::Complete;
+                            return false;
+                        }
+                    }
                     5 => {
-                        let key = self.chrome_build.tooltip_titles.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.chrome_build.tooltip_titles.remove(&key);
+                        if self.chrome_build.tooltip_titles.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     6 => {
-                        let key = self.chrome_build.element_rects.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.chrome_build.element_rects.remove(&key);
+                        if self.chrome_build.element_rects.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     7 => {
-                        let key = self.widget_maps.input_metas.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.input_metas.remove(&key);
+                        if self.widget_maps.input_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     8 => {
-                        let key = self.widget_maps.select_metas.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.select_metas.remove(&key);
+                        if self.widget_maps.select_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     9 => {
-                        let key = self.widget_maps.toggle_metas.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.toggle_metas.remove(&key);
+                        if self.widget_maps.toggle_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     10 => {
-                        let key = self.widget_maps.slider_metas.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.slider_metas.remove(&key);
+                        if self.widget_maps.slider_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     11 => {
-                        let key = self.widget_maps.stepper_metas.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.stepper_metas.remove(&key);
+                        if self.widget_maps.stepper_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     12 => {
-                        let key = self.widget_maps.ring_metas.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.ring_metas.remove(&key);
+                        if self.widget_maps.ring_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     13 => {
-                        let key = self.widget_maps.slider_live_values.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.slider_live_values.remove(&key);
+                        if self.widget_maps.slider_live_values.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     14 => {
-                        let key = self.widget_maps.ring_live_values.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.ring_live_values.remove(&key);
+                        if self.widget_maps.ring_live_values.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     15 => {
-                        let key = self.widget_maps.tree_hover_commands.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.tree_hover_commands.remove(&key);
+                        if self.widget_maps.tree_hover_commands.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     16 => {
-                        let key = self.widget_maps.tree_unhover_commands.keys().next().cloned();
-                        if let Some(key) = key {
-                            self.widget_maps.tree_unhover_commands.remove(&key);
+                        if self.widget_maps.tree_unhover_commands.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
@@ -9521,50 +9673,73 @@ impl ShellState {
                 cursor.setup += 1;
             }
             ShellChromeFramePhase::MainWindow => {
-                let find_items = self.chrome_build.find_items.clone();
-                let mut overlay_slot = Some(overlay);
-                {
-                    let _find_items_binding = find_items.bind();
-                    self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, engine_resources, world_resources);
+                if cursor.child.find_rejected.take().is_some() {
+                    return false;
                 }
-                self.find_items = find_items.take();
-                cursor.phase = ShellChromeFramePhase::LeftPanel;
+                if let Some(item) = self.chrome_build.find_items.pop_front() {
+                    if let Err(item) = self.find_items.try_push(item) {
+                        cursor.child.find_rejected = Some(item);
+                    }
+                    return false;
+                }
+                let binding = match self.chrome_build.find_items.bind() {
+                    Ok(binding) => binding,
+                    Err(()) => return false,
+                };
+                let mut overlay_slot = Some(overlay);
+                let complete = self.render_main_window_step(&mut cursor.child, draw, &mut overlay_slot, atlas, icons, input, theme, body, engine_resources, world_resources);
+                drop(binding);
+                if !complete {
+                    return false;
+                }
+                if !self.chrome_build.find_items.terminal_is_empty() {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::LeftPanel);
             }
             ShellChromeFramePhase::LeftPanel => {
-                if self.left_panel_open && self.has_left_tabs() {
-                    self.render_left_panel(overlay, None, atlas, icons, input, theme, body, engine_resources, world_resources);
+                if self.left_panel_open && self.has_left_tabs() && !self.render_panel_step(&mut cursor.child, true, overlay, None, atlas, icons, input, theme, body, engine_resources, world_resources) {
+                    return false;
                 }
-                cursor.phase = ShellChromeFramePhase::RightPanel;
+                cursor.advance(ShellChromeFramePhase::RightPanel);
             }
             ShellChromeFramePhase::RightPanel => {
-                if self.right_panel_open && self.has_right_tabs() {
-                    self.render_right_panel(overlay, None, atlas, icons, input, theme, body, engine_resources, world_resources);
+                if self.right_panel_open && self.has_right_tabs() && !self.render_panel_step(&mut cursor.child, false, overlay, None, atlas, icons, input, theme, body, engine_resources, world_resources) {
+                    return false;
                 }
-                cursor.phase = ShellChromeFramePhase::Navbar;
+                cursor.advance(ShellChromeFramePhase::Navbar);
             }
             ShellChromeFramePhase::Navbar => {
-                self.render_navbar(overlay, atlas, icons, input, theme, w);
-                cursor.phase = ShellChromeFramePhase::TutorialBar;
+                if !self.render_navbar_step(&mut cursor.child, overlay, atlas, icons, input, theme, w) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::TutorialBar);
             }
             ShellChromeFramePhase::TutorialBar => {
-                self.render_tutorial_bar(overlay, atlas, icons, input, theme, w);
-                cursor.phase = ShellChromeFramePhase::Footer;
+                if !self.render_tutorial_bar_step(&mut cursor.child, overlay, atlas, icons, input, theme, w) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::Footer);
             }
             ShellChromeFramePhase::Footer => {
-                self.render_footer(overlay, atlas, icons, input, theme, w, h);
-                cursor.phase = ShellChromeFramePhase::Overlay;
+                if !self.render_footer_step(&mut cursor.child, overlay, atlas, icons, input, theme, w, h) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::Overlay);
             }
             ShellChromeFramePhase::Overlay => {
-                self.render_overlay(overlay, atlas, icons, input, theme, w, h);
-                cursor.phase = ShellChromeFramePhase::TreeDrag;
+                if !self.render_overlay_step(&mut cursor.child, overlay, atlas, icons, input, theme, w, h) {
+                    return false;
+                }
+                cursor.advance(ShellChromeFramePhase::TreeDrag);
             }
             ShellChromeFramePhase::TreeDrag => {
-                self.render_tree_drag_overlay(overlay, input, theme);
-                cursor.phase = ShellChromeFramePhase::TutorialGesture;
+                self.render_tree_drag_overlay_node(overlay, input, theme);
+                cursor.advance(ShellChromeFramePhase::TutorialGesture);
             }
             ShellChromeFramePhase::TutorialGesture => {
-                render_tutorial_gesture_overlay(self, overlay, theme);
-                cursor.phase = ShellChromeFramePhase::Error;
+                render_tutorial_gesture_overlay_node(self, overlay, theme);
+                cursor.advance(ShellChromeFramePhase::Error);
             }
             ShellChromeFramePhase::Error => {
                 if let Some(error) = &self.error {
@@ -9574,7 +9749,7 @@ impl ShellState {
                     let mut ctx = framework_widget_context(draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
                     draw_text(&mut ctx, error, 12.0, h - theme.footer_height - 24.0, theme.font_size_small, theme.error);
                 }
-                cursor.phase = ShellChromeFramePhase::IntroductionWrite;
+                cursor.advance(ShellChromeFramePhase::IntroductionWrite);
             }
             ShellChromeFramePhase::IntroductionWrite => {
                 if let Some(app_id) = self.chrome_build.introduction_seen_writes.pop() {
@@ -9742,6 +9917,750 @@ impl ShellState {
         }
     }
 
+    fn render_main_window_step(
+        &mut self,
+        cursor: &mut ShellChromeChildCursor,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        bounds: Rect,
+        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) -> bool {
+        match cursor.phase {
+            0 => {
+                draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
+                cursor.rect = Some(bounds.inset(theme.panel_inset));
+                cursor.phase = 1;
+            }
+            1 => {
+                let window = if self.space_mode && self.spawned_ui.is_some() { UiText::try_from_str("spawned") } else { self.active_window_id.as_deref().and_then(UiText::try_from_str) };
+                cursor.window = window;
+                cursor.phase = 2;
+            }
+            2 => {
+                let Some(rect) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                draw.push_scissor(rect);
+                cursor.phase = 3;
+            }
+            3 => {
+                let Some(rect) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                let control_id = cursor.window.as_ref().map_or("window", UiText::as_str);
+                input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id.into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+                cursor.phase = 4;
+            }
+            4 => {
+                let Some(window) = cursor.window.as_ref() else {
+                    cursor.phase = 5;
+                    return false;
+                };
+                let document = if window.as_str() == "spawned" { self.spawned_ui.clone() } else { self.window_ui.get(window.as_str()).cloned() };
+                let Some(document) = document else {
+                    cursor.phase = 5;
+                    return false;
+                };
+                let Some(rect) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                let scroll_offsets = &mut self.scroll_offsets;
+                let collapsed_sections = &mut self.collapsed_sections;
+                let open_selects = &mut self.open_selects;
+                let widget_maps = &mut self.widget_maps;
+                let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
+                ctx.pick_clip = Some(rect);
+                if !render_ui_document_step(
+                    &mut cursor.document,
+                    &document,
+                    rect,
+                    &mut ctx,
+                    window.as_str(),
+                    engine_resources,
+                    world_resources,
+                    &mut self.world3d_states,
+                    &mut self.node_graph_states,
+                    &mut self.tiled_map_states,
+                    &mut self.icon_render_states,
+                    &mut self.board2d_states,
+                ) {
+                    return false;
+                }
+                cursor.phase = 5;
+            }
+            5 => {
+                draw.pop_scissor();
+                cursor.phase = 6;
+            }
+            6 => return true,
+            _ => return false,
+        }
+        false
+    }
+
+    fn render_panel_step(
+        &mut self,
+        cursor: &mut ShellChromeChildCursor,
+        left: bool,
+        panel_draw: &mut DrawList,
+        overlay: Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        body: Rect,
+        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) -> bool {
+        const PANEL_RESIZE_HIT_PX: f32 = 20.0;
+        match cursor.phase {
+            0 => {
+                cursor.rect = Some(self.floating_panel_rect(left, body, theme));
+                let active = if left { self.active_left_tab.as_deref().unwrap_or(FRAMEWORK_PANEL_TAB_ARTIFACT_ID) } else { self.active_right_tab.as_deref().unwrap_or(FRAMEWORK_SETTINGS_GENERAL_TAB_ID) };
+                cursor.window = UiText::try_from_str(active);
+                cursor.phase = 1;
+            }
+            1 => {
+                let Some(panel) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                cursor.scalar = panel_draw.push_glass([panel.x, panel.y, panel.w, panel.h], theme.border_radius, theme.glass(Level::Panel));
+                cursor.phase = 2;
+            }
+            2 => {
+                panel_draw.begin_glass_content(cursor.scalar);
+                cursor.phase = 3;
+            }
+            3..=6 => {
+                let Some(panel) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                let hair = theme.stroke_hairline;
+                let rect = match cursor.phase {
+                    3 => [panel.x, panel.y, panel.w, hair],
+                    4 => [panel.x, panel.y + panel.h - hair, panel.w, hair],
+                    5 => [panel.x, panel.y, hair, panel.h],
+                    _ => [panel.x + panel.w - hair, panel.y, hair, panel.h],
+                };
+                panel_draw.push_solid(rect, theme.border_normal);
+                cursor.phase += 1;
+            }
+            7 => {
+                let Some(panel) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                let content = panel.inset(theme.gap_standard);
+                panel_draw.push_scissor(content);
+                cursor.phase = 8;
+            }
+            8 => {
+                let Some(window) = cursor.window.as_ref() else {
+                    cursor.phase = 9;
+                    return false;
+                };
+                let Some(document) = self.panel_documents.get(window.as_str()).cloned() else {
+                    cursor.phase = 9;
+                    return false;
+                };
+                let Some(panel) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                let content = panel.inset(theme.gap_standard);
+                let scroll_offsets = &mut self.scroll_offsets;
+                let collapsed_sections = &mut self.collapsed_sections;
+                let open_selects = &mut self.open_selects;
+                let widget_maps = &mut self.widget_maps;
+                let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
+                ctx.pick_clip = Some(content);
+                if !render_ui_document_step(
+                    &mut cursor.document,
+                    &document,
+                    content,
+                    &mut ctx,
+                    window.as_str(),
+                    engine_resources,
+                    world_resources,
+                    &mut self.world3d_states,
+                    &mut self.node_graph_states,
+                    &mut self.tiled_map_states,
+                    &mut self.icon_render_states,
+                    &mut self.board2d_states,
+                ) {
+                    return false;
+                }
+                cursor.phase = 9;
+            }
+            9 => {
+                panel_draw.pop_scissor();
+                cursor.phase = 10;
+            }
+            10 => {
+                panel_draw.end_glass_content();
+                cursor.phase = 11;
+            }
+            11 => {
+                let Some(panel) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                let resize_id = if left { "panel.resize.left" } else { "panel.resize.right" };
+                let resize_handle = if left { Rect::new(panel.x + panel.w - PANEL_RESIZE_HIT_PX, panel.y, PANEL_RESIZE_HIT_PX, panel.h) } else { Rect::new(panel.x, panel.y, PANEL_RESIZE_HIT_PX, panel.h) };
+                input.register_hit(HitTarget { rect: resize_handle, event: None, control_id: Some(resize_id.into()), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
+                cursor.phase = 12;
+            }
+            12 => return true,
+            _ => return false,
+        }
+        false
+    }
+
+    fn render_navbar_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+        let btn_h = theme.control_height;
+        let btn_y = (theme.navbar_height - btn_h) * 0.5;
+        match cursor.phase {
+            0 => {
+                draw.push_solid([0.0, 0.0, width, theme.navbar_height], theme.navbar);
+                cursor.x = theme.padding_standard;
+                cursor.right = width - theme.padding_standard;
+                cursor.phase = 1;
+            }
+            1 => {
+                let hovered = Rect::new(0.0, 0.0, width, theme.navbar_height).contains(input.pointer_x, input.pointer_y);
+                draw.push_solid([0.0, theme.navbar_height - theme.stroke_hairline, width, theme.stroke_hairline], if hovered { theme.border_emphasized } else { theme.border_normal });
+                cursor.phase = 2;
+            }
+            2 => {
+                let size = btn_h - theme.gap_standard;
+                chrome_icon(draw, icons, "semio-logo", cursor.x, btn_y + (btn_h - size) * 0.5, size, theme.text);
+                cursor.x += size + theme.gap_standard;
+                cursor.phase = 3;
+            }
+            3 => {
+                let title = self.session.as_ref().map_or("semio · os", |session| session.app.id.as_str());
+                chrome_text(draw, atlas, input, theme, title, cursor.x, btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+                cursor.phase = 4;
+            }
+            4 => {
+                let is_de = self.locale_id == "de";
+                let item = ChromeGroupItem {
+                    control_id: "ui.fullscreen.toggle",
+                    icon_id: Some(if self.fullscreen_active { "minimize-2" } else { "maximize-2" }),
+                    label: Some(if self.fullscreen_active { shell_chrome_string("fullscreen.exit", is_de) } else { shell_chrome_string("fullscreen.toggle", is_de) }),
+                    active: self.fullscreen_active,
+                    disabled: false,
+                    kind: HitKind::Toggle,
+                };
+                let item_w = measure_chrome_group_item(atlas, theme, &item);
+                cursor.right -= item_w;
+                render_chrome_group(draw, atlas, icons, input, theme, Rect::new(cursor.right, btn_y, item_w, btn_h), &[item], true);
+                cursor.phase = 5;
+            }
+            5 => {
+                let is_de = self.locale_id == "de";
+                let display = self.has_display_tabs();
+                let item = match (display, cursor.item) {
+                    (true, 0) => Some(ChromeGroupItem {
+                        control_id: "ui.panelToggle.display",
+                        icon_id: Some(panel_toggle_icon_id("display", self.session.as_ref())),
+                        label: Some(shell_chrome_string("panelToggle.display", is_de)),
+                        active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display,
+                        disabled: false,
+                        kind: HitKind::Toggle,
+                    }),
+                    (true, 1) | (false, 0) => Some(ChromeGroupItem {
+                        control_id: "ui.panelToggle.workbench",
+                        icon_id: Some(panel_toggle_icon_id("workbench", self.session.as_ref())),
+                        label: Some(shell_chrome_string("panelToggle.workbench", is_de)),
+                        active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
+                        disabled: false,
+                        kind: HitKind::Toggle,
+                    }),
+                    (true, 2) | (false, 1) => Some(ChromeGroupItem {
+                        control_id: "ui.panelToggle.details",
+                        icon_id: Some(panel_toggle_icon_id("details", self.session.as_ref())),
+                        label: Some(shell_chrome_string("panelToggle.details", is_de)),
+                        active: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
+                        disabled: false,
+                        kind: HitKind::Toggle,
+                    }),
+                    (true, 3) | (false, 2) => Some(ChromeGroupItem {
+                        control_id: "ui.panelToggle.settings",
+                        icon_id: Some(panel_toggle_icon_id("settings", self.session.as_ref())),
+                        label: Some(shell_chrome_string("panelToggle.settings", is_de)),
+                        active: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
+                        disabled: false,
+                        kind: HitKind::Toggle,
+                    }),
+                    _ => None,
+                };
+                if let Some(item) = item {
+                    let item_w = measure_chrome_group_item(atlas, theme, &item);
+                    cursor.right -= item_w;
+                    render_chrome_group(draw, atlas, icons, input, theme, Rect::new(cursor.right, btn_y, item_w, btn_h), &[item], true);
+                    cursor.item += 1;
+                    return false;
+                }
+                cursor.phase = 6;
+            }
+            6 => return true,
+            _ => return false,
+        }
+        false
+    }
+
+    fn render_tutorial_bar_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) -> bool {
+        let Some(runtime) = self.tutorial.as_ref() else { return true };
+        let mode = runtime.mode;
+        let playhead_ms = runtime.playhead_ms;
+        let duration_ms = runtime.definition.duration_ms;
+        let rate = runtime.rate;
+        let bar_h = tutorial_bar_height(theme);
+        let y = theme.navbar_height;
+        let btn_h = theme.control_height;
+        let btn_y = y + (bar_h - btn_h) * 0.5;
+        match cursor.phase {
+            0 => {
+                draw.push_solid([0.0, y, width, bar_h], theme.navbar);
+                cursor.x = theme.padding_standard;
+                cursor.right = width - theme.padding_standard;
+                cursor.phase = 1;
+            }
+            1 => {
+                draw.push_solid([0.0, y + bar_h - theme.stroke_hairline, width, theme.stroke_hairline], theme.border_normal);
+                cursor.phase = 2;
+            }
+            2 if mode != TutorialMode::Recording => {
+                let playing = mode == TutorialMode::Playing;
+                let item = ChromeGroupItem { control_id: "shell.tutorial.playPause", icon_id: Some(if playing { "pause" } else { "play" }), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
+                let item_w = measure_chrome_group_item(atlas, theme, &item).max(btn_h);
+                let rect = Rect::new(cursor.x, btn_y, item_w, btn_h);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                if self.chrome_build.clicked_this_frame && rect.contains(input.pointer_x, input.pointer_y) {
+                    self.tutorial_toggle_play_pause();
+                }
+                cursor.x += item_w + theme.gap_standard;
+                cursor.phase = 3;
+            }
+            2 => cursor.phase = 3,
+            3 => {
+                let item = ChromeGroupItem { control_id: "shell.tutorial.stop", icon_id: Some("square"), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
+                let item_w = measure_chrome_group_item(atlas, theme, &item).max(btn_h);
+                let rect = Rect::new(cursor.x, btn_y, item_w, btn_h);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                if self.chrome_build.clicked_this_frame && rect.contains(input.pointer_x, input.pointer_y) {
+                    self.tutorial_stop();
+                    cursor.phase = 9;
+                    return false;
+                }
+                cursor.x += item_w + theme.gap_standard;
+                cursor.phase = 4;
+            }
+            4 => {
+                let current = (playhead_ms / 1000.0).max(0.0) as u64;
+                let label = if mode == TutorialMode::Recording {
+                    format!("REC {}:{:02}", current / 60, current % 60)
+                } else {
+                    let total = duration_ms / 1000;
+                    format!("{}:{:02} / {}:{:02}", current / 60, current % 60, total / 60, total % 60)
+                };
+                chrome_text(draw, atlas, input, theme, &label, cursor.x, btn_y + (btn_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+                cursor.x += atlas.measure_text(&label, theme.font_size_small).0 + theme.gap_standard * 2.0;
+                cursor.phase = 5;
+            }
+            5 if mode != TutorialMode::Recording => {
+                const RATES: [(f32, &str, &str); 4] = [(2.0, "2x", "shell.tutorial.rate.2"), (1.5, "1.5x", "shell.tutorial.rate.1_5"), (1.0, "1x", "shell.tutorial.rate.1"), (0.5, "0.5x", "shell.tutorial.rate.0_5")];
+                let Some((value, label, control_id)) = RATES.get(cursor.item).copied() else {
+                    cursor.phase = 6;
+                    return false;
+                };
+                let item = ChromeGroupItem { control_id, icon_id: None, label: Some(label), active: (rate - value).abs() < 0.01, disabled: false, kind: HitKind::Toggle };
+                let item_w = measure_chrome_group_item(atlas, theme, &item);
+                cursor.right -= item_w;
+                let rect = Rect::new(cursor.right, btn_y, item_w, btn_h);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                if self.chrome_build.clicked_this_frame && rect.contains(input.pointer_x, input.pointer_y) {
+                    if let Some(runtime) = self.tutorial.as_mut() {
+                        runtime.rate = value;
+                    }
+                }
+                cursor.item += 1;
+            }
+            5 => cursor.phase = 6,
+            6 => {
+                let rect = Rect::new(cursor.x, btn_y, (cursor.right - cursor.x).max(24.0), btn_h);
+                cursor.rect = Some(rect);
+                draw.push_rounded([rect.x, btn_y + btn_h * 0.5 - 2.0, rect.w, 4.0], theme.border_normal, 2.0);
+                cursor.phase = 7;
+            }
+            7 => {
+                let Some(rect) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                let knob_x = rect.x + rect.w * tutorial_scrub_progress(playhead_ms, duration_ms);
+                draw.push_rounded([knob_x - 6.0, btn_y + btn_h * 0.5 - 6.0, 12.0, 12.0], theme.selected, 6.0);
+                cursor.phase = 8;
+            }
+            8 => {
+                let Some(rect) = cursor.rect else {
+                    cursor.phase = u16::MAX;
+                    return false;
+                };
+                input.register_hit(HitTarget { rect, event: None, control_id: Some("shell.tutorial.scrubber".into()), kind: HitKind::Slider, drag_axis: None, drag_data: None });
+                if mode != TutorialMode::Recording && input.pointer_down && rect.contains(input.pointer_x, input.pointer_y) {
+                    self.tutorial_seek(tutorial_scrub_target_ms(input.pointer_x, rect, duration_ms));
+                }
+                cursor.phase = 9;
+            }
+            9 => return true,
+            _ => return false,
+        }
+        false
+    }
+
+    fn render_footer_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        let y = height - theme.footer_height;
+        let btn_h = theme.control_height;
+        let btn_y = y + (theme.footer_height - btn_h) * 0.5;
+        match cursor.phase {
+            0 => {
+                draw.push_solid([0.0, y, width, theme.footer_height], theme.navbar);
+                cursor.x = theme.padding_standard;
+                cursor.phase = 1;
+            }
+            1 => {
+                let hovered = Rect::new(0.0, y, width, theme.footer_height).contains(input.pointer_x, input.pointer_y);
+                draw.push_solid([0.0, y, width, theme.stroke_hairline], if hovered { theme.border_emphasized } else { theme.border_normal });
+                cursor.phase = 2;
+            }
+            2 if self.session.is_some() => {
+                if cursor.scalar == 0 {
+                    let Some(utility) = footer_utility_at_path(&self.active_utilities, &cursor.path, cursor.depth) else {
+                        cursor.phase = 3;
+                        return false;
+                    };
+                    let (next_x, descend) = render_footer_utility_node(&mut self.chrome_build, draw, atlas, icons, input, theme, cursor.x, btn_y, btn_h, utility, &self.utility_collection_expanded);
+                    cursor.x = next_x;
+                    cursor.flag = descend;
+                    cursor.scalar = 1;
+                    return false;
+                }
+                if cursor.flag {
+                    let Some(next_depth) = cursor.depth.checked_add(1).filter(|depth| *depth < cursor.path.len()) else {
+                        cursor.phase = u16::MAX;
+                        return false;
+                    };
+                    cursor.depth = next_depth;
+                    cursor.path[next_depth] = 0;
+                    cursor.flag = false;
+                    cursor.scalar = 0;
+                    return false;
+                }
+                let sibling_count = footer_utility_sibling_count(&self.active_utilities, &cursor.path, cursor.depth).unwrap_or(0);
+                let next = cursor.path[cursor.depth] as usize + 1;
+                if next < sibling_count {
+                    cursor.path[cursor.depth] = next as u16;
+                    cursor.scalar = 0;
+                    return false;
+                }
+                if cursor.depth > 0 {
+                    cursor.depth -= 1;
+                    return false;
+                }
+                cursor.phase = 3;
+            }
+            2 => cursor.phase = 4,
+            3 => {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    let count = uncommitted_edit_count(&self.history_entries);
+                    cursor.x = render_sync_status_and_checkin(draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), count, cursor.x, btn_y, btn_h);
+                }
+                cursor.phase = 4;
+            }
+            4 => return true,
+            _ => return false,
+        }
+        false
+    }
+
+    fn render_overlay_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        match cursor.phase {
+            0 => {
+                if matches!(self.overlay_state, OverlayState::Search | OverlayState::Find | OverlayState::Dropdown(_)) {
+                    let rect = Rect::new(width * 0.5 - 200.0, theme.navbar_height + 8.0, 400.0, height * 0.55);
+                    overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Menu));
+                    cursor.rect = Some(rect);
+                }
+                cursor.phase = 1;
+            }
+            1 => {
+                let label = match &self.overlay_state {
+                    OverlayState::Search => Some(("Search", self.search_query.as_str())),
+                    OverlayState::Find => Some(("Find in page", self.find_query.as_str())),
+                    OverlayState::Dropdown(id) if id == "example" => Some(("Examples", "")),
+                    _ => None,
+                };
+                if let (Some(rect), Some((title, query))) = (cursor.rect, label) {
+                    chrome_text(overlay, atlas, input, theme, title, rect.x + theme.padding_standard, rect.y + theme.padding_standard + theme.font_size_body, theme.font_size_body, theme.text);
+                    if !query.is_empty() {
+                        chrome_text(overlay, atlas, input, theme, query, rect.x + theme.padding_standard, rect.y + theme.padding_standard * 2.0 + theme.font_size_body * 2.0, theme.font_size_small, theme.text_muted);
+                    }
+                }
+                cursor.phase = 2;
+            }
+            2 => {
+                if !self.render_context_menu_step(cursor, overlay, atlas, icons, input, theme, width, height) {
+                    return false;
+                }
+                cursor.scalar = 0;
+                cursor.item = 0;
+                cursor.phase = 3;
+            }
+            3 => {
+                if !self.render_chrome_tooltip_step(cursor, overlay, atlas, input, theme, width, height) {
+                    return false;
+                }
+                cursor.scalar = 0;
+                cursor.item = 0;
+                cursor.phase = 4;
+            }
+            4 => {
+                if !self.render_chrome_dialog_step(cursor, overlay, atlas, input, theme, width, height) {
+                    return false;
+                }
+                cursor.scalar = 0;
+                cursor.item = 0;
+                cursor.phase = 5;
+            }
+            5 => {
+                if !self.render_chrome_tour_step(cursor, overlay, atlas, input, theme, width, height) {
+                    return false;
+                }
+                cursor.phase = 6;
+            }
+            6 => return true,
+            _ => return false,
+        }
+        false
+    }
+
+    fn render_context_menu_step(&self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, viewport_w: f32, viewport_h: f32) -> bool {
+        let Some(menu) = self.context_menu.as_ref() else { return true };
+        let row_h = theme.control_height;
+        let menu_w = 240.0_f32.min(viewport_w.max(0.0));
+        let menu_h = (menu.items.len() as f32 * row_h + 8.0).min((viewport_h - 8.0).max(row_h + 8.0));
+        let rect = Rect::new(menu.x.clamp(0.0, (viewport_w - menu_w).max(0.0)), menu.y.clamp(0.0, (viewport_h - menu_h).max(0.0)), menu_w, menu_h);
+        match cursor.scalar {
+            0 => {
+                overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Menu));
+                cursor.rect = Some(rect);
+                cursor.scalar = 1;
+            }
+            1 => {
+                overlay.push_scissor(rect);
+                cursor.scalar = 2;
+            }
+            2 => {
+                let Some(item) = menu.items.get(cursor.item) else {
+                    cursor.scalar = 3;
+                    return false;
+                };
+                let row = Rect::new(rect.x + 4.0, rect.y + 4.0 + cursor.item as f32 * row_h - menu.scroll_offset, rect.w - 8.0, row_h);
+                if row.y + row.h > rect.y && row.y < rect.y + rect.h {
+                    if item.separator {
+                        overlay.push_solid([row.x + 4.0, row.y + row.h * 0.5, row.w - 8.0, theme.stroke_hairline], theme.text_muted);
+                    } else {
+                        let active = menu.active.first().copied() == Some(cursor.item);
+                        overlay.push_rounded([row.x, row.y, row.w, row.h], if active { theme.accent } else { theme.button }, theme.border_radius);
+                        let icon = item.icon.as_deref().unwrap_or("circle-dot");
+                        chrome_icon(overlay, icons, icon, row.x + 8.0, row.y + (row.h - theme.font_size_body) * 0.5, theme.font_size_body, if item.disabled { theme.text_muted } else { theme.text });
+                        chrome_text(
+                            overlay,
+                            atlas,
+                            input,
+                            theme,
+                            &item.label,
+                            row.x + theme.font_size_body + theme.gap_standard * 2.0,
+                            row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
+                            theme.font_size_small,
+                            if item.disabled { theme.text_muted } else { theme.text },
+                        );
+                        if !item.disabled {
+                            input.register_hit(HitTarget { rect: row, event: item.action.clone(), control_id: Some(item.id.clone()), kind: HitKind::ContextMenu, drag_axis: None, drag_data: None });
+                        }
+                    }
+                }
+                cursor.item += 1;
+            }
+            3 => {
+                overlay.pop_scissor();
+                cursor.scalar = 4;
+            }
+            4 => return true,
+            _ => return false,
+        }
+        false
+    }
+
+    fn render_chrome_tooltip_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        if self.chrome_build.dialog_open() {
+            return true;
+        }
+        match cursor.scalar {
+            0 => {
+                let Some(id) = input.hovered_id.as_deref() else {
+                    self.chrome_build.tooltip_hover = None;
+                    return true;
+                };
+                let Some(title) = self.chrome_build.tooltip_titles.get(id) else {
+                    self.chrome_build.tooltip_hover = None;
+                    return true;
+                };
+                let now = chrome_now_ms();
+                let restart = self.chrome_build.tooltip_hover.as_ref().is_none_or(|hover| hover.control_id != id);
+                if restart {
+                    self.chrome_build.tooltip_hover = Some(ChromeTooltipHover { control_id: id.into(), anchor_x: input.pointer_x, anchor_y: input.pointer_y, started_ms: now });
+                    return true;
+                }
+                let Some(hover) = self.chrome_build.tooltip_hover.as_ref() else { return true };
+                if !chrome_tooltip_ready(hover, now) {
+                    return true;
+                }
+                let Some(text) = UiText::try_from_str(title) else { return true };
+                let padding = theme.padding_standard * 0.5;
+                let (text_w, text_h) = atlas.measure_text(text.as_str(), theme.font_size_small);
+                cursor.rect =
+                    Some(Rect::new((hover.anchor_x + 12.0).clamp(0.0, (width - text_w - padding * 2.0).max(0.0)), (hover.anchor_y + 18.0).clamp(0.0, (height - text_h - padding * 2.0).max(0.0)), text_w + padding * 2.0, text_h + padding * 2.0));
+                cursor.window = Some(text);
+                cursor.scalar = 1;
+            }
+            1 => {
+                let Some(rect) = cursor.rect else { return true };
+                overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Menu));
+                cursor.scalar = 2;
+            }
+            2 => {
+                if let (Some(rect), Some(text)) = (cursor.rect, cursor.window.as_ref()) {
+                    let padding = theme.padding_standard * 0.5;
+                    chrome_text(overlay, atlas, input, theme, text.as_str(), rect.x + padding, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+                }
+                cursor.scalar = 3;
+            }
+            3 => return true,
+            _ => return false,
+        }
+        false
+    }
+
+    fn render_chrome_dialog_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        let Some(request) = self.chrome_build.dialog_stack.last() else { return true };
+        let dialog = Rect::new((width - 360.0) * 0.5, (height - 168.0) * 0.5, 360.0, 168.0);
+        let pad = theme.padding_standard;
+        let confirm = Rect::new(dialog.x + dialog.w - pad - 110.0, dialog.y + dialog.h - pad - theme.control_height, 110.0, theme.control_height);
+        let cancel = Rect::new(dialog.x + pad, dialog.y + dialog.h - pad - theme.control_height, 90.0, theme.control_height);
+        match cursor.scalar {
+            0 => overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35)),
+            1 => {
+                overlay.push_glass([dialog.x, dialog.y, dialog.w, dialog.h], theme.border_radius, theme.glass(Level::Dialog));
+            }
+            2 => chrome_text(overlay, atlas, input, theme, &request.title, dialog.x + pad, dialog.y + pad + theme.font_size_body, theme.font_size_body, theme.text),
+            3 => chrome_text(overlay, atlas, input, theme, &request.body, dialog.x + pad, dialog.y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small, theme.font_size_small, theme.text_muted),
+            4 => overlay.push_rounded([cancel.x, cancel.y, cancel.w, cancel.h], theme.button, theme.border_radius),
+            5 => chrome_text(overlay, atlas, input, theme, &request.cancel_label, cancel.x + 10.0, cancel.y + (cancel.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text),
+            6 => overlay.push_rounded([confirm.x, confirm.y, confirm.w, confirm.h], theme.accent, theme.border_radius),
+            7 => chrome_text(overlay, atlas, input, theme, &request.confirm_label, confirm.x + 10.0, confirm.y + (confirm.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.active_foreground),
+            8 => input.register_hit(HitTarget { rect: cancel, event: None, control_id: Some(format!("shell.dialog.{}.cancel", request.id)), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            9 => input.register_hit(HitTarget { rect: confirm, event: Some(request.confirm_action.clone()), control_id: Some(format!("shell.dialog.{}.confirm", request.id)), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            10 => {
+                if self.chrome_build.clicked_this_frame {
+                    let (x, y) = (input.pointer_x, input.pointer_y);
+                    if confirm.contains(x, y) || cancel.contains(x, y) || !dialog.contains(x, y) {
+                        self.chrome_build.close_topmost_dialog();
+                    }
+                }
+            }
+            11 => return true,
+            _ => return false,
+        }
+        cursor.scalar += 1;
+        false
+    }
+
+    fn render_chrome_tour_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        let Some(session) = self.session.as_ref() else {
+            self.chrome_build.tour_state = None;
+            return true;
+        };
+        let Some(introduction) = session.app.introduction.as_ref() else { return true };
+        let Some(step_index) = self.chrome_build.tour_state.as_ref().map(|state| state.step_index) else { return true };
+        let Some(step) = introduction.steps.get(step_index) else { return true };
+        let rect = Rect::new((width - 320.0) * 0.5, (height - 168.0) * 0.5, 320.0, 168.0);
+        let pad = theme.padding_standard;
+        let skip = Rect::new(rect.x + pad, rect.y + rect.h - pad - theme.control_height, 70.0, theme.control_height);
+        let next = Rect::new(rect.x + rect.w - pad - 90.0, rect.y + rect.h - pad - theme.control_height, 90.0, theme.control_height);
+        match cursor.scalar {
+            0 => overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35)),
+            1 => {
+                overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Dialog));
+            }
+            2 => chrome_text(overlay, atlas, input, theme, step.title.resolve(self.active_terminology(), self.active_locale()), rect.x + pad, rect.y + pad + theme.font_size_body, theme.font_size_body, theme.text),
+            3 => chrome_text(
+                overlay,
+                atlas,
+                input,
+                theme,
+                step.body.resolve(self.active_terminology(), self.active_locale()),
+                rect.x + pad,
+                rect.y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small,
+                theme.font_size_small,
+                theme.text_muted,
+            ),
+            4 => overlay.push_rounded([skip.x, skip.y, skip.w, skip.h], theme.button, theme.border_radius),
+            5 => chrome_text(overlay, atlas, input, theme, shell_chrome_string("introduction.skip", self.locale_id == "de"), skip.x + 10.0, skip.y + (skip.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text),
+            6 if step.interactions.is_empty() => overlay.push_rounded([next.x, next.y, next.w, next.h], theme.accent, theme.border_radius),
+            7 if step.interactions.is_empty() => chrome_text(
+                overlay,
+                atlas,
+                input,
+                theme,
+                shell_chrome_string(if step_index + 1 == introduction.steps.len() { "introduction.done" } else { "introduction.next" }, self.locale_id == "de"),
+                next.x + 10.0,
+                next.y + (next.h + theme.font_size_small) * 0.5 - 1.0,
+                theme.font_size_small,
+                theme.active_foreground,
+            ),
+            8 => input.register_hit(HitTarget { rect: skip, event: None, control_id: Some("shell.tour.skip".into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            9 if step.interactions.is_empty() => input.register_hit(HitTarget { rect: next, event: None, control_id: Some("shell.tour.next".into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            10 => {
+                if self.chrome_build.clicked_this_frame {
+                    if next.contains(input.pointer_x, input.pointer_y) && step.interactions.is_empty() {
+                        self.chrome_build.advance_introduction(introduction.steps.len());
+                    } else if skip.contains(input.pointer_x, input.pointer_y) {
+                        self.chrome_build.skip_introduction();
+                    }
+                }
+            }
+            11 => return true,
+            _ => {}
+        }
+        cursor.scalar += 1;
+        false
+    }
+
+    #[cfg(test)]
     fn render_navbar(&mut self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) {
         let is_de = self.locale_id == "de";
         let navbar_rect = Rect::new(0.0, 0.0, width, theme.navbar_height);
@@ -9911,6 +10830,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn render_footer(&mut self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         let y = height - theme.footer_height;
         let footer_rect = Rect::new(0.0, y, width, theme.footer_height);
@@ -9963,6 +10883,7 @@ impl ShellState {
         }
     }
 
+    #[cfg(test)]
     fn render_floating_panel(
         &mut self,
         panel_draw: &mut DrawList,
@@ -10044,6 +10965,7 @@ impl ShellState {
         input.register_hit(HitTarget { rect: resize_handle, event: None, control_id: Some(resize_id.into()), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
     }
 
+    #[cfg(test)]
     fn render_left_panel(
         &mut self,
         panel_draw: &mut DrawList,
@@ -10069,6 +10991,7 @@ impl ShellState {
         self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, true, engine_resources, world_resources);
     }
 
+    #[cfg(test)]
     fn render_right_panel(
         &mut self,
         panel_draw: &mut DrawList,
@@ -10094,6 +11017,7 @@ impl ShellState {
         self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, false, engine_resources, world_resources);
     }
 
+    #[cfg(test)]
     fn render_main_window(
         &mut self,
         draw: &mut DrawList,
@@ -10234,6 +11158,7 @@ impl ShellState {
         (x2 > x && y2 > y).then(|| Rect::new(x, y, x2 - x, y2 - y))
     }
 
+    #[cfg(test)]
     fn render_window_content(
         &mut self,
         draw: &mut DrawList,
@@ -10286,6 +11211,7 @@ impl ShellState {
 
     //#endregion SilhouetteContent
 
+    #[cfg(test)]
     fn render_overlay(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         match &self.overlay_state {
             OverlayState::Search => {
@@ -10426,6 +11352,7 @@ impl ShellState {
 
     /// 💬️ Paints the armed tooltip (item 1) — `AtPointer` placement/dismissal policy sourced from
     /// `ui_wgpu::wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
+    #[cfg(test)]
     fn render_chrome_tooltip(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         let hovered_id = input.hovered_id.clone();
         let title = hovered_id.as_ref().and_then(|id| self.chrome_build.tooltip_titles.get(id).cloned());
@@ -10467,6 +11394,7 @@ impl ShellState {
     /// (`OverlayKind::Dialog::default_placement` == `Centered`) with Cancel/Confirm. Confirm's hit
     /// target carries the staged `ActionDescriptor` so it dispatches through the existing generic
     /// pipeline exactly like any other chrome button — only closing the dialog itself is handled here.
+    #[cfg(test)]
     fn render_chrome_dialog(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         let Some(request) = self.chrome_build.dialog_stack.last().cloned() else {
             return;
@@ -10744,6 +11672,7 @@ impl ShellState {
     /// beside it via `resolve_introduction_placement`. Ids that don't resolve to a rect (see
     /// `resolve_introduction_element_rect`'s doc comment for the current registration gaps) fall back to
     /// a centered box with no cutout, same as a `None` `introduce`.
+    #[cfg(test)]
     fn render_chrome_tour(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         let Some(session) = self.session.as_ref() else {
             self.chrome_build.tour_state = None;
@@ -11693,6 +12622,7 @@ impl ShellState {
     }
     // #endregion
 
+    #[cfg(test)]
     fn render_context_menu(&self, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, menu: &ContextMenuState, viewport_w: f32, viewport_h: f32) {
         Self::render_context_menu_level(overlay, atlas, icons, input, theme, menu, &menu.items, &[], menu.x, menu.y, viewport_w, viewport_h);
     }
@@ -11709,6 +12639,7 @@ impl ShellState {
         w
     }
 
+    #[cfg(test)]
     fn render_context_menu_level(
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
@@ -12836,23 +13767,30 @@ mod chrome_overlays_tour_tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn find_item_sink_binding_routes_owned_output_across_threads() {
-        let sink = ShellFindItemSink::default();
-        let worker_sink = sink.clone();
-        std::thread::spawn(move || {
-            let _binding = worker_sink.bind();
-            push_find_item(ShellFindItem { id: "item".to_string(), label: "Item".to_string(), description: None, category: None, surface_id: "surface".to_string(), node_id: "node".to_string() });
+        let joined = std::thread::spawn(move || {
+            let mut items = ShellFindItems::default();
+            let binding = match items.bind() {
+                Ok(binding) => binding,
+                Err(()) => panic!("single worker binding"),
+            };
+            assert!(try_push_find_item(ShellFindItem { id: "item".to_string(), label: "Item".to_string(), description: None, category: None, surface_id: "surface".to_string(), node_id: "node".to_string() }).is_ok());
+            drop(binding);
+            items
         })
         .join()
         .expect("worker render callback completes");
-        assert_eq!(sink.take().into_iter().map(|item| item.id).collect::<Vec<_>>(), vec!["item"]);
+        assert_eq!(joined.iter().map(|item| item.id.as_str()).collect::<Vec<_>>(), vec!["item"]);
     }
 
     #[test]
     fn find_item_callback_without_render_binding_is_explicitly_rejected() {
-        let result = std::panic::catch_unwind(|| {
-            push_find_item(ShellFindItem { id: "unbound".to_string(), label: "Unbound".to_string(), description: None, category: None, surface_id: "surface".to_string(), node_id: "node".to_string() });
-        });
-        assert!(result.is_err(), "unbound callbacks must not silently write into an empty per-thread sink");
+        let item = ShellFindItem { id: "unbound".to_string(), label: "Unbound".to_string(), description: None, category: None, surface_id: "surface".to_string(), node_id: "node".to_string() };
+        let identity = item.id.as_ptr();
+        let rejected = match try_push_find_item(item) {
+            Ok(()) => panic!("unbound callbacks must refuse"),
+            Err(item) => item,
+        };
+        assert_eq!(rejected.id.as_ptr(), identity);
     }
     //#endregion ThreadBoundary
 

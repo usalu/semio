@@ -172,6 +172,7 @@ pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
 use crate::fem3d_engine::mesh_preview;
 
 /// 🧭️ Hamilton quaternion product `a * b`, both `[x,y,z,w]` — applying `b`'s rotation first, then `a`'s.
+#[cfg(test)]
 fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
     let (ax, ay, az, aw) = (a[0], a[1], a[2], a[3]);
     let (bx, by, bz, bw) = (b[0], b[1], b[2], b[3]);
@@ -180,6 +181,7 @@ fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
 
 /// 🧭️ Rotation of `roll` radians about the LOCAL +Z axis — applied before `quat_z_to` reorients +Z to
 /// the member direction, so this spins the box prism about its own long axis (matches `Frame3`'s roll).
+#[cfg(test)]
 fn quat_roll_z(roll: f64) -> [f64; 4] {
     let h = roll / 2.0;
     [0.0, 0.0, h.sin(), h.cos()]
@@ -189,6 +191,7 @@ fn quat_roll_z(roll: f64) -> [f64; 4] {
 /// — the standard "rotate A onto B" quaternion (`axis = cross(from,to)`, `angle = acos(dot(from,to))`),
 /// specialized for `from = (0,0,1)` so `cross` reduces to `(-dir.y, dir.x, 0)`. Handles the antiparallel
 /// case (`dir ≈ (0,0,-1)`) with a fixed 180° flip about the X axis, since `cross` degenerates to zero there.
+#[cfg(test)]
 fn quat_z_to(dir: [f64; 3]) -> [f64; 4] {
     let dot = dir[2].clamp(-1.0, 1.0);
     if dot > 0.999_999 {
@@ -207,6 +210,7 @@ fn quat_z_to(dir: [f64; 3]) -> [f64; 4] {
 
 /// 🧊️ Node-position resolver shared by every 3D instance/mesh builder: `displacements` (node id -> 6-DOF
 /// values), when present, offsets a node's position by its solved displacement scaled by `deform_scale`.
+#[cfg(test)]
 fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> [f64; 3] {
     let mut p = pos;
     if let Some(map) = displacements {
@@ -225,10 +229,12 @@ const NODE_SIZE_3D: f64 = 0.05;
 /// a fixed visual thickness, not the member's actual section dimensions (see `fem3d_structural_instances`).
 const MEMBER_THICKNESS_3D: f64 = 0.05;
 
+#[cfg(test)]
 fn find_node_3d<'a>(nodes: &'a [crate::artifacts::fem3d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem3d::FemNode> {
     nodes.iter().find(|n| n.id == id)
 }
 
+#[cfg(test)]
 fn fem3d_element_endpoints(element: &crate::artifacts::fem3d::FemElement) -> (&str, &str) {
     match element {
         crate::artifacts::fem3d::FemElement::Bar { start, end, .. } | crate::artifacts::fem3d::FemElement::Frame { start, end, .. } => (start.as_str(), end.as_str()),
@@ -239,6 +245,7 @@ fn fem3d_element_endpoints(element: &crate::artifacts::fem3d::FemElement) -> (&s
 /// at the (possibly deformed) midpoint, `scale=[t,t,length]` so the mesh's own long (local Z) axis
 /// stretches along the member, `rotation` a quaternion aligning that axis to the member's direction
 /// (composed with a `Frame`'s own `roll` about its own axis; `Bar`s have no roll).
+#[cfg(test)]
 fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
     let node_pos = |node: &crate::artifacts::fem3d::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
 
@@ -287,6 +294,7 @@ fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMa
 /// solids' averaged values), driving the react renderer's vertex-color contour (see
 /// `PaintTexturedMesh`). `displacements` deforms vertex positions the same way
 /// `fem3d_structural_instances` deforms node/member instances.
+#[cfg(test)]
 fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
     use crate::app_surface::{hex_to_rgb01, von_mises_color};
 
@@ -345,6 +353,7 @@ fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
 /// 🧊️ Builds the FULL `(meshes_json, instances_json)` pair for a 3D scene: the `"box"` primitive mesh
 /// plus every `FemSolid`'s custom surface mesh, and every node/member/solid instance — shared by the
 /// model window and every results view (static/modal/buckling).
+#[cfg(test)]
 pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
     let mut meshes: Vec<Value> = serde_json::from_str(&semio_framework_plugin::resolve_ready(semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()]))).unwrap_or_default();
     let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
@@ -406,19 +415,19 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Ok(crate::editor::fem3d::session::maintenance_step(instance_id, maximum_items, maximum_bytes))
+        Ok(crate::artifacts::fem3d::live_visual::maintenance_step(instance_id, maximum_items, maximum_bytes))
     }
 
     fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Ok(crate::editor::fem3d::session::close_step(instance_id, maximum_items, maximum_bytes))
+        Ok(crate::artifacts::fem3d::live_visual::close_step(instance_id, maximum_items, maximum_bytes))
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
-        crate::editor::fem3d::session::terminal_is_empty(instance_id)
+        crate::artifacts::fem3d::live_visual::terminal_is_empty(instance_id)
     }
 
     fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        crate::editor::fem3d::session::prepare_snapshot_read(operation, snapshot)
+        crate::artifacts::fem3d::live_visual::prepare_snapshot_read(operation, snapshot)
     }
 
     /// 🎞️ `"document:out"` reproduces the trait's default whole-document pack (overriding
@@ -511,14 +520,14 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     async fn pending_effects(doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Vec<semio_framework::kernel::Effect> {
-        crate::editor::fem3d::session::reconcile(doc)
+        crate::artifacts::fem3d::live_visual::reconcile(doc)
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>) -> semio_framework_plugin::ComponentTree {
         let camera = &cfg.snapshot.camera;
         semio_framework_plugin::built_to_component_tree(match body_key {
-            window_model::FEM3D_BODY_MODEL => crate::editor::fem3d::session::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(camera, visual)),
-            window_results::FEM3D_BODY_RESULTS => crate::editor::fem3d::session::with_live_visual(doc.render_operation(), |visual| window_results::render_with_progress(camera, visual)),
+            window_model::FEM3D_BODY_MODEL => crate::artifacts::fem3d::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(camera, visual)),
+            window_results::FEM3D_BODY_RESULTS => crate::artifacts::fem3d::live_visual::with_live_visual(doc.render_operation(), |visual| window_results::render_with_progress(camera, visual)),
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))),
         })
     }

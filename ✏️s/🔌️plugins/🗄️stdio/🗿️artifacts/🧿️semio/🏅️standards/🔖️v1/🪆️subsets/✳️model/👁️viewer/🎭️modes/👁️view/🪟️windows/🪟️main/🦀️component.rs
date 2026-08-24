@@ -58,7 +58,7 @@ fn world_instances_json(document: &SemioModelSnapshot) -> String {
 /// 👁️ Pure `SemioModelSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioModelSnapshot) -> BuiltNode {
+pub fn render(document: &SemioModelSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": SEMIO_MODEL_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(SEMIO_MODEL_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_MODEL_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_MODEL_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_MODEL_VIEW_DEFAULT_CAMERA_FOV),

@@ -159,7 +159,8 @@ pub fn apply_ua_conformance_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfU
 /// `diff_set_snapshot` is built on, and it is exact on `objects` (keyed by `ObjRef`), on `trailer`
 /// (keyed by dict key) and on `pages` (keyed by index).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn transform(mutation: &PdfUaMutation, base: &PdfSnapshot) -> PdfSnapshot {
+impl PdfUaMutation {
+    fn transform(mutation: &PdfUaMutation, base: &PdfSnapshot) -> PdfSnapshot {
     let mut next = base.clone();
     match mutation {
             Self::NoMutation => {},
@@ -183,6 +184,7 @@ fn transform(mutation: &PdfUaMutation, base: &PdfSnapshot) -> PdfSnapshot {
             },
     }
     next
+    }
 }
 //#endregion 🔖️Transform
 
@@ -191,7 +193,7 @@ impl Mutation<PdfSnapshot> for PdfUaMutation {
     type Diff = PdfDiff;
 
     fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
-        protocol::MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &transform(self, base)))
+        protocol::MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &Self::transform(self, base)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {

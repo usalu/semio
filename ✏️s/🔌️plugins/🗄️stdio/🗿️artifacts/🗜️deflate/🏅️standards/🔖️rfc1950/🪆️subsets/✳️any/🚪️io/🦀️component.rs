@@ -506,12 +506,34 @@ impl DeflateEncodeJob {
         self.writer.out
     }
 
-    fn checkpoint(&self) -> semio_framework_job::Checkpoint {
-        semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.position as u64 }
+    fn retained_payload(
+        context: &mut semio_framework_job::StepContext<'_>,
+        stream: semio_framework_job::JobPayloadStream,
+        bytes: &[u8],
+    ) -> semio_framework_job::RetainedJobPayload {
+        match context.payload_from_bytes(stream, bytes) {
+            Ok(payload) => payload,
+            Err(rejected) => {
+                drop(rejected.into_source());
+                semio_framework_job::RetainedJobPayload::empty(stream)
+            }
+        }
     }
 
-    fn commit(&self) -> semio_framework_job::CommitCandidate {
-        semio_framework_job::CommitCandidate { state: self.checkpoint_bytes(), output: self.writer.out.clone() }
+    fn checkpoint(&self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::Checkpoint {
+        let state = self.checkpoint_bytes();
+        semio_framework_job::Checkpoint {
+            state: Self::retained_payload(context, semio_framework_job::JobPayloadStream::CheckpointState, &state),
+            applied_progress: self.position as u64,
+        }
+    }
+
+    fn commit(&self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::CommitCandidate {
+        let state = self.checkpoint_bytes();
+        semio_framework_job::CommitCandidate {
+            state: Self::retained_payload(context, semio_framework_job::JobPayloadStream::CommitState, &state),
+            output: Self::retained_payload(context, semio_framework_job::JobPayloadStream::CommitOutput, &self.writer.out),
+        }
     }
 }
 
@@ -526,7 +548,7 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
         let distance_codes = build_codes(&fixed_dist_lengths());
         loop {
             if self.complete {
-                return StepOutcome::Complete(self.commit());
+                return StepOutcome::Complete(self.commit(context));
             }
             let work = self.process_transition(&literal_codes, &distance_codes);
             context.consume_fuel(work as u64);
@@ -534,13 +556,13 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
                 return StepOutcome::Cancelled;
             }
             if self.complete {
-                return StepOutcome::Complete(self.commit());
+                return StepOutcome::Complete(self.commit(context));
             }
             if self.position >= self.next_checkpoint {
                 while self.next_checkpoint <= self.position {
                     self.next_checkpoint = self.next_checkpoint.saturating_add(self.checkpoint_interval);
                 }
-                return StepOutcome::CheckpointReady(self.checkpoint());
+                return StepOutcome::CheckpointReady(self.checkpoint(context));
             }
             if context.should_yield() {
                 return StepOutcome::Yield;
@@ -748,7 +770,11 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
         context.set_stage("deflate:tuned-encode");
         loop {
             if self.engine.step() {
-                return StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: self.output() });
+                let output = self.output();
+                return StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: DeflateEncodeJob::retained_payload(context, semio_framework_job::JobPayloadStream::CommitState, &[]),
+                    output: DeflateEncodeJob::retained_payload(context, semio_framework_job::JobPayloadStream::CommitOutput, &output),
+                });
             }
             context.consume_fuel(1);
             if context.is_cancelled() {

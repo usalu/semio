@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `CsvSnapshot -> BuiltNode` read: header row (if any) supplies column labels, every
 /// remaining record is one read-only row — no mutation, no selection state.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &CsvSnapshot) -> BuiltNode {
+pub fn render(document: &CsvSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (columns, data_rows): (Vec<String>, &[crate::artifacts::csv::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {

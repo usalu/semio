@@ -26,7 +26,10 @@ pub use crate::os_spr::causal::{
     FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseMutation, MutationDag, MutationDagAppliedStep, MutationDagCloseOwner, MutationDagError, MutationDagInsertRejected,
     MutationDagSeedRejected, MutationEnvelope, MutationTransform, TransformOutcome,
 };
-pub use crate::os_spr::channel::{decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, ChildPackEntry, CHANNEL_VERSION};
+pub use crate::os_spr::channel::{
+    decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, ChildPackEntry,
+    DecodedAppCommandOwner, PagedAppCommandDecodeCursor, PresenceCommandCursor, CHANNEL_VERSION,
+};
 pub use crate::os_spr::command::{
     apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, plan_foreign_steps, plan_of,
     register_mutation_descriptor, str_eq, worst_level, CollectionDiff, CollectionMutation, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffCodec, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference,

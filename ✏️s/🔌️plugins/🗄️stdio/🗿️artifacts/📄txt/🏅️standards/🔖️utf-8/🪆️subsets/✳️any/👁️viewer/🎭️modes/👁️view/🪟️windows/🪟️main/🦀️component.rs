@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `TxtSnapshot -> BuiltNode` read: same join as the editor's own render, `read_only: true`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &TxtSnapshot) -> BuiltNode {
+pub fn render(document: &TxtSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut text = document.lines.join(document.line_ending.as_str());
     if document.trailing_newline && !document.lines.is_empty() {
         text.push_str(document.line_ending.as_str());

@@ -13,19 +13,20 @@
 //! them. The subject half is gated behind the generated host's `sut` feature so the oracle-only run
 //! never links `semio-s-plugin-stdio`, whose subject phase is peer-blocked right now (concurrent
 //! os-kernel refactor).
+//!
+//! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
+//! module, so a scenario cannot pass merely because `zip`+`quick-xml` declined to error:
+//! `mutate-<kind>` must MOVE the compared projection, `inverse-<kind>` must land back on the
+//! untouched package's projection, and `identity-round-trip` must both preserve the projection and
+//! rebuild an archive that differs from the input. There is no carve-out of any kind here: the
+//! profile declares no writer freedom, no kind is exempt from observability, and no axis is dropped
+//! from the inverse law. The one inverse this vocabulary genuinely cannot express — removing an
+//! INTERIOR style, which `InsertStyle`'s append can never put back — is refused by the oracle
+//! outright rather than faked, and the feature says so.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_docx_ecma_376};
-
-//#region 🔖️Kinds
-/// 📇️ Kebab-case spelling of every `DocxMutation` variant, mirrored from
-/// `../../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
-/// `KINDS` — duplicated rather than imported because the ORACLE-only build of this adapter must
-/// never link `semio-s-plugin-stdio` (see this file's own header); `kinds_const_matches_enum_
-/// variants_in_declaration_order` on the production side and the framework's own catalog-
-/// completeness gate on this side are what keep the two lists honest against each other.
-const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-block", "remove-block", "set-block-content", "set-run-text", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part"];
-//#endregion 🔖️Kinds
+use semio_s_plugin_stdio_test_oracle::artifacts::docx::standards::v_ecma_376::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, project_docx_ecma_376, KINDS};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://📜️example-readme.docx";
@@ -35,98 +36,56 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     let copy = ctx.copy_fixture(INPUT, Some("example-readme.docx"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
+
+/// 🈳️ The `no-mutation` spec, which is how the identity round trip asks the reference composition to
+/// unzip, parse, re-serialize and rezip the real package without changing anything.
+fn no_mutation() -> Json {
+    Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))])
+}
 //#endregion 🔖️Input
 
-//#region 🔖️Law
-/// 🔬️ First structural divergence between two projections — a dotted field path plus both values,
-/// so a law that fails names WHICH field moved instead of only "not equal". Kept local to this
-/// adapter for the same reason `KINDS` is duplicated here: a case adapter is a leaf that links the
-/// test host and this subset's own oracle module, nothing else.
-fn first_divergence(path: &str, expected: &Json, actual: &Json) -> Option<String> {
-    let here = if path.is_empty() { "the projection".to_string() } else { path.to_string() };
-    let child = |key: &str| if path.is_empty() { key.to_string() } else { format!("{path}.{key}") };
-    match (expected, actual) {
-        (Json::Object(left), Json::Object(right)) => {
-            for (key, value) in left {
-                match right.iter().find(|(name, _)| name == key) {
-                    Some((_, other)) => {
-                        if let Some(found) = first_divergence(&child(key), value, other) {
-                            return Some(found);
-                        }
-                    }
-                    None => return Some(format!("{} is gone (the original carried {})", child(key), brief(value))),
-                }
-            }
-            right.iter().find(|(name, _)| !left.iter().any(|(other, _)| other == name)).map(|(name, value)| format!("{} appeared (absent in the original, now {})", child(name), brief(value)))
-        }
-        (Json::Array(left), Json::Array(right)) => {
-            if left.len() != right.len() {
-                return Some(format!("{here} has {} entries, the original had {}", right.len(), left.len()));
-            }
-            left.iter().zip(right.iter()).enumerate().find_map(|(index, (value, other))| first_divergence(&child(&index.to_string()), value, other))
-        }
-        (left, right) if left == right => None,
-        (left, right) => Some(format!("{here} is {} — the original had {}", brief(right), brief(left))),
-    }
-}
-
-/// ✂️ A projection value, truncated: a divergence message must stay readable, and this projection
-/// carries the whole README as a block tree.
-fn brief(value: &Json) -> String {
-    let text = value.to_string();
-    match text.char_indices().nth(160) {
-        Some((cut, _)) => format!("{}…", &text[..cut]),
-        None => text,
-    }
-}
-//#endregion 🔖️Law
-
 //#region 🔖️Oracle
-/// 🔮️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
-/// spec is carried in its doc string, not in the function it dispatches to.
+/// 🦠️ The forward half, with the OBSERVABILITY law asserted in role: the reference composition
+/// applies the kind to the real README document and the result has to differ from the untouched
+/// package. Returning the projection uncompared is what made these thirteen scenarios pass whenever
+/// `zip`+`quick-xml` merely did not error. NOTHING is exempt — `semantic-docx-ecma-376-mutate-v1`
+/// declares no writer freedom at all (`ignoreKeys: []`), and the ordered block tree, the ordered
+/// style list and the path-keyed digest of every other OPC part between them reach all thirteen
+/// kinds.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_docx_ecma_376(&bytes)?;
+    mutation_is_observable(&spec.str("kind"), &projection, &project_docx_ecma_376(&input)?, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔮️ One handler shared by every `inverse-<kind>` scenario id -- and the place the inverse LAW is
-/// asserted, in-role, without needing the subject: `apply(inverse(m), apply(m, base))` must land
-/// back on the ORIGINAL package's own projection, read through the same independent reader.
-/// Producing that projection and returning it uncompared is what made every one of these scenarios
-/// pass whenever the reference composition merely did not error.
+/// ↩️ The INVERSE law, asserted in role without needing the subject: `apply(inverse(m), apply(m,
+/// base))` must land back on the ORIGINAL package's own projection, read through the same
+/// independent reader. No axis is dropped and no tolerance is allowed.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let original = project_docx_ecma_376(&input)?;
+    let kind = spec.str("kind");
     let bytes = oracle_apply_mutation_inverse(&input, &spec)?;
     let projection = project_docx_ecma_376(&bytes)?;
-    if let Some(divergence) = first_divergence("", &original, &projection) {
-        return Err(format!("inverse-{}: the mutation followed by its own computed inverse did not restore the original document — {}", spec.str("kind"), divergence));
-    }
+    inverse_restores(&kind, &projection, &project_docx_ecma_376(&input)?)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔒️ The ORACLE side of the no-byte-pass-through law, asserted rather than merely claimed in
-/// prose: the `zip`+`quick-xml` composition fully parses the real document and re-serializes it
-/// from its own tree alone (the same "no-mutation" routing `oracle_apply_mutation` already gives
-/// every other kind), and BOTH halves of the law are checked here — the re-serialized bytes must
-/// differ from the input (nothing was copied) and their projection must be identical to the
-/// input's (nothing was lost).
+/// 🔒️ The ORACLE side of the identity law, both halves asserted: the `zip`+`quick-xml` composition
+/// fully parses the real package and re-serializes it from its own trees alone (the same
+/// `no-mutation` routing every other kind goes through), the rebuilt archive must differ from the
+/// input — two independent writers do not agree on compression level, extra fields, entry order or
+/// attribute layout, so bit-identical output would mean the input was copied — and the projection
+/// must survive intact.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
-    let bytes = oracle_apply_mutation(&input, &no_mutation)?;
-    if bytes == input {
-        return Err("byte pass-through: the re-serialized package is bit-identical to the input".to_string());
-    }
+    let bytes = oracle_apply_mutation(&input, &no_mutation())?;
+    reparsed_not_copied(&bytes, &input)?;
     let projection = project_docx_ecma_376(&bytes)?;
-    let original = project_docx_ecma_376(&input)?;
-    if let Some(divergence) = first_divergence("", &original, &projection) {
-        return Err(format!("identity round trip: parsing and re-serializing the real document did not preserve its semantic projection — {divergence}"));
-    }
+    round_trip_preserves(&projection, &project_docx_ecma_376(&input)?)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -342,8 +301,8 @@ mod subject {
     }
     //#endregion 🔖️Handlers
 
-    /// 🧭️ Re-exported so `super::adapter()` can register the same 13-kind sweep for the subject role
-    /// without duplicating `KINDS` a third time.
+    /// 🧭️ Re-exported so `super::adapter()` can register the same 13-kind sweep for the subject
+    /// role from the one list the subset's own oracle module declares.
     pub const SUBJECT_KINDS: &[&str] = KINDS;
 }
 //#endregion 🔖️Subject

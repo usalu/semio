@@ -9310,7 +9310,6 @@ impl AppRuntime {
 //#endregion 🎮️AppInteractionState
 
 const FRAME_ENGINE_PACKET_CAPACITY: usize = 256;
-const FRAME_ATLAS_PAGE_BYTES: usize = 16 * 1024;
 
 struct FrameEnginePackets {
     slots: Box<[Option<engine_canvas::EngineCanvasPacket>; FRAME_ENGINE_PACKET_CAPACITY]>,
@@ -9383,10 +9382,7 @@ struct FrameBuildCursor {
     previous_draw: Option<DrawList>,
     previous_overlay: Option<DrawList>,
     icon_checked: bool,
-    icon_offset: usize,
-    icon_pixels: Vec<u8>,
-    icon_width: u32,
-    icon_height: u32,
+    icon_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
     icon_upload: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
     engine_resources: Option<engine_canvas::EngineCanvasBuildContext>,
     world_resources: Option<infinite_world::world::World3dBuildContext>,
@@ -9444,10 +9440,7 @@ impl FrameBuildCursor {
             previous_draw: None,
             previous_overlay: None,
             icon_checked: false,
-            icon_offset: 0,
-            icon_pixels: Vec::new(),
-            icon_width: 0,
-            icon_height: 0,
+            icon_pages: None,
             icon_upload: None,
             engine_resources: None,
             world_resources: None,
@@ -9499,9 +9492,11 @@ impl FrameBuildCursor {
             self.previous_overlay = None;
             return false;
         }
-        if !self.icon_pixels.is_empty() {
-            let retained = self.icon_pixels.len().saturating_sub(FRAME_ATLAS_PAGE_BYTES);
-            self.icon_pixels.truncate(retained);
+        if let Some(pages) = self.icon_pages.as_mut() {
+            if !pages.close_step() || !pages.terminal_is_empty() {
+                return false;
+            }
+            self.icon_pages = None;
             return false;
         }
         if let Some(packet) = self.engine_packets.last_mut() {
@@ -9523,13 +9518,7 @@ impl FrameBuildCursor {
             return false;
         }
         if self.resource_input.is_none() && (self.world_resources.is_some() || self.icon_upload.is_some()) {
-            self.resource_input = Some(ui_wgpu::wgpu::PreparedRenderInput::new(
-                self.presentation_witness.scene_revision,
-                self.presentation_witness.input_generation,
-                ui_wgpu::wgpu::DrawList::default(),
-                None,
-                0.0,
-            ));
+            self.resource_input = Some(ui_wgpu::wgpu::PreparedRenderInput::new(self.presentation_witness.scene_revision, self.presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::default(), None, 0.0));
             return false;
         }
         if let Some(resources) = self.world_resources.as_mut() {
@@ -9586,7 +9575,7 @@ impl FrameBuildCursor {
             && self.world_resources.is_none()
             && self.resource_input.is_none()
             && self.icon_upload.is_none()
-            && self.icon_pixels.is_empty()
+            && self.icon_pages.is_none()
             && self.retirement.is_none()
             && self.cursor_wake.is_none()
             && self.deferred_actions.as_ref().is_none_or(FrameActionOwners::is_empty)
@@ -9600,10 +9589,7 @@ struct FrameFinishCursor {
     flush_tutorial: bool,
     deferred_actions: Option<FrameActionOwners>,
     glyph_started: bool,
-    glyph_offset: usize,
-    glyph_pixels: Vec<u8>,
-    glyph_width: u32,
-    glyph_height: u32,
+    glyph_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
 }
 
 #[derive(Clone, Copy)]
@@ -9619,33 +9605,24 @@ enum FrameFinishPhase {
 
 impl Default for FrameFinishCursor {
     fn default() -> Self {
-        Self {
-            phase: FrameFinishPhase::Inputs,
-            cursor: SemioCursor::Default,
-            pump_sync: false,
-            flush_tutorial: false,
-            deferred_actions: None,
-            glyph_started: false,
-            glyph_offset: 0,
-            glyph_pixels: Vec::new(),
-            glyph_width: 0,
-            glyph_height: 0,
-        }
+        Self { phase: FrameFinishPhase::Inputs, cursor: SemioCursor::Default, pump_sync: false, flush_tutorial: false, deferred_actions: None, glyph_started: false, glyph_pages: None }
     }
 }
 
 impl FrameFinishCursor {
     fn close_step(&mut self) -> bool {
-        if !self.glyph_pixels.is_empty() {
-            let retained = self.glyph_pixels.len().saturating_sub(FRAME_ATLAS_PAGE_BYTES);
-            self.glyph_pixels.truncate(retained);
+        if let Some(pages) = self.glyph_pages.as_mut() {
+            if !pages.close_step() || !pages.terminal_is_empty() {
+                return false;
+            }
+            self.glyph_pages = None;
             return false;
         }
         self.deferred_actions.as_mut().is_none_or(|actions| actions.pop_front().is_none())
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.glyph_pixels.is_empty() && self.deferred_actions.as_ref().is_none_or(FrameActionOwners::is_empty)
+        self.glyph_pages.is_none() && self.deferred_actions.as_ref().is_none_or(FrameActionOwners::is_empty)
     }
 }
 
@@ -11440,33 +11417,33 @@ impl AppRuntime {
             FrameBuildPhase::IconAtlas => {
                 if !cursor.icon_checked {
                     let mut pending = false;
+                    let mut observed = false;
                     ICON_ATLAS_RUNTIME.with(|cell| {
                         if let Some(atlas) = cell.borrow_mut().take() {
+                            observed = true;
                             self.icons = atlas;
-                            cursor.icon_pixels = Vec::with_capacity(self.icons.pixels.len());
-                            cursor.icon_width = self.icons.width;
-                            cursor.icon_height = self.icons.height;
-                            pending = true;
+                            if let Ok(pages) = ui_wgpu::wgpu::PreparedAtlasPages::try_new(self.icons.width, self.icons.height, 4, self.icons.pixels.len()) {
+                                cursor.icon_pages = Some(pages);
+                                pending = true;
+                            }
                         }
                     });
-                    if !pending {
-                        cursor.icon_offset = self.icons.pixels.len();
-                    }
                     cursor.icon_checked = true;
+                    if observed && !pending {
+                        return FrameBuildBoundaryStep::Fault("frame icon atlas page admission failed");
+                    }
                     return FrameBuildBoundaryStep::Pending;
                 }
-                if cursor.icon_offset < self.icons.pixels.len() {
-                    let Some(end) = cursor.icon_offset.checked_add(FRAME_ATLAS_PAGE_BYTES).map(|end| end.min(self.icons.pixels.len())) else { return FrameBuildBoundaryStep::Fault("frame icon page cursor exhausted") };
-                    cursor.icon_pixels.extend_from_slice(&self.icons.pixels[cursor.icon_offset..end]);
-                    cursor.icon_offset = end;
-                    return FrameBuildBoundaryStep::Pending;
-                }
-                if cursor.icon_width != 0 && cursor.icon_height != 0 {
-                    cursor.icon_upload = Some(ui_wgpu::wgpu::PreparedRenderUpload::IconAtlas {
-                        pixels: std::mem::take(&mut cursor.icon_pixels),
-                        width: cursor.icon_width,
-                        height: cursor.icon_height,
-                    });
+                if let Some(pages) = cursor.icon_pages.as_mut() {
+                    let complete = match pages.push_page(&self.icons.pixels, pages.next_row()) {
+                        Ok(complete) => complete,
+                        Err(_) => return FrameBuildBoundaryStep::Fault("frame icon atlas page construction faulted"),
+                    };
+                    if !complete {
+                        return FrameBuildBoundaryStep::Pending;
+                    }
+                    let Some(pages) = cursor.icon_pages.take() else { return FrameBuildBoundaryStep::Fault("frame icon atlas pages lost ownership") };
+                    cursor.icon_upload = Some(ui_wgpu::wgpu::PreparedRenderUpload::IconAtlasPages { pixels: pages });
                 }
                 cursor.phase = FrameBuildPhase::Tutorial;
             }
@@ -11513,13 +11490,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::ResourceInput;
             }
             FrameBuildPhase::ResourceInput => {
-                cursor.resource_input = Some(ui_wgpu::wgpu::PreparedRenderInput::new(
-                    cursor.presentation_witness.scene_revision,
-                    cursor.presentation_witness.input_generation,
-                    ui_wgpu::wgpu::DrawList::default(),
-                    None,
-                    0.0,
-                ));
+                cursor.resource_input = Some(ui_wgpu::wgpu::PreparedRenderInput::new(cursor.presentation_witness.scene_revision, cursor.presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::default(), None, 0.0));
                 cursor.phase = FrameBuildPhase::WorldTransfer;
             }
             FrameBuildPhase::WorldTransfer => {
@@ -11625,31 +11596,37 @@ impl AppRuntime {
                     if next > input.limits.max_upload_items {
                         return FrameFinishBoundaryStep::Fault("frame glyph upload credits exceeded");
                     }
-                    cursor.glyph_pixels = Vec::with_capacity(self.atlas.pixels.len());
-                    cursor.glyph_width = self.atlas.width;
-                    cursor.glyph_height = self.atlas.height;
+                    let Ok(pages) = ui_wgpu::wgpu::PreparedAtlasPages::try_new(self.atlas.width, self.atlas.height, 1, self.atlas.pixels.len()) else {
+                        return FrameFinishBoundaryStep::Fault("frame glyph atlas page admission failed");
+                    };
+                    cursor.glyph_pages = Some(pages);
                     cursor.glyph_started = true;
                     return FrameFinishBoundaryStep::Pending;
                 }
-                if cursor.glyph_offset < self.atlas.pixels.len() {
-                    let Some(end) = cursor.glyph_offset.checked_add(FRAME_ATLAS_PAGE_BYTES).map(|end| end.min(self.atlas.pixels.len())) else { return FrameFinishBoundaryStep::Fault("frame glyph page cursor exhausted") };
-                    cursor.glyph_pixels.extend_from_slice(&self.atlas.pixels[cursor.glyph_offset..end]);
-                    cursor.glyph_offset = end;
+                let Some(pages) = cursor.glyph_pages.as_mut() else { return FrameFinishBoundaryStep::Fault("frame glyph atlas pages lost ownership") };
+                let complete = match pages.push_page(&self.atlas.pixels, pages.next_row()) {
+                    Ok(complete) => complete,
+                    Err(_) => return FrameFinishBoundaryStep::Fault("frame glyph atlas page construction faulted"),
+                };
+                if !complete {
                     return FrameFinishBoundaryStep::Pending;
                 }
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame glyph transfer lost resource input") };
-                input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlas {
-                    pixels: std::mem::take(&mut cursor.glyph_pixels),
-                    width: cursor.glyph_width,
-                    height: cursor.glyph_height,
-                });
+                let Some(pages) = cursor.glyph_pages.take() else { return FrameFinishBoundaryStep::Fault("frame glyph atlas pages lost ownership") };
+                input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlasPages { pixels: pages });
                 cursor.phase = FrameFinishPhase::Cursor;
             }
             FrameFinishPhase::Cursor => {
                 let hit = self.input.hit_at(self.last_pointer_x, self.last_pointer_y);
                 let base_cursor = resolve_semio_cursor(
                     hit,
-                    CursorDragState { tree_drag: self.shell.tree_drag.is_some(), dock_drag: self.shell.dock_drag.is_some(), pointer_drag_active: self.input.drag.active, pointer_drag_axis: self.input.drag.axis, pointer_drag_kind: self.input.drag.kind },
+                    CursorDragState {
+                        tree_drag: self.shell.tree_drag.is_some(),
+                        dock_drag: self.shell.dock_drag.is_some(),
+                        pointer_drag_active: self.input.drag.active,
+                        pointer_drag_axis: self.input.drag.axis,
+                        pointer_drag_kind: self.input.drag.kind,
+                    },
                 );
                 cursor.cursor = match self.shell.utility_cursor_override(self.last_pointer_x, self.last_pointer_y) {
                     Some(utility_cursor) if matches!(base_cursor, SemioCursor::Default | SemioCursor::Grab | SemioCursor::Selectable | SemioCursor::Pointer) => utility_cursor,

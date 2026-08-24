@@ -35,22 +35,37 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
   role that it really did move it — a row whose parameters leave the document where it was fails
   instead of passing.
 
-  ⚠️ `inverse-remove-face` is a known, reproduced FAILURE and is left asserting. Both roles apply
-  the forward mutation, serialize, re-read and then apply the inverse — the wire is deliberately in
-  the middle, because that is what this ticket tests. Face 16127 belongs to `g band-2` and to
-  `o pattern-sphere`. Removing it necessarily drops it from both (a membership list keyed by face
-  index cannot keep a member the document no longer has), and `InsertFace` — the whole of the
-  inverse `ObjMutation` declares — carries a face but no membership, so the restored face lands in
-  no band and no object. `tobj` reads that as a fourth model and the projection reports 8,577
-  vertices where the real mesh has 8,576.
+  ↩️ `inverse-remove-face` was this case's one reproduced FAILURE and is now fixed at the cause, so
+  the shape of the defect is recorded here rather than lost. Both roles apply the forward mutation,
+  serialize, re-read and then apply the inverse — the wire is deliberately in the middle, because
+  that is what this ticket tests. Face 16127 belongs to `g band-2` and to `o pattern-sphere`.
+  Removing it necessarily drops it from both (a membership list keyed by face index cannot keep a
+  member the document no longer has), and `InsertFace` carries a face but no membership, so a lone
+  `InsertFace` restored the row into no band and no object: `tobj` read that as a fourth model and
+  the projection reported 8,577 vertices where the real mesh has 8,576.
 
-  The defect is ours: not `tobj`'s, and not the fixture's. Two places could hold the fix and neither
-  does today. `Mutation::inverse` returns `Vec<Self>`, so `RemoveFace`'s inverse is entitled to be
-  `[InsertFace, SetGroup, SetObject]` — restoring the bands the removed face belonged to — yet
-  `../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` returns the single
-  `InsertFace`. Alternatively `RemoveFace`/`InsertFace` could carry the membership itself. Until one
-  of them lands, `remove-face` is the one declared kind of the twenty-two whose inverse cannot exist,
-  and the honest report of that is a red scenario rather than a softened assertion.
+  `Mutation::inverse` returns `Vec<Self>`, and that is where the repair went.
+  `../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` now inverts
+  `RemoveFace` as `[InsertFace, SetGroup…, SetObject…]`, re-declaring every membership list that
+  names a face at or after the removed index — the removed face's own bands included — with the
+  exact list the pre-mutation document carries; this adapter computes the same sequence
+  independently from the real file. The same "restore the prior index space, do not re-insert by
+  value" reading fixed two sibling kinds that were passing only by luck of this fixture's shape:
+  `RemoveGroup`/`RemoveObject` used to invert through a single `SetGroup`/`SetObject`, which
+  APPENDS, so the band came back at the end of the list rather than at its own position — invisible
+  while the three bands are disjoint, visible the moment two bands share a face and the `g a b`
+  token order is decided by that list. Their inverses now lift the tail off and re-declare it in
+  order. `InsertVertex`/`InsertTexCoord`/`InsertNormal`/`InsertFace` likewise invert at the CLAMPED
+  landing index rather than the requested one.
+
+  🧭️ Still open and deliberately NOT patched here, because no law in this case measures it and
+  changing it is a vocabulary decision rather than a repair: neither producer renumbers the `v`/
+  `vt`/`vn` index space when a row is removed, so a `remove-vertex` leaves every later `f` reference
+  pointing one row off, and our own `RemoveFace`/`InsertFace` do not renumber the `g`/`o`/`usemtl`/
+  `s` face-index space the way this case's reference implementation does. Both sides agree today —
+  which is exactly why the differential comparison cannot see it — and the `remove-vertex`/
+  `remove-texcoord`/`remove-normal` rows target the fixture's deliberate unreferenced orphan row, so
+  no scenario walks into it.
 
   @id-mutate
   @level-exhaustive

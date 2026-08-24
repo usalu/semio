@@ -15,7 +15,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &PngSnapshot) -> BuiltNode {
+pub fn render(snapshot: &PngSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     ImageWindowKit::render(&image_view(snapshot))
 }
 

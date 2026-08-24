@@ -4,12 +4,14 @@
 @mutations-pptx-ecma-376-strict
 Feature: Apply every typed PPTX ECMA-376 Strict conformance-class mutation to a real package
   The input is shared://🎞️semio-talk.pptx, a real committed ECMA-376 package: 55 parts — 7 slides,
-  11 slide layouts, a slide master, 3 real media parts and 22 relationship parts — from a real
-  conference deck. Unzipping the committed file and reading every declared namespace confirms it is
-  a genuine ISO/IEC 29500-4 Transitional package that declares no strict-family namespace, no VML,
-  no mc:AlternateContent and no conformance attribute — which is exactly what makes it the right
-  input for a conformance-class case: every scenario moves the real package along one axis of the
-  class and then back.
+  11 slide layouts, a slide master, 3 real media parts and 22 relationship parts — from a real 2020
+  conference deck.
+  Unzipping it and reading every namespace across all 55 entries shows a package that fails this
+  class on two independent namespace families at once: ppt/presentation.xml and all 7 slide parts
+  declare Transitional PresentationML, and their shape trees declare Transitional DrawingML. That
+  second family is what makes this deck the right input for a PPTX conformance case and what no
+  DOCX or XLSX package can supply — set-main-namespace and set-drawing-namespace move the real
+  package onto the class along two axes a text document and a workbook simply do not have.
 
   WHAT THIS VOCABULARY IS, AND WHY IT IS NOT A COPY OF ✳️any. The ✳️any subset of this same standard
   owns the DOCUMENT vocabulary — the slide, shape, paragraph and run kinds. This subset owns the
@@ -19,26 +21,30 @@ Feature: Apply every typed PPTX ECMA-376 Strict conformance-class mutation to a 
   PresentationML main namespace, the Transitional namespace, VML, the officeDocument relationship
   base, conformance="strict" and mc:AlternateContent, it separately rejects the Transitional
   DrawingML namespace — a second real namespace family a deck carries and a text document does not.
-  This catalog is one kind per axis. No ✳️any mutation moves any of those axes and no mutation here
-  touches document content, so the two vocabularies are disjoint by construction.
+  This catalog is one kind per axis. Disjointness here is checkable rather than asserted: move-slide reorders p:sldIdLst and
+  set-shape-position rewrites an a:xfrm, and neither can reach a root xmlns or a relationship type —
+  while nothing in this catalog opens a slide's shape tree.
 
-  THE REFERENCE. `quick-xml` 0.42 performs and observes every part edit, over the `zip` 6 container
-  codec, which reads every entry of the real package and reassembles the whole container from those
-  entries alone — never a patch of the input bytes. That pairing is a genuine second producer for
-  every kind this catalog declares, which is why every mutate scenario is @mode-differential rather
-  than a weaker mode. Both crates are test-only; this repository's own OPC and XML codecs are
-  hand-written and link neither, so the oracle is not production-reachable.
+  THE REFERENCE, AND WHAT IT CAN AND CANNOT WITNESS. `quick-xml` 0.42 rewrites the root element of
+  ppt/presentation.xml, of each of the 7 slide parts and of every one of the 22 *.rels parts; `zip` 6
+  reads all 55 entries — the 3 real media binaries included — and reassembles the container from
+  those entries alone, never patching input bytes. Both read AND write, so this case has a real second producer for all eleven kinds and every mutate scenario is honestly @mode-differential. The evidence is
+  the six class axes and nothing else: the ordered slide list, the shapes on each slide and their
+  EMU geometry that mutate-pptx-ecma-376 measures are invisible here, and so are the media parts,
+  which are carried through the container faithfully but read by no axis of any conformance class.
 
-  THE REMOVAL KINDS ARE ARRANGED, AND THAT IS RECORDED. Not one real ECMA-376 package committed to
-  this repository carries VML markup, mc:AlternateContent or a conformance attribute — verified by
-  unzipping all three committed OOXML fixtures and searching every entry, and a fact about the
-  corpus rather than a gap to paper over. remove-conformance-attribute, remove-vml-part,
-  remove-alternate-content therefore run on the real package after the SAME independent
-  implementation has inserted their target; the mutation under test is still the removal, still
-  performed by the reference, still on a genuine OPC container.
+  THREE OF THE ELEVEN KINDS RUN ON AN ARRANGED PRE-STATE, AND THAT IS RECORDED RATHER THAN HIDDEN.
+  remove-conformance-attribute, remove-vml-part and remove-alternate-content each need their target
+  to exist, and this deck carries none of the three — nor does any other ECMA-376 package committed
+  to this repository, verified by unzipping all three committed OOXML fixtures and searching every
+  entry. A 2020 conference deck exported by a modern authoring tool has no reason to carry legacy
+  VML, and that is a fact about the corpus rather than a gap to paper over. Each of those three
+  therefore runs after the SAME independent implementation has inserted its target into the real
+  55-part container; the mutation under test is still the removal, still performed by the reference,
+  still on genuine OPC. The other eight kinds read the committed bytes untouched.
 
-  Every scenario copies the fixture into the case work directory before touching it; the committed
-  file is never written to.
+  Every scenario copies the committed .pptx into the case work directory before touching it, so the
+  7 real slides and 3 real media parts the ✳️any case also reads are never written to by this one.
 
   @id-mutate
   @level-exhaustive

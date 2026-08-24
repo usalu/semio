@@ -35,6 +35,23 @@ Feature: Apply every typed ISO 10303-214 CC3 (wireframe with topology) mutation 
   and only a real export made it visible. Both halves now enumerate their ISO 10303-41 subtypes
   explicitly, because a name PREFIX is not an EXPRESS subtype relation.
 
+  🧬️ Why this catalog is identical to `mutate-step-ap214-cc2`, `mutate-step-ap214-cc4`, `mutate-step-ap214-cc5`'s, and
+  why that is a consequence rather than a copy. ISO 10303-214 §4.3 defines the six conformance
+  classes as one monotone ladder over a single capability — which `*_SHAPE_REPRESENTATION` types
+  the exchange structure may carry — and varies nothing else: the `AUTOMOTIVE_DESIGN` declaration
+  and the PRODUCT/formation/definition chain are required identically by all six. A vocabulary
+  derived one kind per axis therefore depends only on WHERE the ceiling sits, and there are three
+  places. Strictly inside the ladder (CC2, CC3, CC4, CC5) there is a ceiling type to write and at
+  least one rung above it to demote from, so both ladder verbs exist and the list is these six.
+  Below the ladder (CC1) no representation is admitted at all, so deletion replaces both verbs.
+  On top of it (CC6) nothing can be above the ceiling, so no demotion has a subject. The two edge
+  classes declare five kinds each. This is asserted, not merely written down: the shared
+  `🏅️standards/🔖️ap214/🧪️oracle/🦀️component.rs` carries
+  `the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place`, and the
+  four classes share every line of classification and serialization through that one module —
+  what this subset supplies is `MAX_RUNG = 3` and the ceiling type GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION
+  it selects.
+
   🔬️ The reference. `ruststep` 0.4 is a real ISO 10303-21 reader (it parses this fixture's 1,396
   entities with zero errors) and has NO writer at all — no `Display`/`fmt::Formatter` impl exists on
   `Exchange`/`DataSection`/`Record`/`Parameter`, and `ast::ser::to_record` only builds an in-memory

@@ -62,6 +62,24 @@ pub fn independent_render(lines: &[String], trailing_newline: bool, is_crlf: boo
     }
     out
 }
+
+/// 🔒️ Why `(lines, trailing_newline)` is not the canonical decomposition of the body it renders, or
+/// `None` when it is — re-derived here from the rendering rule itself, never by calling the
+/// subject's `TxtMutation`/`TxtSnapshot`, which this crate cannot see. [`independent_render`] is a
+/// join plus an optional terminator, so `(L, true)` and `(L ++ [""], false)` emit identical bytes,
+/// as do `(vec![], true)` and `(vec![""], true)`; [`independent_split`] resolves both ties in favour
+/// of the terminated reading. Exactly those two shapes therefore lie outside its image, and a
+/// mutation that lands on one has silently lost a line the way back cannot recover.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn non_canonical_reason(lines: &[String], trailing_newline: bool) -> Option<String> {
+    if trailing_newline && lines.is_empty() {
+        return Some("a document with no lines cannot carry a trailing terminator — that pair renders the very bytes the one-empty-line document renders, and reading them back returns the latter".to_string());
+    }
+    if !trailing_newline && lines.last().is_some_and(|line| line.is_empty()) {
+        return Some("a document whose last line is empty cannot drop its trailing terminator — that pair renders the very bytes the same document one line shorter renders, and reading them back returns the latter, losing the empty line".to_string());
+    }
+    None
+}
 //#endregion 🔖️IndependentReader
 
 //#region 🔖️Projection
@@ -109,6 +127,13 @@ fn json_strings(params: &Json, key: &str) -> Vec<String> {
 /// `TxtMutation::diff`/`TxtLinesDiff::apply` document (`InsertLine` clamps to `min(index, len)`;
 /// an out-of-range `RemoveLine`/`SetLine` is a no-op) — those are the FORMAT's rules, not this
 /// crate's implementation detail, so a genuinely independent reader has to agree with them too.
+///
+/// 🔒️ The same holds for representability: a result outside [`independent_split`]'s image is a
+/// document this encoding cannot write down, so it is REFUSED here rather than rendered into bytes
+/// that read back as something else. That refusal is a property of the encoding, arrived at from
+/// the join rule alone (see [`non_canonical_reason`]), and the subset's own vocabulary refuses the
+/// same states under `stdio.txt.mutation-not-representable` — two independent statements of one
+/// format rule, not one implementation consulted twice.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let body = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
@@ -142,6 +167,9 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             }
         }
         other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
+    }
+    if let Some(reason) = non_canonical_reason(&lines, trailing_newline) {
+        return Err(format!("{} is not representable on this document — {reason}", spec.str("kind")));
     }
     Ok(independent_render(&lines, trailing_newline, is_crlf).into_bytes())
 }
@@ -478,17 +506,32 @@ mod tests {
         ]
     }
 
+    /// 🚫 The one kind the real fixture cannot carry, named once so both laws below read off the
+    /// same fact rather than each hard-coding it: the transcript ends `…conversation.\n\n`, its
+    /// 170th line is empty, and `set-trailing-newline false` has no representable result there.
+    const REFUSED_ON_THIS_FIXTURE: &str = "set-trailing-newline";
+
     /// 👁️ The OBSERVABILITY law, carried here because the case cannot carry it. Every kind other
     /// than `no-mutation`, with the feature file's OWN parameters, has to move the real document's
     /// semantic projection — a row whose parameters address nothing (an index past the end, a value
     /// the document already has) would report as a pass while testing nothing at all. This subset's
     /// case is a recorded no-oracle one, so the runner never dispatches its oracle-phase scenarios
     /// and this unit test is the ONLY place that claim is checked today.
+    ///
+    /// 🔒️ [`REFUSED_ON_THIS_FIXTURE`] is the single exception and it is asserted, not waved through:
+    /// the row must be REFUSED, with a reason that names the loss, rather than quietly leaving the
+    /// document where it was. A refusal that stopped happening would fail here just as loudly as an
+    /// unobservable mutation.
     #[test]
     fn every_feature_row_moves_the_real_documents_projection() {
         let original = project_txt(REAL_FIXTURE).expect("the real fixture projects");
         for row in feature_example_rows() {
             let kind = row.str("kind");
+            if kind == REFUSED_ON_THIS_FIXTURE {
+                let refusal = oracle_apply_mutation(REAL_FIXTURE, &row).expect_err("set-trailing-newline false has no representable result on a document whose last line is empty");
+                assert!(refusal.contains("not representable"), "the refusal must say what it refuses: {refusal}");
+                continue;
+            }
             let mutated = oracle_apply_mutation(REAL_FIXTURE, &row).unwrap_or_else(|error| panic!("{kind} must apply to the real fixture: {error}"));
             let projection = project_txt(&mutated).expect("the mutated document projects");
             if kind == "no-mutation" {
@@ -503,27 +546,23 @@ mod tests {
     /// independently computed inverse, and the projection must be back where it started — every
     /// line, the trailing-terminator flag and the whole-document line ending.
     ///
-    /// ⚠️ OPEN, and left RED rather than tuned away: `set-trailing-newline` FAILS this on the real
-    /// fixture, and the defect is in the SUBSET'S OWN DATA MODEL, not in this reference module, not
-    /// in the fixture and not in the law. `(lines, trailing_newline)` is not an injective encoding
-    /// of a body: `(["a"], true)` and `(["a", ""], false)` both render to `"a\n"`, and the split
-    /// resolves that tie in favour of the first. The real fixture ends `"…conversation.\n\n"`, so
-    /// its 170th line is empty; `set-trailing-newline(false)` renders 170 lines with no terminator,
-    /// which reads back as 169 lines WITH one, and the inverse — correctly computed from the
-    /// original as `set-trailing-newline(true)` — can no longer recover the lost blank line. The
-    /// production `TxtSnapshot`/`TxtMutation` share the same decomposition, so the subject has the
-    /// identical hole; it has simply never been measured, because this case is a recorded no-oracle
-    /// one whose scenarios the runner never dispatches. The remedy belongs to the VOCABULARY —
-    /// `SetTrailingNewline { value: false }` has no representable result on a document whose last
-    /// line is empty and should be REJECTED there, the same "refuse rather than silently lose"
-    /// discipline the sibling `📰xml ✳️valid` vocabulary uses — and it must land on both sides at
-    /// once. Weakening this assertion, or picking a fixture that does not end with a blank line,
-    /// would hide a defect that is live in production code.
+    /// 🔒️ This is the law that found the `(lines, trailing_newline)` non-injectivity, and it is
+    /// still the law that measures the remedy. `set-trailing-newline` on THIS document is now
+    /// refused outright — the fixture ends `"…conversation.\n\n"`, so its 170th line is empty, and
+    /// `false` would render 170 lines with no terminator, bytes that read back as 169 lines WITH
+    /// one. The refusal is asserted to leave the document byte-identical, so the row cannot pass by
+    /// quietly doing nothing, and [`set_trailing_newline_inverts_where_its_result_is_representable`]
+    /// carries the kind's positive inverse on a document that CAN hold both answers. Nothing here is
+    /// weakened to fit: the assertion below is the same equality it always was.
     #[test]
     fn every_feature_row_inverts_back_to_the_real_document() {
         let original = project_txt(REAL_FIXTURE).expect("the real fixture projects");
         for row in feature_example_rows() {
             let kind = row.str("kind");
+            if kind == REFUSED_ON_THIS_FIXTURE {
+                assert!(oracle_apply_mutation(REAL_FIXTURE, &row).is_err(), "{kind} must be refused on a document whose last line is empty, not silently applied");
+                continue;
+            }
             let mutated = oracle_apply_mutation(REAL_FIXTURE, &row).unwrap_or_else(|error| panic!("{kind} must apply: {error}"));
             let undo = oracle_inverse_spec(REAL_FIXTURE, &row).unwrap_or_else(|error| panic!("{kind} must have an inverse: {error}"));
             let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("the inverse of {kind} must apply: {error}"));
@@ -531,23 +570,42 @@ mod tests {
             assert_eq!(
                 project_txt(&restored).expect("the restored document projects"),
                 original,
-                "applying {kind} and then its own inverse did not restore the real document ({restored_bytes} bytes back, {} in) — see this test's own doc comment for the `(lines, trailing_newline)` non-injectivity this exposes",
+                "applying {kind} and then its own inverse did not restore the real document ({restored_bytes} bytes back, {} in)",
                 REAL_FIXTURE.len()
             );
         }
     }
 
-    /// 🔬️ The exact shape of the defect above, pinned so it cannot be misattributed to the fixture
-    /// or to the reference module: two DIFFERENT `(lines, trailing_newline)` pairs render to the
-    /// SAME bytes, and the split can only return one of them. This test asserts the ambiguity
-    /// itself, so it starts failing the moment the decomposition is made injective — which is the
-    /// signal that the vocabulary fix has landed and the law test above should go green.
+    /// ↩️ The positive half of the kind the real fixture has to refuse: on a document whose last
+    /// line is NOT empty, `set-trailing-newline` has a representable result in both directions, and
+    /// the forward-then-inverse round trip is byte-exact. Without this the refusal above would leave
+    /// the kind with no exercised inverse at all.
     #[test]
-    fn the_line_terminator_decomposition_is_not_injective() {
+    fn set_trailing_newline_inverts_where_its_result_is_representable() {
+        let document = b"Erste Zeile\nZweite Zeile\n";
+        let forward = spec("set-trailing-newline", &[("value", Json::Bool(false))]);
+        let mutated = oracle_apply_mutation(document, &forward).expect("the last line is not empty, so the result is representable");
+        assert_eq!(mutated.as_slice(), b"Erste Zeile\nZweite Zeile".as_slice(), "the terminator must actually come off");
+        let undo = oracle_inverse_spec(document, &forward).expect("the kind has an inverse");
+        let restored = oracle_apply_mutation(&mutated, &undo).expect("the inverse applies");
+        assert_eq!(restored.as_slice(), document.as_slice(), "forward then inverse must return the exact bytes");
+    }
+
+    /// 🔬️ The exact shape of the defect this ticket found, pinned so it cannot be misattributed to
+    /// the fixture or to the reference module: two DIFFERENT `(lines, trailing_newline)` pairs
+    /// render to the SAME bytes and the split can only return one of them. The collision is a
+    /// property of a join, so it does not go away — what the remedy changes is REACHABILITY, and
+    /// that is the second half asserted here: the losing pre-image is now named unrepresentable, so
+    /// no mutation can land a document on it.
+    #[test]
+    fn the_line_terminator_collision_is_named_and_unreachable() {
         let with_terminator = independent_render(&["a".to_string()], true, false);
         let with_empty_last_line = independent_render(&["a".to_string(), String::new()], false, false);
         assert_eq!(with_terminator, with_empty_last_line, "these are the two pre-images that collide");
         assert_eq!(independent_split(&with_terminator), (vec!["a".to_string()], true, false), "the split resolves the tie in favour of the terminator, losing the empty last line");
+        assert_eq!(non_canonical_reason(&["a".to_string()], true), None, "the pre-image the split returns is the representable one");
+        assert!(non_canonical_reason(&["a".to_string(), String::new()], false).is_some(), "the pre-image it cannot return must be refused rather than rendered");
+        assert!(non_canonical_reason(&[], true).is_some(), "so must the no-lines-but-terminated pair, which renders what the one-empty-line document renders");
         let body = std::str::from_utf8(REAL_FIXTURE).expect("UTF-8");
         assert!(body.ends_with("\n\n"), "the real fixture is one of the documents that hits the collision: its last line is empty");
     }

@@ -97,6 +97,14 @@ fn find_child_by_key(tree: &UiTree, parent: NodeId, key: &NodeKey) -> Option<Nod
 }
 
 fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
+    sync_interactive_state_node(tree, id, theme);
+    let children: Vec<NodeId> = tree.children(id).collect();
+    for child in children {
+        sync_interactive_state(tree, child, theme);
+    }
+}
+
+pub(crate) fn sync_interactive_state_node(tree: &mut UiTree, id: NodeId, theme: &Theme) {
     let accepted = tree.accepted_layout(id);
     let select_open: Option<(Vec<UiSelectItem>, f32, f32)> = tree.node(id).and_then(|node| match &node.spec.0 {
         UiNode::Select(select) if node.state.open => accepted.map(|layout| (select.items.clone(), layout.width, layout.height)),
@@ -118,11 +126,6 @@ fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
 
     if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::Tree(_))) {
         sync_tree_row_layout(tree, id);
-    }
-
-    let children: Vec<NodeId> = tree.children(id).collect();
-    for child in children {
-        sync_interactive_state(tree, child, theme);
     }
 }
 
@@ -256,6 +259,25 @@ fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: 
 }
 
 pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
+    paint_node_self(tree, id, origin_x, origin_y, theme, atlas, icons, has_scene_host, draw);
+    let Some(node) = tree.node(id) else { return };
+    let Some(layout) = tree.accepted_layout(id) else { return };
+    if !node.spec.0.presence().visible() {
+        return;
+    }
+    let abs_x = origin_x + layout.x;
+    let abs_y = origin_y + layout.y;
+    match &node.spec.0 {
+        UiNode::Stack(_) | UiNode::Field(_) | UiNode::Section(_) | UiNode::Group(_) => paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw),
+        UiNode::Select(select) => paint_select(select, Rect::new(abs_x, abs_y, layout.width, layout.height), node.flags, node.state.open, Some((tree, id)), theme, atlas, icons, draw),
+        UiNode::KeyValue(key_value) => paint_key_value(key_value, Rect::new(abs_x, abs_y, layout.width, layout.height), theme, atlas, draw),
+        UiNode::IconSelect(select) => paint_icon_select(select, Rect::new(abs_x, abs_y, layout.width, layout.height), node.flags, theme, atlas, icons, draw),
+        UiNode::Tree(tree_node) => paint_tree_widget(tree_node, Rect::new(abs_x, abs_y, layout.width, layout.height), theme, atlas, icons, draw),
+        _ => {}
+    }
+}
+
+pub(crate) fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     let Some(node) = tree.node(id) else { return };
     let Some(layout) = tree.accepted_layout(id) else { return };
     let presence = node.spec.0.presence();
@@ -281,32 +303,28 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
     match &node.spec.0 {
         UiNode::Stack(stack) => {
             paint_stack_frame(stack, bounds, flags, theme, draw);
-            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
         }
         UiNode::Text(text) => paint_text(text, bounds, theme, atlas, draw),
         UiNode::Separator(_) => paint_separator(bounds, theme, draw),
         UiNode::Button(button) => paint_button(button, bounds, flags, theme, atlas, icons, draw),
         UiNode::Input(input) => paint_input(input, node.state.edit.as_ref(), bounds, flags, theme, atlas, draw),
-        UiNode::Select(select) => paint_select(select, bounds, flags, node.state.open, Some((tree, id)), theme, atlas, icons, draw),
+        UiNode::Select(_) => {}
         UiNode::Toggle(toggle) => paint_toggle(toggle, bounds, flags, theme, atlas, icons, draw),
-        UiNode::KeyValue(kv) => paint_key_value(kv, bounds, theme, atlas, draw),
+        UiNode::KeyValue(_) => {}
         UiNode::Slider(slider) => paint_slider(slider, bounds, theme, atlas, draw),
         UiNode::NumberStepper(stepper) => paint_number_stepper(stepper, bounds, flags, theme, atlas, draw),
         UiNode::Ring(ring) => paint_ring(ring, bounds, theme, draw),
-        UiNode::IconSelect(select) => paint_icon_select(select, bounds, flags, theme, atlas, icons, draw),
+        UiNode::IconSelect(_) => {}
         UiNode::Field(field) => {
             paint_field(field, bounds, theme, atlas, draw);
-            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
         }
         UiNode::Section(section) => {
             paint_section(section, bounds, theme, atlas, icons, draw);
-            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
         }
         UiNode::Group(group) => {
             paint_group(group, bounds, theme, atlas, icons, draw);
-            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
         }
-        UiNode::Tree(tree_node) => paint_tree_widget(tree_node, bounds, theme, atlas, icons, draw),
+        UiNode::Tree(_) => {}
         // 🎬️ With a `SceneHost` registered this tick, leave these two rects untouched here —
         // `engine::Ui::frame`'s `collect_scene_slots` loop paints the real content right after this
         // pass returns. With no host, fall back to the unchanged placeholder chrome.

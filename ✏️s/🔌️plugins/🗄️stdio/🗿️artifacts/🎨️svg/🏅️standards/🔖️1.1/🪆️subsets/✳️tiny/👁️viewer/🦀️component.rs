@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::SvgMutation;
+use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::mutations::SvgTinyMutation;
 use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::snapshot::SvgSnapshot;
 use crate::artifacts::svg::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_TINY_DIALECT};
 use crate::viewer::svg_tiny::modes::view;
@@ -35,7 +35,7 @@ pub struct SvgTinyViewer;
 
 impl ArtifactViewer for SvgTinyViewer {
     type Snapshot = SvgSnapshot;
-    type Mutation = SvgMutation;
+    type Mutation = SvgTinyMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -61,11 +61,11 @@ impl ArtifactViewer for SvgTinyViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
-        semio_framework_plugin::built_to_component_tree(match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        })
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        match body_key {
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }
     }
 }
 //#endregion 🔖️Viewer

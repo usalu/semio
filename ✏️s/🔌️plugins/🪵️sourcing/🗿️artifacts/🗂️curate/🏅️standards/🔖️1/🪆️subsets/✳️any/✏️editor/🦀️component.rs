@@ -29,7 +29,7 @@ use store::EngineHandles;
 /// mapped into the SAME `kit.catalog` JSON shape `block_3d::puzzle3d_catalog_fragment` produces, so
 /// `s/plugin/puzzle`'s `kit:in` importer can consume either producer identically without knowing which
 /// one it came from (see `crate::artifacts::curate::schema::inferences::sourcing_catalog_fragment`).
-pub async fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
+pub fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: SOURCING_CURATE_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Kit },
@@ -166,7 +166,7 @@ use crate::editor::sourcing::commands::{set_filter_min_availability, set_filter_
 ///
 /// Without this, `ArtifactApp::command_from_action`'s default rejects every app-owned action and the
 /// pane cannot even load its own example. See `📐️cad`'s `cad_command_from_action` twin.
-async fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
+fn sourcing_curate_command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<SourcingCurateCommand, Fault> {
     let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_str).map(str::to_string);
     let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_f64);
     let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(serde_json::Value::as_bool);
@@ -253,7 +253,7 @@ impl ArtifactEditor for SourcingCurateApp {
                 payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: crate::artifacts::curate::schema::inferences::sourcing_catalog_fragment(doc.snapshot).to_string() },
             }),
             "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -331,10 +331,10 @@ impl ArtifactEditor for SourcingCurateApp {
 /// `"document:in"` above, `commands::document::{set_active_example, set_artifact_json,
 /// stock_from_catalogue}`) builds this effect instead of an `Emit::mutations([...])`. The spr is a
 /// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
-pub async fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kernel::Effect {
+pub fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kernel::Effect {
     let pack = <CurateSnapshot as ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<CurateSnapshot, SourcingMutation>(SOURCING_CURATE_SCHEMA, "curate", document.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("curate document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("curate document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -342,14 +342,14 @@ pub async fn reset_document_effect(document: &CurateSnapshot) -> semio_framework
 //#region 🔖️Manifest
 /// 🙈️ An internal document operation kept out of the command palette — the curate/DnD arms that mutate
 /// the persisted `CurateSnapshot` but are only ever dispatched from window chrome.
-async fn hidden_operation(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
+fn hidden_operation(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::Mutation) }
 }
 
 /// 🙈️👁️ The filter/sort/selection/world-pick arms emit ONLY `config_mutations`, so (unlike
 /// `hidden_operation` above) they're declared `ActionKind::View`, letting `VcsArtifactApp`'s
 /// kind-discipline check actually enforce "must not emit document operations".
-async fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
+fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::View) }
 }
 
@@ -478,25 +478,25 @@ pub(crate) mod testkit {
     /// 🧪️ Framework testkit gap (contract §2.5, w0-f Gap 3 handoff): `new_app_with_registry` and
     /// `assert_declared_actions_bridge_to_commands` still take the pre-migration `fn() -> App` shape,
     /// not the `AppDefinition`-returning `create_sourcing_curate_app`. Local wrapper until that lands.
-    pub(crate) async fn sourcing_manifest_for_testkit() -> App {
+    pub(crate) fn sourcing_manifest_for_testkit() -> App {
         App { definition: create_sourcing_curate_app(), examples: Vec::new() }
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn new_app() -> SourcingApp {
+    pub fn new_app() -> SourcingApp {
         new_app_impl::<EditorApp<SourcingCurateApp>>()
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn new_app_with_registry() -> SourcingApp {
+    pub fn new_app_with_registry() -> SourcingApp {
         new_app_with_registry_impl::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut SourcingApp, command: SourcingCurateCommand) -> InvocationResult {
+    pub fn dispatch(app: &mut SourcingApp, command: SourcingCurateCommand) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut SourcingApp, body_key: &str) -> String {
+    pub fn render(app: &mut SourcingApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }

@@ -14,14 +14,48 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   oracle's and the subject's results are read back by the SAME independent `lopdf`-backed projection
   before comparison, never against each other's own writing.
 
-  THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because `lopdf` did not
-  error. `inverse-<kind>` applies the mutation, applies its own independently computed inverse, and
-  fails with the first diverging field unless the result projects onto exactly what the original
-  document projects onto. `identity-round-trip` fails unless the re-serialized bytes differ from the
-  input AND their projection is identical to the input's. Neither law is scoped down: the whole
-  `semantic-pdf-v1` projection — declared version, page count, and every page's media box, content
-  operators, shown text and rotation — has to come back, with one exception, on one axis, for three
-  kinds, stated here in full.
+  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law module
+  and under `semantic-pdf-v1`'s own tolerance, so no scenario can pass merely because `lopdf`
+  declined to error. `mutate-<kind>` fails unless the mutation MOVES the compared projection — a
+  kind that applies cleanly and changes nothing observable would otherwise report a green for a
+  mutation nobody watched, and until this wave all eighteen of them did exactly that.
+  `inverse-<kind>` applies the mutation, applies its own independently computed inverse, and fails
+  with the first diverging field unless the result projects onto exactly what the original document
+  projects onto. `identity-round-trip` fails unless the re-serialized bytes differ from the input
+  AND their projection is identical to the input's.
+
+  WHAT THE PROJECTION HAD TO GROW BEFORE THE OBSERVABILITY LAW COULD BE HONEST. The shared PDF
+  projection reports declared version, page count and per-page media box, content operators and
+  shown text — a page-and-metadata surface. Seven of this catalog's eighteen kinds never touch a
+  page: insert-object, remove-object, set-object-value, set-dict-entry, remove-dict-entry,
+  set-trailer-entry and remove-trailer-entry all edit the COS object graph, and an eighth,
+  set-page-crop-box, moves a page field the shared surface does not report. Asserting observability
+  against that surface would have meant declaring eight kinds unobservable, which would be shrinking
+  the law to fit the projection. This subset's own project_pdf_1_7 therefore reports two things more
+  — each page's /CropBox, and an objectGraph member carrying the trailer (minus the /Size, /Prev and
+  /XRefStm bookkeeping the writer recomputes on every save) and the document catalog resolved three
+  references deep, with /Pages omitted because pageCount and pages already project the page tree in
+  full and re-reporting it would make every page edit register twice. Object NUMBERS never appear in
+  it: semantic-pdf-v1 calls them writer freedom, and a resolved value is what a conforming reader
+  sees anyway (ISO 32000-1 §7.3.10). On the real thesis that surface is where set-dict-entry's
+  /PageMode, remove-dict-entry's /Outlines, remove-object's #3015 (the outline root the catalog
+  resolves to), set-object-value's #145 (the /OpenAction the catalog resolves to) and both trailer
+  kinds become visible — seven of the eight, under the full law, with no exemption.
+
+  THE ONE KIND THAT STAYS UNOBSERVABLE, AND WHY NO PROJECTION CAN FIX IT. insert-object adds an
+  indirect object and links it to nothing. ISO 32000-1 §7.5.4 has a conforming reader reach objects
+  only by following references from the trailer, so an object nothing references changes nothing
+  readable. That is not a thin projection, it was measured: the real thesis carries 3,173 objects,
+  3,173 references, ZERO orphans and ZERO dangling references, so there is no id at which an
+  insertion could land somewhere already pointed at. The vocabulary is what cannot express it —
+  InsertObject carries no reference site, and only SetDictEntry can create one. Widening it to carry
+  the linking site is the fix, and it belongs to whoever owns that enum. Its INVERSE stays under the
+  full law, as does every other kind; the exemption is one kind on one law, named in the subset's own
+  oracle module as UNOBSERVABLE and pinned there by a test that flips red the moment the vocabulary
+  or the fixture changes.
+
+  The inverse law is not scoped down either, with one exception, on one axis, for three kinds,
+  stated here in full.
 
   THE ONE AXIS THIS VOCABULARY CANNOT CARRY, FOUND BY ASSERTING THE LAW RATHER THAN BY REASONING
   ABOUT IT. remove-page, append-page-content and set-page-content all have to REBUILD a page's
@@ -33,10 +67,15 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   bring them back. AppendPageContent was documented from the start as having no minimal inverse in
   this vocabulary; this is the same gap, now measured. Those three inverse scenarios therefore compare
   the projection with pages.N.contentOperators dropped and nothing else dropped: declared version,
-  page count, every page's media box, rotation and — critically — the shown text the vocabulary DOES
-  carry all stay under the full law, and every other kind in the catalog stays under it on every axis
-  including contentOperators. Widening PdfPage to retain a real content stream is the fix, and it
+  page count, every page's media box, crop box, rotation, the whole objectGraph surface and —
+  critically — the shown text the vocabulary DOES carry all stay under the full law, and every other
+  kind in the catalog stays under it on every axis including contentOperators. Widening PdfPage to retain a real content stream is the fix, and it
   belongs to whoever owns that snapshot.
+
+  All three laws are proven again at unit level, against the same real document and the same
+  Examples rows, by `every_declared_kind_is_observable_and_its_inverse_restores_the_document` in
+  ../../🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs, so the argument holds without the
+  runner too.
 
   A SECOND, SMALLER DEFECT THE SAME LAW EXPOSED, AND IT WAS FIXED RATHER THAN EXEMPTED. This thesis
   sets its type with TJ, the positioned-array form, so the independent reader projects most of its

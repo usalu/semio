@@ -16,15 +16,28 @@ Feature: Apply every typed PDF 1.4 mutation to a real-world document
   below compare `width`/`height`/`text` — everything `PdfSnapshot` itself carries — through an
   independent `lopdf` reader on both sides, never against each other's own writing.
 
-  THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because `lopdf` did not
-  error. `inverse-<kind>` applies the mutation, applies its algebraic inverse, and fails with the
-  first diverging field unless the result projects onto exactly what the un-mutated document
-  projects onto. `identity-round-trip` fails unless the re-encoded bytes differ from the input AND
-  the independent reader recovers exactly the text the real input carries. Both laws are asserted on
-  `text` and on the pinned `612×792` geometry, and NOT on this fixture's real page size: the
-  subset's whole model hardcodes Letter-size on both sides (`decode_pdf` never reads a MediaBox),
-  so `595.276 × 841.89` is unreachable by construction and demanding it would be a contrived check
-  rather than a true one. That carve-out is a documented property of the subset, not a softened law.
+  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law module,
+  so no scenario can pass merely because `lopdf` declined to error. `mutate-<kind>` fails unless the
+  mutation MOVES the compared projection — with two declared kinds that is a small claim, but it is
+  the difference between measuring `set-snapshot` and merely running it, and until this wave neither
+  row was measured at all. `inverse-<kind>` applies the mutation, applies its algebraic inverse, and
+  fails with the first diverging field unless the result projects onto exactly what the un-mutated
+  document projects onto. `identity-round-trip` fails unless the re-encoded bytes differ from the
+  input AND the independent reader recovers exactly the text the real input carries.
+
+  WHAT THE LAWS ARE MEASURED AGAINST, AND WHY IT IS THE REBUILD RATHER THAN THE COMMITTED BYTES. The
+  oracle is a rebuild-from-text writer that pins `MediaBox [0 0 612 792]` for every document,
+  mirroring `decode_pdf`, which hardcodes the same constant and never reads a real page's geometry
+  (confirmed against this fixture's true `[0 0 595.276 841.89]`). Measured against the committed
+  input, `set-snapshot` would be credited with a `595.276 → 612` move the REBUILD made and the
+  mutation did not — a green for something never observed. Measured against the reference's own
+  `no-mutation` output, the only field that can move is `text`, the one this subset genuinely reads
+  out of a document, and it has to. Geometry therefore carries no round-trip information on either
+  side; that is a documented property of the subset, not a softened law, and demanding the real page
+  size would be a contrived check rather than a true one. Both laws are proven again at unit level
+  against the same real document by
+  `every_declared_kind_is_observable_and_its_inverse_restores_the_document` in
+  ../../🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs.
 
   @id-mutate
   @level-exhaustive

@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `XmlSnapshot -> BuiltNode`: an empty document renders a single placeholder leaf, otherwise
 /// the real element tree, child-index paths as node ids.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &XmlSnapshot) -> BuiltNode {
+pub fn render(document: &XmlSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let root = match &document.doc.root {
         Some(node) => node_view(Vec::new(), node),
         None => TreeNodeView { id: String::new(), label: "(empty document)".to_string(), children: Vec::new() },

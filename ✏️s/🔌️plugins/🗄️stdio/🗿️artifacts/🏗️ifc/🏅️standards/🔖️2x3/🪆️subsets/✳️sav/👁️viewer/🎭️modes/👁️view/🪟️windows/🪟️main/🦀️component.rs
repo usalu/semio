@@ -58,7 +58,7 @@ fn world_instances_json(document: &Ifc2x3Snapshot) -> String {
 /// 👁️ Pure `Ifc2x3Snapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &Ifc2x3Snapshot) -> BuiltNode {
+pub fn render(document: &Ifc2x3Snapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": IFC2X3_SAV_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(IFC2X3_SAV_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(IFC2X3_SAV_VIEW_DEFAULT_CAMERA_POSITION, IFC2X3_SAV_VIEW_DEFAULT_CAMERA_TARGET, IFC2X3_SAV_VIEW_DEFAULT_CAMERA_FOV),

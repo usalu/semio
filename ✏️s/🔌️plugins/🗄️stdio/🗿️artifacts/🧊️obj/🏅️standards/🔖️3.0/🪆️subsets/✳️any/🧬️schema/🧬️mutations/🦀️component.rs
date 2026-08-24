@@ -5,6 +5,15 @@
 //! single sub-field) — their `diff()` still constructs a sparse per-field patch by comparing
 //! against `base`'s current value, never a full-item replace.
 //!
+//! ↩️ Three kinds need MORE than one step to undo, which is why `inverse()` returns `Vec<Self>`.
+//! `RemoveFace` closes the face-index space that `g`/`o` membership is keyed on, and `InsertFace`
+//! carries a face value with no membership at all, so the row alone comes back into no band and no
+//! object — measured as `$.vertexCount` 8577 against the real `pattern-sphere` mesh's own 8576
+//! (ticket `26/08/23/END-TO-END-TESTING-REFACTOR`, `inverse-remove-face`). `RemoveGroup`/
+//! `RemoveObject` have the same shape one level up: `SetGroup`/`SetObject` on a name the document
+//! no longer carries APPENDS, so a single-step undo restores the membership but not the position
+//! the entry held. See the `InverseRestoration` region for the three repairs.
+//!
 //! 🧪️ F6: `#[derive(dsl::DslOps)]` — DERIVE path (ticket `f6-recon-report.md` §3's decision rule:
 //! the Mutation side only cares whether the Snapshot type tree contains a data-carrying enum
 //! ANYWHERE, since `SetSnapshot` always carries the whole `ObjSnapshot`; `obj`'s whole model is
@@ -164,6 +173,45 @@ pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) ->
 }
 //#endregion 🔖️Apply
 
+//#region 🔖️InverseRestoration
+/// ↩️ The undo of a positional `f` removal at `index`. `InsertFace` puts the row back BY VALUE and
+/// carries no `g`/`o` membership, so on its own it restores geometry into no band and no object:
+/// the real `pattern-sphere` fixture reads back as a fourth `tobj` model, `$.vertexCount` 8577
+/// against the mesh's own 8576 (ticket `26/08/23/END-TO-END-TESTING-REFACTOR`, scenario
+/// `inverse-remove-face`). Removing face `index` also closes the whole face-index space up by one,
+/// so every membership list naming a face AT OR AFTER `index` — the removed face's own bands
+/// included — is set back to the exact list `base` carries, after the row is back in place.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn restore_face_at(index: usize, face: &ObjFace, base: &ObjSnapshot) -> Vec<ObjMutation> {
+    let disturbed = |faces: &[usize]| faces.iter().any(|member| *member >= index);
+    let mut undo = vec![ObjMutation::InsertFace { index, face: face.clone() }];
+    undo.extend(base.groups.iter().filter(|group| disturbed(&group.faces)).map(|group| ObjMutation::SetGroup { name: group.name.clone(), faces: group.faces.clone() }));
+    undo.extend(base.objects.iter().filter(|object| disturbed(&object.faces)).map(|object| ObjMutation::SetObject { name: object.name.clone(), faces: object.faces.clone() }));
+    undo
+}
+
+/// ↩️ The undo of removing the `g` entry at position `at`. `SetGroup` on a name the document no
+/// longer carries APPENDS, so a lone `SetGroup` restores the membership but moves the band to the
+/// end of the list — and the list's order is what decides the token order of a `g a b` line for a
+/// face two bands share. The tail after `at` is therefore lifted off and re-declared in its own
+/// order, which puts every entry back at the exact position `base` gave it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn restore_group_at(at: usize, base: &ObjSnapshot) -> Vec<ObjMutation> {
+    let mut undo: Vec<ObjMutation> = base.groups[at + 1..].iter().map(|group| ObjMutation::RemoveGroup { name: group.name.clone() }).collect();
+    undo.extend(base.groups[at..].iter().map(|group| ObjMutation::SetGroup { name: group.name.clone(), faces: group.faces.clone() }));
+    undo
+}
+
+/// ↩️ The `o` mirror of [`restore_group_at`] — same append-loses-position defect, same repair, kept
+/// separate because `groups` and `objects` are distinct name spaces rather than one list.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn restore_object_at(at: usize, base: &ObjSnapshot) -> Vec<ObjMutation> {
+    let mut undo: Vec<ObjMutation> = base.objects[at + 1..].iter().map(|object| ObjMutation::RemoveObject { name: object.name.clone() }).collect();
+    undo.extend(base.objects[at..].iter().map(|object| ObjMutation::SetObject { name: object.name.clone(), faces: object.faces.clone() }));
+    undo
+}
+//#endregion 🔖️InverseRestoration
+
 //#region 🔖️MutationTrait
 impl Mutation<ObjSnapshot> for ObjMutation {
     type Diff = ObjDiff;
@@ -224,7 +272,7 @@ impl Mutation<ObjSnapshot> for ObjMutation {
             ObjMutation::NoMutation => vec![ObjMutation::NoMutation],
             ObjMutation::SetSnapshot { .. } => vec![ObjMutation::SetSnapshot { snapshot: base.clone() }],
 
-            ObjMutation::InsertVertex { index, .. } => vec![ObjMutation::RemoveVertex { index: *index }],
+            ObjMutation::InsertVertex { index, .. } => vec![ObjMutation::RemoveVertex { index: (*index).min(base.vertices.len()) }],
             ObjMutation::RemoveVertex { index } => match base.vertices.get(*index) {
                 Some(v) => vec![ObjMutation::InsertVertex { index: *index, vertex: v.clone() }],
                 None => vec![ObjMutation::NoMutation],
@@ -234,7 +282,7 @@ impl Mutation<ObjSnapshot> for ObjMutation {
                 None => vec![ObjMutation::NoMutation],
             },
 
-            ObjMutation::InsertTexCoord { index, .. } => vec![ObjMutation::RemoveTexCoord { index: *index }],
+            ObjMutation::InsertTexCoord { index, .. } => vec![ObjMutation::RemoveTexCoord { index: (*index).min(base.texcoords.len()) }],
             ObjMutation::RemoveTexCoord { index } => match base.texcoords.get(*index) {
                 Some(v) => vec![ObjMutation::InsertTexCoord { index: *index, texcoord: v.clone() }],
                 None => vec![ObjMutation::NoMutation],
@@ -244,7 +292,7 @@ impl Mutation<ObjSnapshot> for ObjMutation {
                 None => vec![ObjMutation::NoMutation],
             },
 
-            ObjMutation::InsertNormal { index, .. } => vec![ObjMutation::RemoveNormal { index: *index }],
+            ObjMutation::InsertNormal { index, .. } => vec![ObjMutation::RemoveNormal { index: (*index).min(base.normals.len()) }],
             ObjMutation::RemoveNormal { index } => match base.normals.get(*index) {
                 Some(v) => vec![ObjMutation::InsertNormal { index: *index, normal: v.clone() }],
                 None => vec![ObjMutation::NoMutation],
@@ -254,9 +302,9 @@ impl Mutation<ObjSnapshot> for ObjMutation {
                 None => vec![ObjMutation::NoMutation],
             },
 
-            ObjMutation::InsertFace { index, .. } => vec![ObjMutation::RemoveFace { index: *index }],
+            ObjMutation::InsertFace { index, .. } => vec![ObjMutation::RemoveFace { index: (*index).min(base.faces.len()) }],
             ObjMutation::RemoveFace { index } => match base.faces.get(*index) {
-                Some(v) => vec![ObjMutation::InsertFace { index: *index, face: v.clone() }],
+                Some(v) => restore_face_at(*index, v, base),
                 None => vec![ObjMutation::NoMutation],
             },
             ObjMutation::SetFace { index, .. } => match base.faces.get(*index) {
@@ -268,16 +316,16 @@ impl Mutation<ObjSnapshot> for ObjMutation {
                 Some(g) => vec![ObjMutation::SetGroup { name: name.clone(), faces: g.faces.clone() }],
                 None => vec![ObjMutation::RemoveGroup { name: name.clone() }],
             },
-            ObjMutation::RemoveGroup { name } => match base.groups.iter().find(|g| &g.name == name) {
-                Some(g) => vec![ObjMutation::SetGroup { name: name.clone(), faces: g.faces.clone() }],
+            ObjMutation::RemoveGroup { name } => match base.groups.iter().position(|g| &g.name == name) {
+                Some(at) => restore_group_at(at, base),
                 None => vec![ObjMutation::NoMutation],
             },
             ObjMutation::SetObject { name, .. } => match base.objects.iter().find(|o| &o.name == name) {
                 Some(o) => vec![ObjMutation::SetObject { name: name.clone(), faces: o.faces.clone() }],
                 None => vec![ObjMutation::RemoveObject { name: name.clone() }],
             },
-            ObjMutation::RemoveObject { name } => match base.objects.iter().find(|o| &o.name == name) {
-                Some(o) => vec![ObjMutation::SetObject { name: name.clone(), faces: o.faces.clone() }],
+            ObjMutation::RemoveObject { name } => match base.objects.iter().position(|o| &o.name == name) {
+                Some(at) => restore_object_at(at, base),
                 None => vec![ObjMutation::NoMutation],
             },
 
@@ -685,6 +733,87 @@ mod tests {
         assert_eq!(KINDS.len(), 22, "obj-3-0-any declares 22 ObjMutation variants");
     }
     //#endregion 🔖️KindsCoverageLaw
+
+    //#region 🔖️IndexSpaceInverseLaw
+    /// 🧊️ Three faces, two bands and one object over them — the smallest mesh on which removing a
+    /// face disturbs a membership list that another entry sits after.
+    // 🚫️async: E1 pure test-fixture builder, no I/O — see R9
+    fn banded_snapshot() -> ObjSnapshot {
+        let corner = |vertex: u32| ObjFaceVertex { vertex, texcoord: None, normal: None };
+        let face = |a: u32, b: u32, c: u32| ObjFace { vertices: vec![corner(a), corner(b), corner(c)] };
+        ObjSnapshot {
+            schema: "stdio.obj".into(),
+            vertices: vec![ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None }, ObjVertex { x: 0.0, y: 1.0, z: 0.0, w: None }],
+            texcoords: vec![],
+            normals: vec![],
+            faces: vec![face(0, 1, 2), face(1, 2, 0), face(2, 0, 1)],
+            groups: vec![ObjGroup { name: "front".into(), faces: vec![0, 1] }, ObjGroup { name: "back".into(), faces: vec![2] }],
+            objects: vec![ObjObject { name: "shell".into(), faces: vec![0, 1, 2] }],
+            mtllib: None,
+            usemtl: vec![],
+            smoothing_groups: vec![],
+            unknown_statements: vec![],
+        }
+    }
+
+    /// ↩️ Removing a face that BELONGS to a band must invert through the band, not through the row
+    /// alone: the undo names every membership list the positional removal disturbed and puts each
+    /// back to the exact list the pre-mutation document declared.
+    #[test]
+    fn remove_face_inverts_through_the_membership_it_disturbed() {
+        let base = banded_snapshot();
+        let removal = ObjMutation::RemoveFace { index: 1 };
+        let undo = removal.inverse(&base);
+        assert!(matches!(undo.first(), Some(ObjMutation::InsertFace { index: 1, .. })), "the row itself comes back first, at its own position: {undo:?}");
+        assert!(undo.iter().any(|step| matches!(step, ObjMutation::SetGroup { name, faces } if name == "front" && faces == &vec![0, 1])), "the removed face's own band must be re-declared: {undo:?}");
+        assert!(undo.iter().any(|step| matches!(step, ObjMutation::SetGroup { name, faces } if name == "back" && faces == &vec![2])), "so must the band the removal shifted: {undo:?}");
+        assert!(undo.iter().any(|step| matches!(step, ObjMutation::SetObject { name, faces } if name == "shell" && faces == &vec![0, 1, 2])), "and the object over all three: {undo:?}");
+
+        let mut restored = base.clone();
+        apply_obj_mutation(&mut restored, &removal);
+        assert_ne!(restored.faces, base.faces, "the removal has to move the mesh, or the undo proves nothing");
+        for step in &undo {
+            apply_obj_mutation(&mut restored, step);
+        }
+        assert_eq!(restored, base, "forward then inverse must return the whole snapshot, membership included");
+    }
+
+    /// ↩️ Removing the FIRST of several bands must invert back to that band's own position. A single
+    /// `SetGroup` appends instead, which the second half of this test states outright rather than
+    /// leaving as folklore.
+    #[test]
+    fn remove_group_inverts_back_to_its_own_position() {
+        let base = banded_snapshot();
+        let removal = ObjMutation::RemoveGroup { name: "front".into() };
+        let mut restored = base.clone();
+        apply_obj_mutation(&mut restored, &removal);
+        assert_eq!(restored.groups.len(), 1, "the removal has to move the document");
+
+        let mut naive = restored.clone();
+        apply_obj_mutation(&mut naive, &ObjMutation::SetGroup { name: "front".into(), faces: vec![0, 1] });
+        assert_eq!(naive.groups.iter().map(|group| group.name.as_str()).collect::<Vec<_>>(), vec!["back", "front"], "a lone SetGroup appends — this is the position loss the sequenced inverse repairs");
+
+        for step in removal.inverse(&base) {
+            apply_obj_mutation(&mut restored, &step);
+        }
+        assert_eq!(restored, base, "the sequenced inverse must restore both the membership and the order");
+    }
+
+    /// ↩️ The `o` mirror, kept separate because `groups` and `objects` are distinct name spaces.
+    #[test]
+    fn remove_object_inverts_back_to_its_own_position() {
+        let mut base = banded_snapshot();
+        base.objects = vec![ObjObject { name: "shell".into(), faces: vec![0, 1] }, ObjObject { name: "cap".into(), faces: vec![2] }];
+        let removal = ObjMutation::RemoveObject { name: "shell".into() };
+        let mut restored = base.clone();
+        apply_obj_mutation(&mut restored, &removal);
+        assert_eq!(restored.objects.len(), 1, "the removal has to move the document");
+        for step in removal.inverse(&base) {
+            apply_obj_mutation(&mut restored, &step);
+        }
+        assert_eq!(restored, base, "the sequenced inverse must restore both the membership and the order");
+    }
+    //#endregion 🔖️IndexSpaceInverseLaw
 }
 //#endregion 🧪️Tests
 

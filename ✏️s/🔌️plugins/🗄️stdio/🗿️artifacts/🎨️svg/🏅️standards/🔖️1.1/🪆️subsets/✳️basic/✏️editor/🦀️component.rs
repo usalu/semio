@@ -3,7 +3,7 @@
 //! SVG has no pixel buffer: `set-pixel-region` replaces the whole vector snapshot via the artifact's own DSL text round-trip (`parse_dsl`/`SetSnapshot`), the closest real mutation this format declares — not a pixel edit.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::mutations::SvgMutation;
+use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::mutations::SvgBasicMutation;
 use crate::artifacts::svg::standards::v1_1::subsets::basic::schema::snapshot::SvgSnapshot;
 use crate::artifacts::svg::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_BASIC_DIALECT};
 use crate::editor::svg_basic::modes::edit;
@@ -34,7 +34,7 @@ pub struct SvgBasicEditor;
 
 impl ArtifactEditor for SvgBasicEditor {
     type Snapshot = SvgSnapshot;
-    type Mutation = SvgMutation;
+    type Mutation = SvgBasicMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
@@ -62,17 +62,17 @@ impl ArtifactEditor for SvgBasicEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             SvgBasicEditCommand::SetPixelRegion { source } => match <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![SvgMutation::SetSnapshot { snapshot }])),
+                Ok(snapshot) => Ok(Emit::mutations(vec![SvgBasicMutation::SetSnapshot { snapshot }])),
                 Err(_) => Ok(Emit::default()),
             },
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
-        semio_framework_plugin::built_to_component_tree(match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        })
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        match body_key {
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }
     }
 }
 //#endregion 🔖️Editor

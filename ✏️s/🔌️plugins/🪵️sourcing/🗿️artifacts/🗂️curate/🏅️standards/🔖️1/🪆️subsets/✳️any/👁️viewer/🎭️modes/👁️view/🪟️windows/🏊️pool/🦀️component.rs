@@ -13,7 +13,7 @@ pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     TableWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -22,13 +22,13 @@ pub async fn definition() -> WindowKindDefinition {
 /// 🧱️ Every stock object kind as one flat row — id/name/module/typology/availability, string cells
 /// only (the framework `TableView` view-model has no typed-cell concept, unlike the editor's
 /// `TableCell::{Text,Number,Stepper,Buttons}` — a viewer renders nothing interactive per cell).
-pub async fn view_model(document: &CurateSnapshot) -> TableView {
+pub fn view_model(document: &CurateSnapshot) -> TableView {
     let stock = stock_of(document);
     let rows = stock.iter().map(|kind| vec![kind.id.clone(), kind.name.clone(), kind.module_id.clone(), kind.typology_path.join(" / "), kind.availability.to_string()]).collect();
     TableView { columns: vec!["Id".into(), "Name".into(), "Module".into(), "Typology".into(), "Availability".into()], rows }
 }
 
-pub async fn render(document: &CurateSnapshot) -> UiNode {
+pub fn render(document: &CurateSnapshot) -> UiNode {
     TableWindowKit::render(&view_model(document))
 }
 //#endregion 🔖️Render

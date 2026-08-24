@@ -40,7 +40,7 @@ fn shape_text(shape: &PptxShape) -> Option<String> {
 
 /// ✏️ Real `PptxSnapshot -> BuiltNode`: one `DocumentPage` per slide.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &PptxSnapshot) -> BuiltNode {
+pub fn render(document: &PptxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let pages = document.presentation.slides.iter().map(|slide| DocumentPage { text: slide.shapes.iter().filter_map(shape_text).collect::<Vec<_>>().join("\n") }).collect();
     DocumentWindowKit::render(&DocumentView { pages })
 }

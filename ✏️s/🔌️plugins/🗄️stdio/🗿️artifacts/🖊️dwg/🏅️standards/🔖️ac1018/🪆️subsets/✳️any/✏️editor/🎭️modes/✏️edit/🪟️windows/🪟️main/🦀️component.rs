@@ -54,7 +54,7 @@ fn world_instances_json(document: &DwgSnapshot) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DwgSnapshot) -> BuiltNode {
+pub fn render(document: &DwgSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": DWG_AC1018_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(DWG_AC1018_EDIT_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(DWG_AC1018_EDIT_DEFAULT_CAMERA_POSITION, DWG_AC1018_EDIT_DEFAULT_CAMERA_TARGET, DWG_AC1018_EDIT_DEFAULT_CAMERA_FOV),

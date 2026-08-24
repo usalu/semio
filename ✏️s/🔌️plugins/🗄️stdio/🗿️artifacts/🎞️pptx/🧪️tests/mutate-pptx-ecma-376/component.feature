@@ -32,13 +32,23 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   footer/slide-number placeholders) and slide 6's real picture (the real `Diagrammnotation` photo,
   `blipRelId` `rId2`) among them — never a synthetic two-shape stand-in.
 
-  THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because the reference
-  composition did not error. `inverse-<kind>` applies the mutation, applies its own independently
-  computed inverse, and fails with the first diverging field unless the result projects onto exactly
-  what the original presentation projects onto. `identity-round-trip` fails unless the re-serialized
-  bytes differ from the input AND their projection is identical to the input's. Neither law is
-  scoped down: the whole projection — the ordered slide list and every slide's ordered shape list
-  with each shape's kind, text and position — has to come back.
+  ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law module,
+  so no scenario can pass merely because the reference composition declined to error.
+  `mutate-<kind>` fails unless the mutation MOVES the very projection the case is compared through:
+  a kind that applies cleanly and changes nothing observable would otherwise report a green for a
+  mutation nobody watched, and until this wave all nine of them did exactly that. `inverse-<kind>`
+  applies the mutation, applies its own independently computed inverse, and fails with the first
+  diverging field unless the result projects onto exactly what the original presentation projects
+  onto. `identity-round-trip` fails unless the rebuilt archive differs from the input AND its
+  projection is identical to the input's. NONE of the three is scoped down and NO kind is exempt
+  from any of them: `semantic-pptx-mutate-v1` declares no writer freedom, and the whole projection —
+  the ordered slide list and every slide's ordered shape list with each shape's kind, text and
+  position — has to move for a mutation and come back for an inverse. Slide ORDER is part of that,
+  which is what gives `move-slide` real evidence rather than a shape census that a reorder leaves
+  untouched. The same three laws are proven again at unit level over these very Examples rows by
+  `every_declared_kind_is_observable_and_its_inverse_restores_the_presentation` in
+  ../🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs, which READS this table rather
+  than restating it, so the two can never drift apart.
 
   @id-mutate
   @level-exhaustive

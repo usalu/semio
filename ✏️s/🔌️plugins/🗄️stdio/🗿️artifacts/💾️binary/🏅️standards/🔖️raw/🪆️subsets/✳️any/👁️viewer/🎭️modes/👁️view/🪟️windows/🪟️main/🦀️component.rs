@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `BinarySnapshot -> BuiltNode` read: the first `HEX_PREVIEW_CAP_BYTES` bytes as contiguous
 /// lowercase hex, always `read_only: true`, plus a trailing `#`-prefixed byte-count comment.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BinarySnapshot) -> BuiltNode {
+pub fn render(document: &BinarySnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let total = document.bytes.len();
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();

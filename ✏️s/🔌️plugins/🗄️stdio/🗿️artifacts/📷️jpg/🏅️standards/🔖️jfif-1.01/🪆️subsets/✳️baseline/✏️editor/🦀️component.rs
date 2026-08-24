@@ -3,7 +3,7 @@
 //! Emits the frozen `set-pixel-region` action onto the artifact's own whole-raster replace mutation.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::JpgMutation;
+use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::JpgBaselineMutation;
 use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
 use crate::artifacts::jpg::{JPG_BASELINE_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use crate::editor::jpg_baseline::modes::edit;
@@ -34,7 +34,7 @@ pub struct JpgBaselineEditor;
 
 impl ArtifactEditor for JpgBaselineEditor {
     type Snapshot = JpgSnapshot;
-    type Mutation = JpgMutation;
+    type Mutation = JpgBaselineMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
@@ -54,22 +54,26 @@ impl ArtifactEditor for JpgBaselineEditor {
 
     async fn handle(
         command: &Self::Command,
-        _doc: &ArtifactView<'_, Self::Snapshot>,
+        doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            JpgBaselineEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![JpgMutation::SetPixels { pixels: pixels.clone() }])),
+            JpgBaselineEditCommand::SetPixelRegion { pixels } => {
+                let mut snapshot = doc.snapshot.clone();
+                snapshot.pixels = pixels.clone();
+                Ok(Emit::mutations(vec![JpgBaselineMutation::SetSnapshot { snapshot }]))
+            }
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
-        semio_framework_plugin::built_to_component_tree(match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        })
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        match body_key {
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }
     }
 }
 //#endregion 🔖️Editor

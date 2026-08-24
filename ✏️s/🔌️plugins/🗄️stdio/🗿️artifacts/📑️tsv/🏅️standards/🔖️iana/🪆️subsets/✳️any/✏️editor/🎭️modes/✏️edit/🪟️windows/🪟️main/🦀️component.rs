@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Real `TsvSnapshot -> BuiltNode`: one row per record, `set-cell`'s `row`/`column` index this
 /// grid directly (a 1:1 mapping onto `records`, unlike csv's header-offset math).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &TsvSnapshot) -> BuiltNode {
+pub fn render(document: &TsvSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let width = document.records.iter().map(|record| record.len()).max().unwrap_or(0);
     let columns = (0..width).map(|index| format!("Column {}", index + 1)).collect();
     let rows = document.records.clone();

@@ -4,7 +4,7 @@ use crate::artifacts::curate::diff::{CurateCuratedDelta, CurateDiff};
 use crate::artifacts::curate::CurateSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::CreateCuratedItem, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
+pub fn diff(payload: &super::mutation::CreateCuratedItem, base: &CurateSnapshot) -> protocol::MutationOutcome<CurateDiff> {
     if base.curated.iter().any(|item| item.object_id == payload.item.object_id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("\"{}\" is already curated.", payload.item.object_id), [payload.item.object_id.clone()]);
     }

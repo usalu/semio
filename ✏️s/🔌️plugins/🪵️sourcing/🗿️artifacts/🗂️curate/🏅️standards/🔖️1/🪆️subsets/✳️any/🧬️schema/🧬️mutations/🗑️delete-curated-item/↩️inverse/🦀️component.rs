@@ -4,7 +4,7 @@ use crate::artifacts::curate::mutations::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::DeleteCuratedItem, base: &CurateSnapshot) -> Vec<SourcingMutation> {
+pub fn inverse(payload: &super::mutation::DeleteCuratedItem, base: &CurateSnapshot) -> Vec<SourcingMutation> {
     match base.curated.iter().find(|item| item.object_id == payload.object_id) {
         Some(item) => vec![crate::artifacts::curate::mutations::create_curated_item::mutation::create_curated_item(item.clone())],
         None => Vec::new(),

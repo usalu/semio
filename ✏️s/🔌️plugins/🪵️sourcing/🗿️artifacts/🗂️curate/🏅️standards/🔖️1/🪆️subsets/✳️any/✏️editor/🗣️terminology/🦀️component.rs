@@ -29,7 +29,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn sourcing_curate_labels(cfg: &SourcingCurateConfig) -> &'static SourcingLabels {
+pub fn sourcing_curate_labels(cfg: &SourcingCurateConfig) -> &'static SourcingLabels {
     semio_framework_plugin::resolve_labels_for_locale::<SourcingLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers

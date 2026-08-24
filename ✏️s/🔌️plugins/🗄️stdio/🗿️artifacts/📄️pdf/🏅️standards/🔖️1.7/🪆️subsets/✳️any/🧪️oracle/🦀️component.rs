@@ -17,6 +17,79 @@
 
 use semio_repo_test_host::Json;
 
+//#region 🔖️Vocabulary
+/// 🧾️ Kebab-case spelling of every variant this subset's `PdfMutation` declares, in declaration
+/// order. The `pdf-1-7-any` catalog is measured against this exact list, and the production-side
+/// `KINDS` carries `kinds_const_matches_enum_variants_in_declaration_order`, which proves enum,
+/// constant and manifest never drift apart. Declared here rather than in the case adapter so the
+/// adapter, this module's own tests and any future host all read ONE list.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-page", "remove-page", "set-page-media-box", "set-page-crop-box", "append-page-content", "set-info", "insert-object", "remove-object", "set-object-value", "set-dict-entry", "remove-dict-entry", "set-trailer-entry", "remove-trailer-entry", "move-page", "set-page-content", "set-page-rotation"];
+
+/// 👁️ The ONE declared kind whose forward effect no semantic projection of a PDF can carry, with
+/// the reason and the fix.
+///
+/// `InsertObject { id, value }` adds an indirect object and links it to nothing. ISO 32000-1 §7.5.4
+/// makes a conforming reader reach objects only by following references from the trailer's `/Root`
+/// and `/Info`, so an object nothing references is unreachable and changes nothing readable: page
+/// count, page geometry, page content, metadata and the whole resolved object graph all stay where
+/// they were. This is not a thin projection — it was measured on the real thesis, which carries
+/// 3,173 objects, 3,173 references and ZERO orphans and ZERO dangling references, so there is no
+/// id in the file at which an insertion could land somewhere already pointed at. The vocabulary is
+/// what cannot express it: `InsertObject` carries no reference site, and only `SetDictEntry` can
+/// create one. Widening it to carry the linking site (or requiring the pair) is the fix, and it
+/// belongs to whoever owns `../🧬️schema/🧬️mutations/🦀️component.rs`. Its INVERSE is still under the
+/// full law, and so is every other kind — this exempts one kind from one law, not from the case.
+pub const UNOBSERVABLE: &[&str] = &["insert-object"];
+//#endregion 🔖️Vocabulary
+
+//#region 🔖️PageContentLaw
+/// 🧱️ The three kinds whose undo has to REBUILD a page's content stream, and therefore cannot
+/// restore `contentOperators`. This is a property of the `pdf-1-7-any` VOCABULARY, not of the
+/// reference implementation, and it was found by asserting the law rather than by reasoning about
+/// it: `PdfPage`'s only content field is `text` (`../🧬️schema/📸️snapshot/🦀️component.rs`), so
+/// `InsertPage`/`SetPageContent` carry extracted text and nothing else, and both producers
+/// regenerate a five-operator `BT /F1 12 Tf 72 720 Td (…) Tj ET` stream from it. Page 8 of the real
+/// thesis carries 294 operators — glyph positioning, graphics state, the lot — and no round trip
+/// through a single `text` field can bring them back. `AppendPageContent` was documented from the
+/// start as having no minimal inverse in this vocabulary; this is the same gap, measured.
+///
+/// ⚖️ Exactly ONE axis is exempted, and only for these three kinds. `version`, `pageCount`, every
+/// page's `mediaBox`, `cropBox`, `rotate` and — critically — the shown `text` the vocabulary DOES
+/// carry all stay under the full law, as does the whole `objectGraph` surface. Widening `PdfPage`
+/// to retain a real content stream is the fix; it belongs to whoever owns that snapshot. Lives here
+/// rather than in the case adapter because the adapter's `inverse-<kind>` handler and this module's
+/// own `every_declared_kind_is_observable_and_its_inverse_restores_the_document` must exempt the
+/// same axis for the same three kinds or one of them is measuring a different law.
+pub fn regenerates_page_content(kind: &str) -> bool {
+    matches!(kind, "remove-page" | "append-page-content" | "set-page-content")
+}
+
+/// ✂️ The same projection with every page's `contentOperators` dropped — nothing else is touched,
+/// so a divergence anywhere else still fails. @see [`regenerates_page_content`].
+pub fn without_content_operators(projection: &Json) -> Json {
+    let Json::Object(fields) = projection else { return projection.clone() };
+    Json::Object(
+        fields
+            .iter()
+            .map(|(key, value)| {
+                if key != "pages" {
+                    return (key.clone(), value.clone());
+                }
+                let Json::Array(pages) = value else { return (key.clone(), value.clone()) };
+                let stripped = pages
+                    .iter()
+                    .map(|page| match page {
+                        Json::Object(entries) => Json::Object(entries.iter().filter(|(name, _)| name != "contentOperators").cloned().collect()),
+                        other => other.clone(),
+                    })
+                    .collect();
+                (key.clone(), Json::Array(stripped))
+            })
+            .collect(),
+    )
+}
+//#endregion 🔖️PageContentLaw
+
 #[cfg(feature = "oracles")]
 //#region 🔖️Oracles
 mod oracles {
@@ -594,17 +667,116 @@ mod oracles {
         }
     }
 
+    /// 🪟️ How far the catalog rendering resolves indirect references before it stops. Three is what
+    /// the real thesis needs and no more: `/OpenAction → #145 → {/S /GoTo, /D [ref, /Fit]}` and
+    /// `/Outlines → #3015 → {/Type /Outlines, /First ref, /Last ref, /Count 6}` both land inside it,
+    /// while everything below renders as an opaque marker — so an edit far away in the graph can
+    /// never register here as a change to the catalog.
+    const CATALOG_DEPTH: u8 = 3;
+
+    /// 🔎️ One object rendered for the [`object_graph`] surface, with indirect references RESOLVED
+    /// inline while `depth` lasts and rendered as `"<indirect object>"` once it runs out. Object
+    /// NUMBERS never appear — `semantic-pdf-v1` declares them writer freedom, and the resolved value
+    /// is what a conforming reader sees anyway (ISO 32000-1 §7.3.10). A reference that resolves to
+    /// nothing renders as `null`, which is precisely what makes `remove-object` observable. `seen`
+    /// is the cycle guard: `/Parent` back-pointers make a PDF object graph cyclic by construction.
+    fn render_object(document: &Document, object: &Object, depth: u8, seen: &mut Vec<ObjectId>) -> Json {
+        match object {
+            Object::Null => Json::Null,
+            Object::Boolean(value) => Json::Bool(*value),
+            Object::Integer(value) => Json::Number(*value as f64),
+            Object::Real(value) => Json::Number(*value as f64),
+            Object::Name(name) => Json::String(format!("/{}", String::from_utf8_lossy(name))),
+            Object::String(bytes, _) => Json::String(String::from_utf8_lossy(bytes).into_owned()),
+            Object::Array(items) => Json::Array(items.iter().map(|item| render_object(document, item, depth.saturating_sub(1), seen)).collect()),
+            Object::Dictionary(dictionary) => render_dictionary(document, dictionary, depth, seen),
+            Object::Stream(stream) => Json::Object(vec![("streamDictionary".to_string(), render_dictionary(document, &stream.dict, depth, seen))]),
+            Object::Reference(id) => {
+                if depth == 0 || seen.contains(id) {
+                    return Json::String("<indirect object>".to_string());
+                }
+                seen.push(*id);
+                let resolved = match document.get_object(*id) {
+                    Ok(target) => render_object(document, target, depth - 1, seen),
+                    Err(_) => Json::Null,
+                };
+                seen.pop();
+                resolved
+            }
+        }
+    }
+
+    /// 🔤️ A dictionary rendered key-sorted, so dictionary ORDER — writer freedom under
+    /// `semantic-pdf-v1` — never reads as a difference.
+    fn render_dictionary(document: &Document, dictionary: &Dictionary, depth: u8, seen: &mut Vec<ObjectId>) -> Json {
+        let mut entries: Vec<(String, Json)> = dictionary.iter().map(|(key, value)| (String::from_utf8_lossy(key).into_owned(), render_object(document, value, depth.saturating_sub(1), seen))).collect();
+        entries.sort_by(|one, other| one.0.cmp(&other.0));
+        Json::Object(entries)
+    }
+
+    /// 🕸️ The surface the object-graph half of this vocabulary lives on. `insert-object`,
+    /// `remove-object`, `set-object-value`, `set-dict-entry`, `remove-dict-entry`,
+    /// `set-trailer-entry` and `remove-trailer-entry` — seven of the eighteen declared kinds — never
+    /// touch a page, so `document::project_pdf`'s page-and-metadata shape cannot see them at all,
+    /// and six of the seven would pass whether or not the mutation ran. This is that gap closed, not
+    /// excused.
+    ///
+    /// Two members, both read out of the bytes by `lopdf` alone:
+    ///
+    /// * `trailer` — every trailer entry except `Size`, `Prev` and `XRefStm`, which are
+    ///   cross-reference bookkeeping the writer recomputes on every save and which
+    ///   `semantic-pdf-v1` already calls non-normative. Values render at depth 0, so `/Root` and
+    ///   `/Info` show as opaque markers rather than pulling their whole subtree in twice.
+    /// * `catalog` — the document catalog, resolved to [`CATALOG_DEPTH`], WITHOUT `/Pages`: the page
+    ///   tree is already projected in full by `pageCount` and `pages`, and re-projecting it here
+    ///   would make every page edit register twice and make a page reorder churn a surface it has no
+    ///   business churning.
+    fn object_graph(document: &Document) -> Json {
+        let mut trailer: Vec<(String, Json)> = document
+            .trailer
+            .iter()
+            .filter(|(key, _)| !matches!(key.as_slice(), b"Size" | b"Prev" | b"XRefStm"))
+            .map(|(key, value)| (String::from_utf8_lossy(key).into_owned(), render_object(document, value, 0, &mut Vec::new())))
+            .collect();
+        trailer.sort_by(|one, other| one.0.cmp(&other.0));
+        let catalog = match document.catalog() {
+            Ok(dictionary) => {
+                let mut seen: Vec<ObjectId> = Vec::new();
+                let mut entries: Vec<(String, Json)> = dictionary.iter().filter(|(key, _)| key.as_slice() != b"Pages").map(|(key, value)| (String::from_utf8_lossy(key).into_owned(), render_object(document, value, CATALOG_DEPTH - 1, &mut seen))).collect();
+                entries.sort_by(|one, other| one.0.cmp(&other.0));
+                Json::Object(entries)
+            }
+            Err(error) => Json::String(format!("<no catalog: {error}>")),
+        };
+        Json::Object(vec![("trailer".to_string(), Json::Object(trailer)), ("catalog".to_string(), catalog)])
+    }
+
     /// 👁️ This subset's own projection: the shared `document::project_pdf` independent-reader
-    /// projection, augmented with each page's resolved `/Rotate` (normative for `set-page-rotation`
-    /// but outside the shared projection's own scope, since no other subset needs it -- the fleet
-    /// brief's own "do not edit the shared family module's existing functions" rule is what makes
-    /// this an addition here rather than a change there).
+    /// projection, augmented with the two surfaces the `pdf-1-7-any` vocabulary needs and no other
+    /// subset does — each page's resolved `/CropBox` and `/Rotate` (normative for
+    /// `set-page-crop-box` and `set-page-rotation`), and the [`object_graph`] surface the seven
+    /// object/dict/trailer kinds live on. The fleet brief's own "do not edit the shared family
+    /// module's existing functions" rule is what makes all three an addition here rather than a
+    /// change there.
     pub fn project_pdf_1_7(bytes: &[u8]) -> Result<Json, String> {
         let base = document::project_pdf(bytes)?;
         let reader = Document::load_mem(bytes).map_err(|error| format!("independent reader could not parse the document: {error}"))?;
-        let rotations: Vec<i64> = reader.get_pages().into_values().map(|page_id| reader.get_dictionary(page_id).ok().and_then(|dict| dict.get(b"Rotate").ok()).and_then(|value| value.as_i64().ok()).unwrap_or(0)).collect();
+        let boxes: Vec<(Json, i64)> = reader
+            .get_pages()
+            .into_values()
+            .map(|page_id| {
+                let dictionary = reader.get_dictionary(page_id).ok();
+                let crop_box = dictionary
+                    .and_then(|dict| dict.get(b"CropBox").ok())
+                    .and_then(|value| value.as_array().ok())
+                    .map(|items| Json::Array(items.iter().map(|item| Json::Number(item.as_float().unwrap_or(0.0) as f64)).collect()))
+                    .unwrap_or(Json::Null);
+                let rotate = dictionary.and_then(|dict| dict.get(b"Rotate").ok()).and_then(|value| value.as_i64().ok()).unwrap_or(0);
+                (crop_box, rotate)
+            })
+            .collect();
         let Json::Object(entries) = base else { return Ok(base) };
-        let augmented: Vec<(String, Json)> = entries
+        let mut augmented: Vec<(String, Json)> = entries
             .into_iter()
             .map(|(key, value)| {
                 if key != "pages" {
@@ -613,10 +785,12 @@ mod oracles {
                 let Json::Array(pages) = value else { return (key, value) };
                 let merged = pages
                     .into_iter()
-                    .zip(rotations.iter().chain(std::iter::repeat(&0)))
-                    .map(|(page, rotate)| match page {
+                    .enumerate()
+                    .map(|(index, page)| match page {
                         Json::Object(mut fields) => {
-                            fields.push(("rotate".to_string(), Json::Number(*rotate as f64)));
+                            let (crop_box, rotate) = boxes.get(index).cloned().unwrap_or((Json::Null, 0));
+                            fields.push(("cropBox".to_string(), crop_box));
+                            fields.push(("rotate".to_string(), Json::Number(rotate as f64)));
                             Json::Object(fields)
                         }
                         other => other,
@@ -625,6 +799,7 @@ mod oracles {
                 (key, Json::Array(merged))
             })
             .collect();
+        augmented.push(("objectGraph".to_string(), object_graph(&reader)));
         Ok(Json::Object(augmented))
     }
 }
@@ -674,3 +849,160 @@ pub fn project_pdf_1_7(_bytes: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Dispatch
+
+//#region 🧪️Tests
+#[cfg(all(test, feature = "oracles"))]
+mod tests {
+    use super::*;
+
+    /// 🧫️ The real committed document `mutate-pdf-1-7` runs on, read where the artifact already
+    /// keeps it — a 6.3 MB, 65-page LaTeX bachelor thesis carrying 3,173 indirect objects, a
+    /// six-entry outline tree and an `/OpenAction` `/GoTo` destination.
+    const FIXTURE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf");
+
+    fn json_object(pairs: Vec<(&str, Json)>) -> Json {
+        Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
+    }
+
+    fn number(value: f64) -> Json {
+        Json::Number(value)
+    }
+
+    fn text(value: &str) -> Json {
+        Json::String(value.to_string())
+    }
+
+    fn object_id(num: f64) -> Json {
+        json_object(vec![("num", number(num)), ("gen", number(0.0))])
+    }
+
+    fn pdf_dict(entries: Vec<(&str, Json)>) -> Json {
+        json_object(vec![("kind", text("dict")), ("entries", Json::Array(entries.into_iter().map(|(key, value)| json_object(vec![("key", text(key)), ("value", value)])).collect()))])
+    }
+
+    fn pdf_name(value: &str) -> Json {
+        json_object(vec![("kind", text("name")), ("value", text(value))])
+    }
+
+    fn pdf_str(value: &str) -> Json {
+        json_object(vec![("kind", text("str")), ("value", text(value))])
+    }
+
+    /// 🧾️ The Examples rows `../../../../🧪️tests/mutate-pdf-1-7/component.feature` carries, one per
+    /// declared kind — the same targets against the same real document, so a failure here and a
+    /// failure there have the same cause and the same fix.
+    fn params_for(kind: &str) -> Json {
+        match kind {
+            "no-mutation" => json_object(vec![]),
+            "set-snapshot" => json_object(vec![("declaredVersion", text("2.0")), ("title", text("Wave 7 Snapshot Title"))]),
+            "insert-page" => json_object(vec![("index", number(30.0)), ("page", json_object(vec![("mediaBox", Json::Array(vec![number(0.0), number(0.0), number(612.0), number(792.0)])), ("rotate", number(0.0)), ("text", text("Inserted page for wave 7 mutation testing"))]))]),
+            "remove-page" => json_object(vec![("index", number(7.0))]),
+            "set-page-media-box" => json_object(vec![("index", number(15.0)), ("mediaBox", Json::Array(vec![number(0.0), number(0.0), number(595.0), number(842.0)]))]),
+            "set-page-crop-box" => json_object(vec![("index", number(16.0)), ("cropBox", Json::Array(vec![number(10.0), number(10.0), number(580.0), number(820.0)]))]),
+            "append-page-content" => json_object(vec![("index", number(17.0)), ("text", text("Appended content line for wave 7 testing"))]),
+            "set-info" => json_object(vec![("title", text("Wave 7 Replaced Title")), ("author", text("Wave 7 Test Author"))]),
+            "insert-object" => json_object(vec![("id", object_id(900001.0)), ("value", pdf_dict(vec![("Type", pdf_name("SemioWave7Marker")), ("Note", pdf_str("inserted by wave 7"))]))]),
+            "remove-object" => json_object(vec![("id", object_id(3015.0))]),
+            "set-object-value" => json_object(vec![("id", object_id(145.0)), ("value", pdf_dict(vec![("S", pdf_name("GoToR")), ("Note", pdf_str("replaced by wave 7"))]))]),
+            "set-dict-entry" => json_object(vec![("id", object_id(3188.0)), ("path", Json::Array(vec![])), ("key", text("PageMode")), ("value", pdf_name("UseNone"))]),
+            "remove-dict-entry" => json_object(vec![("id", object_id(3188.0)), ("path", Json::Array(vec![])), ("key", text("Outlines"))]),
+            "set-trailer-entry" => json_object(vec![("key", text("SemioWave7Marker")), ("value", json_object(vec![("kind", text("int")), ("value", number(42.0))]))]),
+            "remove-trailer-entry" => json_object(vec![("key", text("ID"))]),
+            "move-page" => json_object(vec![("from", number(10.0)), ("to", number(40.0))]),
+            "set-page-content" => json_object(vec![("index", number(20.0)), ("text", text("Replaced page content for wave 7 mutation testing"))]),
+            "set-page-rotation" => json_object(vec![("index", number(5.0)), ("rotation", number(90.0))]),
+            other => panic!("no test parameters for kind {other:?}"),
+        }
+    }
+
+    fn spec(kind: &str) -> Json {
+        json_object(vec![("kind", text(kind)), ("params", params_for(kind))])
+    }
+
+    fn fixture() -> Vec<u8> {
+        std::fs::read(FIXTURE).expect("the committed bachelor-thesis document")
+    }
+
+    /// ⚖️ The two laws `mutate-pdf-1-7`'s adapter asserts in role, proven here against the real
+    /// document without the runner: every declared kind moves the projection it is compared through
+    /// (except the one [`UNOBSERVABLE`] names, with its reason), and every declared kind's own
+    /// computed inverse lands back on the untouched document's projection (with
+    /// [`regenerates_page_content`]'s single documented axis dropped for its three kinds).
+    #[test]
+    fn every_declared_kind_is_observable_and_its_inverse_restores_the_document() {
+        let original = fixture();
+        let base = project_pdf_1_7(&original).expect("the independent reader projects the real document");
+        for kind in KINDS {
+            let forward = spec(kind);
+            let mutated = oracle_apply_mutation(&original, &forward).unwrap_or_else(|error| panic!("{kind}: {error}"));
+            let moved = project_pdf_1_7(&mutated).unwrap_or_else(|error| panic!("{kind}: projecting the result failed: {error}"));
+            if *kind != "no-mutation" && !UNOBSERVABLE.contains(kind) {
+                assert_ne!(moved, base, "{kind} left the compared projection untouched, so its scenario would pass whether or not the mutation ran");
+            }
+            let restored = oracle_apply_mutation_inverse(&original, &forward).unwrap_or_else(|error| panic!("{kind}: inverse: {error}"));
+            let recovered = project_pdf_1_7(&restored).unwrap_or_else(|error| panic!("{kind}: projecting the restored document failed: {error}"));
+            let (expected, actual) = if regenerates_page_content(kind) { (without_content_operators(&base), without_content_operators(&recovered)) } else { (base.clone(), recovered) };
+            assert_eq!(actual, expected, "{kind}: applying the mutation and then its own inverse must restore the document's projection");
+        }
+    }
+
+    /// 🚫️ The one exemption, pinned rather than merely asserted: `insert-object` is unobservable
+    /// BECAUSE the real document has nowhere for an unreferenced object to be seen from, not
+    /// because the projection is thin. The moment the vocabulary grows a linking site — or the
+    /// fixture grows a dangling reference — this flips red and the exemption has to be re-argued.
+    #[test]
+    fn insert_object_is_unobservable_only_because_nothing_can_reference_the_new_object() {
+        let original = fixture();
+        let base = project_pdf_1_7(&original).expect("the independent reader projects the real document");
+        let mutated = oracle_apply_mutation(&original, &spec("insert-object")).expect("the reference inserts the object");
+        assert_ne!(mutated, original, "the reference really did rewrite the file");
+        assert_eq!(project_pdf_1_7(&mutated).unwrap(), base, "an object nothing references is unreachable (ISO 32000-1 §7.5.4) and must project identically");
+    }
+
+    /// 🕸️ The object-graph surface, checked against the values the real document actually carries,
+    /// so a future refactor that quietly renders it empty cannot keep the observability test green.
+    #[test]
+    fn the_object_graph_surface_reads_the_real_catalog_and_trailer() {
+        let projection = project_pdf_1_7(&fixture()).expect("the independent reader projects the real document");
+        let graph = projection.get("objectGraph").expect("the projection carries the object-graph surface").clone();
+        let trailer = graph.get("trailer").expect("a trailer surface").clone();
+        assert_eq!(trailer.get("Root"), Some(&Json::String("<indirect object>".to_string())), "trailer references render opaquely; the catalog has its own member");
+        assert!(trailer.get("ID").is_some(), "the real trailer carries the /ID pair remove-trailer-entry targets");
+        assert!(trailer.get("Size").is_none(), "/Size is cross-reference bookkeeping the writer recomputes on every save");
+        let catalog = graph.get("catalog").expect("a catalog surface").clone();
+        assert!(catalog.get("Pages").is_none(), "the page tree is projected by pageCount/pages, never twice");
+        assert_eq!(catalog.get("PageMode"), Some(&Json::String("/UseOutlines".to_string())), "set-dict-entry's target axis");
+        assert_eq!(catalog.get("Outlines").and_then(|outlines| outlines.get("Count")).cloned(), Some(Json::Number(6.0)), "remove-object #3015 is the outline root the catalog resolves to");
+        assert_eq!(catalog.get("OpenAction").and_then(|action| action.get("S")).cloned(), Some(Json::String("/GoTo".to_string())), "set-object-value #145 is the OpenAction the catalog resolves to");
+    }
+
+    /// 🔒️ Both halves of the identity law, on the real document.
+    #[test]
+    fn the_round_trip_is_projection_stable_and_not_a_byte_passthrough() {
+        let original = fixture();
+        let rebuilt = oracle_apply_mutation(&original, &spec("no-mutation")).expect("the reference re-serializes the document");
+        assert_ne!(rebuilt, original, "the reference rebuilds the file from its own object graph; identical bytes would mean the input was smuggled");
+        assert_eq!(project_pdf_1_7(&rebuilt).unwrap(), project_pdf_1_7(&original).unwrap());
+    }
+
+    #[test]
+    fn unknown_kind_is_an_error_never_a_silent_no_op() {
+        let unknown = json_object(vec![("kind", text("not-a-real-kind")), ("params", json_object(vec![]))]);
+        assert!(oracle_apply_mutation(&fixture(), &unknown).is_err());
+        assert!(oracle_apply_mutation_inverse(&fixture(), &unknown).is_err());
+    }
+
+    /// 📇️ The three declarations that must never drift: this module's [`KINDS`], the catalog in
+    /// `🔣️component.json`, and the `Examples` rows of the case that claims it.
+    #[test]
+    fn kinds_matches_the_catalog_and_every_feature_row() {
+        let manifest = include_str!("🔣️component.json");
+        let feature = include_str!("../../../../../🧪️tests/mutate-pdf-1-7/component.feature");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "the pdf-1-7-any catalog is missing {kind:?}");
+            assert!(feature.contains(&format!("| {kind} ")) || feature.contains(&format!("| {kind}\n")), "the feature declares no Examples row for {kind:?}");
+        }
+        assert_eq!(KINDS.len(), 18, "the pdf-1-7-any vocabulary declares eighteen kinds");
+    }
+}
+//#endregion 🧪️Tests

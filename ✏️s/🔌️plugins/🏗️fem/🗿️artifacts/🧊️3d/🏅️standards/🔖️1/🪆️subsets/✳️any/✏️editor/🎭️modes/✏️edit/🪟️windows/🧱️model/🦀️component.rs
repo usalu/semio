@@ -14,6 +14,7 @@ pub const FEM3D_BODY_MODEL: &str = "fem3d.play.model";
 /// 🧱️ Renders the undeformed structure: the same node/member/solid instances every results view
 /// deforms, at deformation scale `doc.analysis.deformation_scale` with no displacement offset applied
 /// (`None` displacements) and no stress coloring.
+#[cfg(test)]
 pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
 
@@ -25,18 +26,11 @@ pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin
 }
 
 /// 👁️ Borrows a generation-qualified immutable renderer packet without scene rebuilding on the UI thread.
-pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::editor::fem3d::session::Fem3dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let (meshes_json, instances_json) = visual.map_or(("[]", "[]"), |lease| (lease.meshes_json(), lease.instances_json()));
-    crate::app_surface::world_3d_surface(
-        FEM3D_BODY_MODEL,
-        semio_framework_plugin::world3d_scene(
-            crate::editor::fem3d::fem3d_camera_json(camera),
-            meshes_json.to_string(),
-            instances_json.to_string(),
-            semio_framework_plugin::world3d_selection_json("rectangle", &[], None),
-            &semio_framework_plugin::WorldSunConfig::default(),
-        ),
-    )
+pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut scene =
+        semio_framework_plugin::world3d_scene(crate::editor::fem3d::fem3d_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
+    scene.snapshot = visual.map(crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease::snapshot);
+    crate::app_surface::world_3d_surface(FEM3D_BODY_MODEL, scene)
 }
 
 // #region 🧪️Tests

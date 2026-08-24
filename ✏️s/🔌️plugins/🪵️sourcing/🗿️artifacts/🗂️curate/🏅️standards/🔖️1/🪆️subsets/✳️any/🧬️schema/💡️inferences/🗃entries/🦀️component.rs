@@ -22,7 +22,7 @@ pub struct CurateEntries {
 /// `types` — reading the sourcing-owned overflow list directly avoids resolving the composed child
 /// just to count it); `entryCount` = `curated.len()`; `totalCount` = sum of every curated line's
 /// `count`.
-pub async fn compute_curate_entries(snapshot: &CurateSnapshot) -> CurateEntries {
+pub fn compute_curate_entries(snapshot: &CurateSnapshot) -> CurateEntries {
     CurateEntries { stock_count: snapshot.stock_extra.len() as u32, entry_count: snapshot.curated.len() as u32, total_count: snapshot.curated.iter().map(|item| item.count).sum() }
 }
 //#endregion 🔖️Entries

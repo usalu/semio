@@ -2922,8 +2922,10 @@ pub mod board_host {
                         }
                     } else {
                         drop(std::mem::take(&mut self.world_raster_tiling));
-                        self.push_close_string(std::mem::take(&mut self.selection_options.method));
-                        self.push_close_string(std::mem::take(&mut self.selection_options.mode));
+                        let method = std::mem::take(&mut self.selection_options.method);
+                        let mode = std::mem::take(&mut self.selection_options.mode);
+                        self.push_close_string(method);
+                        self.push_close_string(mode);
                         self.close_phase = BoardHostClosePhase::Weights;
                     }
                 }
@@ -4755,7 +4757,7 @@ pub mod board_host {
         fn accept_candidate(&mut self) -> semio_framework_job::StepOutcome {
             let Some(preview) = self.state.current_preview.clone() else {
                 self.reject_candidate("missing-preview");
-                return self.preview_outcome(self.state.preview_sequence);
+                return semio_framework_job::StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview));
             };
             let kind = self.state.snapshot.kinds[preview.kind_index].clone();
             let serial = self.state.next_serial;
@@ -4831,7 +4833,7 @@ pub mod board_host {
                 self.state.current_preview = None;
                 self.state.stage = BoardFillStage::PrepareSources;
             }
-            self.preview_outcome(self.state.preview_sequence)
+            semio_framework_job::StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))
         }
 
         fn reject_candidate(&mut self, reason: &str) {
@@ -4884,11 +4886,22 @@ pub mod board_host {
             }
         }
 
-        fn preview_outcome(&self, sequence: u64) -> semio_framework_job::StepOutcome {
-            semio_framework_job::StepOutcome::PreviewReady(serde_json::to_vec(&self.preview(sequence)).expect("board fill preview is serializable"))
+        fn retained_payload(context: &mut semio_framework_job::StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
+            match context.payload_from_bytes(stream, bytes) {
+                Ok(payload) => payload,
+                Err(rejected) => {
+                    drop(rejected.into_source());
+                    semio_framework_job::RetainedJobPayload::empty(stream)
+                }
+            }
         }
 
-        fn complete(&self) -> semio_framework_job::StepOutcome {
+        fn preview_outcome(&self, context: &mut semio_framework_job::StepContext<'_>, sequence: u64) -> semio_framework_job::StepOutcome {
+            let bytes = serde_json::to_vec(&self.preview(sequence)).expect("board fill preview is serializable");
+            semio_framework_job::StepOutcome::PreviewReady(Self::retained_payload(context, semio_framework_job::JobPayloadStream::Preview, &bytes))
+        }
+
+        fn complete(&self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
             let output = serde_json::to_vec(&serde_json::json!({
                 "placements": self.state.placements,
                 "done": true,
@@ -4897,7 +4910,10 @@ pub mod board_host {
                 "searchCount": self.state.search_count,
             }))
             .expect("board fill output is serializable");
-            semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.checkpoint_bytes(), output })
+            semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                output: Self::retained_payload(context, semio_framework_job::JobPayloadStream::CommitOutput, &output),
+            })
         }
     }
 
@@ -4907,7 +4923,9 @@ pub mod board_host {
                 return semio_framework_job::StepOutcome::Cancelled;
             }
             if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"stale-puzzle2d-fill-operation".to_vec() });
+                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
+                    detail: Self::retained_payload(context, semio_framework_job::JobPayloadStream::Fault, b"stale-puzzle2d-fill-operation"),
+                });
             }
             if context.should_yield() {
                 return semio_framework_job::StepOutcome::Yield;
@@ -4944,7 +4962,7 @@ pub mod board_host {
                 }
                 BoardFillStage::AcceptCandidate => Some(self.accept_candidate()),
                 BoardFillStage::PublishPlanPrefix => Some(self.publish_prefix()),
-                BoardFillStage::Complete => return self.complete(),
+                BoardFillStage::Complete => return self.complete(context),
             };
             context.consume_fuel(1);
             if context.is_cancelled() {
@@ -4957,9 +4975,10 @@ pub mod board_host {
             self.operation.preview_sequence = preview_sequence.saturating_add(1);
             self.state.preview_sequence = self.operation.preview_sequence;
             match outcome {
-                Some(semio_framework_job::StepOutcome::PreviewReady(_)) | None => self.preview_outcome(preview_sequence),
+                Some(semio_framework_job::StepOutcome::PreviewReady(_)) | None => self.preview_outcome(context, preview_sequence),
                 Some(semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint)) => {
-                    checkpoint.state = self.checkpoint_bytes();
+                    let bytes = self.checkpoint_bytes();
+                    checkpoint.state = Self::retained_payload(context, semio_framework_job::JobPayloadStream::CheckpointState, &bytes);
                     semio_framework_job::StepOutcome::CheckpointReady(checkpoint)
                 }
                 Some(outcome) => outcome,
@@ -9168,8 +9187,8 @@ pub mod board_host {
             if points.len() != screen_points.len() || points.len() >= BOARD_POINTER_ITEM_CAPACITY {
                 return Err(BoardPointerPlanFault::ItemCredits);
             }
-            let mut next_points = Box::new(std::array::from_fn(|_| Point::new(0.0, 0.0)));
-            let mut next_screen_points = Box::new(std::array::from_fn(|_| Point::new(0.0, 0.0)));
+            let mut next_points: Box<[Point; BOARD_POINTER_ITEM_CAPACITY]> = Box::new([Point::ZERO; BOARD_POINTER_ITEM_CAPACITY]);
+            let mut next_screen_points: Box<[Point; BOARD_POINTER_ITEM_CAPACITY]> = Box::new([Point::ZERO; BOARD_POINTER_ITEM_CAPACITY]);
             next_points[..points.len()].copy_from_slice(points);
             next_screen_points[..screen_points.len()].copy_from_slice(screen_points);
             let mut len = points.len();
@@ -9438,7 +9457,7 @@ pub mod board_host {
             }
         }
 
-        fn plan_drag_pointer(&self, world: Point, primary_id: &str, offset: Point, start_positions: &BTreeMap<String, (f64, f64)>, kind: BoardPointerPlanKind) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+        fn plan_drag_pointer(&self, world: Point, primary_id: &str, offset: Vec2, start_positions: &BTreeMap<String, (f64, f64)>, kind: BoardPointerPlanKind) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
             if start_positions.len() > BOARD_POINTER_ITEM_CAPACITY {
                 return Err(BoardPointerPlanFault::ItemCredits);
             }
@@ -10425,7 +10444,7 @@ pub mod board_host {
     fn pointer_plan_rejects_drag_item_overflow_and_retires_one_delta_per_step() {
         let mut host = BoardHost::default();
         let start_positions = (0..=BOARD_POINTER_ITEM_CAPACITY).map(|index| (format!("node-{index}"), (index as f64, 0.0))).collect();
-        host.interaction = Interaction::DragNodes { primary_id: "node-0".into(), offset: Point::new(0.0, 0.0), start_positions, proximity_pair: None };
+        host.interaction = Interaction::DragNodes { primary_id: "node-0".into(), offset: Vec2::ZERO, start_positions, proximity_pair: None };
         assert_eq!(host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 1.0, y: 1.0, shift: false, ctrl_or_meta: false, alt: false }).unwrap_err(), BoardPointerPlanFault::ItemCredits);
 
         let mut plan = BoardPointerPlan::empty(0, BoardPointerPlanKind::DragMove);
@@ -10453,7 +10472,7 @@ pub mod board_host {
     #[test]
     fn drag_commit_obeys_zero_budget_one_delta_turn_cancel_and_publication_witness() {
         let mut host = deletion_fixture("node-a");
-        host.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Point::new(0.0, 0.0), start_positions: [("node-a".to_string(), (0.0, 0.0)), ("node-b".to_string(), (20.0, 0.0))].into_iter().collect(), proximity_pair: None };
+        host.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Vec2::ZERO, start_positions: [("node-a".to_string(), (0.0, 0.0)), ("node-b".to_string(), (20.0, 0.0))].into_iter().collect(), proximity_pair: None };
         let plan = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Up, x: 10.0, y: 5.0, shift: false, ctrl_or_meta: false, alt: false }).expect("finish drag plan");
         host.begin_pointer_commit(plan).expect("retained drag commit");
         let before = host.nodes.get("node-a").map(|node| (node.x, node.y));
@@ -10471,7 +10490,7 @@ pub mod board_host {
         assert!(host.pointer_authority_terminal_is_empty());
 
         let mut cancelled = deletion_fixture("node-a");
-        cancelled.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Point::new(0.0, 0.0), start_positions: [("node-a".to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None };
+        cancelled.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Vec2::ZERO, start_positions: [("node-a".to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None };
         let plan = cancelled.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 8.0, y: 3.0, shift: false, ctrl_or_meta: false, alt: false }).expect("cancelled drag plan");
         cancelled.begin_pointer_commit(plan).expect("cancelled retained commit");
         let cancel = semio_framework_job::root_cancel_token();
